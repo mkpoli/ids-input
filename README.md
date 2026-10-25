@@ -245,6 +245,9 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - 字統网 (zi.tools), IDS search, <https://zi.tools/?secondary=ids>: the ASCII operator names, read from
   its page script (`action_abbr_map`) on 2026-10-24, and ideas for typing sequences.
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
+- X posts seen on 2026-10-26, for the forms in `demo/lib/examples.js` with no code point:
+  @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
+  (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 

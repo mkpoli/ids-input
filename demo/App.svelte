@@ -123,7 +123,10 @@
     { label: t('app.drafts.export'), icon: 'download', disabled: !drafts.length, run: () => download(new Blob([toText(drafts)], { type: 'text/plain' }), 'ids-drafts.txt') },
     ...(drafts.length ? [{ label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
   ])
-  const exampleItems = $derived(EXAMPLES.map(e => ({ label: e.char ? `${e.char}　${e.sequence}` : `${e.sequence}　${t('app.examples.none')}`, lang: 'ja', run: () => editor.open(e.sequence) })))
+  const exampleItems = $derived(EXAMPLES.map(example => {
+    const label = example.char ? `${example.char}　${example.sequence}` : `${example.sequence}　${t('app.examples.none')}`
+    return { label, hint: label, lang: 'ja', run: () => editor.open(example.sequence) }
+  }))
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
