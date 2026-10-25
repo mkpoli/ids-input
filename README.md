@@ -19,6 +19,8 @@ layers, and an optional preview:
 
 Demo: <https://ids.mkpo.li/>
 
+[![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
+
 ## Install
 
 ```sh
