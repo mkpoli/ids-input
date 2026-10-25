@@ -6,6 +6,7 @@ export default defineConfig({
   root: import.meta.dirname,
   base: './',
   plugins: [svelte()],
-  build: { outDir: '../dist', emptyOutDir: true, target: 'es2022' },
+  build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, embed: `${import.meta.dirname}/embed.html` } } },
   server: { fs: { allow: ['..'] } },
 })

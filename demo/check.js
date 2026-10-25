@@ -244,6 +244,20 @@ try {
   pass('theme switch, no flash, key hints off, the language')
   assert(!drawn.errors.length, `page errors: ${drawn.errors.join('; ')}`)
 
+  // IdsInput as one block in a host page: it starts from 疑, takes operator keys and hands a whole sequence over.
+  const embed = await open('embed.html')
+  await embed.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
+  await choose(embed, 0)
+  await embed.keyboard.press('Digit1')
+  assert(await valueOf(embed) === '⿰⿰𠤕＋⿱龴疋', `embedded split: ${await valueOf(embed)}`)
+  await embed.keyboard.press('Control+z')
+  await embed.locator('.ids-use').click()
+  assert(await embed.locator('.used').textContent() === '⿰𠤕⿱龴疋', 'the whole sequence is handed over')
+  assert(!embed.errors.length, `page errors: ${embed.errors.join('; ')}`)
+  await embed.screenshot({ path: join(shots, 'embed.png'), fullPage: true })
+  await embed.context().close()
+  pass('IdsInput embedded: keys, undo and Use')
+
   // Screenshots, light and dark through the theme switch, at three widths; no sideways scroll.
   for (const scheme of ['light', 'dark']) for (const [name, width, height] of [['desktop', 1440, 900], ['tablet', 1024, 1200], ['phone', 375, 812]]) {
     const shot = await open('#' + encodeURIComponent('⿰𠤕⿱龴疋'), { width, height })
