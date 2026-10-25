@@ -192,15 +192,17 @@
       <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
     </section>
 
-    <section class="pane tree" aria-label={t('ids.structure')}>
-      <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
-      <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
-      <section class="results" aria-label={t('ids.search.title')}>
+    <div class="middle">
+      <section class="pane tree" aria-label={t('ids.structure')}>
+        <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+        <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+      </section>
+      <section class="pane results" aria-label={t('ids.search.title')}>
         <h2 class="label">{t('ids.search.title')}</h2>
         <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
           onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
       </section>
-    </section>
+    </div>
 
     <section class="pane output" aria-label={t('app.output')}>
       <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
@@ -311,21 +313,23 @@
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
   .foot .link{color:inherit}
 
-  .results{display:flex;flex-direction:column;gap:6px;min-width:0;max-height:min(720px,80dvh);overflow:auto;padding-top:14px;border-top:1px solid var(--line)}
-  /* Two columns: input beside the tree, the search under the tree; the output under both. */
+  .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .results{gap:6px;max-height:min(720px,80dvh);overflow:auto}
+  /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
     .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
-  /* Three columns filling the window: input, tree with the search under it, output. */
+  /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
-    .tree{--_tree-size:min(100%,max(240px,calc(100dvh - 480px)));justify-content:flex-start}
+    .middle{--_tree-size:min(100%,max(240px,calc(100dvh - 540px)));min-height:0}
+    .tree{flex:none;justify-content:flex-start}
     .tree-box{width:var(--_tree-size)}
     .output{grid-column:auto;display:flex;flex-direction:column}
-    .results{width:min(100%,var(--_tree-size));align-self:center;flex:1;min-height:0;max-height:none;overflow:hidden;padding-top:12px}
+    .results{flex:1;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
     .results :global(.empty){margin:auto}

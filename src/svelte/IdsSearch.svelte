@@ -36,6 +36,8 @@
     chars.forEach((c, i) => { if (out.length && out[out.length - 1].marked === marked[i]) out[out.length - 1].text += c; else out.push({ text: c, marked: marked[i] }) })
     return out
   }
+  /** @param {string} char */
+  const cp = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 </script>
 
 <section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
@@ -49,10 +51,11 @@
     <ol class="hits" class:stale={found.status === 'loading'}>
       {#each found.hits as hit (hit.char)}
         <li class="hit">
-          <button type="button" class="open" title={t('ids.search.open', { sequence: hit.sequence })} draggable="true"
+          <button type="button" class="open" title={`${t('ids.search.open', { sequence: hit.sequence })} · ${cp(hit.char)}`} draggable="true"
             ondragstart={event => event.dataTransfer?.setData('text/plain', hit.char)} onclick={() => onopen?.(hit)}>
             <span class="char" lang="ja">{hit.char}</span>
             <span class="seq" lang="ja">{#each pieces(hit) as piece, i (i)}{#if piece.marked}<mark>{piece.text}</mark>{:else}{piece.text}{/if}{/each}</span>
+            <span class="code">{cp(hit.char)}</span>
           </button>
           {#if ontake}<button type="button" class="take" title={t('ids.search.take', { char: hit.char })} aria-label={t('ids.search.take', { char: hit.char })} onclick={() => ontake?.(hit)}>
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 13h7v7h-7zM14 7h6M17 4v6M4 17h6" /></svg></button>{/if}
@@ -88,6 +91,10 @@
   .open{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 5px;text-align:center}
   .char{font-family:var(--_font);font-size:clamp(22px,2.2vw,34px);line-height:1.15}
   .seq{display:block;width:100%;font-family:var(--_font);font-size:10.5px;line-height:1.3;color:var(--_muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .code{display:none;font:10.5px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
+  .hit:hover .seq,.hit:focus-within .seq{display:none}
+  .hit:hover .code,.hit:focus-within .code{display:block}
+  @media (hover:none){.code{display:block}}
   mark{background:var(--_accent-light);color:var(--_ink);border-radius:3px;box-shadow:0 -2px 0 var(--_accent) inset}
   .take{position:absolute;top:2px;right:2px;display:grid;place-items:center;width:22px;height:22px;padding:0;border-color:transparent;background:var(--_surface);color:var(--_muted);opacity:0;transition:opacity .12s}
   .hit:hover .take,.hit:focus-within .take{opacity:1}
