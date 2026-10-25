@@ -4,12 +4,13 @@
   // encodes, its code points, export). A toolbar holds undo and redo with the history, examples,
   // saved drafts, sharing, the theme, the language, preferences and sources.
   import { untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
   import { isSequence, parse, write } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
+  import forms from '../data/component-forms.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES } from './lib/examples.js'
   import { drafts as storedDrafts, forget, fromText, keep, toText } from './lib/projects.js'
@@ -34,7 +35,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts })
+  const babel = babelStoneAdapter({ ids, parts, forms })
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at */
@@ -210,10 +211,17 @@
       <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
     </section>
 
-    <section class="pane tree" aria-label={t('ids.structure')}>
-      <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
-      <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
-    </section>
+    <div class="middle">
+      <section class="pane tree" aria-label={t('ids.structure')}>
+        <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+        <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+      </section>
+      <section class="pane results" aria-label={t('ids.search.title')}>
+        <h2 class="label">{t('ids.search.title')}</h2>
+        <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
+          onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+      </section>
+    </div>
 
     <section class="pane output" aria-label={t('app.output')}>
       <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
@@ -302,8 +310,8 @@
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
-  .tree-box{--ids-part-size:clamp(32px,4.2vw,56px);--ids-part-height:clamp(52px,7vw,110px)}
-  .preview{position:relative;display:grid;--ids-preview-size:100%}
+  .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
+  .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
@@ -324,21 +332,27 @@
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
   .foot .link{color:inherit}
 
-  /* Two columns: input beside the tree, the output under both. */
+  .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .results{gap:6px;max-height:min(720px,80dvh);overflow:auto}
+  /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
     .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
-  /* Three columns filling the window: input, tree, output, each scrolling on its own. */
+  /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
-    .output{grid-column:auto;display:flex;align-items:stretch}
-    .tree{justify-content:center}
-    .tree-box{width:min(100%,calc(100dvh - 290px))}
+    .middle{--_tree-size:min(100%,max(240px,calc(100dvh - 540px)));min-height:0}
+    .tree{flex:none;justify-content:flex-start}
+    .tree-box{width:var(--_tree-size)}
+    .output{grid-column:auto;display:flex;flex-direction:column}
+    .results{flex:1;min-height:0;max-height:none;overflow:hidden}
+    .results :global(.ids-search-results){flex:1;min-height:0}
+    .results :global(.hits){flex:1;min-height:0;overflow:auto}
+    .results :global(.empty){margin:auto}
   }
-  /* On a phone: the mark, undo and redo, and one menu holding the rest. */
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}

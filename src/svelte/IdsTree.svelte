@@ -147,11 +147,12 @@
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Strokes","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:16px;color:var(--_ink)}
-  .ids-tree-root{display:grid;width:min(100%,420px);max-height:100%}
+  .ids-tree-root{display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0}
+  .ids-tree-root > *{height:100%;min-height:0}
   :where(.ids-tree) button{font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);cursor:pointer}
   :where(.ids-tree) button:disabled{cursor:default;opacity:.55}
   :where(.ids-tree) button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-node{position:relative;display:flex;flex-direction:column;min-width:0;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;
+  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;
     transition:border-color .12s,background-color .12s}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
@@ -161,8 +162,8 @@
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
   .ids-unwrap{padding:0 5px;font-size:13px;line-height:1.2;color:var(--_muted);border-color:transparent;background:none}
   .ids-unwrap:not(:disabled):hover{color:var(--_fault);border-color:var(--_fault)}
-  .ids-parts{flex:1;display:flex;gap:6px;min-width:0}
-  .ids-cell{flex:1;display:grid;min-width:0}
+  .ids-parts{flex:1;display:flex;gap:6px;min-width:0;min-height:0}
+  .ids-cell{flex:1;display:grid;min-width:0;min-height:0}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits
@@ -190,11 +191,11 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
-  .ids-part{display:grid;place-items:center;min-width:44px;min-height:var(--ids-part-height,52px);padding:2px 6px;font-size:var(--ids-part-size,32px);line-height:1.1;
+  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:44px;min-height:0;box-sizing:border-box;padding:2px 6px;font-size:var(--ids-part-size,32px);line-height:1.1;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:1px solid var(--_line);border-radius:8px}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
   .ids-part.empty{font-size:20px;color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
-  .ids-tree-root > .ids-part{aspect-ratio:1;font-size:min(30vw,140px);min-height:120px}
+  .ids-tree-root > .ids-part{font-size:min(30vw,140px)}
   .ids-tree-root > .ids-part.empty{font-size:48px}
   .ids-part.chosen{border:2px solid var(--_accent);padding:1px 5px;background:var(--_accent-light)}
   .ids-part.over{border:2px solid var(--_accent);border-style:solid}
