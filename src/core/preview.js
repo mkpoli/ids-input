@@ -139,7 +139,10 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * @returns {string}
  */
 export function drawingSvg(drawing, { background = null, ink = '#000000', padding = 0, size = 1000, placeholders = false } = {}) {
-  const pad = Math.round(Math.max(0, Math.min(padding, 0.5)) * 1000 * 100) / 100
+  // Every number written is a finite number, whatever it was handed.
+  const num = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback
+  const pad = Math.round(Math.max(0, Math.min(num(padding, 0), 0.5)) * 1000 * 100) / 100
+  size = Math.max(1, Math.round(num(size, 1000)))
   const span = 1000 + 2 * pad, fill = colour(ink, '#000000')
   const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${span} ${span}" width="${size}" height="${size}">`]
   const back = background === null ? null : colour(background, null)
@@ -148,8 +151,11 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   if (cut) out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/><path d="${cut}" fill="#000"/></mask>`)
   if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
   if (placeholders) for (const slot of drawing.slots ?? []) {
-    const p = placeholder(slot.box, drawing.stroke?.[0] ?? STROKE)
-    out.push(`<rect x="${p.x}" y="${p.y}" width="${p.width}" height="${p.height}" rx="${p.rx}" fill="none" stroke="${fill}" stroke-opacity="0.5" stroke-width="${p.dot}" stroke-linecap="round" pathLength="${p.dots}" stroke-dasharray="0 1"/>`)
+    const box = (slot.box ?? []).slice(0, 4).map(v => num(v, 0))
+    if (box.length < 4) continue
+    const p = placeholder(box, num(drawing.stroke?.[0], STROKE))
+    const r = v => Math.round(v * 100) / 100
+    out.push(`<rect x="${r(p.x)}" y="${r(p.y)}" width="${r(p.width)}" height="${r(p.height)}" rx="${r(p.rx)}" fill="none" stroke="${fill}" stroke-opacity="0.5" stroke-width="${r(p.dot)}" stroke-linecap="round" pathLength="${p.dots}" stroke-dasharray="0 1"/>`)
   }
   out.push('</svg>')
   return out.join('')
