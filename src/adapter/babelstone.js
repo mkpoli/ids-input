@@ -96,11 +96,22 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, 
         asked.delete(data.id)
         if (data.error === undefined) waiting?.resolve(data.result); else waiting?.reject(new Error(data.error))
       }
+      // A worker that cannot start or answer fails everything asked of it, and the next ask starts another.
+      /** @param {Event} event */
+      const failed = event => {
+        event.preventDefault()
+        searcher?.terminate()
+        searcher = null
+        for (const waiting of asked.values()) waiting.reject(new Error('The search worker failed.'))
+        asked.clear()
+      }
+      searcher.onerror = failed
+      searcher.onmessageerror = failed
     }
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined })
+      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText })
     })
   }
 

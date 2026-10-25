@@ -45,7 +45,7 @@
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name or a reading.
  * @property {(sequence: string, options?: Options) => Promise<string[]>} [encoded] The encoded characters a whole description describes exactly.
- * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core).
+ * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'extra' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core).
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
