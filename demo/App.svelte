@@ -31,7 +31,7 @@
 
   const params = new URLSearchParams(location.search)
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
-  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f3/'
+  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f4/'
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
