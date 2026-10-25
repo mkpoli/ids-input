@@ -17,7 +17,7 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-Demo: <https://mkpoli.github.io/ids-input/>
+Demo: <https://ids.mkpo.li/>
 
 ## Install
 
