@@ -15,15 +15,15 @@
   const t = $derived(translator(messages, locale))
   let extra = $state('')
   const asked = $derived([query, extra].map(q => q.trim()).filter(Boolean).join(' '))
-  let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', hits: IdsHit[], total: number }} */ ({ status: 'idle', hits: [], total: 0 }))
+  let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra', hits: IdsHit[], total: number }} */ ({ status: 'idle', hits: [], total: 0 }))
   let asks = 0
   $effect(() => {
-    const text = asked, find = adapter.findByIds
+    const text = asked, find = adapter.findByIds, most = limit
     if (!text || !find) { found = { status: 'idle', hits: [], total: 0 }; return }
     const id = ++asks, controller = new AbortController()
     untrack(() => { found = { ...found, status: 'loading' } })
-    const timer = setTimeout(() => find(text, { limit, signal: controller.signal }).then(
-      result => { if (id === asks) found = { status: result.problem ? 'idle' : 'ready', hits: result.hits, total: result.total } },
+    const timer = setTimeout(() => find(text, { limit: most, signal: controller.signal }).then(
+      result => { if (id === asks) found = { status: result.problem === 'extra' ? 'extra' : result.problem ? 'idle' : 'ready', hits: result.hits, total: result.total } },
       () => { if (id === asks && !controller.signal.aborted) found = { status: 'failed', hits: [], total: 0 } }), delay)
     return () => { clearTimeout(timer); controller.abort() }
   })
@@ -44,7 +44,8 @@
   <input type="search" bind:value={extra} lang="ja" spellcheck="false" autocomplete="off" aria-label={t('ids.search.more')} placeholder="⿰？口　木木" title={t('ids.search.hint')} />
   <p class="count" aria-live="polite">
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
-    {:else if asked && found.status !== 'idle'}<span lang="ja" class="asked">{asked}</span>{t('ids.search.count', { count: found.total })}{/if}
+    {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
+    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}<span lang="ja" class="asked">{asked}</span>{t('ids.search.count', { count: found.total })}{/if}
   </p>
   {#if found.hits.length}
     <ol class="hits" class:stale={found.status === 'loading'}>
