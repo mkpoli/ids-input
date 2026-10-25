@@ -21,6 +21,9 @@ describe('a drawing as an SVG file', () => {
     expect(cut).toContain('<mask id="cut">')
     expect(cut).toContain('mask="url(#cut)"')
   })
+  it('keeps a line break or a tab in path data as the separator it is', () => {
+    expect(drawingSvg({ d: 'M10\n20\tL30 40Z' })).toContain('<path d="M10 20 L30 40Z"')
+  })
   it('refuses a colour that is not a hex colour', () => {
     const svg = drawingSvg(drawing, { ink: 'red"/><script>', background: 'url(x)' })
     expect(svg).toContain('fill="#000000"')

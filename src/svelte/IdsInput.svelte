@@ -36,6 +36,7 @@
       const typed = isSequence(value) ? value : ''
       editor.reset(typed)
       if (!typed && of) editor.lookup.read(of).then(found => {
+        if (char !== of) return
         const first = found?.status === 'ready' ? found.sequences.find(s => !parse(s.text, { open: true }).problem) : undefined
         if (!editor.draft && first) editor.reset(first.text)
       })

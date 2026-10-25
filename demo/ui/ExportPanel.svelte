@@ -14,9 +14,11 @@
 
   async function save() {
     if (!drawing) return
+    // The click's drawing, name and settings: the export runs on after the page has moved on.
+    const drawn = drawing, name = sequence, settings = $state.snapshot(s)
     try {
-      if (s.format === 'svg') download(new Blob([svgOf(drawing, s)], { type: 'image/svg+xml' }), fileName(sequence, 'svg'))
-      else download(await pngOf(drawing, s), fileName(sequence, 'png'))
+      if (settings.format === 'svg') download(new Blob([svgOf(drawn, settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
+      else download(await pngOf(drawn, settings), fileName(name, 'png'))
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {

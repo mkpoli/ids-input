@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 
-// A static site: relative asset URLs, so it works under any path (GitHub Pages serves it under /ids-input/).
+// A static site served at the root of https://ids.mkpo.li/ (GitHub Pages with a custom domain).
 export default defineConfig({
   root: import.meta.dirname,
-  base: './',
+  base: '/',
   plugins: [svelte()],
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
     rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, embed: `${import.meta.dirname}/embed.html` } } },
