@@ -54,6 +54,8 @@
   "app.inspired.yedict": "Choosing a cell then an operator to split it, an operator on an operator to swap it with its parts kept, × to take a level away, and a list of hard-to-type components.",
   "app.inspired.zitools": "Building a sequence with operator buttons in an interactive editor beside direct input, a palette of hard-to-type components, and ASCII operator names.",
   "app.language": "Language",
+  "app.menu": "Menu",
+  "app.more": "More",
   "app.output": "Output",
   "app.prefs.composer": "Preview drawings from",
   "app.prefs.composerHint": "A han-compose export folder (export-web). Empty uses the default.",

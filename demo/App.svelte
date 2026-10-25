@@ -21,6 +21,8 @@
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
   import Menu from './ui/Menu.svelte'
+  import MenuList from './ui/MenuList.svelte'
+  import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ThemeSwitch from './ui/ThemeSwitch.svelte'
@@ -125,7 +127,7 @@
     ]
   })
 
-  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false)
+  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
   /** @param {KeyboardEvent} event */
   function keys(event) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !event.shiftKey) { event.preventDefault(); keepDraft(); return }
@@ -148,14 +150,14 @@
     </a>
     <nav class="tools" aria-label={t('app.toolbar')}>
       <div class="group">
-        <button type="button" class="tool" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
-          <Icon name="undo" />{#if keyHints}<kbd>{shortcut('mod+z')}</kbd>{/if}</button>
-        <button type="button" class="tool" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>
-          <Icon name="redo" />{#if keyHints}<kbd>{shortcut('mod+shift+z')}</kbd>{/if}</button>
-        <Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} />
+        <button type="button" class="tool key" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+          <Icon name="undo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
+        <button type="button" class="tool key" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>
+          <Icon name="redo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+        <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
       </div>
-      <Menu label={t('app.drafts')} icon="folder" items={draftItems} {keyHints} />
-      <Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} />
+      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} {keyHints} /></span>
+      <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} /></span>
     </nav>
     <div class="end">
       <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
@@ -166,6 +168,7 @@
       <button type="button" class="tool" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} onclick={() => prefsOpen = true}><Icon name="settings" /></button>
       <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
     </div>
+    <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
   </header>
 
   <main class="work" bind:this={work}>
@@ -217,13 +220,32 @@
 </div>
 
 <Toast {toast} ondone={() => toast = null} />
+<Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
+  <div class="more-sheet">
+    <div class="more-row">
+      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
+      <select class="locale" bind:value={locale} aria-label={t('app.language')}>
+        {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
+      </select>
+    </div>
+    <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.drafts')} items={draftItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
+      { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
+      { label: t('app.prefs.title'), icon: 'settings', run: () => prefsOpen = true },
+      { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
+    ]} />
+  </div>
+</Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 
 <style>
   .app{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:8px 16px;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));background:color-mix(in srgb,var(--bg) 88%,transparent);
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
@@ -235,7 +257,13 @@
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
   :global(.tool:disabled){opacity:.4;cursor:default}
   :global(.tool:focus-visible),.locale:focus-visible,.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  :global(.tool kbd){font:500 10px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
+  /* A key hint in the corner of its button, under the icon. */
+  .tool.key{position:relative;height:36px;min-width:46px;justify-content:center;padding:0 8px 8px}
+  .tool.key kbd{position:absolute;right:4px;bottom:2px;font:500 8.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted);pointer-events:none}
+  .wide-only{display:contents}
+  .phone-only{display:none}
+  .more-sheet{display:flex;flex-direction:column;gap:14px}
+  .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
   .locale{height:32px;padding:0 6px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
 
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
@@ -283,12 +311,13 @@
     .tree{justify-content:center}
     .tree-box{width:min(100%,calc(100dvh - 290px))}
   }
+  /* On a phone: the mark, undo and redo, and one menu holding the rest. */
   @media (max-width:640px){
-    .bar{padding:8px 12px;gap:6px}
-    .brand{margin-right:0}
-    .brand span,.wide,.bar :global(.tool kbd),.bar :global(.menu-wrap .tool span){display:none}
-    .end{margin-left:0;gap:4px}
-    .locale{max-width:92px}
+    .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+    .brand{margin-right:auto}
+    .brand span,.wide,.wide-only,.end,.tool.key kbd{display:none}
+    .tool.key{height:32px;min-width:40px;padding:0 8px}
+    .phone-only{display:inline-flex}
     .grow{max-height:440px;overflow:auto}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}

@@ -52,6 +52,8 @@
   "app.inspired.yedict": "枠を選んで演算子を押すと分割、演算子に演算子で部品を保ったまま交換、×で一段戻す操作、入力しにくい部品の一覧。",
   "app.inspired.zitools": "直接入力と並ぶ対話式の組字エディタと演算子ボタン、入力しにくい部品の一覧、ASCIIの演算子名。",
   "app.language": "言語",
+  "app.menu": "メニュー",
+  "app.more": "その他",
   "app.output": "出力",
   "app.prefs.composer": "プレビューの字形データ",
   "app.prefs.composerHint": "han-composeのexport-web出力のフォルダ。空欄なら既定値。",

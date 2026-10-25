@@ -174,13 +174,13 @@ try {
   assert((await value()).startsWith('⿰木'), `found: ${await value()}`)
   pass('a component found by its code point replaces the chosen part')
 
-  // The preview without its export: placeholders, and a badge saying it could not compose.
-  await page.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+  // The preview without its export: placeholders and no badge, since nothing could be tried.
+  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   assert(await page.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
-  assert(await page.locator('.ids-preview-badge').textContent() === 'Could not compose', 'the badge says so')
+  assert(await page.locator('.ids-preview-badge').count() === 0, 'no badge without data')
   assert(await page.locator('.export .primary').isDisabled(), 'nothing to export')
   const bad = await open(`?composer=${encodeURIComponent('http://[')}`)
-  await bad.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+  await bad.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   await bad.context().close()
   pass('the preview degrades without its export, or with a base that is no URL')
   assert(!page.errors.length, `page errors: ${page.errors.join('; ')}`)
@@ -239,7 +239,7 @@ try {
   await drawn.locator('.prefs input[type="checkbox"]').click()
   await drawn.keyboard.press('Escape')
   assert(await drawn.locator('.ids-kbd').count() === 0, 'key hints hidden')
-  await drawn.locator('select.locale').selectOption('ja')
+  await drawn.locator('.bar select.locale').selectOption('ja')
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
   pass('theme switch, no flash, key hints off, the language')
   assert(!drawn.errors.length, `page errors: ${drawn.errors.join('; ')}`)
@@ -258,15 +258,41 @@ try {
   await embed.context().close()
   pass('IdsInput embedded: keys, undo and Use')
 
-  // Screenshots, light and dark through the theme switch, at three widths; no sideways scroll.
+  // On a phone: a top bar of undo, redo and one menu, which holds the rest.
+  const phone = await open('', { width: 375, height: 812 })
+  assert(await phone.locator('.bar .locale').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
+  await phone.locator('.bar .more').click()
+  await phone.locator('dialog[open] .more-sheet').waitFor()
+  await phone.locator('dialog[open] .item', { hasText: 'About' }).click()
+  await phone.locator('dialog[open] .about').waitFor()
+  await phone.keyboard.press('Escape')
+  await phone.context().close()
+  pass('the phone bar: undo, redo and a menu sheet holding the rest')
+
+  // Screenshots, light and dark through the theme switch, at three widths; no sideways scroll. The
+  // phone is shot at the top, the middle and the foot of the page, the bar staying at the top.
   for (const scheme of ['light', 'dark']) for (const [name, width, height] of [['desktop', 1440, 900], ['tablet', 1024, 1200], ['phone', 375, 812]]) {
     const shot = await open('#' + encodeURIComponent('⿰𠤕⿱龴疋'), { width, height })
-    await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
+    if (name === 'phone') {
+      await shot.locator('.bar .more').click()
+      await shot.locator('dialog[open]').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
+      if (scheme === 'dark') await shot.locator('dialog[open]').screenshot({ path: join(shots, 'phone-menu-dark.png') })
+      else await shot.locator('dialog[open]').screenshot({ path: join(shots, 'phone-menu-light.png') })
+      await shot.keyboard.press('Escape')
+    } else await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
     await shot.locator('.ids-part').nth(1).click()
-    await shot.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+    await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
     await shot.evaluate(() => document.fonts.ready)
     assert(await shot.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no sideways scroll at ${width}`)
-    await shot.screenshot({ path: join(shots, `${name}-${scheme}.png`), fullPage: name !== 'desktop' })
+    if (name === 'phone') {
+      for (const [at, where] of [[0, 'top'], [0.5, 'middle'], [1, 'foot']]) {
+        await shot.evaluate(share => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * share), at)
+        await shot.waitForTimeout(150)
+        const top = await shot.locator('.bar').evaluate(el => el.getBoundingClientRect().top)
+        assert(top === 0, `the bar stays at the top when scrolled to the ${where} (${top})`)
+        await shot.screenshot({ path: join(shots, `phone-${where}-${scheme}.png`) })
+      }
+    } else await shot.screenshot({ path: join(shots, `${name}-${scheme}.png`), fullPage: name !== 'desktop' })
     if (name === 'desktop') {
       await shot.locator('.ids-part').nth(1).click({ button: 'right' })
       await shot.locator('.ids-menu').screenshot({ path: join(shots, `menu-${scheme}.png`) })

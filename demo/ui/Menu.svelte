@@ -1,8 +1,11 @@
+<script module>
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, run?: () => void } | { heading: string } | { separator: true }} Item */
+</script>
+
 <script>
   // A menu behind a button: items with an optional icon, a shortcut on the right, and a separator
   // or a heading between groups. Arrow keys move, Escape closes and gives the focus back.
   import Icon from './Icon.svelte'
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, run?: () => void } | { heading: string } | { separator: true }} Item */
   /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean }} */
   let { label, icon, items, align = 'start', text = true, keyHints = true } = $props()
   let open = $state(false)

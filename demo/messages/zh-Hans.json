@@ -52,6 +52,8 @@
   "app.inspired.yedict": "选中格子后点结构符即拆分，在结构符上点结构符即替换并保留部件，×退回一层，以及难输入字元表。",
   "app.inspired.zitools": "与直接输入并列的交互式组字编辑与结构符按钮、难输入部件表、ASCII结构符名。",
   "app.language": "语言",
+  "app.menu": "菜单",
+  "app.more": "更多",
   "app.output": "输出",
   "app.prefs.composer": "预览字形数据来源",
   "app.prefs.composerHint": "han-compose的export-web输出目录。留空则用默认值。",

@@ -52,6 +52,8 @@
   "app.inspired.yedict": "칸을 고르고 연산자를 누르면 분할, 연산자 위에 연산자를 누르면 부품을 둔 채 교체, ×로 한 단계 되돌리기, 입력하기 어려운 부품표.",
   "app.inspired.zitools": "직접 입력과 나란한 대화형 조합 편집기와 연산자 버튼, 입력하기 어려운 부품표, ASCII 연산자 이름.",
   "app.language": "언어",
+  "app.menu": "메뉴",
+  "app.more": "더 보기",
   "app.output": "출력",
   "app.prefs.composer": "미리보기 자형 데이터",
   "app.prefs.composerHint": "han-compose export-web 출력 폴더. 비우면 기본값.",

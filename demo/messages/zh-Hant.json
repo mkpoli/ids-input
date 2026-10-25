@@ -52,6 +52,8 @@
   "app.inspired.yedict": "選中格子後點結構符即拆分，在結構符上點結構符即替換並保留部件，×退回一層，以及難輸入字元表。",
   "app.inspired.zitools": "與直接輸入並列的互動式組字編輯與結構符按鈕、難輸入部件表、ASCII結構符名。",
   "app.language": "語言",
+  "app.menu": "選單",
+  "app.more": "更多",
   "app.output": "輸出",
   "app.prefs.composer": "預覽字形資料來源",
   "app.prefs.composerHint": "han-compose的export-web輸出目錄。留空則用預設值。",
