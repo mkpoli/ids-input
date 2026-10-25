@@ -4,12 +4,13 @@
   // encodes, its code points, export). A toolbar holds undo and redo with the history, examples,
   // saved drafts, sharing, the theme, the language, preferences and sources.
   import { untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
   import { isSequence, parse, write } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
+  import forms from '../data/component-forms.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES } from './lib/examples.js'
   import { drafts as storedDrafts, forget, fromText, keep, toText } from './lib/projects.js'
@@ -34,7 +35,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts })
+  const babel = babelStoneAdapter({ ids, parts, forms })
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at */
@@ -192,26 +193,33 @@
       <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
     </section>
 
-    <section class="pane output" aria-label={t('app.output')}>
-      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
-      <div class="details">
-        <div class="readout">
-          <div class="seq-row">
-            <output class="seq" lang="ja">{editor.whole}</output>
-            {#each encoded as ch (ch)}
-              <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
-            {/each}
-            <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+    <div class="side">
+      <section class="pane output" aria-label={t('app.output')}>
+        <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
+        <div class="details">
+          <div class="readout">
+            <div class="seq-row">
+              <output class="seq" lang="ja">{editor.whole}</output>
+              {#each encoded as ch (ch)}
+                <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
+              {/each}
+              <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+            </div>
+            <details class="points">
+              <summary>{t('app.codePoints', { count: points.length })}</summary>
+              <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
+              <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
+            </details>
           </div>
-          <details class="points">
-            <summary>{t('app.codePoints', { count: points.length })}</summary>
-            <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
-            <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
-          </details>
+          <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
-        <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
-      </div>
-    </section>
+      </section>
+      <section class="pane results" aria-label={t('ids.search.title')}>
+        <h2 class="label">{t('ids.search.title')}</h2>
+        <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
+          onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+      </section>
+    </div>
   </main>
 
   <footer class="foot">
@@ -301,21 +309,34 @@
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
   .foot .link{color:inherit}
 
-  /* Two columns: input beside the tree, the output under both. */
+  .side{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .results{max-height:min(720px,80dvh);overflow:auto}
+  @media (max-width:640px){.side{gap:12px}}
+  /* Two columns: input beside the tree, the output and the search under both. */
   @media (min-width:880px){
     .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
-    .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+    .side{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}
+    .output{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
   /* Three columns filling the window: input, tree, output, each scrolling on its own. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
-    .output{grid-column:auto;display:flex;align-items:stretch}
+    /* The output and the search share the last column, each scrolling on its own. */
+    .side{grid-column:auto;display:flex;align-items:stretch;min-height:0;overflow:auto}
+    .output{display:flex;align-items:stretch;flex:none}
+    .results{flex:none;max-height:none}
     .tree{justify-content:center}
     .tree-box{width:min(100%,calc(100dvh - 290px))}
   }
   /* On a phone: the mark, undo and redo, and one menu holding the rest. */
+  /* Four columns on a wide screen: the search beside the output. */
+  @media (min-width:1720px){
+    .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(720px,800px)}
+    .side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow:visible;align-items:stretch}
+    .output,.results{overflow:auto;min-height:0;max-height:none}
+  }
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}

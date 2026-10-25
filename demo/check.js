@@ -57,6 +57,24 @@ try {
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
   pass('the workshop opens on 疑, matched to its character')
 
+  // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
+  const started = Date.now()
+  await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
+  const firstResults = Date.now() - started
+  assert(await page.locator('.ids-search-results .hit .char').first().textContent() === '疑', 'the exact description first')
+  assert(await page.locator('.ids-search-results .hit').nth(1).locator('mark').count() === 1, 'a deeper match is marked')
+  const many = await page.locator('.ids-search-results .hit').count()
+  await page.locator('.ids-search-results input').fill('冫')
+  await page.waitForFunction(() => document.querySelector('.ids-search-results .hit .char')?.textContent === '凝', null, { timeout: 15000 })
+  assert(await page.locator('.ids-search-results .hit').count() < many, 'a further term narrows the hits')
+  await page.locator('.ids-search-results .hit .take').first().click()
+  assert(await page.locator('.from-field input').inputValue() === '凝', 'a hit hands its parts to Take parts from')
+  await page.locator('.ids-search-results .hit .open').first().click()
+  assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
+  await page.locator('.ids-search-results input').fill('')
+  await page.locator('.bar button[aria-label^="Undo"]').click()
+  pass(`the search follows the tree (first results ${firstResults} ms after load, index built in a worker), narrows by terms, opens a hit and takes its parts`)
+
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
   assert(JSON.stringify(groups) === JSON.stringify([['1 part', 3], ['3 parts', 2], ['2 parts', 13]]), `groups: ${JSON.stringify(groups)}`)
@@ -145,6 +163,7 @@ try {
   pass('the context menu splits a part and copies its sequence')
 
   // The parts palette: a part dragged onto a slot, and one picked into the chosen slot.
+  await page.getByRole('tab', { name: 'Parts', exact: true }).click()
   await page.locator('.parts-grid .part').first().waitFor()
   const first = await page.locator('.parts-grid .part').first().textContent()
   await page.locator('.parts-grid .part').first().dragTo(page.locator('.ids-part.empty'))
@@ -315,6 +334,7 @@ try {
       await shot.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
       await shot.waitForTimeout(300)
       await shot.locator('.output').screenshot({ path: join(shots, `output-${scheme}.png`) })
+      await shot.locator('.results').screenshot({ path: join(shots, `results-${scheme}.png`) })
       await shot.getByRole('button', { name: 'About' }).click()
       await shot.locator('dialog[open]').screenshot({ path: join(shots, `about-${scheme}.png`) })
     }
