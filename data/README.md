@@ -1,0 +1,69 @@
+# Data
+
+Each file keeps its own licence; the MIT licence of the code does not cover them.
+
+## `babelstone-ids.tsv.gz`
+
+BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
+<https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date 2025-06-27 (Unicode 16.0 edition), SHA-256
+`cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1`. 97,680 ideographs, 777 KB
+gzipped, 2.2 MB as text.
+
+- Licence: public domain. Note 2 of the file's header states that IDS sequences are facts not
+  eligible for copyright and that "anyone is free to make use of the IDS data provided in this file
+  for personal or commercial purposes without asking permission or providing attribution". It is
+  credited all the same.
+- Format: one line per ideograph, `char<TAB>sequences`, every alternative the file gives,
+  space-separated, each with the source regions it describes (`⿰氵骨(GHTJKPV)`). The maintainer's `*`
+  notes are left out. `{n}` is BabelStone's unencoded component n and `？` an unrepresentable one.
+- The header warns that a sequence describes a character's form in the regions tagged, not an
+  absolute glyph; every alternative is kept with its regions.
+- The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
+  from CHISE, and on IRG submissions, edited by its maintainer. Only BabelStone's file is read here.
+- Built by `scripts/build_ids_data.py`.
+
+## `ids-parts.json`
+
+The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
+many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
+hard to type or a CJK stroke. 1,679 parts (674 common, 967 hard to type, 38 strokes), 42 KB, 11 KB
+gzipped. Built by `scripts/build_ids_parts.py`, whose docstring gives the rules.
+
+- Licence: **CC BY-SA 3.0**, for the file as a whole, because the `first` column adapts KanjiVG's
+  stroke data, which is shared alike. Anything made from that column must be shared under the same
+  licence. The other columns come from public-domain sequences, MIT-licensed decomposition choices
+  and Unicode data, whose licences ask only for the notices below.
+- Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
+  first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+
+Sources:
+
+- BabelStone IDS, as above: which components the sequences use, how many ideographs use each, and
+  which split only into strokes.
+- hfhchan/ids v1.0.2, `ids-20240112.txt`, Copyright (c) 2021 Henry Chan, MIT licence
+  (<https://github.com/hfhchan/ids>, SHA-256
+  `7466c8bd9151f1db5ef247fcbf84d7de4b36a6ec741e793c54972aa3dcbc0af4`): which components are left
+  undecomposed (王 is not ⿱一土).
+- Unihan 18.0.0 (Unicode Han Database, UAX #38), Copyright Unicode, Inc., Unicode License v3
+  (<https://www.unicode.org/license.txt>, `Unihan.zip` SHA-256
+  `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`): stroke counts
+  (`kTotalStrokes`), the one-stroke ideographs counted as strokes, and the common set (`kJoyoKanji`
+  for 常用漢字; `kTGH` positions 1–3500 for the first level of the 通用规范汉字表).
+- KanjiVG release r20260714, Copyright (C) 2009-2013 Ulrich Apel, CC BY-SA 3.0
+  (<https://kanjivg.tagaini.net/>, `kanjivg-20260714.xml.gz` SHA-256
+  `d4a8e5e11533fe6a5d81a158b2c153964322641d2982c90a919461f3c06dca6b`): the type of each character's
+  first stroke, mapped to 横 豎 撇 點 折.
+
+Notes on the columns:
+
+- The mapping of KanjiVG's stroke types to the five classes is an editorial table of the build script
+  (提 as 横, 豎鉤 as 豎, 捺 and 提捺 as 點, every turning stroke as 折). Only bare types are mapped: a
+  suffixed type (㇑a, given both to the top dot of 亠 and the vertical of 山) or an alternative whose
+  sides disagree is no witness. A class is kept when all witnesses agree, or, from 3 witnesses on,
+  when at least 90% do. A component's first stroke can depend on its host (𠂇 starts with 一 in 左 but
+  with 丿 in 右), so such a part has no class. KanjiVG follows Japanese stroke order and types the
+  first stroke of 白 as a dot, so 白 is classed 點. In this build 631 of the 967 hard-to-type parts
+  and 181 of the 674 common ones have no class.
+- A stroke count is Unihan's first `kTotalStrokes` value, which Unihan gives for the zh-Hans form
+  where forms differ. A CJK stroke counts 1 and is marked derived; a part Unihan lacks takes the sum
+  over the leaves of its first sequence whose leaves all have counts, marked derived, or stays null.

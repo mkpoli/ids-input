@@ -4,16 +4,48 @@
   "description": "Headless editing of ideographic description sequences (IDS): parse, write and edit IDS trees, with Svelte components for an editor, a parts palette and a decomposition browser.",
   "license": "MIT",
   "author": "mkpoli",
-  "repository": { "type": "git", "url": "git+https://github.com/mkpoli/ids-input.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mkpoli/ids-input.git"
+  },
   "homepage": "https://mkpoli.github.io/ids-input/",
-  "keywords": ["ids", "ideographic description sequence", "cjk", "han", "kanji", "hanzi", "input", "svelte"],
+  "keywords": [
+    "ids",
+    "ideographic description sequence",
+    "cjk",
+    "han",
+    "kanji",
+    "hanzi",
+    "input",
+    "svelte"
+  ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "*.css"
+  ],
   "exports": {
-    ".": { "types": "./types/core/index.d.ts", "default": "./src/core/index.js" },
+    ".": {
+      "types": "./types/core/index.d.ts",
+      "default": "./src/core/index.js"
+    },
+    "./adapter": {
+      "types": "./types/adapter/index.d.ts",
+      "default": "./src/adapter/index.js"
+    },
+    "./fonts.css": "./fonts/fonts.css",
+    "./fonts/*": "./fonts/*",
+    "./data/*": "./data/*",
     "./package.json": "./package.json"
   },
-  "files": ["src", "types", "LICENSE", "README.md"],
+  "files": [
+    "src",
+    "types",
+    "data",
+    "fonts",
+    "scripts",
+    "LICENSE",
+    "README.md"
+  ],
   "scripts": {
     "test": "bun test tests",
     "types": "tsc -p tsconfig.json",
