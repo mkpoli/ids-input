@@ -102,7 +102,7 @@
   :where(.ids-search) :is(button,input):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .ids-title{font-size:11px;color:var(--_muted)}
   .ids-pick-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:3px;border-radius:10px;background:var(--_surface-subtle);border:1px solid var(--_line)}
-  .ids-pick-tabs button{flex:1;border:0;background:transparent;font-size:12.5px;padding:6px 10px;border-radius:7px;color:var(--_muted)}
+  .ids-pick-tabs button{flex:1 1 auto;border:0;background:transparent;font-size:12.5px;padding:6px 8px;white-space:nowrap;border-radius:7px;color:var(--_muted)}
   .ids-pick-tabs button.active{background:var(--_surface);color:var(--_ink);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
   .ids-pick-panel{min-width:0}
   .ids-pick-panel[hidden]{display:none}

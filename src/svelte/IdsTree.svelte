@@ -189,7 +189,7 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
-  .ids-part{display:grid;place-items:center;min-width:44px;min-height:52px;padding:2px 6px;font-size:32px;line-height:1.1;
+  .ids-part{display:grid;place-items:center;min-width:44px;min-height:var(--ids-part-height,52px);padding:2px 6px;font-size:var(--ids-part-size,32px);line-height:1.1;
     font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:1px solid var(--_line);border-radius:8px}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
   .ids-part.empty{font-size:20px;color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
