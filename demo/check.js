@@ -31,8 +31,8 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 const pass = message => console.log('PASS', message)
 const browser = await chromium.launch({ executablePath })
 /** A fresh page; the real export is another site's, so the check never reaches it. */
-async function open(path = '', { width = 1440, height = 900, scheme = 'light' } = {}) {
-  const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 2, colorScheme: scheme, acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] })
+async function open(path = '', { width = 1440, height = 900, scheme = 'light', locale } = {}) {
+  const context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 2, colorScheme: scheme, ...(locale ? { locale } : {}), acceptDownloads: true, permissions: ['clipboard-read', 'clipboard-write'] })
   await context.route('https://glyphatlas.org/**', route => route.abort())
   const page = await context.newPage()
   page.errors = []
@@ -251,6 +251,14 @@ try {
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
   pass('theme switch, no flash, key hints off, the language')
   assert(!drawn.errors.length, `page errors: ${drawn.errors.join('; ')}`)
+
+  // A browser set to Traditional Chinese opens the traditional catalogue.
+  const zhTw = await open('', { locale: 'zh-TW' })
+  assert(await zhTw.locator('.bar select.locale').inputValue() === 'zh-Hant', `zh-TW locale: ${await zhTw.locator('.bar select.locale').inputValue()}`)
+  assert(await zhTw.locator('.ids-op-label').first().textContent() === '單部件', 'Traditional Chinese throughout')
+  assert(!zhTw.errors.length, `page errors: ${zhTw.errors.join('; ')}`)
+  await zhTw.context().close()
+  pass('a Traditional Chinese browser opens the traditional catalogue')
 
   // IdsInput as one block in a host page: it starts from 疑, takes operator keys and hands a whole sequence over.
   const embed = await open('embed.html')

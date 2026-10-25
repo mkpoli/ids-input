@@ -41,8 +41,12 @@
   const previewAt = at => { if (!previews.has(at)) previews.set(at, composerPreview({ base: at })); return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(at)) }
   const adapter = $derived({ ...babel, preview: previewAt(base) })
 
-  const wanted = params.get('lang') ?? load('locale', null) ?? navigator.language
-  let locale = $state(LOCALES.find(([code]) => code === wanted)?.[0] ?? LOCALES.find(([code]) => wanted?.startsWith(code.split('-')[0]))?.[0] ?? 'en')
+  const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
+  // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
+  const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
+  let locale = $state(LOCALES.find(([code]) => code === wanted)?.[0]
+    ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
+    ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
   $effect(() => save('locale', locale))
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
