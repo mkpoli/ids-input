@@ -78,6 +78,16 @@ try {
   await page.locator('.bar button[aria-label^="Undo"]').click()
   pass(`the search follows the tree (first results by ${firstResults} ms after navigation, index built in a worker), narrows by terms, opens a hit and takes its parts`)
 
+  // The search stands under a tree that fills its square frame.
+  const box = await page.locator('.tree-box').boundingBox()
+  const root = await page.locator('.ids-tree-root').boundingBox()
+  const results = await page.locator('.tree .results').boundingBox()
+  assert(await page.locator('.work > *').count() === 3, 'the workshop has three columns')
+  assert(results.y > box.y + box.height - 1, 'the search stands under the tree')
+  assert(Math.abs(results.width - box.width) < 2, `the search is as wide as the tree (${results.width} against ${box.width})`)
+  assert(Math.abs(root.width - root.height) < 2 && root.width > box.width * 0.85, `the tree is square and fills its frame (${root.width}×${root.height} in ${box.width})`)
+  pass('the search sits under the tree, in the middle column')
+
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
   assert(JSON.stringify(groups) === JSON.stringify([['1 part', 3], ['3 parts', 2], ['2 parts', 13]]), `groups: ${JSON.stringify(groups)}`)
@@ -326,6 +336,7 @@ try {
     } else await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
     await shot.locator('.ids-part').nth(1).click()
     await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+    await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
     await shot.evaluate(() => document.fonts.ready)
     assert(await shot.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no sideways scroll at ${width}`)
     if (name === 'phone') {

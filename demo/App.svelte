@@ -195,35 +195,33 @@
     <section class="pane tree" aria-label={t('ids.structure')}>
       <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
       <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
-    </section>
-
-    <div class="side">
-      <section class="pane output" aria-label={t('app.output')}>
-        <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
-        <div class="details">
-          <div class="readout">
-            <div class="seq-row">
-              <output class="seq" lang="ja">{editor.whole}</output>
-              {#each encoded as ch (ch)}
-                <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
-              {/each}
-              <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
-            </div>
-            <details class="points">
-              <summary>{t('app.codePoints', { count: points.length })}</summary>
-              <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
-              <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
-            </details>
-          </div>
-          <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
-        </div>
-      </section>
-      <section class="pane results" aria-label={t('ids.search.title')}>
+      <section class="results" aria-label={t('ids.search.title')}>
         <h2 class="label">{t('ids.search.title')}</h2>
         <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
           onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
       </section>
-    </div>
+    </section>
+
+    <section class="pane output" aria-label={t('app.output')}>
+      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
+      <div class="details">
+        <div class="readout">
+          <div class="seq-row">
+            <output class="seq" lang="ja">{editor.whole}</output>
+            {#each encoded as ch (ch)}
+              <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
+            {/each}
+            <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+          </div>
+          <details class="points">
+            <summary>{t('app.codePoints', { count: points.length })}</summary>
+            <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
+            <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
+          </details>
+        </div>
+        <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
+      </div>
+    </section>
   </main>
 
   <footer class="foot">
@@ -291,7 +289,7 @@
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
-  .tree-box{--ids-part-size:clamp(32px,4.2vw,56px);--ids-part-height:clamp(52px,7vw,110px)}
+  .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
@@ -313,33 +311,24 @@
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
   .foot .link{color:inherit}
 
-  .side{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .results{max-height:min(720px,80dvh);overflow:auto}
-  @media (max-width:640px){.side{gap:12px}}
-  /* Two columns: input beside the tree, the output and the search under both. */
+  .results{display:flex;flex-direction:column;gap:6px;min-width:0;max-height:min(720px,80dvh);overflow:auto;padding-top:14px;border-top:1px solid var(--line)}
+  /* Two columns: input beside the tree, the search under the tree; the output under both. */
   @media (min-width:880px){
     .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
-    .side{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start}
-    .output{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+    .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
-  /* Three columns filling the window: input, tree, output, each scrolling on its own. */
+  /* Three columns filling the window: input, tree with the search under it, output. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
-    /* The output and the search share the last column, each scrolling on its own. */
-    .side{grid-column:auto;display:flex;align-items:stretch;min-height:0;overflow:auto}
-    .output{display:flex;align-items:stretch;flex:none}
-    .results{flex:none;max-height:none}
-    .tree{justify-content:center}
-    .tree-box{width:min(100%,calc(100dvh - 290px))}
-  }
-  /* On a phone: the mark, undo and redo, and one menu holding the rest. */
-  /* Four columns on a wide screen: the search beside the output. */
-  @media (min-width:1720px){
-    .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(720px,800px)}
-    .side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);overflow:visible;align-items:stretch}
-    .output,.results{overflow:auto;min-height:0;max-height:none}
+    .tree{--_tree-size:min(100%,max(240px,calc(100dvh - 480px)));justify-content:flex-start}
+    .tree-box{width:var(--_tree-size)}
+    .output{grid-column:auto;display:flex;flex-direction:column}
+    .results{width:min(100%,var(--_tree-size));align-self:center;flex:1;min-height:0;max-height:none;overflow:hidden;padding-top:12px}
+    .results :global(.ids-search-results){flex:1;min-height:0}
+    .results :global(.hits){flex:1;min-height:0;overflow:auto}
+    .results :global(.empty){margin:auto}
   }
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
