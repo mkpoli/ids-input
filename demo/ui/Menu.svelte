@@ -65,6 +65,7 @@
   .item:disabled{opacity:.45;cursor:default}
   .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .label:lang(ja){font-family:var(--cjk)}
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .sep{height:1px;margin:5px 4px;background:var(--line)}
   .heading{margin:6px 10px 2px;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
