@@ -34,6 +34,7 @@ describe('the search', () => {
   })
   it('takes an empty slot or ？ as any part, a component or a subtree, at any depth', () => {
     expect(chars('⿰？木')).toEqual(['休', '林', '沐', '森', '淋'])
+    expect(chars('⿱⬚口')).toEqual(['杏'])
     expect(chars('⿱＋口')).toEqual(['杏'])
     expect(chars('⿱？⿰木目')).toEqual(['箱'])
     expect(chars('⿱⿰木目？')).toEqual(['想'])
@@ -58,6 +59,10 @@ describe('the search', () => {
     expect(chars('⿰⺡木')).toEqual(['沐'])
     expect(chars('⿰水木')).toEqual(['沐'])
     expect(chars('人')).toEqual(['休', '体'])
+  })
+  it('matches the parts of ⿻ in either order', () => {
+    expect(chars('⿻八十')).toEqual(chars('⿻十八'))
+    expect(chars('⿻八十')[0]).toBe('木')
   })
   it('finds nothing for a shape no character has', () => {
     expect(chars('⿲木木木')).toEqual([])

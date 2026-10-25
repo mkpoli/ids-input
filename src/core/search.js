@@ -4,16 +4,17 @@
 // A query is one or more terms, apart by spaces, and a character is found when every term matches
 // it. A term starting with an operator (or its ASCII name) is a structure: it matches wherever its
 // shape stands in the character's description, at any depth, components opened into their own
-// descriptions as needed, so ⿱木⿰木木 finds 森 (⿱木林, 林 being ⿰木木). An empty slot (＋) or ？ in it
+// descriptions as needed, so ⿱木⿰木木 finds 森 (⿱木林, 林 being ⿰木木). An empty slot (⬚, or a pasted ＋) or ？ in it
 // matches any part, a component or a whole subtree. Any other term is a run of components the
 // character must hold, counted (木木 finds 林 and 森, not 本), at any depth. Components match across
-// their radical and positional forms (⺡, 氵 and 水 are one), from a table of forms.
+// their radical and positional forms (⺡, 氵 and 水 are one), from a table of forms, and ⿻ matches its
+// parts in either order.
 //
 // Hits are ranked by how close they are: a match of the whole description first, then by how deep
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
 import { tokens } from './decompose.js'
 
@@ -51,7 +52,7 @@ export function parseQuery(text) {
   for (const term of written) {
     if (isSequence(term)) {
       /** @type {(t: Tree) => Pattern} */
-      const pattern = t => typeof t === 'string' ? (t === EMPTY || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
+      const pattern = t => typeof t === 'string' ? (EMPTY_MARKS.includes(t) || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
       const tree = pattern(readTree(tokens(term), { at: 0 }))
       /** @type {string[]} */
       const leaves = []
@@ -60,7 +61,7 @@ export function parseQuery(text) {
       collect(tree)
       terms.push({ kind: 'structure', text: term, tree, leaves })
     } else {
-      const leaves = tokens(term).filter(t => isComponent([...t][0]) && t !== UNKNOWN && t !== EMPTY)
+      const leaves = tokens(term).filter(t => isComponent([...t][0]) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
       if (leaves.length) terms.push({ kind: 'components', text: term, leaves })
     }
   }
@@ -194,14 +195,15 @@ export function createSearch(table, { forms = new Map() } = {}) {
     if (typeof pattern === 'string') return typeof data === 'string' && fold(data) === fold(pattern) ? data : null
     if (typeof data !== 'string') {
       if (data.op !== pattern.op || data.parts.length !== pattern.parts.length) return null
-      /** @type {Tree[]} */
-      const parts = []
-      for (let i = 0; i < data.parts.length; i++) {
-        const got = match(pattern.parts[i], data.parts[i], depth, cost)
-        if (got === null) return null
-        parts.push(got)
+      // ⿻ lays its parts over each other, so either order is the same shape.
+      if (pattern.op === '⿻') {
+        const swapped = { op: pattern.op, parts: [pattern.parts[1], pattern.parts[0]] }
+        const trial = { opened: cost.opened }
+        const straight = matchParts(pattern, data, depth, trial)
+        if (straight !== null) { cost.opened = trial.opened; return straight }
+        return matchParts(swapped, data, depth, cost)
       }
-      return parts.some((p, i) => p !== data.parts[i]) ? { ...data, parts } : data
+      return matchParts(pattern, data, depth, cost)
     }
     // A component standing where the pattern has structure: opened into its descriptions.
     if (depth >= OPEN_DEPTH) return null
@@ -211,6 +213,22 @@ export function createSearch(table, { forms = new Map() } = {}) {
       if (got !== null) { cost.opened = trial.opened; return typeof got === 'string' ? got : { ...got, from: data } }
     }
     return null
+  }
+
+  /**
+   * A node's parts matched in order.
+   * @param {{ op: string, parts: Pattern[] }} pattern @param {{ op: string, parts: Tree[], from?: string }} data @param {number} depth @param {{ opened: number }} cost
+   * @returns {Tree | null}
+   */
+  function matchParts(pattern, data, depth, cost) {
+    /** @type {Tree[]} */
+    const parts = []
+    for (let i = 0; i < data.parts.length; i++) {
+      const got = match(pattern.parts[i], data.parts[i], depth, cost)
+      if (got === null) return null
+      parts.push(got)
+    }
+    return parts.some((p, i) => p !== data.parts[i]) ? { ...data, parts } : data
   }
 
   /**
@@ -321,7 +339,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
       }
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
-      const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !terms[0].text.includes(EMPTY) && !terms[0].text.includes(UNKNOWN)
+      const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
       found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -1000 : 0) + best.score })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
