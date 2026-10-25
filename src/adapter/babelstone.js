@@ -69,7 +69,7 @@ export function babelStoneAdapter({ ids, parts, table: given, palette: givenPale
   let palette = givenPalette ? Promise.resolve(givenPalette) : null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
-  /** @type {Map<string, string[]> | null} */
+  /** @type {Promise<Map<string, string[]>> | null} */
   let described = null
 
   /** @param {string | URL} url */
@@ -101,15 +101,18 @@ export function babelStoneAdapter({ ids, parts, table: given, palette: givenPale
       return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
     },
     async encoded(sequence) {
-      if (!described) {
-        described = new Map()
-        for (const [char, sequences] of await read()) for (const { text } of sequences) {
+      // Built once from the table; a failed load is tried again on the next call.
+      described ??= read().then(found => {
+        /** @type {Map<string, string[]>} */
+        const by = new Map()
+        for (const [char, sequences] of found) for (const { text } of sequences) {
           if (!isSequence(text)) continue
-          const chars = described.get(text)
-          if (chars) { if (!chars.includes(char)) chars.push(char) } else described.set(text, [char])
+          const chars = by.get(text)
+          if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
         }
-      }
-      return described.get(sequence.trim()) ?? []
+        return by
+      }).catch(error => { described = null; throw error })
+      return (await described).get(sequence.trim()) ?? []
     },
     async containing(asked, { limit = 24 } = {}) {
       index ??= componentIndex(new Map([...(await read())].map(([char, sequences]) => [char, sequences.map(s => s.text)])))
