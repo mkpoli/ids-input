@@ -1,0 +1,26 @@
+{
+  "name": "ids-input",
+  "version": "0.1.0",
+  "description": "Headless editing of ideographic description sequences (IDS): parse, write and edit IDS trees, with Svelte components for an editor, a parts palette and a decomposition browser.",
+  "license": "MIT",
+  "author": "mkpoli",
+  "repository": { "type": "git", "url": "git+https://github.com/mkpoli/ids-input.git" },
+  "homepage": "https://mkpoli.github.io/ids-input/",
+  "keywords": ["ids", "ideographic description sequence", "cjk", "han", "kanji", "hanzi", "input", "svelte"],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": { "types": "./types/core/index.d.ts", "default": "./src/core/index.js" },
+    "./package.json": "./package.json"
+  },
+  "files": ["src", "types", "LICENSE", "README.md"],
+  "scripts": {
+    "test": "bun test tests",
+    "types": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "5.9.3"
+  }
+}
