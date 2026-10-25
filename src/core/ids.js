@@ -20,6 +20,18 @@ export const OPERATORS = [
 ]
 const ARITY = new Map(OPERATORS)
 
+/**
+ * The operators grouped by how many parts they take, as a palette shows them: those that change one
+ * part, those that place two (side by side, enclosing, at a corner, over or out of each other) and
+ * those that place three.
+ * @type {ReadonlyArray<{ arity: 1 | 2 | 3, ops: readonly string[] }>}
+ */
+export const OPERATOR_GROUPS = [
+  { arity: 1, ops: ['⿾', '⿿', '〾'] },
+  { arity: 2, ops: ['⿰', '⿱', '⿴', '⿵', '⿶', '⿷', '⿼', '⿸', '⿹', '⿺', '⿽', '⿻', '㇯'] },
+  { arity: 3, ops: ['⿲', '⿳'] },
+]
+
 /** The longest description, in code points. */
 export const LONGEST = 64
 const COMPONENTS = [[0x2E80, 0x2FDF], [0x30A1, 0x30FA], [0x31C0, 0x31EE], [0x3400, 0x4DBF], [0x4E00, 0x9FFF],

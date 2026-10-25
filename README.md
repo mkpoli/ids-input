@@ -59,6 +59,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
 | `pickers` | `['find', 'parts', 'from']` | the part picker's tabs; a tab the adapter cannot answer is left out |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
+| `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
 | `disabled` | | |
 
@@ -165,6 +166,9 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Backspace`, `Delete` | empty the chosen part |
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
 | any other character | goes to the part field; `Enter` puts it in the slot |
+
+The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
+⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key.
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
