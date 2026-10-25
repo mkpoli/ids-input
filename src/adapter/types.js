@@ -23,14 +23,29 @@
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  *
+ * @typedef {object} SketchLeaf Where the layout puts one leaf of a sequence, before it is drawn.
+ * @property {number} index The leaf's place in reading order.
+ * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
+ * @property {boolean} empty Whether the leaf is an empty slot (＋).
+ *
+ * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
+ * @property {string} d The SVG path of its ink, filled by the nonzero rule.
+ * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
+ * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (＋), numbered in reading order, in the box the layout gives it.
+ * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
+ * @property {string[]} [approximate] Operators drawn by an approximation of their own.
+ * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
+ *
+ * @typedef {Options & { onSketch?: (leaves: SketchLeaf[]) => void }} PreviewOptions
+ *
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name or a reading.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
- * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of an image of a whole description, or null.
- * @property {(sequence: string, options?: Options) => Promise<string | null>} [preview] SVG markup drawing a whole description, or null. The markup is inserted as given, so it must come from a source the host trusts.
+ * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
+ * @property {(sequence: string, options?: PreviewOptions) => Promise<Drawing>} [preview] A description drawn, empty slots (＋) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws.
  */
 
 export {}
