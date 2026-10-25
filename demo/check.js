@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 // The built workshop (dist/) in a headless Chromium: editing by keyboard, pointer, drag and the tree's
 // context menu, named undo and redo, the pickers, the preview with and without its export, the
-// output and export, drafts, sharing, the theme switch, preferences and languages, then screenshots
-// at 2x in light and dark through the theme switch, at desktop, tablet and phone widths.
+// output and export, drafts, tabs, sharing, the theme switch, preferences and languages, then
+// screenshots at 2x in light and dark through the theme switch, at desktop, tablet and phone widths.
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { chromium } from 'playwright-core'
@@ -127,6 +127,9 @@ try {
   assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
   await page.locator('.ids-search-results input').fill('')
   await page.locator('.bar button[aria-label^="Undo"]').click()
+  // The hits for the undone tree, not the ones that were still shown when Undo was clicked.
+  await page.waitForFunction(() => document.querySelector('.ids-search-results')?.dataset.status === 'ready'
+    && document.querySelector('.ids-search-results .hit .char')?.textContent === '疑', null, { timeout: 15000 })
   await page.waitForTimeout(250)
   await page.locator('.ids-search-results .hit').first().hover()
   await page.waitForTimeout(150)
@@ -347,6 +350,142 @@ try {
   await drawn.keyboard.press('Escape')
   pass('drafts, the share link and QR code, and the sources and inspirations')
 
+  // Tabs: several descriptions open at once, each with its own history and a drawn
+  // icon; an edited tab is marked until it is saved; a closed tab comes back from the note; the tabs
+  // and the active one survive a reload.
+  const tabbed = await open(`${fixture}#${encodeURIComponent('⿰木⬚')}`)
+  const tabs = () => tabbed.locator('.tabbar [role="tab"]')
+  const tabTitles = () => tabs().evaluateAll(els => els.map(el => el.getAttribute('title')))
+  const activeTitle = () => tabbed.locator('.tabbar .tab.on [role="tab"]').getAttribute('title')
+  const tabIcon = () => tabbed.waitForFunction(() => (document.querySelector('.tabbar .tab.on .tab-glyph path')?.getAttribute('d')?.length ?? 0) > 20, null, { timeout: 15000 })
+  await tabbed.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await tabIcon()
+  assert(await tabs().count() === 1, 'the workspace opens with one tab')
+  assert(await tabbed.locator('.tabbar .tab-main').first().evaluate(el => el.textContent?.trim() ?? '') === '', 'a tab holds its drawing and no text')
+  assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
+  pass('a tab shows only its composed drawing')
+
+  // Empty-slot compositions have a layout and no ink; the tab still shows that layout.
+  const slots = await open(`${fixture}#${encodeURIComponent('⿰⬚⬚')}`)
+  await slots.locator('.tabbar .tab-glyph .tab-slot').first().waitFor({ timeout: 15000 })
+  assert(await slots.locator('.tabbar .tab-glyph .tab-slot').count() === 2, 'a tab of empty slots draws its slots')
+  assert(await slots.locator('.tabbar .tab-empty').count() === 0, 'a tab of empty slots is not the empty frame')
+  await slots.context().close()
+  pass('a tab of empty slots shows their layout')
+
+  await tabbed.locator('.tab-new').click()
+  assert(await tabs().count() === 2 && await valueOf(tabbed) === '', 'a new tab is empty')
+  assert(await activeTitle() === 'Untitled', 'an empty tab is untitled')
+  assert(await tabbed.locator('.tabbar .tab.on .tab-empty').count() === 1, 'an empty tab has an empty frame, not a part')
+  await tabbed.locator('.ids-field input').fill('⿱木口')
+  assert(await tabbed.locator('.tabbar .tab.on .tab-dot').count() === 1, 'an edited tab is marked')
+  await tabIcon()
+  pass('a new tab, its icon and its edited mark')
+
+  await tabs().first().click()
+  assert(await valueOf(tabbed) === '⿰木⬚', 'a tab keeps its own description')
+  await tabbed.locator('.ids-field input').fill('⿱木木')
+  await tabs().nth(1).click()
+  assert(await valueOf(tabbed) === '⿱木口', 'the other tab keeps its own description')
+  await tabbed.locator('.ids-tree').click({ position: { x: 4, y: 4 } })
+  await tabbed.keyboard.press('Control+z')
+  assert(await valueOf(tabbed) === '', `undo stays in its tab: ${await valueOf(tabbed)}`)
+  await tabs().first().click()
+  await tabbed.locator('.ids-tree').click({ position: { x: 4, y: 4 } })
+  await tabbed.keyboard.press('Control+z')
+  assert(await valueOf(tabbed) === '⿰木⬚', `each tab keeps its own history: ${await valueOf(tabbed)}`)
+  pass('switching tabs restores each description and its own undo history')
+
+  await tabbed.locator('.ids-field input').fill('⿱木木')
+  await tabbed.locator('.ids-tree').click({ position: { x: 4, y: 4 } })
+  await tabbed.keyboard.press('Control+s')
+  assert(await tabbed.locator('.tabbar .tab.on .tab-dot').count() === 0, 'saving clears the edited mark')
+  await tabbed.locator('.ids-field input').fill('⿴囗或')
+  assert(await tabbed.locator('.tabbar .tab.on .tab-dot').count() === 1, 'a later edit marks it again')
+
+  const countBeforeClose = await tabs().count()
+  await tabbed.locator('.tabbar .tab.on .tab-close').click()
+  assert(await tabs().count() === countBeforeClose - 1, 'a tab closes')
+  assert(await tabbed.locator('.tabbar .tab-close').count() === 0, 'the last tab has no close button')
+  await tabbed.locator('.toast').waitFor()
+  await tabbed.locator('.toast button').click()
+  assert(await tabs().count() === countBeforeClose, 'Undo brings a closed tab back')
+  assert(await valueOf(tabbed) === '⿴囗或', `with its text: ${await valueOf(tabbed)}`)
+  pass('saving a tab, closing it, and Undo bringing it back')
+
+  await tabs().nth(1).click()
+  await tabbed.locator('.ids-field input').fill('⿱木口')
+  await tabs().first().click()
+  await tabs().first().focus()
+  await tabbed.keyboard.press('ArrowRight')
+  assert(await activeTitle() === '⿱木口', `ArrowRight: ${await activeTitle()}`)
+  await tabbed.keyboard.press('Home')
+  assert(await activeTitle() === '⿴囗或', `Home: ${await activeTitle()}`)
+  const focusedTab = () => tabbed.evaluate(() => document.activeElement?.closest('.tab')?.getAttribute('data-tab-id'))
+  const onTab = () => tabbed.locator('.tabbar .tab.on').getAttribute('data-tab-id')
+  await tabbed.keyboard.press('Control+Tab')
+  assert(await activeTitle() === '⿱木口', `Ctrl+Tab: ${await activeTitle()}`)
+  assert(await focusedTab() === await onTab(), 'Ctrl+Tab moves the focus with the tab')
+  await tabbed.keyboard.press('Control+Shift+Tab')
+  assert(await activeTitle() === '⿴囗或', `Ctrl+Shift+Tab: ${await activeTitle()}`)
+  assert(await focusedTab() === await onTab(), 'Ctrl+Shift+Tab moves the focus with the tab')
+  // From the editor, the focus follows into the destination instead of falling to the page.
+  await tabbed.locator('.ids-tree [data-path]').first().click()
+  await tabbed.keyboard.press('Control+Tab')
+  assert(await tabbed.evaluate(() => Boolean(document.activeElement?.closest('.work'))), 'Ctrl+Tab from the tree keeps focus in the editor')
+  assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
+  pass('arrow keys, Home, and Ctrl+Tab move between tabs and their editor')
+
+  const titles = await tabTitles(), active = await activeTitle(), marked = await tabbed.locator('.tabbar .tab-dot').count(), tabText = await valueOf(tabbed)
+  await tabbed.reload()
+  await tabbed.locator('.ids-field input').waitFor()
+  await tabbed.waitForFunction(sequence => document.querySelector('.ids-field input')?.value === sequence, tabText)
+  assert(JSON.stringify(await tabTitles()) === JSON.stringify(titles), `the tabs come back: ${await tabTitles()}`)
+  assert(await activeTitle() === active, 'the active tab comes back')
+  assert(await tabbed.locator('.tabbar .tab-dot').count() === marked, 'the edited marks come back')
+  assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
+
+  // Two tabs may hold the same text; a reload keeps the one that was active.
+  await tabbed.locator('.tab-new').click()
+  await tabbed.locator('.ids-field input').fill(tabText)
+  const duplicate = await onTab()
+  await tabbed.reload()
+  await tabbed.locator('.ids-field input').waitFor()
+  await tabbed.waitForTimeout(300)
+  assert(await onTab() === duplicate, `the active tab stays when texts match: ${await onTab()} against ${duplicate}`)
+  assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
+  await tabbed.context().close()
+  pass('the tabs and the active one survive a reload')
+
+  // An unreadable draft is not an empty tab: opening another document keeps its tab.
+  const unreadable = await open(`#${encodeURIComponent('⿱木林')}`)
+  await unreadable.locator('.tab-new').click()
+  await unreadable.locator('.ids-field input').fill('木木')
+  assert(await unreadable.locator('.tabbar .tab.on .tab-empty').count() === 1, 'an undrawable tab shows no part')
+  const unreadableId = await unreadable.locator('.tabbar .tab.on').getAttribute('data-tab-id')
+  const countBefore = await unreadable.locator('.tabbar [role="tab"]').count()
+  await unreadable.getByRole('button', { name: 'Examples' }).click()
+  await unreadable.locator('[role="menu"] .item.rich').first().click()
+  assert(await unreadable.locator('.tabbar [role="tab"]').count() === countBefore + 1, 'an example opens a new tab, and an unreadable draft gets its own')
+  await unreadable.locator(`.tabbar .tab[data-tab-id="${unreadableId}"] [role="tab"]`).click()
+  assert(await valueOf(unreadable) === '木木', 'the unreadable draft is kept')
+  assert(!unreadable.errors.length, `page errors: ${unreadable.errors.join('; ')}`)
+  await unreadable.context().close()
+  pass('an unreadable draft keeps its tab when another document opens')
+
+  // Switching between tabs with the same description keeps the preview's drawing, and its export.
+  const alike = await open(`${fixture}#${encodeURIComponent('⿱木口')}`)
+  await alike.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await alike.locator('.tab-new').click()
+  await alike.locator('.ids-field input').fill('⿱木口')
+  await alike.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await alike.locator('.tabbar [role="tab"]').first().click()
+  assert(await alike.locator('.ids-preview[data-step="composed"]').count() === 1, 'the drawing stays for an identical tab')
+  assert(await alike.locator('.export .primary').isEnabled(), 'the export stays available between identical tabs')
+  assert(!alike.errors.length, `page errors: ${alike.errors.join('; ')}`)
+  await alike.context().close()
+  pass('switching between identical tabs keeps the drawing and export')
+
   // The theme switch sets data-theme, kept and applied before the page paints; key hints can be hidden;
   // the language changes the whole page.
   await drawn.locator('.bar').getByRole('radio', { name: 'Dark' }).click()
@@ -407,6 +546,8 @@ try {
   // A link written with ＋ for an empty slot, as older links are, opens with ⬚.
   const old = await open('#' + encodeURIComponent('⿰亻＋'))
   assert(await valueOf(old) === '⿰亻⬚', `an old link: ${await valueOf(old)}`)
+  assert(await old.locator('.tabbar [role="tab"]').getAttribute('title') === '⿰亻⬚', 'the tab writes ＋ as ⬚')
+  assert(new URL(old.url()).hash === `#${encodeURIComponent('⿰亻⬚')}`, 'the address writes ＋ as ⬚')
   await old.context().close()
   pass('a link with ＋ opens with ⬚')
 

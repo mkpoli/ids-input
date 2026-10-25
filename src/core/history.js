@@ -13,7 +13,15 @@
  * @property {() => string | undefined} undoLabel The name of the step Undo takes back.
  * @property {() => string | undefined} redoLabel The name of the step Redo puts again.
  * @property {() => { done: string[], undone: string[] }} steps The names of the steps done, oldest first, and of those undone, the next to redo first.
+ * @property {() => HistoryState<T>} snapshot The steps done and undone, to put back later.
+ * @property {(state: HistoryState<T>) => void} restore Put back the steps of a `snapshot`.
  * @property {() => void} clear
+ */
+
+/**
+ * The steps a history holds, as `snapshot` hands them out.
+ * @template T
+ * @typedef {{ past: { state: T, label: string }[], future: { state: T, label: string }[] }} HistoryState
  */
 
 /**
@@ -50,6 +58,8 @@ export function createHistory(limit = 100) {
     undoLabel: () => past.at(-1)?.label,
     redoLabel: () => future.at(-1)?.label,
     steps: () => ({ done: past.map(step => step.label), undone: future.map(step => step.label).reverse() }),
+    snapshot: () => ({ past: past.slice(), future: future.slice() }),
+    restore(state) { past = state.past.slice(-limit); future = state.future.slice(-limit) },
     clear() { past = []; future = [] },
   }
 }

@@ -92,10 +92,12 @@ workshop in `demo/` does so:
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
 with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
 and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. In the tree, a click chooses a part, a part dragged from the
-palette, the decomposition tree, a search or the swaps is put where it is dropped, and the context
-menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
+them back, for a host switching between documents. In the tree, a click chooses a part, a part
+dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
+and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
+clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
+on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -296,20 +298,26 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 
 ## The workshop
 
-The demo is a full-width workshop: the sequence, the operators and the part pickers at the start,
-the tree in a square panel in the middle, and at the end the drawing in a square panel, the sequence
-with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
-PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
-a chosen one, with a margin, empty slots left out unless asked for. The toolbar holds Undo and Redo
-with the history of named steps, saved drafts (also read from and written to a text file), examples
-(each with its character and code point, or marked when it has none), a share link with its QR code,
-the language, a system, light or dark theme, preferences (key hints on
-buttons, where the preview draws from) and the sources. The tree and search panels in the middle
-column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
-double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
-sequence
-(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
-`localStorage` under `ids-input:`.
+The demo is a full-width workshop with one tab for each description being edited, in the top bar
+between the toolbar's examples and its end controls; on narrow screens the tabs take a second row of
+the same bar. A tab is the description's composed drawing at a small size, and a dot while its text
+differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
+name, not written in it. The active tab joins the panel area below, and the + after the tabs is an
+empty tab. Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
+start; the tree in a square panel with the search under it; and at the end the drawing
+in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its
+code points, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
+for. A click, the arrow keys or, where the browser leaves them to the page, `Ctrl+Tab` and
+`Ctrl+Shift+Tab` move between tabs, and × closes a tab (Undo brings it back; the last tab stays). The
+tree and search panels in the middle column are divided by a draggable splitter, the tree starting
+larger; the arrow keys move it and a double-click restores the default. Toolbar buttons show their
+keys on hover. The toolbar holds Undo and Redo with the history of named steps, saved drafts (also
+read from and written to a text file), examples (each with its character and code point, or marked
+when it has none), a share link with its QR code, the language, a system, light or dark theme,
+preferences (key hints on buttons, where the preview draws from) and the sources. An example opens a
+tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs,
+settings, drafts and the theme stay in the browser's `localStorage` under `ids-input:`.
 
 ## Inspired by
 
