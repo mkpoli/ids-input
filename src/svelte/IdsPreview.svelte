@@ -7,8 +7,8 @@
   // `drawing` holds a final image of the whole description, that image is shown, badged as final. A
   // description too large to draw, or one the preview cannot draw, shows placeholders and says so.
   import { fade } from 'svelte/transition'
-  import { isDescription, leaves, samePath, write } from '../core/ids.js'
-  import { FACE, STROKE, badge, placeholder, roughLayout } from './preview.js'
+  import { leaves, samePath, write } from '../core/ids.js'
+  import { FACE, STROKE, badge, placeholder, roughLayout, runPreview } from './preview.js'
   import { translator } from './i18n.js'
 
   /**
@@ -42,25 +42,11 @@
     if (empty || !(ask || final)) { step = 'idle'; shown = null; return }
     step = 'loading'
     const controller = new AbortController(), signal = controller.signal
-    const timer = setTimeout(() => {
-      let isFinal = false
-      if (final && isDescription(text)) final(text, { signal }).then(url => {
-        if (signal.aborted || !url) return
-        isFinal = true
-        shown = { key: ++count, url }
-        step = 'final'
-      }, () => {})
-      if (!ask) { if (!isDescription(text)) step = 'idle'; return }
-      ask(text, { signal, onSketch: found => { if (!signal.aborted) sketched = { text, leaves: found } } }).then(drawn => {
-        if (signal.aborted || isFinal) return
-        shown = { key: ++count, drawn }
-        step = 'composed'
-      }, error => {
-        if (signal.aborted || isFinal) return
-        shown = null
-        step = error?.name === 'TooLargeError' ? 'capped' : 'failed'
-      })
-    }, delay)
+    const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, signal }, patch => {
+      if (patch.sketch) { sketched = { text, leaves: /** @type {SketchLeaf[]} */ (patch.sketch) }; return }
+      shown = patch.url ? { key: ++count, url: patch.url } : patch.drawn ? { key: ++count, drawn: /** @type {Drawing} */ (patch.drawn) } : null
+      step = /** @type {typeof step} */ (patch.step)
+    }), delay)
     return () => { clearTimeout(timer); controller.abort() }
   })
 

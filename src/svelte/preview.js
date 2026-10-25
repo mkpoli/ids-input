@@ -1,4 +1,6 @@
 // @ts-nocheck: geometry over plain arrays, as in the composer's own drawing.
+import { isDescription as isWhole } from '../core/ids.js'
+
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
 // part not drawn yet) becomes, in the drawing's 1000-unit box.
 
@@ -93,4 +95,33 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
     roughLayout(parts[1], box, flip, true, out)
   } else parts.forEach(part => roughLayout(part, box, flip, cut, out))
   return out
+}
+
+/**
+ * One description's turn in a preview: the adapter's `drawing` (a final image of a whole
+ * description) and its `preview` (a drawing, empty slots and all) asked for `text`, each answer
+ * handed to `update` as `{ step, url }`, `{ step, drawn }`, `{ step }` or `{ sketch }`. A final image
+ * wins over a drawing. Where there is nothing to show (no preview, and no final image for this
+ * text) the step is `idle` with nothing shown, so no image of an earlier description stays. Nothing
+ * is handed over once `signal` aborts.
+ * @param {string} text
+ * @param {{ preview?: Function, drawing?: Function, signal: AbortSignal }} asking
+ * @param {(patch: { step?: string, url?: string, drawn?: object, sketch?: object[] }) => void} update
+ */
+export function runPreview(text, { preview, drawing, signal }, update) {
+  const whole = isWhole(text)
+  let final = false
+  const none = () => { if (!signal.aborted && !preview && !final) update({ step: 'idle' }) }
+  if (drawing && whole) drawing(text, { signal }).then(url => {
+    if (signal.aborted) return
+    if (!url) { none(); return }
+    final = true
+    update({ step: 'final', url })
+  }, none)
+  if (!preview) { if (!drawing || !whole) none(); return }
+  preview(text, { signal, onSketch: sketch => { if (!signal.aborted) update({ sketch }) } }).then(drawn => {
+    if (!signal.aborted && !final) update({ step: 'composed', drawn })
+  }, error => {
+    if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : 'failed' })
+  })
 }

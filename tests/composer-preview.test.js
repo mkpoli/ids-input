@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { composerPreview } from '../src/composer/index.js'
-import { roughLayout } from '../src/svelte/preview.js'
+import { roughLayout, runPreview } from '../src/svelte/preview.js'
 
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {
@@ -70,5 +70,36 @@ describe('a composer base that is no URL', () => {
     const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
     const error = await draw('⿰木口').catch(e => e)
     expect(error).toBeInstanceOf(TypeError)
+  })
+})
+
+describe('a preview turn', () => {
+  const later = value => new Promise(resolve => setTimeout(() => resolve(value), 1))
+  const run = (text, asking) => new Promise(resolve => {
+    const seen = []
+    runPreview(text, { signal: new AbortController().signal, ...asking }, patch => seen.push(patch))
+    setTimeout(() => resolve(seen), 20)
+  })
+  it('with only a final image, shows nothing for an incomplete description or a missing image', async () => {
+    const drawing = () => later('https://example.org/a.svg')
+    expect(await run('⿰木＋', { drawing })).toEqual([{ step: 'idle' }])
+    expect(await run('⿰木口', { drawing: () => later(null) })).toEqual([{ step: 'idle' }])
+    expect(await run('⿰木口', { drawing: () => Promise.reject(new Error('down')) })).toEqual([{ step: 'idle' }])
+    expect(await run('⿰木口', { drawing })).toEqual([{ step: 'final', url: 'https://example.org/a.svg' }])
+  })
+  it('prefers a final image to a drawing, and says when a drawing fails or is too large', async () => {
+    const preview = () => later({ d: 'M0 0Z' })
+    expect(await run('⿰木口', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'final', url: 'u' }])
+    expect(await run('⿰木＋', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'composed', drawn: { d: 'M0 0Z' } }])
+    expect(await run('⿰木口', { preview: () => Promise.reject(new Error('x')) })).toEqual([{ step: 'failed' }])
+    expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'TooLargeError' })) })).toEqual([{ step: 'capped' }])
+  })
+  it('hands nothing over once aborted', async () => {
+    const controller = new AbortController(), seen = []
+    runPreview('⿰木口', { signal: controller.signal, preview: () => later({ d: 'M0 0Z' }) }, patch => seen.push(patch))
+    controller.abort()
+    await later()
+    await later()
+    expect(seen).toEqual([])
   })
 })
