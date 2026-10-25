@@ -115,3 +115,21 @@ describe('the shipped data', () => {
     expect(new Set(palette.map(part => part.kind))).toEqual(new Set(['c', 'd', 's']))
   })
 })
+
+describe('an encoded character', () => {
+  it('is found by the description it has, exactly', async () => {
+    const adapter = babelStoneAdapter({ table })
+    expect(await adapter.encoded('⿰木木')).toEqual(['林'])
+    expect(await adapter.encoded('⿳𭁟冖⺼')).toEqual(['骨'])
+    expect(await adapter.encoded('⿰木口')).toEqual([])
+    expect(await adapter.encoded('一')).toEqual([])
+  })
+  it('answers callers who ask while the table loads, and tries again after a failed load', async () => {
+    let fail = true
+    const fetch = async () => { if (fail) { fail = false; return new Response('', { status: 503 }) } return new Response(TABLE) }
+    const adapter = babelStoneAdapter({ ids: 'ids.tsv', fetch })
+    await expect(adapter.encoded('⿰木木')).rejects.toThrow('503')
+    const [a, b] = await Promise.all([adapter.encoded('⿰木木'), adapter.encoded('⿰木木')])
+    expect([a, b]).toEqual([['林'], ['林']])
+  })
+})

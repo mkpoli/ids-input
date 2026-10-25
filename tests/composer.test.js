@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { badge, placeholder } from '../src/svelte/preview.js'
+import { badge, placeholder } from '../src/core/preview.js'
 import { files, layout, ops } from './fixtures/composer-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {

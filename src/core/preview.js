@@ -1,5 +1,5 @@
 // @ts-nocheck: geometry over plain arrays, as in the composer's own drawing.
-import { isDescription as isWhole } from '../core/ids.js'
+import { isDescription as isWhole } from './ids.js'
 
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
 // part not drawn yet) becomes, in the drawing's 1000-unit box.
@@ -122,4 +122,41 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   }, error => {
     if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
   })
+}
+
+/** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
+const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
+/** A colour as an SVG attribute takes it: `#rgb`, `#rrggbb` or `#rrggbbaa`; anything else is refused. */
+const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value ?? '') ? value : fallback
+
+/**
+ * A drawing (`Drawing` in the adapter types) as a file of its own: an SVG of its ink in `ink` on
+ * `background` (none for a transparent one), `padding` the share of the 1000-unit box added on each
+ * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
+ * draws each as the editor does, in the ink at half strength.
+ * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null }} drawing
+ * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
+ * @returns {string}
+ */
+export function drawingSvg(drawing, { background = null, ink = '#000000', padding = 0, size = 1000, placeholders = false } = {}) {
+  // Every number written is a finite number, whatever it was handed.
+  const num = (value, fallback) => Number.isFinite(Number(value)) ? Number(value) : fallback
+  const pad = Math.round(Math.max(0, Math.min(num(padding, 0), 0.5)) * 1000 * 100) / 100
+  size = Math.max(1, Math.round(num(size, 1000)))
+  const span = 1000 + 2 * pad, fill = colour(ink, '#000000')
+  const out = [`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-pad} ${-pad} ${span} ${span}" width="${size}" height="${size}">`]
+  const back = background === null ? null : colour(background, null)
+  if (back) out.push(`<rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="${back}"/>`)
+  const d = pathData(drawing.d), cut = pathData(drawing.cut)
+  if (cut) out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/><path d="${cut}" fill="#000"/></mask>`)
+  if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
+  if (placeholders) for (const slot of drawing.slots ?? []) {
+    const box = (slot.box ?? []).slice(0, 4).map(v => num(v, 0))
+    if (box.length < 4) continue
+    const p = placeholder(box, num(drawing.stroke?.[0], STROKE))
+    const r = v => Math.round(v * 100) / 100
+    out.push(`<rect x="${r(p.x)}" y="${r(p.y)}" width="${r(p.width)}" height="${r(p.height)}" rx="${r(p.rx)}" fill="none" stroke="${fill}" stroke-opacity="0.5" stroke-width="${r(p.dot)}" stroke-linecap="round" pathLength="${p.dots}" stroke-dasharray="0 1"/>`)
+  }
+  out.push('</svg>')
+  return out.join('')
 }

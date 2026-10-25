@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { composerPreview } from '../src/composer/index.js'
-import { roughLayout, runPreview } from '../src/svelte/preview.js'
+import { roughLayout, runPreview } from '../src/core/preview.js'
 
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {

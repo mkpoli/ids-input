@@ -104,7 +104,8 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" {disabled} lang="ja" title={title(part)} aria-label={title(part)} onclick={() => pick(part.part)}>{part.part}</button>
+      <button type="button" class="part" {disabled} lang="ja" title={title(part)} aria-label={title(part)}
+        draggable={!disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => pick(part.part)}>{part.part}</button>
     {/each}
   </div>
 {/snippet}

@@ -25,8 +25,8 @@
    * @typedef {{ key: string, level: number, kind: 'char' | 'node' | 'sequence' | 'status', part?: string, text?: string, regions?: string,
    *   take: string | null, openable: boolean, open: boolean, note?: string | null, status?: 'loading' | 'failed', swaps: Swap[] }} Row
    */
-  /** @type {{ adapter: IdsAdapter, lookup?: Lookup, disabled?: boolean, messages?: Record<string, string>, locale?: string, ontake?: (part: string) => void }} */
-  let { adapter, lookup: given, disabled = false, messages, locale = 'en', ontake } = $props()
+  /** @type {{ adapter: IdsAdapter, lookup?: Lookup, disabled?: boolean, messages?: Record<string, string>, locale?: string, ontake?: (part: string) => void, text?: string }} */
+  let { adapter, lookup: given, disabled = false, messages, locale = 'en', ontake, text = $bindable('') } = $props()
   const t = $derived(translator(messages, locale))
   const own = createLookup(() => adapter)
   const lookup = $derived(given ?? own)
@@ -45,7 +45,7 @@
   const REGIONS = { G: 'CN', H: 'HK', M: 'MO', T: 'TW', J: 'JP', K: 'KR', P: 'KP', V: 'VN', B: 'GB', U: 'UTC', S: 'SAT' }
   const displayNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'region' }) } catch { return null } })
 
-  let text = $state('')
+  let dropping = $state(false)
   /** @type {string[]} */
   let extra = $state([])
   let toggled = $state(new Set(/** @type {string[]} */ ([])))
@@ -163,6 +163,15 @@
     }
   })
 
+  /** Characters dropped on the panel, read as if typed. @param {DragEvent} event */
+  function dropped(event) {
+    dropping = false
+    const given = event.dataTransfer?.getData('text/plain')?.trim()
+    if (disabled || !given) return
+    event.preventDefault()
+    text = given
+    extra = []; toggled = new Set(); focusKey = null; swapAt = null; seen.clear()
+  }
   /** @param {Event} [event] */
   function typing(event) {
     if (/** @type {InputEvent | undefined} */ (event)?.isComposing || !input) return
@@ -270,7 +279,10 @@
   {/each}
 {/snippet}
 
-<div class="ids-from">
+<!-- Characters dropped anywhere here are read as if typed. -->
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div class="ids-from" class:over={dropping} ondragover={event => { if (!disabled && event.dataTransfer?.types.includes('text/plain')) { event.preventDefault(); dropping = true } }}
+  ondragleave={() => dropping = false} ondrop={dropped}>
   <label class="from-field">
     <input bind:this={input} aria-label={t('ids.pick.from')} value={text} {disabled} lang="ja" spellcheck="false" autocomplete="off"
       placeholder={t('ids.from.placeholder')} oninput={typing} oncompositionend={() => typing()}
@@ -278,8 +290,7 @@
   </label>
   <p class="from-live" aria-live="polite">{live}</p>
   {#if rows.length}
-    <p class="from-hint">{t('ids.from.hint')}</p>
-    <ul class="from-tree" role="tree" aria-label={t('ids.from.tree')} bind:this={tree}>
+    <ul class="from-tree" role="tree" aria-label={t('ids.from.tree')} title={t('ids.from.hint')} bind:this={tree}>
       {#each rows as row, index (row.key)}
         {@const current = row.key === focusKey ? swapAt : null}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -288,6 +299,7 @@
           aria-disabled={disabled || (!row.take && row.status !== 'failed') ? 'true' : undefined} aria-label={rowLabel(row)}
           tabindex={row.key === tabStop ? 0 : -1} style:--level={row.level - 1}
           onfocus={() => { if (focusKey !== row.key) swapAt = null; focusKey = row.key }}
+          draggable={Boolean(row.take) && !disabled} ondragstart={event => { if (row.take) event.dataTransfer?.setData('text/plain', row.take) }}
           onkeydown={event => rowKey(event, index)} onclick={event => rowClick(event, row)}>
           <span class="from-toggle" aria-hidden="true" title={row.openable ? t(row.open ? 'ids.from.collapse' : 'ids.from.expand', { part: label(row) }) : undefined}>{row.openable ? row.open ? '▾' : '▸' : ''}</span>
           {#if row.kind === 'status'}
@@ -349,7 +361,7 @@
   .from-field input:placeholder-shown{font-size:14px;font-family:inherit;padding:7px 8px}
   .from-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .from-title{font-size:11px;color:var(--_muted)}
-  .from-hint{margin:0;font-size:11px;color:var(--_muted)}
+  .ids-from.over{outline:2px dashed var(--_accent);outline-offset:4px;border-radius:8px}
   .from-tree{list-style:none;margin:0;padding:4px;display:flex;flex-direction:column;max-height:320px;overflow:auto;
     border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
   .from-row{display:flex;align-items:center;flex-wrap:wrap;gap:4px;padding:1px 4px 1px calc(var(--level) * 18px + 4px);border-radius:5px;min-height:34px;cursor:pointer}
