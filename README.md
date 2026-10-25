@@ -115,10 +115,10 @@ smaller parts. `variants` answers components that can stand in a part's place (�
 `containing` answers the characters built from every part in its query, counted (`木木` asks for
 two). `preview` draws a sequence that may hold empty slots (`＋`); its options also carry
 `onSketch(leaves)`, which hears where each part goes before the drawing is done. It rejects with an
-Error named `TooLargeError` for a sequence larger than it draws, and with any other Error when it
-cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
+Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
+cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
-the preview when there is one.
+the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
 `babelStoneAdapter({ ids, parts })` answers `structure`, `search` (a character, `U+6728` or bare
 hex), `containing` and `parts` from the two files in `data/`. Its component search builds an index
@@ -143,8 +143,8 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it, or when a part has no drawing, the preview keeps its placeholders and
-its badge reads "Could not compose". Sequences over 12 operators or 4 levels are not drawn. Under
+origin by CORS. Without it the preview keeps its placeholders and shows no badge; when the export
+loads but a part has no drawing, its badge reads "Could not compose". Sequences over 12 operators or 4 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.

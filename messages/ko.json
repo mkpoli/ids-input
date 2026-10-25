@@ -61,7 +61,7 @@
   "ids.preview.draft": "미리보기",
   "ids.preview.drawing": "{sequence}의 자형",
   "ids.preview.failed": "조합 불가",
-  "ids.preview.failedNote": "조합기 데이터를 불러오지 못했거나 그릴 수 없는 부품이 있습니다.",
+  "ids.preview.failedNote": "이 기술은 조합하지 못했습니다.",
   "ids.preview.final": "확정",
   "ids.preview.tooLarge": "너무 큼",
   "ids.preview.tooLargeNote": "너무 커서 조합하지 않습니다. 틀은 배치를 보여 줍니다.",

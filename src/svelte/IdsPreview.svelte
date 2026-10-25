@@ -5,7 +5,8 @@
   // placeholders where the layout puts each part (even shares before the layout has loaded); after
   // that the last drawing stays until the next is done and fades into it. Where the adapter's
   // `drawing` holds a final image of the whole description, that image is shown, badged as final. A
-  // description too large to draw, or one the preview cannot draw, shows placeholders and says so.
+  // description too large to draw, or one the preview cannot draw, shows placeholders and says so;
+  // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { leaves, samePath, write } from '../core/ids.js'
   import { FACE, STROKE, badge, placeholder, roughLayout, runPreview } from './preview.js'
@@ -31,7 +32,9 @@
     box: [FACE[0] + leaf.box[0] * FACE[2], FACE[1] + leaf.box[1] * FACE[3], (leaf.box[2] - leaf.box[0]) * FACE[2], (leaf.box[3] - leaf.box[1]) * FACE[3]] })))
   let sketched = $state.raw(/** @type {{ text: string, leaves: SketchLeaf[] } | null} */ (null))
   let shown = $state.raw(/** @type {{ key: number, url?: string, drawn?: Drawing } | null} */ (null))
-  let step = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped'} */ ('idle'))
+  let step = $state(/** @type {'idle' | 'loading' | 'composed' | 'final' | 'failed' | 'capped' | 'unavailable'} */ ('idle'))
+  // No badge while there is nothing to say: no preview asked, or no data to draw from.
+  const quiet = $derived(step === 'idle' || step === 'unavailable')
   let count = 0
 
   // A description is drawn after a short pause in editing. A newer one aborts the one before, and an
@@ -56,7 +59,7 @@
   const NAMES = /** @type {Record<string, string>} */ ({ '⿼': 'fromRight', '⿽': 'fromLowerRight', '⿾': 'mirrored', '⿿': 'rotated', '㇯': 'subtracted', '〾': 'variant' })
   // The operators named in words: their characters are too new for most fonts to show.
   const named = $derived(/** @type {Record<string, string>} */ (said.params.ops ? { ops: said.params.ops.split(' ').map((/** @type {string} */ op) => NAMES[op] ? t(`ids.op.${NAMES[op]}`) : op).join(' · ') } : {}))
-  const note = $derived(said.label in NOTES ? t(NOTES[said.label], named) : '')
+  const note = $derived(!quiet && said.label in NOTES ? t(NOTES[said.label], named) : '')
   // The placeholders shown in place of a drawing: where the layout puts each part, else even shares.
   const boxes = $derived(sketched?.text === sequence && step !== 'capped' ? sketched.leaves : even)
   /** Whether the leaf at `index` lies in the part being edited. @param {number | undefined} index */
@@ -116,10 +119,10 @@
 
 <figure class="ids-preview" data-step={step} data-label={said.label} aria-label={t('ids.preview.drawing', { sequence })}>
   <div class="ids-preview-large">{@render picture('large')}</div>
-  {#if small || step !== 'idle'}
+  {#if small || !quiet}
     <figcaption class="ids-preview-meta">
       {#if small}<div class="ids-preview-small">{@render picture('small')}</div>{/if}
-      {#if step !== 'idle'}<span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>{/if}
+      {#if !quiet}<span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>{/if}
     </figcaption>
   {/if}
   {#if note && notes}<p class="ids-preview-note">{note}</p>{/if}

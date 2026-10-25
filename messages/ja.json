@@ -61,7 +61,7 @@
   "ids.preview.draft": "プレビュー",
   "ids.preview.drawing": "{sequence}の字形",
   "ids.preview.failed": "組めません",
-  "ids.preview.failedNote": "組字器のデータを読み込めないか、描けない部品があります。",
+  "ids.preview.failedNote": "この記述は組めませんでした。",
   "ids.preview.final": "確定",
   "ids.preview.tooLarge": "大きすぎ",
   "ids.preview.tooLargeNote": "大きすぎて組めません。枠は配置を示します。",

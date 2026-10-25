@@ -102,7 +102,8 @@ export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut
  * description) and its `preview` (a drawing, empty slots and all) asked for `text`, each answer
  * handed to `update` as `{ step, url }`, `{ step, drawn }`, `{ step }` or `{ sketch }`. A final image
  * wins over a drawing. Where there is nothing to show (no preview, and no final image for this
- * text) the step is `idle` with nothing shown, so no image of an earlier description stays. Nothing
+ * text) the step is `idle` with nothing shown, so no image of an earlier description stays; where the
+ * preview's data cannot be read at all, `unavailable`, which shows placeholders with no badge. Nothing
  * is handed over once `signal` aborts.
  * @param {string} text
  * @param {{ preview?: Function, drawing?: Function, signal: AbortSignal }} asking
@@ -122,6 +123,6 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   preview(text, { signal, onSketch: sketch => { if (!signal.aborted) update({ sketch }) } }).then(drawn => {
     if (!signal.aborted && !final) update({ step: 'composed', drawn })
   }, error => {
-    if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : 'failed' })
+    if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
   })
 }

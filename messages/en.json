@@ -62,7 +62,7 @@
   "ids.preview.draft": "Preview",
   "ids.preview.drawing": "Drawing of {sequence}",
   "ids.preview.failed": "Could not compose",
-  "ids.preview.failedNote": "The composer's data could not be loaded, or a part has no drawing.",
+  "ids.preview.failedNote": "The composer could not draw this sequence.",
   "ids.preview.final": "Final",
   "ids.preview.tooLarge": "Too large",
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",

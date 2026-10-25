@@ -7,14 +7,15 @@
 /**
  * @typedef {import('../adapter/types.js').Drawing} Drawing
  * @typedef {import('../adapter/types.js').SketchLeaf} SketchLeaf
- * @typedef {{ status: 'composed', drawn: Drawing } | { status: 'failed', error: string } | { status: 'cancelled' }} Answer
+ * @typedef {{ status: 'composed', drawn: Drawing } | { status: 'failed', error: string, unavailable?: boolean } | { status: 'cancelled' }} Answer
  * @typedef {{ postMessage(message: any): void, terminate(): void, onmessage: ((event: MessageEvent) => any) | null,
  *   onerror: ((event: ErrorEvent) => any) | null }} WorkerLike
  */
 
 /**
  * A drawer over workers made by `makeWorker`, drawing from the export at `base`. `draw(sequence,
- * onSketch)` answers `{ status: 'composed', drawn }`, `{ status: 'failed', error }`, or `{ status:
+ * onSketch)` answers `{ status: 'composed', drawn }`, `{ status: 'failed', error, unavailable }` (`unavailable`
+ * when the export itself could not be read), or `{ status:
  * 'cancelled' }` when it was replaced or `cancel` was called first; `onSketch` hears where the layout
  * puts each part before the drawing is done.
  * @param {() => WorkerLike} makeWorker
@@ -50,7 +51,7 @@ export function createDrawer(makeWorker, base) {
       live.onmessage = ({ data }) => {
         if (data.id !== pending?.id) return
         if (data.sketch) { pending?.onSketch?.(data.sketch); return }
-        settle(data.error === undefined ? { status: 'composed', drawn: data.drawn } : { status: 'failed', error: data.error })
+        settle(data.error === undefined ? { status: 'composed', drawn: data.drawn } : { status: 'failed', error: data.error, ...(data.unavailable ? { unavailable: true } : {}) })
       }
       live.onerror = event => { event?.preventDefault?.(); end(); settle({ status: 'failed', error: String(event?.message ?? 'worker failed') }) }
     }

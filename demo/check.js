@@ -127,12 +127,12 @@ try {
   await page.locator(`.from-row[data-key="x${hit}"]`).waitFor()
   pass(`${taken} taken from 疑's tree; ${hit} found by 疑's parts and opened`)
 
-  // The preview: without its export, placeholders and a badge saying it could not compose; with
+  // The preview: without its export, placeholders and no badge, since nothing could be tried; with
   // one, the filled part drawn and the empty slot a placeholder in its box.
   await page.goto(url)
-  await page.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   assert(await page.locator('.ids-preview-large .slot').count() >= 3, 'placeholders stand for the parts')
-  assert((await page.locator('.ids-preview-badge').textContent()) === 'Could not compose', 'the badge says so')
+  assert(await page.locator('.ids-preview-badge').count() === 0, 'no badge without data')
   await page.goto(`${url}?composer=${encodeURIComponent(`${url}composer/`)}&ids=${encodeURIComponent('⿰木＋')}`)
   await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
   await page.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
@@ -141,7 +141,7 @@ try {
   await page.locator('.ids-part.empty').click()
   assert(await page.locator('.ids-preview-large .slot.selected').count() === 1, 'the chosen slot is marked in the preview')
   await page.goto(`${url}?composer=${encodeURIComponent('http://[')}`)
-  await page.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   pass('the preview degrades without its export or with a base that is no URL, and draws a part and an empty slot with one')
 
   assert(!errors.length, `page errors: ${errors.join('; ')}`)
@@ -170,8 +170,8 @@ try {
     await narrow.screenshot({ path: join(shots, `phone-${scheme}.png`), fullPage: true })
     // The preview beside the field: as it stands without its export, and drawn from the test export.
     await shot.goto(url)
-    await shot.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
-    await shot.locator('.ids-top').screenshot({ path: join(shots, `preview-failed-${scheme}.png`) })
+    await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+    await shot.locator('.ids-top').screenshot({ path: join(shots, `preview-unavailable-${scheme}.png`) })
     await shot.goto(`${url}?composer=${encodeURIComponent(`${url}composer/`)}&ids=${encodeURIComponent('⿰木⿱口＋')}`)
     await shot.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
     await shot.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)

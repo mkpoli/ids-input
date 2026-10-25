@@ -65,11 +65,19 @@ describe('the rough layout', () => {
   })
 })
 
-describe('a composer base that is no URL', () => {
-  it('makes each drawing fail, leaving the page running', async () => {
+describe('an export that cannot be read', () => {
+  it('is unavailable, not a failed drawing: a base that is no URL, or a manifest the worker could not load', async () => {
     const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
-    const error = await draw('⿰木口').catch(e => e)
-    expect(error).toBeInstanceOf(TypeError)
+    expect((await draw('⿰木口').catch(e => e)).name).toBe('UnavailableError')
+    const reach = preview()
+    const asked = reach('⿰木口')
+    const [worker] = FakeWorker.made
+    worker.answer({ id: worker.posted[0].id, error: 'manifest.json: 404', unavailable: true })
+    expect((await asked.catch(e => e)).name).toBe('UnavailableError')
+    const fails = reach('⿱木口')
+    const next = FakeWorker.made.at(-1)
+    next.answer({ id: next.posted.at(-1).id, error: 'No glyph or sequence draws 㐀.' })
+    expect((await fails.catch(e => e)).name).toBe('Error')
   })
 })
 
@@ -93,6 +101,7 @@ describe('a preview turn', () => {
     expect(await run('⿰木＋', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'composed', drawn: { d: 'M0 0Z' } }])
     expect(await run('⿰木口', { preview: () => Promise.reject(new Error('x')) })).toEqual([{ step: 'failed' }])
     expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'TooLargeError' })) })).toEqual([{ step: 'capped' }])
+    expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'UnavailableError' })) })).toEqual([{ step: 'unavailable' }])
   })
   it('hands nothing over once aborted', async () => {
     const controller = new AbortController(), seen = []
