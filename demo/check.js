@@ -57,6 +57,20 @@ try {
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
   pass('the workshop opens on 疑, matched to its character')
 
+  // Examples: the character's tile, its code point, and a heading for the forms without one.
+  await page.getByRole('button', { name: 'Examples' }).click()
+  const exampleHeads = await page.locator('.menu .heading').allTextContents()
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['With a code point', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(await page.locator('.menu .item').count() === 17, 'seventeen examples')
+  const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
+  assert(await biang.count() === 1, 'the biang example shows U+30EDE')
+  assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
+  assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
+  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
+  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).first().locator('.leading.op').count() === 1, 'a form without a code point leads with its operator')
+  await page.getByRole('button', { name: 'Examples' }).click()
+  pass('examples show their code point, or say there is none')
+
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
   assert(JSON.stringify(groups) === JSON.stringify([['1 part', 3], ['3 parts', 2], ['2 parts', 13]]), `groups: ${JSON.stringify(groups)}`)
