@@ -1,7 +1,7 @@
 // Starter sequences. The characters use a description BabelStone IDS lists for them; the rest
 // describe forms with no code point.
 //
-// Sources for the forms with no code point, X posts seen on 2026-10-26: ⿱艹堀 (@JUMANJIKYO, a
+// Sources for the forms with no code point, X posts seen on 2026-10-26 (JST): ⿱艹堀 (@JUMANJIKYO, a
 // Kagoshima place-name character read ホキ), ⿱投石 (@dmnefkt, 逆{⿱投石}橋 in Ōzu, Ehime, read
 // さかなげ), ⿲𠂤日千 (@ka_disco, an oracle-bone form), ⿴囗⿱エン (@qvarie, a dialect abbreviation
 // of 園), ⿱一心 (@jianhuazi_bot2, the 二簡字 of 德) and ⿰忄実 (@Umihotarus, 舘暲's character for
