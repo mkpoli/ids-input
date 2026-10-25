@@ -161,9 +161,10 @@ different components to it.
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. It reads the static files han-compose's `export-web` writes (format 3):
-a manifest, the learned layout, and per character and per (place, operand) gzipped records, each
-named by its SHA-256, so a sequence loads only the records it names. Drawing runs in a Web Worker,
+MIT), ported to the browser. It reads the static files han-compose's `export-web` writes (format 4):
+a manifest, the learned layout, and the records of every character and the host lists of every
+(place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
+(`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
 one sequence at a time; a newer sequence ends the drawing before it.
 
 ```js
@@ -180,7 +181,7 @@ Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude:
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
 
-The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f3/`;
+The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f4/`;
 `?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
 
 ## Keyboard
@@ -236,7 +237,7 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
-  export format 3 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
+  export format 4 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
   as its `docs/licensing.md` states.
 - qrcode-generator 1.4.4, Kazuhiko Arase, MIT, <https://github.com/kazuhikoarase/qrcode-generator>:
