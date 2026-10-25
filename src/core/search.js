@@ -41,9 +41,10 @@ function readTree(list, cursor) {
 }
 
 /**
- * A query read into its terms, or a problem: `empty` (nothing to find) or `terms` (more than TERMS).
+ * A query read into its terms, or a problem: `empty` (nothing to find), `extra` (a structure with more
+ * than its operators take) or `terms` (more than TERMS).
  * @param {string} text
- * @returns {{ terms: Term[], problem?: 'empty' | 'terms' }}
+ * @returns {{ terms: Term[], problem?: 'empty' | 'extra' | 'terms' }}
  */
 export function parseQuery(text) {
   const written = (text ?? '').split(/[\s　]+/).map(t => unalias(t)).filter(Boolean)
@@ -53,7 +54,9 @@ export function parseQuery(text) {
     if (isSequence(term)) {
       /** @type {(t: Tree) => Pattern} */
       const pattern = t => typeof t === 'string' ? (EMPTY_MARKS.includes(t) || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
-      const tree = pattern(readTree(tokens(term), { at: 0 }))
+      const list = tokens(term), cursor = { at: 0 }
+      const tree = pattern(readTree(list, cursor))
+      if (cursor.at < list.length) return { terms, problem: 'extra' }
       /** @type {string[]} */
       const leaves = []
       /** @param {Pattern} p */
@@ -129,33 +132,48 @@ export function createSearch(table, { forms = new Map() } = {}) {
   const EMPTY_HELD = new Int32Array(0)
   /** @type {{ chars: string[], of: Map<number, Int32Array> } | null} */
   let holders = null
+  // A character whose holdings were cut short by a cycle (水 is ⿰㇇𰛅 and 𰛅 is ㇯水㇇) is worked out
+  // again when next asked, never kept half done.
+  /** @type {Set<string>} */
+  const cut = new Set()
+  /**
+   * What one description holds, counted: its components and operators, and what its components
+   * hold in turn. The operands of ㇯ do not stand in the character, so only ㇯ itself is counted,
+   * and a character never holds itself.
+   * @param {Tree} tree @param {string} char @param {Set<string>} path @returns {Map<number, number>}
+   */
+  function holdingsIn(tree, char, path) {
+    /** @type {Map<number, number>} */
+    const here = new Map()
+    /** @param {number} k @param {number} n */
+    const add = (k, n) => here.set(k, (here.get(k) ?? 0) + n)
+    /** @param {Tree} t */
+    const walk = t => {
+      if (typeof t !== 'string') { add(key(t.op), 1); if (t.op !== '㇯') t.parts.forEach(walk); return }
+      if (t === UNKNOWN || t.startsWith('{') || t === char) return
+      add(key(fold(t)), 1)
+      const inner = holdingsOf(t, path)
+      for (let i = 0; i < inner.length; i += 2) add(inner[i], inner[i + 1])
+    }
+    walk(tree)
+    here.delete(key(fold(char)))
+    return here
+  }
   /** @param {string} char @param {Set<string>} path @returns {Int32Array} */
   function holdingsOf(char, path) {
     const known = held.get(char)
     if (known) return known
-    if (path.has(char) || path.size > 12) return EMPTY_HELD
+    if (path.has(char) || path.size > 12) { for (const c of path) cut.add(c); return EMPTY_HELD }
     path.add(char)
     /** @type {Map<number, number>} */
     const most = new Map()
-    for (const tree of treesOf(char)) {
-      /** @type {Map<number, number>} */
-      const here = new Map()
-      /** @param {number} k @param {number} n */
-      const add = (k, n) => here.set(k, (here.get(k) ?? 0) + n)
-      /** @param {Tree} t */
-      const walk = t => {
-        if (typeof t !== 'string') { add(key(t.op), 1); t.parts.forEach(walk); return }
-        if (t === UNKNOWN || t.startsWith('{')) return
-        add(key(fold(t)), 1)
-        if (t !== char) { const inner = holdingsOf(t, path); for (let i = 0; i < inner.length; i += 2) add(inner[i], inner[i + 1]) }
-      }
-      walk(tree)
-      for (const [k, n] of here) if (n > (most.get(k) ?? 0)) most.set(k, n)
-    }
+    for (const tree of treesOf(char)) for (const [k, n] of holdingsIn(tree, char, path)) if (n > (most.get(k) ?? 0)) most.set(k, n)
     path.delete(char)
     const ks = [...most.keys()].sort((x, y) => x - y), out = new Int32Array(ks.length * 2)
     ks.forEach((k, i) => { out[2 * i] = k; out[2 * i + 1] = /** @type {number} */ (most.get(k)) })
-    held.set(char, out)
+    // Asked for itself (nothing above it on the path), a character's holdings are whole.
+    if (cut.has(char) && path.size) cut.delete(char)
+    else { cut.delete(char); held.set(char, out) }
     return out
   }
   /** How many of key `k` a character's holdings hold. @param {Int32Array} run @param {number} k */
@@ -249,16 +267,18 @@ export function createSearch(table, { forms = new Map() } = {}) {
       for (const tree of treesOf(data)) {
         const inner = find(pattern, tree, depth + 1)
         if (!inner) continue
-        if (!best || inner.depth + inner.opened + 1 < best.depth + best.opened)
+        if (!best || (inner.depth * 4 + (inner.opened + 1) * 2) < best.depth * 4 + best.opened * 2)
           best = { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, depth: inner.depth, opened: inner.opened + 1 }
         break
       }
       return best
     }
     const node = data
+    // What ㇯ takes away, and what it takes it from, do not stand in the character.
+    if (node.op === '㇯') return best
     node.parts.forEach((part, i) => {
       const inner = find(pattern, part, depth)
-      if (!inner || (best && best.depth + best.opened <= inner.depth + 1 + inner.opened)) return
+      if (!inner || (best && best.depth * 4 + best.opened * 2 <= (inner.depth + 1) * 4 + inner.opened * 2)) return
       const parts = node.parts.slice()
       parts[i] = inner.tree
       best = { tree: { ...node, parts }, path: [i, ...inner.path], depth: inner.depth + 1, opened: inner.opened }
@@ -285,7 +305,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
    * The characters `query` finds, closest first, at most `limit`, and how many there are.
    * @param {string} query
    * @param {{ limit?: number }} [options]
-   * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'terms' }}
+   * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'extra' | 'terms' }}
    */
   function search(query, { limit = 60 } = {}) {
     const { terms, problem } = parseQuery(query)
@@ -334,6 +354,18 @@ export function createSearch(table, { forms = new Map() } = {}) {
           score += found.depth * 4 + found.opened * 2
         }
         if (!ok) continue
+        // Every components term held by this one description, not by several together. A component
+        // inside it counts the most any one of its own descriptions holds of each part.
+        const runs = terms.filter(term => term.kind === 'components')
+        if (runs.length) {
+          const holds = holdingsIn(tree, char, new Set([char]))
+          if (runs.some(term => {
+            /** @type {Map<string, number>} */
+            const want = new Map()
+            for (const leaf of term.leaves) want.set(fold(leaf), (want.get(fold(leaf)) ?? 0) + 1)
+            return [...want].some(([k, n]) => (holds.get(keyOf.get(k) ?? -1) ?? 0) < n)
+          })) continue
+        }
         // A components term costs less where its components stand in the description itself.
         for (const term of terms) if (term.kind === 'components') {
           /** @type {string[]} */

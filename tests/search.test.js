@@ -66,6 +66,19 @@ describe('the search', () => {
     expect(chars('⿻八十')).toEqual(chars('⿻十八'))
     expect(chars('⿻八十')[0]).toBe('木')
   })
+  it('needs one description to hold a run, not several together', () => {
+    const two = createSearch(new Map(Object.entries({ C: ['⿰木木', '⿱口口'], X: ['⿰C丨'], 林: ['⿰木木'] })))
+    expect(two.search('木木口口').hits.map(h => h.char)).not.toContain('C')
+    expect(two.search('木木').hits.map(h => h.char).sort()).toEqual(['C', 'X', '林'].sort())
+  })
+  it('counts nothing a cycle or ㇯ would add, and finds every member of a cycle', () => {
+    const cycle = createSearch(new Map(Object.entries({ 水: ['⿰㇇甲'], 甲: ['㇯水㇇'], 冰: ['⿰冫水'], A: ['⿰B口'], B: ['⿱A木'] })))
+    expect(cycle.search('水水').hits.map(h => h.char)).toEqual([])
+    expect(cycle.search('口').hits.map(h => h.char).sort()).toEqual(['A', 'B'])
+  })
+  it('refuses a structure with more than its operators take', () => {
+    expect(search.search('⿰木木木').problem).toBe('extra')
+  })
   it('finds nothing for a shape no character has', () => {
     expect(chars('⿲木木木')).toEqual([])
     expect(search.search('').problem).toBe('empty')
