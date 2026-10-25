@@ -4,8 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <title>IDS Input</title>
-  <meta name="description" content="Type or build ideographic description sequences (IDS) as trees, with a parts palette and decomposition from BabelStone IDS.">
+  <title>IDS Workshop</title>
+  <meta name="description" content="Build ideographic description sequences (IDS) as trees: operators by key, parts from a palette or from any character, a preview drawn by han-compose, and SVG or PNG export.">
+  <script>
+    // The theme kept from the last visit, set before the page paints.
+    try { const theme = JSON.parse(localStorage.getItem('ids-input:theme') ?? 'null'); if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme } catch {}
+  </script>
 </head>
 <body>
   <div id="app"></div>

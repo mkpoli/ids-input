@@ -1,0 +1,32 @@
+/* The workshop's colours, for the system's scheme or the one chosen (data-theme on the root). Every
+   token is a light-dark() pair, so color-scheme alone picks the side. */
+:root{color-scheme:light dark}
+:root[data-theme="light"]{color-scheme:light}
+:root[data-theme="dark"]{color-scheme:dark}
+:root{
+  --bg:light-dark(#f3f3f6,#111114);
+  --surface:light-dark(#ffffff,#1b1b20);
+  --surface-2:light-dark(#f6f6f9,#16161a);
+  --hover:light-dark(#eeeef3,#26262d);
+  --ink:light-dark(#1c1c22,#ececf2);
+  --muted:light-dark(#686874,#9d9daa);
+  --line:light-dark(#e1e1e8,#2e2e36);
+  --line-strong:light-dark(#c2c2cc,#4a4a55);
+  --accent:light-dark(#2944c7,#8ea8ff);
+  --accent-soft:light-dark(#e9edfd,#232c4c);
+  --on-accent:light-dark(#ffffff,#0e1330);
+  --focus:light-dark(#2944c7,#8ea8ff);
+  --fault:light-dark(#b42318,#ff8a80);
+  --shadow:light-dark(0 1px 3px rgb(0 0 0 / .12),0 1px 3px rgb(0 0 0 / .5));
+  --shadow-pop:light-dark(0 12px 32px rgb(20 20 40 / .18),0 12px 32px rgb(0 0 0 / .55));
+  --toast-bg:light-dark(#1c1c22,#ececf2);
+  --toast-ink:light-dark(#ffffff,#111114);
+  --cjk:"IDS Strokes","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
+  /* The components' tokens, from the workshop's. */
+  --ids-ink:var(--ink);--ids-muted:var(--muted);--ids-line:var(--line);--ids-line-strong:var(--line-strong);
+  --ids-surface:var(--surface);--ids-surface-subtle:var(--surface-2);--ids-surface-selected:var(--hover);
+  --ids-accent:var(--accent);--ids-accent-light:var(--accent-soft);--ids-focus:var(--focus);--ids-fault:var(--fault);
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
