@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, OPERATORS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isSequence, leaves, nextEmpty,
+import { EMPTY, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -160,5 +160,13 @@ describe('moving through a tree', () => {
     expect(samePath([], [])).toBe(true)
     expect(samePath([1], [1, 0])).toBe(false)
     expect(samePath(null, [])).toBe(false)
+  })
+})
+
+describe('the operator groups', () => {
+  it('hold every operator once, each in the group of its arity', () => {
+    const all = OPERATOR_GROUPS.flatMap(group => group.ops)
+    expect(all.slice().sort()).toEqual(OPERATORS.map(([op]) => op).sort())
+    for (const group of OPERATOR_GROUPS) for (const op of group.ops) expect(arity(op)).toBe(group.arity)
   })
 })
