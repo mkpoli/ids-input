@@ -19,7 +19,9 @@
     </label>
     <label class="pref column">
       <span>{t('app.prefs.composer')}</span>
-      <input type="url" bind:value={composer} placeholder={defaultComposer} spellcheck="false" />
+      <input type="url" value={composer} placeholder={defaultComposer} spellcheck="false"
+        onchange={event => { composer = event.currentTarget.value }}
+        onkeydown={event => { if (event.key === 'Enter') composer = event.currentTarget.value }} />
       <small>{t('app.prefs.composerHint')}</small>
     </label>
   </div>
