@@ -36,8 +36,6 @@
     chars.forEach((c, i) => { if (out.length && out[out.length - 1].marked === marked[i]) out[out.length - 1].text += c; else out.push({ text: c, marked: marked[i] }) })
     return out
   }
-  /** @param {string} char */
-  const cp = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 </script>
 
 <section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
@@ -55,7 +53,6 @@
             ondragstart={event => event.dataTransfer?.setData('text/plain', hit.char)} onclick={() => onopen?.(hit)}>
             <span class="char" lang="ja">{hit.char}</span>
             <span class="seq" lang="ja">{#each pieces(hit) as piece, i (i)}{#if piece.marked}<mark>{piece.text}</mark>{:else}{piece.text}{/if}{/each}</span>
-            <code>{cp(hit.char)}</code>
           </button>
           {#if ontake}<button type="button" class="take" title={t('ids.search.take', { char: hit.char })} aria-label={t('ids.search.take', { char: hit.char })} onclick={() => ontake?.(hit)}>
             <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 4h7v7H4zM13 13h7v7h-7zM14 7h6M17 4v6M4 17h6" /></svg></button>{/if}
@@ -83,17 +80,19 @@
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}
   .asked{margin-right:6px;font-family:var(--_font);color:var(--_ink)}
   .fault{color:var(--_fault)}
-  .hits{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none;transition:opacity .15s}
+  .hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;margin:0;padding:0;list-style:none;transition:opacity .15s}
   .hits.stale{opacity:.55}
-  .hit{display:flex;align-items:stretch;gap:2px}
-  .hit button{border:1px solid transparent;border-radius:8px;background:none;color:inherit;font:inherit;cursor:pointer}
-  .hit button:hover{background:var(--_surface-subtle);border-color:var(--_line)}
-  .open{flex:1;min-width:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;padding:3px 8px;text-align:left}
-  .char{font-family:var(--_font);font-size:28px;line-height:1.2}
-  .seq{font-family:var(--_font);font-size:15px;color:var(--_muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .hit{position:relative;aspect-ratio:1;min-width:0}
+  .hit button{border:1px solid var(--_line);border-radius:10px;background:var(--_surface);color:inherit;font:inherit;cursor:pointer}
+  .hit button:hover{border-color:var(--_accent);background:var(--_surface-subtle)}
+  .open{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:6px 5px;text-align:center}
+  .char{font-family:var(--_font);font-size:clamp(22px,2.2vw,34px);line-height:1.15}
+  .seq{display:block;width:100%;font-family:var(--_font);font-size:10.5px;line-height:1.3;color:var(--_muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   mark{background:var(--_accent-light);color:var(--_ink);border-radius:3px;box-shadow:0 -2px 0 var(--_accent) inset}
-  code{font:11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
-  .take{display:grid;place-items:center;width:34px;color:var(--_muted)}
+  .take{position:absolute;top:2px;right:2px;display:grid;place-items:center;width:22px;height:22px;padding:0;border-color:transparent;background:var(--_surface);color:var(--_muted);opacity:0;transition:opacity .12s}
+  .hit:hover .take,.hit:focus-within .take{opacity:1}
+  .take:hover{color:var(--_accent);border-color:var(--_accent)}
+  @media (hover:none){.take{opacity:1}}
   .take svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .empty{width:120px;align-self:center;margin:16px 0;fill:none;stroke:var(--_line);stroke-width:3;stroke-linecap:round;stroke-dasharray:0}
   .empty rect{stroke-dasharray:4 5}

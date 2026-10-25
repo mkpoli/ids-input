@@ -86,7 +86,9 @@ try {
   assert(results.y > box.y + box.height - 1, 'the search stands under the tree')
   assert(Math.abs(results.width - box.width) < 2, `the search is as wide as the tree (${results.width} against ${box.width})`)
   assert(Math.abs(root.width - root.height) < 2 && root.width > box.width * 0.85, `the tree is square and fills its frame (${root.width}×${root.height} in ${box.width})`)
-  pass('the search sits under the tree, in the middle column')
+  const card = await page.locator('.ids-search-results .hit').first().boundingBox()
+  assert(Math.abs(card.width - card.height) < 2, `a hit is a square card (${card.width}×${card.height})`)
+  pass('the search sits under the tree, in the middle column, its hits as square cards')
 
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
