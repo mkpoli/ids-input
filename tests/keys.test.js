@@ -119,3 +119,13 @@ describe('undo and redo', () => {
     expect([history.undo('f'), history.undo('e'), history.undo('d'), history.undo('c')]).toEqual(['e', 'd', 'c', undefined])
   })
 })
+
+describe('a shortcut', () => {
+  it('is written with symbols on Apple systems and with names elsewhere', async () => {
+    const { shortcut } = await import('../src/svelte/shortcut.js')
+    expect(shortcut('mod+shift+z', true)).toBe('⌘⇧Z')
+    expect(shortcut('mod+shift+z', false)).toBe('Ctrl+Shift+Z')
+    expect(shortcut('backspace', false)).toBe('Backspace')
+    expect(shortcut('q', true)).toBe('Q')
+  })
+})
