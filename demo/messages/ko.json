@@ -65,6 +65,7 @@
   "app.share.link": "링크",
   "app.share.qr": "링크 QR 코드",
   "app.share.title": "공유",
+  "app.share.tooLong": "링크가 너무 길어 QR 코드로 만들 수 없습니다.",
   "app.source.babelstone": "각 글자의 구성 기술. 분해, 부품표, 대조에 사용.",
   "app.source.hanCompose": "기존 글자의 부품으로 미리보기를 그립니다.",
   "app.source.hfhchan": "부품표에서 더 나누지 않는 부품.",

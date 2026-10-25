@@ -15,12 +15,12 @@
   /** @param {boolean} [focus] */
   function show(focus = false) {
     open = true
-    if (focus) queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (box?.querySelector('[role="menuitem"]:not([disabled])'))?.focus())
+    if (focus) queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (box?.querySelector(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])'))?.focus())
   }
   function hide() { open = false; trigger?.focus() }
   /** @param {KeyboardEvent} event */
   function key(event) {
-    const all = /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll('[role="menuitem"]:not([disabled])') ?? [])])
+    const all = /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])') ?? [])])
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
@@ -44,7 +44,7 @@
         {:else if 'heading' in item}<p class="heading">{item.heading}</p>
         {:else}
           <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item" disabled={item.disabled}
-            title={item.hint} onclick={() => { open = false; item.run?.() }}>
+            title={item.hint} onclick={() => { hide(); item.run?.() }}>
             <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
             <span class="label" lang={item.lang}>{item.label}</span>
             {#if item.shortcut && keyHints}<kbd>{item.shortcut}</kbd>{/if}

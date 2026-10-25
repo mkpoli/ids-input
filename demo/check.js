@@ -97,6 +97,14 @@ try {
   assert(await value() === '⿰⬚⿱七木', `cleared: ${await value()}`)
   await page.locator('.toast button').click()
   assert(await value() === '⿰亻⿱七木', `undone from the note: ${await value()}`)
+  // A later change takes the note away, so its Undo never takes back something else.
+  await page.locator('.ids-part').first().focus()
+  await page.keyboard.press('Backspace')
+  await page.locator('.toast').waitFor()
+  await page.locator('input.ids-slot').fill('亻')
+  await page.locator('input.ids-slot').press('Enter')
+  await page.locator('.toast').waitFor({ state: 'detached', timeout: 2000 })
+  assert(await value() === '⿰亻⿱七木', `refilled: ${await value()}`)
   pass('Tab and Shift+Tab, typing on the tree, Backspace with an Undo note')
 
   // An operator on a node swaps it, refusing to drop a filled part; × takes a level away; undo, redo.

@@ -65,6 +65,7 @@
   "app.share.link": "リンク",
   "app.share.qr": "リンクのQRコード",
   "app.share.title": "共有",
+  "app.share.tooLong": "リンクが長すぎてQRコードにできません。",
   "app.source.babelstone": "各字の構成記述。分解・部品一覧・照合に使用。",
   "app.source.hanCompose": "既存の字の部品を使ってプレビューを描く。",
   "app.source.hfhchan": "部品一覧で分解しない部品の判定。",

@@ -72,9 +72,13 @@
   let notes = 0
   /** @param {string} text */
   const note = text => { toast = { id: ++notes, text } }
+  // Its Undo takes back that change only: any later change takes the note away.
   $effect(() => {
     const change = editor.change
-    if (change?.destructive && !change.undone) untrack(() => { toast = { id: ++notes, text: change.label, action: t('ids.undo'), run: () => editor.undo() } })
+    untrack(() => {
+      if (change?.destructive && !change.undone) toast = { id: ++notes, text: change.label, action: t('ids.undo'), run: () => editor.undo() }
+      else if (change && toast?.run) toast = null
+    })
   })
 
   // The output: the encoded characters the whole sequence describes, and its code points.
@@ -84,7 +88,7 @@
     encoded = []
     if (!text || !ask) return
     let live = true
-    ask(text).then(found => { if (live) encoded = found })
+    ask(text).then(found => { if (live) encoded = found }, () => {})
     return () => { live = false }
   })
   /** @param {string} ch */
