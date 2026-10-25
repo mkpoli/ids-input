@@ -67,3 +67,13 @@ Notes on the columns:
 - A stroke count is Unihan's first `kTotalStrokes` value, which Unihan gives for the zh-Hans form
   where forms differ. A CJK stroke counts 1 and is marked derived; a part Unihan lacks takes the sum
   over the leaves of its first sequence whose leaves all have counts, marked derived, or stays null.
+
+## component-forms.tsv
+
+Component forms that stand for another character (⺡ for 氵, 氵 for 水), which the description search
+folds together. Copied from han-compose (<https://github.com/mkpoli/han-compose>, MIT)
+`data/vocab/han-component-forms.tsv` at commit efb5acb, its first header line changed to say so;
+SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072008c38`. Its rows come from Unicode's EquivalentUnifiedIdeograph.txt 18.0.0
+(Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
+`radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
+rows), each row naming its source.

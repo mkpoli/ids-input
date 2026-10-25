@@ -158,6 +158,36 @@ in memory on first use: under Bun, about half a second for the most frequent com
 no `variants`, `drawing` or `preview`, and no table of component forms, so `⺡` and `氵` are
 different components to it.
 
+## Search
+
+`createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
+`babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
+hits; the workshop puts it beside the output and asks it for the tree being edited.
+
+- A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
+  stands in a character's description, at any depth, components opened into their own descriptions
+  as needed: `⿱木⿰木木` finds 森 (`⿱木林`, 林 being `⿰木木`).
+- An empty slot (`⬚`, or a pasted `＋`) or `？` in a structure matches any part, a component or a
+  whole subtree.
+- Any other term is a run of components the character must hold, at any depth, counted: `木木`
+  finds 林 and 森 but not 本.
+- Terms apart by spaces must all match: `⿰？？ 氵` finds characters split left and right that hold 氵.
+- Components match across their radical and positional forms (⺡, 氵 and 水 are one), from
+  `data/component-forms.tsv`; ⿻ matches its parts in either order.
+- Hits come closest first: the whole description matched exactly, then by how deep the match lies,
+  how many components had to be opened to reach it, how many of a run's components stand in the
+  description itself, how many parts the description has, and the common ideographs before the
+  rarer blocks. Each hit carries the description it matched in, opened where the match needed it,
+  and the spans the terms matched, which `IdsSearch` marks.
+
+`findByIds` builds its index once in a Web Worker, which fetches the table and the forms itself. On
+the full table (97,680 characters) under Bun 1.3.14 on an AMD Ryzen 7 9800X3D, building it took
+1.4 to 2.1 s and 55 to 65 MB of heap over several runs. A query naming components answers in
+1 to 35 ms (`⿱木⿰木木` 15 to 33 ms, `日月` 8 ms, `⿰⺡木` 17 to 35 ms); the broadest wildcard queries
+take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, which matches 91,193 characters,
+0.6 to 1 s). In the workshop under headless Chromium, the first results arrived 1.3 s after the page
+loaded, table download included. Without a Worker (Bun, tests) the search runs on the caller's thread.
+
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
@@ -211,6 +241,9 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 
 - Code: MIT (`LICENSE`).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain (777 KB).
+- `data/component-forms.tsv`: radical and positional forms, from han-compose's
+  `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
+  License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
 - `data/ids-parts.json`: CC BY-SA 3.0 as a whole, since its first-stroke column adapts KanjiVG;
   anything made from that column must be shared alike (42 KB).
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
@@ -239,6 +272,10 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   export format 3 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
   as its `docs/licensing.md` states.
+- Unicode EquivalentUnifiedIdeograph.txt 18.0.0, Unicode, Inc., Unicode License v3, and
+  cjkvi-variants `radical-variants.txt` (at e4f1da2), Kawabata Taichi (川幡太一), public domain,
+  <https://github.com/cjkvi/cjkvi-variants>: the radical and positional forms the search folds, by
+  way of han-compose's table.
 - qrcode-generator 1.4.4, Kazuhiko Arase, MIT, <https://github.com/kazuhikoarase/qrcode-generator>:
   the workshop's QR codes (a development dependency, bundled into the demo only).
 - 字統网 (zi.tools), IDS search, <https://zi.tools/?secondary=ids>: the ASCII operator names, read from
@@ -289,8 +326,14 @@ from BabelStone IDS. Read on 2026-10-25.
 
 What Mojidata offers that this package does not:
 
-- An IDS Finder (<https://mojidata.ryusei.dev/idsfind>) that searches by several sequences at once,
-  by a whole-character pattern with `？` as a wildcard (`⿰？月`), and by a query syntax (`：日`).
+- In its IDS Finder (<https://mojidata.ryusei.dev/idsfind>): a whole-character mode (`§…§`),
+  variables (`x` matching the same subtree each time it appears, `⿱x⿰xx`), a count suffix (`耳*3`),
+  and query terms beyond structure, such as a code point, readings, stroke counts and other
+  properties (in `mojidata-web-app`'s `src/search/parseQuery.ts`), read from its source on
+  2026-10-25. This package's search (see [Search](#search)) takes from it several sequences at once,
+  all to match, `？` as a wildcard for a component or a subtree, and ⿻ matching its parts in either
+  order; it ranks its hits and marks the match, which Mojidata's finder does not do as far as its
+  source shows. No Mojidata data or code is used.
 - Many character databases beyond IDS, shown together, with Moji_Joho, regional and Adobe-Japan1
   glyphs and glyph images from GlyphWiki.
 - Search backends on SQLite (sql.js, SQLite wasm, better-sqlite3, node:sqlite, Cloudflare D1), and a
