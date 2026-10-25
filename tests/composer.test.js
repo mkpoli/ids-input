@@ -5,7 +5,7 @@ import { describe, expect, it } from 'bun:test'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
 import { badge, placeholder } from '../src/svelte/preview.js'
-import { at, files, layout, ops } from './fixtures/composer-export.js'
+import { files, layout, ops } from './fixtures/composer-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -59,7 +59,7 @@ describe('the composer', () => {
       return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
     })
     await source.ready()
-    await source.load(Array.from({ length: 20 }, (_, i) => at('g', `x${i}`)))
+    await source.load(Array.from({ length: 20 }, (_, i) => `g/${i.toString(16).padStart(3, '0')}.json`))
     expect(most).toBe(6)
   })
 })

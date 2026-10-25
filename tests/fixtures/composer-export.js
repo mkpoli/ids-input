@@ -9,7 +9,14 @@ import { gzipSync } from 'node:zlib'
 
 export const constants = JSON.parse(readFileSync(join(import.meta.dirname, 'composer-constants.json'), 'utf8'))
 const hex = text => createHash('sha256').update(text).digest('hex')
-export const at = (folder, text) => `${folder}/${hex(text).slice(0, 2)}/${hex(text)}.json`
+/** The shard a key's record or host list is in: the first three hex digits of its SHA-256. */
+export const shardOf = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
+/** Format 4's shards: each entry under the full hash of its text, gzipped. */
+export const shards = (folder, entries) => {
+  const out = {}
+  for (const [text, value] of entries) ((out[shardOf(folder, text)] ??= {})[hex(text)] = value)
+  return Object.fromEntries(Object.entries(out).map(([name, file]) => [name, gzipSync(JSON.stringify(file))]))
+}
 const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
 // A glyph of boxes, each [x0, y0, x1, y1] in font units: one square contour per box.
 const glyph = boxes => {
@@ -25,9 +32,9 @@ const records = {
   口: character('口', [[120, -40, 880, 20], [120, 700, 880, 760], [120, -40, 180, 760], [820, -40, 880, 760]]),
   永: character('永', [[100, 0, 900, 800]]),
 }
-/** Each file of the export by its name: JSON text, or gzip bytes for a record. */
+/** Each file of the export by its name: JSON text, or gzip bytes for a shard. */
 export const files = {
-  'manifest.json': JSON.stringify({ format: 2, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
+  'manifest.json': JSON.stringify({ format: 4, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
   'layout.json': JSON.stringify(layout),
-  ...Object.fromEntries(Object.entries(records).map(([key, record]) => [at('g', key), gzipSync(JSON.stringify(record))])),
+  ...shards('g', Object.entries(records)),
 }
