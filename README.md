@@ -9,9 +9,11 @@ layers, and an optional preview:
 - **adapter**: the data the components ask for, supplied by the host application. A default
   adapter reads BabelStone IDS and the parts palette from two static files, so nothing needs a
   server.
-- **svelte**: Svelte 5 components for the editor, a parts palette and a "Take parts from"
-  decomposition browser, with message catalogues in English, Japanese, Simplified Chinese,
-  Traditional Chinese and Korean.
+- **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
+  the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
+  decomposition browser, a search) and the preview, each placeable on its own or together as
+  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese
+  and Korean.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
@@ -63,9 +65,37 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
 | `disabled` | | |
 
-`IdsParts` (`adapter`, `onpick(part)`), `IdsFrom` (`adapter`, `ontake(text)`) and `IdsPreview`
-(`adapter`, `tree`, `chosen`) also work on their own. `IdsInput` shows `IdsPreview` beside the field
-when the adapter has a `preview` or a `drawing`. The components take colours from CSS custom properties with light and dark defaults
+`IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
+
+A host laying the editor out itself makes one editor and places its parts where it wants them; the
+workshop in `demo/` does so:
+
+```svelte
+<script>
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSequence, IdsTree, createEditor } from 'ids-input/svelte'
+  const editor = createEditor(() => ({ adapter, messages: ja, locale: 'ja' }))
+  editor.reset('⿰亻⿱七木')
+  let drawing = $state(null)   // the preview's drawing, for export (drawingSvg in the core)
+</script>
+
+<svelte:window onkeydown={event => editor.keydown(event, { root: document.body })} />
+<IdsSequence {editor} />
+<IdsOperators {editor} />
+<IdsTree {editor} />
+<IdsPartTools {editor} />
+<IdsPicker {editor} pickers={['parts', 'from', 'find']} />
+<IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} bind:drawing />
+```
+
+The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ＋
+with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
+and `keydown` change it, `change` names the last change and whether it threw something away, and
+`listen(fn)` hears each new text. In the tree, a click chooses a part, a part dragged from the
+palette, the decomposition tree, a search or the swaps is put where it is dropped, and the context
+menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
+level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+`IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
+also work without an editor. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
 `--ids-font` and others; see the top of each component's style). The defaults use `light-dark()`,
 so the page needs `color-scheme: light dark` for its dark scheme.
@@ -164,10 +194,12 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Tab`, `Shift+Tab` | the next and previous part |
 | `Backspace`, `Delete` | empty the chosen part |
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
+| `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
-⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key.
+⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
+Ctrl+Shift+Z elsewhere).
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
@@ -207,11 +239,42 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   export format 3 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
   as its `docs/licensing.md` states.
+- qrcode-generator 1.4.4, Kazuhiko Arase, MIT, <https://github.com/kazuhikoarase/qrcode-generator>:
+  the workshop's QR codes (a development dependency, bundled into the demo only).
 - 字統网 (zi.tools), IDS search, <https://zi.tools/?secondary=ids>: the ASCII operator names, read from
   its page script (`action_abbr_map`) on 2026-10-24, and ideas for typing sequences.
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
+
+## The workshop
+
+The demo is a full-width workshop: the sequence, the operators and the part pickers at the start,
+the tree in a square panel in the middle, and at the end the drawing in a square panel, the sequence
+with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
+PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
+a chosen one, with a margin, empty slots left out unless asked for. The toolbar holds Undo and Redo
+with the history of named steps, saved drafts (also read from and written to a text file), examples,
+a share link with its QR code, the language, a system, light or dark theme, preferences (key hints on
+buttons, where the preview draws from) and the sources. The address carries the sequence
+(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
+`localStorage` under `ids-input:`.
+
+## Inspired by
+
+Ideas the editor takes, each traced to the tool's own page as seen on 2026-10-25:
+
+- 字統网 zi.tools, <https://zi.tools/?secondary=ids>: an interactive editor with operator buttons
+  beside direct input, a palette of hard-to-type components, and the ASCII operator names.
+- 字海网 yedict, <http://www.yedict.com/search/ids>: choosing a cell and then an operator splits it,
+  an operator on an operator swaps it with its parts kept, × backs out one level, and a list of
+  hard-to-type components fills the chosen cell; the editor's split, swap and unwrap follow it.
+- Mojidata IDS Finder, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/idsfind>: searching
+  by several sequences at once, by a whole pattern with `？` as a wildcard, and by other query terms.
+- CHISE IDS 漢字検索, MORIOKA Tomohiko, <https://www.chise.org/ids-find>: listing the characters
+  that contain every component given.
+
+The data the editor runs on is listed under [Sources](#sources) with its licences.
 
 ## Prior art
 
