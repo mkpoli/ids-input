@@ -25,7 +25,7 @@ import { tokens } from './decompose.js'
  * @typedef {{ char: string, sequence: string, spans: [number, number][], score: number }} Hit
  */
 
-/** Among hits as close as each other, the common ideographs (U+4E00–9FFF) first, then Extension A, then the rest. @param {string} char */
+/** The common ideographs (U+4E00–9FFF) first, then Extension A, then the rest: a rarer character ranks as if a little farther. @param {string} char */
 const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); return cp >= 0x4E00 && cp <= 0x9FFF ? 0 : cp >= 0x3400 && cp <= 0x4DBF ? 1 : 2 }
 
 /** How many components deep a match may open. */
@@ -334,13 +334,22 @@ export function createSearch(table, { forms = new Map() } = {}) {
           score += found.depth * 4 + found.opened * 2
         }
         if (!ok) continue
+        // A components term costs less where its components stand in the description itself.
+        for (const term of terms) if (term.kind === 'components') {
+          /** @type {string[]} */
+          const top = []
+          /** @param {Tree} t */
+          const collect = t => { if (typeof t === 'string') top.push(fold(t)); else t.parts.forEach(collect) }
+          collect(tree)
+          for (const leaf of term.leaves) { const i = top.indexOf(fold(leaf)); if (i >= 0) top.splice(i, 1); else score += 1 }
+        }
         score = score * 10 + count(tree)
         if (best === null || score < best.score) best = { tree: root, paths, score }
       }
       if (!best) continue
       // The whole description matched exactly comes first; a description with more parts, later.
       const exact = terms.length === 1 && terms[0].kind === 'structure' && best.paths[0]?.length === 0 && !EMPTY_MARKS.some(mark => terms[0].text.includes(mark)) && !terms[0].text.includes(UNKNOWN)
-      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -1000 : 0) + best.score })
+      found.push({ char, tree: best.tree, paths: best.paths, score: (exact ? -1000 : 0) + best.score + tier(char) * 15 })
     }
     found.sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char) || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
     // Only the hits handed back are written out, with their spans.

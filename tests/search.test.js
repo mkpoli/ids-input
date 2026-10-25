@@ -51,6 +51,8 @@ describe('the search', () => {
   it('reads a run of components as all of them held, counted', () => {
     expect(chars('木木')).toEqual(['林', '森', '淋'])
     expect(chars('木木木')).toEqual(['森'])
+    expect(chars('木')[0]).not.toBe('森')
+    expect(chars('木林')).toEqual(['森', '淋'])
     expect(chars('口木')).toEqual(['呆', '杏'])
     const hit = search.search('口木').hits[0]
     expect(hit.spans.length).toBe(2)
