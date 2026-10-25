@@ -21,6 +21,25 @@
     if (focus) queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (box?.querySelector(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])'))?.focus())
   }
   function hide() { open = false; trigger?.focus() }
+  // A wide menu can start left of the window when its trigger sits near that edge, as a short
+  // locale label or a narrow desktop can put it. Shift the open menu back inside the window.
+  $effect(() => {
+    const menu = box
+    if (!open || !menu) return
+    const pad = 8
+    /** @param {DOMRect} rect */
+    const shift = rect => rect.left < pad ? pad - rect.left : rect.right > innerWidth - pad ? innerWidth - pad - rect.right : 0
+    const place = () => {
+      menu.style.transform = ''
+      const dx = shift(menu.getBoundingClientRect())
+      menu.style.transform = dx ? `translateX(${dx}px)` : ''
+    }
+    place()
+    const observer = new ResizeObserver(place)
+    observer.observe(menu)
+    addEventListener('resize', place)
+    return () => { observer.disconnect(); removeEventListener('resize', place); menu.style.transform = '' }
+  })
   /** @param {KeyboardEvent} event */
   function key(event) {
     const all = /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])') ?? [])])

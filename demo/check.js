@@ -265,6 +265,12 @@ try {
   await drawn.locator('.bar select.locale').selectOption('ja')
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
   pass('theme switch, no flash, key hints off, the language')
+  await drawn.setViewportSize({ width: 641, height: 900 })
+  await drawn.getByRole('button', { name: '例' }).click()
+  await drawn.waitForTimeout(100)
+  const jpMenu = await drawn.locator('.menu').boundingBox()
+  assert(jpMenu && jpMenu.x >= 0 && jpMenu.x + jpMenu.width <= 641, `the Japanese examples menu fits: ${JSON.stringify(jpMenu)}`)
+  await drawn.getByRole('button', { name: '例' }).click()
   assert(!drawn.errors.length, `page errors: ${drawn.errors.join('; ')}`)
 
   // A browser set to Traditional Chinese opens the traditional catalogue.
