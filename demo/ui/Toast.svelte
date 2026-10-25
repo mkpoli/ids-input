@@ -15,7 +15,7 @@
   {#if toast}
     {#key toast.id}
       <div class="toast" role="status" transition:fly={{ y: 12, duration: 160 }}>
-        <span lang="ja">{toast.text}</span>
+        <span>{toast.text}</span>
         {#if toast.run && toast.action}<button type="button" onclick={() => { toast?.run?.(); ondone() }}>{toast.action}</button>{/if}
       </div>
     {/key}
