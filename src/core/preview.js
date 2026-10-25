@@ -124,8 +124,8 @@ export function runPreview(text, { preview, drawing, signal }, update) {
   })
 }
 
-/** Path data with nothing but its commands and numbers. */
-const pathData = d => String(d ?? '').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
+/** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
+const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
 /** A colour as an SVG attribute takes it: `#rgb`, `#rrggbb` or `#rrggbbaa`; anything else is refused. */
 const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value ?? '') ? value : fallback
 
