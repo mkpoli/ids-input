@@ -334,7 +334,11 @@ try {
       await shot.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
       await shot.waitForTimeout(300)
       await shot.locator('.output').screenshot({ path: join(shots, `output-${scheme}.png`) })
+      await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
       await shot.locator('.results').screenshot({ path: join(shots, `results-${scheme}.png`) })
+      await shot.setViewportSize({ width: 1920, height: 1080 })
+      await shot.waitForTimeout(300)
+      await shot.screenshot({ path: join(shots, `wide-${scheme}.png`) })
       await shot.getByRole('button', { name: 'About' }).click()
       await shot.locator('dialog[open]').screenshot({ path: join(shots, `about-${scheme}.png`) })
     }
