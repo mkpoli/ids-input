@@ -68,8 +68,9 @@ try {
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
   assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
   assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).first().locator('.leading.op').count() === 1, 'a form without a code point leads with its operator')
-  await page.getByRole('button', { name: 'Examples' }).click()
-  pass('examples show their code point, or say there is none')
+  await biang.click()
+  assert(await value() === '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', `example opened: ${await value()}`)
+  pass('examples show their code point, or say there is none, and open')
 
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
