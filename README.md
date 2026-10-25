@@ -162,7 +162,7 @@ different components to it.
 
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
-hits; the workshop puts it beside the output and asks it for the tree being edited.
+hits; the workshop puts it under the tree and asks it for the tree being edited.
 
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions
@@ -186,7 +186,7 @@ the full table (97,680 characters) under Bun 1.3.14 on an AMD Ryzen 7 9800X3D, b
 1 to 35 ms (`⿱木⿰木木` 15 to 33 ms, `日月` 8 ms, `⿰⺡木` 17 to 35 ms); the broadest wildcard queries
 take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, which matches 91,193 characters,
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
-3.7 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
+5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
 
 ## Preview
 
