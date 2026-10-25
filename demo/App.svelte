@@ -13,7 +13,7 @@
   const LOCALES = [['en', 'English', en], ['ja', '日本語', ja], ['zh-Hans', '简体中文', zhHans], ['zh-Hant', '繁體中文', zhHant], ['ko', '한국어', ko]]
   const params = new URLSearchParams(location.search)
   // The han-compose export the preview draws from: `?composer=` or VITE_COMPOSER_BASE points it at another copy.
-  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f3/'
+  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f4/'
   const base = params.get('composer') || import.meta.env.VITE_COMPOSER_BASE || COMPOSER
   const adapter = { ...babelStoneAdapter({ ids, parts }), preview: composerPreview({ base }) }
   let locale = $state(LOCALES.some(([code]) => code === params.get('lang')) ? params.get('lang') : 'en')
