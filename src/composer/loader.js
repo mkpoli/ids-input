@@ -126,7 +126,9 @@ export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch } = {
   const root = base.endsWith('/') ? base : `${base}/`
   return createSource(async name => {
     const response = await get(`${root}${name}${suffix}`)
-    if (response.status === 404 && name !== 'manifest.json') return null
+    // Only a key's own files (`b/`, `g/`, `p/`) may be missing, as the export holds none for a key it
+    // lacks; a missing manifest or layout fails with its status like any other error.
+    if (response.status === 404 && /^[bgp]\//.test(name)) return null
     if (!response.ok) throw new Error(`${name}: ${response.status}`)
     return await response.arrayBuffer()
   })

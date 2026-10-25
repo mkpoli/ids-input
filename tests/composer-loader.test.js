@@ -56,3 +56,18 @@ describe('a format-3 host list', () => {
     expect(uncut.k).toBeUndefined()
   })
 })
+
+describe('a missing file', () => {
+  it('reads as empty only for a key\'s own files; a missing layout fails naming it, as does a server error', async () => {
+    const answer = (status, name) => async url => url.endsWith(name) ? new Response('{"detail":"No such composer file."}', { status })
+      : files[url.replace('/x/', '')] ? new Response(files[url.replace('/x/', '')]) : new Response('{"detail":"No such composer file."}', { status: 404 })
+    await expect(fromUrl('/x/', { fetch: answer(404, 'layout.json') }).ready()).rejects.toThrow('layout.json: 404')
+    const down = fromUrl('/x/', { fetch: answer(503, `${hex('L\t木')}.json`) })
+    await down.ready()
+    await expect(down.load([at('p', 'L\t木')])).rejects.toThrow('503')
+    const missing = fromUrl('/x/', { fetch: answer(404, `${hex('L\t木')}.json`) })
+    await missing.ready()
+    await missing.load([at('p', 'L\t木')])
+    expect(missing.store().hosts('木', 'L')).toEqual([])
+  })
+})
