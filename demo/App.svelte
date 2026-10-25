@@ -7,7 +7,7 @@
   import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { isDescription } from '../src/core/index.js'
+  import { isSequence, parse, write } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
   import { LOCALES, appMessages } from './lib/locales.js'
@@ -101,7 +101,7 @@
   async function importDrafts() {
     const text = await pickText('.txt,text/plain')
     if (text === null) return
-    const found = fromText(text).filter(s => isDescription(s) || s.includes('＋'))
+    const found = fromText(text).filter(s => isSequence(s) && !parse(s, { open: true }).problem).map(s => write(parse(s, { open: true }).tree ?? null))
     for (const sequence of found.reverse()) drafts = keep(sequence)
     note(t('app.drafts.imported', { count: found.length }))
   }

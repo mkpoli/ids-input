@@ -3,7 +3,7 @@
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
   // click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a level or
-  // copies that part's sequence. An empty slot shows as ＋.
+  // copies that part's sequence. An empty slot shows as ⬚.
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
@@ -106,7 +106,7 @@
       data-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '＋'}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
   {/if}
 {/snippet}
 

@@ -1,5 +1,5 @@
 // @ts-check
-// Undo and redo over immutable states, each step named by what it did ("Split ＋ with ⿰"), so a
+// Undo and redo over immutable states, each step named by what it did ("Split ⬚ with ⿰"), so a
 // toolbar can say what Undo and Redo will take back or put again and list the steps.
 
 /**

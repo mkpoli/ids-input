@@ -4,8 +4,8 @@
 // them out as it likes; `IdsInput` puts them together as one editor.
 //
 // The sequence is held twice, kept in step: as text in the field, which also takes the ASCII operator
-// names (LR or lr for ⿰), and as a tree, where an empty slot shows (and is written) as ＋. One part of
-// the tree is chosen at a time. Every change is a named step in the history ("Split ＋ with ⿰",
+// names (LR or lr for ⿰), and as a tree, where an empty slot shows (and is written) as ⬚. One part of
+// the tree is chosen at a time. Every change is a named step in the history ("Split ⬚ with ⿰",
 // "Put 木"), so it can be undone and redone, a hundred steps each way; a run of typing in the field
 // is one step.
 import { tick } from 'svelte'
@@ -90,8 +90,10 @@ export function createEditor(options) {
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
     history.clear(); note = ''
-    draft = start; chosen = null; piece = ''
-    tree = parse(start, { open: true }).tree ?? null
+    const read = parse(start, { open: true })
+    // A pasted ＋ for an empty slot is written back as ⬚.
+    tree = read.tree ?? null; chosen = null; piece = ''
+    draft = read.problem || tree === null ? start : write(tree)
     sync()
   }
   /** @param {Part} next @param {Path | null} select */
@@ -136,7 +138,7 @@ export function createEditor(options) {
     const before = at ? partAt(tree, at) : tree
     const done = applyOperator(tree, at, op)
     if (done.problem) { note = t(`ids.problem.${done.problem}`, { name: name(op) }); return }
-    const label = isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '＋', op })
+    const label = isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '⬚', op })
     apply(done.tree, done.chosen, label)
   }
   /** `part` in the chosen slot (or the first empty one), or at `at`. @param {Part} part @param {Path | null} [at] */
@@ -292,7 +294,7 @@ export function createEditor(options) {
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
     /** Hear every change: the text and whether it is a whole description. @param {(text: string, whole: boolean) => void} listen */
     listen(listen) { listeners.push(listen); return () => { listeners.splice(listeners.indexOf(listen), 1) } },
-    /** The part at `path` written out, `＋` for an empty slot. @param {Path} path */
+    /** The part at `path` written out, `⬚` for an empty slot. @param {Path} path */
     sequenceAt: (/** @type {Path} */ path) => write(partAt(tree, path) ?? null),
   }
 }

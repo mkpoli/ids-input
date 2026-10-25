@@ -87,7 +87,7 @@ workshop in `demo/` does so:
 <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} bind:drawing />
 ```
 
-The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ＋
+The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
 with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
 and `keydown` change it, `change` names the last change and whether it threw something away, and
 `listen(fn)` hears each new text. In the tree, a click chooses a part, a part dragged from the
@@ -115,7 +115,7 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 
 A component is an ideograph, a radical, a stroke, a katakana letter standing for a component of
 that shape (コ, マ), a private-use character or `？` for a part no character names, with an
-optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot.
+optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ## Adapters
 
