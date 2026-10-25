@@ -2,6 +2,7 @@
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (both ship in this package's `data/`). Nothing is asked of a server beyond the two files.
 import { componentIndex } from './containing.js'
+import { createSearch, readForms } from '../core/search.js'
 import { isComponent, isSequence } from '../core/ids.js'
 
 /**
@@ -45,7 +46,7 @@ export const paletteRows = ({ columns, parts }) => parts.map(row => /** @type {P
  * `.gz`); a server that sent it with `Content-Encoding: gzip` has already decoded it.
  * @param {Response} response
  */
-async function readText(response) {
+export async function readText(response) {
   const bytes = new Uint8Array(await response.arrayBuffer())
   if (bytes[0] !== 0x1f || bytes[1] !== 0x8b) return new TextDecoder().decode(bytes)
   const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))
@@ -58,11 +59,16 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
 /**
  * An adapter over BabelStone IDS. `ids` is the URL of `data/babelstone-ids.tsv.gz` (or of the same
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
- * `table` and `palette` hand the data over directly instead.
- * @param {{ ids?: string | URL, parts?: string | URL, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch }} options
+ * `table` and `palette` hand the data over directly instead. `forms` is the URL of
+ * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
+ * components by. The description search (`findByIds`) runs in a Web Worker made by `worker` where
+ * there is one, its index built there once; elsewhere it runs on the caller's thread.
+ * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis) } = {}) {
+export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+  worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = given ? Promise.resolve(given) : null
   /** @type {Promise<PalettePart[]> | null} */
@@ -71,6 +77,32 @@ export function babelStoneAdapter({ ids, parts, table: given, palette: givenPale
   let index = null
   /** @type {Promise<Map<string, string[]>> | null} */
   let described = null
+  /** @type {Promise<ReturnType<typeof createSearch>> | null} */
+  let local = null
+  /** @type {Worker | null} */
+  let searcher = null
+  /** @type {Map<number, { resolve: (value: any) => void, reject: (error: Error) => void }>} */
+  const asked = new Map()
+  let asks = 0
+  /** The description search on this thread, over the table and the forms. */
+  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '']).then(([found, text]) =>
+    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: readForms(text) })).catch(error => { local = null; throw error })
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
+  function inWorker(query, limit) {
+    if (!searcher && worker) {
+      searcher = worker()
+      searcher.onmessage = ({ data }) => {
+        const waiting = asked.get(data.id)
+        asked.delete(data.id)
+        if (data.error === undefined) waiting?.resolve(data.result); else waiting?.reject(new Error(data.error))
+      }
+    }
+    const id = ++asks, base = globalThis.location?.href
+    return new Promise((resolve, reject) => {
+      asked.set(id, { resolve, reject })
+      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined })
+    })
+  }
 
   /** @param {string | URL} url */
   const load = async url => {
@@ -113,6 +145,11 @@ export function babelStoneAdapter({ ids, parts, table: given, palette: givenPale
         return by
       }).catch(error => { described = null; throw error })
       return (await described).get(sequence.trim()) ?? []
+    },
+    async findByIds(query, { limit = 60, signal } = {}) {
+      const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
+      signal?.throwIfAborted()
+      return result
     },
     async containing(asked, { limit = 24 } = {}) {
       index ??= componentIndex(new Map([...(await read())].map(([char, sequences]) => [char, sequences.map(s => s.text)])))

@@ -133,3 +133,14 @@ describe('an encoded character', () => {
     expect([a, b]).toEqual([['林'], ['林']])
   })
 })
+
+describe('the description search', () => {
+  it('finds characters by a structure with empty slots, folding forms, on the caller\'s thread without a worker', async () => {
+    const adapter = babelStoneAdapter({ table, formsText: 'form\tchar\tsource\tdetail\n⺡\t氵\tunicode-ucd\tx\n' })
+    const { hits, total } = await adapter.findByIds('⿰？木')
+    expect(hits.map(h => h.char)).toEqual(['林', '森'])
+    expect(total).toBe(2)
+    expect((await adapter.findByIds('⿱木⿰木木')).hits[0]).toMatchObject({ char: '森', sequence: '⿱木⿰木木', spans: [[0, 5]] })
+    expect((await adapter.findByIds('⿰⺡骨')).hits.map(h => h.char)).toEqual(['滑'])
+  })
+})
