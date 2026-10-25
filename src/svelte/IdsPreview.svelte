@@ -9,7 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { leaves, samePath, write } from '../core/ids.js'
-  import { FACE, STROKE, badge, placeholder, roughLayout, runPreview } from './preview.js'
+  import { FACE, STROKE, badge, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { translator } from './i18n.js'
 
   /**
@@ -20,8 +20,8 @@
    * @typedef {import('../core/ids.js').Path} Path
    */
 
-  /** @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number }} */
-  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150 } = $props()
+  /** @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, drawing?: Drawing | null }} */
+  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, drawing = $bindable(null) } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -53,6 +53,8 @@
     return () => { clearTimeout(timer); controller.abort() }
   })
 
+  // The drawing shown, for a host to export; none while it is out of date or failed.
+  $effect(() => { drawing = step === 'composed' && shown?.drawn ? shown.drawn : null })
   const said = $derived(badge(step, shown?.drawn))
   /** @type {Record<string, string>} */
   const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', tooLarge: 'ids.preview.tooLargeNote' }
