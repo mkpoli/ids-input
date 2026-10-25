@@ -64,10 +64,10 @@
   <IdsPicker {editor} {pickers} {recentKey} />
   <div class="ids-actions">
     <button type="button" class="ids-undo" disabled={disabled || !editor.canUndo} title={editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo')}
-      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo')}{#if keyHints}<kbd>{shortcut('mod+z')}</kbd>{/if}</button>
+      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
     <button type="button" class="ids-redo" disabled={disabled || !editor.canRedo} title={editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo')}
-      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo')}{#if keyHints}<kbd>{shortcut('mod+shift+z')}</kbd>{/if}</button>
-    {#if onuse}<button type="button" class="ids-use" disabled={disabled || !editor.usable} onclick={use}>{t('ids.use')}{#if keyHints}<kbd>{shortcut('enter')}</kbd>{/if}</button>{/if}
+      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+    {#if onuse}<button type="button" class="ids-use" disabled={disabled || !editor.usable} onclick={use}>{t('ids.use')}{#if keyHints}<kbd aria-hidden="true">{shortcut('enter', undefined, { compact: true })}</kbd>{/if}</button>{/if}
   </div>
 </div>
 
@@ -86,11 +86,11 @@
   .ids-own-preview{flex:none}
   .ids-input :global(.ids-tree){border:1px solid var(--_line);border-radius:12px;background:var(--_surface-subtle);min-height:96px}
   .ids-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
-  .ids-actions button{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 12px;font:inherit;font-size:13px;color:inherit;cursor:pointer;
+  .ids-actions button{position:relative;display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 16px 0 12px;font:inherit;font-size:13px;color:inherit;cursor:pointer;
     border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
   .ids-actions button:disabled{cursor:default;opacity:.5}
   .ids-actions button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-actions kbd{font:500 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
+  .ids-actions kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
   .ids-use:not(:disabled){margin-left:auto;border-color:var(--_accent);background:var(--_accent);color:var(--_surface)}
   .ids-use:not(:disabled) kbd{color:inherit;opacity:.8}
 </style>

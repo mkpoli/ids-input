@@ -127,5 +127,8 @@ describe('a shortcut', () => {
     expect(shortcut('mod+shift+z', false)).toBe('Ctrl+Shift+Z')
     expect(shortcut('backspace', false)).toBe('Backspace')
     expect(shortcut('q', true)).toBe('Q')
+    expect(shortcut('mod+shift+z', false, { compact: true })).toBe('Ctrl⇧Z')
+    expect(shortcut('backspace', false, { compact: true })).toBe('⌫')
+    expect(shortcut('mod+z', true, { compact: true })).toBe('⌘Z')
   })
 })
