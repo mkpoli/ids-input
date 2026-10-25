@@ -1,0 +1,96 @@
+// @ts-nocheck: geometry over plain arrays, as in the composer's own drawing.
+// What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
+// part not drawn yet) becomes, in the drawing's 1000-unit box.
+
+/**
+ * The badge of a preview: `{ label, params }`, `label` a key under `ids.preview.`. `step` is
+ * `loading`, `composed`, `final`, `failed` or `capped` (too large to draw); `drawn` is the composer's
+ * answer (`Drawing` in the adapter types). A drawing using an operator the composer does not draw is
+ * approximate, with the operators in `params.ops`.
+ * @param {string} step
+ * @param {{ approximate?: string[] } | null} [drawn]
+ * @returns {{ label: string, params: Record<string, string> }}
+ */
+export function badge(step, drawn = null) {
+  if (step === 'final') return { label: 'final', params: {} }
+  if (step === 'failed') return { label: 'failed', params: {} }
+  if (step === 'capped') return { label: 'tooLarge', params: {} }
+  if (step === 'composed' && drawn?.approximate?.length) return { label: 'approximate', params: { ops: drawn.approximate.join(' ') } }
+  return { label: 'draft', params: {} }
+}
+
+/** The face a whole character fills in the drawing's box ([x, y, width, height], y down): the median
+ *  box of full ideographs (han-compose's `Composer.face`), where placeholders stand before the layout
+ *  has loaded. */
+export const FACE = [38.42, 39.94, 928.36, 921.56]
+
+/** The stroke width a placeholder is drawn with where no drawing gives one: the font's at weight 400. */
+export const STROKE = 80
+
+/**
+ * A placeholder in `box` ([x, y, width, height], y down): a rounded rectangle inset by half a stroke,
+ * outlined in dots a stroke wide, with a small ＋ at its centre once it is large enough. `stroke` is
+ * the stroke width of the drawing beside it. Answers `{ x, y, width, height, rx, dot, gap, dots, plus, line }`:
+ * the rectangle, the dots' width, their spacing and how many go round, the half-length of the cross's arms (0 for none) and
+ * the width of its lines.
+ */
+export function placeholder(box, stroke = STROKE) {
+  const [bx, by, bw, bh] = box
+  const s = Math.max(24, Math.min(stroke, Math.min(bw, bh) / 5))
+  const inset = Math.min(s / 2, bw / 4, bh / 4)
+  const width = Math.max(bw - 2 * inset, 1), height = Math.max(bh - 2 * inset, 1)
+  const side = Math.min(width, height)
+  const rx = Math.min(side * 0.18, 3 * s)
+  // As many dots as fit the outline at about a stroke and a bit apart, so they close evenly round it.
+  const perimeter = 2 * (width + height) - 8 * rx + 2 * Math.PI * rx
+  return { x: bx + inset, y: by + inset, width, height, rx, dot: s * 0.42, gap: s * 1.15, dots: Math.max(4, Math.round(perimeter / (s * 1.15))),
+    plus: side >= 3.5 * s ? Math.min(side * 0.14, 2.2 * s) : 0, line: s * 0.42 }
+}
+
+// A description laid out roughly, before even the composer's layout has loaded: each part in a box its
+// operators give it, in a unit square with y down, where the preview's placeholders stand. ⿰ ⿲ split it into columns,
+// ⿱ ⿳ into rows, an enclosure puts its first part in the whole box and its second where the
+// composer's `INSIDE` puts a part no host shows, ⿻ and ㇯ lay both parts over the whole box (㇯'s
+// second as a cut), ⿾ mirrors and ⿿ turns what it holds. A tree is the core's: a component is its
+// text, a node `{ op, parts }`, an empty slot null.
+
+// Where an enclosed part sits, as shares of the box (x0, y0, x1, y1), y down: han-compose's INSIDE
+// turned over, with ⿼ and ⿽ added as mirrors of ⿷ and ⿸.
+const INSIDE = {
+  '⿴': [0.2, 0.2, 0.8, 0.85], '⿵': [0.2, 0.2, 0.8, 1], '⿶': [0.2, 0, 0.8, 0.8], '⿷': [0.2, 0.15, 1, 0.85],
+  '⿸': [0.3, 0.22, 1, 1], '⿹': [0, 0.22, 0.75, 1], '⿺': [0.3, 0, 1, 0.75], '⿼': [0, 0.15, 0.8, 0.85], '⿽': [0, 0, 0.7, 0.75],
+}
+const ROWS = { '⿰': [0, 2], '⿲': [0, 3], '⿱': [1, 2], '⿳': [1, 3] }
+
+/**
+ * The leaves of `tree` with their boxes: `{ char, box, flip, cut }`, `char` null for an empty slot,
+ * `box` [x0, y0, x1, y1] in the unit square, `flip` [x, y] whether its glyph is mirrored in its box.
+ */
+export function roughLayout(tree, box = [0, 0, 1, 1], flip = [false, false], cut = false, out = []) {
+  if (tree === null || typeof tree === 'string') { out.push({ char: tree, box, flip, cut }); return out }
+  const { op, parts } = tree
+  if (ROWS[op]) {
+    const [axis, n] = ROWS[op], span = (box[axis + 2] - box[axis]) / n
+    parts.forEach((part, i) => {
+      const b = box.slice()
+      b[axis] = box[axis] + i * span
+      b[axis + 2] = box[axis] + (i + 1) * span
+      roughLayout(part, b, flip, cut, out)
+    })
+  } else if (INSIDE[op]) {
+    roughLayout(parts[0], box, flip, cut, out)
+    const [a, b, c, d] = INSIDE[op], w = box[2] - box[0], h = box[3] - box[1]
+    roughLayout(parts[1], [box[0] + a * w, box[1] + b * h, box[0] + c * w, box[1] + d * h], flip, cut, out)
+  } else if (op === '⿾' || op === '⿿') {
+    // Mirrored about the box's centre: each leaf's box moves across it and its glyph turns over.
+    for (const leaf of roughLayout(parts[0], box, flip, cut)) {
+      const [x0, y0, x1, y1] = leaf.box, turned = op === '⿿'
+      out.push({ ...leaf, box: [box[0] + box[2] - x1, turned ? box[1] + box[3] - y1 : y0, box[0] + box[2] - x0, turned ? box[1] + box[3] - y0 : y1],
+        flip: [!leaf.flip[0], turned ? !leaf.flip[1] : leaf.flip[1]] })
+    }
+  } else if (op === '㇯') {
+    roughLayout(parts[0], box, flip, cut, out)
+    roughLayout(parts[1], box, flip, true, out)
+  } else parts.forEach(part => roughLayout(part, box, flip, cut, out))
+  return out
+}
