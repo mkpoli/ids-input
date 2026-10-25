@@ -4,9 +4,9 @@
   //
   // The sequence is held twice, kept in step: as text in the field, which also takes the ASCII
   // operator names (LR or lr for ⿰), and as a tree of boxes laid out as the operators place their
-  // parts, where an empty slot shows (and is written) as ＋. A sequence with an empty slot is not
+  // parts, where an empty slot shows (and is written) as ⬚. A sequence with an empty slot is not
   // whole; ？ typed into a slot is the part no character names. One part of the tree is chosen at a
-  // time. An operator put on a slot splits it, the slot's part first (⿰ on 失 gives ⿰失＋); put on an
+  // time. An operator put on a slot splits it, the slot's part first (⿰ on 失 gives ⿰失⬚); put on an
   // operator, it takes that operator's place and keeps its parts. × takes one level away, keeping its
   // first filled part. A component found, typed into the part field or offered as a swap replaces the
   // chosen part, and a component with a description of its own can be split into it (𠤕 into ⿱匕矢).
@@ -25,6 +25,7 @@
   import { createLookup } from './lookup.svelte.js'
   import { translator } from './i18n.js'
   import OperatorIcon from './OperatorIcon.svelte'
+  import IdsPreview from './IdsPreview.svelte'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -259,20 +260,6 @@
   }
   function use() { if (usable && !disabled) onuse?.(whole) }
 
-  // The preview of a whole sequence, from the adapter's drawing or SVG, asked once the sequence is whole.
-  /** @type {{ sequence: string, svg?: string | null, url?: string | null } | null} */
-  let drawn = $state(null)
-  $effect(() => {
-    const sequence = usable ? whole : ''
-    if (!sequence || preview || !(adapter.preview || adapter.drawing)) { drawn = null; return }
-    const controller = new AbortController(), signal = controller.signal
-    const asked = adapter.preview
-      ? adapter.preview(sequence, { signal }).then(svg => ({ sequence, svg }))
-      : /** @type {NonNullable<IdsAdapter['drawing']>} */ (adapter.drawing)(sequence, { signal }).then(url => ({ sequence, url }))
-    asked.then(found => { if (!signal.aborted) drawn = found }, () => { if (!signal.aborted) drawn = null })
-    return () => controller.abort()
-  })
-
   // The part picker's tabs, those the adapter can answer. Arrow keys, Home and End move between them.
   const uid = $props.id()
   const shown = $derived(pickers.filter(tab => tab === 'find' ? Boolean(adapter.search) : tab === 'parts' ? Boolean(adapter.parts) : true))
@@ -333,7 +320,7 @@
     <button type="button" class="ids-part" class:empty={part === null} class:chosen={selected} aria-pressed={selected}
       data-path={pathKey(path)} {disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: name(parent.op) }) : label}
-      onclick={() => choose(path)}>{part ?? '＋'}</button>
+      onclick={() => choose(path)}>{part ?? '⬚'}</button>
   {/if}
 {/snippet}
 
@@ -348,11 +335,9 @@
         onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); use() } }} />
     </label>
     {#if preview}
-      <div class="ids-preview">{@render preview(whole, usable)}</div>
-    {:else if drawn && drawn.sequence === whole && (drawn.svg || drawn.url)}
-      <div class="ids-preview" role="img" aria-label={whole}>
-        {#if drawn.svg}{@html drawn.svg}{:else}<img src={drawn.url} alt="" />{/if}
-      </div>
+      <div class="ids-own-preview">{@render preview(whole, usable)}</div>
+    {:else if adapter.preview || adapter.drawing}
+      <IdsPreview {adapter} {tree} {chosen} {messages} {locale} notes={false} />
     {/if}
   </div>
   <div class="ids-operators" role="group" aria-label={t('ids.operators')}>
@@ -448,14 +433,12 @@
   :where(.ids-input) button:disabled{cursor:default;opacity:.55}
   :where(.ids-input) input{padding:6px 8px;min-width:0}
   :where(.ids-input) :is(button,input):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-top{display:flex;gap:10px;align-items:flex-end}
+  .ids-top{display:flex;gap:12px;align-items:flex-start}
   .ids-field,.ids-slot{display:flex;flex-direction:column;gap:4px}
   .ids-field{flex:1;min-width:0}
   .ids-title{font-size:11px;color:var(--_muted)}
   .ids-field input{font-size:20px;padding:6px 8px;font-family:var(--_font)}
   .ids-field input[aria-invalid="true"]{border-color:var(--_fault)}
-  .ids-preview{flex:none;display:grid;place-items:center;width:52px;height:52px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface);overflow:hidden}
-  .ids-preview :global(svg),.ids-preview img{width:44px;height:44px}
   .ids-operators{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
   @media (max-width:520px){.ids-operators{grid-template-columns:repeat(6,minmax(0,1fr))}}
   .ids-key{display:grid;place-items:center;padding:5px 0;min-width:0}

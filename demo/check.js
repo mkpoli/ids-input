@@ -6,14 +6,20 @@
 import { chromium } from 'playwright-core'
 import { mkdirSync } from 'node:fs'
 import { join, normalize } from 'node:path'
+import { files as composerFiles } from '../tests/fixtures/composer-export.js'
 
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const shots = arg('--shots') ?? 'shots'
 const executablePath = arg('--chromium') ?? process.env.CHROMIUM_PATH
 mkdirSync(shots, { recursive: true })
 const root = join(import.meta.dirname, '..', 'dist')
+// The small export of the composer tests, served beside the demo for the preview to draw from.
 const server = Bun.serve({ port: 0, fetch(request) {
   const path = normalize(decodeURIComponent(new URL(request.url).pathname)).replace(/^\/+/, '') || 'index.html'
+  if (path.startsWith('composer/')) {
+    const body = composerFiles[path.slice('composer/'.length)]
+    return body === undefined ? new Response('missing', { status: 404 }) : new Response(body)
+  }
   const file = Bun.file(join(root, path.endsWith('/') ? path + 'index.html' : path))
   return file.exists().then(found => found ? new Response(file) : new Response('missing', { status: 404 }))
 } })
@@ -21,11 +27,14 @@ const url = `http://localhost:${server.port}/`
 const assert = (condition, message) => { if (!condition) throw new Error(message) }
 const browser = await chromium.launch({ executablePath })
 const pass = message => console.log('PASS', message)
+// The real export is another site's: the check never reaches it, and sees the preview fail cleanly.
+const offline = page => page.context().route('https://glyphatlas.org/**', route => route.abort())
 try {
   const page = await browser.newPage({ viewport: { width: 820, height: 1100 }, deviceScaleFactor: 2 })
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   const value = () => page.locator('.ids-field input').inputValue()
+  await offline(page)
   await page.goto(url)
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
   pass('the editor starts from 疑\'s own description')
@@ -40,7 +49,7 @@ try {
   // A key on the tree: the second slot chosen, 2 splits it, a part typed fills it.
   await page.locator('.ids-part.empty').click()
   await page.keyboard.press('Digit2')
-  assert(await value() === '⿰亻⿱＋＋', `split: ${await value()}`)
+  assert(await value() === '⿰亻⿱⬚⬚', `split: ${await value()}`)
   await page.locator('.ids-slot input').fill('七')
   await page.locator('.ids-slot input').press('Enter')
   await page.locator('.ids-slot input').fill('木')
@@ -60,7 +69,7 @@ try {
   assert(await page.locator('.ids-slot input').inputValue() === 'k' && await page.evaluate(() => document.activeElement?.closest('.ids-slot') !== null), 'a typed letter goes to the part field')
   await page.locator('.ids-part').first().focus()
   await page.keyboard.press('Backspace')
-  assert(await value() === '⿰＋⿱七木', `cleared: ${await value()}`)
+  assert(await value() === '⿰⬚⿱七木', `cleared: ${await value()}`)
   await page.keyboard.press('Control+z')
   assert(await value() === '⿰亻⿱七木', `undo clear: ${await value()}`)
   pass('Tab and Shift+Tab, typing on the tree, Backspace')
@@ -118,11 +127,29 @@ try {
   await page.locator(`.from-row[data-key="x${hit}"]`).waitFor()
   pass(`${taken} taken from 疑's tree; ${hit} found by 疑's parts and opened`)
 
+  // The preview: without its export, placeholders and no badge, since nothing could be tried; with
+  // one, the filled part drawn and the empty slot a placeholder in its box.
+  await page.goto(url)
+  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+  assert(await page.locator('.ids-preview-large .slot').count() >= 3, 'placeholders stand for the parts')
+  assert(await page.locator('.ids-preview-badge').count() === 0, 'no badge without data')
+  await page.goto(`${url}?composer=${encodeURIComponent(`${url}composer/`)}&ids=${encodeURIComponent('⿰木⬚')}`)
+  await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await page.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
+  assert((await page.locator('.ids-preview-large .ink').getAttribute('d'))?.length > 20, 'the filled part is drawn')
+  assert(await page.locator('.ids-preview-large .slot:not(.faint)').count() === 1, 'the empty slot is a placeholder')
+  await page.locator('.ids-part.empty').click()
+  assert(await page.locator('.ids-preview-large .slot.selected').count() === 1, 'the chosen slot is marked in the preview')
+  await page.goto(`${url}?composer=${encodeURIComponent('http://[')}`)
+  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+  pass('the preview degrades without its export or with a base that is no URL, and draws a part and an empty slot with one')
+
   assert(!errors.length, `page errors: ${errors.join('; ')}`)
 
   // Screenshots, light and dark, of a fresh page with the editor on 疑 and the tree open.
   for (const scheme of ['light', 'dark']) {
     const shot = await browser.newPage({ viewport: { width: 820, height: 1000 }, deviceScaleFactor: 2, colorScheme: scheme })
+    await offline(shot)
     await shot.goto(url)
     await shot.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
     await shot.locator('.ids-part').nth(1).click()
@@ -136,10 +163,19 @@ try {
     await shot.evaluate(() => document.fonts.ready)
     await shot.locator('.ids-input').screenshot({ path: join(shots, `palette-${scheme}.png`) })
     const narrow = await browser.newPage({ viewport: { width: 375, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
+    await offline(narrow)
     await narrow.goto(url)
     await narrow.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
     assert(await narrow.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no sideways scroll at phone width')
     await narrow.screenshot({ path: join(shots, `phone-${scheme}.png`), fullPage: true })
+    // The preview beside the field: as it stands without its export, and drawn from the test export.
+    await shot.goto(url)
+    await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+    await shot.locator('.ids-top').screenshot({ path: join(shots, `preview-unavailable-${scheme}.png`) })
+    await shot.goto(`${url}?composer=${encodeURIComponent(`${url}composer/`)}&ids=${encodeURIComponent('⿰木⿱口⬚')}`)
+    await shot.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+    await shot.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
+    await shot.locator('.ids-top').screenshot({ path: join(shots, `preview-composed-${scheme}.png`) })
     await Promise.all([shot.close(), narrow.close()])
   }
   pass(`screenshots in ${shots}/`)

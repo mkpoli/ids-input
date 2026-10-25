@@ -1,6 +1,7 @@
 <script>
   import { IdsInput } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
+  import { composerPreview } from '../src/composer/index.js'
   import en from '../messages/en.json' with { type: 'json' }
   import ja from '../messages/ja.json' with { type: 'json' }
   import zhHans from '../messages/zh-Hans.json' with { type: 'json' }
@@ -10,8 +11,11 @@
   import parts from '../data/ids-parts.json?url'
 
   const LOCALES = [['en', 'English', en], ['ja', '日本語', ja], ['zh-Hans', '简体中文', zhHans], ['zh-Hant', '繁體中文', zhHant], ['ko', '한국어', ko]]
-  const adapter = babelStoneAdapter({ ids, parts })
   const params = new URLSearchParams(location.search)
+  // The han-compose export the preview draws from: `?composer=` or VITE_COMPOSER_BASE points it at another copy.
+  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f4/'
+  const base = params.get('composer') || import.meta.env.VITE_COMPOSER_BASE || COMPOSER
+  const adapter = { ...babelStoneAdapter({ ids, parts }), preview: composerPreview({ base }) }
   let locale = $state(LOCALES.some(([code]) => code === params.get('lang')) ? params.get('lang') : 'en')
   let char = $state(params.get('char') ?? '疑')
   let value = $state(params.get('ids') ?? '')
@@ -45,6 +49,7 @@
       IDS data: <a href="https://www.babelstone.co.uk/CJK/IDS.TXT">BabelStone IDS</a> by Andrew West (public domain) ·
       Parts palette: BabelStone IDS, hfhchan/ids (MIT), Unihan (Unicode License v3), KanjiVG (CC BY-SA 3.0) ·
       Fonts: Plangothic, Noto Sans CJK JP (SIL OFL 1.1) ·
+      Preview: <a href="https://github.com/mkpoli/han-compose">han-compose</a> (MIT), outlines from Noto Sans CJK JP and Plangothic (SIL OFL 1.1), cuts along KanjiVG (CC BY-SA 3.0) ·
       Operator names after <a href="https://zi.tools/?secondary=ids">字統网</a>
     </p>
   </footer>

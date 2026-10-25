@@ -85,10 +85,12 @@ FONTS = {
         "240c9b83bf7b386edbae39995ae7e068ed4583f484d92e4a74c34158b5f27b1a",
     ),
 }
+# Marks the editor draws beside the parts: ⬚ (U+2B1A DOTTED SQUARE), its empty slot.
+MARKS = [0x2B1A]
 # Each file, the fonts it is cut from and the code points it takes. The ranges do not overlap, so the
 # page names them in one @font-face rule each.
 FONT_FILES = {
-    "NotoSansCJKjp-ids-strokes.woff2": (["NotoSansCJKjp-VF-2.004.ttf"], [(0x31C0, 0x31E3)]),
+    "NotoSansCJKjp-ids-strokes.woff2": (["NotoSansCJKjp-VF-2.004.ttf"], [(0x2B1A, 0x2B1A), (0x31C0, 0x31E3)]),
     "Plangothic-ids-parts.woff2": (
         ["PlangothicP1-Regular.ttf", "PlangothicP2-Regular.ttf"],
         [(0x2E80, 0x2EFF), (0x31E4, 0x31EF), (0x20000, 0x3FFFF)],
@@ -450,12 +452,12 @@ def subset_piece(source: Path, codes: list[int], path: Path) -> Path:
 
 
 def font(rows: list[list], cache: Path, refresh: bool, out: Path = FONT_DIR) -> None:
-    """Subset Noto Sans CJK JP and Plangothic P1 and P2 (merged) to the parts `needs_font` names, one
-    woff2 per family, so a page that shows no stroke never loads the strokes."""
+    """Subset Noto Sans CJK JP and Plangothic P1 and P2 (merged) to the parts `needs_font` names and the
+    editor's `MARKS`, one woff2 per family, so a page that shows no stroke never loads the strokes."""
     from fontTools.merge import Merger
     from fontTools.ttLib import TTFont
 
-    wanted = sorted({ord(row[0]) for row in rows if needs_font(row[0])})
+    wanted = sorted({ord(row[0]) for row in rows if needs_font(row[0])} | set(MARKS))
     covered: set[int] = set()
     for target, (names, ranges) in FONT_FILES.items():
         pieces = []

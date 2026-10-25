@@ -1,7 +1,7 @@
 {
   "name": "ids-input",
   "version": "0.1.0",
-  "description": "Headless editing of ideographic description sequences (IDS): parse, write and edit IDS trees, with Svelte components for an editor, a parts palette and a decomposition browser.",
+  "description": "Headless editing of ideographic description sequences (IDS): parse, write and edit IDS trees, with Svelte components for an editor, a parts palette, a decomposition browser and a preview drawn by han-compose.",
   "license": "MIT",
   "author": "mkpoli",
   "repository": {
@@ -31,6 +31,10 @@
     "./adapter": {
       "types": "./types/adapter/index.d.ts",
       "default": "./src/adapter/index.js"
+    },
+    "./composer": {
+      "types": "./types/composer/index.d.ts",
+      "default": "./src/composer/index.js"
     },
     "./svelte": {
       "svelte": "./src/svelte/index.js",

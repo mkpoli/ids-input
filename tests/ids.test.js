@@ -49,9 +49,9 @@ describe('a whole description', () => {
 })
 
 describe('a draft read as the editor reads it', () => {
-  it('reads ＋ and the parts still missing at the end as empty slots', () => {
+  it('reads ⬚ and the parts still missing at the end as empty slots', () => {
     expect(tree('⿰亻')).toEqual({ op: '⿰', parts: ['亻', null] })
-    expect(tree('⿰＋木')).toEqual({ op: '⿰', parts: [null, '木'] })
+    expect(tree('⿰⬚木')).toEqual({ op: '⿰', parts: [null, '木'] })
     expect(tree('')).toBeNull()
     expect(tree('木')).toBe('木')
   })
@@ -62,23 +62,28 @@ describe('a draft read as the editor reads it', () => {
   it('keeps ？, the part no character names, apart from an empty slot', () => {
     expect(tree('⿰？木')).toEqual({ op: '⿰', parts: ['？', '木'] })
   })
-  it('writes an empty slot as ＋, which no whole description takes', () => {
-    for (const text of ['⿰⿱匕失⿱コ疋', '⿲亻＋木', '⿲亻？木', '⿾疋', '⿻＋＋']) expect(write(tree(text))).toBe(text)
-    expect(write(null)).toBe(EMPTY)
+  it('reads a pasted ＋ as an empty slot too, and writes ⬚', () => {
+    expect(tree('⿰＋木')).toEqual({ op: '⿰', parts: [null, '木'] })
+    expect(write(tree('⿰＋木'))).toBe('⿰⬚木')
     expect(parse('⿰＋木').problem).toBe('component')
+  })
+  it('writes an empty slot as ⬚, which no whole description takes', () => {
+    for (const text of ['⿰⿱匕失⿱コ疋', '⿲亻⬚木', '⿲亻？木', '⿾疋', '⿻⬚⬚']) expect(write(tree(text))).toBe(text)
+    expect(write(null)).toBe(EMPTY)
+    expect(parse('⿰⬚木').problem).toBe('component')
   })
 })
 
 describe('the editor verbs', () => {
   const t = tree('⿰亻⿱七木')
   it('split a slot: the part first, then empty slots', () => {
-    expect(write(wrap('⿲', '木'))).toBe('⿲木＋＋')
+    expect(write(wrap('⿲', '木'))).toBe('⿲木⬚⬚')
     expect(wrap('⿾', '疋')).toEqual({ op: '⿾', parts: ['疋'] })
   })
   it('swap an operator and keep its parts', () => {
     expect(write(swapOp(t, [1], '⿻').tree)).toBe('⿰亻⿻七木')
-    expect(write(swapOp(t, [], '⿲').tree)).toBe('⿲亻⿱七木＋')
-    expect(write(swapOp(tree('⿲亻木＋'), [], '⿰').tree)).toBe('⿰亻木')
+    expect(write(swapOp(t, [], '⿲').tree)).toBe('⿲亻⿱七木⬚')
+    expect(write(swapOp(tree('⿲亻木⬚'), [], '⿰').tree)).toBe('⿰亻木')
   })
   it('refuse a swap that would drop a filled part', () => {
     expect(swapOp(tree('⿲亻木口'), [], '⿰')).toEqual({ problem: 'drop' })
@@ -86,12 +91,12 @@ describe('the editor verbs', () => {
   })
   it('remove one level, keeping the first part that is filled', () => {
     expect(write(unwrap(t, [1]))).toBe('⿰亻七')
-    expect(write(unwrap(tree('⿰＋木'), []))).toBe('木')
-    expect(unwrap(tree('⿰＋＋'), [])).toBeNull()
+    expect(write(unwrap(tree('⿰⬚木'), []))).toBe('木')
+    expect(unwrap(tree('⿰⬚⬚'), [])).toBeNull()
     expect(unwrap(t, [0])).toBe(t)
   })
   it('clear a slot', () => {
-    expect(write(clear(t, [1, 0]))).toBe('⿰亻⿱＋木')
+    expect(write(clear(t, [1, 0]))).toBe('⿰亻⿱⬚木')
     expect(clear(t, [])).toBeNull()
   })
   it('replace a part, leaving the tree it came from as it was', () => {
@@ -107,15 +112,15 @@ describe('an operator put on a draft', () => {
   })
   it('on a component, splits it and chooses the new slot beside it', () => {
     const { tree: next, chosen } = applyOperator(tree('⿰亻失'), [1], '⿱')
-    expect(write(next)).toBe('⿰亻⿱失＋')
+    expect(write(next)).toBe('⿰亻⿱失⬚')
     expect(chosen).toEqual([1, 1])
   })
   it('a unary one on a component chooses the component', () => {
     expect(applyOperator(tree('⿰亻疋'), [1], '⿾').chosen).toEqual([1])
   })
   it('a unary one on an empty slot chooses the slot inside it', () => {
-    const { tree: next, chosen } = applyOperator(tree('⿰亻＋'), [1], '⿾')
-    expect(write(next)).toBe('⿰亻⿾＋')
+    const { tree: next, chosen } = applyOperator(tree('⿰亻⬚'), [1], '⿾')
+    expect(write(next)).toBe('⿰亻⿾⬚')
     expect(chosen).toEqual([1, 0])
   })
   it('on a node, swaps it, or refuses to drop a filled part', () => {
@@ -124,20 +129,20 @@ describe('an operator put on a draft', () => {
   })
   it('with nothing to fill, takes the whole tree as its first part', () => {
     const { tree: next, chosen } = applyOperator(tree('⿰亻木'), null, '⿱')
-    expect(write(next)).toBe('⿱⿰亻木＋')
+    expect(write(next)).toBe('⿱⿰亻木⬚')
     expect(chosen).toEqual([1])
   })
 })
 
 describe('a part placed', () => {
   it('moves on to the next empty slot, or stays', () => {
-    expect(place(tree('⿰＋＋'), [0], '亻')).toEqual({ tree: { op: '⿰', parts: ['亻', null] }, chosen: [1] })
-    expect(place(tree('⿰亻＋'), [1], '木').chosen).toEqual([1])
+    expect(place(tree('⿰⬚⬚'), [0], '亻')).toEqual({ tree: { op: '⿰', parts: ['亻', null] }, chosen: [1] })
+    expect(place(tree('⿰亻⬚'), [1], '木').chosen).toEqual([1])
   })
 })
 
 describe('moving through a tree', () => {
-  const t = tree('⿰＋⿱七＋')
+  const t = tree('⿰⬚⿱七⬚')
   it('steps through every part in reading order', () => {
     expect(paths(t)).toEqual([[], [0], [1], [1, 0], [1, 1]])
     expect(leaves(t).map(leaf => leaf.char)).toEqual([null, '七', null])
