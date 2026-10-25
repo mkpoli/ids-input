@@ -98,6 +98,12 @@ describe('undo and redo', () => {
     expect(history.undo('⿰亻木')).toBe('')
     expect(history.canUndo()).toBe(false)
   })
+  it('keeps at most its limit of steps', () => {
+    const one = createHistory(1)
+    one.record('a'); one.record('b')
+    expect(one.undo('c')).toBe('b')
+    expect(one.canUndo()).toBe(false)
+  })
   it('name each step, a run of typing by its last name', () => {
     const history = createHistory()
     history.record('', { label: 'Type ⿰' })

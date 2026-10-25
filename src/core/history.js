@@ -28,7 +28,7 @@ export function createHistory(limit = 100) {
   return {
     record(state, { merge = false, label = '' } = {}) {
       if (merge && past.length) past = [...past.slice(0, -1), { state: /** @type {{ state: T }} */ (past.at(-1)).state, label }]
-      else past = [...past.slice(1 - limit), { state, label }]
+      else past = [...past, { state, label }].slice(-limit)
       future = []
     },
     undo(current) {

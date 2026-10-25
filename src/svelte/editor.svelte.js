@@ -293,7 +293,7 @@ export function createEditor(options) {
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
     /** Hear every change: the text and whether it is a whole description. @param {(text: string, whole: boolean) => void} listen */
-    listen(listen) { listeners.push(listen); return () => { listeners.splice(listeners.indexOf(listen), 1) } },
+    listen(listen) { listeners.push(listen); return () => { const at = listeners.indexOf(listen); if (at >= 0) listeners.splice(at, 1) } },
     /** The part at `path` written out, `⬚` for an empty slot. @param {Path} path */
     sequenceAt: (/** @type {Path} */ path) => write(partAt(tree, path) ?? null),
   }

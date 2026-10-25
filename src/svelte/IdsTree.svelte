@@ -45,8 +45,9 @@
   /** @param {Path} path @param {number} x @param {number} y */
   function openMenu(path, x, y) {
     if (editor.disabled) return
-    const box = rootEl?.getBoundingClientRect()
-    menu = { path, x: x - (box?.left ?? 0), y: y - (box?.top ?? 0) }
+    // Placed where it opened, over everything (so no scrolled or clipped box moves or cuts it), kept inside the window.
+    const W = 230, H = 280
+    menu = { path, x: Math.max(8, Math.min(x, innerWidth - W - 8)), y: Math.max(8, Math.min(y, innerHeight - H - 8)) }
     editor.choose(path, { toggle: false })
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (menuEl?.querySelector('[role="menuitem"]'))?.focus())
   }
@@ -130,7 +131,7 @@
       <button type="button" role="menuitem" class="ids-menu-item" disabled={!isNode(menuPart)} onclick={() => run(() => editor.remove(menu?.path ?? null))}>
         <span>{t('ids.unwrap')}</span></button>
       <button type="button" role="menuitem" class="ids-menu-item" disabled={!filled}
-        onclick={() => { const text = editor.sequenceAt(/** @type {Path} */ (menu?.path)); run(() => navigator.clipboard?.writeText(text)) }}>
+        onclick={() => { const text = editor.sequenceAt(/** @type {Path} */ (menu?.path)); run(() => { navigator.clipboard?.writeText(text).catch(() => {}) }) }}>
         <span>{t('ids.menu.copy')}</span><span class="ids-menu-seq" lang="ja">{editor.sequenceAt(menu.path)}</span></button>
     </div>
   {/if}
@@ -198,7 +199,7 @@
   .ids-part.chosen{border:2px solid var(--_accent);padding:1px 5px;background:var(--_accent-light)}
   .ids-part.over{border:2px solid var(--_accent);border-style:solid}
 
-  .ids-menu{position:absolute;z-index:20;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
+  .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
     border:1px solid var(--_line);border-radius:10px;background:var(--_surface);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
   .ids-menu-title{margin:2px 6px 4px;font-size:11px;color:var(--_muted)}
   .ids-menu-ops{display:grid;grid-template-columns:repeat(6,32px);gap:2px}
