@@ -13,7 +13,7 @@ layers:
   decomposition browser, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese and Korean.
 
-Demo: <https://mkpoli.github.io/ids-input/>
+Demo: <https://ids.mkpo.li/>
 
 ## Install
 
