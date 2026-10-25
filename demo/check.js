@@ -39,6 +39,12 @@ try {
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
   pass('the editor starts from 疑\'s own description')
 
+  // The operators in three groups by how many parts they take, each with its key on it.
+  const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
+  assert(JSON.stringify(groups) === JSON.stringify([['1 part', 3], ['2 parts', 13], ['3 parts', 2]]), `groups: ${JSON.stringify(groups)}`)
+  assert(await page.locator('.ids-key[data-op="⿾"] .ids-kbd').textContent() === 'e', 'each operator shows its key')
+  pass('operators grouped by their parts, keys shown')
+
   // Typed with ASCII names, the field writes operators.
   await page.locator('.ids-field input').fill('')
   await page.locator('.ids-field input').pressSequentially('LR亻')
@@ -162,6 +168,7 @@ try {
     await shot.locator('.parts-tabs [role="tab"]', { hasText: 'Hard to type' }).click()
     await shot.evaluate(() => document.fonts.ready)
     await shot.locator('.ids-input').screenshot({ path: join(shots, `palette-${scheme}.png`) })
+    await shot.locator('.ids-operators').screenshot({ path: join(shots, `operators-${scheme}.png`) })
     const narrow = await browser.newPage({ viewport: { width: 375, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
     await offline(narrow)
     await narrow.goto(url)
