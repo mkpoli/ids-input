@@ -103,6 +103,8 @@ try {
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
   assert(await biang.count() === 1, 'the biang example shows U+30EDE')
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
+  assert(await biang.locator('.label .op svg').count() === 8, 'the biang operators are SVG icons')
+  assert(!((await biang.locator('.label').textContent()) ?? '').includes('⿺'), 'no raw IDC in the sequence')
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
   assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
   assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).first().locator('.leading.op').count() === 1, 'a form without a code point leads with its operator')
