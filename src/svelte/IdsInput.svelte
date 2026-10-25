@@ -16,7 +16,7 @@
   import { tick, untrack } from 'svelte'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
-  import { OPERATORS, applyOperator, arity, clear, isDescription, isNode, isSequence, nextEmpty, parse, partAt, paths,
+  import { OPERATOR_GROUPS, applyOperator, arity, clear, isDescription, isNode, isSequence, nextEmpty, parse, partAt, paths,
     place as placed, samePath, unwrap, write } from '../core/ids.js'
   import { namingOperator, unalias } from '../core/aliases.js'
   import { KEY_OF, commandFor } from '../core/keys.js'
@@ -34,10 +34,10 @@
    */
 
   /** @type {{ adapter: IdsAdapter, value?: string, char?: string, disabled?: boolean, messages?: Record<string, string>, locale?: string,
-   *   pickers?: ('find' | 'parts' | 'from')[], recentKey?: string | null, onuse?: (sequence: string) => void,
+   *   pickers?: ('find' | 'parts' | 'from')[], recentKey?: string | null, keyHints?: boolean, onuse?: (sequence: string) => void,
    *   onchange?: (text: string, whole: boolean) => void, preview?: import('svelte').Snippet<[string, boolean]> }} */
   let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'parts', 'from'],
-    recentKey = 'ids-input.recentParts', onuse, onchange, preview } = $props()
+    recentKey = 'ids-input.recentParts', keyHints = true, onuse, onchange, preview } = $props()
 
   const t = $derived(translator(messages, locale))
   const NAMES = {
@@ -340,10 +340,19 @@
       <IdsPreview {adapter} {tree} {chosen} {messages} {locale} notes={false} />
     {/if}
   </div>
-  <div class="ids-operators" role="group" aria-label={t('ids.operators')}>
-    {#each OPERATORS as [op] (op)}
-      <button type="button" class="ids-key" data-op={op} {disabled} aria-label={name(op)}
-        title={t('ids.operatorTitle', { op, name: name(op), key: KEY_OF[op] })} onclick={() => operator(op)}><OperatorIcon {op} size={22} /></button>
+  <div class="ids-operators" role="group" aria-label={t('ids.operators')} class:hints={keyHints}>
+    {#each OPERATOR_GROUPS as group (group.arity)}
+      <div class="ids-op-group" data-arity={group.arity} role="group" aria-labelledby={`${uid}-ops-${group.arity}`}>
+        <span class="ids-op-label" id={`${uid}-ops-${group.arity}`}>{t(`ids.group.${group.arity}`)}</span>
+        <div class="ids-op-keys">
+          {#each group.ops as op (op)}
+            <button type="button" class="ids-key" data-op={op} {disabled} aria-label={name(op)} aria-keyshortcuts={KEY_OF[op]}
+              title={t('ids.operatorTitle', { op, name: name(op), key: KEY_OF[op] })} onclick={() => operator(op)}>
+              <OperatorIcon {op} size={24} />{#if keyHints}<kbd class="ids-kbd" aria-hidden="true">{KEY_OF[op]}</kbd>{/if}
+            </button>
+          {/each}
+        </div>
+      </div>
     {/each}
   </div>
   <div class="ids-tree" role="group" aria-label={t('ids.structure')}>
@@ -439,10 +448,18 @@
   .ids-title{font-size:11px;color:var(--_muted)}
   .ids-field input{font-size:20px;padding:6px 8px;font-family:var(--_font)}
   .ids-field input[aria-invalid="true"]{border-color:var(--_fault)}
-  .ids-operators{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
-  @media (max-width:520px){.ids-operators{grid-template-columns:repeat(6,minmax(0,1fr))}}
-  .ids-key{display:grid;place-items:center;padding:5px 0;min-width:0}
-  .ids-key:not(:disabled):hover{border-color:var(--_accent)}
+  .ids-operators{display:flex;flex-wrap:wrap;gap:8px 14px}
+  .ids-op-group{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .ids-op-label{font-size:11px;color:var(--_muted)}
+  .ids-op-keys{display:flex;flex-wrap:wrap;gap:4px}
+  @media (max-width:560px){
+    .ids-op-group[data-arity="2"]{flex:1 1 100%}
+    .ids-op-group[data-arity="2"] .ids-op-keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr))}
+    .ids-op-group[data-arity="2"] .ids-key{width:auto}
+  }
+  .ids-key{position:relative;display:grid;place-items:center;width:42px;height:38px;padding:0}
+  .ids-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .ids-kbd{position:absolute;right:3px;bottom:1px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
 
   .ids-tree{display:grid;justify-items:center;padding:12px;border:1px solid var(--_line);border-radius:10px;background:var(--_surface-subtle);min-height:72px}
   .ids-node{position:relative;display:flex;flex-direction:column;min-width:0;padding:22px 6px 6px;
