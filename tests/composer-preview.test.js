@@ -15,9 +15,9 @@ const preview = () => { FakeWorker.made = []; return composerPreview({ base: 'ht
 describe('the composer preview', () => {
   it('draws in a worker from the export at its base, hearing the sketch first', async () => {
     const draw = preview(), sketches = []
-    const drawing = draw('⿰木＋', { onSketch: leaves => sketches.push(leaves) })
+    const drawing = draw('⿰木⬚', { onSketch: leaves => sketches.push(leaves) })
     const [worker] = FakeWorker.made
-    expect(worker.posted[0]).toMatchObject({ sequence: '⿰木＋', base: 'https://example.org/composer/v1/' })
+    expect(worker.posted[0]).toMatchObject({ sequence: '⿰木⬚', base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }] })
     worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
     expect(await drawing).toEqual({ d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] })
@@ -90,7 +90,7 @@ describe('a preview turn', () => {
   })
   it('with only a final image, shows nothing for an incomplete description or a missing image', async () => {
     const drawing = () => later('https://example.org/a.svg')
-    expect(await run('⿰木＋', { drawing })).toEqual([{ step: 'idle' }])
+    expect(await run('⿰木⬚', { drawing })).toEqual([{ step: 'idle' }])
     expect(await run('⿰木口', { drawing: () => later(null) })).toEqual([{ step: 'idle' }])
     expect(await run('⿰木口', { drawing: () => Promise.reject(new Error('down')) })).toEqual([{ step: 'idle' }])
     expect(await run('⿰木口', { drawing })).toEqual([{ step: 'final', url: 'https://example.org/a.svg' }])
@@ -98,7 +98,7 @@ describe('a preview turn', () => {
   it('prefers a final image to a drawing, and says when a drawing fails or is too large', async () => {
     const preview = () => later({ d: 'M0 0Z' })
     expect(await run('⿰木口', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'final', url: 'u' }])
-    expect(await run('⿰木＋', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'composed', drawn: { d: 'M0 0Z' } }])
+    expect(await run('⿰木⬚', { preview, drawing: () => Promise.resolve('u') })).toEqual([{ step: 'composed', drawn: { d: 'M0 0Z' } }])
     expect(await run('⿰木口', { preview: () => Promise.reject(new Error('x')) })).toEqual([{ step: 'failed' }])
     expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'TooLargeError' })) })).toEqual([{ step: 'capped' }])
     expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'UnavailableError' })) })).toEqual([{ step: 'unavailable' }])

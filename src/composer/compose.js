@@ -51,8 +51,8 @@ export const keyOf = node => typeof node === 'string' ? node : node[0] + node.sl
  *  slots out as it would a whole one, each empty slot an operand it knows nothing of (the layout
  *  reads its place's defaults, its ink is the unknown operand's), and draws no ink there: the slot
  *  becomes a placeholder in the box its node gave it. han-compose itself draws no empty slots. */
-export const EMPTY = '＋'
-/** Whether a node is an empty slot, numbered in reading order (`＋0`, `＋1`, …) by `compose`. */
+export const EMPTY = '⬚'
+/** Whether a node is an empty slot, numbered in reading order (`⬚0`, `⬚1`, …) by `compose`. */
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
 
 /** The operators this port draws beyond the composer's, with rooms and turns of its own choosing: a

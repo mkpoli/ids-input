@@ -26,12 +26,12 @@
  * @typedef {object} SketchLeaf Where the layout puts one leaf of a sequence, before it is drawn.
  * @property {number} index The leaf's place in reading order.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
- * @property {boolean} empty Whether the leaf is an empty slot (＋).
+ * @property {boolean} empty Whether the leaf is an empty slot (⬚).
  *
  * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
  * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
- * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (＋), numbered in reading order, in the box the layout gives it.
+ * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (⬚), numbered in reading order, in the box the layout gives it.
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
@@ -45,7 +45,7 @@
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
- * @property {(sequence: string, options?: PreviewOptions) => Promise<Drawing>} [preview] A description drawn, empty slots (＋) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws.
+ * @property {(sequence: string, options?: PreviewOptions) => Promise<Drawing>} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws.
  */
 
 export {}

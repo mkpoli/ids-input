@@ -52,7 +52,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | prop | | |
 | --- | --- | --- |
 | `adapter` | required | see [Adapters](#adapters) |
-| `value` | bindable | the text in the field, `＋` for each empty slot |
+| `value` | bindable | the text in the field, `⬚` for each empty slot |
 | `char` | | start from this character's first description when `value` is not a sequence |
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
@@ -77,14 +77,14 @@ import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
 parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻', null] } }
-write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失＋'
+write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
 A component is an ideograph, a radical, a stroke, a katakana letter standing for a component of
 that shape (コ, マ), a private-use character or `？` for a part no character names, with an
-optional variation selector. In a draft, `＋` (or a part missing at the end) is an empty slot.
+optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot.
 
 ## Adapters
 
@@ -102,7 +102,7 @@ interface IdsAdapter {
 interface Drawing {          // in a 1000-unit box, y down
   d: string                  // the ink as an SVG path, nonzero fill
   cut?: string               // what ㇯ takes away
-  slots?: { index: number, box: [x, y, width, height] }[]   // each empty slot (＋), in reading order
+  slots?: { index: number, box: [x, y, width, height] }[]   // each empty slot (⬚), in reading order
   stroke?: [number, number] | null                          // stroke widths placeholders follow
   approximate?: string[]     // operators drawn by an approximation
   kanjivg?: boolean          // a part was cut along KanjiVG's groups (CC BY-SA 3.0)
@@ -113,7 +113,7 @@ interface Drawing {          // in a 1000-unit box, y down
 descriptions with the source regions each describes (`GHTJKPV`), and `[]` for a character with no
 smaller parts. `variants` answers components that can stand in a part's place (コ for 龴).
 `containing` answers the characters built from every part in its query, counted (`木木` asks for
-two). `preview` draws a sequence that may hold empty slots (`＋`); its options also carry
+two). `preview` draws a sequence that may hold empty slots (`⬚`); its options also carry
 `onSketch(leaves)`, which hears where each part goes before the drawing is done. It rejects with an
 Error named `TooLargeError` for a sequence larger than it draws, `UnavailableError` when its data
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
@@ -165,7 +165,7 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失＋); on an operator it takes
+An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
 either case become operators: LR ⿰, UD ⿱, LL ⿲, UU ⿳, OC ⿴, OD ⿵, OU ⿶, OR ⿷, RD ⿸, LD ⿹, RU ⿺,
 XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow keys move through the tree,

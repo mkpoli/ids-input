@@ -4,9 +4,9 @@
   //
   // The sequence is held twice, kept in step: as text in the field, which also takes the ASCII
   // operator names (LR or lr for ⿰), and as a tree of boxes laid out as the operators place their
-  // parts, where an empty slot shows (and is written) as ＋. A sequence with an empty slot is not
+  // parts, where an empty slot shows (and is written) as ⬚. A sequence with an empty slot is not
   // whole; ？ typed into a slot is the part no character names. One part of the tree is chosen at a
-  // time. An operator put on a slot splits it, the slot's part first (⿰ on 失 gives ⿰失＋); put on an
+  // time. An operator put on a slot splits it, the slot's part first (⿰ on 失 gives ⿰失⬚); put on an
   // operator, it takes that operator's place and keeps its parts. × takes one level away, keeping its
   // first filled part. A component found, typed into the part field or offered as a swap replaces the
   // chosen part, and a component with a description of its own can be split into it (𠤕 into ⿱匕矢).
@@ -320,7 +320,7 @@
     <button type="button" class="ids-part" class:empty={part === null} class:chosen={selected} aria-pressed={selected}
       data-path={pathKey(path)} {disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: name(parent.op) }) : label}
-      onclick={() => choose(path)}>{part ?? '＋'}</button>
+      onclick={() => choose(path)}>{part ?? '⬚'}</button>
   {/if}
 {/snippet}
 

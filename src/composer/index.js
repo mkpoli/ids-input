@@ -1,6 +1,6 @@
 // @ts-check
 // han-compose's composer in the browser, as a `preview` for an IDS adapter: a sequence, empty slots
-// (＋) and all, drawn in a Web Worker from han-compose's `export-web` output (format 3) at `base`.
+// (⬚) and all, drawn in a Web Worker from han-compose's `export-web` output (format 3) at `base`.
 // han-compose: https://github.com/mkpoli/han-compose (MIT). The export's outlines come from Noto
 // Sans CJK JP and Plangothic (SIL OFL 1.1); a part cut along KanjiVG's groups (`drawn.kanjivg`) is
 // shared alike under CC BY-SA 3.0.
