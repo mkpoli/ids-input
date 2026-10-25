@@ -57,6 +57,44 @@ try {
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
   pass('the workshop opens on 疑, matched to its character')
 
+  // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
+  await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
+  // How long after a fresh page began to load its first hits stood (polled, so at most this).
+  const fresh = await open()
+  await fresh.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
+  const firstResults = await fresh.evaluate(() => Math.round(performance.now()))
+  await fresh.context().close()
+  assert(await page.locator('.ids-search-results .hit .char').first().textContent() === '疑', 'the exact description first')
+  assert(await page.locator('.ids-search-results .hit').nth(1).locator('mark').count() === 1, 'a deeper match is marked')
+  const many = await page.locator('.ids-search-results .hit').count()
+  await page.locator('.ids-search-results input').fill('冫')
+  await page.waitForFunction(() => document.querySelector('.ids-search-results .hit .char')?.textContent === '凝', null, { timeout: 15000 })
+  assert(await page.locator('.ids-search-results .hit').count() < many, 'a further term narrows the hits')
+  await page.locator('.ids-search-results .hit .take').first().click()
+  assert(await page.locator('.from-field input').inputValue() === '凝', 'a hit hands its parts to Take parts from')
+  await page.locator('.ids-search-results .hit .open').first().click()
+  assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
+  await page.locator('.ids-search-results input').fill('')
+  await page.locator('.bar button[aria-label^="Undo"]').click()
+  await page.locator('.ids-search-results .hit').first().hover()
+  assert(await page.locator('.ids-search-results .hit').first().locator('.code').isVisible()
+    && await page.locator('.ids-search-results .hit').first().locator('.seq').isHidden(), 'a hovered card shows its code point')
+  pass(`the search follows the tree (first results by ${firstResults} ms after navigation, index built in a worker), narrows by terms, opens a hit and takes its parts, its cards showing Unicode on hover`)
+
+  // The middle column is two panels: the square tree, and the search under it.
+  const box = await page.locator('.tree-box').boundingBox()
+  const root = await page.locator('.ids-tree-root').boundingBox()
+  const middle = await page.locator('.middle').boundingBox()
+  const tree = await page.locator('.middle .tree').boundingBox()
+  const results = await page.locator('.results').boundingBox()
+  assert(await page.locator('.work > *').count() === 3, 'the workshop has three columns')
+  assert(results.y > tree.y + tree.height - 1, 'the search is its own panel under the tree')
+  assert(Math.abs(results.width - middle.width) < 2, `the search spans the middle column (${results.width} against ${middle.width})`)
+  assert(Math.abs(root.width - root.height) < 2 && root.width > box.width * 0.85, `the tree is square and fills its frame (${root.width}×${root.height} in ${box.width})`)
+  const card = await page.locator('.ids-search-results .hit').first().boundingBox()
+  assert(Math.abs(card.width - card.height) < 2, `a hit is a square card (${card.width}×${card.height})`)
+  pass('the search is its own panel under the square tree, its hits as square cards')
+
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
   assert(JSON.stringify(groups) === JSON.stringify([['1 part', 3], ['3 parts', 2], ['2 parts', 13]]), `groups: ${JSON.stringify(groups)}`)
@@ -145,6 +183,7 @@ try {
   pass('the context menu splits a part and copies its sequence')
 
   // The parts palette: a part dragged onto a slot, and one picked into the chosen slot.
+  await page.getByRole('tab', { name: 'Parts', exact: true }).click()
   await page.locator('.parts-grid .part').first().waitFor()
   const first = await page.locator('.parts-grid .part').first().textContent()
   await page.locator('.parts-grid .part').first().dragTo(page.locator('.ids-part.empty'))
@@ -304,6 +343,7 @@ try {
     } else await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
     await shot.locator('.ids-part').nth(1).click()
     await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+    await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
     await shot.evaluate(() => document.fonts.ready)
     assert(await shot.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no sideways scroll at ${width}`)
     if (name === 'phone') {
@@ -323,6 +363,12 @@ try {
       await shot.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
       await shot.waitForTimeout(300)
       await shot.locator('.output').screenshot({ path: join(shots, `output-${scheme}.png`) })
+      await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
+      await shot.locator('.results .hit').first().hover()
+      await shot.locator('.results').screenshot({ path: join(shots, `results-${scheme}.png`) })
+      await shot.setViewportSize({ width: 1920, height: 1080 })
+      await shot.waitForTimeout(300)
+      await shot.screenshot({ path: join(shots, `wide-${scheme}.png`) })
       await shot.getByRole('button', { name: 'About' }).click()
       await shot.locator('dialog[open]').screenshot({ path: join(shots, `about-${scheme}.png`) })
     }
