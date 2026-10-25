@@ -58,9 +58,12 @@ try {
   pass('the workshop opens on 疑, matched to its character')
 
   // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
-  const started = Date.now()
   await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
-  const firstResults = Date.now() - started
+  // How long after a fresh page began to load its first hits stood (polled, so at most this).
+  const fresh = await open()
+  await fresh.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
+  const firstResults = await fresh.evaluate(() => Math.round(performance.now()))
+  await fresh.context().close()
   assert(await page.locator('.ids-search-results .hit .char').first().textContent() === '疑', 'the exact description first')
   assert(await page.locator('.ids-search-results .hit').nth(1).locator('mark').count() === 1, 'a deeper match is marked')
   const many = await page.locator('.ids-search-results .hit').count()
@@ -73,7 +76,7 @@ try {
   assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
   await page.locator('.ids-search-results input').fill('')
   await page.locator('.bar button[aria-label^="Undo"]').click()
-  pass(`the search follows the tree (first results ${firstResults} ms after load, index built in a worker), narrows by terms, opens a hit and takes its parts`)
+  pass(`the search follows the tree (first results by ${firstResults} ms after navigation, index built in a worker), narrows by terms, opens a hit and takes its parts`)
 
   // Operators in three groups with their keys.
   const groups = await page.locator('.ids-op-group').evaluateAll(els => els.map(el => [el.querySelector('.ids-op-label').textContent, el.querySelectorAll('.ids-key').length]))
