@@ -64,3 +64,11 @@ describe('the rough layout', () => {
     expect(roughLayout(null)).toEqual([{ char: null, box: [0, 0, 1, 1], flip: [false, false], cut: false }])
   })
 })
+
+describe('a composer base that is no URL', () => {
+  it('makes each drawing fail, leaving the page running', async () => {
+    const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
+    const error = await draw('⿰木口').catch(e => e)
+    expect(error).toBeInstanceOf(TypeError)
+  })
+})

@@ -140,7 +140,9 @@ try {
   assert(await page.locator('.ids-preview-large .slot:not(.faint)').count() === 1, 'the empty slot is a placeholder')
   await page.locator('.ids-part.empty').click()
   assert(await page.locator('.ids-preview-large .slot.selected').count() === 1, 'the chosen slot is marked in the preview')
-  pass('the preview degrades without its export, and draws a part and an empty slot with one')
+  await page.goto(`${url}?composer=${encodeURIComponent('http://[')}`)
+  await page.locator('.ids-preview[data-step="failed"]').waitFor({ timeout: 15000 })
+  pass('the preview degrades without its export or with a base that is no URL, and draws a part and an empty slot with one')
 
   assert(!errors.length, `page errors: ${errors.join('; ')}`)
 

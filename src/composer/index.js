@@ -32,12 +32,12 @@ export class TooLargeError extends Error { name = 'TooLargeError' }
 export function composerPreview({ base, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
   /** @type {ReturnType<typeof createDrawer> | null} */
   let drawer = null
-  const root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href
   let asking = 0
   return async (sequence, { signal, onSketch } = {}) => {
     if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators or ${LIMITS.depth} levels.`)
     signal?.throwIfAborted()
-    drawer ??= createDrawer(worker, root)
+    // A base that is no URL rejects here, as a drawing that cannot be made, and the page goes on.
+    drawer ??= createDrawer(worker, new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href)
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
     const asked = drawer, mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
