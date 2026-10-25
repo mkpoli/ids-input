@@ -59,7 +59,8 @@
     "dev": "vite demo",
     "build:demo": "vite build demo",
     "preview": "vite preview demo",
-    "demo:check": "bun demo/check.js"
+    "demo:check": "bun demo/check.js",
+    "prepack": "tsc -p tsconfig.json"
   },
   "devDependencies": {
     "@types/bun": "1.3.14",
