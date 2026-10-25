@@ -131,6 +131,8 @@
       leading: example.char || undefined,
       operator: example.char ? undefined : [...example.sequence][0],
       label: example.sequence,
+      sequence: example.sequence,
+      visualSequence: example.char ? undefined : [...example.sequence].slice(1).join(''),
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
       lang: 'ja',
