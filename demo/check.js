@@ -57,6 +57,17 @@ try {
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
   pass('the workshop opens on 疑, matched to its character')
 
+  // The toolbar buttons share one height; a shortcut shows under its button on hover; scrollbars
+  // follow the theme rather than the browser's default.
+  const heights = await page.locator('.bar .tool').evaluateAll(els => [...new Set(els.filter(el => el.offsetParent).map(el => Math.round(el.getBoundingClientRect().height)))])
+  assert(JSON.stringify(heights) === '[32]', `toolbar button heights: ${heights}`)
+  const undoButton = page.locator('.bar button[aria-label^="Undo"]')
+  await undoButton.hover()
+  await page.waitForTimeout(250)
+  assert(await undoButton.evaluate(el => Number(getComputedStyle(el, '::after').opacity) > 0.9 && getComputedStyle(el, '::after').content.includes('Ctrl+Z')), 'undo shows its key on hover')
+  assert(await page.evaluate(() => getComputedStyle(document.querySelector('.pane')).scrollbarWidth === 'thin'), 'themed scrollbars')
+  pass('one toolbar height, key hints on hover, themed scrollbars')
+
   // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
   await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
   // How long after a fresh page began to load its first hits stood (polled, so at most this).
@@ -158,6 +169,9 @@ try {
   assert(await value() === '⿰亻⿻七木', `undo: ${await value()}`)
   await page.keyboard.press('Control+Shift+z')
   assert(await value() === '⿰亻七', `redo: ${await value()}`)
+  await page.keyboard.press('Control+z')
+  await page.keyboard.press('Control+y')
+  assert(await value() === '⿰亻七', `redo by Ctrl+Y: ${await value()}`)
   await page.locator('button[aria-label^="Undo"]').click()
   assert(await value() === '⿰亻⿻七木', `undo by the toolbar: ${await value()}`)
   pass('swaps, refusals, × and undo and redo by key and toolbar')
@@ -285,7 +299,12 @@ try {
   await drawn.getByRole('button', { name: 'Preferences' }).click()
   await drawn.locator('.prefs input[type="checkbox"]').click()
   await drawn.keyboard.press('Escape')
+  await drawn.waitForTimeout(200)
   assert(await drawn.locator('.ids-kbd').count() === 0, 'key hints hidden')
+  assert(await drawn.locator('.bar button[aria-label^="Undo"]').getAttribute('data-keys') === null, 'hover key hints hidden too')
+  await drawn.keyboard.press('Control+,')
+  await drawn.locator('dialog[open] .prefs').waitFor({ timeout: 5000 })
+  await drawn.keyboard.press('Escape')
   await drawn.locator('.bar select.locale').selectOption('ja')
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
   pass('theme switch, no flash, key hints off, the language')

@@ -139,6 +139,7 @@
   let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
   /** @param {KeyboardEvent} event */
   function keys(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) { event.preventDefault(); prefsOpen = true; return }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !event.shiftKey) { event.preventDefault(); keepDraft(); return }
     editor.keydown(event, { root: work, slot })
   }
@@ -159,13 +160,13 @@
     </a>
     <nav class="tools" aria-label={t('app.toolbar')}>
       <div class="group">
-        <button type="button" class="tool key" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
-          <Icon name="undo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
-        <button type="button" class="tool key" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>
-          <Icon name="redo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+        <button type="button" class="tool key-hint" data-keys={keyHints ? shortcut('mod+z') : undefined} disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+          <Icon name="undo" /></button>
+        <button type="button" class="tool key-hint" data-keys={keyHints ? `${shortcut('mod+shift+z')} / ${shortcut('mod+y')}` : undefined} disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
+          <Icon name="redo" /></button>
         <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
       </div>
-      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} {keyHints} /></span>
+      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} keys={keyHints ? shortcut('mod+s') : undefined} {keyHints} /></span>
       <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} /></span>
     </nav>
     <div class="end">
@@ -174,7 +175,7 @@
         {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
       </select>
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <button type="button" class="tool" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} onclick={() => prefsOpen = true}><Icon name="settings" /></button>
+      <button type="button" class="tool key-hint" data-keys={keyHints ? shortcut('mod+,') : undefined} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" /></button>
       <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
     </div>
     <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
@@ -265,17 +266,13 @@
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
-  .group{gap:2px;padding:2px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
-  .group :global(.tool){border-color:transparent;background:none}
+  .group{gap:2px}
   .end{margin-left:auto}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
   :global(.tool:disabled){opacity:.4;cursor:default}
   :global(.tool:focus-visible),.locale:focus-visible,.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  /* A key hint in the corner of its button, under the icon. */
-  .tool.key{position:relative;height:36px;min-width:46px;justify-content:center;padding:0 8px 8px}
-  .tool.key kbd{position:absolute;right:4px;bottom:2px;font:500 8.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted);pointer-events:none}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
@@ -337,8 +334,7 @@
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}
-    .brand span,.wide,.wide-only,.end,.tool.key kbd{display:none}
-    .tool.key{height:32px;min-width:40px;padding:0 8px}
+    .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
     .grow{max-height:440px;overflow:auto}
     .work{padding:12px;gap:12px}

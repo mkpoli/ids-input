@@ -30,3 +30,18 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+/* Scrollbars follow the theme instead of the browser's bright default. */
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--line-strong);border:2px solid transparent;border-radius:999px;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:padding-box}
+/* A key hint under a toolbar control, on hover or focus. */
+.key-hint{position:relative}
+.key-hint[data-keys]::after{content:attr(data-keys);position:absolute;z-index:50;top:calc(100% + 7px);left:50%;
+  padding:4px 8px;border-radius:7px;background:var(--toast-bg);color:var(--toast-ink);
+  font:500 11px/1.3 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;box-shadow:var(--shadow-pop);
+  opacity:0;pointer-events:none;transform:translate(-50%,-2px);transition:opacity .12s,transform .12s}
+.key-hint[data-keys]:is(:hover,:focus-within)::after{opacity:1;transform:translate(-50%,0)}
+.end .key-hint[data-keys]::after{left:auto;right:0;transform:translateY(-2px)}
+.end .key-hint[data-keys]:is(:hover,:focus-within)::after{transform:none}
