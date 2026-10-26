@@ -140,8 +140,7 @@
   "parts.tab.difficult": "Khó nhập",
   "parts.tab.recent": "Gần đây",
   "parts.tab.strokes": "Nét",
-  "parts.tab.seal": "Tiểu triện",
+  "parts.tab.seal": "Triện",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
-  "parts.uses.other": "dùng trong {count} chữ",
-  "parts.tab.seal": "Triện"
+  "parts.uses.other": "dùng trong {count} chữ"
 }
