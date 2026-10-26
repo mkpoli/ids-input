@@ -137,9 +137,12 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a katakana letter standing for a component of
-that shape (コ, マ), a private-use character or `？` for a part no character names, with an
-optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
+`？` for a part no character names, with an optional variation selector. The letters and digits are
+those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
+shape), Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
+preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
+written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ## Adapters
 
@@ -287,7 +290,8 @@ Ctrl+Shift+Z elsewhere).
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
 either case become operators: LR ⿰, UD ⿱, LL ⿲, UU ⿳, OC ⿴, OD ⿵, OU ⿶, OR ⿷, RD ⿸, LD ⿹, RU ⿺,
-XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow keys move through the tree,
+XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. Two capitals that spell a name are read as that operator, so
+letters such as L and R side by side go in from the part field, one slot at a time. In "Take parts from", the arrow keys move through the tree,
 `ArrowRight` opens a part and reaches its swaps, and `Enter` takes a part or a whole node.
 
 ## Licences
@@ -358,10 +362,9 @@ The demo is a full-width workshop with one tab for each description being edited
 the toolbar. A tab is the description's composed drawing at a small size, and a dot while its text
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
 name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
-Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
-start; the Shape or indented Tree view with the search under it; and at the end the drawing
-in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its
-code points, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
+at the start; the Shape or indented Tree view with the sequence and search under it; and at the end
+the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
 those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand

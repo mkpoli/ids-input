@@ -46,7 +46,8 @@ export const decomposable = part => typeof part === 'string' && isComponent(look
 
 /**
  * What is decomposed for the text typed: a description (typed with operators or their ASCII names)
- * as one sequence, else each component character once, in order, at most ROOTS.
+ * as one sequence, else each component character once, in order, at most ROOTS; an ASCII letter
+ * or digit only when it is typed alone.
  * @param {string | null | undefined} text
  * @returns {Root[]}
  */
@@ -54,8 +55,9 @@ export function roots(text) {
   const written = unalias((text ?? '').trim())
   if (!written) return []
   if (isDescription(written)) return [{ kind: 'sequence', text: written, tree: /** @type {import('./ids.js').Part} */ (parse(written).tree) }]
-  const seen = new Set()
-  for (const token of tokens(written)) if (decomposable(token) && !seen.has(token)) seen.add(token)
+  const seen = new Set(), typed = tokens(written)
+  // An ASCII letter or digit counts only alone: a word names none.
+  for (const token of typed) if (decomposable(token) && (typed.length === 1 || !/^[0-9A-Za-z]$/.test(token))) seen.add(token)
   return [...seen].slice(0, ROOTS).map(char => ({ kind: 'char', char }))
 }
 

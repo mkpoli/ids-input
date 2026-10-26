@@ -91,7 +91,7 @@
   "ids.preview.tooLarge": "过大",
   "ids.preview.tooLargeNote": "过大，未组字，框线显示布局。",
   "ids.problem.character": "请以⿰、⿱等结构符开头。",
-  "ids.problem.component": "部件须为汉字、西夏文、部首、笔画或片假名。",
+  "ids.problem.component": "部件须为汉字、西夏文、部首、笔画、字母或数字。",
   "ids.problem.drop": "{name}需要的部件较少，请先清空多出的部件。",
   "ids.problem.empty": "{name}的第{n}部分还空着。请填入部件；无字可表的部件请输入？。",
   "ids.problem.extra": "部件多于结构符所需。",
