@@ -2,7 +2,7 @@ import { expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { babelStoneAdapter, parseIdsTable, paletteRows } from '../src/adapter/index.js'
-import { isComponent, parse, write } from '../src/core/index.js'
+import { isComponent, parse, write, roots, searchParts } from '../src/core/index.js'
 
 const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
 const parts = paletteRows(JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url))))
@@ -40,4 +40,12 @@ it('provides all 768 original Tangut components in code point order', () => {
   expect(tangut.map(part => part.part)).toEqual(Array.from({ length: 768 }, (_, i) => String.fromCodePoint(0x18800 + i)))
   expect(tangut.find(part => part.part === '𘠀').uses).toBeGreaterThan(0)
   expect(tangut.every(part => part.strokes === null && part.first === null)).toBe(true)
+})
+
+it('searches from Tangut parts, an IDS, or a character decomposition', () => {
+  expect(searchParts(roots('𘠀𘢰𘠆'), {})).toBe('𘠀𘢰𘠆')
+  expect(searchParts(roots('⿱𘠀⿰𘢰𘠆'), {})).toBe('𘠀𘢰𘠆')
+  expect(searchParts(roots('𗀀'), {
+    '𗀀': { status: 'ready', sequences: table.get('𗀀') },
+  })).toBe('𘠀𘢰𘠆')
 })
