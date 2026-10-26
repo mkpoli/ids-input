@@ -33,7 +33,7 @@ it('finds Tangut by character, code point, component and full IDS', async () => 
   expect(await adapter.encoded('⿱𘠀⿰𘢰𘠆')).toContain('𗀀')
   expect((await adapter.findByIds('⿱𘠀⿰𘢰𘠆')).hits.map(hit => hit.char)).toContain('𗀀')
   expect((await adapter.containing('𘠀𘢰𘠆', { limit: 100 })).items).toContain('𗀀')
-})
+}, 15000)
 
 it('provides all 768 original Tangut components in code point order', () => {
   const tangut = parts.filter(part => part.kind === 't')

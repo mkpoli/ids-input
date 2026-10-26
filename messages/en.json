@@ -149,5 +149,12 @@
   "parts.uses.other": "used in {count} characters",
   "ids.characters.none": "No characters match.",
   "ids.characters.placeholder": "Reading, pinyin or meaning…",
-  "ids.pick.characters": "Characters"
+  "ids.pick.characters": "Characters",
+  "parts.seal.basic": "Basic",
+  "parts.seal.compound": "Compound",
+  "parts.seal.other": "Other",
+  "parts.seal.groups": "Small Seal groups",
+  "parts.seal.filter": "Filter by seal or CJK character",
+  "parts.seal.estimate": "≈ Group inferred from modern CJK",
+  "parts.seal.inferred": "Grouping inferred from modern IDS: {ids}"
 }

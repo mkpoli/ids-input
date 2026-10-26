@@ -5,7 +5,7 @@
 """Build IDS Seal webfont and outlines from the bundled, pinned Kaiyuan SVG sources.
 
 uv run scripts/build_small_seal_font.py
-Only the head characters and seal components in the compiled IDS table are included.
+Includes the expanded palette and the head characters in the compiled IDS table.
 Glyphs retain Kaiyuan's CCZ provenance; the font is a rendering aid for Jiguge IDS.
 """
 import csv
