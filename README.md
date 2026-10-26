@@ -203,6 +203,12 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
+IDS queries accept visual substitutes: `ㅅ` (also `ᄉ` or `ᆺ`) searches as `人`,
+and `스` searches as `亼`, including its decomposed Unicode spelling `스`.
+For example, `⿰ㅅ木` finds `休` through the existing `人`/`亻` component forms.
+These aliases apply only to IDS search; entered text, stored descriptions,
+rendering, exact `encoded` lookup, and Korean name searches retain their spelling.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
   <img src="docs/images/search-light.png" width="600" alt="Search results for the part 疋: 定, 旋, 是, 楚 and other characters, each with its description below and the matched 疋 marked">

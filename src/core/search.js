@@ -28,6 +28,13 @@ import { tokens } from './decompose.js'
 /** The common ideographs (U+4E00–9FFF) first, then Extension A, then the rest: a rarer character ranks as if a little farther. @param {string} char */
 const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); return cp >= 0x4E00 && cp <= 0x9FFF ? 0 : cp >= 0x3400 && cp <= 0x4DBF ? 1 : 2 }
 
+// Visual substitutes accepted only in IDS search queries. These are not Unicode equivalences
+// and must not rewrite stored descriptions, rendering operands, or Korean name searches.
+/** @type {Readonly<Record<string, string>>} */
+const SHAPE_ALIASES = { 'ㅅ': '人', 'ᄉ': '人', 'ᆺ': '人', '스': '亼' }
+/** @param {string} token */
+const searchShape = token => SHAPE_ALIASES[token] ?? token
+
 /** How many components deep a match may open. */
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
@@ -51,10 +58,13 @@ export function parseQuery(text) {
   /** @type {Term[]} */
   const terms = []
   for (const term of written) {
+    // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
+    const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
+    const list = tokens(matching).map(searchShape)
     if (isSequence(term)) {
       /** @type {(t: Tree) => Pattern} */
       const pattern = t => typeof t === 'string' ? (EMPTY_MARKS.includes(t) || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
-      const list = tokens(term), cursor = { at: 0 }
+      const cursor = { at: 0 }
       const tree = pattern(readTree(list, cursor))
       if (cursor.at < list.length) return { terms, problem: 'extra' }
       /** @type {string[]} */
@@ -64,7 +74,7 @@ export function parseQuery(text) {
       collect(tree)
       terms.push({ kind: 'structure', text: term, tree, leaves })
     } else {
-      const leaves = tokens(term).filter(t => isComponent([...t][0]) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
+      const leaves = list.filter(t => isComponent([...t][0]) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
       if (leaves.length) terms.push({ kind: 'components', text: term, leaves })
     }
   }

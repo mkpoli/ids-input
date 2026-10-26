@@ -84,3 +84,40 @@ describe('the search', () => {
     expect(search.search('').problem).toBe('empty')
   })
 })
+
+
+describe('visual substitutes in IDS queries', () => {
+  const shapes = createSearch(new Map(Object.entries({
+    人: ['人'], 亼: ['⿱𠆢一'], 从: ['⿰人人'], 众: ['⿱人从'],
+    休: ['⿰亻木'], 合: ['⿱亼口'], 余: ['⿱亼朩'], 木: ['木'], 口: ['口'],
+  })), { forms })
+  const result = query => shapes.search(query)
+
+  it('accepts the requested shapes in runs and structures, including positional forms', () => {
+    for (const [alias, canonical] of [
+      ['ㅅ', '人'], ['ᄉ', '人'], ['ᆺ', '人'], ['스', '亼'], ['스', '亼'],
+      ['⿰ㅅ木', '⿰人木'], ['⿱스口', '⿱亼口'], ['⿱스口', '⿱亼口'],
+      ['ㅅㅅ', '人人'], ['스口', '亼口'], ['⿱스？ 口', '⿱亼？ 口'],
+    ]) {
+      expect(result(alias)).toEqual(result(canonical))
+      expect(result(alias).hits.length).toBeGreaterThan(0)
+    }
+    expect(result('⿰ㅅ木').hits[0].char).toBe('休')
+    expect(result('⿱스口').hits[0]).toMatchObject({ char: '合', sequence: '⿱亼口', spans: [[0, 3]] })
+    expect(result('ㅅㅅ').hits.map(hit => hit.char)).not.toContain('休')
+  })
+
+  it('keeps the entered term, leaves other Hangul alone, and checks structure arity', () => {
+    expect(parseQuery('⿱스口').terms[0]).toMatchObject({ text: '⿱스口', tree: { op: '⿱', parts: ['亼', '口'] } })
+    expect(parseQuery('수').terms[0]).toMatchObject({ text: '수', leaves: ['수'] })
+    expect(result('⿱스口木').problem).toBe('extra')
+  })
+})
+
+
+it('preserves Han compatibility components and unrelated Hangul syllables', () => {
+  const index = createSearch(new Map([['甲', ['⿰神木']], ['乙', ['⿰神木']]]))
+  expect(index.search('⿰神木').hits.map(hit => hit.char)).toEqual(['甲'])
+  expect(index.search('⿰神木').hits.map(hit => hit.char)).toEqual(['乙'])
+  expect(parseQuery('슨').terms[0].leaves).toEqual(['슨'])
+})
