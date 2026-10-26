@@ -91,7 +91,6 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate) })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -105,6 +104,7 @@
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
   }
   const icons = $derived(iconsAt(base))
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate), icon: icons })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.

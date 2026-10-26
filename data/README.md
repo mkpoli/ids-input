@@ -26,8 +26,8 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,679 Han entries (674 common, 967 hard to type, 38 strokes),
-plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py`, whose docstring gives the rules.
+hard to type or a CJK stroke. 1,687 Han entries (682 common, 967 hard to type, 38 strokes),
+plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
@@ -192,3 +192,36 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## Subtree frequencies and compound palette entries
+
+Run `bun run build:subtrees` after rebuilding `ids-parts.json` or the bundled IDS
+corpus. This reads the shipped corpus without downloading a newer edition and
+writes `ids-subtrees.json.gz` plus the compound entries in `ids-parts.json`.
+
+The frequency report contains every exact subtree, including leaves, complete
+roots, numbered unknown components and variation selectors. Its columns are
+`[part, uses, occurrences, nestedUses, strokes]`: `uses` counts distinct source
+characters, `occurrences` counts tree positions across distinct IDS alternatives,
+and `nestedUses` counts characters using the tree below the root. Palette usage
+counts are refreshed from `uses` for single-character entries too. Identical
+regional alternatives count once. Characters are not recursively expanded and
+variant glyphs are not merged. The report records malformed sequences under
+`rejected`; the current corpus has eight, all Tangut.
+
+Common also shows hard-to-type components used by at least 50 characters
+(285 in this corpus), while keeping them available in their stroke groups.
+It includes compound IDS occurring below the root in at least 50
+characters, matching the existing component frequency cutoff. The current
+corpus supplies seven entries. The manual shortcut `⿰冫⿱丿丶` is included with
+zero corpus uses and an estimated four strokes. Compound cells show a rendered
+icon with an `IDS` marker; hovering reveals the sequence and stroke count.
+Picking or dragging one inserts its complete tree. Stroke counts are searchable
+with the existing numeric filter. These counts are additive estimates from the existing palette's
+stroke metadata, recursively resolving other leaves where possible. They are
+marked `derived` and displayed with `≈`; overlapping strokes can make the true
+count differ. Subtraction, unresolved leaves and cycles retain an unknown count.
+The generated report uses the same stroke calculation for every subtree.
+
+The report derives from the public-domain BabelStone Han and Tangut IDS and the
+stroke-count sources listed above. It contains no Rime stroke-order column.

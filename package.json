@@ -61,6 +61,7 @@
     "types": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "dev": "vite demo",
+    "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "preview": "vite preview demo",

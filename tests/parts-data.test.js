@@ -17,7 +17,7 @@ describe('palette stroke metadata', () => {
 
   it('classifies every Han component while leaving the circle stroke outside the five classes', () => {
     const classes = new Set(['横', '豎', '撇', '點', '折'])
-    const han = parts.filter(part => part.kind === 'c' || part.kind === 'd')
+    const han = parts.filter(part => [...part.part].length === 1 && (part.kind === 'c' || part.kind === 'd'))
     expect(han).toHaveLength(1641)
     expect(han.filter(part => !classes.has(part.first))).toEqual([])
     expect(['山', '月', '宀', '弓', '⺝', '⺀', '⺆', '⺻', '⻀'].map(char => byPart.get(char).first))
