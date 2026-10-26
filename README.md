@@ -572,6 +572,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
 - [𰻞𰻞會 / BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/),
   October 2026 presentations: a general source for some of the examples.
+- BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
+  臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
+  of all 17 IDCs; the approximation marker `〾` is represented separately.
+  [IRG N2572, p.2](https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2) also illustrates
+  the descriptions of 㕚, 氷 and 𧰧.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 

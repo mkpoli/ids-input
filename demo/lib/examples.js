@@ -31,8 +31,13 @@
 // ⿰要勿 (覅): https://www.cns11643.gov.tw/wordView.jsp?ID=149313
 // ⿹⿺㇉一卄 (與 variant), JYN00001; ⿰扌⿸厃⿱儿𢀛 (擔 variant), JYN00010:
 // https://jyutnet.github.io/unencoded-characters/ (dictionary evidence linked per record).
+// 匜, 爽, 㕚, 氷, 臦, 𢨋 and 𧰧: BabelStone IDS.
+// 㕚 (⿼叉丶) and 氷 (⿽水丶) also appear in IRG N2572, p.2:
+// https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
+    { sequence: '⿻大㸚', char: '爽' },
+    { sequence: '㇯豕㇒', char: '𧰧' },
     { sequence: '⿱成龙', char: '' },
     { sequence: '⿰氵恩', char: '𰜩' },
     { sequence: '⿰要勿', char: '覅' },
@@ -55,6 +60,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰氵鬱', char: '灪' },
   ] },
   { key: 'repeated', examples: [
+    { sequence: '⿰⿾臣臣', char: '臦' },
+    { sequence: '⿱或⿿或', char: '𢨋' },
     { sequence: '⿰⿱興興⿱興興', char: '𠔻' },
     { sequence: '⿱七⿰七七', char: '㐂' },
     { sequence: '⿱木林', char: '森' },
@@ -68,6 +75,9 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
+    { sequence: '⿷匚也', char: '匜' },
+    { sequence: '⿼叉丶', char: '㕚' },
+    { sequence: '⿽水丶', char: '氷' },
     { sequence: '⿹⿺㇉一卄', char: '' },
     { sequence: '⿺辶說', char: '' },
     { sequence: '⿺克千', char: '兛' },
