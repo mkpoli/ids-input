@@ -72,6 +72,6 @@
 </span>
 
 <style>
-  .part-icon{display:block;width:28px;height:28px;pointer-events:none}
+  .part-icon{display:block;width:1em;height:1em;pointer-events:none}
   svg,img{display:block;width:100%;height:100%;object-fit:contain}
 </style>

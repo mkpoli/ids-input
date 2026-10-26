@@ -256,7 +256,9 @@ stroke-count sources listed above. It contains no Rime stroke-order column.
 Sans 2.004 and Serif 2.002. `scripts/build_component_forms.py` verifies the source
 TTC hashes recorded in the JSON before exporting them. Rebuild with
 `uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
-The six-stroke `⿳士冖一` preserves its proportions from 彀; the Sans export
+Detached forms retain their source position in the native em instead of being
+enlarged to fill the cell, preserving their stroke thickness and spacing. Palette icons share the surrounding
+text’s em size. The six-stroke `⿳士冖一` preserves its proportions from 彀; the Sans export
 clips away the adjoining 殳 at x=491. `⿻者丶` uses the glyph shared by
 者 + U+E0101 and U+FA5B, verified in both fonts' variation tables.
 Exact 塁 and 疂 descriptions use their complete native JP glyphs.

@@ -104,3 +104,18 @@ it('retains three designed groups for the six-stroke component in either style',
     expect(drawn.parts[2].box[2] - drawn.parts[2].box[0]).toBeLessThan(drawn.parts[1].box[2] - drawn.parts[1].box[0])
   }
 })
+
+
+it('keeps detached components at native stroke thickness instead of enlarging their crop', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const style of ['sans', 'serif']) {
+    const parts = componentParts('⿳士冖一', undefined, style)
+    for (const part of parts) {
+      expect(part.target).toEqual(part.source)
+      expect(part.target[2] - part.target[0]).toBeCloseTo(part.source[2] - part.source[0], 6)
+      expect(part.target[3] - part.target[1]).toBeCloseTo(part.source[3] - part.source[1], 6)
+    }
+    const root = await compose(local(), '⿳士冖一', { fontStyle: style })
+    expect(root.parts[2].box[2]).toBeCloseTo(parts[2].source[2] - parts[2].source[0], 1)
+  }
+})
