@@ -71,6 +71,24 @@ try {
     assert(prepared.composerRequests.length > 0, 'an unprepared edit loads the composer')
     await prepared.context().close()
   }
+  for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄙ', '⿰木⿱ㄅㄞ', '⿰木き']) {
+    const example = await open()
+    await example.getByRole('button', { name: 'Examples' }).click()
+    await example.locator('.menu .item').filter({ has: example.getByText(sequence, { exact: true }) }).click()
+    assert(await valueOf(example) === sequence, `example opens ${sequence}`)
+    await example.locator('.ids-preview[data-step="composed"]').waitFor()
+    const path = await example.locator('.ids-preview-large .ink').getAttribute('d')
+    assert(path.length > 100, `${sequence} has outlines`)
+    if (sequence === '⿰𛂦方') await example.locator('.ids-preview').getByText('U+2D92A', { exact: true }).waitFor()
+    const [svg] = await Promise.all([example.waitForEvent('download'), example.locator('.export .primary').click()])
+    assert(readFileSync(await svg.path(), 'utf8').includes(path), `${sequence} exports its outlines`)
+    await example.locator('.export [role="radio"]', { hasText: 'PNG' }).click()
+    const [png] = await Promise.all([example.waitForEvent('download'), example.locator('.export .primary').click()])
+    assert(readFileSync(await png.path()).readUInt32BE(16) === 1024, `${sequence} exports a 1024 px PNG`)
+    assert(!example.errors.length, `${sequence} has no page errors`)
+    await example.context().close()
+  }
+  pass('six script examples open with outlines, the hentaigana code point, and SVG/PNG exports')
   const separate = await open()
   await separate.locator('.ids-preview[data-step="composed"]').waitFor()
   const splitRequest = separate.context().waitForEvent('request', { predicate: request => request.url().startsWith(COMPOSER_BASE) })
@@ -452,7 +470,7 @@ try {
   // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
-  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'Script hybrids', 'Constructed samples', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'Script hybrids', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
