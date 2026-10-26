@@ -92,8 +92,8 @@
   "app.source.tangut": "Phông chữ Tây Hạ và đường viền dùng để ghép hình.",
   "app.source.noto": "Đường viền mà han-compose di chuyển và phông chữ cho các bộ phận.",
   "app.source.plangothic": "Đường viền cho các bộ phận không có trong Noto Sans CJK.",
-  "app.source.smallSeal": "Phân giải Thuyết Văn bản Cấp Cổ các: 49 ký tự đã ánh xạ và 31 thành phần. Các bản ghi nguồn khác vẫn chưa được giải quyết.",
-  "app.source.sealFont": "76 hình tự từ bản Trần Xương Trị. Việc rà soát thượng nguồn chưa hoàn tất.",
+  "app.source.smallSeal": "Phân tích Thuyết văn của Jiguge: 49 chữ và 31 bộ phận đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý.",
+  "app.source.sealFont": "76 glyph từ bản khắc của Trần Xương Trị. Việc rà soát thượng nguồn chưa hoàn tất.",
   "app.source.qrcode": "Mã QR trong mục Chia sẻ.",
   "app.source.rime": "Phân loại nét đầu trong bảng chọn bộ phận.",
   "app.source.unihan": "Số nét và khu vực nguồn.",
@@ -109,7 +109,5 @@
   "app.theme.light": "Sáng",
   "app.theme.system": "Theo hệ thống",
   "app.title": "Xưởng IDS",
-  "app.toolbar": "Công cụ",
-  "app.source.sealFont": "76 glyph từ bản khắc của Trần Xương Trị. Việc rà soát thượng nguồn chưa hoàn tất.",
-  "app.source.smallSeal": "Phân tích Thuyết văn của Jiguge: 49 chữ và 31 bộ phận đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý."
+  "app.toolbar": "Công cụ"
 }
