@@ -5,3 +5,6 @@
   unicode-range:U+2E80-2EFF,U+31E4-31EF,U+20000-3FFFF}
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;
   unicode-range:U+2B1A,U+31C0-31E3}
+
+@font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
+  unicode-range:U+17000-18AFF,U+18D00-18DFF}

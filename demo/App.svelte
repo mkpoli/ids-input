@@ -114,6 +114,7 @@
   $effect(() => save('split', split === 60 ? undefined : split))
 
   const editor = createEditor(() => ({ adapter, messages, locale }))
+  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   let fromText_ = $state('')
@@ -289,8 +290,8 @@
         <span class="grip" aria-hidden="true"></span>
       </div>
       <section class="pane results" aria-label={t('ids.search.title')}>
-        <h2 class="label">{t('ids.search.title')}</h2>
-        <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
+        <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+        <IdsSearch {adapter} query={searchQuery} {messages} {locale}
           onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
       </section>
     </div>
@@ -408,10 +409,10 @@
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .split{display:none}
-  .results{gap:6px;max-height:min(720px,80dvh);overflow:auto}
+  .results{gap:6px}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
-    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
+    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:stretch}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
@@ -419,6 +420,7 @@
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
+    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
     .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
     .split .grip{width:56px;height:5px;border-radius:999px;background:var(--line-strong);transition:background-color .12s,width .12s}
@@ -438,7 +440,6 @@
     .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
-    .grow{max-height:440px;overflow:auto}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}
   }
