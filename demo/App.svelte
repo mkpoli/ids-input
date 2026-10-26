@@ -655,6 +655,8 @@
     <button type="button" class="link" onclick={() => aboutOpen = true}>{t('app.footer.about')}</button>
     <span aria-hidden="true">·</span>
     <a href="https://github.com/mkpoli/han-compose">han-compose</a>
+    <span aria-hidden="true">·</span>
+    <a href="https://mkpo.li" rel="me" title="mkpo.li">mkpoli</a>
   </footer>
 </div>
 
@@ -760,8 +762,8 @@
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
-  .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
+  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:1px 6px;padding:2px 12px 6px;font-size:11.5px;line-height:1.35;color:var(--muted)}
+  .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit;white-space:nowrap}
   .foot .link{color:inherit}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}

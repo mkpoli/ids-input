@@ -235,6 +235,7 @@ try {
   assert(await page.getByRole('dialog').locator('li').count() === 5, 'the code points open in a dialog')
   await page.keyboard.press('Escape')
   await page.waitForTimeout(200)
+  assert(await page.locator('.foot a[href="https://mkpo.li"]').textContent() === 'mkpoli', 'the footer links mkpoli to mkpo.li')
   pass('the workshop opens on 疑, matched to its character, with the sequence and code points in reach')
 
   // The toolbar buttons share one height; a shortcut shows under its button on hover; scrollbars

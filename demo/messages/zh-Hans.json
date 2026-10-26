@@ -54,7 +54,7 @@
   "app.font": "字体",
   "app.font.sans": "无衬线",
   "app.font.serif": "衬线",
-  "app.footer.about": "来源与灵感",
+  "app.footer.about": "来源",
   "app.history": "历史",
   "app.history.empty": "尚无更改",
   "app.history.undone": "已撤销",
@@ -72,7 +72,6 @@
   "app.prefs.composer": "预览字形数据来源",
   "app.prefs.composerHint": "han-compose的export-web输出目录。留空则用默认值。",
   "app.prefs.keyHints": "按钮上显示按键",
-
   "app.prefs.theme": "主题",
   "app.prefs.title": "设置",
   "app.share": "分享",
