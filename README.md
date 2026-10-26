@@ -13,12 +13,14 @@ Demo: the IDS Workshop, <https://ids.mkpo.li/>
   <img src="docs/images/workshop-light.png" alt="The IDS Workshop: the sequence ⿰𠤕⿱龴疋 with the operator palette and parts on the left, its tree in the middle above the characters that contain it, and its drawing with export settings on the right">
 </picture></a>
 
-The package has three layers, and an optional preview:
+The package has four layers, and an optional preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
   the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
+- **document**: the layer model behind `.ids.json` documents: stable layer IDs, transforms, IDS
+  import and projection, and identity-preserving edits. The editor does not use it yet.
 - **adapter**: the data the components ask for, supplied by the host application. A default
   adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
   static files, so nothing needs a server.
@@ -172,6 +174,32 @@ The source has 11,114 records. Unresolved identifiers, extended operators and mi
 mappings remain in the downloadable data with their original text and status. They are
 excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
 provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+
+### Documents
+
+`ids-input/document` is the model behind the [document format](docs/document-format.md): a tree whose
+layers have stable IDs, transforms and a rendering recipe, saved as `.ids.json`.
+
+```js
+import { fromSequence, toSequence, replaceWithSequence, writeDocument, readDocument } from 'ids-input/document'
+
+const document = fromSequence('⿰木口')
+toSequence(document.root)                       // '⿰木口'
+const mouth = document.root.children[1]
+const replaced = replaceWithSequence(document, mouth.id, '水')
+document.root.children[1].char                    // '口'; the input document is unchanged
+const file = writeDocument(replaced)
+readDocument(file).root.id                       // 'root'
+```
+
+`fromSequence` gives every layer a fresh opaque ID; repeated characters get different IDs. The edit
+functions (`replaceNode`, `replaceWithSequence`, `decompose`, `wrapNode`, `unwrapNode`,
+`changeOperator`, `deleteLayer`) keep the selected layer's ID, name and transform. Pass one
+allocator across a session (`allocatorFor(document, retainedIds)`) so a removed ID is not reused.
+
+The model reads and writes the document shape and validates its structure and transforms. The current
+editor still edits positional trees and the current preview still draws canvas-space paths; a
+document renderer, storage and the editor binding are the next layer.
 
 ## Adapters
 
