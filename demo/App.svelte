@@ -213,7 +213,7 @@
     ]
   })
 
-  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
+  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
   /** @param {KeyboardEvent} event */
   function keys(event) {
     if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) { event.preventDefault(); prefsOpen = true; return }
@@ -260,7 +260,10 @@
     <section class="pane input" aria-label={t('app.input')}>
       <div class="block">
         <h2 class="label">{t('ids.label')}</h2>
-        <IdsSequence {editor} label={false} />
+        <div class="seq-line">
+          <IdsSequence {editor} label={false} />
+          <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+        </div>
         {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
         {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
       </div>
@@ -281,6 +284,7 @@
         {:else}
           <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
         {/if}
+        {#if editor.whole}<output class="tree-whole" lang="ja" title={t('ids.label')} aria-label={`${t('ids.label')}: ${editor.whole}`}>{editor.whole}</output>{/if}
         <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
       </section>
       <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
@@ -297,22 +301,18 @@
     </div>
 
     <section class="pane output" aria-label={t('app.output')}>
+      {#if encoded.length || points.length}
+        <div class="output-head">
+          {#each encoded as ch (ch)}
+            <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
+          {/each}
+          {#if points.length}
+            <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+          {/if}
+        </div>
+      {/if}
       <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
       <div class="details">
-        <div class="readout">
-          <div class="seq-row">
-            <output class="seq" lang="ja">{editor.whole}</output>
-            {#each encoded as ch (ch)}
-              <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
-            {/each}
-            <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
-          </div>
-          <details class="points">
-            <summary>{t('app.codePoints', { count: points.length })}</summary>
-            <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
-            <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
-          </details>
-        </div>
         <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
       </div>
     </section>
@@ -347,6 +347,12 @@
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
+<Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
+  <div class="point-sheet">
+    <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
+    <button type="button" class="tool" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
+  </div>
+</Dialog>
 
 <style>
   .app{display:flex;flex-direction:column;min-height:100dvh}
@@ -384,24 +390,31 @@
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
+  .seq-line{display:flex;align-items:flex-start;gap:6px}
+  .seq-line :global(.ids-field){flex:1;min-width:0}
+  .seq-line .seq-copy{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer}
+  .seq-line .seq-copy:hover{color:var(--ink);border-color:var(--line-strong)}
+  .seq-line .seq-copy:disabled{color:var(--muted);background:var(--surface-2);cursor:default}
+  .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .readout{display:flex;flex-direction:column;gap:10px}
-  .seq-row{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
-  .seq{flex:1;min-width:0;font-family:var(--cjk);font-size:22px;overflow-wrap:anywhere}
+  .output-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  .points-btn{height:28px;margin-left:auto;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+  .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .point-sheet{display:flex;flex-direction:column;gap:14px}
+  .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
+  .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
+  .point-list li span{font-family:var(--cjk);font-size:18px}
   .char{display:inline-flex;flex:none;align-items:center;gap:6px;padding:0 8px 0 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
   .char span{font-family:var(--cjk);font-size:22px;line-height:1.3}
   .char:hover{border-color:var(--accent)}
   .char:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .points summary{cursor:pointer;font-size:12px;color:var(--muted)}
-  .points ol{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0;padding:0;list-style:none}
-  .points li{display:flex;align-items:baseline;gap:4px}
-  .points li span{font-family:var(--cjk);font-size:16px}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
@@ -427,8 +440,8 @@
     .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 154px)))}
-    .output{grid-column:auto;display:flex;flex-direction:column}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
+    .output{grid-column:auto;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
