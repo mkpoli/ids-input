@@ -214,7 +214,7 @@ Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude:
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
 
-The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-compose-layout-v4-f4/`;
+The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
 `?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
 
 ## Keyboard
