@@ -29,6 +29,7 @@ try {
   await select(1, 2)
   await page.keyboard.insertText('日')
   assert.equal(await field.inputValue(), '⿰日水')
+  assert.deepEqual(await field.evaluate(f => [f.selectionStart, f.selectionEnd]), [2, 2])
   await select(1, 2)
   await page.keyboard.press('Backspace')
   assert.equal(await field.inputValue(), '⿰⬚水')
