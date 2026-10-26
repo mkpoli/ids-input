@@ -86,6 +86,8 @@ export class Composer {
     this.face = face ?? c.face
     this.separate = separate
     this.fontStyle = fontStyle
+    // A static brush face keeps its own stroke weights; a variable export weights its parts.
+    this.weighted = m.weighted ?? m.heavy > 400
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -156,7 +158,7 @@ export class Composer {
     if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
       out.forEach((part, i) => { part.leaf = ownership.owners[i] })
     }
-    if (!this.partial) this.balance(out)
+    if (!this.partial && this.weighted) this.balance(out)
     return out
   }
 

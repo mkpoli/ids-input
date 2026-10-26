@@ -60,7 +60,7 @@
   const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
@@ -79,7 +79,7 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   function previewFor(at, split, style) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
@@ -105,7 +105,7 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** @param {string} at @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
@@ -115,7 +115,7 @@
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const componentStyle = $derived(face === 'serif' ? 'serif' : 'sans')
+  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
 
