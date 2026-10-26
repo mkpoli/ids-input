@@ -141,7 +141,7 @@
     --_line:var(--ids-line,light-dark(#d8d8de,#3a3a43));--_surface:var(--ids-surface,light-dark(#fff,#202026));
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
-    --_font:var(--ids-font,"IDS Strokes","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     height:100%;min-height:0;overflow:auto;padding:4px;color:var(--_ink)}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
   li{display:flex;align-items:center;gap:8px;min-height:32px;padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:8px;cursor:pointer}

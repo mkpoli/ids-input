@@ -36,6 +36,10 @@
       "types": "./types/composer/index.d.ts",
       "default": "./src/composer/index.js"
     },
+    "./document": {
+      "types": "./types/document/index.d.ts",
+      "default": "./src/document/index.js"
+    },
     "./svelte": {
       "svelte": "./src/svelte/index.js",
       "default": "./src/svelte/index.js"
@@ -54,7 +58,10 @@
     "messages",
     "scripts",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "docs/document-format.md",
+    "docs/ids-document.schema.json",
+    "docs/ids-document.example.json"
   ],
   "scripts": {
     "test": "bun test tests",

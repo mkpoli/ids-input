@@ -1,4 +1,8 @@
 {
+  "app.about.licenses": "ライセンス",
+  "app.about.codeLicense": "コード：MIT",
+  "app.about.dataLicense": "データには、Creative Commons または各出典の利用条件が適用されます。詳しくは出典とデータのライセンス表記をご覧ください。",
+  "app.about.outputLicense": "生成物には、元のフォントの利用条件が適用される場合があります。当サイト独自の利用制限はありません。",
   "app.about.inspired": "着想元",
   "app.about.lead": "表意文字記述列を木として組み立て、字形で確かめる工房。",
   "app.about.sources": "データとコード",
@@ -85,6 +89,8 @@
   "app.source.hanCompose": "既存の字の部品を使ってプレビューを描く。",
   "app.source.hfhchan": "部品一覧で分解しない部品の判定。",
   "app.source.kanjivg": "組字器の一部の切り出し。その切り出しを含む字形は同条件で共有。",
+  "app.source.smallSeal": "汲古閣本『説文解字』の構字情報。Unicodeに対応付けられた49字と31部件を収録。ほかの原資料の項目は未対応です。",
+  "app.source.sealFont": "陳昌治本に基づく76字の字形。提供元での確認作業は未完了です。",
   "app.source.tangut": "西夏文字の表示と組字に使う字形。",
   "app.source.noto": "han-composeが動かす字形と、部品用フォント。",
   "app.source.plangothic": "Noto Sans CJKにない部品の字形。",

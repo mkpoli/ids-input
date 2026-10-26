@@ -139,6 +139,7 @@
   "parts.none": "No part matches.",
   "parts.strokeCount.one": "{count} stroke",
   "parts.strokeCount.other": "{count} strokes",
+  "parts.tab.seal": "Small Seal",
   "parts.tab.tangut": "Tangut",
   "parts.tab.common": "Common",
   "parts.tab.difficult": "Hard to type",

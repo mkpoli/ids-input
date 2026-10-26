@@ -2,7 +2,7 @@
 # component forms and the Japanese shinjitai forms the other tables leave apart. Built by
 # scripts/build_component_names.py; used by src/core/names.js.
 # columns: form, char, source
-# rows: 591
+# rows: 593
 # source component-forms: data/component-forms.tsv, from han-compose's han-component-forms.tsv, Unicode's EquivalentUnifiedIdeograph.txt (Unicode License v3) and cjkvi-variants' radical-variants.txt (public domain)
 # source opencc: OpenCC 1.4.2, Apache 2.0; by BYVoid; https://github.com/BYVoid/OpenCC
 # source ja-variants: the Japanese shinjitai forms 竜, 亀, 斉 and 歯 and the forms they stand for
@@ -349,6 +349,7 @@
 亀	龟	ja-variants
 亂	乱	opencc
 亻	人	component-forms
+倉	仓	opencc
 兒	儿	opencc
 兩	两	opencc
 刁	刀	component-forms
@@ -421,6 +422,7 @@
 舊	旧	opencc
 艸	艹	component-forms
 蓋	盖	opencc
+蘭	兰	opencc
 衤	衣	component-forms
 補	补	opencc
 西	襾	component-forms

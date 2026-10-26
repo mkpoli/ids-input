@@ -25,8 +25,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -71,6 +71,7 @@
   const shown = $derived.by(() => {
     if (!parts) return []
     if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
+    if (tab === 'seal') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'seal') }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(difficult.filter(part => (part.strokes ?? null) === shownCount))
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
@@ -184,11 +185,11 @@
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
-  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
+  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
   .part.compound{position:relative;padding:5px}
   .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
     font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}

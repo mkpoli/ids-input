@@ -13,20 +13,22 @@ Demo: the IDS Workshop, <https://ids.mkpo.li/>
   <img src="docs/images/workshop-light.png" alt="The IDS Workshop: the sequence ⿰𠤕⿱龴疋 with the operator palette and parts on the left, its tree in the middle above the characters that contain it, and its drawing with export settings on the right">
 </picture></a>
 
-The package has three layers, and an optional preview:
+The package has four layers, and an optional preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
   the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
+- **document**: the layer model behind `.ids.json` documents: stable layer IDs, transforms, IDS
+  import and projection, and identity-preserving edits. The editor does not use it yet.
 - **adapter**: the data the components ask for, supplied by the host application. A default
   adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
   static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
-  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese
-  and Korean.
+  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese,
+  Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
@@ -148,6 +150,60 @@ shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and 
 preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
 written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+### Small Seal (小篆)
+
+The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
+Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
+The workshop includes these in its searches and Small Seal palette. Searching for `玨`
+finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`.
+
+```js
+import { smallSealAdapter } from 'ids-input/adapter'
+import sealData from 'ids-input/data/small-seal.json.gz?url'
+
+const adapter = smallSealAdapter({
+  data: sealData,
+  ids, parts, forms, names,
+})
+```
+
+`data` accepts a URL or the decoded JSON document. The remaining options are those of
+`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index. Modern-character correspondences help component search;
+each script keeps its own decompositions. Import `fonts.css` to display the supported
+seal characters. Their bundled outlines support previews and SVG/PNG export; mixed
+Han–seal compositions also need the host's Han export.
+
+The source has 11,114 records. Unresolved identifiers, extended operators and missing
+mappings remain in the downloadable data with their original text and status. They are
+excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
+provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+
+### Documents
+
+`ids-input/document` is the model behind the [document format](docs/document-format.md): a tree whose
+layers have stable IDs, transforms and a rendering recipe, saved as `.ids.json`.
+
+```js
+import { fromSequence, toSequence, replaceWithSequence, writeDocument, readDocument } from 'ids-input/document'
+
+const document = fromSequence('⿰木口')
+toSequence(document.root)                       // '⿰木口'
+const mouth = document.root.children[1]
+const replaced = replaceWithSequence(document, mouth.id, '水')
+document.root.children[1].char                    // '口'; the input document is unchanged
+const file = writeDocument(replaced)
+readDocument(file).root.id                       // 'root'
+```
+
+`fromSequence` gives every layer a fresh opaque ID; repeated characters get different IDs. The edit
+functions (`replaceNode`, `replaceWithSequence`, `decompose`, `wrapNode`, `unwrapNode`,
+`changeOperator`, `deleteLayer`) keep the selected layer's ID, name and transform. Pass one
+allocator across a session (`allocatorFor(document, retainedIds)`) so a removed ID is not reused.
+
+The model reads and writes the document shape and validates its structure and transforms. The current
+editor still edits positional trees and the current preview still draws canvas-space paths; a
+document renderer, storage and the editor binding are the next layer.
+
 ## Adapters
 
 ```ts
@@ -239,22 +295,25 @@ take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, wh
 ### Names and vocabulary
 
 The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
-point, a name, a word or a reading (`data/component-names.tsv`, 5,456 names, words and readings from
-Japanese and Chinese radical dictionaries, with English glosses, pinyin and Hepburn and Kunrei
-romaji). A query and every name are folded alike: NFKC, katakana as hiragana, Latin accents off,
-spaces and punctuation out, and Chinese scripts through `data/component-name-folds.tsv`. A name
-that is the whole query comes first, then one the query starts, then one it stands inside, so 宝盖
-finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin query matches whole words and their starts,
-and a word of five letters or more may stand inside a longer name.
+point, a name, a word or a reading (`data/component-names.tsv`, 6,642 names, words and readings
+from Japanese and Chinese radical dictionaries and Wikidata, with English glosses, pinyin, Hepburn
+and Kunrei romaji, and Korean and Vietnamese readings). A query and every name are folded alike:
+NFKC, katakana as hiragana, Latin accents off, spaces and punctuation out, and Chinese scripts
+through `data/component-name-folds.tsv`. A name that is the whole query comes first, then one the
+query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin
+query matches whole words and their starts, and a word of five letters or more may stand inside a
+longer name.
 
 The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
 those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
-and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. Either Chinese script finds
-either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀, and 龍部, 龙部 and 竜部 all give the forms of 龍.
-Readings, pinyin, romaji and English senses work the same way: water, silk, roof, thread, person,
-みず, mizu, sui, shui, jiaosipang, baogaitou, sandianshui, nobun, nogi and ukanmuri lead to their
-components; `radical 120` leads to 糸. A single component typed on its own stays the character it
-is, and without `names` the search takes characters and code points only.
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀; 倒八 offers 丷, 卷字头 offers
+龹, and 石字头 offers 丆. Either Chinese script finds either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀,
+and 龍部, 龙部 and 竜部 all give the forms of 龍. Readings, pinyin, romaji, Korean, Vietnamese and
+English senses work the same way: water, silk, roof, thread, person, みず, mizu, sui, shui,
+jiaosipang, baogaitou, sandianshui, nobun, nogi, ukanmuri, 수, thủy and Bộ Thủy lead to their
+components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph or kana typed on
+its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
+characters and code points only.
 
 ## Preview
 
@@ -317,6 +376,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 ## Licences
 
 - Code: MIT (`LICENSE`).
+- `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
+  (`data/COPYING-small-seal.txt`).
+- `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
+  the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
+  exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
@@ -325,8 +389,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-names.tsv`: the names, words and readings people use for components, CC BY-SA 4.0
   as a whole (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2
   and Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
-  (Apache 2.0), Unihan 18.0.0 (Unicode License v3) and pypinyin (MIT); its header names each
-  (237 KB). Its Wikipedia redirects are kept in `data/component-name-redirects.json`.
+  (Apache 2.0), Unihan 18.0.0 (Unicode License v3), pypinyin (MIT) and Wikidata (CC0 1.0); its
+  header names each (298 KB). Its Wikipedia redirects are kept in
+  `data/component-name-redirects.json`.
+- `data/component-name-wikidata.json`: the Wikidata labels and aliases for the 214 radicals, CC0 1.0
+  (<https://creativecommons.org/publicdomain/zero/1.0/>), 131 KB.
 - `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
@@ -355,10 +422,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
-  definitions, Mandarin and Japanese readings of the component names.
+  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component names.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.
+- Wikidata, CC0 1.0, <https://www.wikidata.org/>: labels and aliases for the 214 radical items, in
+  English, Japanese, Chinese, Korean and Vietnamese.
 - pypinyin 0.55.0, mozillazg, MIT, <https://github.com/mozillazg/python-pinyin>: the pinyin of
   Chinese component names.
 - OpenCC 1.4.2, BYVoid, Apache 2.0, <https://github.com/BYVoid/OpenCC>: traditional and simplified
@@ -488,6 +557,16 @@ What this package offers that Mojidata, as far as its pages and repositories sho
   the parts few fonts draw.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
+
+## Licenses
+
+The code is licensed under [MIT](LICENSE). Data is provided under Creative Commons
+or the terms of its original sources; see the [data notices](data/README.md) for
+each dataset's license and attribution.
+
+Generated items are subject to the applicable terms of the original fonts; see the
+[font notices](fonts/README.md). The IDS Workshop imposes no additional restrictions
+on their use.
 
 ## Development
 

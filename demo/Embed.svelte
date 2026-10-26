@@ -1,12 +1,13 @@
 <script>
   import { IdsInput } from '../src/svelte/index.js'
-  import { babelStoneAdapter } from '../src/adapter/index.js'
+  import { smallSealAdapter } from '../src/adapter/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
+  const adapter = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
   let value = $state('')
   let used = $state('')
 </script>
