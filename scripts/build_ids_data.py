@@ -85,16 +85,19 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     path = args.ids or fetch(IDS_URL, args.cache / "IDS.TXT")
     rows, date, digest = read_ids(path)
+    from tangut import read_tangut, SOURCE
+    tangut = read_tangut(args.cache)
     lines = [
         f"# BabelStone IDS, {IDS_URL}, Andrew West (魏安); File Date {date}, sha256:{digest}",
         "# Public domain facts (IDS.TXT header, note 2). char<TAB>sequences, each with its source regions.",
         *(f"{char}\t{' '.join(sequences)}" for _, char, sequences in rows if sequences),
     ]
+    lines.extend([f"# {SOURCE}", *(f"{char}\t{sequence}" for char, sequence in tangut)])
     text = "\n".join(lines) + "\n"
     args.out.parent.mkdir(parents=True, exist_ok=True)
     # A fixed mtime and no file name keep the output byte-identical between builds.
     args.out.write_bytes(gzip.compress(text.encode(), 9, mtime=0))
-    print(f"{args.out}: {len(rows)} ideographs, {len(text.encode())} bytes, {args.out.stat().st_size} gzipped")
+    print(f"{args.out}: {len(rows) + len(tangut)} ideographs, {len(text.encode())} bytes, {args.out.stat().st_size} gzipped")
     return 0
 
 

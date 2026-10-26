@@ -19,7 +19,7 @@
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
  * @property {'横' | '豎' | '撇' | '點' | '折' | null} [first] The class of its first stroke.
- * @property {'c' | 'd' | 's'} kind Common, difficult (hard to type) or a CJK stroke.
+ * @property {'c' | 't' | 'd' | 's'} kind Common, Tangut, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  *

@@ -20,18 +20,13 @@ components {n} are not parts.
 Each part carries:
 - `strokes`: Unihan's kTotalStrokes (its first value, which Unihan gives for the zh-Hans form where
   the forms differ). A part Unihan lacks gets the sum over the leaves of its first compound sequence
-  whose leaves all have counts, marked derived; a CJK stroke counts 1 and is marked derived; anything
-  else stays null.
-- `first`: the class of its first stroke, 横 豎 撇 點 or 折, where the KanjiVG witnesses agree: the
-  character's own entry, every group drawing it whole (`kvg:element`, not marked part, partial or
-  variant), and every character whose sequence starts with it under ⿰ ⿱ ⿸. The class is kept when
-  all its witnesses with a class agree, or, from 3 of them on, at least 90% (`VOTE_FROM`,
-  `VOTE_SHARE`); 𠂇 starts with 一 in 左 友 and with 丿 in 右 有 布, so it has none. A CJK stroke
-  is classed as itself. A bare stroke type maps to the five classes by the table `CLASS` (an
-  editorial table, after the five classes Chinese dictionaries order strokes by: 提 counts as 横, 豎鉤
-  as 豎, 捺 and 提捺 as 點, every turning stroke as 折, and ㇣ as none). A suffixed type (㇑a, which
-  KanjiVG gives to the dot of 亠 and the vertical of 山 alike), an alternative whose sides disagree
-  (㇔/㇑), or a type outside the table is no witness. KanjiVG follows Japanese stroke order.
+  whose leaves all have counts, marked derived; a CJK stroke counts 1 and is marked derived.
+  The twelve radical forms absent from Unihan use explicit counts; anything else stays null.
+- `first`: the first stroke in Rime's five-stroke dictionary, using its first listed code when
+  it lists alternatives, except that an s/z-only choice uses s (vertical hooks count as 豎).
+  h/s/p/n/z map to 横/豎/撇/點/折. Unicode equivalents of CJK strokes use CLASS directly.
+  The dictionary's Chinese stroke order can differ from Japanese order.
+  The four-stroke grass radical ⻀ has an explicit 横 classification.
 - `kind`: s for a CJK stroke; c (common) for a part that is a 常用漢字 (Unihan kJoyoKanji, with the
   form a U+XXXX value points to) or in the first level of the 通用规范汉字表 (Unihan kTGH, positions
   1–3500); d (difficult) for the rest. The palette's Common, Difficult and Strokes tabs list them.
@@ -45,9 +40,9 @@ supplementary planes (Extensions B–J). It writes `NotoSansCJKjp-ids-strokes.wo
 `Plangothic-ids-parts.woff2` under `fonts/`. The rest of the Basic Multilingual Plane, Extension A
 included, comes from the reader's own CJK font.
 
-IDS.TXT, Unihan, hfhchan/ids, KanjiVG and the fonts are fetched once into `cache/`; all but IDS.TXT,
+IDS.TXT, Unihan, hfhchan/ids, Rime and the fonts are fetched once into `cache/`; all but IDS.TXT,
 which is unversioned upstream, are checked against pinned SHA-256s.
-The `first` field adapts KanjiVG's stroke data and is shared alike under CC BY-SA 3.0.
+The `first` field adapts Rime's stroke data under LGPL-3.0; see data/licences/.
 """
 
 from __future__ import annotations
@@ -56,7 +51,6 @@ import argparse
 import gzip
 import json
 import re
-import xml.etree.ElementTree as ET
 import zipfile
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -102,14 +96,17 @@ UNIHAN_URL = f"https://www.unicode.org/Public/{UNICODE_VERSION}/ucd/Unihan.zip"
 UNIHAN_SHA256 = "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
 HFHCHAN_URL = "https://github.com/hfhchan/ids/releases/download/v1.0.2/ids-20240112.txt"
 HFHCHAN_SHA256 = "7466c8bd9151f1db5ef247fcbf84d7de4b36a6ec741e793c54972aa3dcbc0af4"
-KANJIVG_URL = "https://github.com/KanjiVG/kanjivg/releases/download/r20260714/kanjivg-20260714.xml.gz"
-KANJIVG_SHA256 = "d4a8e5e11533fe6a5d81a158b2c153964322641d2982c90a919461f3c06dca6b"
+RIME_REVISION = "1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48"
+RIME_URL = f"https://raw.githubusercontent.com/rime/rime-stroke/{RIME_REVISION}/stroke.dict.yaml"
+RIME_SHA256 = "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791"
+RIME_SOURCE = f"Rime five-stroke dictionary, {RIME_REVISION}, LGPL-3.0, {RIME_URL}"
+# CJK Radicals Supplement forms absent from Unihan kTotalStrokes.
+RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4), strict=True))
 
 # Binary and ternary description characters, and the unary ones (〾 ⿾ ⿿); ㇯ subtracts.
 OPERATORS = set("⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽⿾⿿㇯〾")
 UNKNOWN = re.compile(r"\{\d+\}|？")
 REGIONS = re.compile(r"\([^)]*\)$")
-KVG = "{http://kanjivg.tagaini.net}"
 TGH_FIRST_LEVEL = 3500
 
 # The CJK Strokes block, U+31C0–U+31E5, by the abbreviations of its Unicode 18.0 names (CJK STROKE
@@ -177,21 +174,6 @@ CLASS = {
 # strokes only, or strokes and one other component; every component this many ideographs use counts
 # as a part as well.
 USE_THRESHOLD = 50
-
-
-def type_class(kind: str) -> str | None:
-    """The class of a KanjiVG `kvg:type`, when every side of it is a bare stroke of one class.
-
-    A type with a letter suffix (㇑a, ㇐b, ㇕c) names a variant shape, and KanjiVG gives the same
-    suffixed type to strokes of different classes: ㇑a is the top dot of 亠 宀 广 as well as the
-    verticals of 山 止 出. Such a type, an alternative whose sides disagree (㇔/㇑), or a type outside
-    the table gives None.
-    """
-    sides = kind.split("/")
-    if any(len(side) != 1 for side in sides):
-        return None
-    found = {CLASS.get(side) for side in sides}
-    return found.pop() if len(found) == 1 else None
 
 
 def components(ids: str) -> list[str]:
@@ -304,6 +286,8 @@ def stroke_counts(
     def count(char: str, seen: frozenset = frozenset()) -> tuple[int | None, bool]:
         if char in unihan:
             return unihan[char], False
+        if char in RADICAL_COUNTS:
+            return RADICAL_COUNTS[char], False
         if char in STROKES:
             return 1, True
         if char in seen:
@@ -319,89 +303,31 @@ def stroke_counts(
     return {name: count(name) for name in names}
 
 
-# Operators whose first operand is written first in the characters they describe (⿺ is not: 辶
-# comes last), so a character spelled ⿸𠂇X starts as its 𠂇 does.
-LEADING = set("⿰⿱⿸")
-# A part with fewer than `VOTE_FROM` witnesses that have a bare stroke type keeps a first-stroke
-# class only when they all agree (its own entry alone included); from `VOTE_FROM` on, when at least
-# `VOTE_SHARE` of them agree. Otherwise it has none.
-VOTE_FROM = 3
-VOTE_SHARE = 0.9
-
-
-def kanjivg_witnesses(path: Path, ids: dict[str, list[str]]) -> dict[str, list[str | None]]:
-    """char → the first-stroke classes of its KanjiVG witnesses, None where a witness has none.
-
-    A component's first stroke can depend on the character it stands in: 𠂇 writes 一 first in 左 and
-    友 but 丿 first in 右 有 布. The witnesses are the character's own entry, every group drawing it
-    whole, and every character with an entry whose sequence starts with it (⿰ ⿱ ⿸ and the component
-    as the first operand), whose own first stroke is then the component's. KanjiVG names no 𠂇 group
-    in 右, so only these characters show that 𠂇 starts two ways. With fewer than `VOTE_FROM`
-    witnesses that have a class, they must all agree; from `VOTE_FROM` on, `VOTE_SHARE` of them must
-    (`agreement`). So 竹's own entry alone keeps its class, a few odd groups do not clear 口's 豎, and
-    𠂇, split between 一 and 丿, has none. A
-    witness whose first stroke has no class (a suffixed type such as ㇑a) is left out, and so is a
-    group KanjiVG marks as drawing part of the component or a variant shape of it.
-    """
-    own: dict[str, str | None] = {}
-    witnesses: dict[str, list[str | None]] = defaultdict(list)
-
-    def first_type(node) -> str | None:
-        for path_node in node.iter("path"):
-            return path_node.get(f"{KVG}type")
-        return None
-
-    def cls(node) -> str | None:
-        kind = first_type(node)
-        return type_class(kind) if kind else None
-
-    root = ET.fromstring(gzip.decompress(path.read_bytes()))
-    for kanji in root.iter("kanji"):
-        hexcode = kanji.get("id", "").removeprefix("kvg:kanji_")
-        if not re.fullmatch(r"[0-9a-f]{5}", hexcode):
+def first_strokes(text: str, forms: str = "") -> dict[str, str]:
+    """Read complete Rime codes, normalizing vertical hooks and Unicode stroke equivalents."""
+    classes = dict(zip("hspnz", "横豎撇點折", strict=True))
+    codes: dict[str, list[str]] = defaultdict(list)
+    for line in text.splitlines():
+        fields = line.split("\t")
+        if len(fields) < 2:
             continue
-        char = chr(int(hexcode, 16))
-        own[char] = cls(kanji)
-        witnesses[char].append(own[char])
-        for group in kanji.iter("g"):
-            element = group.get(f"{KVG}element")
-            # A group that draws only some of the component (kvg:part, kvg:partial) or a variant shape
-            # of it (kvg:variant) says nothing of how the component itself starts.
-            whole = all(group.get(f"{KVG}{name}") is None for name in ("part", "partial", "variant"))
-            if element and len(element) == 1 and whole and group is not kanji:
-                witnesses[element].append(cls(group))
-    for char, sequences in ids.items():
-        if char not in own:
-            continue
-        for sequence in sequences:
-            if (
-                len(sequence) > 1
-                and sequence[0] in LEADING
-                and sequence[1] not in OPERATORS
-                and sequence[1] != char
-            ):
-                witnesses[sequence[1]].append(own[char])
-    return witnesses
-
-
-def kanjivg_first(path: Path, ids: dict[str, list[str]]) -> dict[str, str]:
-    """char → class of its first stroke, where its KanjiVG witnesses agree enough (`agreement`)."""
-    return {char: cls for char, (cls, _, _) in agreement(kanjivg_witnesses(path, ids)).items() if cls}
-
-
-def agreement(witnesses: dict[str, list[str | None]]) -> dict[str, tuple[str | None, int, int]]:
-    """char → (class or None, witnesses agreeing on the most common class, witnesses with a class)."""
-    out = {}
-    for char, found in witnesses.items():
-        votes = Counter(value for value in found if value)
-        total = sum(votes.values())
-        if not total:
-            out[char] = (None, 0, 0)
-            continue
-        cls, agreeing = votes.most_common(1)[0]
-        kept = agreeing == total if total < VOTE_FROM else agreeing / total >= VOTE_SHARE
-        out[char] = (cls if kept else None, agreeing, total)
-    return out
+        char, code = fields[:2]
+        if len(char) == 1 and code and all(stroke in classes for stroke in code):
+            codes[char].append(code)
+    first = {}
+    for char, variants in codes.items():
+        starts = {code[0] for code in variants}
+        first[char] = classes["s" if starts == {"s", "z"} else variants[0][0]]
+    # An equivalent encoded stroke must stay in the same geometric class.
+    for line in forms.splitlines():
+        fields = line.split("\t")
+        if len(fields) == 4:
+            form, char, source, detail = fields
+            if source == "unicode-ucd" and detail == "EquivalentUnifiedIdeograph" and form in CLASS:
+                first[char] = CLASS[form]
+    # CJK RADICAL GRASS THREE: the four-stroke 艹 form begins with a horizontal.
+    first["⻀"] = "横"
+    return first
 
 
 def palette(
@@ -488,26 +414,6 @@ def font(rows: list[list], cache: Path, refresh: bool, out: Path = FONT_DIR) -> 
     print(f"{len(covered)} of {len(wanted)} parts drawn; the fonts lack {lacking or 'none'}")
 
 
-def log_agreement(rows: list[list], agreed: dict[str, tuple[str | None, int, int]]) -> None:
-    """Print how the first-stroke witnesses of the parts agreed: the agreement stays in the log, since
-    a column of it would add over 2 KB to the gzipped palette."""
-    found = [(row[0], *agreed.get(row[0], (None, 0, 0))) for row in rows if row[5] != "s"]
-    kept = [part for part in found if part[1]]
-    few = [part for part in kept if part[3] < VOTE_FROM]
-    split = [part for part in found if part[3] and not part[1]]
-    print(
-        f"first strokes: {len(kept)} kept ({len(few)} of them with fewer than {VOTE_FROM} witnesses, all "
-        f"agreeing), {len(split)} split (under {VOTE_FROM} witnesses disagreeing, or below {VOTE_SHARE:.0%}), "
-        f"{len(found) - len(kept) - len(split)} unwitnessed"
-    )
-    print("  split: " + " ".join(f"{part}({agreeing}/{total})" for part, _, agreeing, total in split))
-    dissent = [part for part in kept if part[2] < part[3]]
-    print(
-        "  kept with dissent: "
-        + " ".join(f"{part}{cls}({agreeing}/{total})" for part, cls, agreeing, total in dissent)
-    )
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cache", type=Path, default=ROOT / "cache")
@@ -518,17 +424,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     unihan_path = fetch(UNIHAN_URL, args.cache / f"Unihan-{UNICODE_VERSION}.zip", UNIHAN_SHA256, args.refresh)
     hfhchan_path = fetch(HFHCHAN_URL, args.cache / "hfhchan-ids-20240112.txt", HFHCHAN_SHA256, args.refresh)
-    kanjivg_path = fetch(KANJIVG_URL, args.cache / "kanjivg-20260714.xml.gz", KANJIVG_SHA256, args.refresh)
+    rime_path = fetch(RIME_URL, args.cache / "rime-stroke.dict.yaml", RIME_SHA256, args.refresh)
     ids_path = args.ids or fetch(IDS_URL, args.cache / "IDS.TXT", refresh=args.refresh)
 
     ids, ids_date = read_ids(ids_path)
-    agreed = agreement(kanjivg_witnesses(kanjivg_path, ids))
     rows = palette(
         ids,
         hfhchan_atomic(hfhchan_path.read_text(encoding="utf-8")),
         unihan_fields(unihan_path),
-        {char: cls for char, (cls, _, _) in agreed.items() if cls},
+        first_strokes(rime_path.read_text(encoding="utf-8"), (ROOT / "data/component-forms.tsv").read_text(encoding="utf-8")),
     )
+    from tangut import read_tangut, tangut_parts, SOURCE
+    rows.extend(tangut_parts(read_tangut(args.cache)))
     document = {
         "columns": ["part", "uses", "strokes", "derived", "first", "kind"],
         "common": f"常用漢字 (Unihan kJoyoKanji) or 通用规范汉字表 level 1 (Unihan kTGH ≤ {TGH_FIRST_LEVEL})",
@@ -536,7 +443,8 @@ def main(argv: list[str] | None = None) -> int:
             f"BabelStone IDS.TXT, File Date {ids_date}, PD, Andrew West, {IDS_URL}",
             f"hfhchan/ids v1.0.2, MIT, Copyright (c) 2021 Henry Chan, {HFHCHAN_URL}",
             f"Unihan {UNICODE_VERSION}, Unicode License v3, Copyright Unicode, Inc., {UNIHAN_URL}",
-            f"KanjiVG r20260714, CC BY-SA 3.0, Copyright (C) 2009-2013 Ulrich Apel, {KANJIVG_URL}; the first column adapts it and is shared alike under CC BY-SA 3.0",
+            RIME_SOURCE,
+            SOURCE,
         ],
         "parts": rows,
     }
@@ -547,7 +455,7 @@ def main(argv: list[str] | None = None) -> int:
     size = len(text.encode())
     packed = len(gzip.compress(text.encode(), 9))
     print(f"{args.out}: {len(rows)} parts ({dict(kinds)}), {size} bytes, {packed} gzipped")
-    log_agreement(rows, agreed)
+    print(f"first strokes: {sum(row[4] is not None for row in rows)} classified")
     if args.font:
         font(rows, args.cache, args.refresh)
     return 0

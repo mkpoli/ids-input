@@ -8,6 +8,8 @@
 // ヴァーチャル).
 export const EXAMPLES = [
   { sequence: '⿰𠤕⿱龴疋', char: '疑' },
+  { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
+  { sequence: '⿰𘫿𘫿', char: '𘴅' },
   { sequence: '⿱木林', char: '森' },
   { sequence: '⿴囗或', char: '國' },
   { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },

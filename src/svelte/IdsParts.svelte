@@ -1,7 +1,8 @@
 <script>
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
-  // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, most used first; Hard to
+  // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, most used first; Tangut
+  // the Tangut components in code point order; Hard to
   // type the rest, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
@@ -21,8 +22,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -67,6 +68,7 @@
   const shown = $derived.by(() => {
     if (!parts) return []
     if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c') }]
+    if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(difficult.filter(part => (part.strokes ?? null) === shownCount))
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
@@ -104,7 +106,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" {disabled} lang="ja" title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
         draggable={!disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => pick(part.part)}>{part.part}</button>
     {/each}
   </div>
@@ -172,11 +174,11 @@
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
-  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Parts",var(--ids-ui-font,system-ui,sans-serif)}
+  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Parts","IDS Strokes",var(--ids-font,sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>
