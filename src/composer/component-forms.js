@@ -21,7 +21,7 @@ export function componentParts(text, region = constants.face, style = 'sans', at
   if (!form) return null
   const { parts, frame, ink } = form
   // Preserve the source font's em and placement for standalone forms. A crop
-  // such as 彀's upper-left component stays floating in that character space;
+  // stays floating in that character space;
   // complete native glyphs retain their designed proportions and side bearings.
   // Nested forms use the description's contextual row/column allocation.
   const target = atRoot ? mapped(frame, constants.face, region) : region

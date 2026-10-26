@@ -75,10 +75,11 @@ export function strokeCounter(table, rows) {
 // Useful unencoded components absent from the corpus remain explicit manual shortcuts.
 export const MANUAL_PARTS = ['⿰冫⿱丿丶']
 // IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
+export const ENCODED_PARTS = { '⿱宀儿': '宂', '⿻三丨': '丰' }
 export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'] }
 
-export function manualUses(table, text) {
-  const spellings = new Set([text, ...(SOURCE_ALIASES[text] ?? [])])
+export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
+  const spellings = new Set([text, ...aliases])
   let uses = 0
   for (const sequences of table.values()) {
     if (sequences.some(({ text }) => {
@@ -107,10 +108,17 @@ export function build(root = new URL('../', import.meta.url)) {
     if (existing) existing.uses = uses
     else selected.push({ ...subtrees(text).at(-1), uses })
   }
-  for (const entry of selected) rows.push([entry.text, entry.uses, count(entry), 1, null, 'c'])
+  for (const entry of selected) {
+    const encoded = ENCODED_PARTS[entry.text]
+    if (!encoded) { rows.push([entry.text, entry.uses, count(entry), 1, null, 'c']); continue }
+    let row = rows.find(row => row[0] === encoded)
+    if (!row) { row = [encoded, 0, count(entry), 1, '點', 'c']; rows.push(row) }
+    row[1] = manualUses(table, encoded, [entry.text])
+    row[5] = 'c'
+  }
   rows.sort((a, b) => (a[5] === 't') - (b[5] === 't') || (a[5] === 't' ? a[0].codePointAt(0) - b[0].codePointAt(0) : b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)))
   palette.parts = rows
-  palette.subtrees = { threshold, manual: MANUAL_PARTS, sourceAliases: SOURCE_ALIASES, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
+  palette.subtrees = { threshold, manual: MANUAL_PARTS, sourceAliases: SOURCE_ALIASES, encoded: ENCODED_PARTS, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
   writeFileSync(data('ids-parts.json'), JSON.stringify(palette) + '\n')
   const report = {
     columns: ['part', 'uses', 'occurrences', 'nestedUses', 'strokes'],

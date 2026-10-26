@@ -106,7 +106,7 @@ it('retains three designed groups for the six-stroke component in either style',
 })
 
 
-it('keeps detached components at native stroke thickness instead of enlarging their crop', async () => {
+it('keeps designed component strokes at native thickness', async () => {
   const { componentParts } = await import('../src/composer/component-forms.js')
   for (const style of ['sans', 'serif']) {
     const parts = componentParts('⿳士冖一', undefined, style)
@@ -117,5 +117,20 @@ it('keeps detached components at native stroke thickness instead of enlarging th
     }
     const root = await compose(local(), '⿳士冖一', { fontStyle: style })
     expect(root.parts[2].box[2]).toBeCloseTo(parts[2].source[2] - parts[2].source[0], 1)
+  }
+})
+
+
+it('combines the intact 士冖 crown above 一 in both equivalent descriptions', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const crown = componentParts('⿱士冖', undefined, fontStyle)
+    const whole = componentParts('⿳士冖一', undefined, fontStyle)
+    expect(whole.slice(0, 2).map(p => p.target)).toEqual(crown.map(p => p.target))
+    expect(whole[2].target[3]).toBeLessThan(whole[1].target[1])
+    const a = await compose(local(), '⿳士冖一', { fontStyle, separate: true })
+    const b = await compose(local(), '⿱⿱士冖一', { fontStyle, separate: true })
+    expect(a.d).toBe(b.d)
+    expect(groupParts(b.parts, await sketch(local(), '⿱⿱士冖一', { fontStyle }))).toHaveLength(3)
   }
 })

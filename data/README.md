@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,687 Han entries (682 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,686 Han entries (681 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -230,7 +230,11 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 It includes compound IDS occurring below the root in at least 50
 characters, matching the existing component frequency cutoff. The current
-corpus supplies seven entries. The manual shortcut `⿰冫⿱丿丶` is included with
+corpus supplies seven frequent trees. Two use encoded palette entries instead:
+`⿱宀儿 → 宂` and `⿻三丨 → 丰`. Their palette frequencies count each character
+once across either spelling (533 and 167, respectively); the raw report retains
+exact IDS counts. Their IDS remain searchable aliases and appear in hover text.
+The five remaining trees stay as compound shortcuts. The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
 `{11}` (bottom of 軣, `⿰⿱丶㇀⿱㇒丶`) supplies those uses; its exact source
 spelling remains in the raw report. The shortcut count deduplicates characters
@@ -258,12 +262,14 @@ TTC hashes recorded in the JSON before exporting them. Rebuild with
 `uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
 Detached forms retain their source position in the native em instead of being
 enlarged to fill the cell, preserving their stroke thickness and spacing. Palette icons share the surrounding
-text’s em size. The six-stroke `⿳士冖一` preserves its proportions from 彀; the Sans export
-clips away the adjoining 殳 at x=491. `⿻者丶` uses the glyph shared by
+text’s em size. The six-stroke `⿳士冖一` has a dedicated two-level layout:
+the intact `⿱士冖` crown from 壱 above the short 一 from 壹. The line moves
+vertically without scaling its strokes. `⿱⿱士冖一` uses the same layout. `⿻者丶` uses the glyph shared by
 者 + U+E0101 and U+FA5B, verified in both fonts' variation tables.
 Exact 塁 and 疂 descriptions use their complete native JP glyphs.
 `⿱宀儿` uses 宂 (U+5B82), whose source regions are HTKP; `⿻三丨` uses
-丰 (U+4E30), whose exact source regions are GJKPV. Literal IDS stay unchanged.
+丰 (U+4E30), whose exact source regions are GJKPV. Explicit IDS typed in the
+editor remain unchanged; palette selection inserts the encoded counterparts.
 Bundled styles affect only these selected forms; other composed outlines still
 come from the configured Han export. Whole glyphs fall back to their operands
 in adjustment mode when the export supplies them.

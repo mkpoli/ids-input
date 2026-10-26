@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["fonttools==4.63.0", "skia-pathops==0.9.2"]
+# dependencies = ["fonttools==4.63.0"]
 # ///
 """Export selected Noto CJK forms. Run with uv; source TTC paths are arguments."""
 import hashlib, json, sys
@@ -9,7 +9,6 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
-import pathops
 
 class Contours(BasePen):
     def __init__(self):
@@ -35,15 +34,6 @@ def contours(gs, name):
             result.append(current); current = []
     return result
 
-def clipped(recording, box):
-    p, q = pathops.Path(), pathops.Path()
-    replayRecording(recording, p.getPen())
-    x0,y0,x1,y1 = box
-    q.moveTo(x0,y0); q.lineTo(x1,y0); q.lineTo(x1,y1); q.lineTo(x0,y1); q.close()
-    out = RecordingPen()
-    pathops.op(p,q,pathops.PathOp.INTERSECTION).draw(out)
-    return out.value
-
 def group(cs):
     pen = Contours()
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
@@ -63,12 +53,21 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms={}
     if style=='sans':
         c=cs('氺'); dots=[group([c[0],c[2]]),group([c[3]]),group([c[1]])]
-        c=cs('彀'); roof=clipped(c[3],(0,400,491,594))
-        forms['⿳士冖一']=[group([c[2]]),group([roof]),group([c[0]])]
+        c=cs('壱'); crown=[group([c[1]]),group([c[0]])]
+        bar=group([cs('壹')[0]])
     else:
         # Detach the upper-right dot where its upper edge meets 田 (818,475 -> 756,444).
         c=cs('塁'); dots=[group([c[0],c[2]]),group([c[5][:2] + c[5][14:]]),group([c[1]])]
-        c=cs('彀'); forms['⿳士冖一']=[group([c[2]]),group([c[1]]),group([c[0]])]
+        c=cs('壱'); crown=[group([c[0]]),group([c[1]])]
+        bar=group([cs('壹')[1]])
+    # Compose the intact 士冖 crown above a short 一, with unchanged stroke weight.
+    # The line is translated only; both pieces retain their native horizontal proportions.
+    ys=[v for _,points in bar for v in points[1::2]]
+    dy=200-(min(ys)+max(ys))/2
+    bar=[[ops,[v if i%2==0 else v+dy for i,v in enumerate(points)]] for ops,points in bar]
+    forms['⿱士冖']=crown
+    forms['⿳士冖一']=crown+[bar]
+    forms['⿱⿱士冖一']=crown+[bar]
     forms['⿰冫⿱丿丶']=dots
     forms['⿰冫⿾冫']=[dots[0],dots[1]+dots[2]]
     for sequence,ch in [('⿱宀儿','宂'),('⿻三丨','丰'),('⿻者丶','者')]:

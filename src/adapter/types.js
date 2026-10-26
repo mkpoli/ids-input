@@ -14,6 +14,7 @@
  * @property {string} [label] What to show beside it (a reading, a name, a code point).
  *
  * @typedef {object} PalettePart A part of the parts palette.
+ * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {string} part
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]

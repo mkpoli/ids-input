@@ -64,7 +64,7 @@
     if (!query || !parts) return null
     if (/^\d+$/.test(query)) return parts.filter(part => part.strokes === Number(query))
     const chars = new Set([...query])
-    return parts.filter(part => chars.has(part.part) || isSequence(part.part) && part.part.includes(query))
+    return parts.filter(part => chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query)))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
@@ -87,6 +87,7 @@
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
+    ...(part.aliases ?? []),
     part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
     part.uses ? t('parts.uses', { count: part.uses }) : null,
   ].filter(Boolean).join(' · ')

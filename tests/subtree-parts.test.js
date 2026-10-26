@@ -38,7 +38,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => [...row[0]].length > 1)
-  expect(compounds).toHaveLength(8)
+  expect(compounds).toHaveLength(6)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
@@ -72,4 +72,17 @@ it('keeps raw counts when a literal manual shortcut crosses the frequency cutoff
     expect(palette.parts.find(row => row[0] === '⿰冫⿱丿丶')[1]).toBe(51)
     expect(report.parts.find(row => row[0] === '⿰冫⿱丿丶')[1]).toBe(50)
   } finally { rmSync(root, { recursive: true, force: true }) }
+})
+
+
+it('normalizes exact encoded shortcuts without losing source counts or IDS search aliases', () => {
+  const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
+  const report = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-subtrees.json.gz', import.meta.url))))
+  for (const [ids, char] of Object.entries(palette.subtrees.encoded)) {
+    expect(palette.parts.filter(row => row[0] === char)).toHaveLength(1)
+    expect(palette.parts.some(row => row[0] === ids)).toBe(false)
+    expect(report.parts.some(row => row[0] === ids)).toBe(true)
+  }
+  const table = parseIdsTable('甲\t⿰宂⿱宀儿(G)\n乙\t⿱口⿱宀儿(G)\n丙\t⿰宂木(G)')
+  expect(manualUses(table, '宂', ['⿱宀儿'])).toBe(3)
 })

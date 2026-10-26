@@ -13,7 +13,7 @@ const compounds = palette.parts.filter(row => isSequence(row[0])).map(row => row
 // Test glyphs are deliberately simple outlines, as in the shared composer fixture.
 const fixture = { ...files }
 const template = Object.values(JSON.parse(gunzipSync(files[shardOf('g', '永')])))[0]
-for (const char of new Set(compounds.flatMap(text => leaves(parse(text).tree).map(leaf => leaf.char)))) {
+for (const char of new Set([...compounds.flatMap(text => leaves(parse(text).tree).map(leaf => leaf.char)), ...Object.values(palette.subtrees.encoded)])) {
   const path = shardOf('g', char)
   const shard = fixture[path] ? JSON.parse(gunzipSync(fixture[path])) : {}
   shard[createHash('sha256').update(char).digest('hex')] = { ...template, k: char }
@@ -50,6 +50,16 @@ try {
     assert((await cell.getAttribute('title')).startsWith(text), 'sequence in hover tooltip')
     assert((await cell.innerText()).trim() === 'IDS', 'compound displays an icon and marker')
   }
+  for (const [ids, char] of Object.entries(palette.subtrees.encoded)) {
+    await page.locator('.parts-filter').fill(ids)
+    const normalized = page.locator('.parts-grid .part')
+    assert(await normalized.count() === 1, 'encoded alias has one candidate')
+    assert((await normalized.innerText()).trim() === char, 'encoded alias displays its character')
+    assert((await normalized.getAttribute('title')).includes(ids), 'encoded alias preserves IDS in tooltip')
+    await page.locator('.ids-part').last().click()
+    await normalized.click()
+    await page.waitForFunction(expected => document.querySelector('.ids-field input').value === expected, `⿰木${char}`)
+  }
   await page.locator('.ids-preview[data-step="composed"]').waitFor()
   await page.locator('.parts-filter').fill('⿰冫⿱丿丶')
   const cell = page.locator('.part.compound')
@@ -60,7 +70,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.ids-field input').value === '⿰木⿰冫⿱丿丶')
   await page.locator('.ids-preview[data-step="composed"]').waitFor()
   await page.locator('.parts-filter').fill('4')
-  assert(await page.locator('.part.compound').count() === 3, 'stroke-count filter')
+  assert(await page.locator('.part.compound').count() === 2, 'stroke-count filter')
   await page.locator('.parts-filter').fill('')
   await page.getByRole('tab', { name: 'Recent', exact: true }).click()
   assert(await page.locator('.part.compound').count() === 1, 'compound in Recent')
