@@ -115,6 +115,8 @@ export function createEditor(options) {
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean }} [how]
    */
   function apply(next, select, label, { destructive = false } = {}) {
+    const valid = parse(write(next), { open: true })
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive }

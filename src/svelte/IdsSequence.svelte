@@ -47,8 +47,12 @@
     if (!field || field.selectionStart === field.selectionEnd || parse(unalias(text), { open: true }).problem) return false
     expandSelection()
     if (editor.chosen === null) return false
+    const start = field.selectionStart ?? 0
     editor.take(text)
     field.value = editor.draft
+    const end = Math.min(field.value.length, start + unalias(text).length)
+    editor.selectText(end, end)
+    field.setSelectionRange(end, end)
     return true
   }
   /** @param {ClipboardEvent} event */
@@ -65,10 +69,11 @@
   /** @param {CompositionEvent} event */
   function endComposition(event) {
     composing = false
-    if (field && compositionRange && compositionRange.start !== compositionRange.end && event.data && !parse(unalias(event.data), {open:true}).problem) {
-      editor.selectText(compositionRange.start, compositionRange.end)
-      editor.take(event.data)
+    if (field && compositionRange && compositionRange.start !== compositionRange.end && event.data) {
+      const composed = field.value
       field.value = editor.draft
+      field.setSelectionRange(compositionRange.start, compositionRange.end)
+      if (!replaceText(event.data)) { field.value = composed; edit() }
     } else edit()
     compositionRange = null
   }
