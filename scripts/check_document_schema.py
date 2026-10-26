@@ -9,8 +9,8 @@ from pathlib import Path
 from jsonschema import Draft202012Validator, FormatChecker
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA = json.loads((ROOT / 'docs/ids-document.schema.json').read_text())
-EXAMPLE = json.loads((ROOT / 'docs/ids-document.example.json').read_text())
+SCHEMA = json.loads((ROOT / 'docs/ids-document.schema.json').read_text(encoding='utf-8'))
+EXAMPLE = json.loads((ROOT / 'docs/ids-document.example.json').read_text(encoding='utf-8'))
 
 
 def main():
