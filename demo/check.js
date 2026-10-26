@@ -610,6 +610,18 @@ try {
   await mixed.context().close()
   pass('Tangut outlines, edited slots, SVG/PNG exports and mixed Han–Tangut rendering')
 
+  const bopomofo = await open(`?composer=${encodeURIComponent('http://[')}#${encodeURIComponent('⿰ㄅㆿ')}`)
+  await bopomofo.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  const [bopomofoSvg] = await Promise.all([bopomofo.waitForEvent('download'), bopomofo.locator('.export .primary').click()])
+  const bopomofoText = readFileSync(await bopomofoSvg.path(), 'utf8')
+  assert(bopomofoText.includes('<path') && !/<text|NaN|Infinity/.test(bopomofoText), 'Bopomofo SVG carries outlines')
+  await bopomofo.locator('.export [role="radio"]', { hasText: 'PNG' }).click()
+  const [bopomofoPng] = await Promise.all([bopomofo.waitForEvent('download'), bopomofo.locator('.export .primary').click()])
+  assert(readFileSync(await bopomofoPng.path()).readUInt32BE(16) === 1024, 'Bopomofo exports a 1024 px PNG')
+  assert(!bopomofo.errors.length, `Bopomofo page errors: ${bopomofo.errors.join('; ')}`)
+  await bopomofo.context().close()
+  pass('Bopomofo preview and SVG/PNG exports without a Han export')
+
   // With an export: the filled part drawn, the slot a placeholder; SVG and PNG saved as files named
   // after the sequence, on the background and in the ink chosen; the settings kept.
   const drawn = await open(`${fixture}#${encodeURIComponent('⿰木⬚')}`)

@@ -31,7 +31,7 @@ The package has three layers, and an optional preview:
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
 The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
-tab. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
 <picture>
@@ -141,7 +141,7 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
 `？` for a part no character names, with an optional variation selector. The letters and digits are
 those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
-shape), Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
+shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
 preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
 written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
