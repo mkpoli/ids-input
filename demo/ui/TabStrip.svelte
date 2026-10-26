@@ -116,18 +116,19 @@
   .tabs::-webkit-scrollbar{display:none}
   .tab{position:relative;isolation:isolate;flex:none;width:96px;height:40px;border:0;border-radius:12px 12px 0 0;color:var(--muted)}
   .tab:not(.on):hover{background:var(--hover);color:var(--ink)}
-  .tab.on{background:var(--bg);color:var(--ink)}
+  .tab.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
   .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
   .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--bg) 10.5px)}
   .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--bg) 10.5px)}
   .tab-main{display:flex;align-items:center;gap:8px;width:100%;height:100%;padding:6px 36px 6px 12px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
+  .tab:not(.on) .tab-main{justify-content:center;padding-inline:12px}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{display:grid;place-items:center;flex:none;width:28px;height:28px}
   .tab:not(.on) .tab-icon{opacity:.7}
   .tab-dot{flex:none;width:5px;height:5px;border-radius:50%;background:var(--accent)}
   .tab-close{position:absolute;z-index:2;top:8px;right:8px;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:7px;
     background:none;color:var(--muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
-  .tab.on .tab-close,.tab:hover .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
+  .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--hover);color:var(--ink)}
   .tab-close:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
   .tab-new{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:0 0 6px -6px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
