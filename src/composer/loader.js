@@ -193,7 +193,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
     return { d: svgPath(ink.filter(p => !p.cut)), cut: svgPath(ink.filter(p => p.cut)),
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
-      parts: ink.map(p => ({ origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
+      parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
       kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...sequence].filter(ch => APPROXIMATE.includes(ch)))] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)

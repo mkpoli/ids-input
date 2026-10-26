@@ -57,6 +57,7 @@
   "app.font.serif": "Serif",
   "app.font.klee": "Kaisho",
   "app.footer.about": "Sources and inspiration",
+  "app.footer.sources": "Sources",
   "app.history": "History",
   "app.history.empty": "No changes yet",
   "app.history.undone": "Undone",

@@ -1,0 +1,615 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ids-input:document:1",
+  "title": "IDS layer document",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "root",
+    "render"
+  ],
+  "properties": {
+    "format": {
+      "const": "ids-input/document"
+    },
+    "version": {
+      "const": 1
+    },
+    "root": {
+      "$ref": "#/$defs/node"
+    },
+    "render": {
+      "$ref": "#/$defs/render"
+    },
+    "geometryEdits": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/geometryEdit"
+      },
+      "minItems": 0,
+      "maxItems": 1000
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "modified": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "extensions": {
+      "$ref": "#/$defs/extensions"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "geometryEdits"
+        ],
+        "properties": {
+          "geometryEdits": {
+            "minItems": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "render": {
+            "properties": {
+              "mode": {
+                "const": "pinned"
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "not": {
+        "pattern": "[^A-Za-z0-9_-]"
+      }
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "minLength": 64,
+      "maxLength": 64
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      },
+      "additionalProperties": true
+    },
+    "complex": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "affine": {
+      "type": "object",
+      "required": [
+        "type",
+        "matrix"
+      ],
+      "properties": {
+        "type": {
+          "const": "affine"
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 6,
+          "maxItems": 6
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "projective": {
+      "type": "object",
+      "required": [
+        "type",
+        "matrix"
+      ],
+      "properties": {
+        "type": {
+          "const": "projective"
+        },
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 9,
+          "maxItems": 9
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "mobius": {
+      "type": "object",
+      "required": [
+        "type",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "properties": {
+        "type": {
+          "const": "mobius"
+        },
+        "a": {
+          "$ref": "#/$defs/complex"
+        },
+        "b": {
+          "$ref": "#/$defs/complex"
+        },
+        "c": {
+          "$ref": "#/$defs/complex"
+        },
+        "d": {
+          "$ref": "#/$defs/complex"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    },
+    "operation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/affine"
+        },
+        {
+          "$ref": "#/$defs/projective"
+        },
+        {
+          "$ref": "#/$defs/mobius"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "not": {
+                "enum": [
+                  "affine",
+                  "projective",
+                  "mobius"
+                ]
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "chain": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/operation"
+      },
+      "minItems": 0,
+      "maxItems": 64
+    },
+    "layer": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "transform": {
+          "$ref": "#/$defs/chain"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      }
+    },
+    "node": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/component"
+        },
+        {
+          "$ref": "#/$defs/operator"
+        },
+        {
+          "$ref": "#/$defs/slot"
+        },
+        {
+          "$ref": "#/$defs/group"
+        }
+      ]
+    },
+    "component": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layer"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "char"
+          ],
+          "properties": {
+            "kind": {
+              "const": "component"
+            },
+            "char": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "operator": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layer"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "op",
+            "children"
+          ],
+          "properties": {
+            "kind": {
+              "const": "operator"
+            },
+            "op": {
+              "enum": [
+                "⿾",
+                "⿿",
+                "〾",
+                "⿰",
+                "⿱",
+                "⿴",
+                "⿵",
+                "⿶",
+                "⿷",
+                "⿸",
+                "⿹",
+                "⿺",
+                "⿻",
+                "⿼",
+                "⿽",
+                "㇯",
+                "⿲",
+                "⿳"
+              ]
+            },
+            "children": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/node"
+              },
+              "minItems": 1,
+              "maxItems": 3
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "op": {
+                    "enum": [
+                      "⿾",
+                      "⿿",
+                      "〾"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "children": {
+                    "minItems": 1,
+                    "maxItems": 1
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "op": {
+                    "enum": [
+                      "⿰",
+                      "⿱",
+                      "⿴",
+                      "⿵",
+                      "⿶",
+                      "⿷",
+                      "⿸",
+                      "⿹",
+                      "⿺",
+                      "⿻",
+                      "⿼",
+                      "⿽",
+                      "㇯"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "children": {
+                    "minItems": 2,
+                    "maxItems": 2
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "op": {
+                    "enum": [
+                      "⿲",
+                      "⿳"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "children": {
+                    "minItems": 3,
+                    "maxItems": 3
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "slot": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layer"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slot"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "group": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layer"
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "child"
+          ],
+          "properties": {
+            "kind": {
+              "const": "group"
+            },
+            "child": {
+              "$ref": "#/$defs/node"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "render": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "mode"
+          ],
+          "properties": {
+            "mode": {
+              "const": "unbound"
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "mode",
+            "engine",
+            "revision",
+            "options",
+            "assets"
+          ],
+          "properties": {
+            "mode": {
+              "const": "pinned"
+            },
+            "engine": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "revision": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            },
+            "options": {
+              "type": "object"
+            },
+            "assets": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/asset"
+              },
+              "minItems": 1,
+              "maxItems": 128
+            },
+            "extensions": {
+              "$ref": "#/$defs/extensions"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "role",
+        "sha256"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "sha256": {
+          "$ref": "#/$defs/digest"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 2048
+        }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "piece",
+            "contour"
+          ],
+          "properties": {
+            "kind": {
+              "const": "contour"
+            },
+            "piece": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "contour": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "id"
+          ],
+          "properties": {
+            "kind": {
+              "const": "stroke"
+            },
+            "id": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "geometryEdit": {
+      "type": "object",
+      "required": [
+        "id",
+        "node",
+        "geometry",
+        "target",
+        "transform"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "node": {
+          "$ref": "#/$defs/id"
+        },
+        "geometry": {
+          "$ref": "#/$defs/digest"
+        },
+        "target": {
+          "$ref": "#/$defs/target"
+        },
+        "transform": {
+          "$ref": "#/$defs/chain"
+        },
+        "extensions": {
+          "$ref": "#/$defs/extensions"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

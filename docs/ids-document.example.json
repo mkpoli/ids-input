@@ -1,0 +1,63 @@
+{
+  "format": "ids-input/document",
+  "version": 1,
+  "title": "Nested component edits",
+  "render": {
+    "mode": "unbound"
+  },
+  "root": {
+    "id": "character",
+    "kind": "operator",
+    "op": "⿰",
+    "children": [
+      {
+        "id": "left-wood",
+        "kind": "component",
+        "char": "木"
+      },
+      {
+        "id": "right-part",
+        "kind": "operator",
+        "op": "⿱",
+        "transform": [
+          {
+            "type": "affine",
+            "matrix": [
+              0.95,
+              0,
+              0,
+              0.95,
+              25,
+              8
+            ]
+          }
+        ],
+        "children": [
+          {
+            "id": "mouth",
+            "kind": "component",
+            "char": "口",
+            "transform": [
+              {
+                "type": "affine",
+                "matrix": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  -8,
+                  3
+                ]
+              }
+            ]
+          },
+          {
+            "id": "lower-wood",
+            "kind": "component",
+            "char": "木"
+          }
+        ]
+      }
+    ]
+  }
+}

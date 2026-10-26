@@ -50,7 +50,7 @@
     step = 'loading'
     // Start the export's manifest and layout while the edit settles; the first draw then waits on
     // the parts it needs, not on the export itself.
-    ask?.warm?.()
+    ask?.warm?.(text)
     const controller = new AbortController(), signal = controller.signal
     const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, signal }, patch => {
       if (patch.sketch) { sketched = { text, leaves: /** @type {SketchLeaf[]} */ (patch.sketch) }; return }

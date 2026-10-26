@@ -56,6 +56,7 @@
   "app.font.serif": "明朝",
   "app.font.klee": "楷書",
   "app.footer.about": "出典と着想元",
+  "app.footer.sources": "出典",
   "app.history": "履歴",
   "app.history.empty": "まだ変更なし",
   "app.history.undone": "取り消した操作",

@@ -29,6 +29,7 @@
  * @property {boolean} empty Whether the leaf is an empty slot (⬚).
  *
  * @typedef {object} DrawingPart One part of a drawing: a piece the composer placed.
+ * @property {number} [leaf] Original IDS leaf index when the composer can preserve ownership through a rewrite.
  * @property {string} origin What the piece was drawn from, such as `glyph 木` or `learned 村`.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
@@ -57,7 +58,7 @@
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
- * @property {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm?: () => void }} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws. `warm` starts the export's manifest and layout before the first drawing.
+ * @property {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm?: (sequence?: string) => void }} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws. `warm` starts the export's manifest and layout before the first drawing; it may be told the sequence being previewed.
  */
 
 export {}

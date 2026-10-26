@@ -63,18 +63,31 @@
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
+  /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
+  function exportUrl(value) {
+    try {
+      const url = new URL(value, location.href)
+      if (!url.pathname.endsWith('/')) url.pathname += '/'
+      return url.href
+    } catch { return null }
+  }
+  const preparedBase = exportUrl(COMPOSER_BASE)
   /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
   function previewFor(at, split) {
     const key = `${at}\0${split ? '1' : '0'}`
     const known = previewsWithExamples.get(key)
     if (known) return known
     const composed = previewAt(at, split)
-    if (split || at !== COMPOSER_BASE) { previewsWithExamples.set(key, composed); return composed }
+    if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       return prepared.get(sequence) ?? composed(sequence, options)
-    }, { warm: composed.warm })
+    }, {
+      warm: (/** @type {string | undefined} */ sequence) => {
+        if (sequence === undefined || !prepared.has(sequence)) composed.warm()
+      },
+    })
     previewsWithExamples.set(key, preview)
     return preview
   }
@@ -87,7 +100,7 @@
     if (!iconDrawings.has(at)) {
       const composed = composerPreview({ base: at })
       iconDrawings.set(at, createIconDrawings(async sequence =>
-        (at === COMPOSER_BASE ? prepared.get(sequence) : null) ?? composed(sequence)))
+        (exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
   }
@@ -622,7 +635,6 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          {#if editor.whole}<output class="tree-whole" lang="ja" title={t('ids.label')} aria-label={`${t('ids.label')}: ${editor.whole}`}>{editor.whole}</output>{/if}
           <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
@@ -666,11 +678,15 @@
   </main>
 
   <footer class="foot">
-    <a href="https://github.com/mkpoli/ids-input"><Icon name="github" size={14} />ids-input</a>
-    <span aria-hidden="true">·</span>
-    <button type="button" class="link" onclick={() => aboutOpen = true}>{t('app.footer.about')}</button>
-    <span aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/han-compose">han-compose</a>
+    <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <button type="button" class="link" aria-label={t('app.footer.about')} onclick={() => aboutOpen = true}><Icon name="book" size={14} /><span class="foot-full">{t('app.footer.about')}</span><span class="foot-short" aria-hidden="true">{t('app.footer.sources')}</span></button>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />MIT</a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
   </footer>
 </div>
 
@@ -753,7 +769,6 @@
   .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
-  .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
@@ -777,9 +792,15 @@
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
-  .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
-  .foot .link{color:inherit}
+  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;padding:4px max(16px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-size:12px;line-height:16px;color:var(--muted)}
+  .foot a,.foot .link{display:inline-flex;align-items:center;gap:5px;color:inherit;white-space:nowrap}
+  .foot-short{display:none}
+  @media (max-width:600px){
+    .foot{column-gap:8px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+    .foot a,.foot .link{gap:4px}
+    .foot-full,.foot-separator,.repository span{display:none}
+    .foot-short{display:inline}
+  }
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}
@@ -806,7 +827,7 @@
     .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
