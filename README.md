@@ -204,9 +204,13 @@ functions (`replaceNode`, `replaceWithSequence`, `decompose`, `wrapNode`, `unwra
 `changeOperator`, `deleteLayer`) keep the selected layer's ID, name and transform. Pass one
 allocator across a session (`allocatorFor(document, retainedIds)`) so a removed ID is not reused.
 
-The model reads and writes the document shape and validates its structure and transforms. The current
-editor still edits positional trees and the current preview still draws canvas-space paths; a
-document renderer, storage and the editor binding are the next layer.
+The model reads and writes the document shape and validates its structure and transforms. The
+transform engine evaluates affine, projective and Möbius chains on paths: affine chains stay exact,
+a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
+hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
+local geometry and each operator child's placement, applies the nested layer transforms, and reports
+missing geometry or unsupported transforms. Compositing (including ㇯), storage and the editor binding
+are not part of these modules yet.
 
 ## Adapters
 
