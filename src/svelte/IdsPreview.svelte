@@ -44,6 +44,9 @@
     sketched = null
     if (empty || !(ask || final)) { step = 'idle'; shown = null; return }
     step = 'loading'
+    // Start the export's manifest and layout while the edit settles; the first draw then waits on
+    // the parts it needs, not on the export itself.
+    ask?.warm?.()
     const controller = new AbortController(), signal = controller.signal
     const timer = setTimeout(() => runPreview(text, { preview: ask, drawing: final, signal }, patch => {
       if (patch.sketch) { sketched = { text, leaves: /** @type {SketchLeaf[]} */ (patch.sketch) }; return }
@@ -115,12 +118,18 @@
   </div>
 {/snippet}
 
-<figure class="ids-preview" data-step={step} data-label={said.label} aria-label={t('ids.preview.drawing', { sequence })}>
-  <div class="ids-preview-large">{@render picture('large')}</div>
+<figure class="ids-preview" data-step={step} data-label={said.label} aria-busy={step === 'loading'} aria-label={t('ids.preview.drawing', { sequence })}>
+  <div class="ids-preview-large">
+    {@render picture('large')}
+    {#if step === 'loading'}<span class="ids-preview-progress" aria-hidden="true"></span>{/if}
+  </div>
   {#if small || !quiet}
     <figcaption class="ids-preview-meta">
       {#if small}<div class="ids-preview-small">{@render picture('small')}</div>{/if}
-      {#if !quiet}<span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>{/if}
+      {#if !quiet}
+        {#if step === 'loading'}<span class="ids-preview-spinner" aria-hidden="true"></span>{/if}
+        <span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>
+      {/if}
     </figcaption>
   {/if}
   {#if note && notes}<p class="ids-preview-note">{note}</p>{/if}
@@ -133,6 +142,9 @@
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;width:var(--ids-preview-size,120px);max-width:100%;flex:none}
   .ids-preview-large{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--_line);border-radius:10px;background:var(--_surface);color:var(--_ink);overflow:hidden}
+  .ids-preview-progress{position:absolute;right:0;bottom:0;left:0;height:2px;overflow:hidden;background:color-mix(in srgb,var(--_line) 55%,transparent);pointer-events:none}
+  .ids-preview-progress::before{content:"";position:absolute;inset-block:0;left:0;width:42%;border-radius:2px;background:var(--_accent);animation:ids-preview-sweep 1.15s ease-in-out infinite}
+  .ids-preview-spinner{flex:none;width:11px;height:11px;border:1.5px solid color-mix(in srgb,var(--_muted) 28%,transparent);border-top-color:var(--_accent);border-radius:50%;animation:ids-preview-spin .8s linear infinite}
   .ids-preview-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;min-height:22px;max-width:100%}
   .ids-preview-small{width:20px;height:20px;color:var(--_ink)}
   .frame{position:relative;width:100%;height:100%}
@@ -149,7 +161,14 @@
   .slot.selected .slot-fill{fill:color-mix(in srgb,var(--_accent) 16%,transparent)}
   .slot.selected .slot-line{stroke:var(--_accent)}
   .ids-preview-badge{padding:0 7px;border-radius:999px;font-size:11px;line-height:18px;color:var(--_muted);border:1px solid var(--_line);text-align:center}
+  .ids-preview[data-label="loading"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 35%,var(--_line))}
   .ids-preview[data-label="final"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 45%,var(--_line))}
   .ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}
   .ids-preview-note{margin:0;width:100%;font-size:11px;line-height:1.4;color:var(--_muted);text-align:center;overflow-wrap:anywhere}
+  @keyframes ids-preview-spin{to{transform:rotate(1turn)}}
+  @keyframes ids-preview-sweep{from{transform:translateX(-110%)}to{transform:translateX(260%)}}
+  @media (prefers-reduced-motion: reduce){
+    .ids-preview-spinner{animation:none;border-top-color:var(--_muted)}
+    .ids-preview-progress::before{animation:none;width:100%;background:var(--_line)}
+  }
 </style>

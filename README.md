@@ -1,14 +1,27 @@
 # ids-input
 
-Type or build ideographic description sequences (IDS) such as `⿰亻⿱七木`. The package has three
-layers, and an optional preview:
+ids-input is a JavaScript library and a set of Svelte components for writing ideographic
+description sequences (IDS), strings such as `⿰亻⿱七木` that describe a character by its parts.
+Use it to write down a character that has no code point, to find characters by their parts, or to
+put an IDS editor in a web page. It reads Han characters, those of Chữ Nôm included (𡨸 `⿰宁字`),
+and Tangut characters and components.
+
+Demo: the IDS Workshop, <https://ids.mkpo.li/>
+
+<a href="https://ids.mkpo.li/"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/workshop-dark.png">
+  <img src="docs/images/workshop-light.png" alt="The IDS Workshop: the sequence ⿰𠤕⿱龴疋 with the operator palette and parts on the left, its tree in the middle above the characters that contain it, and its drawing with export settings on the right">
+</picture></a>
+
+The package has three layers, and an optional preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
-  (`LR` for ⿰), maps keys to operators, and steps through decomposition trees.
+  (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
+  the names people call them (絞絲, ノ文, 宝盖).
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS and the parts palette from two static files, so nothing needs a
-  server.
+  adapter reads BabelStone IDS, the parts palette, component forms and component names from static
+  files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
@@ -17,13 +30,14 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-Tangut characters and components are accepted in IDS. The bundled data includes Tangut
-decompositions, a Tangut parts tab, and examples. Import `fonts.css` for Tangut text
-coverage; composed previews still depend on the host’s han-compose dataset.
+The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
+tab. Import `fonts.css` for Tangut text. The preview draws Han sequences only: han-compose's export
+holds no Tangut outlines, so a Tangut sequence is edited and searched but not drawn.
 
-Demo: <https://ids.mkpo.li/>
-
-[![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
+  <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
+</picture>
 
 ## Install
 
@@ -46,8 +60,10 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
   import parts from 'ids-input/data/ids-parts.json?url'
+  import forms from 'ids-input/data/component-forms.tsv?url'
+  import names from 'ids-input/data/component-names.tsv?url'
 
-  const adapter = babelStoneAdapter({ ids, parts })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names })
   let value = $state('')
 </script>
 
@@ -159,12 +175,14 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`babelStoneAdapter({ ids, parts })` answers `structure`, `search` (a character, `U+6728` or bare
-hex), `containing` and `parts` from the two files in `data/`. Its component search builds an index
-in memory on first use: under Bun, about half a second for the most frequent components and
-150 MB of heap with the table loaded; a host with a server can answer `containing` there instead. It has
-no `variants`, `drawing` or `preview`, and no table of component forms, so `⺡` and `氵` are
-different components to it.
+`babelStoneAdapter({ ids, parts, forms, names })` answers `structure`, `search` (a character,
+`U+6728` or bare hex, or a name such as 絞絲 or のぶん when `names` is given), `containing` and
+`parts` from the files in `data/`. `forms` folds the description search's components and opens a
+named component into the forms that stand for it; without it `⺡` and `氵` are different components
+and a name finds only the form the table records. The containing search builds an index in memory on
+first use: under Bun, about half a second for the most frequent components and 150 MB of heap with
+the table loaded; a host with a server can answer `containing` there instead. It has no `variants`,
+`drawing` or `preview`.
 
 ## Search
 
@@ -173,6 +191,11 @@ different components to it.
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
+  <img src="docs/images/search-light.png" width="600" alt="Search results for the part 疋: 定, 旋, 是, 楚 and other characters, each with its description below and the matched 疋 marked">
+</picture>
 
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions
@@ -197,6 +220,20 @@ the full table (97,680 characters) under Bun 1.3.14 on an AMD Ryzen 7 9800X3D, b
 take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, which matches 91,193 characters,
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
 5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
+
+### Names
+
+The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
+point, or one of the names people call a component (`data/component-names.tsv`, 1,727 names in
+Japanese and Chinese, traditional and simplified). A query and every name are folded alike: NFKC,
+katakana as hiragana, spaces and punctuation out. A name that is the whole query comes first, then
+one the query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds
+絞絲旁.
+
+The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
+those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. A single component typed on its
+own stays the character it is, and without `names` the search takes characters and code points only.
 
 ## Preview
 
@@ -254,34 +291,46 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 ## Licences
 
 - Code: MIT (`LICENSE`).
-- `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain (777 KB).
+- `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
+  Tangut IDS, factual decompositions (798 KB).
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
-- `data/ids-parts.json`: CC BY-SA 3.0 as a whole, since its first-stroke column adapts KanjiVG;
-  anything made from that column must be shared alike (42 KB).
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
+- `data/component-names.tsv`: the names people call components by, CC BY-SA 4.0 as a whole
+  (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2 and
+  Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
+  (Apache 2.0); its header names each (79 KB). Its Wikipedia redirects are kept in
+  `data/component-name-redirects.json`.
+- `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
+  source notices and licence texts are in `data/licences/`.
+- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
+  SIL Open Font License 1.1.
 - `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
   are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
   `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
-`scripts/build_ids_data.py` and `scripts/build_ids_parts.py` (`uv run scripts/…`) rebuild them.
+`scripts/build_ids_data.py`, `scripts/build_ids_parts.py` and `scripts/build_component_names.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
   (<https://github.com/kawabata/ids>) and IRG submissions.
+- BabelStone Tangut IDS, Andrew West, <https://www.babelstone.co.uk/Tangut/TangutIDS.txt>, pinned
+  by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, and the IRG source regions named in the decomposition tree.
-- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: first strokes
-  (share-alike, see above).
+- Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
+- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
+  used by the composer.
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
+- Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
+  <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
   export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
@@ -387,5 +436,10 @@ COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against 
 bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
+
+The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
+`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+`tests/example-drawings.test.js` fails while the file and the export disagree.

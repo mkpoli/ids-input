@@ -26,13 +26,12 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,679 parts (674 common, 967 hard to type, 38 strokes), 42 KB, 11 KB
-gzipped. Built by `scripts/build_ids_parts.py`, whose docstring gives the rules.
+hard to type or a CJK stroke. 1,679 Han entries (674 common, 967 hard to type, 38 strokes),
+plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py`, whose docstring gives the rules.
 
-- Licence: **CC BY-SA 3.0**, for the file as a whole, because the `first` column adapts KanjiVG's
-  stroke data, which is shared alike. Anything made from that column must be shared under the same
-  licence. The other columns come from public-domain sequences, MIT-licensed decomposition choices
-  and Unicode data, whose licences ask only for the notices below.
+- Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
+  texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
+  decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
 
@@ -49,24 +48,26 @@ Sources:
   `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`): stroke counts
   (`kTotalStrokes`), the one-stroke ideographs counted as strokes, and the common set (`kJoyoKanji`
   for 常用漢字; `kTGH` positions 1–3500 for the first level of the 通用规范汉字表).
-- KanjiVG release r20260714, Copyright (C) 2009-2013 Ulrich Apel, CC BY-SA 3.0
-  (<https://kanjivg.tagaini.net/>, `kanjivg-20260714.xml.gz` SHA-256
-  `d4a8e5e11533fe6a5d81a158b2c153964322641d2982c90a919461f3c06dca6b`): the type of each character's
-  first stroke, mapped to 横 豎 撇 點 折.
+- Rime five-stroke dictionary, revision `1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48`,
+  LGPL-3.0, <https://github.com/rime/rime-stroke>. Authors: 四季的風, 雪齋, Kunki Chou and 宋天.
+  The table credits CNS11643, 北大中文論壇 and 宋天's extension data.
+  SHA-256: `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`.
 
 Notes on the columns:
 
-- The mapping of KanjiVG's stroke types to the five classes is an editorial table of the build script
-  (提 as 横, 豎鉤 as 豎, 捺 and 提捺 as 點, every turning stroke as 折). Only bare types are mapped: a
-  suffixed type (㇑a, given both to the top dot of 亠 and the vertical of 山) or an alternative whose
-  sides disagree is no witness. A class is kept when all witnesses agree, or, from 3 witnesses on,
-  when at least 90% do. A component's first stroke can depend on its host (𠂇 starts with 一 in 左 but
-  with 丿 in 右), so such a part has no class. KanjiVG follows Japanese stroke order and types the
-  first stroke of 白 as a dot, so 白 is classed 點. In this build 631 of the 967 hard-to-type parts
-  and 181 of the 674 common ones have no class.
+- Rime codes supply the first-stroke class: h/s/p/n/z → 横/豎/撇/點/折.
+  The first listed code is used unless the alternatives start only with s and z; those entries
+  use 豎 so vertical hooks in 小 and 水 agree with the palette's CJK stroke table.
+  Unicode equivalents of individual CJK strokes use that table directly, including
+  亅 → 豎, 乀 → 點 and 𠃍/𠃎 → 折. The equivalents come from `component-forms.tsv` below.
+  Other stroke-order differences follow the first Rime code and can differ from Japanese order.
+  All 1,641 Han components have a first-stroke class. ⻀, the four-stroke grass radical, starts 横.
+  Circular ㇣ appears under “Other stroke”.
 - A stroke count is Unihan's first `kTotalStrokes` value, which Unihan gives for the zh-Hans form
-  where forms differ. A CJK stroke counts 1 and is marked derived; a part Unihan lacks takes the sum
-  over the leaves of its first sequence whose leaves all have counts, marked derived, or stays null.
+  where forms differ. The radical forms absent from Unihan have explicit counts:
+  ⺊ 2, ⺌ 3, ⺗ 4, ⺼ 4, ⺈ 2, ⺶ 6, ⺄ 1, ⺝ 4, ⺀ 2, ⺆ 2, ⺻ 5, ⻀ 4.
+  A CJK stroke counts 1 and is marked derived; other missing counts use the sum over the leaves
+  of the first fully counted decomposition. All Han palette entries have a count.
 
 ## component-forms.tsv
 
@@ -77,6 +78,51 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 (Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
+
+## component-names.tsv
+
+The names people call components by, for the parts finder's search: 絞絲 and 绞丝 for 糸, ノ文 and
+のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀. 1,727 names, 79 KB (14 KB gzipped), built by
+`scripts/build_component_names.py`. Format: `name`, `char`, `source`, `detail`, one name for one
+component per row; comments start with `#`.
+
+The search folds a query and a name (NFKC, katakana as hiragana, spaces and punctuation out) and takes
+a name that is the whole query, then one it starts, then one it stands inside. The adapter opens the
+component a name found into its forms from `component-forms.tsv`, keeping the forms the palette
+holds, so 絞絲 offers 纟, 糹 and 糸.
+
+- Licence: **CC BY-SA 4.0** for the file as a whole, because its KANJIDIC2 and Wikipedia rows are
+  (<https://creativecommons.org/licenses/by-sa/4.0/>). The code stays MIT; the file's header carries
+  every notice.
+
+Sources:
+
+- anzumura/kanji-tools `data/radicals.txt` at c3e52cb (`https://github.com/anzumura/kanji-tools`),
+  MIT, Copyright (c) 2022 Dan H: the Japanese names and readings of the 214 radicals (のぎ, のぶん,
+  うかんむり).
+- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+  (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
+  and Development Group: further Japanese radical names (`rad_name`).
+- The redirects to the Japanese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA
+  4.0 (`https://ja.wikipedia.org/`): ノ文 and のぶん to 攴部, ノ木偏 to 禾部, 草冠 to 艸部.
+- catusf/tudien `dict/radical_name.txt` at a214ee3 (`https://github.com/catusf/tudien`), CC0 1.0: the
+  Chinese names of the radicals (宝盖头, 绞丝旁, 反文旁).
+- amzxyz/rime-wanxiang `lua/data/others.txt` at 275c61b (`https://github.com/amzxyz/rime-wanxiang`),
+  CC BY 4.0, by amzxyz: its radical-nickname block (宝盖, 绞丝, 秃宝盖).
+- Mararsh/MyBox `docs/data2d/ChineseRadicals_example_zh.csv` at 107ddc3
+  (`https://github.com/Mararsh/MyBox`), Apache 2.0: one Chinese name for each radical (鱼字旁,
+  鸟字旁, 门字框, 骨字旁).
+- The redirects to the Chinese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA 4.0
+  (`https://zh.wikipedia.org/`): 絞絲旁, 三點水, 寶蓋頭.
+- OpenCC 1.4.2 (`https://github.com/BYVoid/OpenCC`), Apache 2.0, by BYVoid: the traditional
+  or simplified spelling of a Chinese name where it differs, marked in `detail`. Characters that are
+  radicals in their own right (几, 厂, 干, 尸, 里, 凶, 虫) are kept as they are, since 几 must not
+  become 幾 and 尸 must not become 屍. A redirect naming another radical than the article it points
+  to (男部 to 女部, 鳥偏 to 酉部) is left out.
+
+The kanji-tools, tudien, rime-wanxiang, MyBox and KANJIDIC2 files are pinned by revision and SHA-256 in
+the script. The exact Wikipedia redirects used are kept in `data/component-name-redirects.json`, read
+2026-10-26 (CC BY-SA 4.0); `--refresh` fetches them again and rewrites that file.
 
 ## Tangut
 

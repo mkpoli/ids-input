@@ -6,6 +6,7 @@ import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
 import { badge, placeholder } from '../src/core/preview.js'
 import { files, layout, ops } from './fixtures/composer-export.js'
+import { parse } from '../src/core/ids.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -35,21 +36,26 @@ describe('the composer', () => {
   })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'
-    expect(LIMITS).toEqual({ nodes: 12, depth: 4 })
+    const nest = n => n ? ['⿰', '木', nest(n - 1)] : '口'
+    expect(LIMITS).toEqual({ nodes: 24, depth: 8 })
     expect(size({ op: '⿰', parts: ['木', { op: '⿱', parts: ['口', null] }] })).toEqual({ nodes: 2, depth: 2 })
-    expect(tooLarge(['⿰', '木', ['⿰', '木', ['⿰', '木', ['⿰', '木', '口']]]])).toBe(false)
-    expect(tooLarge(['⿰', '木', ['⿰', '木', ['⿰', '木', ['⿰', '木', ['⿰', '木', '口']]]]])).toBe(true)
-    const wide = { op: '⿲', parts: Array.from({ length: 3 }, () => ({ op: '⿲', parts: Array.from({ length: 3 }, () => ({ op: '⿰', parts: ['木', '口'] })) })) }
-    expect(size(wide)).toEqual({ nodes: 13, depth: 3 })
-    expect(tooLarge(wide)).toBe(true)
-    await expect(compose(sourceOf(), chain(5))).rejects.toThrow('larger than a preview draws')
+    expect(tooLarge(nest(8))).toBe(false)
+    expect(tooLarge(nest(9))).toBe(true)
+    const biang = parse('⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心').tree
+    expect(size(biang)).toEqual({ nodes: 8, depth: 6 })
+    expect(tooLarge(biang)).toBe(false)
+    const wide = { op: '⿲', parts: Array.from({ length: 5 }, () => ({ op: '⿲', parts: Array.from({ length: 3 }, () => ({ op: '⿰', parts: ['木', '口'] })) })) }
+    expect(size(wide)).toEqual({ nodes: 21, depth: 3 })
+    expect(tooLarge(wide)).toBe(false)
+    expect(tooLarge({ op: '⿲', parts: [wide, wide, '口'] })).toBe(true)
+    await expect(compose(sourceOf(), chain(9))).rejects.toThrow('larger than a preview draws')
   })
   it('fails when its manifest is missing or a file cannot be fetched', async () => {
     await expect(compose(createSource(async () => { throw new Error('manifest.json: 404') }), '⿰木口')).rejects.toThrow('404')
     const broken = createSource(async name => name === 'manifest.json' || name === 'layout.json' ? new Uint8Array(Buffer.from(files[name])).buffer : Promise.reject(new Error('network down')))
     await expect(compose(broken, '⿰木口')).rejects.toThrow('network down')
   })
-  it('asks for at most six files at once', async () => {
+  it('asks for at most ten files at once', async () => {
     let open = 0, most = 0
     const source = createSource(async name => {
       open++; most = Math.max(most, open)
@@ -60,7 +66,7 @@ describe('the composer', () => {
     })
     await source.ready()
     await source.load(Array.from({ length: 20 }, (_, i) => `g/${i.toString(16).padStart(3, '0')}.json`))
-    expect(most).toBe(6)
+    expect(most).toBe(10)
   })
 })
 
@@ -106,8 +112,8 @@ describe('the drawer', () => {
 })
 
 describe('the preview badge', () => {
-  it('says preview, approximate, final, failed or too large', () => {
-    expect(badge('loading')).toEqual({ label: 'draft', params: {} })
+  it('says composing, preview, approximate, final, failed or too large', () => {
+    expect(badge('loading')).toEqual({ label: 'loading', params: {} })
     expect(badge('capped')).toEqual({ label: 'tooLarge', params: {} })
     expect(badge('failed')).toEqual({ label: 'failed', params: {} })
     expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })
