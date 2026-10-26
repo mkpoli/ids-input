@@ -25,7 +25,7 @@ describe('the composer preview', () => {
   })
   it('refuses a description larger than it draws without asking the worker', async () => {
     const draw = preview()
-    const error = await draw('⿰木⿰木⿰木⿰木⿰木口').catch(e => e)
+    const error = await draw('⿰木'.repeat(9) + '口').catch(e => e)
     expect(error.name).toBe('TooLargeError')
     expect(FakeWorker.made).toHaveLength(0)
   })
