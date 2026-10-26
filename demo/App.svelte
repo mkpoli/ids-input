@@ -124,7 +124,27 @@
     { label: t('app.drafts.export'), icon: 'download', disabled: !drafts.length, run: () => download(new Blob([toText(drafts)], { type: 'text/plain' }), 'ids-drafts.txt') },
     ...(drafts.length ? [{ label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
   ])
-  const exampleItems = $derived(EXAMPLES.map(e => ({ label: e.char ? `${e.char}　${e.sequence}` : `${e.sequence}　${t('app.examples.none')}`, lang: 'ja', run: () => editor.open(e.sequence) })))
+  /** @param {{ sequence: string, char: string }} example */
+  function exampleItem(example) {
+    const point = example.char ? cp(example.char) : ''
+    return {
+      leading: example.char || undefined,
+      root: example.char ? undefined : [...example.sequence][0],
+      label: example.sequence,
+      sequence: example.char ? example.sequence : [...example.sequence].slice(1).join(''),
+      note: example.char ? point : t('app.examples.none'),
+      unencoded: !example.char,
+      lang: 'ja',
+      hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
+      run: () => editor.open(example.sequence),
+    }
+  }
+  const exampleItems = $derived([
+    { heading: t('app.examples.encoded') },
+    ...EXAMPLES.filter(example => example.char).map(exampleItem),
+    { heading: t('app.examples.unencoded') },
+    ...EXAMPLES.filter(example => !example.char).map(exampleItem),
+  ])
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -166,7 +186,7 @@
         <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
       </div>
       <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} {keyHints} /></span>
-      <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} /></span>
+      <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
     </nav>
     <div class="end">
       <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
