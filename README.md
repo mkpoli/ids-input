@@ -145,6 +145,34 @@ shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and 
 preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
 written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+### Small Seal (小篆)
+
+The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
+Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
+The workshop includes these in its searches and Small Seal palette. Searching for `玨`
+finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`.
+
+```js
+import { smallSealAdapter } from 'ids-input/adapter'
+import sealData from 'ids-input/data/small-seal.json.gz?url'
+
+const adapter = smallSealAdapter({
+  data: sealData,
+  ids, parts, forms, names,
+})
+```
+
+`data` accepts a URL or the decoded JSON document. The remaining options are those of
+`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index. Modern-character correspondences help component search;
+each script keeps its own decompositions. Import `fonts.css` to display the supported
+seal characters. Their bundled outlines support previews and SVG/PNG export; mixed
+Han–seal compositions also need the host's Han export.
+
+The source has 11,114 records. Unresolved identifiers, extended operators and missing
+mappings remain in the downloadable data with their original text and status. They are
+excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
+provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+
 ## Adapters
 
 ```ts
@@ -313,6 +341,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 ## Licences
 
 - Code: MIT (`LICENSE`).
+- `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
+  (`data/COPYING-small-seal.txt`).
+- `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
+  the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
+  exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
