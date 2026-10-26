@@ -259,6 +259,29 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
+IDS queries accept these visual substitutes, including halfwidth forms where available:
+
+| Shapes typed | Component searched |
+|---|---|
+| `ㅅ` | `人` |
+| `ㅆ` | `从` |
+| `스` | `亼` |
+| `ㅁ`, `ロ` | `口` |
+| `ㅇ` | `〇` |
+| `ㅣ`, `ㅡ` | `丨`, `一` respectively |
+| `ㄱ`, `ㄴ`, `ㄷ` | `𠃍`, `𠃊`, `匚` respectively |
+| `エ`, `カ`, `タ`, `ト` | `工`, `力`, `夕`, `卜` respectively |
+| `ニ`, `ハ`, `ヌ`, `ノ` | `二`, `八`, `又`, `丿` respectively |
+| `ム`, `ヒ`, `ヨ` | `厶`, `匕`, `彐` respectively |
+
+The corresponding conjoining Hangul jamo also work. Decomposed `스` searches
+like `스`; other complete syllables keep their identity. Attached variation
+selectors are preserved. For example, `⿰ㅅ木` finds `休` through the existing
+`人`/`亻` component forms, and `⿰カロ` finds `加`.
+These are approximate visual aliases for IDS search. Entered text, stored
+descriptions, rendering, exact `encoded` lookup, and Korean or Japanese name
+searches retain their spelling.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
   <img src="docs/images/search-light.png" width="600" alt="Search results for the part 疋: 定, 旋, 是, 楚 and other characters, each with its description below and the matched 疋 marked">
