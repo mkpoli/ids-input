@@ -142,5 +142,6 @@
   "parts.tab.strokes": "Nét",
   "parts.tab.seal": "Tiểu triện",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
-  "parts.uses.other": "dùng trong {count} chữ"
+  "parts.uses.other": "dùng trong {count} chữ",
+  "parts.tab.seal": "Triện"
 }
