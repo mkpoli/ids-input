@@ -79,6 +79,51 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
 
+## component-names.tsv
+
+The names people call components by, for the parts finder's search: 絞絲 and 绞丝 for 糸, ノ文 and
+のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀. 1,727 names, 79 KB (14 KB gzipped), built by
+`scripts/build_component_names.py`. Format: `name`, `char`, `source`, `detail`, one name for one
+component per row; comments start with `#`.
+
+The search folds a query and a name (NFKC, katakana as hiragana, spaces and punctuation out) and takes
+a name that is the whole query, then one it starts, then one it stands inside. The adapter opens the
+component a name found into its forms from `component-forms.tsv`, keeping the forms the palette
+holds, so 絞絲 offers 纟, 糹 and 糸.
+
+- Licence: **CC BY-SA 4.0** for the file as a whole, because its KANJIDIC2 and Wikipedia rows are
+  (<https://creativecommons.org/licenses/by-sa/4.0/>). The code stays MIT; the file's header carries
+  every notice.
+
+Sources:
+
+- anzumura/kanji-tools `data/radicals.txt` at c3e52cb (`https://github.com/anzumura/kanji-tools`),
+  MIT, Copyright (c) 2022 Dan H: the Japanese names and readings of the 214 radicals (のぎ, のぶん,
+  うかんむり).
+- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+  (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
+  and Development Group: further Japanese radical names (`rad_name`).
+- The redirects to the Japanese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA
+  4.0 (`https://ja.wikipedia.org/`): ノ文 and のぶん to 攴部, ノ木偏 to 禾部, 草冠 to 艸部.
+- catusf/tudien `dict/radical_name.txt` at a214ee3 (`https://github.com/catusf/tudien`), CC0 1.0: the
+  Chinese names of the radicals (宝盖头, 绞丝旁, 反文旁).
+- amzxyz/rime-wanxiang `lua/data/others.txt` at 275c61b (`https://github.com/amzxyz/rime-wanxiang`),
+  CC BY 4.0, by amzxyz: its radical-nickname block (宝盖, 绞丝, 秃宝盖).
+- Mararsh/MyBox `docs/data2d/ChineseRadicals_example_zh.csv` at 107ddc3
+  (`https://github.com/Mararsh/MyBox`), Apache 2.0: one Chinese name for each radical (鱼字旁,
+  鸟字旁, 门字框, 骨字旁).
+- The redirects to the Chinese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA 4.0
+  (`https://zh.wikipedia.org/`): 絞絲旁, 三點水, 寶蓋頭.
+- OpenCC 1.4.2 (`https://github.com/BYVoid/OpenCC`), Apache 2.0, by BYVoid: the traditional
+  or simplified spelling of a Chinese name where it differs, marked in `detail`. Characters that are
+  radicals in their own right (几, 厂, 干, 尸, 里, 凶, 虫) are kept as they are, since 几 must not
+  become 幾 and 尸 must not become 屍. A redirect naming another radical than the article it points
+  to (男部 to 女部, 鳥偏 to 酉部) is left out.
+
+The kanji-tools, tudien, rime-wanxiang, MyBox and KANJIDIC2 files are pinned by revision and SHA-256 in
+the script. The exact Wikipedia redirects used are kept in `data/component-name-redirects.json`, read
+2026-10-26 (CC BY-SA 4.0); `--refresh` fetches them again and rewrites that file.
+
 ## Tangut
 
 The same IDS table also includes 6,145 records from Andrew West's

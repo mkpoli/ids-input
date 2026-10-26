@@ -23,6 +23,26 @@ describe('the composer preview', () => {
     expect(await drawing).toEqual({ d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] })
     expect(sketches).toHaveLength(1)
   })
+  it('answers a sequence it has drawn before from memory', async () => {
+    const draw = preview()
+    const first = draw('⿱木林')
+    const [worker] = FakeWorker.made
+    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
+    expect(await first).toEqual({ d: 'M0 0Z' })
+    expect(await draw('⿱木林')).toEqual({ d: 'M0 0Z' })
+    expect(worker.posted).toHaveLength(1)
+  })
+  it('warms the worker on the export before the first drawing', async () => {
+    const draw = preview()
+    draw.warm()
+    const [worker] = FakeWorker.made
+    expect(worker.posted[0]).toMatchObject({ warm: true, base: 'https://example.org/composer/v1/' })
+    worker.answer({ id: worker.posted[0].id, warm: true })
+    const drawing = draw('⿱木口')
+    expect(FakeWorker.made).toHaveLength(1)
+    worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M2 2Z' } })
+    expect(await drawing).toEqual({ d: 'M2 2Z' })
+  })
   it('refuses a description larger than it draws without asking the worker', async () => {
     const draw = preview()
     const error = await draw('⿰木'.repeat(9) + '口').catch(e => e)
