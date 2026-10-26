@@ -365,5 +365,10 @@ COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against 
 bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
+
+The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
+`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+`tests/example-drawings.test.js` fails while the file and the export disagree.

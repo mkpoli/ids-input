@@ -49,7 +49,7 @@ describe('the composer', () => {
     const broken = createSource(async name => name === 'manifest.json' || name === 'layout.json' ? new Uint8Array(Buffer.from(files[name])).buffer : Promise.reject(new Error('network down')))
     await expect(compose(broken, '⿰木口')).rejects.toThrow('network down')
   })
-  it('asks for at most six files at once', async () => {
+  it('asks for at most ten files at once', async () => {
     let open = 0, most = 0
     const source = createSource(async name => {
       open++; most = Math.max(most, open)
@@ -60,7 +60,7 @@ describe('the composer', () => {
     })
     await source.ready()
     await source.load(Array.from({ length: 20 }, (_, i) => `g/${i.toString(16).padStart(3, '0')}.json`))
-    expect(most).toBe(6)
+    expect(most).toBe(10)
   })
 })
 
@@ -106,8 +106,8 @@ describe('the drawer', () => {
 })
 
 describe('the preview badge', () => {
-  it('says preview, approximate, final, failed or too large', () => {
-    expect(badge('loading')).toEqual({ label: 'draft', params: {} })
+  it('says composing, preview, approximate, final, failed or too large', () => {
+    expect(badge('loading')).toEqual({ label: 'loading', params: {} })
     expect(badge('capped')).toEqual({ label: 'tooLarge', params: {} })
     expect(badge('failed')).toEqual({ label: 'failed', params: {} })
     expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })

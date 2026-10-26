@@ -78,6 +78,7 @@
   "ids.preview.failed": "조합 불가",
   "ids.preview.failedNote": "이 기술은 조합하지 못했습니다.",
   "ids.preview.final": "확정",
+  "ids.preview.loading": "조합 중…",
   "ids.preview.tooLarge": "너무 큼",
   "ids.preview.tooLargeNote": "너무 커서 조합하지 않습니다. 틀은 배치를 보여 줍니다.",
   "ids.problem.character": "⿰, ⿱ 같은 연산자로 시작하세요.",

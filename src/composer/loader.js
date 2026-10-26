@@ -41,7 +41,7 @@ const recordOf = (file, key) => file[recordHash(key)] ?? null
  * in the export (`manifest.json`, `layout.json`, `g/07a.json`), or null where there is no such file;
  * `fromUrl` builds one over HTTP.
  */
-export function createSource(read, { concurrency = 6 } = {}) {
+export function createSource(read, { concurrency = 10 } = {}) {
   let ready = null
   // At most `concurrency` files are asked for at once; the rest wait their turn.
   let active = 0

@@ -79,6 +79,7 @@
   "ids.preview.failed": "Could not compose",
   "ids.preview.failedNote": "The composer could not draw this sequence.",
   "ids.preview.final": "Final",
+  "ids.preview.loading": "Composing…",
   "ids.preview.tooLarge": "Too large",
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",
   "ids.problem.character": "Start with an operator such as ⿰ or ⿱.",

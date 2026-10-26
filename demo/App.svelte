@@ -13,6 +13,8 @@
   import forms from '../data/component-forms.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES } from './lib/examples.js'
+  import exampleDrawings from './lib/example-drawings.json'
+  import { COMPOSER_BASE } from './lib/composer.js'
   import { drafts as storedDrafts, forget, fromText, keep, toText } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -31,16 +33,33 @@
 
   const params = new URLSearchParams(location.search)
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
-  const COMPOSER = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/'
   let composer = $state(params.get('composer') || load('composer', '') || '')
-  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER)
+  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const babel = babelStoneAdapter({ ids, parts, forms })
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at */
   const previewAt = at => { if (!previews.has(at)) previews.set(at, composerPreview({ base: at })); return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(at)) }
-  const adapter = $derived({ ...babel, preview: previewAt(base) })
+  /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
+  const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
+  /** @type {Map<string, ReturnType<typeof composerPreview>>} */
+  const previewsWithExamples = new Map()
+  /** A preview that answers the prepared examples at once and the composer otherwise. @param {string} at */
+  function previewFor(at) {
+    const known = previewsWithExamples.get(at)
+    if (known) return known
+    const composed = previewAt(at)
+    if (at !== COMPOSER_BASE) { previewsWithExamples.set(at, composed); return composed }
+    /** @type {ReturnType<typeof composerPreview>} */
+    const preview = Object.assign(async (sequence, options) => {
+      options?.signal?.throwIfAborted()
+      return prepared.get(sequence) ?? composed(sequence, options)
+    }, { warm: composed.warm })
+    previewsWithExamples.set(at, preview)
+    return preview
+  }
+  const adapter = $derived({ ...babel, preview: previewFor(base) })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -274,7 +293,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
-<PreferencesDialog bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER} {t} ontheme={setTheme} />
+<PreferencesDialog bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 
 <style>
