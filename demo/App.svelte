@@ -698,7 +698,7 @@
   .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11px;cursor:pointer}
   .font-choice .aa{font-size:14px;line-height:1;color:var(--ink);font-family:var(--cjk-sans)}
   .font-choice .aa.serif{font-family:var(--cjk-serif)}
-  .font-choice .aa.klee{font-family:var(--cjk-klee)}
+  .font-choice[aria-pressed="true"] .aa.klee{font-family:var(--cjk-klee)}
   .font-choice:hover{color:var(--ink)}
   .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
   .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}

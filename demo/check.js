@@ -183,6 +183,7 @@ try {
   const serifChoice = fontSwitch.getByRole('button', { name: 'Serif', exact: true })
   const kleeChoice = fontSwitch.getByRole('button', { name: 'Klee One', exact: true })
   assert(await sansChoice.getAttribute('aria-pressed') === 'true', 'sans is chosen by default')
+  assert(!(await fontPage.evaluate(() => document.fonts.check('16px "Klee One"'))), 'Klee One is not loaded before it is chosen')
   await serifChoice.click()
   assert((await fontPage.locator('.ids-field input').evaluate(el => getComputedStyle(el).fontFamily)).includes('Noto Serif CJK JP'), 'the serif stack applies')
   await fontPage.reload({ waitUntil: 'commit' })
