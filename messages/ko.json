@@ -81,7 +81,7 @@
   "ids.preview.tooLarge": "너무 큼",
   "ids.preview.tooLargeNote": "너무 커서 조합하지 않습니다. 틀은 배치를 보여 줍니다.",
   "ids.problem.character": "⿰, ⿱ 같은 연산자로 시작하세요.",
-  "ids.problem.component": "구성 요소는 한자·서하 문자·부수·획·가타카나로 씁니다.",
+  "ids.problem.component": "구성 요소는 한자·서하 문자·부수·획·자모·숫자로 씁니다.",
   "ids.problem.drop": "{name}은(는) 구성 요소가 더 적습니다. 빠질 구성 요소를 먼저 지우세요.",
   "ids.problem.empty": "{name}의 {n}번째가 비어 있습니다. 구성 요소를 넣거나, 글자로 나타낼 수 없는 부분이면 ？를 입력하세요.",
   "ids.problem.extra": "연산자가 받는 것보다 구성 요소가 많습니다.",

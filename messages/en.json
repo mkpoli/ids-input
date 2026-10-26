@@ -82,7 +82,7 @@
   "ids.preview.tooLarge": "Too large",
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",
   "ids.problem.character": "Start with an operator such as ⿰ or ⿱.",
-  "ids.problem.component": "A part must be an ideograph, a radical, a stroke or a katakana letter.",
+  "ids.problem.component": "A part must be an ideograph, a radical, a stroke, a letter or a digit.",
   "ids.problem.drop": "{name} takes fewer parts. Empty the ones it would drop first.",
   "ids.problem.empty": "Part {n} of {name} is empty. Fill it, or type ？ for a part no character names.",
   "ids.problem.extra": "There are more parts than the operators take.",
