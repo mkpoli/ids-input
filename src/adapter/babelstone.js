@@ -86,12 +86,13 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern equivalents supply component-search labels only.
  * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   folds?: string | URL, foldsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -173,6 +174,17 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   // the forms that stand for it, loaded together once.
   /** @type {Promise<{ search: ReturnType<typeof createNameSearch>['search'], forms: Map<string, string>, reverse: Map<string, Set<string>> }> | null} */
   let named = null
+  /** @type {Promise<ReturnType<typeof createNameSearch>> | null} */
+  let characterNames = null
+  const characterIndex = () => characterNames ??= Promise.all([
+    charactersText !== undefined ? charactersText : characters ? load(characters).then(readText) : '',
+    foldsText !== undefined ? foldsText : folds ? load(folds).then(response => response.text()).catch(() => '') : '',
+  ]).then(([text, foldText]) => {
+    let folds = new Map()
+    try { folds = readFolds(foldText) } catch { /* names as they are written */ }
+    return createNameSearch(readNames(text), { folds })
+  }).catch(error => { characterNames = null; throw error })
+
   const nameIndex = () => named ??= Promise.all([
     namesText !== undefined ? namesText : names ? load(names).then(response => response.text()) : '',
     // A names table without the forms or folds tables still finds the component the name records.
@@ -341,6 +353,17 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       signal?.throwIfAborted()
       return result
     },
+    ...(characters !== undefined || charactersText !== undefined ? {
+      /** @param {string} query @param {import('./types.js').Options} [options] */
+      async searchCharacters(query, { limit = 24, signal } = {}) {
+        if (limit <= 0) return []
+        const text = query.trim()
+        if (!text) return []
+        const search = await characterIndex()
+        signal?.throwIfAborted()
+        return search.search(text, { limit }).map(({ char, label }) => ({ char, label }))
+      },
+    } : {}),
     async containing(asked, { limit = 24 } = {}) {
       if (!index) {
         const [found, search] = await Promise.all([read(), smallSeal ? localSearch() : null])

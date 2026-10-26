@@ -15,6 +15,7 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
+  import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
@@ -45,7 +46,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
+  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -618,7 +619,7 @@
           {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">

@@ -18,17 +18,18 @@ The package has four layers, and an optional preview:
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
-  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
+  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ), and a
+  character by its readings or meanings.
 - **document**: the layer model behind `.ids.json` documents: stable layer IDs, transforms, IDS
   import and projection, and identity-preserving edits. The editor does not use it yet.
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
-  static files, so nothing needs a server.
+  adapter reads BabelStone IDS, the parts palette, component forms, names, script folds and the
+  character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
-  decomposition browser, a search) and the preview, each placeable on its own or together as
-  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese,
-  Korean and Vietnamese.
+  decomposition browser, a search, a character search) and the preview, each placeable on its own
+  or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
+  Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
@@ -65,8 +66,9 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
   import folds from 'ids-input/data/component-name-folds.tsv?url'
+  import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -222,6 +224,7 @@ interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
   search?(query, options?): Promise<{ char: string, label?: string }[]>
+  searchCharacters?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
@@ -256,9 +259,10 @@ Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen par
 keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
 for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
 
-`babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
-`U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
-is given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+`babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
+(a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん
+when `names` is given), `searchCharacters` (a character by a reading or meaning when `characters` is
+given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -349,6 +353,15 @@ components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideogra
 its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
 characters and code points only.
 
+### Characters
+
+The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: the common
+characters Unicode marks with `kIICore` (9,810, all with an IDS description), with 102,456 readings,
+pinyin, romanizations, Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and
+thủy find 水; person finds 人; silk finds 糸. Results are characters, not the forms the Find tab
+opens; among equally close names the more common character comes first, by KANJIDIC2's newspaper
+frequency or Unihan's school grade. Without `characters` the tab is not shown.
+
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
@@ -431,6 +444,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
+- `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
+  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 102,456
+  rows, 831 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB) and
@@ -443,7 +459,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
-`scripts/build_ids_data.py`, `scripts/build_ids_parts.py` and `scripts/build_component_names.py` (`uv run scripts/…`) rebuild them.
+`scripts/build_ids_data.py`, `scripts/build_ids_parts.py`, `scripts/build_component_names.py` and
+`scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
 
@@ -456,7 +473,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
-  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component names.
+  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component and character
+  names.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.

@@ -137,10 +137,13 @@
   "parts.strokeCount.other": "{count} nét",
   "parts.tab.tangut": "Tây Hạ",
   "parts.tab.common": "Thường dùng",
-  "parts.tab.difficult": "Khó nhập",
+  "parts.tab.difficult": "Số nét",
   "parts.tab.recent": "Gần đây",
   "parts.tab.strokes": "Nét",
   "parts.tab.seal": "Triện",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
-  "parts.uses.other": "dùng trong {count} chữ"
+  "parts.uses.other": "dùng trong {count} chữ",
+  "ids.characters.none": "Không có chữ phù hợp.",
+  "ids.characters.placeholder": "Cách đọc, bính âm, nghĩa…",
+  "ids.pick.characters": "Chữ"
 }

@@ -14,6 +14,7 @@ import { isComponent } from './ids.js'
  * @property {string} char The component the name stands for.
  * @property {string} source The source the name is attested in.
  * @property {string} detail What the source says about it.
+ * @property {number} [rank] How common the character is; lower comes first among equal matches.
  *
  * @typedef {object} NameHit A component a query found, by one of its names.
  * @property {string} char The component.
@@ -58,10 +59,11 @@ export function readNames(text) {
   for (const row of (text ?? '').split('\n')) {
     line++
     if (!row.trim() || row.startsWith('#')) continue
-    const [name, char, source = '', detail = ''] = row.replace(/\r$/, '').split('\t')
+    const [name, char, source = '', detail = '', rank] = row.replace(/\r$/, '').split('\t')
     if (!name?.trim() || !char) continue
     if ([...char].length !== 1 || !isComponent(char)) throw new Error(`component-names.tsv:${line}: ${JSON.stringify(char)} is not a component`)
-    names.push({ name: name.trim(), char, source: source.trim(), detail: detail.trim() })
+    const order = rank === undefined || rank === '' ? undefined : Number(rank)
+    names.push({ name: name.trim(), char, source: source.trim(), detail: detail.trim(), ...(order !== undefined && !Number.isNaN(order) ? { rank: order } : {}) })
   }
   return names
 }
@@ -141,6 +143,7 @@ export function createNameSearch(names, { limit = 50, folds = new Map() } = {}) 
     shown.sort((a, b) =>
       Number(b.name === written) - Number(a.name === written)
       || a.score - b.score
+      || (a.rank ?? Infinity) - (b.rank ?? Infinity)
       || a.size - b.size
       || (a.char.codePointAt(0) ?? 0) - (b.char.codePointAt(0) ?? 0)
       || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))

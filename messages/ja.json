@@ -119,7 +119,6 @@
   "ids.view": "表示",
   "ids.view.shape": "図",
   "ids.view.tree": "ツリー",
-
   "ids.use": "この字形にする",
   "parts.byStrokes": "画数",
   "parts.failed": "部品を読み込めませんでした。",
@@ -139,9 +138,12 @@
   "parts.tab.seal": "小篆",
   "parts.tab.tangut": "西夏",
   "parts.tab.common": "常用",
-  "parts.tab.difficult": "入力しにくい",
+  "parts.tab.difficult": "画数",
   "parts.tab.recent": "最近",
   "parts.tab.strokes": "筆画",
   "parts.unknownStrokes": "画数の記録なし",
-  "parts.uses.other": "{count}字に使用"
+  "parts.uses.other": "{count}字に使用",
+  "ids.characters.none": "合う字がありません。",
+  "ids.characters.placeholder": "読み・拼音・意味…",
+  "ids.pick.characters": "字"
 }

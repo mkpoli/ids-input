@@ -7,7 +7,8 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
-  const adapter = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
+  import characters from '../data/character-vocabulary.tsv.gz?url'
+  const adapter = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
   let value = $state('')
   let used = $state('')
 </script>
