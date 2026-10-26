@@ -72,6 +72,12 @@ try {
   assert(await page.evaluate(() => getComputedStyle(document.querySelector('.pane')).scrollbarWidth === 'thin'), 'themed scrollbars')
   pass('one toolbar height, key hints on hover, themed scrollbars')
 
+  // A click on a node's frame, away from its parts and buttons, chooses the node.
+  const rootFrame = page.locator('.ids-node').first()
+  await rootFrame.click({ position: { x: 4, y: 80 } })
+  assert(await rootFrame.evaluate(el => el.classList.contains('chosen')), 'a click on the frame chooses its node')
+  pass('a click on a frame chooses its node')
+
   // The middle column: the tree starts larger than the search and the divider resizes them.
   const splitPage = await open()
   const splitter = splitPage.locator('.split')
