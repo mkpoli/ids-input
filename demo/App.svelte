@@ -4,7 +4,7 @@
   // encodes, its code points, export). A toolbar holds undo and redo with the history, examples,
   // saved drafts, sharing, the theme, the language, preferences and sources.
   import { untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
   import { isSequence, parse, write } from '../src/core/index.js'
@@ -23,6 +23,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
+  import KeyHint from './ui/KeyHint.svelte'
   import Menu from './ui/Menu.svelte'
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
@@ -70,12 +71,69 @@
   $effect(() => save('locale', locale))
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
+  const localeName = $derived(LOCALES.find(([code]) => code === locale)?.[1] ?? 'English')
+  const localeItems = $derived(LOCALES.map(([code, name]) => ({ label: name, lang: code, checked: code === locale, run: () => { locale = code } })))
+
+  /** @param {unknown} value */
+  function clampSplit(value) {
+    const n = Number(value)
+    return Number.isFinite(n) ? Math.min(78, Math.max(35, Math.round(n * 10) / 10)) : 60
+  }
+  /** @param {PointerEvent} event */
+  function splitStart(event) {
+    const el = /** @type {HTMLElement} */ (event.currentTarget)
+    resizing = true
+    el.setPointerCapture(event.pointerId)
+    event.preventDefault()
+  }
+  /** @param {PointerEvent} event */
+  function splitMove(event) {
+    if (!resizing || !middleEl) return
+    const box = middleEl.getBoundingClientRect()
+    split = clampSplit(((event.clientY - box.top) / box.height) * 100)
+  }
+  /** @param {PointerEvent} event */
+  function splitEnd(event) {
+    resizing = false
+    const el = /** @type {HTMLElement} */ (event.currentTarget)
+    if (el.hasPointerCapture(event.pointerId)) el.releasePointerCapture(event.pointerId)
+  }
+  /** @param {KeyboardEvent} event */
+  function splitKey(event) {
+    const step = event.shiftKey ? 5 : 2
+    if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      event.preventDefault()
+      split = clampSplit(split + (event.key === 'ArrowUp' ? step : -step))
+    } else if (event.key === 'Home') {
+      event.preventDefault()
+      split = 35
+    } else if (event.key === 'End') {
+      event.preventDefault()
+      split = 78
+    }
+  }
+  function splitReset() { split = 60 }
+  /** @param {KeyboardEvent} event */
+  function viewKey(event) {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return
+    event.preventDefault()
+    view = view === 'shape' ? 'tree' : 'shape'
+    queueMicrotask(() => /** @type {HTMLElement | null} */ (document.getElementById(`${view}-tab`))?.focus())
+  }
 
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
+  let view = $state(load('view', 'shape'))
+  $effect(() => save('view', view === 'shape' ? undefined : view))
+  // The share of the middle column given to the tree; the search takes the rest.
+  let split = $state(clampSplit(load('split', 60)))
+  /** @type {HTMLElement | null} */ let middleEl = $state(null)
+  let resizing = false
+  $effect(() => save('split', split === 60 ? undefined : split))
 
   const editor = createEditor(() => ({ adapter, messages, locale }))
+  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   let fromText_ = $state('')
@@ -177,6 +235,7 @@
   let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
   /** @param {KeyboardEvent} event */
   function keys(event) {
+    if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) { event.preventDefault(); prefsOpen = true; return }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !event.shiftKey) { event.preventDefault(); keepDraft(); return }
     editor.keydown(event, { root: work, slot })
   }
@@ -197,22 +256,20 @@
     </a>
     <nav class="tools" aria-label={t('app.toolbar')}>
       <div class="group">
-        <button type="button" class="tool key" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
-          <Icon name="undo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
-        <button type="button" class="tool key" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>
-          <Icon name="redo" />{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+        <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+          <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
+        <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
+          <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
         <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
       </div>
-      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} {keyHints} /></span>
+      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} keys={keyHints ? ['mod+s'] : undefined} {keyHints} /></span>
       <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
     </nav>
     <div class="end">
       <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
-      <select class="locale" bind:value={locale} aria-label={t('app.language')} title={t('app.language')}>
-        {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
-      </select>
+      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <button type="button" class="tool" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} onclick={() => prefsOpen = true}><Icon name="settings" /></button>
+      <button type="button" class="tool key-hint" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
       <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
     </div>
     <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
@@ -230,14 +287,30 @@
       <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
     </section>
 
-    <div class="middle">
+    <div class="middle" bind:this={middleEl} style:--upper="{split}%">
       <section class="pane tree" aria-label={t('ids.structure')}>
-        <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+        <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
+          <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
+            onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
+          <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
+            onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
+        </div>
+        {#if view === 'shape'}
+          <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+        {:else}
+          <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+        {/if}
         <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
       </section>
+      <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
+        aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
+        onpointerdown={splitStart} onpointermove={splitMove} onpointerup={splitEnd} onpointercancel={splitEnd}
+        onkeydown={splitKey} ondblclick={splitReset}>
+        <span class="grip" aria-hidden="true"></span>
+      </div>
       <section class="pane results" aria-label={t('ids.search.title')}>
-        <h2 class="label">{t('ids.search.title')}</h2>
-        <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
+        <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+        <IdsSearch {adapter} query={searchQuery} {messages} {locale}
           onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
       </section>
     </div>
@@ -278,9 +351,7 @@
   <div class="more-sheet">
     <div class="more-row">
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <select class="locale" bind:value={locale} aria-label={t('app.language')}>
-        {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
-      </select>
+      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.drafts')} items={draftItems} onpick={() => moreOpen = false} />
@@ -303,22 +374,21 @@
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
-  .group{gap:2px;padding:2px;border-radius:10px;background:var(--surface-2);border:1px solid var(--line)}
-  .group :global(.tool){border-color:transparent;background:none}
+  .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+  .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
+  .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
+  .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
+  .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:auto}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
-  :global(.tool:disabled){opacity:.4;cursor:default}
-  :global(.tool:focus-visible),.locale:focus-visible,.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  /* A key hint in the corner of its button, under the icon. */
-  .tool.key{position:relative;height:36px;min-width:46px;justify-content:center;padding:0 8px 8px}
-  .tool.key kbd{position:absolute;right:4px;bottom:2px;font:500 8.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted);pointer-events:none}
+  :global(.tool:disabled){color:var(--muted);background:var(--surface-2);cursor:default}
+  :global(.tool:focus-visible),.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .locale{height:32px;padding:0 6px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
 
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
@@ -326,6 +396,11 @@
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
   .status{margin:0;font-size:12px;line-height:1.45;color:var(--muted)}
   .status.fault{color:var(--fault)}
+  .view-tabs{display:flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
+  .view-tabs button{height:26px;padding:0 10px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+  .view-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
@@ -352,10 +427,11 @@
   .foot .link{color:inherit}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .results{gap:6px;max-height:min(720px,80dvh);overflow:auto}
+  .split{display:none}
+  .results{gap:6px}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
-    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:start}
+    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:stretch}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
@@ -363,11 +439,16 @@
     .app{height:100dvh;min-height:0}
     .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
     .pane{overflow:auto;min-height:0}
-    .middle{--_tree-size:min(100%,max(240px,calc(100dvh - 540px)));min-height:0}
-    .tree{flex:none;justify-content:flex-start}
-    .tree-box{width:var(--_tree-size)}
+    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
+    .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
+    .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
+    .split .grip{width:56px;height:5px;border-radius:999px;background:var(--line-strong);transition:background-color .12s,width .12s}
+    .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
+    .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
+    .tree{flex:none;justify-content:flex-start;container-type:size}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 154px)))}
     .output{grid-column:auto;display:flex;flex-direction:column}
-    .results{flex:1;min-height:0;max-height:none;overflow:hidden}
+    .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
     .results :global(.empty){margin:auto}
@@ -375,10 +456,9 @@
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}
-    .brand span,.wide,.wide-only,.end,.tool.key kbd{display:none}
-    .tool.key{height:32px;min-width:40px;padding:0 8px}
+    .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
-    .grow{max-height:440px;overflow:auto}
+    .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}
   }

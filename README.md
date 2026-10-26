@@ -17,6 +17,10 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
+Tangut characters and components are accepted in IDS. The bundled data includes Tangut
+decompositions, a Tangut parts tab, and examples. Import `fonts.css` for Tangut text
+coverage; composed previews still depend on the host’s han-compose dataset.
+
 Demo: <https://ids.mkpo.li/>
 
 [![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
@@ -165,7 +169,8 @@ different components to it.
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
-asks it for the tree being edited.
+searches for the selected part, or the whole tree when nothing is selected. Each operator frame
+shows its subsequence in muted text. Selecting an empty slot clears the search.
 
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions
@@ -231,6 +236,9 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
+Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens preferences. Toolbar buttons show their keys
+on hover.
+
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
 Ctrl+Shift+Z elsewhere).
@@ -248,8 +256,8 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
-- `data/ids-parts.json`: CC BY-SA 3.0 as a whole, since its first-stroke column adapts KanjiVG;
-  anything made from that column must be shared alike (42 KB).
+- `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
+  source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
 - `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
   are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
@@ -268,8 +276,9 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, and the IRG source regions named in the decomposition tree.
-- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: first strokes
-  (share-alike, see above).
+- Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
+- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
+  used by the composer.
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
@@ -301,7 +310,12 @@ a chosen one, with a margin, empty slots left out unless asked for. The toolbar 
 with the history of named steps, saved drafts (also read from and written to a text file), examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
 the language, a system, light or dark theme, preferences (key hints on
-buttons, where the preview draws from) and the sources. The address carries the sequence
+buttons, where the preview draws from) and the sources. The tree panel switches between the Shape
+of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
+keys and are drop targets. The tree and search panels in the middle
+column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
+double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
+sequence
 (`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
 `localStorage` under `ids-input:`.
 

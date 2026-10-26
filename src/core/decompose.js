@@ -84,7 +84,7 @@ export function variants(entry) {
 /** The encoded components an unreadable sequence names, once each, so they can still be opened. @param {string} text */
 export const namedParts = text => [...new Set(tokens(text).filter(decomposable))]
 
-const PART = /^[\p{Script=Han}㇀-㇯]$/u
+const PART = /^[\p{Script=Han}\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}㇀-㇯]$/u
 /**
  * The parts a search for characters containing them is asked for: two or more typed characters as
  * they are, else the components of the one typed (of its first readable description), counted, so

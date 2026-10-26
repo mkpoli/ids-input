@@ -98,7 +98,7 @@ describe('the component search', () => {
 describe('the shipped data', () => {
   const ids = parseIdsTable(require('node:zlib').gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
   it('holds every ideograph of BabelStone IDS', () => {
-    expect(ids.size).toBe(97680)
+    expect(ids.size).toBe(97680 + 6145)
     expect(ids.get('滑')?.map(s => s.text)).toContain('⿰氵骨')
   })
   it('finds 滑 by 水骨\'s written forms, 氵 and 骨, and 林 and 森 by 木木', () => {
@@ -112,7 +112,7 @@ describe('the shipped data', () => {
   it('lists the palette parts', () => {
     const palette = paletteRows(JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url), 'utf8')))
     expect(palette.length).toBeGreaterThan(1000)
-    expect(new Set(palette.map(part => part.kind))).toEqual(new Set(['c', 'd', 's']))
+    expect(new Set(palette.map(part => part.kind))).toEqual(new Set(['c', 't', 'd', 's']))
   })
 })
 

@@ -1,7 +1,8 @@
 // @ts-check
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
-// Each operator takes its own number of descriptions. A component is an ideograph, a radical, a
+// Each operator takes its own number of descriptions. A component is a Han or Tangut ideograph,
+// a Tangut component, a radical, a
 // stroke, a katakana letter standing for a component of that shape (コ, マ), a private-use character
 // or ？ for a part no character names, with an optional variation selector.
 
@@ -35,7 +36,7 @@ export const OPERATOR_GROUPS = [
 /** The longest description, in code points. */
 export const LONGEST = 64
 const COMPONENTS = [[0x2E80, 0x2FDF], [0x30A1, 0x30FA], [0x31C0, 0x31EE], [0x3400, 0x4DBF], [0x4E00, 0x9FFF],
-  [0xE000, 0xF8FF], [0xF900, 0xFAFF], [0xFF1F, 0xFF1F], [0x20000, 0x3FFFD], [0xF0000, 0x10FFFD]]
+  [0xE000, 0xF8FF], [0xF900, 0xFAFF], [0xFF1F, 0xFF1F], [0x17000, 0x18AFF], [0x18D00, 0x18DFF], [0x20000, 0x3FFFD], [0xF0000, 0x10FFFD]]
 /** The part no character names. */
 export const UNKNOWN = '？'
 /** A slot still to fill, as the editor writes it (U+2B1A DOTTED SQUARE). It is never a component, so a draft holding one never passes as whole. */
