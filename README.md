@@ -312,8 +312,8 @@ a chosen one, with a margin, empty slots left out unless asked for. File and Edi
 left provide new sequences, browser drafts, sharing, image export and editing commands. The toolbar
 holds Undo and Redo with the history of named steps, examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
-the language, a system, light or dark theme, preferences (key hints on
-buttons, where the preview draws from) and the sources. The tree panel switches between the Shape
+the language, preferences and the sources. Preferences contain the system, light and dark themes,
+key hints on buttons, and the preview data source. The tree panel switches between the Shape
 of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
 keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a

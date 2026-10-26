@@ -535,13 +535,16 @@ try {
 
   // The theme switch sets data-theme, kept and applied before the page paints; key hints can be hidden;
   // the language changes the whole page.
-  await drawn.locator('.bar').getByRole('radio', { name: 'Dark' }).click()
+  await drawn.getByRole('button', { name: 'Preferences', exact: true }).click()
+  await drawn.locator('dialog[open]').getByRole('radio', { name: 'Dark' }).click()
   assert(await drawn.evaluate(() => document.documentElement.dataset.theme) === 'dark', 'dark set')
   await drawn.reload({ waitUntil: 'commit' })
   await drawn.waitForFunction(() => document.body !== null)
   assert(await drawn.evaluate(() => document.documentElement.dataset.theme) === 'dark', 'dark before the page script runs')
   await drawn.locator('.ids-field input').waitFor()
-  await drawn.locator('.bar').getByRole('radio', { name: 'System theme' }).click()
+  await drawn.getByRole('button', { name: 'Preferences', exact: true }).click()
+  await drawn.locator('dialog[open]').getByRole('radio', { name: 'System theme' }).click()
+  await drawn.keyboard.press('Escape')
   assert(await drawn.evaluate(() => document.documentElement.dataset.theme === undefined && localStorage.getItem('ids-input:theme') === null), 'system theme clears it')
   await drawn.getByRole('button', { name: 'Preferences' }).click()
   await drawn.locator('.prefs input[type="checkbox"]').click()
@@ -623,11 +626,15 @@ try {
     const shot = await open('#' + encodeURIComponent('⿰𠤕⿱龴疋'), { width, height })
     if (name === 'phone') {
       await shot.locator('.bar .more').click()
-      await shot.locator('dialog[open]').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
-      if (scheme === 'dark') await shot.locator('dialog[open]').screenshot({ path: join(shots, 'phone-menu-dark.png') })
-      else await shot.locator('dialog[open]').screenshot({ path: join(shots, 'phone-menu-light.png') })
+      await shot.locator('dialog[open]').getByRole('button', { name: 'Preferences', exact: true }).click()
+    } else await shot.getByRole('button', { name: 'Preferences', exact: true }).click()
+    await shot.locator('dialog[open]').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
+    await shot.keyboard.press('Escape')
+    if (name === 'phone') {
+      await shot.locator('.bar .more').click()
+      await shot.locator('dialog[open]').screenshot({ path: join(shots, `phone-menu-${scheme}.png`) })
       await shot.keyboard.press('Escape')
-    } else await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
+    }
     await shot.locator('.ids-part').nth(1).click()
     await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
     await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
