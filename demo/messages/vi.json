@@ -107,5 +107,7 @@
   "app.theme.light": "Sáng",
   "app.theme.system": "Theo hệ thống",
   "app.title": "Xưởng IDS",
-  "app.toolbar": "Công cụ"
+  "app.toolbar": "Công cụ",
+  "app.source.smallSeal": "Phân tích chữ Thuyết văn theo bản Cấp Cổ Các: 49 chữ và 31 bộ phận đã được ánh xạ. Các mục khác trong nguồn vẫn chưa được xác định.",
+  "app.source.sealFont": "76 tự hình từ bản Trần Xương Trị. Việc thẩm định tại nguồn chưa hoàn tất."
 }
