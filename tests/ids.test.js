@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isSequence, leaves, nextEmpty,
+import { EMPTY, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -13,7 +13,7 @@ describe('a whole description', () => {
   it('names what is wrong', () => {
     expect(parse('⿰亻').problem).toBe('missing')
     expect(parse('⿰亻木林').problem).toBe('extra')
-    expect(parse('⿰亻a').problem).toBe('component')
+    expect(parse('⿰亻!').problem).toBe('component')
     expect(parse('木').problem).toBe('character')
     expect(parse('').problem).toBe('character')
     expect(parse('⿰亻 木').problem).toBe('character')
@@ -30,8 +30,18 @@ describe('a whole description', () => {
     expect(isDescription('⿱コ疋')).toBe(true)
     expect(isDescription('⿱㇒一')).toBe(true)
     expect(isDescription('⿰⺡骨')).toBe(true)
-    expect(isComponent('a')).toBe(false)
+    expect(isComponent('!')).toBe(false)
     expect(isComponent(null)).toBe(false)
+  })
+  it('takes the letters and digits of alphabets and syllabaries the composer draws', () => {
+    expect(parse('⿸广⿰KO').tree).toEqual({ op: '⿸', parts: ['广', { op: '⿰', parts: ['K', 'O'] }] })
+    for (const char of ['a', 'Z', '0', 'é', 'Ω', 'Ж', 'あ', 'ア', 'ー', 'ㇰ', '가', 'ㄱ', 'ᄀ', 'Ｋ', '０', 'ｶ', '\u{1B001}']) {
+      expect(isLetter(char)).toBe(true)
+      expect(isComponent(char)).toBe(true)
+    }
+    // Punctuation, spaces, Hangul fillers and letters no font of the composer draws stay out.
+    for (const char of ['!', '.', '-', ' ', '\u3164', '\u115F', '\uFFA0', 'ӂ', 'ꙮ']) expect(isComponent(char)).toBe(false)
+    expect(isLetter('木')).toBe(false)
   })
   it('knows each operator\'s arity', () => {
     expect(OPERATORS).toHaveLength(18)
@@ -44,7 +54,8 @@ describe('a whole description', () => {
   it('finds where a description ends inside longer text', () => {
     expect(descriptionEnd([...'⿰亻哥と'])).toBe(3)
     expect(descriptionEnd([...'⿰亻'])).toBe(-1)
-    expect(descriptionEnd([...'a'])).toBe(-1)
+    expect(descriptionEnd([...'!'])).toBe(-1)
+    expect(descriptionEnd([...'⿰KO and'])).toBe(3)
   })
 })
 
@@ -57,7 +68,7 @@ describe('a draft read as the editor reads it', () => {
   })
   it('still names what is wrong', () => {
     expect(parse('⿰亻木林', { open: true }).problem).toBe('extra')
-    expect(parse('⿰亻a', { open: true }).problem).toBe('component')
+    expect(parse('⿰亻!', { open: true }).problem).toBe('component')
   })
   it('keeps ？, the part no character names, apart from an empty slot', () => {
     expect(tree('⿰？木')).toEqual({ op: '⿰', parts: ['？', '木'] })

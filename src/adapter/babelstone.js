@@ -140,7 +140,9 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, 
       // A code point written U+4E00, or as bare hex (with a digit) when that is all there is.
       const hex = /^(?=.*\d)[0-9A-Fa-f]{4,6}$/.test(text) ? [text] : [...text.matchAll(/[Uu]\+([0-9A-Fa-f]{4,6})/g)].map(match => match[1])
       for (const value of hex) { const code = parseInt(value, 16); if (code <= 0x10FFFF) chars.push(String.fromCodePoint(code)) }
-      for (const char of text.replace(/[Uu]\+[0-9A-Fa-f]{4,6}/g, '')) if (isComponent(char)) chars.push(char)
+      // An ASCII letter or digit counts only alone: a word or a code point's digits names none.
+      const rest = [...text.replace(/[Uu]\+[0-9A-Fa-f]{4,6}/g, '')]
+      for (const char of rest) if (isComponent(char) && (rest.length === 1 || !/[0-9A-Za-z]/.test(char))) chars.push(char)
       return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
     },
     async encoded(sequence) {
