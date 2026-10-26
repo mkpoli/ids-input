@@ -31,8 +31,14 @@
 // ⿰要勿 (覅): https://www.cns11643.gov.tw/wordView.jsp?ID=149313
 // ⿹⿺㇉一卄 (與 variant), JYN00001; ⿰扌⿸厃⿱儿𢀛 (擔 variant), JYN00010:
 // https://jyutnet.github.io/unencoded-characters/ (dictionary evidence linked per record).
+// 嫑 (⿱不要): BabelStone IDS; ⿺辶比 (避) and ⿱艹半 (瓣):
+// https://www.babelstone.co.uk/Fonts/Erjian.html, entries 2.2:007 and 2.2:003.
+// ⿵門覃 and ⿰舟邊: https://jyutnet.github.io/unencoded-characters/, JYN00013 / JYN00017.
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
+    { sequence: '⿱不要', char: '嫑' },
+    { sequence: '⿱艹半', char: '' },
+    { sequence: '⿰舟邊', char: '' },
     { sequence: '⿱成龙', char: '' },
     { sequence: '⿰氵恩', char: '𰜩' },
     { sequence: '⿰要勿', char: '覅' },
@@ -68,6 +74,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
+    { sequence: '⿵門覃', char: '' },
+    { sequence: '⿺辶比', char: '' },
     { sequence: '⿹⿺㇉一卄', char: '' },
     { sequence: '⿺辶說', char: '' },
     { sequence: '⿺克千', char: '兛' },
