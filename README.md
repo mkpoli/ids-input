@@ -393,8 +393,16 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
   L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
-  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone. ⿰木あ, ⿰木Д and ⿰木？
-  are constructed samplers, not attested characters.
+  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone.
+- Gen Kojitani, [Reply to N2741, IRG N2744](https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf),
+  2024-10-20, p.7: 𭤪 (U+2D92A) contains hentaigana 𛂦 (U+1B0A6), represented in the examples as
+  `⿰𛂦方`. BabelStone currently records `⿰？方`. The digit form `⿰扌3` approximates the Sawndip
+  form in Fig.7 (p.8); its pictographic right component also has a dot in the source.
+- Gen Kojitani, [Script-hybrid and abbreviated CJK letters, IRG N2637](https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf),
+  2023-06-23, Table 1 no.1 and Fig.1: the Bouyei form `⿰亻Ａ`, from 《布依方塊古文字》p.64.
+  The example `⿰亻A` uses ASCII A.
+- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
+  `⿰木⿱ㄅㄞ`. No published source is recorded here.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 

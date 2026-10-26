@@ -1,12 +1,14 @@
 #!/usr/bin/env bun
-// Rebuild demo/lib/example-drawings.json: every starter example composed once using bundled Tangut outlines or the export at
+// Rebuild demo/lib/example-drawings.json: every starter example composed once using bundled outlines or the export at
 // COMPOSER_BASE, so the demo opens an example without waiting for the composer. Run it whenever
 // COMPOSER_BASE changes; tests/example-drawings.test.js fails until the file matches the export.
 //
 //   bun run build:example-drawings
 import { readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { hasTangut, onlyTangut, tangutSource } from '../../src/composer/tangut.js'
+import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
+import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
+import { onlyBundled } from '../../src/composer/local.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
@@ -15,12 +17,19 @@ const source = fromUrl(COMPOSER_BASE)
 const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
+const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
+const bopomofoSources = new Map()
 await source.ready()
 const drawings = {}
 const failed = []
 for (const example of EXAMPLES) {
   try {
-    const selected = onlyTangut(example.sequence) ? tangut : hasTangut(example.sequence) ? mixed : source
+    const local = onlyBundled(example.sequence)
+    let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? null : source)
+    if (hasBopomofo(example.sequence)) {
+      if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
+      selected = bopomofoSources.get(selected)
+    }
     const drawn = await compose(selected, example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
@@ -42,4 +51,4 @@ const data = {
 }
 const out = new URL('../lib/example-drawings.json', import.meta.url)
 writeFileSync(out, JSON.stringify(data, null, 1) + '\n')
-console.log(`${Object.keys(drawings).length} drawings, ${failed.length} skipped, ${JSON.stringify(data).length} bytes -> ${out.pathname}`)
+console.log(`${Object.keys(drawings).length} drawings, ${failed.length} skipped, ${JSON.stringify(data).length} bytes -> demo/lib/example-drawings.json`)
