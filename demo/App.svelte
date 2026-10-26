@@ -1,6 +1,6 @@
 <script>
-  // The IDS workshop: a tab for each description being edited, each its composed drawing, in the top
-  // bar before its end controls; under it the input at the start (the sequence, the operators, where
+  // The IDS workshop: a tab for each description being edited, each its composed drawing, in a strip
+  // below the toolbar; under it the input at the start (the sequence, the operators, where
   // parts come from), the tree and search in the middle, and the output at the end (the drawing, the
   // sequence, the character it encodes, its code points, export). A toolbar holds undo and redo with
   // the history, saved drafts, examples, sharing, the theme, the language, preferences and sources.
@@ -390,34 +390,36 @@
 <svelte:window onkeydown={keys} />
 
 <div class="app" lang={locale}>
-  <header class="bar">
-    <a class="brand" href="./" aria-label={t('app.title')}>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
-      <span>{t('app.title')}</span>
-    </a>
-    <nav class="tools" aria-label={t('app.toolbar')}>
-      <div class="group">
-        <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
-          <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
-        <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
-          <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-        <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+  <div class="chrome">
+    <header class="bar">
+      <a class="brand" href="./" aria-label={t('app.title')}>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
+        <span>{t('app.title')}</span>
+      </a>
+      <nav class="tools" aria-label={t('app.toolbar')}>
+        <div class="group">
+          <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+            <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
+          <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
+            <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
+          <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+        </div>
+        <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} keys={keyHints ? ['mod+s'] : undefined} {keyHints} /></span>
+        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
+      </nav>
+      <div class="end">
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
+        <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
+        <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
+        <button type="button" class="tool key-hint" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
+        <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
-      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} keys={keyHints ? ['mod+s'] : undefined} {keyHints} /></span>
-      <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
-    </nav>
+      <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
+    </header>
     <div class="tabs-slot">
       <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} />
     </div>
-    <div class="end">
-      <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
-      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <button type="button" class="tool key-hint" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
-      <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
-    </div>
-    <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
-  </header>
+  </div>
 
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}>
@@ -516,9 +518,9 @@
 
 <style>
   .app{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));background:color-mix(in srgb,var(--bg) 88%,transparent);
-    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
@@ -537,7 +539,7 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;align-items:flex-start;flex:1 1 160px;min-width:0;height:40px;margin:0 2px -9px;overflow:hidden}
+  .tabs-slot{display:flex;height:40px;min-width:0;padding-inline:max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
@@ -602,11 +604,9 @@
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
     .results :global(.empty){margin:auto}
   }
-  @media (max-width:1024px){
-    .tabs-slot{order:10;flex:1 0 100%;height:40px;margin:2px 0 -9px}
-  }
   @media (max-width:640px){
     .bar{flex-wrap:wrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+    .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}
     .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}

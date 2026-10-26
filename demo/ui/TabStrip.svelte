@@ -110,30 +110,25 @@
 </div>
 
 <style>
-  .tabbar{display:flex;align-items:flex-start;gap:8px;flex:1;min-width:0;height:100%}
-  .tabs{position:relative;display:flex;align-items:flex-end;gap:12px;flex:0 1 auto;min-width:0;height:100%;padding:0 12px;overflow-x:auto;overflow-y:hidden;
+  .tabbar{display:flex;align-items:stretch;gap:6px;flex:1;min-width:0;height:100%}
+  .tabs{display:flex;align-items:stretch;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;
     scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
-  .tab{position:relative;flex:none;width:68px;height:40px;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;color:var(--muted)}
+  .tab{position:relative;flex:none;width:72px;height:40px;border-right:1px solid var(--line);color:var(--muted)}
   .tab:not(.on):hover{background:var(--hover);color:var(--ink)}
-  .tab.on{background:var(--bg);border-color:var(--line);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
-  /* The two lower corners flow out into the bar instead of ending at a square edge. */
-  .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:12px;height:12px;pointer-events:none}
-  .tab.on::before{right:100%;background:radial-gradient(circle at top left,transparent 11px,var(--line) 11.5px 12px,var(--bg) 12.5px)}
-  .tab.on::after{left:100%;background:radial-gradient(circle at top right,transparent 11px,var(--line) 11.5px 12px,var(--bg) 12.5px)}
-  .tab-main{display:flex;align-items:center;width:100%;height:100%;padding:6px 24px 4px 9px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
+  .tab.on{background:var(--surface);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
+  .tab-main{display:flex;align-items:center;width:100%;height:100%;padding:6px 24px 4px 11px;border:0;background:none;color:inherit;cursor:pointer}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{display:grid;place-items:center;flex:none;width:26px;height:26px}
   .tab:not(.on) .tab-icon{opacity:.6}
-  .tab-dot{position:absolute;right:11px;bottom:7px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
-  .tab-close{position:absolute;z-index:2;top:5px;right:5px;display:grid;place-items:center;width:18px;height:18px;padding:0;border:0;border-radius:5px;
+  .tab-dot{position:absolute;right:12px;bottom:7px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .tab-close{position:absolute;z-index:2;top:6px;right:7px;display:grid;place-items:center;width:18px;height:18px;padding:0;border:0;border-radius:5px;
     background:none;color:var(--muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
   .tab.on .tab-close,.tab:hover .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--hover);color:var(--ink)}
   .tab-close:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
-  .tab-new{display:grid;place-items:center;flex:none;align-self:flex-start;width:32px;height:32px;margin:0 0 0 2px;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted);cursor:pointer}
+  .tab-new{display:grid;place-items:center;flex:none;align-self:center;width:28px;height:28px;padding:0;border:0;border-radius:7px;background:none;color:var(--muted);cursor:pointer}
   .tab-new:hover{background:var(--hover);color:var(--ink)}
   .tab-new:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
   @media (hover:none){.tab.on .tab-close{opacity:1;pointer-events:auto}}
-  @media (max-width:640px){.tab{height:40px}.tab-main{padding-top:4px;padding-bottom:3px}}
 </style>

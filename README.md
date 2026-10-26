@@ -303,9 +303,8 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 
 ## The workshop
 
-The demo is a full-width workshop with one tab for each description being edited, in the top bar
-between the toolbar's examples and its end controls; on narrow screens the tabs take a second row of
-the same bar. A tab is the description's composed drawing at a small size, and a dot while its text
+The demo is a full-width workshop with one tab for each description being edited, in a strip below
+the toolbar. A tab is the description's composed drawing at a small size, and a dot while its text
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
 name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
