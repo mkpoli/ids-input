@@ -505,6 +505,7 @@
   .font-choice:hover{color:var(--ink)}
   .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
   .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  @media (max-width:1100px){.font-choice .wide{display:none}}
   .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
   .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
