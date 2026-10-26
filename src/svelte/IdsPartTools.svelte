@@ -16,6 +16,8 @@
     <input class="ids-slot" bind:this={slot} bind:value={editor.piece} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
       aria-label={t('ids.slot')} placeholder={t('ids.slotHint')}
       onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); if (editor.enter()) queueMicrotask(() => slot?.select()) } }} />
+    <button type="button" class="ids-empty" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
+      title={`${t('ids.empty')} (${shortcut('backspace')})`} aria-label={t('ids.empty')} onclick={() => editor.empty(editor.chosen)}>⬚</button>
     <button type="button" class="ids-clear" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
       title={`${t('ids.clear')} (${shortcut('backspace')})`} onclick={() => editor.empty(editor.chosen)}>{t('ids.clear')}{#if keyHints}<kbd aria-hidden="true">{shortcut('backspace', undefined, { compact: true })}</kbd>{/if}</button>
     <button type="button" class="ids-remove" disabled={editor.disabled || !isNode(picked)} title={t('ids.unwrap')} onclick={() => editor.remove(editor.chosen)}>{t('ids.unwrap')}</button>
@@ -59,6 +61,7 @@
   .ids-slot{flex:1 1 140px;min-width:0;min-height:36px;padding:4px 10px;font-size:14px}
   .ids-slot:not(:placeholder-shown){font-size:20px;font-family:var(--_font);padding:2px 10px}
   .ids-tools > button{position:relative;display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 12px;min-height:36px;font-size:13px}
+  .ids-tools > .ids-empty{justify-content:center;min-width:38px;padding:0 8px;font-family:var(--_font);font-size:22px;line-height:1}
   .ids-tools > button:not(:disabled):hover{border-color:var(--_line-strong);background:var(--_surface-subtle)}
   kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
   .ids-title{font-size:11px;color:var(--_muted)}

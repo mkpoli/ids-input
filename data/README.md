@@ -183,3 +183,12 @@ Mixed Han–Tangut descriptions also load the host's Han export. The shared layo
 constants in `src/composer/constants.json` come from han-compose at bd0829b (MIT),
 previously used by the composer's test fixture. Tangut Components Supplement glyphs
 are absent from this font version and report a missing glyph.
+
+## Bopomofo outlines
+
+`bopomofo-outlines.json.gz` holds U+3105–U+312F and U+31A0–U+31BF (75 letters).
+Noto Sans CJK JP 2.004 at weight 400 supplies 71 glyphs; Plangothic P1 V2.9.5795
+supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
+The compressed document records each source URL and SHA-256. Rebuild with
+`uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
+listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
