@@ -66,9 +66,47 @@ try {
   const undoButton = page.locator('.bar button[aria-label^="Undo"]')
   await undoButton.hover()
   await page.waitForTimeout(250)
-  assert(await undoButton.evaluate(el => Number(getComputedStyle(el, '::after').opacity) > 0.9 && getComputedStyle(el, '::after').content.includes('Ctrl+Z')), 'undo shows its key on hover')
+  assert(await undoButton.locator('.key-hint-pop').isVisible(), 'undo shows its keys on hover')
+  const caps = await undoButton.locator('.key-hint-pop kbd').allTextContents()
+  assert(caps.length === 2 && caps[1] === 'Z' && /^(Ctrl|⌘)$/.test(caps[0]), `undo keycaps: ${caps}`)
   assert(await page.evaluate(() => getComputedStyle(document.querySelector('.pane')).scrollbarWidth === 'thin'), 'themed scrollbars')
   pass('one toolbar height, key hints on hover, themed scrollbars')
+
+  // The middle column: the tree starts larger than the search and the divider resizes them.
+  const splitPage = await open()
+  const splitter = splitPage.locator('.split')
+  const upper = await splitPage.locator('.middle .tree').boundingBox()
+  const lower = await splitPage.locator('.middle .results').boundingBox()
+  assert(upper.height > lower.height, `the tree starts above the search: ${upper.height} against ${lower.height}`)
+  assert(await splitter.getAttribute('role') === 'separator' && await splitter.getAttribute('aria-valuenow') === '60', 'the divider is a separator at 60%')
+  const bar = await splitter.boundingBox()
+  await splitPage.mouse.move(bar.x + bar.width / 2, bar.y + bar.height / 2)
+  await splitPage.mouse.down()
+  await splitPage.mouse.move(bar.x + bar.width / 2, bar.y + bar.height / 2 + 40, { steps: 4 })
+  await splitPage.mouse.up()
+  assert(Number(await splitter.getAttribute('aria-valuenow')) > 60, 'dragging moves the divider')
+  await splitter.dblclick()
+  assert(await splitter.getAttribute('aria-valuenow') === '60', 'double-click resets the divider')
+  await splitter.focus()
+  await splitPage.keyboard.press('ArrowDown')
+  assert(await splitter.getAttribute('aria-valuenow') === '58', 'the arrow keys move the divider')
+  await splitPage.reload()
+  await splitPage.locator('.ids-field input').waitFor()
+  assert(await splitPage.locator('.split').getAttribute('aria-valuenow') === '58', 'the divider keeps its place')
+  await splitPage.context().close()
+  pass('the tree panel starts larger, and the divider resizes and keeps the panels')
+
+  // A dense tree keeps every glyph inside its box.
+  const dense = await open('#' + encodeURIComponent('⿰言⿱⿰木木⿰木木'))
+  await dense.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰言⿱⿰木木⿰木木', null, { timeout: 15000 })
+  const overflowing = await dense.locator('.ids-part').evaluateAll(els => els.filter(el => {
+    const box = el.getBoundingClientRect(), cell = el.parentElement.getBoundingClientRect()
+    return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 ||
+      box.left < cell.left - 1 || box.right > cell.right + 1 || box.top < cell.top - 1 || box.bottom > cell.bottom + 1
+  }).length)
+  assert(overflowing === 0, `parts overflowing their boxes: ${overflowing}`)
+  await dense.context().close()
+  pass('a dense tree keeps its glyphs inside their boxes')
 
   // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
   await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
@@ -324,7 +362,7 @@ try {
   await drawn.keyboard.press('Escape')
   await drawn.waitForTimeout(200)
   assert(await drawn.locator('.ids-kbd').count() === 0, 'key hints hidden')
-  assert(await drawn.locator('.bar button[aria-label^="Undo"]').getAttribute('data-keys') === null, 'hover key hints hidden too')
+  assert(await drawn.locator('.bar button[aria-label^="Undo"] .key-hint-pop').count() === 0, 'hover key hints hidden too')
   await drawn.keyboard.press('Control+,')
   await drawn.locator('dialog[open] .prefs').waitFor({ timeout: 5000 })
   await drawn.keyboard.press('Escape')

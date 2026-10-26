@@ -57,6 +57,7 @@
   "app.menu": "메뉴",
   "app.more": "더 보기",
   "app.output": "출력",
+  "app.panels.resize": "패널 크기 조절",
   "app.prefs.composer": "미리보기 자형 데이터",
   "app.prefs.composerHint": "han-compose export-web 출력 폴더. 비우면 기본값.",
   "app.prefs.keyHints": "버튼에 키 표시",

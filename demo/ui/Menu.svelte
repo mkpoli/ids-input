@@ -8,8 +8,9 @@
   // with a note, as the examples menu does with a code point; its sequence keeps the IDS written
   // with the IDC characters. Arrow keys move, Escape closes and gives the focus back.
   import Icon from './Icon.svelte'
-  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string, ariaLabel?: string, wide?: boolean }} */
-  let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel, wide = false } = $props()
+  import KeyHint from './KeyHint.svelte'
+  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean }} */
+  let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel, wide = false, compact = false } = $props()
   let open = $state(false)
   /** @type {HTMLElement | null} */ let box = $state(null)
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
@@ -53,13 +54,13 @@
 <svelte:window onpointerdown={event => { if (open && !box?.parentElement?.contains(/** @type {Node} */ (event.target))) open = false }} />
 
 <div class="menu-wrap">
-  <button type="button" class="tool" class:on={open} class:key-hint={Boolean(keys)} data-keys={keys} bind:this={trigger} aria-haspopup="menu" aria-expanded={open} aria-controls={`${uid}-menu`}
+  <button type="button" class="tool" class:on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} aria-haspopup="menu" aria-expanded={open} aria-controls={`${uid}-menu`}
     title={label} aria-label={ariaLabel ?? (text ? undefined : label)} onclick={() => open ? (open = false) : show()}
     onkeydown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); show(true) } }}>
-    {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}<Icon name="chevron" size={14} />
+    {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}<Icon name="chevron" size={14} />{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
-    <div class="menu" class:end={align === 'end'} class:wide role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
+    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
       {#each items as item, i (i)}
         {#if 'separator' in item}<div class="sep" role="separator"></div>
         {:else if 'heading' in item}<p class="heading">{item.heading}</p>
@@ -90,6 +91,9 @@
   .menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:220px;max-width:min(340px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;
     padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-pop)}
   .menu.wide{width:min(480px,calc(100vw - 32px));max-width:min(480px,calc(100vw - 32px));max-height:min(78vh,640px)}
+  .menu.compact{min-width:150px;padding:4px}
+  .menu.compact .item{padding:4px 8px;font-size:13px;gap:8px;border-radius:7px}
+  .menu.compact .mark{width:14px}
   @media (max-width:1000px){.menu.wide{left:auto;right:0}}
   .menu.end{left:auto;right:0}
   .item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-size:13.5px;text-align:left;cursor:pointer}
