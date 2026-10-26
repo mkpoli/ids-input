@@ -508,7 +508,7 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;align-items:flex-end;flex:1 1 160px;min-width:0;height:51px;margin:0 2px -9px;overflow:hidden}
+  .tabs-slot{display:flex;align-items:center;flex:1 1 160px;min-width:0;height:32px;margin:0 2px;overflow:hidden}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
@@ -569,7 +569,7 @@
     .results :global(.empty){margin:auto}
   }
   @media (max-width:1024px){
-    .tabs-slot{order:10;flex:1 0 100%;height:47px;margin:2px 0 -9px}
+    .tabs-slot{order:10;flex:1 0 100%;height:32px;margin:2px 0 0}
   }
   @media (max-width:640px){
     .bar{flex-wrap:wrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
