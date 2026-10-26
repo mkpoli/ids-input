@@ -11,6 +11,7 @@
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
+  import folds from '../data/component-name-folds.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import exampleDrawings from './lib/example-drawings.json'
@@ -38,7 +39,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts, forms, names })
+  const babel = babelStoneAdapter({ ids, parts, forms, names, folds })
   // Manual adjustments of the drawing: leaf path -> move, scale and turn. They change the preview
   // and what is exported, never the sequence. Adjust mode draws each operand separately, and the
   // output stays separate while an adjustment is kept, so what is exported is what is seen.
