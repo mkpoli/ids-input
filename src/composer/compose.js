@@ -142,7 +142,14 @@ export class Composer {
   compose(sequence) {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
-    const out = this.node(number(this.parse(sequence)), this.face.slice(), true)
+    const tree = number(this.parse(sequence))
+    const out = this.node(tree, this.face.slice(), true)
+    // Separated drawings retain reading order. Only publish ownership when every
+    // rendered leaf produced exactly one piece (including empty placeholders).
+    const ownership = this.separate ? this.leafOwners(tree) : null
+    if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
+      out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+    }
     if (!this.partial) this.balance(out)
     return out
   }
@@ -158,6 +165,17 @@ export class Composer {
     const out = []
     const walk = (node, region, atRoot) => {
       if (!Array.isArray(node)) { out.push({ index: out.length, box: region, empty: node === EMPTY }); return }
+      const enclosure = this.splitEnclosure(node)
+      if (enclosure) {
+        const start = out.length
+        walk(enclosure.tree, region, atRoot)
+        const leaves = out.splice(start)
+        const leafCount = n => Array.isArray(n) ? n.slice(1).reduce((sum, kid) => sum + leafCount(kid), 0) : 1
+        const inner = leaves.splice(enclosure.innerIndex, leafCount(node[2]))
+        out.push({ index: out.length, box: union(leaves.map(leaf => leaf.box)), empty: false })
+        for (const leaf of inner) out.push({ ...leaf, index: out.length })
+        return
+      }
       const op = node[0], kids = node.slice(1)
       if (kids.length === 2 && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
         let boxes = this.predict(op, kids)
@@ -303,8 +321,44 @@ export class Composer {
     return this.shares(op, children, region)
   }
 
-  /** A part under a character drawn under a corner (原 in 愿): its inner part stacked above the new one. */
+  leafOwners(tree) {
+    let index = 0, split = false, valid = true
+    const walk = node => {
+      if (!Array.isArray(node)) return [index++]
+      const enclosure = this.splitEnclosure(node)
+      if (enclosure) {
+        split = true
+        const outer = index++, inner = walk(node[2])
+        const count = n => Array.isArray(n) ? n.slice(1).reduce((sum, child) => sum + count(child), 0) : 1
+        const sourceInner = count(node[2])
+        return [...Array(enclosure.innerIndex).fill(outer), ...inner,
+          ...Array(count(enclosure.tree) - sourceInner - enclosure.innerIndex).fill(outer)]
+      }
+      // Other rewrites can merge or introduce leaves; leave their grouping to geometry.
+      if (this.respelled(node) !== node) valid = false
+      return node.slice(1).flatMap(walk)
+    }
+    const owners = walk(tree)
+    return valid ? { owners, split } : null
+  }
+
+  /** Layout and first inner leaf for two-part descriptions with a disconnected outer part. */
+  splitEnclosure(node) {
+    if (!Array.isArray(node) || node.length !== 3) return null
+    const [op, outer, inner] = node
+    const sides = { 行: ['彳', '亍'], 弜: ['弓', '弓'], 玨: ['𤣩', '王'], 辡: ['辛', '辛'], 雔: ['隹', '隹'] }
+    if (op === '⿴' && Object.hasOwn(sides, outer)) return { tree: ['⿲', sides[outer][0], inner, sides[outer][1]], innerIndex: 1 }
+    if (op === '⿴' && outer === '衣') return { tree: ['⿳', '亠', inner, '𧘇'], innerIndex: 1 }
+    if (op === '⿸' && outer === '𭤨') return { tree: ['⿰', '方', ['⿱', '𠂉', inner]], innerIndex: 2 }
+    if (op === '⿶' && outer === '𩰲') return { tree: ['⿱', ['⿲', '弓', inner, '弓'], '鬲'], innerIndex: 1 }
+    if (op === '⿹' && outer === '𣪊') return { tree: ['⿰', ['⿱', ['⿳', '士', '冖', '一'], inner], '殳'], innerIndex: 3 }
+    return null
+  }
+
+  /** Rendering rewrites for split enclosures and compound corners (原 in 愿). */
   respelled(node) {
+    const enclosure = this.splitEnclosure(node)
+    if (enclosure) return enclosure.tree
     if (node[0] !== '⿸' || node.length !== 3 || typeof node[1] !== 'string') return node
     let outer
     try { outer = this.parse(this.sequenceOf(node[1]) ?? '') } catch { return node }

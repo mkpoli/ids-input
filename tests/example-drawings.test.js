@@ -14,6 +14,11 @@ describe('the prepared example drawings', () => {
   it('prepare the proposed 図 with 도', () => {
     expect(data.drawings['⿴口도'].drawn.d.length).toBeGreaterThan(10)
   })
+  it('holds exactly the current examples', () => {
+    const held = [...Object.keys(data.drawings), ...data.failed.map(entry => entry.sequence)]
+    expect(held.sort()).toEqual(EXAMPLES.map(example => example.sequence).sort())
+  })
+  })
   it('answer every example, or say why it was skipped', () => {
     const skipped = new Map(data.failed.map(entry => [entry.sequence, entry]))
     for (const example of EXAMPLES) {

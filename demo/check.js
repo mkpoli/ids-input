@@ -6,7 +6,9 @@
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { EXAMPLES } from './lib/examples.js'
+import { COMPOSER_BASE } from './lib/composer.js'
 import { checkPanelWidths } from './check-panels.js'
+import { checkTabDuplication } from './check-tab-duplication.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
@@ -40,6 +42,10 @@ async function open(path = '', { width = 1440, height = 900, scheme = 'light', l
   await context.route('https://glyphatlas.org/**', route => route.abort())
   const page = await context.newPage()
   page.errors = []
+  page.composerRequests = []
+  context.on('request', request => {
+    if (request.url().startsWith(COMPOSER_BASE.replace(/\/$/, ''))) page.composerRequests.push(request.url())
+  })
   page.on('pageerror', error => page.errors.push(error.message))
   await page.goto(url + path)
   await page.locator('.ids-field input').waitFor()
@@ -54,6 +60,27 @@ async function choose(page, n) {
 }
 
 try {
+  for (const base of [COMPOSER_BASE, COMPOSER_BASE.replace(/\/$/, '')]) {
+    const prepared = await open(`?composer=${encodeURIComponent(base)}`)
+    await prepared.locator('.ids-preview[data-step="composed"]').waitFor()
+    await prepared.locator('.tab-icon svg path').first().waitFor()
+    assert(prepared.composerRequests.length === 0, 'prepared preview and tab icon make no composer requests')
+    const request = prepared.context().waitForEvent('request', { predicate: request => request.url().startsWith(COMPOSER_BASE) })
+    await prepared.locator('.ids-field input').fill('⿰木木')
+    await request
+    assert(prepared.composerRequests.length > 0, 'an unprepared edit loads the composer')
+    await prepared.context().close()
+  }
+  const separate = await open()
+  await separate.locator('.ids-preview[data-step="composed"]').waitFor()
+  const splitRequest = separate.context().waitForEvent('request', { predicate: request => request.url().startsWith(COMPOSER_BASE) })
+  await separate.getByRole('button', { name: 'Adjust layout' }).click()
+  await splitRequest
+  await separate.context().close()
+  pass('prepared previews and tab icons stay local; edits and layout adjustment start the composer')
+
+  await checkTabDuplication(open, assert)
+  pass('File and context-menu tab duplication, independent history, keyboard and phone layout')
   const page = await open()
   const value = () => valueOf(page)
   // Desktop menus own their navigation keys and preserve the editor's selection.
@@ -131,10 +158,16 @@ try {
   assert(await valueOf(menus) === '⿰日口', 'Edit menu Redo works after a tab switch')
 
   await menus.evaluate(() => {
-    const range = document.createRange(), text = document.querySelector('output.tree-whole').firstChild
-    range.setStart(text, 1); range.setEnd(text, 2)
-    getSelection().removeAllRanges(); getSelection().addRange(range)
-    document.activeElement.blur()
+    const heading = document.querySelector('.results h2'), walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT)
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const at = node.data.indexOf('日')
+      if (at < 0) continue
+      const range = document.createRange()
+      range.setStart(node, at); range.setEnd(node, at + 1)
+      getSelection().removeAllRanges(); getSelection().addRange(range)
+      document.activeElement.blur()
+      return
+    }
   })
   await menus.keyboard.press('Control+c')
   await menus.waitForFunction(async () => await navigator.clipboard.readText() === '日')
@@ -220,7 +253,6 @@ try {
   await page.locator('.ids-preview-detail').waitFor({ timeout: 15000 })
   assert(await page.locator('.ids-preview-detail').textContent() === 'U+7591', 'the preview names the code point of the encoded character')
   assert(await page.locator('.seq-row, .output-head').count() === 0, 'the old output row is gone')
-  assert(await page.locator('.tree-whole').textContent() === '⿰𠤕⿱龴疋', 'the sequence sits under the tree')
   assert(await page.locator('.seq-copy').isEnabled(), 'the copy button sits beside the sequence input')
   const fieldBox = await page.locator('.ids-field input').boundingBox()
   const copyBox = await page.locator('.seq-copy').boundingBox()
@@ -235,6 +267,7 @@ try {
   assert(await page.getByRole('dialog').locator('li').count() === 5, 'the code points open in a dialog')
   await page.keyboard.press('Escape')
   await page.waitForTimeout(200)
+  assert(await page.locator('.foot a[href="https://mkpo.li"]').textContent() === 'mkpoli', 'the footer links mkpoli to mkpo.li')
   pass('the workshop opens on 疑, matched to its character, with the sequence and code points in reach')
 
   // The toolbar buttons share one height; a shortcut shows under its button on hover; scrollbars
@@ -474,7 +507,12 @@ try {
   await page.locator('input.ids-slot').press('Enter')
   await page.locator('.toast').waitFor({ state: 'detached', timeout: 2000 })
   assert(await value() === '⿰亻⿱七木', `refilled: ${await value()}`)
-  pass('Tab and Shift+Tab, typing on the tree, Backspace with an Undo note')
+  await choose(page, 0)
+  await page.locator('.ids-empty').click()
+  assert(await value() === '⿰⬚⿱七木', `emptied from the button: ${await value()}`)
+  await page.locator('.toast button').click()
+  assert(await value() === '⿰亻⿱七木', `emptied button undo: ${await value()}`)
+  pass('Tab and Shift+Tab, typing on the tree, Backspace and the ⬚ button with an Undo note')
 
   // An operator on a node swaps it, refusing to drop a filled part; × takes a level away; undo, redo.
   await page.locator('.ids-op').nth(1).click()
@@ -570,8 +608,8 @@ try {
   pass('a component found by its code point replaces the chosen part')
 
   // The preview without its export: placeholders and no badge, since nothing could be tried. The
-  // default base has prepared drawings, so use a base that is not prepared and let the route abort it.
-  const bad = await open(`?composer=${encodeURIComponent('https://glyphatlas.org/atlas/composer/not-prepared/')}`)
+  // default base has prepared drawings, so use a same-origin base that is not prepared.
+  const bad = await open(`?composer=${encodeURIComponent(`${url}composer-not-there/`)}`)
   await bad.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   assert(await bad.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
   assert(await bad.locator('.ids-preview-badge').count() === 0, 'no badge without data')
@@ -609,6 +647,18 @@ try {
   assert((await mixed.locator('.ids-preview-large .ink').getAttribute('d')).length > 100, 'mixed Han–Tangut draws')
   await mixed.context().close()
   pass('Tangut outlines, edited slots, SVG/PNG exports and mixed Han–Tangut rendering')
+
+  const bopomofo = await open(`?composer=${encodeURIComponent('http://[')}#${encodeURIComponent('⿰ㄅㆿ')}`)
+  await bopomofo.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  const [bopomofoSvg] = await Promise.all([bopomofo.waitForEvent('download'), bopomofo.locator('.export .primary').click()])
+  const bopomofoText = readFileSync(await bopomofoSvg.path(), 'utf8')
+  assert(bopomofoText.includes('<path') && !/<text|NaN|Infinity/.test(bopomofoText), 'Bopomofo SVG carries outlines')
+  await bopomofo.locator('.export [role="radio"]', { hasText: 'PNG' }).click()
+  const [bopomofoPng] = await Promise.all([bopomofo.waitForEvent('download'), bopomofo.locator('.export .primary').click()])
+  assert(readFileSync(await bopomofoPng.path()).readUInt32BE(16) === 1024, 'Bopomofo exports a 1024 px PNG')
+  assert(!bopomofo.errors.length, `Bopomofo page errors: ${bopomofo.errors.join('; ')}`)
+  await bopomofo.context().close()
+  pass('Bopomofo preview and SVG/PNG exports without a Han export')
 
   // With an export: the filled part drawn, the slot a placeholder; SVG and PNG saved as files named
   // after the sequence, on the background and in the ink chosen; the settings kept.
@@ -659,6 +709,15 @@ try {
   const editedSvg = readFileSync(await edited.path(), 'utf8')
   assert(editedSvg.includes('<g transform="translate('), 'the export keeps the adjustment')
   const adjustedTab = await edit.locator('.tabbar .tab.on').getAttribute('data-tab-id')
+  const sourceTransform = await firstPart.getAttribute('transform')
+  await edit.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await edit.getByRole('menuitem', { name: 'Duplicate tab', exact: true }).click()
+  await edit.waitForFunction(() => Boolean(document.querySelector('.ids-preview-large .part[transform]')))
+  assert(await firstPart.getAttribute('transform') === sourceTransform, 'a duplicate keeps the drawing adjustment')
+  await edit.getByRole('button', { name: 'Reset all' }).click()
+  await edit.locator(`.tabbar .tab[data-tab-id="${adjustedTab}"] [role="tab"]`).click()
+  await edit.waitForFunction(() => Boolean(document.querySelector('.ids-preview-large .part[transform]')))
+  assert(await firstPart.getAttribute('transform') === sourceTransform, 'resetting the duplicate leaves its source adjustment intact')
   await edit.locator('.tab-new').click()
   assert(await edit.locator('.adjust-toggle').getAttribute('aria-pressed') === 'false', 'a new tab starts outside Adjust layout')
   await edit.locator(`.tabbar .tab[data-tab-id="${adjustedTab}"] [role="tab"]`).click()
