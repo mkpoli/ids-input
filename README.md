@@ -235,22 +235,25 @@ take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, wh
 ### Names and vocabulary
 
 The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
-point, a name, a word or a reading (`data/component-names.tsv`, 5,456 names, words and readings from
-Japanese and Chinese radical dictionaries, with English glosses, pinyin and Hepburn and Kunrei
-romaji). A query and every name are folded alike: NFKC, katakana as hiragana, Latin accents off,
-spaces and punctuation out, and Chinese scripts through `data/component-name-folds.tsv`. A name
-that is the whole query comes first, then one the query starts, then one it stands inside, so 宝盖
-finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin query matches whole words and their starts,
-and a word of five letters or more may stand inside a longer name.
+point, a name, a word or a reading (`data/component-names.tsv`, 6,642 names, words and readings
+from Japanese and Chinese radical dictionaries and Wikidata, with English glosses, pinyin, Hepburn
+and Kunrei romaji, and Korean and Vietnamese readings). A query and every name are folded alike:
+NFKC, katakana as hiragana, Latin accents off, spaces and punctuation out, and Chinese scripts
+through `data/component-name-folds.tsv`. A name that is the whole query comes first, then one the
+query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin
+query matches whole words and their starts, and a word of five letters or more may stand inside a
+longer name.
 
 The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
 those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
-and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. Either Chinese script finds
-either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀, and 龍部, 龙部 and 竜部 all give the forms of 龍.
-Readings, pinyin, romaji and English senses work the same way: water, silk, roof, thread, person,
-みず, mizu, sui, shui, jiaosipang, baogaitou, sandianshui, nobun, nogi and ukanmuri lead to their
-components; `radical 120` leads to 糸. A single component typed on its own stays the character it
-is, and without `names` the search takes characters and code points only.
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀; 倒八 offers 丷, 卷字头 offers
+龹, and 石字头 offers 丆. Either Chinese script finds either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀,
+and 龍部, 龙部 and 竜部 all give the forms of 龍. Readings, pinyin, romaji, Korean, Vietnamese and
+English senses work the same way: water, silk, roof, thread, person, みず, mizu, sui, shui,
+jiaosipang, baogaitou, sandianshui, nobun, nogi, ukanmuri, 수, thủy and Bộ Thủy lead to their
+components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph or kana typed on
+its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
+characters and code points only.
 
 ## Preview
 
@@ -321,8 +324,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-names.tsv`: the names, words and readings people use for components, CC BY-SA 4.0
   as a whole (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2
   and Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
-  (Apache 2.0), Unihan 18.0.0 (Unicode License v3) and pypinyin (MIT); its header names each
-  (237 KB). Its Wikipedia redirects are kept in `data/component-name-redirects.json`.
+  (Apache 2.0), Unihan 18.0.0 (Unicode License v3), pypinyin (MIT) and Wikidata (CC0 1.0); its
+  header names each (298 KB). Its Wikipedia redirects are kept in
+  `data/component-name-redirects.json`.
+- `data/component-name-wikidata.json`: the Wikidata labels and aliases for the 214 radicals, CC0 1.0
+  (<https://creativecommons.org/publicdomain/zero/1.0/>), 131 KB.
 - `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
@@ -351,10 +357,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
-  definitions, Mandarin and Japanese readings of the component names.
+  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component names.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.
+- Wikidata, CC0 1.0, <https://www.wikidata.org/>: labels and aliases for the 214 radical items, in
+  English, Japanese, Chinese, Korean and Vietnamese.
 - pypinyin 0.55.0, mozillazg, MIT, <https://github.com/mozillazg/python-pinyin>: the pinyin of
   Chinese component names.
 - OpenCC 1.4.2, BYVoid, Apache 2.0, <https://github.com/BYVoid/OpenCC>: traditional and simplified

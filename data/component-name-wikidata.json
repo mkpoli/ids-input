@@ -1,0 +1,9389 @@
+{
+ "note": "Wikidata labels and aliases for the 214 Kangxi radicals. CC0 1.0, https://creativecommons.org/publicdomain/zero/1.0/.",
+ "fetched": "2026-10-27",
+ "languages": [
+  "en",
+  "ja",
+  "zh",
+  "zh-hans",
+  "zh-hant",
+  "ko",
+  "vi"
+ ],
+ "items": {
+  "Q100189": {
+   "labels": {
+    "zh": "干部",
+    "en": "Kangxi radical 51 (⼲)",
+    "ja": "干部",
+    "zh-hans": "干部",
+    "zh-hant": "干部",
+    "vi": "Bộ Can (干)",
+    "ko": "⼲"
+   },
+   "aliases": {
+    "zh-hans": [
+     "干",
+     "⼲"
+    ],
+    "zh-hant": [
+     "干",
+     "⼲"
+    ],
+    "zh": [
+     "干",
+     "⼲"
+    ],
+    "vi": [
+     "⼲",
+     "干"
+    ],
+    "en": [
+     "⼲",
+     "干",
+     "KANGXI RADICAL DRY",
+     "radical 51"
+    ],
+    "ja": [
+     "⼲",
+     "干"
+    ],
+    "ko": [
+     "방패간"
+    ]
+   }
+  },
+  "Q114613": {
+   "labels": {
+    "en": "Kangxi radical 176 (⾯)",
+    "ja": "面部",
+    "zh": "面部",
+    "zh-hans": "面部",
+    "zh-hant": "面部",
+    "vi": "Bộ Diện (面)",
+    "ko": "⾯"
+   },
+   "aliases": {
+    "zh-hans": [
+     "面",
+     "⾯"
+    ],
+    "zh-hant": [
+     "面",
+     "⾯"
+    ],
+    "zh": [
+     "面",
+     "⾯"
+    ],
+    "vi": [
+     "⾯",
+     "面"
+    ],
+    "en": [
+     "⾯",
+     "面",
+     "KANGXI RADICAL FACE",
+     "radical 176"
+    ],
+    "ja": [
+     "⾯",
+     "面"
+    ],
+    "ko": [
+     "낯면"
+    ]
+   }
+  },
+  "Q131898": {
+   "labels": {
+    "zh": "⼳部",
+    "en": "Kangxi radical 52 (⼳)",
+    "ja": "幺部",
+    "zh-hans": "⼳部",
+    "zh-hant": "⼳部",
+    "vi": "Bộ Yêu (幺)",
+    "ko": "⼳"
+   },
+   "aliases": {
+    "zh-hans": [
+     "幺",
+     "⼳",
+     "幺部"
+    ],
+    "zh-hant": [
+     "幺",
+     "⼳",
+     "幺部"
+    ],
+    "zh": [
+     "幺",
+     "⼳",
+     "幺部"
+    ],
+    "ja": [
+     "幺",
+     "ようぶ",
+     "よう",
+     "いとがしら",
+     "⼳"
+    ],
+    "vi": [
+     "⼳",
+     "幺"
+    ],
+    "en": [
+     "⼳",
+     "幺",
+     "KANGXI RADICAL SHORT THREAD",
+     "poop radical",
+     "radical 52"
+    ],
+    "ko": [
+     "작을요"
+    ]
+   }
+  },
+  "Q131919": {
+   "labels": {
+    "zh": "广部",
+    "en": "Kangxi radical 53 (⼴ )",
+    "ja": "广部",
+    "zh-hans": "广部",
+    "zh-hant": "广部",
+    "vi": "Bộ Nghiễm (广)",
+    "ko": "⼴"
+   },
+   "aliases": {
+    "zh-hans": [
+     "广",
+     "⼴"
+    ],
+    "zh-hant": [
+     "广",
+     "⼴"
+    ],
+    "zh": [
+     "广",
+     "⼴"
+    ],
+    "ja": [
+     "广",
+     "げんぶ",
+     "まだれ",
+     "⼴"
+    ],
+    "vi": [
+     "⼴",
+     "广"
+    ],
+    "en": [
+     "KANGXI RADICAL DOTTED CLIFF",
+     "⼴",
+     "radical dotted cliff",
+     "radical 53"
+    ],
+    "ko": [
+     "엄호",
+     "엄호밑"
+    ]
+   }
+  },
+  "Q131933": {
+   "labels": {
+    "zh": "廴部",
+    "en": "Kangxi radical 54 (⼵)",
+    "ja": "廴部",
+    "zh-hans": "廴部",
+    "zh-hant": "廴部",
+    "vi": "Bộ Dẫn (廴)",
+    "ko": "⼵"
+   },
+   "aliases": {
+    "zh-hans": [
+     "廴",
+     "⼵"
+    ],
+    "zh-hant": [
+     "廴",
+     "⼵"
+    ],
+    "zh": [
+     "廴",
+     "⼵"
+    ],
+    "vi": [
+     "⼵",
+     "廴"
+    ],
+    "en": [
+     "KANGXI RADICAL LONG STRIDE",
+     "⼵",
+     "radical 54",
+     "radical long stride",
+     "radical progress"
+    ],
+    "ja": [
+     "⼵",
+     "廴"
+    ],
+    "ko": [
+     "민책받침"
+    ]
+   }
+  },
+  "Q131952": {
+   "labels": {
+    "zh": "廾部",
+    "en": "Radical 55",
+    "ja": "廾部",
+    "zh-hans": "廾部",
+    "zh-hant": "廾部",
+    "vi": "Bộ Củng (廾)",
+    "ko": "⼶"
+   },
+   "aliases": {
+    "zh-hans": [
+     "廾",
+     "⼶"
+    ],
+    "zh-hant": [
+     "廾",
+     "⼶"
+    ],
+    "zh": [
+     "廾",
+     "⼶"
+    ],
+    "ja": [
+     "廾",
+     "きょうぶ",
+     "きょう",
+     "こまぬき",
+     "にじゅうあし",
+     "⼶"
+    ],
+    "vi": [
+     "廾",
+     "⼶"
+    ],
+    "en": [
+     "⼶",
+     "廾",
+     "KANGXI RADICAL TWO HANDS"
+    ],
+    "ko": [
+     "스물입발",
+     "스무입발"
+    ]
+   }
+  },
+  "Q131966": {
+   "labels": {
+    "zh": "弋部",
+    "en": "Kangxi radical 56 (⼷)",
+    "ja": "弋部",
+    "zh-hans": "弋部",
+    "zh-hant": "弋部",
+    "vi": "Bộ Dặc (弋)",
+    "ko": "⼷"
+   },
+   "aliases": {
+    "zh-hans": [
+     "弋",
+     "⼷"
+    ],
+    "zh-hant": [
+     "弋",
+     "⼷"
+    ],
+    "zh": [
+     "弋",
+     "⼷"
+    ],
+    "vi": [
+     "⼷",
+     "弋"
+    ],
+    "en": [
+     "KANGXI RADICAL SHOOT",
+     "⼷",
+     "radical shoot",
+     "radical 56"
+    ],
+    "ja": [
+     "⼷",
+     "弋"
+    ],
+    "ko": [
+     "주살익"
+    ]
+   }
+  },
+  "Q131985": {
+   "labels": {
+    "zh": "弓部",
+    "en": "Radical 57",
+    "ja": "弓部",
+    "zh-hans": "弓部",
+    "zh-hant": "弓部",
+    "vi": "Bộ Cung (弓)",
+    "ko": "⼸"
+   },
+   "aliases": {
+    "zh-hans": [
+     "弓",
+     "⼸"
+    ],
+    "zh-hant": [
+     "弓",
+     "⼸"
+    ],
+    "zh": [
+     "弓",
+     "⼸"
+    ],
+    "ja": [
+     "弓",
+     "きゅうぶ",
+     "弓偏",
+     "ゆみへん",
+     "⼸"
+    ],
+    "vi": [
+     "⼸",
+     "弓"
+    ],
+    "en": [
+     "⼸",
+     "弓",
+     "KANGXI RADICAL BOW"
+    ],
+    "ko": [
+     "활궁"
+    ]
+   }
+  },
+  "Q132002": {
+   "labels": {
+    "zh": "⼹部",
+    "en": "Radical 58",
+    "ja": "彐部",
+    "zh-hans": "⼹部",
+    "zh-hant": "⼹部",
+    "vi": "Bộ Ký (彐)",
+    "ko": "⼹"
+   },
+   "aliases": {
+    "zh-hans": [
+     "彐",
+     "⼹",
+     "彐部"
+    ],
+    "zh-hant": [
+     "彐",
+     "⼹",
+     "彐部"
+    ],
+    "zh": [
+     "彐",
+     "⼹",
+     "彐部"
+    ],
+    "ja": [
+     "彑部",
+     "けいがしら",
+     "いのこがしら",
+     "⼹",
+     "彐"
+    ],
+    "vi": [
+     "⼹",
+     "彐"
+    ],
+    "en": [
+     "⼹",
+     "彐",
+     "KANGXI RADICAL SNOUT"
+    ],
+    "ko": [
+     "튼가로왈"
+    ]
+   }
+  },
+  "Q132060": {
+   "labels": {
+    "zh": "彡部",
+    "en": "Radical 59",
+    "ja": "彡部",
+    "zh-hans": "彡部",
+    "zh-hant": "彡部",
+    "vi": "Bộ Sam (彡)",
+    "ko": "⼺"
+   },
+   "aliases": {
+    "zh-hans": [
+     "彡",
+     "⼺"
+    ],
+    "zh-hant": [
+     "彡",
+     "⼺"
+    ],
+    "zh": [
+     "彡",
+     "⼺"
+    ],
+    "ja": [
+     "彡",
+     "さんぶ",
+     "さん",
+     "さんづくり",
+     "⼺"
+    ],
+    "vi": [
+     "⼺",
+     "彡"
+    ],
+    "en": [
+     "⼺",
+     "彡",
+     "KANGXI RADICAL BRISTLE"
+    ],
+    "ko": [
+     "터럭삼"
+    ]
+   }
+  },
+  "Q132128": {
+   "labels": {
+    "zh": "彳部",
+    "en": "Kangxi radical 60 (⼻)",
+    "ja": "彳部",
+    "zh-hans": "彳部",
+    "zh-hant": "彳部",
+    "vi": "Bộ Sách (彳)",
+    "ko": "⼻"
+   },
+   "aliases": {
+    "zh-hans": [
+     "彳",
+     "⼻"
+    ],
+    "zh-hant": [
+     "彳",
+     "⼻"
+    ],
+    "zh": [
+     "彳",
+     "⼻"
+    ],
+    "ja": [
+     "彳",
+     "てきぶ",
+     "ぎょうにんべん",
+     "行人偏",
+     "⼻"
+    ],
+    "vi": [
+     "⼻",
+     "彳"
+    ],
+    "en": [
+     "⼻",
+     "彳",
+     "KANGXI RADICAL STEP",
+     "radical 60"
+    ],
+    "ko": [
+     "두인변"
+    ]
+   }
+  },
+  "Q132188": {
+   "labels": {
+    "zh": "心部",
+    "en": "Kangxi radical 61 (⼼)",
+    "ja": "心部",
+    "zh-hans": "心部",
+    "zh-hant": "心部",
+    "ko": "⼼",
+    "vi": "Bộ Tâm (心)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "心",
+     "⼼"
+    ],
+    "zh-hant": [
+     "心",
+     "⼼"
+    ],
+    "zh": [
+     "心",
+     "忄",
+     "㣺",
+     "⼼"
+    ],
+    "ja": [
+     "心",
+     "忄",
+     "㣺",
+     "しんぶ",
+     "りっしんべん",
+     "したごころ",
+     "こころへん",
+     "立心偏",
+     "下心",
+     "⼼"
+    ],
+    "vi": [
+     "⼼",
+     "心"
+    ],
+    "en": [
+     "⼼",
+     "KANGXI RADICAL HEART",
+     "radical heart",
+     "radical 61"
+    ],
+    "ko": [
+     "마음심"
+    ]
+   }
+  },
+  "Q132233": {
+   "labels": {
+    "zh": "戈部",
+    "en": "Kangxi radical 62 (⼽)",
+    "ja": "戈部",
+    "zh-hans": "戈部",
+    "zh-hant": "戈部",
+    "vi": "Bộ Qua (戈)",
+    "ko": "⼽"
+   },
+   "aliases": {
+    "zh-hans": [
+     "戈",
+     "⼽"
+    ],
+    "zh-hant": [
+     "戈",
+     "⼽"
+    ],
+    "zh": [
+     "戈",
+     "⼽"
+    ],
+    "vi": [
+     "⼽",
+     "戈"
+    ],
+    "en": [
+     "KANGXI RADICAL HALBERD",
+     "⼽",
+     "radical halberd",
+     "radical 62"
+    ],
+    "ja": [
+     "⼽",
+     "戈"
+    ],
+    "ko": [
+     "창과"
+    ]
+   }
+  },
+  "Q132248": {
+   "labels": {
+    "zh": "戶部",
+    "en": "Kanxi radical 63 (⼾)",
+    "ja": "戸部",
+    "zh-hant": "戶部",
+    "zh-hans": "户部",
+    "vi": "Bộ Hộ (戶)",
+    "ko": "⼾"
+   },
+   "aliases": {
+    "zh-hant": [
+     "戶",
+     "⼾"
+    ],
+    "zh-hans": [
+     "户",
+     "⼾",
+     "戶"
+    ],
+    "zh": [
+     "戶",
+     "⼾"
+    ],
+    "vi": [
+     "⼾",
+     "戶"
+    ],
+    "en": [
+     "KANGXI RADICAL DOOR",
+     "radical door",
+     "radical 63"
+    ],
+    "ja": [
+     "⼾",
+     "戶"
+    ],
+    "ko": [
+     "지게호"
+    ]
+   }
+  },
+  "Q132282": {
+   "labels": {
+    "zh": "手部",
+    "en": "Kangxi radical 64 (⼿)",
+    "ja": "手部",
+    "zh-hans": "手部",
+    "zh-hant": "手部",
+    "vi": "Bộ Thủ (手)",
+    "ko": "⼿"
+   },
+   "aliases": {
+    "zh-hans": [
+     "手",
+     "⼿"
+    ],
+    "zh-hant": [
+     "手",
+     "⼿"
+    ],
+    "zh": [
+     "手",
+     "扌",
+     "⼿"
+    ],
+    "ja": [
+     "手",
+     "扌",
+     "しゅぶ",
+     "手偏",
+     "てへん",
+     "⼿"
+    ],
+    "vi": [
+     "⼿",
+     "手"
+    ],
+    "en": [
+     "KANGXI RADICAL HAND",
+     "⼿",
+     "radical hand",
+     "radical 64"
+    ],
+    "ko": [
+     "손수"
+    ]
+   }
+  },
+  "Q132608": {
+   "labels": {
+    "zh": "支部",
+    "en": "Kangxi radical 65 (⽀)",
+    "ja": "支部",
+    "zh-hans": "支部",
+    "zh-hant": "支部",
+    "vi": "Bộ Chi (支)",
+    "ko": "⽀"
+   },
+   "aliases": {
+    "zh-hans": [
+     "支",
+     "⽀"
+    ],
+    "zh-hant": [
+     "支",
+     "⽀"
+    ],
+    "zh": [
+     "支",
+     "附录:部首索引/⽀",
+     "⽀"
+    ],
+    "en": [
+     "支",
+     "⽀",
+     "KANGXI RADICAL BRANCH",
+     "radical 65"
+    ],
+    "ja": [
+     "Wiktionary:漢字索引 部首 支",
+     "⽀",
+     "支"
+    ],
+    "vi": [
+     "⽀",
+     "支"
+    ],
+    "ko": [
+     "지탱할지"
+    ]
+   }
+  },
+  "Q132618": {
+   "labels": {
+    "zh": "攴部",
+    "en": "Kanxi radical 66 (⽁)",
+    "ja": "攴部",
+    "zh-hans": "攴部",
+    "zh-hant": "攴部",
+    "vi": "Bộ Phộc (攴)",
+    "ko": "⽁"
+   },
+   "aliases": {
+    "zh-hans": [
+     "攴",
+     "⽁"
+    ],
+    "zh-hant": [
+     "攴",
+     "⽁"
+    ],
+    "zh": [
+     "攴",
+     "⽁"
+    ],
+    "ja": [
+     "ぼくぶ",
+     "攴",
+     "ぼく",
+     "攵部",
+     "攵",
+     "ぼくづくり",
+     "ぼくにょう",
+     "のぶん",
+     "とまた",
+     "⽁"
+    ],
+    "vi": [
+     "⽁",
+     "攴"
+    ],
+    "en": [
+     "KANGXI RADICAL RAP",
+     "⽁",
+     "radical rap",
+     "radical 66"
+    ],
+    "ko": [
+     "등글월문"
+    ]
+   }
+  },
+  "Q132626": {
+   "labels": {
+    "zh": "文部",
+    "en": "Kanxi radical 67 (⽂)",
+    "ja": "文部",
+    "zh-hans": "文部",
+    "zh-hant": "文部",
+    "vi": "Bộ Văn (文)",
+    "ko": "⽂"
+   },
+   "aliases": {
+    "zh-hans": [
+     "文",
+     "⽂"
+    ],
+    "zh-hant": [
+     "文",
+     "⽂"
+    ],
+    "zh": [
+     "文",
+     "⽂"
+    ],
+    "vi": [
+     "⽂",
+     "文"
+    ],
+    "en": [
+     "KANGXI RADICAL SCRIPT",
+     "⽂",
+     "radical script",
+     "radical 67"
+    ],
+    "ja": [
+     "⽂",
+     "文"
+    ],
+    "ko": [
+     "글월문"
+    ]
+   }
+  },
+  "Q132635": {
+   "labels": {
+    "zh": "斗部",
+    "en": "Kangxi radical 68 (⽃)",
+    "ja": "斗部",
+    "zh-hans": "斗部",
+    "zh-hant": "斗部",
+    "vi": "Bộ Đẩu (斗)",
+    "ko": "⽃"
+   },
+   "aliases": {
+    "zh-hans": [
+     "斗",
+     "⽃"
+    ],
+    "zh-hant": [
+     "斗",
+     "⽃"
+    ],
+    "zh": [
+     "斗",
+     "⽃"
+    ],
+    "vi": [
+     "⽃",
+     "斗"
+    ],
+    "en": [
+     "⽃",
+     "KANGXI RADICAL DIPPER",
+     "radical dipper",
+     "radical 68"
+    ],
+    "ja": [
+     "⽃",
+     "斗"
+    ],
+    "ko": [
+     "말두"
+    ]
+   }
+  },
+  "Q132642": {
+   "labels": {
+    "zh": "斤部",
+    "en": "Kangxi radical 69 (⽄)",
+    "ja": "斤部",
+    "zh-hans": "斤部",
+    "zh-hant": "斤部",
+    "vi": "Bộ Cân (斤)",
+    "ko": "⽄"
+   },
+   "aliases": {
+    "zh-hans": [
+     "斤",
+     "⽄"
+    ],
+    "zh-hant": [
+     "斤",
+     "⽄"
+    ],
+    "zh": [
+     "斤",
+     "⽄"
+    ],
+    "vi": [
+     "⽄",
+     "斤"
+    ],
+    "en": [
+     "⽄",
+     "KANGXI RADICAL AXE",
+     "radical axe",
+     "radical 69"
+    ],
+    "ja": [
+     "⽄",
+     "斤"
+    ],
+    "ko": [
+     "날근",
+     "도끼근"
+    ]
+   }
+  },
+  "Q132648": {
+   "labels": {
+    "zh": "方部",
+    "en": "Kangxi radical 70 (⽅)",
+    "ja": "方部",
+    "zh-hans": "方部",
+    "zh-hant": "方部",
+    "vi": "Bộ Phương (方)",
+    "ko": "⽅"
+   },
+   "aliases": {
+    "zh-hans": [
+     "方",
+     "⽅"
+    ],
+    "zh-hant": [
+     "方",
+     "⽅"
+    ],
+    "zh": [
+     "方",
+     "⽅"
+    ],
+    "ja": [
+     "方",
+     "ほうぶ",
+     "ほうへん",
+     "かたへん",
+     "⽅"
+    ],
+    "vi": [
+     "⽅",
+     "方"
+    ],
+    "en": [
+     "KANGXI RADICAL SQUARE",
+     "⽅",
+     "radical square",
+     "radical 70"
+    ],
+    "ko": [
+     "모방"
+    ]
+   }
+  },
+  "Q132654": {
+   "labels": {
+    "zh": "无部",
+    "en": "Kangxi radical 71 (⽆)",
+    "ja": "无部",
+    "zh-hans": "无部",
+    "zh-hant": "无部",
+    "vi": "Bộ Vô (无)",
+    "ko": "⽆"
+   },
+   "aliases": {
+    "zh-hans": [
+     "无",
+     "⽆"
+    ],
+    "zh-hant": [
+     "无",
+     "⽆"
+    ],
+    "zh": [
+     "无",
+     "⽆"
+    ],
+    "ja": [
+     "旡部",
+     "⽆",
+     "无"
+    ],
+    "vi": [
+     "⽆",
+     "无"
+    ],
+    "en": [
+     "⽆",
+     "KANGXI RADICAL NOT",
+     "radical 71",
+     "radical not",
+     "radical without"
+    ],
+    "ko": [
+     "이미기방"
+    ]
+   }
+  },
+  "Q132663": {
+   "labels": {
+    "zh": "日部",
+    "en": "Kangxi radical 72 (⽇)",
+    "ja": "日部",
+    "zh-hans": "日部",
+    "zh-hant": "日部",
+    "vi": "Bộ Nhật (日)",
+    "ko": "⽇"
+   },
+   "aliases": {
+    "zh-hans": [
+     "日",
+     "⽇"
+    ],
+    "zh-hant": [
+     "日",
+     "⽇"
+    ],
+    "zh": [
+     "日",
+     "⽇"
+    ],
+    "ja": [
+     "日",
+     "にちぶ",
+     "にち",
+     "にちへん",
+     "ひへん",
+     "日偏",
+     "⽇"
+    ],
+    "vi": [
+     "⽇",
+     "日"
+    ],
+    "en": [
+     "⽇",
+     "KANGXI RADICAL SUN",
+     "radical 72",
+     "radical sun",
+     "radical day"
+    ],
+    "ko": [
+     "날일"
+    ]
+   }
+  },
+  "Q132668": {
+   "labels": {
+    "zh": "曰部",
+    "en": "Kangxi radical 73 (⽈)",
+    "ja": "曰部",
+    "zh-hans": "曰部",
+    "zh-hant": "曰部",
+    "vi": "Bộ Viết (曰)",
+    "ko": "⽈"
+   },
+   "aliases": {
+    "zh-hans": [
+     "曰",
+     "⽈"
+    ],
+    "zh-hant": [
+     "曰",
+     "⽈"
+    ],
+    "zh": [
+     "曰",
+     "⽈"
+    ],
+    "vi": [
+     "⽈",
+     "曰"
+    ],
+    "en": [
+     "KANGXI RADICAL SAY",
+     "⽈",
+     "radical say",
+     "radical 73"
+    ],
+    "ja": [
+     "⽈",
+     "曰"
+    ],
+    "ko": [
+     "가로왈",
+     "가로되왈"
+    ]
+   }
+  },
+  "Q132673": {
+   "labels": {
+    "zh": "月部",
+    "en": "Kangxi radical 74 (⽉)",
+    "ja": "月部",
+    "zh-hans": "月部",
+    "zh-hant": "月部",
+    "vi": "Bộ Nguyệt (月)",
+    "ko": "⽉"
+   },
+   "aliases": {
+    "zh-hans": [
+     "月",
+     "🈷️",
+     "⽉"
+    ],
+    "zh-hant": [
+     "月",
+     "⽉"
+    ],
+    "zh": [
+     "月",
+     "⽉"
+    ],
+    "ja": [
+     "月",
+     "げつぶ",
+     "月偏",
+     "つきへん",
+     "🈷️",
+     "⽉"
+    ],
+    "en": [
+     "月",
+     "⽉",
+     "KANGXI RADICAL MOON",
+     "radical 74"
+    ],
+    "vi": [
+     "⽉",
+     "月"
+    ],
+    "ko": [
+     "달월"
+    ]
+   }
+  },
+  "Q132681": {
+   "labels": {
+    "zh": "木部",
+    "en": "Kangxi radical 75 (⽊)",
+    "ja": "木部",
+    "zh-hans": "木部",
+    "zh-hant": "木部",
+    "vi": "Bộ Mộc (木)",
+    "ko": "⽊"
+   },
+   "aliases": {
+    "zh-hans": [
+     "木",
+     "⽊"
+    ],
+    "zh-hant": [
+     "木",
+     "⽊"
+    ],
+    "zh": [
+     "木",
+     "⽊"
+    ],
+    "ja": [
+     "木",
+     "もくぶ",
+     "き",
+     "木偏",
+     "きへん",
+     "⽊"
+    ],
+    "vi": [
+     "⽊",
+     "木"
+    ],
+    "en": [
+     "KANGXI RADICAL TREE",
+     "⽊",
+     "radical tree",
+     "radical 75"
+    ],
+    "ko": [
+     "나무목"
+    ]
+   }
+  },
+  "Q132686": {
+   "labels": {
+    "zh": "欠部",
+    "en": "Radical 76",
+    "ja": "欠部",
+    "zh-hans": "欠部",
+    "zh-hant": "欠部",
+    "vi": "Bộ Khiếm (欠)",
+    "ko": "⽋"
+   },
+   "aliases": {
+    "zh-hans": [
+     "欠",
+     "⽋"
+    ],
+    "zh-hant": [
+     "欠",
+     "⽋"
+    ],
+    "zh": [
+     "欠",
+     "⽋"
+    ],
+    "vi": [
+     "⽋",
+     "欠"
+    ],
+    "en": [
+     "⽋",
+     "欠",
+     "KANGXI RADICAL LACK"
+    ],
+    "ja": [
+     "⽋",
+     "欠"
+    ],
+    "ko": [
+     "하품흠"
+    ]
+   }
+  },
+  "Q132696": {
+   "labels": {
+    "zh": "止部",
+    "en": "Kangxi radical 77 (⽌)",
+    "ja": "止部",
+    "zh-hans": "止部",
+    "zh-hant": "止部",
+    "vi": "Bộ Chỉ (止)",
+    "ko": "⽌"
+   },
+   "aliases": {
+    "zh-hans": [
+     "止",
+     "⽌"
+    ],
+    "zh-hant": [
+     "止",
+     "⽌"
+    ],
+    "zh": [
+     "止",
+     "⽌"
+    ],
+    "vi": [
+     "⽌",
+     "止"
+    ],
+    "en": [
+     "KANGXI RADICAL STOP",
+     "⽌",
+     "radical stop",
+     "radical 77"
+    ],
+    "ja": [
+     "⽌",
+     "止"
+    ],
+    "ko": [
+     "그칠지"
+    ]
+   }
+  },
+  "Q132704": {
+   "labels": {
+    "zh": "歹部",
+    "en": "Radical 78",
+    "ja": "歹部",
+    "zh-hans": "歹部",
+    "zh-hant": "歹部",
+    "ko": "⽍",
+    "vi": "Bộ Đãi (歹)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "歹",
+     "⽍"
+    ],
+    "zh-hant": [
+     "歹",
+     "⽍"
+    ],
+    "zh": [
+     "歹",
+     "⽍"
+    ],
+    "ja": [
+     "歹",
+     "がつぶ",
+     "がつへん",
+     "がつ",
+     "いちたへん",
+     "しにがまえ",
+     "かばねへん",
+     "⽍"
+    ],
+    "vi": [
+     "⽍",
+     "歹"
+    ],
+    "en": [
+     "⽍",
+     "歹",
+     "KANGXI RADICAL DEATH"
+    ],
+    "ko": [
+     "죽을사변"
+    ]
+   }
+  },
+  "Q132715": {
+   "labels": {
+    "zh": "殳部",
+    "en": "Radical 79",
+    "ja": "殳部",
+    "zh-hant": "殳部",
+    "zh-hans": "殳部",
+    "vi": "Bộ Thù (殳)",
+    "ko": "⽎"
+   },
+   "aliases": {
+    "zh-hans": [
+     "殳",
+     "⽎"
+    ],
+    "zh-hant": [
+     "殳",
+     "⽎"
+    ],
+    "zh": [
+     "殳",
+     "⽎"
+    ],
+    "vi": [
+     "⽎",
+     "殳"
+    ],
+    "en": [
+     "⽎",
+     "殳",
+     "KANGXI RADICAL WEAPON"
+    ],
+    "ja": [
+     "⽎",
+     "殳"
+    ],
+    "ko": [
+     "갖은등글월문"
+    ]
+   }
+  },
+  "Q132729": {
+   "labels": {
+    "zh": "毋部",
+    "en": "Radical 80",
+    "ja": "毋部",
+    "zh-hans": "毋部",
+    "zh-hant": "毋部",
+    "ko": "⽏",
+    "vi": "Bộ Vô (毋)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "毋",
+     "⽏"
+    ],
+    "zh-hant": [
+     "毋",
+     "⽏"
+    ],
+    "zh": [
+     "毋",
+     "⽏"
+    ],
+    "vi": [
+     "⽏",
+     "毋"
+    ],
+    "en": [
+     "⽏",
+     "毋",
+     "KANGXI RADICAL DO NOT"
+    ],
+    "ja": [
+     "⽏",
+     "毋"
+    ],
+    "ko": [
+     "말무"
+    ]
+   }
+  },
+  "Q132740": {
+   "labels": {
+    "zh": "比部",
+    "en": "Radical 81",
+    "ja": "比部",
+    "zh-hans": "比部",
+    "zh-hant": "比部",
+    "vi": "Bộ Tỷ (比)",
+    "ko": "⽐"
+   },
+   "aliases": {
+    "zh-hans": [
+     "比",
+     "⽐"
+    ],
+    "zh-hant": [
+     "比",
+     "⽐"
+    ],
+    "zh": [
+     "比",
+     "⽐"
+    ],
+    "vi": [
+     "⽐",
+     "比"
+    ],
+    "en": [
+     "⽐",
+     "比",
+     "KANGXI RADICAL COMPARE"
+    ],
+    "ja": [
+     "⽐",
+     "比"
+    ],
+    "ko": [
+     "견줄비"
+    ]
+   }
+  },
+  "Q132749": {
+   "labels": {
+    "zh": "毛部",
+    "en": "Radical 82",
+    "ja": "毛部",
+    "zh-hans": "毛部",
+    "zh-hant": "毛部",
+    "vi": "Bộ Mao (毛)",
+    "ko": "⽑"
+   },
+   "aliases": {
+    "zh-hans": [
+     "毛",
+     "⽑"
+    ],
+    "zh-hant": [
+     "毛",
+     "⽑"
+    ],
+    "zh": [
+     "毛",
+     "⽑"
+    ],
+    "vi": [
+     "⽑",
+     "毛"
+    ],
+    "en": [
+     "⽑",
+     "毛",
+     "KANGXI RADICAL FUR"
+    ],
+    "ja": [
+     "⽑",
+     "毛"
+    ],
+    "ko": [
+     "털모"
+    ]
+   }
+  },
+  "Q132757": {
+   "labels": {
+    "zh": "氏部",
+    "en": "Radical 83",
+    "ja": "氏部",
+    "zh-hans": "氏部",
+    "zh-hant": "氏部",
+    "vi": "Bộ Thị (氏)",
+    "ko": "⽒"
+   },
+   "aliases": {
+    "zh-hans": [
+     "氏",
+     "⽒"
+    ],
+    "zh-hant": [
+     "氏",
+     "⽒"
+    ],
+    "zh": [
+     "氏",
+     "⽒"
+    ],
+    "vi": [
+     "⽒",
+     "氏"
+    ],
+    "en": [
+     "⽒",
+     "氏",
+     "KANGXI RADICAL CLAN"
+    ],
+    "ja": [
+     "⽒",
+     "氏"
+    ],
+    "ko": [
+     "각시씨"
+    ]
+   }
+  },
+  "Q132764": {
+   "labels": {
+    "zh": "气部",
+    "en": "Radical 84",
+    "ja": "气部",
+    "zh-hans": "气部",
+    "zh-hant": "气部",
+    "vi": "Bộ Khí (气)",
+    "ko": "⽓"
+   },
+   "aliases": {
+    "zh-hans": [
+     "气",
+     "⽓"
+    ],
+    "zh-hant": [
+     "气",
+     "⽓"
+    ],
+    "zh": [
+     "气",
+     "⽓"
+    ],
+    "ja": [
+     "气",
+     "き",
+     "きぶ",
+     "気構",
+     "きがまえ",
+     "⽓"
+    ],
+    "vi": [
+     "⽓",
+     "气"
+    ],
+    "en": [
+     "⽓",
+     "气",
+     "KANGXI RADICAL STEAM"
+    ],
+    "ko": [
+     "기운기엄",
+     "기운기밑"
+    ]
+   }
+  },
+  "Q132780": {
+   "labels": {
+    "zh": "水部",
+    "en": "Kangxi radical 85 (⽔)",
+    "ja": "水部",
+    "zh-hans": "水部",
+    "zh-hant": "水部",
+    "vi": "Bộ Thủy (水)",
+    "ko": "⽔"
+   },
+   "aliases": {
+    "zh-hans": [
+     "水",
+     "⽔",
+     "三点水"
+    ],
+    "zh-hant": [
+     "水",
+     "⽔",
+     "三點水"
+    ],
+    "zh": [
+     "水",
+     "氵",
+     "氺",
+     "⽔"
+    ],
+    "ja": [
+     "水",
+     "氵",
+     "氺",
+     "すいぶ",
+     "みず",
+     "さんずい",
+     "したみず",
+     "⽔"
+    ],
+    "vi": [
+     "⽔",
+     "水"
+    ],
+    "en": [
+     "⽔",
+     "KANGXI RADICAL WATER",
+     "radical 85",
+     "radical water"
+    ],
+    "ko": [
+     "물수"
+    ]
+   }
+  },
+  "Q132788": {
+   "labels": {
+    "zh": "火部",
+    "en": "Kangxi radical 86 (⽕)",
+    "ja": "火部",
+    "zh-hans": "火部",
+    "zh-hant": "火部",
+    "vi": "Bộ Hỏa (火)",
+    "ko": "⽕"
+   },
+   "aliases": {
+    "zh-hans": [
+     "火",
+     "⽕"
+    ],
+    "zh-hant": [
+     "火",
+     "灬",
+     "⽕"
+    ],
+    "zh": [
+     "火",
+     "灬",
+     "⽕"
+    ],
+    "ja": [
+     "火",
+     "灬",
+     "かぶ",
+     "ひ",
+     "ひへん",
+     "れっか",
+     "れんが",
+     "火偏",
+     "⽕"
+    ],
+    "vi": [
+     "⽕",
+     "火"
+    ],
+    "en": [
+     "KANGXI RADICAL FIRE",
+     "⽕",
+     "radical fire",
+     "radical 86"
+    ],
+    "ko": [
+     "불화"
+    ]
+   }
+  },
+  "Q132798": {
+   "labels": {
+    "zh": "爪部",
+    "en": "Radical 87",
+    "ja": "爪部",
+    "zh-hans": "爪部",
+    "zh-hant": "爪部",
+    "vi": "Bộ Trảo (爪)",
+    "ko": "⽖"
+   },
+   "aliases": {
+    "zh-hans": [
+     "爪",
+     "⽖"
+    ],
+    "zh-hant": [
+     "爪",
+     "⽖"
+    ],
+    "zh": [
+     "爪",
+     "⽖"
+    ],
+    "vi": [
+     "⽖",
+     "爪"
+    ],
+    "en": [
+     "⽖",
+     "爪",
+     "KANGXI RADICAL CLAW"
+    ],
+    "ja": [
+     "⽖",
+     "爪"
+    ],
+    "ko": [
+     "손톱조"
+    ]
+   }
+  },
+  "Q132816": {
+   "labels": {
+    "zh": "父部",
+    "en": "Radical 88",
+    "ja": "父部",
+    "zh-hans": "父部",
+    "zh-hant": "父部",
+    "vi": "Bộ Phụ (父)",
+    "ko": "⽗"
+   },
+   "aliases": {
+    "zh-hans": [
+     "父",
+     "⽗"
+    ],
+    "zh-hant": [
+     "父",
+     "⽗"
+    ],
+    "zh": [
+     "父",
+     "⽗"
+    ],
+    "vi": [
+     "⽗",
+     "父"
+    ],
+    "en": [
+     "⽗",
+     "父",
+     "KANGXI RADICAL FATHER"
+    ],
+    "ja": [
+     "⽗",
+     "父"
+    ],
+    "ko": [
+     "아비부",
+     "아비부밑"
+    ]
+   }
+  },
+  "Q142445": {
+   "labels": {
+    "zh": "爻部",
+    "en": "Radical 89",
+    "ja": "爻部",
+    "zh-hans": "爻部",
+    "zh-hant": "爻部",
+    "vi": "Bộ Hào (爻)",
+    "ko": "⽘"
+   },
+   "aliases": {
+    "zh-hans": [
+     "爻",
+     "⽘"
+    ],
+    "zh-hant": [
+     "爻",
+     "⽘"
+    ],
+    "zh": [
+     "爻",
+     "⽘"
+    ],
+    "vi": [
+     "⽘",
+     "爻"
+    ],
+    "en": [
+     "⽘",
+     "爻",
+     "KANGXI RADICAL DOUBLE X"
+    ],
+    "ja": [
+     "⽘",
+     "爻"
+    ],
+    "ko": [
+     "점괘효"
+    ]
+   }
+  },
+  "Q142558": {
+   "labels": {
+    "zh": "爿部",
+    "en": "Radical 90",
+    "ja": "爿部",
+    "zh-hans": "爿部",
+    "zh-hant": "爿部",
+    "vi": "Bộ Tường (爿)",
+    "ko": "⽙"
+   },
+   "aliases": {
+    "zh-hans": [
+     "爿",
+     "⽙"
+    ],
+    "zh-hant": [
+     "爿",
+     "⽙"
+    ],
+    "zh": [
+     "爿",
+     "⽙"
+    ],
+    "vi": [
+     "⽙",
+     "爿"
+    ],
+    "en": [
+     "⽙",
+     "爿",
+     "KANGXI RADICAL HALF TREE TRUNK"
+    ],
+    "ja": [
+     "⽙",
+     "爿"
+    ],
+    "ko": [
+     "장수장변"
+    ]
+   }
+  },
+  "Q142640": {
+   "labels": {
+    "zh": "片部",
+    "en": "Radical 91",
+    "ja": "片部",
+    "zh-hans": "片部",
+    "zh-hant": "片部",
+    "vi": "Bộ Phiến (片)",
+    "ko": "⽚"
+   },
+   "aliases": {
+    "zh-hans": [
+     "片",
+     "⽚"
+    ],
+    "zh-hant": [
+     "片",
+     "⽚"
+    ],
+    "zh": [
+     "片",
+     "⽚"
+    ],
+    "vi": [
+     "⽚",
+     "片"
+    ],
+    "en": [
+     "⽚",
+     "片",
+     "KANGXI RADICAL SLICE"
+    ],
+    "ja": [
+     "⽚",
+     "片"
+    ],
+    "ko": [
+     "조각편"
+    ]
+   }
+  },
+  "Q142719": {
+   "labels": {
+    "zh": "牙部",
+    "en": "Radical 92",
+    "ja": "牙部",
+    "zh-hans": "牙部",
+    "zh-hant": "牙部",
+    "vi": "Bộ Nha (牙)",
+    "ko": "⽛"
+   },
+   "aliases": {
+    "zh-hans": [
+     "牙",
+     "⽛"
+    ],
+    "zh-hant": [
+     "牙",
+     "⽛"
+    ],
+    "zh": [
+     "牙",
+     "⽛"
+    ],
+    "vi": [
+     "⽛",
+     "牙"
+    ],
+    "en": [
+     "⽛",
+     "牙",
+     "KANGXI RADICAL FANG"
+    ],
+    "ja": [
+     "⽛",
+     "牙"
+    ],
+    "ko": [
+     "어금니아"
+    ]
+   }
+  },
+  "Q142797": {
+   "labels": {
+    "zh": "牛部",
+    "en": "Radical 93",
+    "ja": "牛部",
+    "zh-hans": "牛部",
+    "zh-hant": "牛部",
+    "vi": "Bộ Ngưu (牛)",
+    "ko": "⽜"
+   },
+   "aliases": {
+    "zh-hans": [
+     "牛",
+     "牜",
+     "⽜"
+    ],
+    "zh-hant": [
+     "牛",
+     "牜",
+     "⽜"
+    ],
+    "zh": [
+     "牛",
+     "牜",
+     "⽜"
+    ],
+    "ja": [
+     "牛",
+     "牜",
+     "ぎゅうぶ",
+     "うし",
+     "うしへん",
+     "牛偏",
+     "⽜"
+    ],
+    "vi": [
+     "⽜",
+     "牛"
+    ],
+    "en": [
+     "⽜",
+     "牛",
+     "KANGXI RADICAL COW"
+    ],
+    "ko": [
+     "소우"
+    ]
+   }
+  },
+  "Q142910": {
+   "labels": {
+    "zh": "犬部",
+    "en": "Kangxi radical 94 (⽝)",
+    "ja": "犬部",
+    "zh-hans": "犬部",
+    "zh-hant": "犬部",
+    "vi": "Bộ Khuyển (犬)",
+    "ko": "⽝"
+   },
+   "aliases": {
+    "zh-hans": [
+     "犬",
+     "犭",
+     "⽝"
+    ],
+    "zh-hant": [
+     "犬",
+     "犭",
+     "⽝"
+    ],
+    "zh": [
+     "犬",
+     "犭",
+     "⽝"
+    ],
+    "ja": [
+     "犬",
+     "犭",
+     "けんぶ",
+     "いぬ",
+     "けものへん",
+     "⽝",
+     "獣偏"
+    ],
+    "vi": [
+     "⽝",
+     "犬"
+    ],
+    "en": [
+     "KANGXI RADICAL DOG",
+     "⽝",
+     "radical dog",
+     "radical 94"
+    ],
+    "ko": [
+     "개견"
+    ]
+   }
+  },
+  "Q142984": {
+   "labels": {
+    "zh": "玄部",
+    "en": "Kangxi radical 95 (⽞)",
+    "ja": "玄部",
+    "zh-hans": "玄部",
+    "zh-hant": "玄部",
+    "vi": "Bộ Huyền (玄)",
+    "ko": "⽞"
+   },
+   "aliases": {
+    "zh-hans": [
+     "玄",
+     "⽞"
+    ],
+    "zh-hant": [
+     "玄",
+     "⽞"
+    ],
+    "zh": [
+     "玄",
+     "⽞"
+    ],
+    "vi": [
+     "⽞",
+     "玄"
+    ],
+    "en": [
+     "⽞",
+     "KANGXI RADICAL PROFOUND",
+     "radical profound",
+     "radical dark",
+     "radical gloomy",
+     "radical mysterious",
+     "radical 95"
+    ],
+    "ja": [
+     "⽞",
+     "玄"
+    ],
+    "ko": [
+     "검을현"
+    ]
+   }
+  },
+  "Q143037": {
+   "labels": {
+    "zh": "玉部",
+    "en": "Kangxi radical 96 (⽟)",
+    "ja": "玉部",
+    "zh-hans": "玉部",
+    "zh-hant": "玉部",
+    "vi": "Bộ Ngọc (玉)",
+    "ko": "⽟"
+   },
+   "aliases": {
+    "zh-hans": [
+     "玉",
+     "⽟"
+    ],
+    "zh-hant": [
+     "玉",
+     "⽟"
+    ],
+    "zh": [
+     "玉",
+     "王部",
+     "王",
+     "玊",
+     "⽟"
+    ],
+    "ja": [
+     "玉",
+     "王",
+     "玊",
+     "王部",
+     "ぎょく",
+     "ぎょくぶ",
+     "おうぶ",
+     "玉偏",
+     "たまへん",
+     "王偏",
+     "おうへん",
+     "⽟"
+    ],
+    "vi": [
+     "⽟",
+     "玉"
+    ],
+    "en": [
+     "KANGXI RADICAL JADE",
+     "⽟",
+     "radical jade",
+     "radical 96"
+    ],
+    "ko": [
+     "구슬옥"
+    ]
+   }
+  },
+  "Q143135": {
+   "labels": {
+    "zh": "瓜部",
+    "en": "Radical 97",
+    "ja": "瓜部",
+    "zh-hans": "瓜部",
+    "zh-hant": "瓜部",
+    "vi": "Bộ Qua (瓜)",
+    "ko": "⽠"
+   },
+   "aliases": {
+    "zh-hans": [
+     "瓜",
+     "⽠"
+    ],
+    "zh-hant": [
+     "瓜",
+     "⽠"
+    ],
+    "zh": [
+     "瓜",
+     "⽠"
+    ],
+    "vi": [
+     "⽠",
+     "瓜"
+    ],
+    "en": [
+     "⽠",
+     "瓜",
+     "KANGXI RADICAL MELON"
+    ],
+    "ja": [
+     "⽠",
+     "瓜"
+    ],
+    "ko": [
+     "오이과",
+     "외과"
+    ]
+   }
+  },
+  "Q143184": {
+   "labels": {
+    "zh": "瓦部",
+    "en": "Radical 98",
+    "ja": "瓦部",
+    "zh-hans": "瓦部",
+    "zh-hant": "瓦部",
+    "vi": "Bộ Ngõa (瓦)",
+    "ko": "⽡"
+   },
+   "aliases": {
+    "zh-hans": [
+     "瓦",
+     "⽡"
+    ],
+    "zh-hant": [
+     "瓦",
+     "⽡"
+    ],
+    "zh": [
+     "瓦",
+     "⽡"
+    ],
+    "vi": [
+     "⽡",
+     "瓦"
+    ],
+    "en": [
+     "⽡",
+     "瓦",
+     "KANGXI RADICAL TILE"
+    ],
+    "ja": [
+     "⽡",
+     "瓦"
+    ],
+    "ko": [
+     "기와와"
+    ]
+   }
+  },
+  "Q143259": {
+   "labels": {
+    "zh": "甘部",
+    "en": "Radical 99",
+    "ja": "甘部",
+    "zh-hans": "甘部",
+    "zh-hant": "甘部",
+    "vi": "Bộ Cam (甘)",
+    "ko": "⽢"
+   },
+   "aliases": {
+    "zh-hans": [
+     "甘",
+     "⽢"
+    ],
+    "zh-hant": [
+     "甘",
+     "⽢"
+    ],
+    "zh": [
+     "甘",
+     "⽢"
+    ],
+    "vi": [
+     "⽢",
+     "甘"
+    ],
+    "en": [
+     "⽢",
+     "甘",
+     "KANGXI RADICAL SWEET"
+    ],
+    "ja": [
+     "⽢",
+     "甘"
+    ],
+    "ko": [
+     "달감"
+    ]
+   }
+  },
+  "Q143327": {
+   "labels": {
+    "zh": "生部",
+    "en": "Radical 100",
+    "ja": "生部",
+    "zh-hant": "生部",
+    "zh-hans": "生部",
+    "vi": "Bộ Sinh (生)",
+    "ko": "⽣"
+   },
+   "aliases": {
+    "zh-hant": [
+     "生",
+     "⽣"
+    ],
+    "zh-hans": [
+     "生",
+     "⽣"
+    ],
+    "zh": [
+     "生",
+     "⽣"
+    ],
+    "en": [
+     "radical life",
+     "⽣",
+     "生",
+     "KANGXI RADICAL LIFE"
+    ],
+    "vi": [
+     "⽣",
+     "生"
+    ],
+    "ja": [
+     "⽣",
+     "生"
+    ],
+    "ko": [
+     "날생"
+    ]
+   }
+  },
+  "Q143445": {
+   "labels": {
+    "zh": "用部",
+    "en": "Radical 101",
+    "ja": "用部",
+    "zh-hans": "用部",
+    "zh-hant": "用部",
+    "vi": "Bộ Dụng (用)",
+    "ko": "⽤"
+   },
+   "aliases": {
+    "zh-hans": [
+     "用",
+     "⽤"
+    ],
+    "zh-hant": [
+     "用",
+     "⽤"
+    ],
+    "zh": [
+     "用",
+     "⽤"
+    ],
+    "vi": [
+     "⽤",
+     "用"
+    ],
+    "en": [
+     "⽤",
+     "用",
+     "KANGXI RADICAL USE"
+    ],
+    "ja": [
+     "⽤",
+     "用"
+    ],
+    "ko": [
+     "쓸용"
+    ]
+   }
+  },
+  "Q143604": {
+   "labels": {
+    "zh": "田部",
+    "en": "Kangxi radical 102 (⽥)",
+    "ja": "田部",
+    "zh-hans": "田部",
+    "zh-hant": "田部",
+    "vi": "Bộ Điền (田)",
+    "ko": "⽥"
+   },
+   "aliases": {
+    "zh-hans": [
+     "田",
+     "⽥"
+    ],
+    "zh-hant": [
+     "田",
+     "⽥"
+    ],
+    "zh": [
+     "田",
+     "⽥"
+    ],
+    "vi": [
+     "⽥",
+     "田"
+    ],
+    "en": [
+     "KANGXI RADICAL FIELD",
+     "⽥",
+     "radical field",
+     "radical 102"
+    ],
+    "ja": [
+     "⽥",
+     "田"
+    ],
+    "ko": [
+     "밭전"
+    ]
+   }
+  },
+  "Q143685": {
+   "labels": {
+    "zh": "疋部",
+    "en": "Radical 103",
+    "ja": "疋部",
+    "zh-hans": "疋部",
+    "zh-hant": "疋部",
+    "vi": "Bộ Thất (疋)",
+    "ko": "⽦"
+   },
+   "aliases": {
+    "zh-hans": [
+     "疋",
+     "⺪",
+     "⽦"
+    ],
+    "zh-hant": [
+     "疋",
+     "⺪",
+     "⽦"
+    ],
+    "zh": [
+     "疋",
+     "⺪",
+     "⽦"
+    ],
+    "vi": [
+     "⽦",
+     "疋"
+    ],
+    "en": [
+     "⽦",
+     "疋",
+     "KANGXI RADICAL BOLT OF CLOTH"
+    ],
+    "ja": [
+     "⽦",
+     "疋"
+    ],
+    "ko": [
+     "짝필",
+     "필필"
+    ]
+   }
+  },
+  "Q143822": {
+   "labels": {
+    "zh": "疒部",
+    "en": "Radical 104",
+    "ja": "疒部",
+    "zh-hans": "疒部",
+    "zh-hant": "疒部",
+    "vi": "Bộ Nạch (疒)",
+    "ko": "⽧"
+   },
+   "aliases": {
+    "zh-hans": [
+     "疒",
+     "⽧"
+    ],
+    "zh-hant": [
+     "疒",
+     "⽧"
+    ],
+    "zh": [
+     "疒",
+     "⽧"
+    ],
+    "ja": [
+     "ダク部",
+     "疒",
+     "だくぶ",
+     "やまいだれ",
+     "⽧"
+    ],
+    "vi": [
+     "⽧",
+     "疒"
+    ],
+    "en": [
+     "⽧",
+     "疒",
+     "KANGXI RADICAL SICKNESS"
+    ],
+    "ko": [
+     "병질엄",
+     "병질밑",
+     "병질안"
+    ]
+   }
+  },
+  "Q143891": {
+   "labels": {
+    "zh": "癶部",
+    "en": "Kangxi radical 105 (⽨)",
+    "ja": "癶部",
+    "zh-hans": "癶部",
+    "zh-hant": "癶部",
+    "vi": "Bộ Bát (癶)",
+    "ko": "⽨"
+   },
+   "aliases": {
+    "zh-hans": [
+     "癶",
+     "⽨"
+    ],
+    "zh-hant": [
+     "癶",
+     "⽨"
+    ],
+    "zh": [
+     "癶",
+     "⽨"
+    ],
+    "vi": [
+     "⽨",
+     "癶"
+    ],
+    "en": [
+     "⽨",
+     "KANGXI RADICAL DOTTED TENT",
+     "radical tent",
+     "radical 105"
+    ],
+    "ja": [
+     "⽨",
+     "癶"
+    ],
+    "ko": [
+     "필발머리",
+     "필발밑"
+    ]
+   }
+  },
+  "Q143966": {
+   "labels": {
+    "zh": "白部",
+    "en": "Kangxi radical 106 (⽩)",
+    "ja": "白部",
+    "zh-hans": "白部",
+    "zh-hant": "白部",
+    "vi": "Bộ Bạch (白)",
+    "ko": "⽩"
+   },
+   "aliases": {
+    "zh-hans": [
+     "白",
+     "⽩"
+    ],
+    "zh-hant": [
+     "白",
+     "⽩"
+    ],
+    "zh": [
+     "白",
+     "⽩"
+    ],
+    "vi": [
+     "⽩",
+     "白"
+    ],
+    "en": [
+     "KANGXI RADICAL WHITE",
+     "radical white",
+     "radical 106"
+    ],
+    "ja": [
+     "⽩",
+     "白"
+    ],
+    "ko": [
+     "흰백"
+    ]
+   }
+  },
+  "Q144071": {
+   "labels": {
+    "zh": "皮部",
+    "en": "Radical 107",
+    "ja": "皮部",
+    "zh-hans": "皮部",
+    "zh-hant": "皮部",
+    "vi": "Bộ Bì (皮)",
+    "ko": "⽪"
+   },
+   "aliases": {
+    "zh-hans": [
+     "皮",
+     "⽪"
+    ],
+    "zh-hant": [
+     "皮",
+     "⽪"
+    ],
+    "zh": [
+     "皮",
+     "⽪"
+    ],
+    "vi": [
+     "⽪",
+     "皮"
+    ],
+    "en": [
+     "⽪",
+     "皮",
+     "KANGXI RADICAL SKIN"
+    ],
+    "ja": [
+     "⽪",
+     "皮"
+    ],
+    "ko": [
+     "가죽피"
+    ]
+   }
+  },
+  "Q144173": {
+   "labels": {
+    "zh": "皿部",
+    "en": "Radical 108",
+    "ja": "皿部",
+    "zh-hans": "皿部",
+    "zh-hant": "皿部",
+    "vi": "Bộ Mãnh (皿)",
+    "ko": "⽫"
+   },
+   "aliases": {
+    "zh-hans": [
+     "皿",
+     "⽫"
+    ],
+    "zh-hant": [
+     "皿",
+     "⽫"
+    ],
+    "zh": [
+     "皿",
+     "⽫"
+    ],
+    "vi": [
+     "⽫",
+     "皿"
+    ],
+    "en": [
+     "⽫",
+     "皿",
+     "KANGXI RADICAL DISH"
+    ],
+    "ja": [
+     "⽫",
+     "皿"
+    ],
+    "ko": [
+     "그릇명"
+    ]
+   }
+  },
+  "Q144254": {
+   "labels": {
+    "zh": "目部",
+    "en": "Kanxi radical 109 (⽬)",
+    "ja": "目部",
+    "zh-hans": "目部",
+    "zh-hant": "目部",
+    "vi": "Bộ Mục (目)",
+    "ko": "⽬"
+   },
+   "aliases": {
+    "zh-hans": [
+     "目",
+     "⽬"
+    ],
+    "zh-hant": [
+     "目",
+     "⽬"
+    ],
+    "zh": [
+     "目",
+     "⽬"
+    ],
+    "vi": [
+     "⽬",
+     "目"
+    ],
+    "en": [
+     "KANGXI RADICAL EYE",
+     "⽬",
+     "radical eye",
+     "radical 109"
+    ],
+    "ja": [
+     "⽬",
+     "目"
+    ],
+    "ko": [
+     "눈목"
+    ]
+   }
+  },
+  "Q144335": {
+   "labels": {
+    "zh": "矛部",
+    "en": "Radical 110",
+    "ja": "矛部",
+    "zh-hans": "矛部",
+    "zh-hant": "矛部",
+    "vi": "Bộ Mâu (矛)",
+    "ko": "⽭"
+   },
+   "aliases": {
+    "zh-hans": [
+     "矛",
+     "⽭"
+    ],
+    "zh-hant": [
+     "矛",
+     "⽭"
+    ],
+    "zh": [
+     "矛",
+     "⽭"
+    ],
+    "vi": [
+     "⽭",
+     "矛"
+    ],
+    "en": [
+     "⽭",
+     "矛",
+     "KANGXI RADICAL SPEAR"
+    ],
+    "ja": [
+     "⽭",
+     "矛"
+    ],
+    "ko": [
+     "창모"
+    ]
+   }
+  },
+  "Q144443": {
+   "labels": {
+    "zh": "矢部",
+    "en": "Kangxi radical 111 (⽮)",
+    "ja": "矢部",
+    "zh-hans": "矢部",
+    "zh-hant": "矢部",
+    "vi": "Bộ Thỉ (矢)",
+    "ko": "⽮"
+   },
+   "aliases": {
+    "zh-hans": [
+     "矢",
+     "⽮"
+    ],
+    "zh-hant": [
+     "矢",
+     "⽮"
+    ],
+    "zh": [
+     "矢",
+     "⽮"
+    ],
+    "vi": [
+     "⽮",
+     "矢"
+    ],
+    "en": [
+     "KANGXI RADICAL ARROW",
+     "⽮",
+     "radical arrow",
+     "radical 111"
+    ],
+    "ja": [
+     "⽮",
+     "矢"
+    ],
+    "ko": [
+     "화살시"
+    ]
+   }
+  },
+  "Q144546": {
+   "labels": {
+    "zh": "石部",
+    "en": "Kangxi radical 112 (⽯)",
+    "ja": "石部",
+    "zh-hans": "石部",
+    "zh-hant": "石部",
+    "vi": "Bộ Thạch (石)",
+    "ko": "⽯"
+   },
+   "aliases": {
+    "zh-hans": [
+     "石",
+     "⽯"
+    ],
+    "zh-hant": [
+     "石",
+     "⽯"
+    ],
+    "zh": [
+     "石",
+     "⽯"
+    ],
+    "en": [
+     "KANGXI RADICAL STONE",
+     "⽯",
+     "radical stone",
+     "radical 112"
+    ],
+    "vi": [
+     "⽯",
+     "石"
+    ],
+    "ja": [
+     "⽯",
+     "石"
+    ],
+    "ko": [
+     "돌석"
+    ]
+   }
+  },
+  "Q144674": {
+   "labels": {
+    "zh": "示部",
+    "en": "Radical 113",
+    "ja": "示部",
+    "zh-hans": "示部",
+    "zh-hant": "示部",
+    "vi": "Bộ Thị (示)",
+    "ko": "⽰"
+   },
+   "aliases": {
+    "zh-hans": [
+     "示",
+     "礻",
+     "⽰"
+    ],
+    "zh-hant": [
+     "示",
+     "礻",
+     "⽰"
+    ],
+    "zh": [
+     "示",
+     "礻",
+     "⽰"
+    ],
+    "vi": [
+     "⽰",
+     "示"
+    ],
+    "en": [
+     "⽰",
+     "示",
+     "KANGXI RADICAL SPIRIT"
+    ],
+    "ja": [
+     "⽰",
+     "示"
+    ],
+    "ko": [
+     "보일시"
+    ]
+   }
+  },
+  "Q144761": {
+   "labels": {
+    "zh": "禸部",
+    "en": "Radical 114",
+    "ja": "禸部",
+    "zh-hans": "禸部",
+    "zh-hant": "禸部",
+    "vi": "Bộ Nhựu (禸)",
+    "ko": "⽱"
+   },
+   "aliases": {
+    "zh-hans": [
+     "禸",
+     "⽱"
+    ],
+    "zh-hant": [
+     "禸",
+     "⽱"
+    ],
+    "zh": [
+     "禸",
+     "⽱"
+    ],
+    "ja": [
+     "ジュウ部",
+     "ぐうのあし",
+     "じゅう",
+     "⽱",
+     "禸"
+    ],
+    "vi": [
+     "⽱",
+     "禸"
+    ],
+    "en": [
+     "⽱",
+     "禸",
+     "KANGXI RADICAL TRACK"
+    ],
+    "ko": [
+     "짐승발자국유",
+     "자귀유"
+    ]
+   }
+  },
+  "Q144817": {
+   "labels": {
+    "zh": "禾部",
+    "en": "Radical 115",
+    "ja": "禾部",
+    "zh-hans": "禾部",
+    "zh-hant": "禾部",
+    "vi": "Bộ Hòa (禾)",
+    "ko": "⽲"
+   },
+   "aliases": {
+    "zh-hans": [
+     "禾",
+     "⽲"
+    ],
+    "zh-hant": [
+     "禾",
+     "⽲"
+    ],
+    "zh": [
+     "禾",
+     "⽲"
+    ],
+    "ja": [
+     "禾",
+     "かぶ",
+     "いね",
+     "いねへん",
+     "のぎ",
+     "のぎへん",
+     "⽲"
+    ],
+    "vi": [
+     "⽲",
+     "禾"
+    ],
+    "en": [
+     "⽲",
+     "禾",
+     "KANGXI RADICAL GRAIN"
+    ],
+    "ko": [
+     "벼화"
+    ]
+   }
+  },
+  "Q144944": {
+   "labels": {
+    "zh": "穴部",
+    "en": "Radical 116",
+    "ja": "穴部",
+    "zh-hans": "穴部",
+    "zh-hant": "穴部",
+    "vi": "Bộ Huyệt (穴)",
+    "ko": "⽳"
+   },
+   "aliases": {
+    "zh-hans": [
+     "穴",
+     "⽳"
+    ],
+    "zh-hant": [
+     "穴",
+     "⽳"
+    ],
+    "zh": [
+     "穴",
+     "⽳"
+    ],
+    "vi": [
+     "⽳",
+     "穴"
+    ],
+    "en": [
+     "⽳",
+     "穴",
+     "KANGXI RADICAL CAVE"
+    ],
+    "ja": [
+     "⽳",
+     "穴"
+    ],
+    "ko": [
+     "구멍혈"
+    ]
+   }
+  },
+  "Q145079": {
+   "labels": {
+    "zh": "立部",
+    "en": "Kangxi radical 117 (⽴)",
+    "ja": "立部",
+    "zh-hans": "立部",
+    "zh-hant": "立部",
+    "vi": "Bộ Lập (立)",
+    "ko": "⽴"
+   },
+   "aliases": {
+    "zh-hans": [
+     "立",
+     "⽴"
+    ],
+    "zh-hant": [
+     "立",
+     "⽴"
+    ],
+    "zh": [
+     "立",
+     "⽴"
+    ],
+    "vi": [
+     "⽴",
+     "立"
+    ],
+    "en": [
+     "U+2F74",
+     "⽴",
+     "KANGXI RADICAL STAND",
+     "radical 117",
+     "radical stand"
+    ],
+    "ja": [
+     "⽴",
+     "立"
+    ],
+    "ko": [
+     "설립"
+    ]
+   }
+  },
+  "Q156615": {
+   "labels": {
+    "zh": "竹部",
+    "en": "Kangxi radical 118 (⽵)",
+    "ja": "竹部",
+    "zh-hans": "竹部",
+    "zh-hant": "竹部",
+    "vi": "Bộ Trúc (竹)",
+    "ko": "⽵"
+   },
+   "aliases": {
+    "zh-hans": [
+     "竹",
+     "⽵"
+    ],
+    "zh-hant": [
+     "竹",
+     "⽵"
+    ],
+    "zh": [
+     "竹",
+     "⽵"
+    ],
+    "vi": [
+     "⽵",
+     "竹"
+    ],
+    "en": [
+     "U+2F75",
+     "⽵",
+     "KANGXI RADICAL BAMBOO",
+     "radical 118",
+     "radical bamboo"
+    ],
+    "ja": [
+     "⽵",
+     "竹"
+    ],
+    "ko": [
+     "대죽"
+    ]
+   }
+  },
+  "Q156653": {
+   "labels": {
+    "zh": "米部",
+    "en": "Kangxi radical 119 (⽶)",
+    "ja": "米部",
+    "zh-hans": "米部",
+    "zh-hant": "米部",
+    "vi": "Bộ Mễ (米)",
+    "ko": "⽶"
+   },
+   "aliases": {
+    "zh-hans": [
+     "米",
+     "⽶"
+    ],
+    "zh-hant": [
+     "米",
+     "⽶"
+    ],
+    "zh": [
+     "米",
+     "⽶"
+    ],
+    "vi": [
+     "米",
+     "⽶"
+    ],
+    "en": [
+     "⽶",
+     "KANGXI RADICAL RICE",
+     "radical rice",
+     "radical 119"
+    ],
+    "ja": [
+     "⽶",
+     "米"
+    ],
+    "ko": [
+     "쌀미"
+    ]
+   }
+  },
+  "Q156667": {
+   "labels": {
+    "zh": "糸部",
+    "en": "Kangxi radical 120 (⽷)",
+    "ja": "糸部",
+    "zh-hans": "糸部",
+    "zh-hant": "糸部",
+    "vi": "Bộ Mịch (糸)",
+    "ko": "⽷"
+   },
+   "aliases": {
+    "zh-hans": [
+     "绞丝旁",
+     "糸",
+     "纟",
+     "⽷"
+    ],
+    "zh-hant": [
+     "絞絲旁",
+     "糸",
+     "⺯",
+     "⽷"
+    ],
+    "zh": [
+     "絞絲旁",
+     "糸",
+     "纟",
+     "⽷"
+    ],
+    "vi": [
+     "⽷",
+     "糸"
+    ],
+    "en": [
+     "KANGXI RADICAL SILK",
+     "⽷",
+     "radical 120",
+     "radical silk"
+    ],
+    "ja": [
+     "⽷",
+     "糸"
+    ],
+    "ko": [
+     "실사"
+    ]
+   }
+  },
+  "Q156706": {
+   "labels": {
+    "zh": "缶部",
+    "en": "Radical 121",
+    "ja": "缶部",
+    "zh-hans": "缶部",
+    "zh-hant": "缶部",
+    "vi": "Bộ Phẫu (缶)",
+    "ko": "⽸"
+   },
+   "aliases": {
+    "zh-hans": [
+     "缶",
+     "⽸"
+    ],
+    "zh-hant": [
+     "缶",
+     "⽸"
+    ],
+    "zh": [
+     "缶",
+     "⽸"
+    ],
+    "vi": [
+     "⽸",
+     "缶"
+    ],
+    "en": [
+     "⽸",
+     "缶",
+     "KANGXI RADICAL JAR"
+    ],
+    "ja": [
+     "⽸",
+     "缶"
+    ],
+    "ko": [
+     "장군부"
+    ]
+   }
+  },
+  "Q156727": {
+   "labels": {
+    "zh": "网部",
+    "en": "Kanxi radical 122 (⽹)",
+    "ja": "网部",
+    "zh-hans": "网部",
+    "zh-hant": "网部",
+    "vi": "Bộ Võng (网)",
+    "ko": "⽹"
+   },
+   "aliases": {
+    "zh-hans": [
+     "网",
+     "⽹"
+    ],
+    "zh-hant": [
+     "网",
+     "⽹"
+    ],
+    "zh": [
+     "网",
+     "⽹"
+    ],
+    "vi": [
+     "⽹",
+     "网"
+    ],
+    "en": [
+     "KANGXI RADICAL NET",
+     "⽹",
+     "radical 122",
+     "radical net"
+    ],
+    "ja": [
+     "⽹",
+     "网"
+    ],
+    "ko": [
+     "그물망"
+    ]
+   }
+  },
+  "Q156756": {
+   "labels": {
+    "zh": "羊部",
+    "en": "Radical 123",
+    "ja": "羊部",
+    "zh-hans": "羊部",
+    "zh-hant": "羊部",
+    "vi": "Bộ Dương (羊)",
+    "ko": "⽺"
+   },
+   "aliases": {
+    "zh-hans": [
+     "羊",
+     "⽺"
+    ],
+    "zh-hant": [
+     "羊",
+     "⽺"
+    ],
+    "zh": [
+     "羊",
+     "⽺"
+    ],
+    "vi": [
+     "⽺",
+     "羊"
+    ],
+    "en": [
+     "⽺",
+     "羊",
+     "KANGXI RADICAL SHEEP"
+    ],
+    "ja": [
+     "⽺",
+     "羊"
+    ],
+    "ko": [
+     "양양"
+    ]
+   }
+  },
+  "Q156782": {
+   "labels": {
+    "zh": "羽部",
+    "en": "Radical 124",
+    "ja": "羽部",
+    "zh-hans": "羽部",
+    "zh-hant": "羽部",
+    "vi": "Bộ Vũ (羽)",
+    "ko": "⽻"
+   },
+   "aliases": {
+    "zh-hans": [
+     "羽",
+     "⽻"
+    ],
+    "zh-hant": [
+     "羽",
+     "⽻"
+    ],
+    "zh": [
+     "羽",
+     "⽻"
+    ],
+    "vi": [
+     "⽻",
+     "羽"
+    ],
+    "en": [
+     "⽻",
+     "羽",
+     "KANGXI RADICAL FEATHER"
+    ],
+    "ja": [
+     "⽻",
+     "羽"
+    ],
+    "ko": [
+     "깃우"
+    ]
+   }
+  },
+  "Q156817": {
+   "labels": {
+    "zh": "老部",
+    "en": "Kangxi radical 125 (⽼)",
+    "ja": "老部",
+    "zh-hans": "老部",
+    "zh-hant": "老部",
+    "vi": "Bộ Lão (老)",
+    "ko": "⽼"
+   },
+   "aliases": {
+    "zh-hans": [
+     "老",
+     "⽼"
+    ],
+    "zh-hant": [
+     "老",
+     "⽼"
+    ],
+    "zh": [
+     "老",
+     "⽼"
+    ],
+    "vi": [
+     "⽼",
+     "老"
+    ],
+    "en": [
+     "KANGXI RADICAL OLD",
+     "⽼",
+     "radical old",
+     "radical 125"
+    ],
+    "ja": [
+     "⽼",
+     "老"
+    ],
+    "ko": [
+     "늙을로"
+    ]
+   }
+  },
+  "Q156842": {
+   "labels": {
+    "zh": "而部",
+    "en": "Radical 126",
+    "ja": "而部",
+    "zh-hans": "而部",
+    "zh-hant": "而部",
+    "vi": "Bộ Nhi (而)",
+    "ko": "⽽"
+   },
+   "aliases": {
+    "zh-hans": [
+     "而",
+     "⽽"
+    ],
+    "zh-hant": [
+     "而",
+     "⽽"
+    ],
+    "zh": [
+     "而",
+     "⽽"
+    ],
+    "vi": [
+     "⽽",
+     "而"
+    ],
+    "en": [
+     "⽽",
+     "而",
+     "KANGXI RADICAL AND"
+    ],
+    "ja": [
+     "⽽",
+     "而"
+    ],
+    "ko": [
+     "말이을이"
+    ]
+   }
+  },
+  "Q156867": {
+   "labels": {
+    "zh": "耒部",
+    "en": "Radical 127",
+    "ja": "耒部",
+    "zh-hans": "耒部",
+    "zh-hant": "耒部",
+    "vi": "Bộ Lỗi (耒)",
+    "ko": "⽾"
+   },
+   "aliases": {
+    "zh-hans": [
+     "耒",
+     "⽾"
+    ],
+    "zh-hant": [
+     "耒",
+     "⽾"
+    ],
+    "zh": [
+     "耒",
+     "⽾"
+    ],
+    "vi": [
+     "⽾",
+     "耒"
+    ],
+    "en": [
+     "⽾",
+     "耒",
+     "KANGXI RADICAL PLOW"
+    ],
+    "ja": [
+     "⽾",
+     "耒"
+    ],
+    "ko": [
+     "가래뢰",
+     "쟁기뢰"
+    ]
+   }
+  },
+  "Q156880": {
+   "labels": {
+    "zh": "耳部",
+    "en": "Radical 128",
+    "ja": "耳部",
+    "zh-hans": "耳部",
+    "zh-hant": "耳部",
+    "vi": "Bộ Nhĩ (耳)",
+    "ko": "⽿"
+   },
+   "aliases": {
+    "zh-hans": [
+     "耳",
+     "⽿"
+    ],
+    "zh-hant": [
+     "耳",
+     "⽿"
+    ],
+    "zh": [
+     "耳",
+     "⽿"
+    ],
+    "vi": [
+     "⽿",
+     "耳"
+    ],
+    "en": [
+     "⽿",
+     "耳",
+     "KANGXI RADICAL EAR"
+    ],
+    "ja": [
+     "⽿",
+     "耳"
+    ],
+    "ko": [
+     "귀이"
+    ]
+   }
+  },
+  "Q156899": {
+   "labels": {
+    "zh": "聿部",
+    "en": "Radical 129",
+    "ja": "聿部",
+    "zh-hans": "聿部",
+    "zh-hant": "聿部",
+    "vi": "Bộ Duật (聿)",
+    "ko": "⾀"
+   },
+   "aliases": {
+    "zh-hans": [
+     "聿",
+     "⾀",
+     "⺺",
+     "⺻"
+    ],
+    "zh-hant": [
+     "聿",
+     "⾀",
+     "⺺",
+     "⺻"
+    ],
+    "zh": [
+     "聿",
+     "⾀",
+     "⺺",
+     "⺻"
+    ],
+    "vi": [
+     "⾀",
+     "聿"
+    ],
+    "en": [
+     "⾀",
+     "聿",
+     "KANGXI RADICAL BRUSH"
+    ],
+    "ja": [
+     "⾀",
+     "聿"
+    ],
+    "ko": [
+     "붓율"
+    ]
+   }
+  },
+  "Q156920": {
+   "labels": {
+    "zh": "肉部",
+    "en": "Kangxi radical 130 (⾁)",
+    "ja": "肉部",
+    "zh-hans": "肉部",
+    "zh-hant": "肉部",
+    "ko": "⾁",
+    "vi": "Bộ Nhục (肉)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "肉",
+     "⾁",
+     "⺼"
+    ],
+    "zh-hant": [
+     "肉",
+     "⾁",
+     "⺼"
+    ],
+    "zh": [
+     "肉",
+     "⾁",
+     "⺼"
+    ],
+    "ja": [
+     "肉",
+     "⺼",
+     "月",
+     "にくぶ",
+     "にく",
+     "にくづき",
+     "⾁"
+    ],
+    "vi": [
+     "⾁",
+     "肉"
+    ],
+    "en": [
+     "⾁",
+     "肉",
+     "KANGXI RADICAL MEAT",
+     "radical 130"
+    ],
+    "ko": [
+     "고기육"
+    ]
+   }
+  },
+  "Q156950": {
+   "labels": {
+    "zh": "臣部",
+    "en": "Radical 131",
+    "ja": "臣部",
+    "zh-hans": "臣部",
+    "zh-hant": "臣部",
+    "vi": "Bộ Thần (臣)",
+    "ko": "⾂"
+   },
+   "aliases": {
+    "zh-hans": [
+     "臣",
+     "⾂"
+    ],
+    "zh-hant": [
+     "臣",
+     "⾂"
+    ],
+    "zh": [
+     "臣",
+     "⾂"
+    ],
+    "vi": [
+     "⾂",
+     "臣"
+    ],
+    "en": [
+     "⾂",
+     "臣",
+     "KANGXI RADICAL MINISTER"
+    ],
+    "ja": [
+     "⾂",
+     "臣"
+    ],
+    "ko": [
+     "신하신"
+    ]
+   }
+  },
+  "Q156978": {
+   "labels": {
+    "zh": "自部",
+    "en": "Radical 132",
+    "ja": "自部",
+    "zh-hans": "自部",
+    "zh-hant": "自部",
+    "vi": "Bộ Tự (自)",
+    "ko": "⾃"
+   },
+   "aliases": {
+    "zh-hans": [
+     "自",
+     "⾃"
+    ],
+    "zh-hant": [
+     "自",
+     "⾃"
+    ],
+    "zh": [
+     "自",
+     "⾃"
+    ],
+    "vi": [
+     "⾃",
+     "自"
+    ],
+    "en": [
+     "⾃",
+     "自",
+     "KANGXI RADICAL SELF"
+    ],
+    "ja": [
+     "⾃",
+     "自"
+    ],
+    "ko": [
+     "스스로자"
+    ]
+   }
+  },
+  "Q156992": {
+   "labels": {
+    "zh": "至部",
+    "en": "Kangxi radical 133 (⾄)",
+    "ja": "至部",
+    "zh-hans": "至部",
+    "zh-hant": "至部",
+    "vi": "Bộ Chí (至)",
+    "ko": "⾄"
+   },
+   "aliases": {
+    "zh-hans": [
+     "至",
+     "⾄"
+    ],
+    "zh-hant": [
+     "至",
+     "⾄"
+    ],
+    "zh": [
+     "至",
+     "⾄"
+    ],
+    "vi": [
+     "⾄",
+     "至"
+    ],
+    "en": [
+     "KANGXI RADICAL ARRIVE",
+     "⾄",
+     "radical arrive",
+     "radical 133"
+    ],
+    "ja": [
+     "⾄",
+     "至"
+    ],
+    "ko": [
+     "이를지"
+    ]
+   }
+  },
+  "Q157007": {
+   "labels": {
+    "zh": "臼部",
+    "en": "Kanxi radical 134 (⾅)",
+    "ja": "臼部",
+    "zh-hans": "臼部",
+    "zh-hant": "臼部",
+    "vi": "Bộ Cữu (臼)",
+    "ko": "⾅"
+   },
+   "aliases": {
+    "zh-hans": [
+     "臼",
+     "⾅"
+    ],
+    "zh-hant": [
+     "臼",
+     "⾅"
+    ],
+    "zh": [
+     "臼",
+     "⾅"
+    ],
+    "vi": [
+     "⾅",
+     "臼"
+    ],
+    "en": [
+     "KANGXI RADICAL MORTAR",
+     "⾅",
+     "radical mortar",
+     "radical 134"
+    ],
+    "ja": [
+     "⾅",
+     "臼"
+    ],
+    "ko": [
+     "절구구"
+    ]
+   }
+  },
+  "Q157025": {
+   "labels": {
+    "zh": "舌部",
+    "en": "Radical 135",
+    "ja": "舌部",
+    "zh-hans": "舌部",
+    "zh-hant": "舌部",
+    "vi": "Bộ Thiệt (舌)",
+    "ko": "⾆"
+   },
+   "aliases": {
+    "zh-hans": [
+     "舌",
+     "⾆"
+    ],
+    "zh-hant": [
+     "舌",
+     "⾆"
+    ],
+    "zh": [
+     "舌",
+     "⾆"
+    ],
+    "vi": [
+     "⾆",
+     "舌"
+    ],
+    "en": [
+     "⾆",
+     "舌",
+     "KANGXI RADICAL TONGUE"
+    ],
+    "ja": [
+     "⾆",
+     "舌"
+    ],
+    "ko": [
+     "혀설"
+    ]
+   }
+  },
+  "Q157105": {
+   "labels": {
+    "zh": "舛部",
+    "en": "Radical 136",
+    "ja": "舛部",
+    "zh-hans": "舛部",
+    "zh-hant": "舛部",
+    "vi": "Bộ Suyễn (舛)",
+    "ko": "⾇"
+   },
+   "aliases": {
+    "zh-hans": [
+     "舛",
+     "⾇"
+    ],
+    "zh-hant": [
+     "舛",
+     "⾇"
+    ],
+    "zh": [
+     "舛",
+     "⾇"
+    ],
+    "vi": [
+     "⾇",
+     "舛"
+    ],
+    "en": [
+     "⾇",
+     "舛",
+     "KANGXI RADICAL OPPOSE"
+    ],
+    "ja": [
+     "⾇",
+     "舛"
+    ],
+    "ko": [
+     "어그러질천"
+    ]
+   }
+  },
+  "Q157129": {
+   "labels": {
+    "zh": "舟部",
+    "en": "Kangxi radical 137 (⾈)",
+    "ja": "舟部",
+    "zh-hans": "舟部",
+    "zh-hant": "舟部",
+    "vi": "Bộ Chu (舟)",
+    "ko": "⾈"
+   },
+   "aliases": {
+    "zh-hans": [
+     "舟",
+     "⾈"
+    ],
+    "zh-hant": [
+     "舟",
+     "⾈"
+    ],
+    "zh": [
+     "舟",
+     "⾈"
+    ],
+    "vi": [
+     "⾈",
+     "舟"
+    ],
+    "en": [
+     "⾈",
+     "KANGXI RADICAL BOAT",
+     "舟"
+    ],
+    "ja": [
+     "⾈",
+     "舟"
+    ],
+    "ko": [
+     "배주"
+    ]
+   }
+  },
+  "Q157141": {
+   "labels": {
+    "zh": "艮部",
+    "en": "Radical 138",
+    "ja": "艮部",
+    "zh-hans": "艮部",
+    "zh-hant": "艮部",
+    "vi": "Bộ Cấn (艮)",
+    "ko": "⾉"
+   },
+   "aliases": {
+    "zh-hans": [
+     "艮",
+     "⾉"
+    ],
+    "zh-hant": [
+     "艮",
+     "⾉"
+    ],
+    "zh": [
+     "艮",
+     "⾉"
+    ],
+    "vi": [
+     "⾉",
+     "艮"
+    ],
+    "en": [
+     "⾉",
+     "艮",
+     "KANGXI RADICAL STOPPING"
+    ],
+    "ja": [
+     "⾉",
+     "艮"
+    ],
+    "ko": [
+     "괘이름간",
+     "그칠간",
+     "간괘간"
+    ]
+   }
+  },
+  "Q157162": {
+   "labels": {
+    "zh": "色部",
+    "en": "Radical 139",
+    "ja": "色部",
+    "zh-hans": "色部",
+    "zh-hant": "色部",
+    "vi": "Bộ Sắc (色)",
+    "ko": "⾊"
+   },
+   "aliases": {
+    "zh-hans": [
+     "色",
+     "⾊"
+    ],
+    "zh-hant": [
+     "色",
+     "⾊"
+    ],
+    "zh": [
+     "色",
+     "⾊"
+    ],
+    "vi": [
+     "⾊",
+     "色"
+    ],
+    "en": [
+     "⾊",
+     "色",
+     "KANGXI RADICAL COLOR"
+    ],
+    "ja": [
+     "⾊",
+     "色"
+    ],
+    "ko": [
+     "빛색"
+    ]
+   }
+  },
+  "Q157185": {
+   "labels": {
+    "zh": "艸部",
+    "en": "Kangxi radical 140 (⾋)",
+    "ja": "艸部",
+    "zh-hans": "艸部",
+    "zh-hant": "艸部",
+    "vi": "Bộ Thảo (艸)",
+    "ko": "⾋"
+   },
+   "aliases": {
+    "zh-hans": [
+     "艸",
+     "⾋",
+     "艹",
+     "䒑",
+     "⺿",
+     "⺾",
+     "⻀"
+    ],
+    "zh-hant": [
+     "艸",
+     "⾋",
+     "艹",
+     "䒑",
+     "⺿",
+     "⺾",
+     "⻀"
+    ],
+    "zh": [
+     "艸",
+     "⾋",
+     "艹",
+     "䒑",
+     "⺿",
+     "⺾",
+     "⻀"
+    ],
+    "ja": [
+     "艸",
+     "艹",
+     "そうぶ",
+     "くさかんむり",
+     "くさ",
+     "そうこう",
+     "⾋"
+    ],
+    "vi": [
+     "⾋",
+     "艸"
+    ],
+    "en": [
+     "KANGXI RADICAL GRASS",
+     "⾋",
+     "radical grass",
+     "radical 140"
+    ],
+    "ko": [
+     "풀초",
+     "초두밑"
+    ]
+   }
+  },
+  "Q157219": {
+   "labels": {
+    "zh": "虍部",
+    "en": "Kangxi radical 141 (⾌)",
+    "ja": "虍部",
+    "zh-hans": "虍部",
+    "zh-hant": "虍部",
+    "vi": "Bộ Hô (虍)",
+    "ko": "⾌"
+   },
+   "aliases": {
+    "zh-hans": [
+     "虍",
+     "⾌"
+    ],
+    "zh-hant": [
+     "虍",
+     "⾌"
+    ],
+    "zh": [
+     "虍",
+     "⾌"
+    ],
+    "vi": [
+     "⾌",
+     "虍"
+    ],
+    "en": [
+     "KANGXI RADICAL TIGER",
+     "⾌",
+     "radical tiger",
+     "radical 141"
+    ],
+    "ja": [
+     "⾌",
+     "虍"
+    ],
+    "ko": [
+     "범호엄",
+     "범호밑"
+    ]
+   }
+  },
+  "Q157257": {
+   "labels": {
+    "zh": "虫部",
+    "en": "Kanxi radical 142 (⾍)",
+    "ja": "虫部",
+    "zh-hans": "虫部",
+    "zh-hant": "虫部",
+    "vi": "Bộ Trùng (虫)",
+    "ko": "⾍"
+   },
+   "aliases": {
+    "zh-hans": [
+     "虫",
+     "⾍"
+    ],
+    "zh-hant": [
+     "虫",
+     "⾍"
+    ],
+    "zh": [
+     "虫",
+     "⾍"
+    ],
+    "vi": [
+     "⾍",
+     "虫"
+    ],
+    "en": [
+     "KANGXI RADICAL INSECT",
+     "radical insect",
+     "radical 142"
+    ],
+    "ja": [
+     "⾍",
+     "虫"
+    ],
+    "ko": [
+     "벌레훼",
+     "벌레충"
+    ]
+   }
+  },
+  "Q157278": {
+   "labels": {
+    "zh": "血部",
+    "en": "Radical 143",
+    "ja": "血部",
+    "zh-hans": "血部",
+    "zh-hant": "血部",
+    "vi": "Bộ Huyết (血)",
+    "ko": "⾎"
+   },
+   "aliases": {
+    "zh-hans": [
+     "血",
+     "⾎"
+    ],
+    "zh-hant": [
+     "血",
+     "⾎"
+    ],
+    "zh": [
+     "血",
+     "⾎"
+    ],
+    "vi": [
+     "⾎",
+     "血"
+    ],
+    "en": [
+     "⾎",
+     "血",
+     "KANGXI RADICAL BLOOD"
+    ],
+    "ja": [
+     "⾎",
+     "血"
+    ],
+    "ko": [
+     "피혈"
+    ]
+   }
+  },
+  "Q157345": {
+   "labels": {
+    "zh": "行部",
+    "en": "Kangxi radical 144 (⾏)",
+    "ja": "行部",
+    "zh-hans": "行部",
+    "zh-hant": "行部",
+    "vi": "Bộ Hành (行)",
+    "ko": "⾏"
+   },
+   "aliases": {
+    "zh-hans": [
+     "行",
+     "⾏"
+    ],
+    "zh-hant": [
+     "行",
+     "⾏"
+    ],
+    "zh": [
+     "行",
+     "⾏"
+    ],
+    "vi": [
+     "⾏",
+     "行"
+    ],
+    "en": [
+     "⾏",
+     "行",
+     "KANGXI RADICAL WALK ENCLOSURE",
+     "radical 144"
+    ],
+    "ja": [
+     "⾏",
+     "行"
+    ],
+    "ko": [
+     "다닐행"
+    ]
+   }
+  },
+  "Q157374": {
+   "labels": {
+    "zh": "衣部",
+    "en": "Radical 145",
+    "ja": "衣部",
+    "ko": "⾐",
+    "zh-hans": "衣部",
+    "zh-hant": "衣部",
+    "vi": "Bộ Y (衣)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "衣",
+     "⾐",
+     "衤",
+     "⻂"
+    ],
+    "zh-hant": [
+     "衣",
+     "⾐",
+     "衤",
+     "⻂"
+    ],
+    "zh": [
+     "衣",
+     "⾐",
+     "衤",
+     "⻂"
+    ],
+    "vi": [
+     "⾐",
+     "衣"
+    ],
+    "en": [
+     "⾐",
+     "衣",
+     "KANGXI RADICAL CLOTHES"
+    ],
+    "ja": [
+     "⾐",
+     "衣"
+    ],
+    "ko": [
+     "옷의"
+    ]
+   }
+  },
+  "Q157406": {
+   "labels": {
+    "zh": "襾部",
+    "en": "Kangxi radical 146 (⾑)",
+    "ja": "襾部",
+    "zh-hans": "襾部",
+    "zh-hant": "襾部",
+    "vi": "Bộ Á (襾)",
+    "ko": "⾑"
+   },
+   "aliases": {
+    "zh-hans": [
+     "襾",
+     "西",
+     "覀",
+     "⾑"
+    ],
+    "zh-hant": [
+     "襾",
+     "西",
+     "覀",
+     "⾑"
+    ],
+    "zh": [
+     "襾",
+     "西",
+     "覀",
+     "⾑"
+    ],
+    "ja": [
+     "西部",
+     "襾",
+     "西",
+     "覀",
+     "あぶ",
+     "にし",
+     "おおいかんむり",
+     "⾑"
+    ],
+    "vi": [
+     "⾑",
+     "襾"
+    ],
+    "en": [
+     "KANGXI RADICAL WEST",
+     "⾑",
+     "radical west",
+     "radical 146"
+    ],
+    "ko": [
+     "덮을아"
+    ]
+   }
+  },
+  "Q157436": {
+   "labels": {
+    "zh": "見部",
+    "en": "Kangxi radical 147 (⾒)",
+    "ja": "見部",
+    "zh-hans": "见部（⾒）",
+    "zh-hant": "見部",
+    "vi": "Bộ Kiến (見)",
+    "ko": "⾒"
+   },
+   "aliases": {
+    "zh-hans": [
+     "见",
+     "⾒",
+     "見"
+    ],
+    "zh-hant": [
+     "見",
+     "⾒"
+    ],
+    "zh": [
+     "見",
+     "⾒"
+    ],
+    "vi": [
+     "⾒",
+     "見"
+    ],
+    "en": [
+     "⾒",
+     "KANGXI RADICAL SEE",
+     "radical see",
+     "radical 147"
+    ],
+    "ja": [
+     "⾒",
+     "見"
+    ],
+    "ko": [
+     "볼견"
+    ]
+   }
+  },
+  "Q157471": {
+   "labels": {
+    "zh": "⾓部",
+    "en": "Kangxi radical 148 (⾓)",
+    "ja": "角部",
+    "zh-hans": "角部（⾓）",
+    "zh-hant": "⾓部",
+    "vi": "Bộ Giác (角)",
+    "ko": "⻆"
+   },
+   "aliases": {
+    "zh-hans": [
+     "角",
+     "⾓",
+     "⻆",
+     "角部"
+    ],
+    "zh-hant": [
+     "角",
+     "⾓",
+     "⻆",
+     "角部"
+    ],
+    "zh": [
+     "角",
+     "⾓",
+     "⻆",
+     "角部"
+    ],
+    "vi": [
+     "⾓",
+     "角"
+    ],
+    "en": [
+     "⾓",
+     "KANGXI RADICAL HORN",
+     "radical horn",
+     "radical 148"
+    ],
+    "ja": [
+     "⾓",
+     "角"
+    ],
+    "ko": [
+     "뿔각"
+    ]
+   }
+  },
+  "Q157488": {
+   "labels": {
+    "zh": "言部",
+    "en": "Kangxi radical 149 (⾔)",
+    "ja": "言部",
+    "zh-hans": "言部",
+    "zh-hant": "言部",
+    "vi": "Bộ Ngôn (言)",
+    "ko": "⾔"
+   },
+   "aliases": {
+    "zh-hans": [
+     "言",
+     "讠",
+     "⾔"
+    ],
+    "zh-hant": [
+     "言",
+     "訁",
+     "⾔"
+    ],
+    "zh": [
+     "言",
+     "訁",
+     "讠",
+     "⾔"
+    ],
+    "ja": [
+     "言",
+     "訁",
+     "げんぶ",
+     "ごんべん",
+     "⾔"
+    ],
+    "vi": [
+     "⾔",
+     "言"
+    ],
+    "en": [
+     "KANGXI RADICAL SPEECH",
+     "⾔",
+     "radical speech",
+     "radical 149"
+    ],
+    "ko": [
+     "말씀언"
+    ]
+   }
+  },
+  "Q157560": {
+   "labels": {
+    "zh": "谷部",
+    "en": "Radical 150",
+    "ja": "谷部",
+    "zh-hans": "谷部",
+    "zh-hant": "谷部",
+    "vi": "Bộ Cốc (谷)",
+    "ko": "⾕"
+   },
+   "aliases": {
+    "zh-hans": [
+     "谷",
+     "⾕"
+    ],
+    "zh-hant": [
+     "谷",
+     "⾕"
+    ],
+    "zh": [
+     "谷",
+     "⾕"
+    ],
+    "vi": [
+     "⾕",
+     "谷"
+    ],
+    "en": [
+     "⾕",
+     "谷",
+     "KANGXI RADICAL VALLEY"
+    ],
+    "ja": [
+     "⾕",
+     "谷"
+    ],
+    "ko": [
+     "골곡"
+    ]
+   }
+  },
+  "Q174813": {
+   "labels": {
+    "ja": "龜部",
+    "ko": "⿔",
+    "zh": "⿔部",
+    "en": "Kangxi radical 213 (⿔)",
+    "zh-hans": "龟部（⿔）",
+    "zh-hant": "⿔部",
+    "vi": "Bộ Quy (龜)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "龜",
+     "⿔",
+     "⻲",
+     "⻳",
+     "龟部"
+    ],
+    "zh-hant": [
+     "龜",
+     "⿔",
+     "⻲",
+     "⻳",
+     "龜部"
+    ],
+    "zh": [
+     "龜",
+     "⿔",
+     "⻲",
+     "⻳",
+     "龜部"
+    ],
+    "en": [
+     "KANGXI RADICAL TURTLE",
+     "⿔",
+     "radical turtle",
+     "radical 213"
+    ],
+    "ja": [
+     "亀部",
+     "⿔",
+     "龜"
+    ],
+    "vi": [
+     "⿔",
+     "龜"
+    ],
+    "ko": [
+     "거북귀",
+     "거북구"
+    ]
+   }
+  },
+  "Q242520": {
+   "labels": {
+    "zh": "豆部",
+    "en": "Kangxi radical 151 (⾖)",
+    "ja": "豆部",
+    "zh-hans": "豆部",
+    "zh-hant": "豆部",
+    "vi": "Bộ Đậu (豆)",
+    "ko": "⾖"
+   },
+   "aliases": {
+    "zh-hans": [
+     "豆",
+     "⾖"
+    ],
+    "zh-hant": [
+     "豆",
+     "⾖"
+    ],
+    "zh": [
+     "豆",
+     "⾖"
+    ],
+    "vi": [
+     "⾖",
+     "豆"
+    ],
+    "en": [
+     "KANGXI RADICAL BEAN",
+     "⾖",
+     "radical 151",
+     "radical bean"
+    ],
+    "ja": [
+     "⾖",
+     "豆"
+    ],
+    "ko": [
+     "콩두"
+    ]
+   }
+  },
+  "Q242566": {
+   "labels": {
+    "zh": "豕部",
+    "en": "Radical 152",
+    "ja": "豕部",
+    "zh-hans": "豕部",
+    "zh-hant": "豕部",
+    "vi": "Bộ Thỉ (豕)",
+    "ko": "⾗"
+   },
+   "aliases": {
+    "zh-hans": [
+     "豕",
+     "⾗"
+    ],
+    "zh-hant": [
+     "豕",
+     "⾗"
+    ],
+    "zh": [
+     "豕",
+     "⾗"
+    ],
+    "vi": [
+     "⾗",
+     "豕"
+    ],
+    "en": [
+     "⾗",
+     "豕",
+     "KANGXI RADICAL PIG"
+    ],
+    "ja": [
+     "⾗",
+     "豕"
+    ],
+    "ko": [
+     "돼지시"
+    ]
+   }
+  },
+  "Q242604": {
+   "labels": {
+    "zh": "豸部",
+    "en": "Radical 153",
+    "ja": "豸部",
+    "zh-hans": "豸部",
+    "zh-hant": "豸部",
+    "vi": "Bộ Trãi (豸)",
+    "ko": "⾘"
+   },
+   "aliases": {
+    "zh-hans": [
+     "豸",
+     "⾘"
+    ],
+    "zh-hant": [
+     "豸",
+     "⾘"
+    ],
+    "zh": [
+     "豸",
+     "⾘"
+    ],
+    "en": [
+     "\"legless insect\"",
+     "⾘",
+     "豸",
+     "KANGXI RADICAL BADGER"
+    ],
+    "vi": [
+     "⾘",
+     "豸"
+    ],
+    "ja": [
+     "⾘",
+     "豸"
+    ],
+    "ko": [
+     "갖은돼지시변",
+     "갖은돼지시"
+    ]
+   }
+  },
+  "Q242631": {
+   "labels": {
+    "zh": "貝部",
+    "en": "Radical 154",
+    "ja": "貝部",
+    "zh-hans": "贝部（⾙）",
+    "zh-hant": "貝部",
+    "vi": "Bộ Bối (貝)",
+    "ko": "⾙"
+   },
+   "aliases": {
+    "zh-hans": [
+     "贝",
+     "⾙",
+     "貝"
+    ],
+    "zh-hant": [
+     "貝",
+     "⾙"
+    ],
+    "zh": [
+     "貝",
+     "⾙"
+    ],
+    "vi": [
+     "⾙",
+     "貝"
+    ],
+    "en": [
+     "⾙",
+     "貝",
+     "KANGXI RADICAL SHELL"
+    ],
+    "ja": [
+     "⾙",
+     "貝"
+    ],
+    "ko": [
+     "조개패"
+    ]
+   }
+  },
+  "Q242660": {
+   "labels": {
+    "zh": "赤部",
+    "en": "Radical 155",
+    "ja": "赤部",
+    "zh-hans": "赤部",
+    "zh-hant": "赤部",
+    "vi": "Bộ Xích (赤)",
+    "ko": "⾚"
+   },
+   "aliases": {
+    "zh-hans": [
+     "赤",
+     "⾚"
+    ],
+    "zh-hant": [
+     "赤",
+     "⾚"
+    ],
+    "zh": [
+     "赤",
+     "⾚"
+    ],
+    "vi": [
+     "⾚",
+     "赤"
+    ],
+    "en": [
+     "⾚",
+     "赤",
+     "KANGXI RADICAL RED"
+    ],
+    "ja": [
+     "⾚",
+     "赤"
+    ],
+    "ko": [
+     "붉을적"
+    ]
+   }
+  },
+  "Q242695": {
+   "labels": {
+    "zh": "走部",
+    "en": "Kangxi radical 156 (⾛)",
+    "ja": "走部",
+    "zh-hans": "走部",
+    "zh-hant": "走部",
+    "vi": "Bộ Tẩu (走)",
+    "ko": "⾛"
+   },
+   "aliases": {
+    "zh-hans": [
+     "走",
+     "⾛"
+    ],
+    "zh-hant": [
+     "走",
+     "⾛"
+    ],
+    "zh": [
+     "走",
+     "⾛"
+    ],
+    "vi": [
+     "⾛",
+     "走"
+    ],
+    "en": [
+     "KANGXI RADICAL RUN",
+     "⾛",
+     "radical 156",
+     "radical run"
+    ],
+    "ja": [
+     "⾛",
+     "走"
+    ],
+    "ko": [
+     "달릴주"
+    ]
+   }
+  },
+  "Q242727": {
+   "labels": {
+    "zh": "足部",
+    "en": "Radical 157",
+    "ja": "足部",
+    "zh-hans": "足部",
+    "zh-hant": "足部",
+    "vi": "Bộ Túc (足)",
+    "ko": "⾜"
+   },
+   "aliases": {
+    "zh-hans": [
+     "足",
+     "⾜",
+     "⻊"
+    ],
+    "zh-hant": [
+     "足",
+     "⾜",
+     "⻊"
+    ],
+    "zh": [
+     "足",
+     "⾜",
+     "⻊"
+    ],
+    "vi": [
+     "⾜",
+     "足"
+    ],
+    "en": [
+     "⾜",
+     "足",
+     "KANGXI RADICAL FOOT",
+     "Japanese character"
+    ],
+    "ja": [
+     "⾜",
+     "足"
+    ],
+    "ko": [
+     "발족"
+    ]
+   }
+  },
+  "Q242786": {
+   "labels": {
+    "zh": "身部",
+    "en": "Radical 158",
+    "ja": "身部",
+    "zh-hans": "身部",
+    "zh-hant": "身部",
+    "vi": "Bộ Thân (身)",
+    "ko": "⾝"
+   },
+   "aliases": {
+    "zh-hans": [
+     "身",
+     "⾝"
+    ],
+    "zh-hant": [
+     "身",
+     "⾝"
+    ],
+    "zh": [
+     "身",
+     "⾝"
+    ],
+    "vi": [
+     "⾝",
+     "身"
+    ],
+    "en": [
+     "⾝",
+     "身",
+     "KANGXI RADICAL BODY"
+    ],
+    "ja": [
+     "⾝",
+     "身"
+    ],
+    "ko": [
+     "몸신"
+    ]
+   }
+  },
+  "Q242814": {
+   "labels": {
+    "zh": "車部",
+    "en": "Kanxi radical 159 (⾞)",
+    "ja": "車部",
+    "zh-hant": "車部",
+    "zh-hans": "车部（⾞）",
+    "vi": "Bộ Xa (車)",
+    "ko": "⾞"
+   },
+   "aliases": {
+    "zh-hant": [
+     "車",
+     "⾞"
+    ],
+    "zh-hans": [
+     "⾞",
+     "車"
+    ],
+    "zh": [
+     "車",
+     "⾞"
+    ],
+    "vi": [
+     "⾞",
+     "車"
+    ],
+    "en": [
+     "KANGXI RADICAL CART",
+     "⾞",
+     "radical cart",
+     "radical 159"
+    ],
+    "ja": [
+     "⾞",
+     "車"
+    ],
+    "ko": [
+     "수레거"
+    ]
+   }
+  },
+  "Q243351": {
+   "labels": {
+    "zh": "辛部",
+    "en": "Radical 160",
+    "ja": "辛部",
+    "zh-hans": "辛部",
+    "zh-hant": "辛部",
+    "vi": "Bộ Tân (辛)",
+    "ko": "⾟"
+   },
+   "aliases": {
+    "zh-hans": [
+     "辛",
+     "⾟"
+    ],
+    "zh-hant": [
+     "辛",
+     "⾟"
+    ],
+    "zh": [
+     "辛",
+     "⾟"
+    ],
+    "vi": [
+     "⾟",
+     "辛"
+    ],
+    "en": [
+     "⾟",
+     "辛",
+     "KANGXI RADICAL BITTER"
+    ],
+    "ja": [
+     "⾟",
+     "辛"
+    ],
+    "ko": [
+     "매울신"
+    ]
+   }
+  },
+  "Q243406": {
+   "labels": {
+    "zh": "辰部",
+    "en": "Radical 161",
+    "ja": "辰部",
+    "zh-hans": "辰部",
+    "zh-hant": "辰部",
+    "vi": "Bộ Thần (辰)",
+    "ko": "⾠"
+   },
+   "aliases": {
+    "zh-hans": [
+     "辰",
+     "⾠"
+    ],
+    "zh-hant": [
+     "辰",
+     "⾠"
+    ],
+    "zh": [
+     "辰",
+     "⾠"
+    ],
+    "vi": [
+     "⾠",
+     "辰"
+    ],
+    "en": [
+     "⾠",
+     "辰",
+     "KANGXI RADICAL MORNING"
+    ],
+    "ja": [
+     "⾠",
+     "辰"
+    ],
+    "ko": [
+     "별진"
+    ]
+   }
+  },
+  "Q243443": {
+   "labels": {
+    "zh": "辵部",
+    "en": "Kangxi radical 162 (⾡)",
+    "ja": "辵部",
+    "zh-hans": "辵部",
+    "zh-hant": "辵部",
+    "ko": "⾡",
+    "vi": "Bộ Xước (辵)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "辵",
+     "⾡",
+     "辶",
+     "⻍",
+     "⻎",
+     "⻌"
+    ],
+    "zh-hant": [
+     "辵",
+     "⾡",
+     "辶",
+     "⻍",
+     "⻎",
+     "⻌"
+    ],
+    "zh": [
+     "辵",
+     "⾡",
+     "辶",
+     "⻍",
+     "⻎",
+     "⻌"
+    ],
+    "ja": [
+     "チャク部",
+     "ちゃくぶ",
+     "辶",
+     "しんにょう",
+     "しんにゅう",
+     "⾡",
+     "辵"
+    ],
+    "vi": [
+     "⾡",
+     "辵"
+    ],
+    "en": [
+     "KANGXI RADICAL WALK",
+     "⾡",
+     "radical 162",
+     "radiacl walk"
+    ],
+    "ko": [
+     "갖은책받침"
+    ]
+   }
+  },
+  "Q243490": {
+   "labels": {
+    "zh": "邑部",
+    "en": "Radical 163",
+    "ja": "邑部",
+    "zh-hans": "邑部",
+    "zh-hant": "邑部",
+    "vi": "Bộ Ấp (邑)",
+    "ko": "⾢"
+   },
+   "aliases": {
+    "zh-hans": [
+     "邑",
+     "⾢",
+     "阝",
+     "⻏"
+    ],
+    "zh-hant": [
+     "邑",
+     "⾢",
+     "阝",
+     "⻏"
+    ],
+    "zh": [
+     "邑",
+     "⾢",
+     "阝",
+     "⻏"
+    ],
+    "vi": [
+     "⾢",
+     "邑"
+    ],
+    "en": [
+     "⾢",
+     "邑",
+     "KANGXI RADICAL CITY"
+    ],
+    "ja": [
+     "⾢",
+     "邑"
+    ],
+    "ko": [
+     "고을읍"
+    ]
+   }
+  },
+  "Q244491": {
+   "labels": {
+    "zh": "酉部",
+    "en": "Radical 164",
+    "ja": "酉部",
+    "zh-hans": "酉部",
+    "zh-hant": "酉部",
+    "vi": "Bộ Dậu (酉)",
+    "ko": "⾣"
+   },
+   "aliases": {
+    "zh-hans": [
+     "酉",
+     "⾣"
+    ],
+    "zh-hant": [
+     "酉",
+     "⾣"
+    ],
+    "zh": [
+     "酉",
+     "⾣"
+    ],
+    "vi": [
+     "⾣",
+     "酉"
+    ],
+    "en": [
+     "⾣",
+     "酉",
+     "KANGXI RADICAL WINE"
+    ],
+    "ja": [
+     "⾣",
+     "酉"
+    ],
+    "ko": [
+     "닭유"
+    ]
+   }
+  },
+  "Q244505": {
+   "labels": {
+    "zh": "釆部",
+    "en": "Radical 165",
+    "ja": "釆部",
+    "zh-hans": "釆部",
+    "zh-hant": "釆部",
+    "vi": "Bộ Biện (釆)",
+    "ko": "⾤"
+   },
+   "aliases": {
+    "zh-hans": [
+     "釆",
+     "⾤"
+    ],
+    "zh-hant": [
+     "釆",
+     "⾤"
+    ],
+    "zh": [
+     "釆",
+     "⾤"
+    ],
+    "vi": [
+     "⾤",
+     "釆"
+    ],
+    "en": [
+     "⾤",
+     "釆",
+     "KANGXI RADICAL DISTINGUISH"
+    ],
+    "ja": [
+     "⾤",
+     "釆"
+    ],
+    "ko": [
+     "분별할변",
+     "캘채변"
+    ]
+   }
+  },
+  "Q244532": {
+   "labels": {
+    "zh": "里部",
+    "en": "Kangxi radical 166 (⾥)",
+    "ja": "里部",
+    "zh-hans": "里部",
+    "zh-hant": "里部",
+    "vi": "Bộ Lý (里)",
+    "ko": "⾥"
+   },
+   "aliases": {
+    "zh-hans": [
+     "里",
+     "⾥"
+    ],
+    "zh-hant": [
+     "里",
+     "⾥"
+    ],
+    "zh": [
+     "里",
+     "⾥"
+    ],
+    "vi": [
+     "⾥",
+     "里"
+    ],
+    "en": [
+     "KANGXI RADICAL VILLAGE",
+     "⾥",
+     "radical 166",
+     "radical village",
+     "radical hamlet"
+    ],
+    "ja": [
+     "⾥",
+     "里"
+    ],
+    "ko": [
+     "마을리"
+    ]
+   }
+  },
+  "Q244610": {
+   "labels": {
+    "zh": "金部",
+    "en": "Kangxi radical 167 (⾦)",
+    "ja": "金部",
+    "zh-hans": "金部",
+    "zh-hant": "金部",
+    "vi": "Bộ Kim (金)",
+    "ko": "⾦"
+   },
+   "aliases": {
+    "zh-hans": [
+     "金",
+     "钅",
+     "⾦"
+    ],
+    "zh-hant": [
+     "金",
+     "釒",
+     "⾦"
+    ],
+    "zh": [
+     "金",
+     "釒",
+     "钅",
+     "⾦"
+    ],
+    "vi": [
+     "⾦",
+     "金"
+    ],
+    "en": [
+     "KANGXI RADICAL GOLD",
+     "⾦",
+     "radical gold",
+     "radical 167"
+    ],
+    "ja": [
+     "⾦",
+     "金"
+    ],
+    "ko": [
+     "쇠금"
+    ]
+   }
+  },
+  "Q244632": {
+   "labels": {
+    "zh": "長部",
+    "en": "Radical 168",
+    "ja": "長部",
+    "zh-hans": "长部",
+    "zh-hant": "長部",
+    "vi": "Bộ Trường (長)",
+    "ko": "⻑"
+   },
+   "aliases": {
+    "zh-hans": [
+     "长",
+     "⾧",
+     "長"
+    ],
+    "zh-hant": [
+     "長",
+     "⾧"
+    ],
+    "zh": [
+     "長",
+     "⾧"
+    ],
+    "vi": [
+     "⾧",
+     "長"
+    ],
+    "en": [
+     "⾧",
+     "長",
+     "KANGXI RADICAL LONG"
+    ],
+    "ja": [
+     "⾧",
+     "長"
+    ],
+    "ko": [
+     "길장",
+     "긴장"
+    ]
+   }
+  },
+  "Q244879": {
+   "labels": {
+    "zh": "門部",
+    "en": "Radical 169",
+    "ja": "門部",
+    "zh-hans": "门部",
+    "zh-hant": "門部",
+    "vi": "Bộ Môn (門)",
+    "ko": "⾨"
+   },
+   "aliases": {
+    "zh-hans": [
+     "门",
+     "⾨",
+     "門"
+    ],
+    "zh-hant": [
+     "門",
+     "⾨"
+    ],
+    "zh": [
+     "門",
+     "⾨"
+    ],
+    "vi": [
+     "⾨",
+     "門"
+    ],
+    "en": [
+     "⾨",
+     "門",
+     "KANGXI RADICAL GATE"
+    ],
+    "ja": [
+     "⾨",
+     "門"
+    ],
+    "ko": [
+     "문문"
+    ]
+   }
+  },
+  "Q244953": {
+   "labels": {
+    "zh": "阜部",
+    "en": "Kangxi radical 170 (⾩)",
+    "ja": "阜部",
+    "zh-hans": "阜部",
+    "zh-hant": "阜部",
+    "vi": "Bộ Phụ (阜)",
+    "ko": "⾩"
+   },
+   "aliases": {
+    "zh-hans": [
+     "阜",
+     "⾩",
+     "⻕",
+     "阝",
+     "⻖"
+    ],
+    "zh-hant": [
+     "阜",
+     "⾩",
+     "⻕",
+     "阝",
+     "⻖"
+    ],
+    "zh": [
+     "阜",
+     "⾩",
+     "⻕",
+     "阝",
+     "⻖"
+    ],
+    "ja": [
+     "阜",
+     "阝",
+     "ふぶ",
+     "こざとへん",
+     "⾩"
+    ],
+    "vi": [
+     "⾩",
+     "阜"
+    ],
+    "en": [
+     "⾩",
+     "KANGXI RADICAL MOUND",
+     "radical mound",
+     "radical 170"
+    ],
+    "ko": [
+     "언덕부"
+    ]
+   }
+  },
+  "Q244977": {
+   "labels": {
+    "zh": "隶部",
+    "en": "Kangxi radical 171 (⾪)",
+    "ja": "隶部",
+    "zh-hans": "隶部",
+    "zh-hant": "隶部",
+    "vi": "Bộ Đãi (隶)",
+    "ko": "⾪"
+   },
+   "aliases": {
+    "zh-hans": [
+     "隶",
+     "⾪"
+    ],
+    "zh-hant": [
+     "隶",
+     "⾪"
+    ],
+    "zh": [
+     "隶",
+     "⾪"
+    ],
+    "vi": [
+     "⾪",
+     "隶"
+    ],
+    "en": [
+     "⾪",
+     "隶",
+     "KANGXI RADICAL SLAVE",
+     "radical 171"
+    ],
+    "ja": [
+     "⾪",
+     "隶"
+    ],
+    "ko": [
+     "미칠이"
+    ]
+   }
+  },
+  "Q245008": {
+   "labels": {
+    "zh": "隹部",
+    "en": "Kangxi radical 172 (⾫)",
+    "ja": "隹部",
+    "zh-hans": "隹部",
+    "zh-hant": "隹部",
+    "vi": "Bộ Chuy (隹)",
+    "ko": "⾫"
+   },
+   "aliases": {
+    "zh-hans": [
+     "隹",
+     "⾫"
+    ],
+    "zh-hant": [
+     "隹",
+     "⾫"
+    ],
+    "zh": [
+     "隹",
+     "⾫"
+    ],
+    "vi": [
+     "⾫",
+     "隹"
+    ],
+    "en": [
+     "KANGXI RADICAL SHORT TAILED BIRD",
+     "⾫",
+     "radical short tailed bird",
+     "radical 172"
+    ],
+    "ja": [
+     "⾫",
+     "隹"
+    ],
+    "ko": [
+     "새추"
+    ]
+   }
+  },
+  "Q245052": {
+   "labels": {
+    "zh": "雨部",
+    "en": "Kangxi radical 173 (⾬)",
+    "ja": "雨部",
+    "zh-hans": "雨部",
+    "zh-hant": "雨部",
+    "vi": "Bộ Vũ (雨)",
+    "ko": "⾬"
+   },
+   "aliases": {
+    "zh-hans": [
+     "雨",
+     "⾬",
+     "雨字头"
+    ],
+    "zh-hant": [
+     "雨",
+     "⾬",
+     "雨字頭"
+    ],
+    "zh": [
+     "雨",
+     "⾬"
+    ],
+    "vi": [
+     "⾬",
+     "雨"
+    ],
+    "en": [
+     "⾬",
+     "雨",
+     "KANGXI RADICAL RAIN",
+     "radical 173"
+    ],
+    "ja": [
+     "⾬",
+     "雨",
+     "あめかんむり",
+     "あまかんむり"
+    ],
+    "ko": [
+     "비우"
+    ]
+   }
+  },
+  "Q245129": {
+   "labels": {
+    "zh": "⾭部",
+    "en": "Kangxi radical 174 (⾭/青)",
+    "ja": "青部",
+    "zh-hans": "青部（⾭）",
+    "zh-hant": "⾭部",
+    "ko": "⾭",
+    "vi": "Bộ Thanh (靑)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "青",
+     "靑",
+     "⾭",
+     "青部"
+    ],
+    "zh-hant": [
+     "青",
+     "靑",
+     "⾭",
+     "青部"
+    ],
+    "zh": [
+     "青",
+     "靑",
+     "靑部",
+     "⾭",
+     "青部"
+    ],
+    "ja": [
+     "靑部",
+     "靑",
+     "青",
+     "せいぶ",
+     "あお",
+     "⾭"
+    ],
+    "vi": [
+     "⾭",
+     "靑"
+    ],
+    "en": [
+     "⾭",
+     "靑",
+     "KANGXI RADICAL BLUE",
+     "radical 174"
+    ],
+    "ko": [
+     "푸를청"
+    ]
+   }
+  },
+  "Q245259": {
+   "labels": {
+    "zh": "非部",
+    "en": "Kangxi radical 175 (⾮)",
+    "ja": "非部",
+    "zh-hans": "非部",
+    "zh-hant": "非部",
+    "vi": "Bộ Phi (非)",
+    "ko": "⾮"
+   },
+   "aliases": {
+    "zh-hans": [
+     "非",
+     "⾮"
+    ],
+    "zh-hant": [
+     "非",
+     "⾮"
+    ],
+    "zh": [
+     "非",
+     "⾮"
+    ],
+    "vi": [
+     "⾮",
+     "非"
+    ],
+    "en": [
+     "⾮",
+     "非",
+     "KANGXI RADICAL WRONG",
+     "radical 175"
+    ],
+    "ja": [
+     "⾮",
+     "非",
+     "あらず"
+    ],
+    "ko": [
+     "아닐비"
+    ]
+   }
+  },
+  "Q290414": {
+   "labels": {
+    "en": "Kangxi radical 200 (⿇)",
+    "ja": "麻部",
+    "zh": "麻部",
+    "zh-hans": "麻部",
+    "zh-hant": "麻部",
+    "vi": "Bộ Ma (麻)",
+    "ko": "⿇"
+   },
+   "aliases": {
+    "zh-hans": [
+     "麻",
+     "⿇"
+    ],
+    "zh-hant": [
+     "麻",
+     "⿇"
+    ],
+    "zh": [
+     "麻",
+     "⿇"
+    ],
+    "vi": [
+     "⿇",
+     "麻"
+    ],
+    "en": [
+     "⿇",
+     "KANGXI RADICAL HEMP",
+     "radical hemp",
+     "radical 200"
+    ],
+    "ja": [
+     "⿇",
+     "麻"
+    ],
+    "ko": [
+     "삼마"
+    ]
+   }
+  },
+  "Q293542": {
+   "labels": {
+    "zh": "革部",
+    "en": "Kangxi radical 177 (⾰)",
+    "ja": "革部",
+    "zh-hans": "革部",
+    "zh-hant": "革部",
+    "vi": "Bộ Cách (革)",
+    "ko": "⾰"
+   },
+   "aliases": {
+    "zh-hans": [
+     "革",
+     "⾰"
+    ],
+    "zh-hant": [
+     "革",
+     "⾰"
+    ],
+    "zh": [
+     "革",
+     "⾰"
+    ],
+    "vi": [
+     "⾰",
+     "革"
+    ],
+    "en": [
+     "KANGXI RADICAL LEATHER",
+     "⾰",
+     "radical leather",
+     "radical 177"
+    ],
+    "ja": [
+     "⾰",
+     "革"
+    ],
+    "ko": [
+     "가죽혁"
+    ]
+   }
+  },
+  "Q293574": {
+   "labels": {
+    "zh": "韋部",
+    "en": "Kangxi radical 178 (⾱)",
+    "ja": "韋部",
+    "zh-hans": "韦部",
+    "zh-hant": "韋部",
+    "vi": "Bộ Vi (韋)",
+    "ko": "⾱"
+   },
+   "aliases": {
+    "zh-hans": [
+     "韦",
+     "⾱",
+     "韋"
+    ],
+    "zh-hant": [
+     "韋",
+     "⾱"
+    ],
+    "zh": [
+     "韋",
+     "⾱"
+    ],
+    "vi": [
+     "⾱",
+     "韋"
+    ],
+    "en": [
+     "KANGXI RADICAL TANNED LEATHER",
+     "⾱",
+     "radical tanner leather",
+     "radical 178"
+    ],
+    "ja": [
+     "⾱",
+     "韋"
+    ],
+    "ko": [
+     "가죽위",
+     "다룸가죽위"
+    ]
+   }
+  },
+  "Q293630": {
+   "labels": {
+    "zh": "韭部",
+    "en": "Kangxi radical 179 (⾲)",
+    "ja": "韭部",
+    "zh-hans": "韭部",
+    "zh-hant": "韭部",
+    "vi": "Bộ Cửu (韭)",
+    "ko": "⾲"
+   },
+   "aliases": {
+    "zh-hans": [
+     "韭",
+     "⾲"
+    ],
+    "zh-hant": [
+     "韭",
+     "⾲"
+    ],
+    "zh": [
+     "韭",
+     "⾲"
+    ],
+    "vi": [
+     "⾲",
+     "韭"
+    ],
+    "en": [
+     "⾲",
+     "韭",
+     "KANGXI RADICAL LEEK",
+     "radical 179"
+    ],
+    "ja": [
+     "⾲",
+     "韭"
+    ],
+    "ko": [
+     "부추구"
+    ]
+   }
+  },
+  "Q293690": {
+   "labels": {
+    "zh": "音部",
+    "en": "Radical 180",
+    "ja": "音部",
+    "zh-hans": "音部",
+    "zh-hant": "音部",
+    "vi": "Bộ Âm (音)",
+    "ko": "⾳"
+   },
+   "aliases": {
+    "zh-hans": [
+     "音",
+     "⾳"
+    ],
+    "zh-hant": [
+     "音",
+     "⾳"
+    ],
+    "zh": [
+     "音",
+     "⾳"
+    ],
+    "vi": [
+     "⾳",
+     "音"
+    ],
+    "en": [
+     "⾳",
+     "音",
+     "KANGXI RADICAL SOUND"
+    ],
+    "ja": [
+     "⾳",
+     "音"
+    ],
+    "ko": [
+     "소리음"
+    ]
+   }
+  },
+  "Q293766": {
+   "labels": {
+    "zh": "頁部",
+    "en": "Radical 181",
+    "ja": "頁部",
+    "zh-hans": "页部（頁）",
+    "zh-hant": "頁部",
+    "vi": "Bộ Hiệt (頁)",
+    "ko": "⾴"
+   },
+   "aliases": {
+    "zh-hans": [
+     "页",
+     "⾴",
+     "頁"
+    ],
+    "zh-hant": [
+     "頁",
+     "⾴"
+    ],
+    "zh": [
+     "頁",
+     "⾴"
+    ],
+    "ja": [
+     "頁",
+     "けつぶ",
+     "大貝",
+     "おおがい",
+     "⾴"
+    ],
+    "vi": [
+     "⾴",
+     "頁"
+    ],
+    "en": [
+     "⾴",
+     "頁",
+     "KANGXI RADICAL LEAF"
+    ],
+    "ko": [
+     "머리혈"
+    ]
+   }
+  },
+  "Q293830": {
+   "labels": {
+    "zh": "風部",
+    "en": "Radical 182",
+    "ja": "風部",
+    "zh-hans": "风部（⾵）",
+    "zh-hant": "風部",
+    "vi": "Bộ Phong (風)",
+    "ko": "⾵"
+   },
+   "aliases": {
+    "zh-hans": [
+     "风",
+     "⾵",
+     "風"
+    ],
+    "zh-hant": [
+     "風",
+     "⾵"
+    ],
+    "zh": [
+     "風",
+     "⾵"
+    ],
+    "vi": [
+     "⾵",
+     "風"
+    ],
+    "en": [
+     "⾵",
+     "風",
+     "KANGXI RADICAL WIND"
+    ],
+    "ja": [
+     "⾵",
+     "風"
+    ],
+    "ko": [
+     "바람풍"
+    ]
+   }
+  },
+  "Q293986": {
+   "labels": {
+    "zh": "飛部",
+    "en": "Radical 183",
+    "ja": "飛部",
+    "zh-hans": "飞部",
+    "zh-hant": "飛部",
+    "vi": "Bộ Phi (飛)",
+    "ko": "⾶"
+   },
+   "aliases": {
+    "zh-hans": [
+     "飞",
+     "⾶",
+     "飛"
+    ],
+    "zh-hant": [
+     "飛",
+     "⾶"
+    ],
+    "zh": [
+     "飛",
+     "⾶"
+    ],
+    "vi": [
+     "⾶",
+     "飛"
+    ],
+    "en": [
+     "⾶",
+     "飛",
+     "KANGXI RADICAL FLY"
+    ],
+    "ja": [
+     "⾶",
+     "飛"
+    ],
+    "ko": [
+     "날비"
+    ]
+   }
+  },
+  "Q294020": {
+   "labels": {
+    "zh": "⾷部",
+    "en": "Kangxi radical 184 (⾷)",
+    "ja": "食部",
+    "zh-hans": "⾷部",
+    "zh-hant": "⾷部",
+    "vi": "Bộ Thực (食)",
+    "ko": "⻝"
+   },
+   "aliases": {
+    "zh-hans": [
+     "食",
+     "⾷",
+     "⻝",
+     "𩙿",
+     "飠",
+     "饣",
+     "食部"
+    ],
+    "zh-hant": [
+     "食",
+     "⾷",
+     "⻝",
+     "𩙿",
+     "飠",
+     "饣",
+     "食部"
+    ],
+    "zh": [
+     "食",
+     "⾷",
+     "⻝",
+     "𩙿",
+     "飠",
+     "饣",
+     "食部"
+    ],
+    "vi": [
+     "⾷",
+     "食"
+    ],
+    "en": [
+     "KANGXI RADICAL EAT",
+     "⾷",
+     "radical eat",
+     "radical 184"
+    ],
+    "ja": [
+     "⾷",
+     "食"
+    ],
+    "ko": [
+     "먹을식",
+     "밥식"
+    ]
+   }
+  },
+  "Q294164": {
+   "labels": {
+    "zh": "首部",
+    "en": "Radical 185",
+    "ja": "首部",
+    "zh-hans": "首部",
+    "zh-hant": "首部",
+    "vi": "Bộ Thủ (首)",
+    "ko": "⾸"
+   },
+   "aliases": {
+    "zh-hans": [
+     "首",
+     "⾸"
+    ],
+    "zh-hant": [
+     "首",
+     "⾸"
+    ],
+    "zh": [
+     "首",
+     "⾸"
+    ],
+    "vi": [
+     "⾸",
+     "首"
+    ],
+    "en": [
+     "⾸",
+     "首",
+     "KANGXI RADICAL HEAD"
+    ],
+    "ja": [
+     "⾸",
+     "首"
+    ],
+    "ko": [
+     "머리수"
+    ]
+   }
+  },
+  "Q294222": {
+   "labels": {
+    "zh": "香部",
+    "en": "Radical 186",
+    "ja": "香部",
+    "zh-hans": "香部",
+    "zh-hant": "香部",
+    "vi": "Bộ Hương (香)",
+    "ko": "⾹"
+   },
+   "aliases": {
+    "zh-hans": [
+     "香",
+     "⾹"
+    ],
+    "zh-hant": [
+     "香",
+     "⾹"
+    ],
+    "zh": [
+     "香",
+     "⾹"
+    ],
+    "vi": [
+     "⾹",
+     "香"
+    ],
+    "en": [
+     "⾹",
+     "香",
+     "KANGXI RADICAL FRAGRANT"
+    ],
+    "ja": [
+     "⾹",
+     "香"
+    ],
+    "ko": [
+     "향기향"
+    ]
+   }
+  },
+  "Q294290": {
+   "labels": {
+    "zh": "馬部",
+    "en": "Kangxi radical 187 (⾺)",
+    "ja": "馬部",
+    "zh-hans": "马部",
+    "zh-hant": "馬部",
+    "vi": "Bộ Mã (馬)",
+    "ko": "⾺"
+   },
+   "aliases": {
+    "zh-hans": [
+     "马",
+     "⾺",
+     "馬"
+    ],
+    "zh-hant": [
+     "馬",
+     "⾺"
+    ],
+    "zh": [
+     "馬",
+     "⾺"
+    ],
+    "vi": [
+     "⾺",
+     "馬"
+    ],
+    "en": [
+     "KANGXI RADICAL HORSE",
+     "⾺",
+     "radical horse",
+     "radical 187"
+    ],
+    "ja": [
+     "⾺",
+     "馬"
+    ],
+    "ko": [
+     "말마"
+    ]
+   }
+  },
+  "Q294340": {
+   "labels": {
+    "zh": "⾻部",
+    "en": "Kangxi radical 188 (⾻)",
+    "ja": "骨部",
+    "zh-hans": "骨部（⾻）",
+    "zh-hant": "⾻部",
+    "vi": "Bộ Cốt (骨)",
+    "ko": "⾻"
+   },
+   "aliases": {
+    "zh-hans": [
+     "骨",
+     "⾻",
+     "骨部"
+    ],
+    "zh-hant": [
+     "骨",
+     "⾻",
+     "骨部"
+    ],
+    "zh": [
+     "骨",
+     "⾻",
+     "骨部"
+    ],
+    "vi": [
+     "⾻",
+     "骨"
+    ],
+    "en": [
+     "KANGXI RADICAL BONE",
+     "⾻",
+     "radical bone",
+     "radical 188"
+    ],
+    "ja": [
+     "⾻",
+     "骨"
+    ],
+    "ko": [
+     "뼈골"
+    ]
+   }
+  },
+  "Q294424": {
+   "labels": {
+    "zh": "高部",
+    "en": "Radical 189",
+    "ja": "高部",
+    "zh-hans": "高部",
+    "zh-hant": "高部",
+    "vi": "Bộ Cao (高)",
+    "ko": "⾼"
+   },
+   "aliases": {
+    "zh-hans": [
+     "高",
+     "⾼"
+    ],
+    "zh-hant": [
+     "高",
+     "⾼"
+    ],
+    "zh": [
+     "高",
+     "⾼"
+    ],
+    "vi": [
+     "⾼",
+     "高"
+    ],
+    "en": [
+     "⾼",
+     "高",
+     "KANGXI RADICAL TALL",
+     "radical tall"
+    ],
+    "ja": [
+     "⾼",
+     "高",
+     "こうぶ"
+    ],
+    "ko": [
+     "높을고"
+    ]
+   }
+  },
+  "Q294457": {
+   "labels": {
+    "zh": "髟部",
+    "en": "Kangxi radical 190 (⾽)",
+    "ja": "髟部",
+    "zh-hans": "髟部",
+    "zh-hant": "髟部",
+    "vi": "Bộ Bưu (髟)",
+    "ko": "⾽"
+   },
+   "aliases": {
+    "zh-hans": [
+     "髟",
+     "⾽"
+    ],
+    "zh-hant": [
+     "髟",
+     "⾽"
+    ],
+    "zh": [
+     "髟",
+     "⾽"
+    ],
+    "vi": [
+     "⾽",
+     "髟"
+    ],
+    "en": [
+     "KANGXI RADICAL HAIR",
+     "⾽",
+     "radical hair",
+     "radical 190"
+    ],
+    "ja": [
+     "⾽",
+     "髟"
+    ],
+    "ko": [
+     "터럭발",
+     "터럭발밑"
+    ]
+   }
+  },
+  "Q294557": {
+   "labels": {
+    "zh": "鬥部",
+    "en": "Radical 191",
+    "ja": "鬥部",
+    "zh-hans": "鬥部",
+    "zh-hant": "鬥部",
+    "vi": "Bộ Đấu (鬥)",
+    "ko": "⾾"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鬥",
+     "⾾"
+    ],
+    "zh-hant": [
+     "鬥",
+     "⾾"
+    ],
+    "zh": [
+     "鬥",
+     "⾾"
+    ],
+    "vi": [
+     "⾾",
+     "鬥"
+    ],
+    "en": [
+     "⾾",
+     "鬥",
+     "KANGXI RADICAL FIGHT"
+    ],
+    "ja": [
+     "⾾",
+     "鬥"
+    ],
+    "ko": [
+     "싸울투",
+     "싸움투"
+    ]
+   }
+  },
+  "Q294613": {
+   "labels": {
+    "zh": "鬯部",
+    "en": "Radical 192",
+    "ja": "鬯部",
+    "zh-hans": "鬯部",
+    "zh-hant": "鬯部",
+    "vi": "Bộ Sưởng (鬯)",
+    "ko": "⾿"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鬯",
+     "⾿"
+    ],
+    "zh-hant": [
+     "鬯",
+     "⾿"
+    ],
+    "zh": [
+     "鬯",
+     "⾿"
+    ],
+    "vi": [
+     "⾿",
+     "鬯"
+    ],
+    "en": [
+     "⾿",
+     "鬯",
+     "KANGXI RADICAL SACRIFICIAL WINE"
+    ],
+    "ja": [
+     "⾿",
+     "鬯"
+    ],
+    "ko": [
+     "울창주창",
+     "울창술창",
+     "술창"
+    ]
+   }
+  },
+  "Q294683": {
+   "labels": {
+    "zh": "鬲部",
+    "en": "Radical 193",
+    "ja": "鬲部",
+    "zh-hans": "鬲部",
+    "zh-hant": "鬲部",
+    "vi": "Bộ Cách (鬲)",
+    "ko": "⿀"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鬲",
+     "⿀"
+    ],
+    "zh-hant": [
+     "鬲",
+     "⿀"
+    ],
+    "zh": [
+     "鬲",
+     "⿀"
+    ],
+    "vi": [
+     "⿀",
+     "鬲"
+    ],
+    "en": [
+     "⿀",
+     "鬲",
+     "KANGXI RADICAL CAULDRON"
+    ],
+    "ja": [
+     "⿀",
+     "鬲"
+    ],
+    "ko": [
+     "다리굽은솥력",
+     "오지병격",
+     "솥력"
+    ]
+   }
+  },
+  "Q294740": {
+   "labels": {
+    "zh": "鬼部",
+    "en": "Kangxi radical 194 (⿁)",
+    "ja": "鬼部",
+    "zh-hans": "鬼部",
+    "zh-hant": "鬼部",
+    "vi": "Bộ Quỷ (鬼)",
+    "ko": "⿁"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鬼",
+     "⿁"
+    ],
+    "zh-hant": [
+     "鬼",
+     "⿁"
+    ],
+    "zh": [
+     "鬼",
+     "⿁"
+    ],
+    "vi": [
+     "⿁",
+     "鬼"
+    ],
+    "en": [
+     "KANGXI RADICAL GHOST",
+     "⿁",
+     "radical 194"
+    ],
+    "ja": [
+     "⿁",
+     "鬼"
+    ],
+    "ko": [
+     "귀신귀"
+    ]
+   }
+  },
+  "Q294835": {
+   "labels": {
+    "zh": "魚部",
+    "en": "Radical 195",
+    "ja": "魚部",
+    "zh-hans": "鱼部（⿂）",
+    "zh-hant": "魚部",
+    "vi": "Bộ Ngư (魚)",
+    "ko": "⿂"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鱼",
+     "⿂",
+     "魚",
+     "鱼部"
+    ],
+    "zh-hant": [
+     "魚",
+     "⿂"
+    ],
+    "zh": [
+     "魚",
+     "⿂"
+    ],
+    "vi": [
+     "⿂",
+     "魚"
+    ],
+    "en": [
+     "⿂",
+     "魚",
+     "KANGXI RADICAL FISH"
+    ],
+    "ja": [
+     "⿂",
+     "魚"
+    ],
+    "ko": [
+     "물고기어"
+    ]
+   }
+  },
+  "Q294922": {
+   "labels": {
+    "zh": "鳥部",
+    "ja": "鳥部",
+    "en": "Kangxi radical 196 (⿃)",
+    "zh-hans": "鸟部（⿃）",
+    "zh-hant": "鳥部",
+    "vi": "Bộ Điểu (鳥)",
+    "ko": "⿃"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鸟",
+     "⿃",
+     "鳥"
+    ],
+    "zh-hant": [
+     "鳥",
+     "⿃"
+    ],
+    "zh": [
+     "鳥",
+     "⿃"
+    ],
+    "vi": [
+     "⿃",
+     "鳥"
+    ],
+    "en": [
+     "KANGXI RADICAL BIRD",
+     "⿃",
+     "radical bird",
+     "radical 196"
+    ],
+    "ja": [
+     "⿃",
+     "鳥"
+    ],
+    "ko": [
+     "새조"
+    ]
+   }
+  },
+  "Q294972": {
+   "labels": {
+    "zh": "鹵部",
+    "en": "Radical 197",
+    "ja": "鹵部",
+    "zh-hans": "卤部（⿄）",
+    "zh-hant": "鹵部",
+    "vi": "Bộ Lỗ (鹵)",
+    "ko": "⿄"
+   },
+   "aliases": {
+    "zh-hans": [
+     "卤",
+     "⿄",
+     "鹵"
+    ],
+    "zh-hant": [
+     "鹵",
+     "⿄"
+    ],
+    "zh": [
+     "鹵",
+     "⿄"
+    ],
+    "vi": [
+     "⿄",
+     "鹵"
+    ],
+    "en": [
+     "⿄",
+     "鹵",
+     "KANGXI RADICAL SALT"
+    ],
+    "ja": [
+     "⿄",
+     "鹵"
+    ],
+    "ko": [
+     "짠땅로",
+     "소금밭로"
+    ]
+   }
+  },
+  "Q295042": {
+   "labels": {
+    "zh": "鹿部",
+    "en": "Kangxi radical 198 (⿅)",
+    "ja": "鹿部",
+    "zh-hans": "鹿部",
+    "zh-hant": "鹿部",
+    "vi": "Bộ Lộc (鹿)",
+    "ko": "⿅"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鹿",
+     "⿅"
+    ],
+    "zh-hant": [
+     "鹿",
+     "⿅"
+    ],
+    "zh": [
+     "鹿",
+     "⿅"
+    ],
+    "vi": [
+     "⿅",
+     "鹿"
+    ],
+    "en": [
+     "⿅",
+     "KANGXI RADICAL DEER",
+     "radical deer",
+     "radical 198"
+    ],
+    "ja": [
+     "⿅",
+     "鹿"
+    ],
+    "ko": [
+     "사슴록"
+    ]
+   }
+  },
+  "Q295350": {
+   "labels": {
+    "zh": "麥部",
+    "en": "Kangxi radical 199 (⿆)",
+    "ja": "麦部",
+    "zh-hans": "麦部（⿆）",
+    "zh-hant": "麥部",
+    "vi": "Bộ Mạch (麥)",
+    "ko": "⿆"
+   },
+   "aliases": {
+    "zh-hans": [
+     "麦",
+     "⿆",
+     "麥",
+     "麦部"
+    ],
+    "zh-hant": [
+     "麥",
+     "⿆"
+    ],
+    "zh": [
+     "麥",
+     "⿆"
+    ],
+    "vi": [
+     "⿆",
+     "麥"
+    ],
+    "en": [
+     "⿆",
+     "KANGXI RADICAL WHEAT",
+     "radical wheat",
+     "radical 199"
+    ],
+    "ja": [
+     "⿆",
+     "麥"
+    ],
+    "ko": [
+     "보리맥"
+    ]
+   }
+  },
+  "Q295503": {
+   "labels": {
+    "zh": "⿈部",
+    "en": "Kangxi radical 201 (⿈)",
+    "ja": "黄部",
+    "zh-hans": "黄部（⿈）",
+    "zh-hant": "⿈部",
+    "vi": "Bộ Hoàng (黃)",
+    "ko": "⿈"
+   },
+   "aliases": {
+    "zh-hans": [
+     "黄",
+     "⿈",
+     "黃",
+     "黄部"
+    ],
+    "zh-hant": [
+     "黃",
+     "⿈",
+     "黃部"
+    ],
+    "zh": [
+     "黃",
+     "⿈",
+     "黄部",
+     "黃部"
+    ],
+    "vi": [
+     "⿈",
+     "黃"
+    ],
+    "en": [
+     "⿈",
+     "KANGXI RADICAL YELLOW",
+     "radical yellow",
+     "radical 201"
+    ],
+    "ja": [
+     "⿈",
+     "黃"
+    ],
+    "ko": [
+     "누를황"
+    ]
+   }
+  },
+  "Q295533": {
+   "labels": {
+    "zh": "黍部",
+    "en": "Kangxi radical 202 (⿉)",
+    "ja": "黍部",
+    "zh-hans": "黍部",
+    "zh-hant": "黍部",
+    "vi": "Bộ Thử (黍)",
+    "ko": "⿉"
+   },
+   "aliases": {
+    "zh-hans": [
+     "黍",
+     "⿉"
+    ],
+    "zh-hant": [
+     "黍",
+     "⿉"
+    ],
+    "zh": [
+     "黍",
+     "⿉"
+    ],
+    "vi": [
+     "⿉",
+     "黍"
+    ],
+    "en": [
+     "⿉",
+     "KANGXI RADICAL MILLET",
+     "radical millet",
+     "radical 202"
+    ],
+    "ja": [
+     "⿉",
+     "黍"
+    ],
+    "ko": [
+     "기장서"
+    ]
+   }
+  },
+  "Q295565": {
+   "labels": {
+    "zh": "黑部",
+    "en": "Kangxi radical 203 (⿊)",
+    "ja": "黒部",
+    "zh-hans": "黑部",
+    "zh-hant": "黑部",
+    "vi": "Bộ Hắc (黑)",
+    "ko": "⿊"
+   },
+   "aliases": {
+    "zh-hans": [
+     "黑",
+     "⿊"
+    ],
+    "zh-hant": [
+     "黑",
+     "⿊"
+    ],
+    "zh": [
+     "黑",
+     "⿊"
+    ],
+    "vi": [
+     "⿊",
+     "黑"
+    ],
+    "en": [
+     "⿊",
+     "KANGXI RADICAL BLACK",
+     "radical black",
+     "radical 203"
+    ],
+    "ja": [
+     "⿊",
+     "黑"
+    ],
+    "ko": [
+     "검을흑"
+    ]
+   }
+  },
+  "Q295594": {
+   "labels": {
+    "zh": "黹部",
+    "en": "Kangxi radical 204 (⿋)",
+    "ja": "黹部",
+    "zh-hans": "黹部",
+    "zh-hant": "黹部",
+    "vi": "Bộ Chỉ (黹)",
+    "ko": "⿋"
+   },
+   "aliases": {
+    "zh-hans": [
+     "黹",
+     "⿋"
+    ],
+    "zh-hant": [
+     "黹",
+     "⿋"
+    ],
+    "zh": [
+     "黹",
+     "⿋"
+    ],
+    "vi": [
+     "⿋",
+     "黹"
+    ],
+    "en": [
+     "⿋",
+     "KANGXI RADICAL EMBROIDERY",
+     "radical embroidery",
+     "radical 204"
+    ],
+    "ja": [
+     "⿋",
+     "黹"
+    ],
+    "ko": [
+     "바느질할치",
+     "바느질치"
+    ]
+   }
+  },
+  "Q295683": {
+   "labels": {
+    "zh": "黽部",
+    "en": "Kangxi radical 205 (⿌)",
+    "ja": "黽部",
+    "zh-hans": "黾部",
+    "zh-hant": "黽部",
+    "vi": "Bộ Mãnh (黽)",
+    "ko": "⿌"
+   },
+   "aliases": {
+    "zh-hans": [
+     "黾",
+     "⿌",
+     "黽"
+    ],
+    "zh-hant": [
+     "黽",
+     "⿌"
+    ],
+    "zh": [
+     "黽",
+     "⿌"
+    ],
+    "vi": [
+     "⿌",
+     "黽"
+    ],
+    "en": [
+     "KANGXI RADICAL FROG",
+     "⿌",
+     "radical frog",
+     "radical 205"
+    ],
+    "ja": [
+     "⿌",
+     "黽"
+    ],
+    "ko": [
+     "맹꽁이맹"
+    ]
+   }
+  },
+  "Q295748": {
+   "labels": {
+    "zh": "鼎部",
+    "en": "Kangxi radical 206 (⿍)",
+    "ja": "鼎部",
+    "zh-hans": "鼎部",
+    "zh-hant": "鼎部",
+    "vi": "Bộ Đỉnh (鼎)",
+    "ko": "⿍"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鼎",
+     "⿍"
+    ],
+    "zh-hant": [
+     "鼎",
+     "⿍"
+    ],
+    "zh": [
+     "鼎",
+     "⿍"
+    ],
+    "vi": [
+     "⿍",
+     "鼎"
+    ],
+    "en": [
+     "⿍",
+     "KANGXI RADICAL TRIPOD",
+     "radical tripod",
+     "radical 206"
+    ],
+    "ja": [
+     "⿍",
+     "鼎"
+    ],
+    "ko": [
+     "솥정"
+    ]
+   }
+  },
+  "Q295809": {
+   "labels": {
+    "zh": "鼓部",
+    "en": "Kangxi radical 207 (⿎)",
+    "ja": "鼓部",
+    "zh-hans": "鼓部",
+    "zh-hant": "鼓部",
+    "vi": "Bộ Cổ (鼓)",
+    "ko": "⿎"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鼓",
+     "⿎"
+    ],
+    "zh-hant": [
+     "鼓",
+     "⿎"
+    ],
+    "zh": [
+     "鼓",
+     "⿎"
+    ],
+    "vi": [
+     "⿎",
+     "鼓"
+    ],
+    "en": [
+     "⿎",
+     "KANGXI RADICAL DRUM",
+     "radical drum",
+     "radical 207"
+    ],
+    "ja": [
+     "⿎",
+     "鼓"
+    ],
+    "ko": [
+     "북고"
+    ]
+   }
+  },
+  "Q295878": {
+   "labels": {
+    "zh": "鼠部",
+    "en": "Kangxi radical 208 (⿏)",
+    "ja": "鼠部",
+    "zh-hans": "鼠部",
+    "zh-hant": "鼠部",
+    "vi": "Bộ Thử (鼠)",
+    "ko": "⿏"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鼠",
+     "⿏"
+    ],
+    "zh-hant": [
+     "鼠",
+     "⿏"
+    ],
+    "zh": [
+     "鼠",
+     "⿏"
+    ],
+    "vi": [
+     "⿏",
+     "鼠"
+    ],
+    "en": [
+     "⿏",
+     "KANGXI RADICAL RAT",
+     "radical rat",
+     "radical 208"
+    ],
+    "ja": [
+     "⿏",
+     "鼠"
+    ],
+    "ko": [
+     "쥐서"
+    ]
+   }
+  },
+  "Q295934": {
+   "labels": {
+    "zh": "鼻部",
+    "en": "Kangxi radical 209 (⿐)",
+    "ja": "鼻部",
+    "zh-hans": "鼻部",
+    "zh-hant": "鼻部",
+    "vi": "Bộ Tị (鼻)",
+    "ko": "⿐"
+   },
+   "aliases": {
+    "zh-hans": [
+     "鼻",
+     "⿐"
+    ],
+    "zh-hant": [
+     "鼻",
+     "⿐"
+    ],
+    "zh": [
+     "鼻",
+     "⿐"
+    ],
+    "vi": [
+     "⿐",
+     "鼻"
+    ],
+    "en": [
+     "KANGXI RADICAL NOSE",
+     "⿐",
+     "radical nose",
+     "radical 209"
+    ],
+    "ja": [
+     "⿐",
+     "鼻"
+    ],
+    "ko": [
+     "코비"
+    ]
+   }
+  },
+  "Q295986": {
+   "labels": {
+    "zh": "齊部",
+    "en": "Kanxi radical 210 (⿑)",
+    "ja": "齊部",
+    "zh-hans": "齐部",
+    "zh-hant": "齊部",
+    "vi": "Bộ Tề (齊)",
+    "ko": "⿑"
+   },
+   "aliases": {
+    "zh-hans": [
+     "齐",
+     "⿑",
+     "齊"
+    ],
+    "zh-hant": [
+     "齊",
+     "⿑"
+    ],
+    "zh": [
+     "齊",
+     "⿑"
+    ],
+    "ja": [
+     "斉部",
+     "⿑",
+     "齊"
+    ],
+    "vi": [
+     "⿑",
+     "齊"
+    ],
+    "en": [
+     "KANGXI RADICAL EVEN",
+     "radical even",
+     "radical 210"
+    ],
+    "ko": [
+     "가지런할제"
+    ]
+   }
+  },
+  "Q296057": {
+   "labels": {
+    "zh": "齒部",
+    "en": "Kangxi radical 211 (⿒)",
+    "ja": "歯部",
+    "zh-hans": "齿部",
+    "zh-hant": "齒部",
+    "ko": "⿒",
+    "vi": "Bộ Xỉ (齒)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "齿",
+     "⿒",
+     "齒"
+    ],
+    "zh-hant": [
+     "齒",
+     "⿒"
+    ],
+    "zh": [
+     "齒",
+     "⿒"
+    ],
+    "ja": [
+     "齒部",
+     "しぶ",
+     "歯",
+     "齒",
+     "は",
+     "はへん",
+     "⿒"
+    ],
+    "vi": [
+     "⿒",
+     "齒"
+    ],
+    "en": [
+     "KANGXI RADICAL TOOTH",
+     "⿒",
+     "radical tooth",
+     "radical 211"
+    ],
+    "ko": [
+     "이치"
+    ]
+   }
+  },
+  "Q296147": {
+   "labels": {
+    "zh": "龍部",
+    "en": "Kangxi radical 212 (⿓)",
+    "ja": "龍部",
+    "ko": "⿓",
+    "zh-hans": "龙部",
+    "zh-hant": "龍部",
+    "vi": "Bộ Long (龍)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "龙",
+     "⿓",
+     "龍"
+    ],
+    "zh-hant": [
+     "龍",
+     "⿓"
+    ],
+    "zh": [
+     "龍",
+     "⿓"
+    ],
+    "ja": [
+     "竜部",
+     "⿓",
+     "龍"
+    ],
+    "vi": [
+     "⿓",
+     "龍"
+    ],
+    "en": [
+     "KANGXI RADICAL DRAGON",
+     "⿓",
+     "radical dragon",
+     "radical 212"
+    ],
+    "ko": [
+     "용룡"
+    ]
+   }
+  },
+  "Q296261": {
+   "labels": {
+    "zh": "龠部",
+    "en": "Kangxi radical 214 (⿕)",
+    "ja": "龠部",
+    "zh-hans": "龠部",
+    "zh-hant": "龠部",
+    "ko": "⿕",
+    "vi": "Bộ Dược (龠)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "龠",
+     "⿕"
+    ],
+    "zh-hant": [
+     "龠",
+     "⿕"
+    ],
+    "zh": [
+     "龠",
+     "⿕"
+    ],
+    "vi": [
+     "⿕",
+     "龠"
+    ],
+    "en": [
+     "KANGXI RADICAL FLUTE",
+     "⿕",
+     "radical flute",
+     "radical 214"
+    ],
+    "ja": [
+     "⿕",
+     "龠"
+    ],
+    "ko": [
+     "피리약"
+    ]
+   }
+  },
+  "Q93246": {
+   "labels": {
+    "zh": "一部",
+    "en": "Kangxi radical 1 (⼀)",
+    "ja": "一部",
+    "ko": "⼀",
+    "zh-hans": "一部",
+    "zh-hant": "一部",
+    "vi": "Bộ Nhất (一)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "一",
+     "⼀"
+    ],
+    "zh-hant": [
+     "一",
+     "⼀"
+    ],
+    "zh": [
+     "一",
+     "⼀"
+    ],
+    "en": [
+     "KANGXI RADICAL ONE",
+     "⼀",
+     "radical one",
+     "radical 1"
+    ],
+    "vi": [
+     "⼀",
+     "一"
+    ],
+    "ja": [
+     "⼀",
+     "一"
+    ],
+    "ko": [
+     "한일"
+    ]
+   }
+  },
+  "Q93269": {
+   "labels": {
+    "zh": "丨部",
+    "en": "Kangxi radical 2 (⼁)",
+    "ja": "丨部",
+    "ko": "⼁",
+    "zh-hans": "丨部",
+    "zh-hant": "丨部",
+    "vi": "Bộ Cổn (丨)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "丨",
+     "⼁"
+    ],
+    "zh-hant": [
+     "丨",
+     "⼁"
+    ],
+    "zh": [
+     "丨",
+     "⼁"
+    ],
+    "ja": [
+     "コン部",
+     "こんぶ",
+     "ぼう",
+     "たてぼう",
+     "⼁",
+     "丨"
+    ],
+    "en": [
+     "⼁",
+     "KANGXI RADICAL LINE",
+     "radical line",
+     "radical 2"
+    ],
+    "vi": [
+     "⼁",
+     "丨"
+    ],
+    "ko": [
+     "뚫을곤"
+    ]
+   }
+  },
+  "Q93278": {
+   "labels": {
+    "zh": "丶部",
+    "en": "Kangxi radical 3 (⼂)",
+    "ja": "丶部",
+    "ko": "⼂",
+    "zh-hans": "丶部",
+    "zh-hant": "丶部",
+    "vi": "Bộ Chủ (丶)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "丶",
+     "⼂"
+    ],
+    "zh-hant": [
+     "丶",
+     "⼂"
+    ],
+    "zh": [
+     "丶",
+     "⼂"
+    ],
+    "vi": [
+     "⼂",
+     "丶"
+    ],
+    "en": [
+     "丶",
+     "KANGXI RADICAL DOT",
+     "radical dot",
+     "radical 3"
+    ],
+    "ja": [
+     "⼂",
+     "丶"
+    ],
+    "ko": [
+     "점주",
+     "불똥주"
+    ]
+   }
+  },
+  "Q93290": {
+   "labels": {
+    "zh": "丿部",
+    "en": "Kangxi radical 4 (⼃)",
+    "ja": "丿部",
+    "ko": "⼃",
+    "zh-hans": "丿部",
+    "zh-hant": "丿部",
+    "vi": "Bộ Phiệt (丿)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "丿",
+     "⼃"
+    ],
+    "zh-hant": [
+     "丿",
+     "⼃"
+    ],
+    "zh": [
+     "丿",
+     "⼃"
+    ],
+    "en": [
+     "⼃",
+     "radical 4",
+     "KANGXI RADICAL SLASH",
+     "radical slash",
+     "丿"
+    ],
+    "vi": [
+     "⼃",
+     "丿"
+    ],
+    "ja": [
+     "⼃",
+     "丿"
+    ],
+    "ko": [
+     "삐침별",
+     "삐칠별"
+    ]
+   }
+  },
+  "Q93299": {
+   "labels": {
+    "zh": "乙部",
+    "en": "Kangxi radical 5 (⼄)",
+    "ja": "乙部",
+    "ko": "⼄",
+    "zh-hans": "乙部",
+    "zh-hant": "乙部",
+    "vi": "Bộ Ất (乙)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "乙",
+     "⼄"
+    ],
+    "zh-hant": [
+     "乙",
+     "⼄"
+    ],
+    "zh": [
+     "乙",
+     "⼄"
+    ],
+    "vi": [
+     "⼄",
+     "乙"
+    ],
+    "en": [
+     "KANGXI RADICAL SECOND",
+     "⼄",
+     "radical second",
+     "radical 5"
+    ],
+    "ja": [
+     "⼄",
+     "乙"
+    ],
+    "ko": [
+     "새을"
+    ]
+   }
+  },
+  "Q93308": {
+   "labels": {
+    "zh": "亅部",
+    "en": "Kangxi radical 6 (⼅)",
+    "ja": "亅部",
+    "ko": "⼅",
+    "zh-hans": "亅部",
+    "zh-hant": "亅部",
+    "vi": "Bộ Quyết (亅)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "亅",
+     "⼅"
+    ],
+    "zh-hant": [
+     "亅",
+     "⼅"
+    ],
+    "zh": [
+     "亅",
+     "⼅"
+    ],
+    "vi": [
+     "⼅",
+     "亅"
+    ],
+    "en": [
+     "KANGXI RADICAL HOOK",
+     "⼅",
+     "radical 6",
+     "radical hook"
+    ],
+    "ja": [
+     "⼅",
+     "亅"
+    ],
+    "ko": [
+     "갈고리궐"
+    ]
+   }
+  },
+  "Q93320": {
+   "labels": {
+    "zh": "二部",
+    "en": "Kangxi radical 7 (二)",
+    "ja": "二部",
+    "ko": "⼆",
+    "zh-hans": "二部",
+    "zh-hant": "二部",
+    "vi": "Bộ Nhị (二)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "二",
+     "⼆"
+    ],
+    "zh-hant": [
+     "二",
+     "⼆"
+    ],
+    "zh": [
+     "二",
+     "⼆"
+    ],
+    "en": [
+     "二",
+     "KANGXI RADICAL TWO",
+     "radical 7",
+     "radical two"
+    ],
+    "vi": [
+     "⼆",
+     "二"
+    ],
+    "ja": [
+     "⼆",
+     "二"
+    ],
+    "ko": [
+     "두이"
+    ]
+   }
+  },
+  "Q93327": {
+   "labels": {
+    "zh": "亠部",
+    "en": "Kangxi radical 8 (⼇)",
+    "ja": "亠部",
+    "ko": "⼇",
+    "zh-hans": "亠部",
+    "zh-hant": "亠部",
+    "vi": "Bộ Đầu (亠)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "亠",
+     "⼇"
+    ],
+    "zh-hant": [
+     "亠",
+     "⼇"
+    ],
+    "zh": [
+     "亠",
+     "⼇"
+    ],
+    "ja": [
+     "亠",
+     "とうぶ",
+     "なべぶた",
+     "けさんかんむり",
+     "けいさんかんむり",
+     "⼇"
+    ],
+    "vi": [
+     "⼇",
+     "亠"
+    ],
+    "en": [
+     "⼇",
+     "KANGXI RADICAL LID",
+     "radical 8",
+     "radical lid"
+    ],
+    "ko": [
+     "돼지해머리",
+     "돼지해밑"
+    ]
+   }
+  },
+  "Q93331": {
+   "labels": {
+    "zh": "人部",
+    "en": "Kangxi radical 9 (⼈)",
+    "ja": "人部",
+    "ko": "⼈",
+    "zh-hans": "人部",
+    "zh-hant": "人部",
+    "vi": "Bộ Nhân (人)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "人",
+     "⼈"
+    ],
+    "zh-hant": [
+     "人",
+     "⼈"
+    ],
+    "zh": [
+     "人",
+     "亻",
+     "⼈"
+    ],
+    "ja": [
+     "人偏",
+     "にんべん",
+     "亻",
+     "⼈",
+     "人"
+    ],
+    "vi": [
+     "⼈",
+     "人"
+    ],
+    "en": [
+     "KANGXI RADICAL MAN",
+     "⼈",
+     "radical man",
+     "radical 9"
+    ],
+    "ko": [
+     "사람인"
+    ]
+   }
+  },
+  "Q93333": {
+   "labels": {
+    "zh": "儿部",
+    "en": "Kangxi radical 10 (⼉)",
+    "ja": "儿部",
+    "ko": "儿",
+    "zh-hans": "儿部",
+    "zh-hant": "儿部",
+    "vi": "Bộ Nhân (儿)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "儿",
+     "⼉"
+    ],
+    "zh-hant": [
+     "儿",
+     "⼉"
+    ],
+    "zh": [
+     "儿",
+     "⼉"
+    ],
+    "ja": [
+     "儿",
+     "じんぶ",
+     "じん",
+     "にんにょう",
+     "ひとあし",
+     "⼉"
+    ],
+    "vi": [
+     "⼉",
+     "儿"
+    ],
+    "en": [
+     "KANGXI RADICAL LEGS",
+     "⼉",
+     "radical 10",
+     "radical legs"
+    ],
+    "ko": [
+     "어진사람인발",
+     "어진사람인"
+    ]
+   }
+  },
+  "Q93334": {
+   "labels": {
+    "zh": "入部",
+    "en": "Kangxi radical 11 (⼊)",
+    "ja": "入部",
+    "ko": "⼊",
+    "zh-hans": "入部",
+    "zh-hant": "入部",
+    "vi": "Bộ Nhập (入)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "入",
+     "⼊"
+    ],
+    "zh-hant": [
+     "入",
+     "⼊"
+    ],
+    "zh": [
+     "入",
+     "⼊"
+    ],
+    "vi": [
+     "⼊",
+     "入"
+    ],
+    "en": [
+     "KANGXI RADICAL ENTER",
+     "⼊",
+     "radical 11",
+     "radical enter"
+    ],
+    "ja": [
+     "⼊",
+     "入"
+    ],
+    "ko": [
+     "들입"
+    ]
+   }
+  },
+  "Q93336": {
+   "labels": {
+    "zh": "八部",
+    "en": "Kangxi radical 12 (⼋)",
+    "ja": "八部",
+    "ko": "⼋",
+    "zh-hans": "八部",
+    "zh-hant": "八部",
+    "vi": "Bộ Bát (八)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "八",
+     "⼋"
+    ],
+    "zh-hant": [
+     "八",
+     "⼋"
+    ],
+    "zh": [
+     "八",
+     "⼋"
+    ],
+    "vi": [
+     "⼋",
+     "八"
+    ],
+    "en": [
+     "KANGXI RADICAL EIGHT",
+     "⼋",
+     "radical eight",
+     "radical 12"
+    ],
+    "ja": [
+     "⼋",
+     "八"
+    ],
+    "ko": [
+     "들입"
+    ]
+   }
+  },
+  "Q93339": {
+   "labels": {
+    "zh": "冂部",
+    "en": "Kangxi radical 13 (⼌)",
+    "ja": "冂部",
+    "ko": "⼌",
+    "zh-hans": "冂部",
+    "zh-hant": "冂部",
+    "vi": "Bộ Quynh (冂)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "冂",
+     "⼌"
+    ],
+    "zh-hant": [
+     "冂",
+     "⼌"
+    ],
+    "zh": [
+     "冂",
+     "⼌"
+    ],
+    "vi": [
+     "⼌",
+     "冂"
+    ],
+    "en": [
+     "KANGXI RADICAL DOWN BOX",
+     "⼌",
+     "radical down box",
+     "radical 13"
+    ],
+    "ja": [
+     "⼌",
+     "冂"
+    ],
+    "ko": [
+     "멀경몸"
+    ]
+   }
+  },
+  "Q93342": {
+   "labels": {
+    "zh": "冖部",
+    "en": "Kangxi radical 14 (⼍)",
+    "ja": "冖部",
+    "ko": "⼍",
+    "zh-hans": "冖部",
+    "zh-hant": "冖部",
+    "vi": "Bộ Mịch (冖)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "冖",
+     "⼍"
+    ],
+    "zh-hant": [
+     "冖",
+     "⼍"
+    ],
+    "zh": [
+     "冖",
+     "⼍"
+    ],
+    "vi": [
+     "⼍",
+     "冖"
+    ],
+    "en": [
+     "KANGXI RADICAL COVER",
+     "⼍",
+     "radical cover",
+     "radical 14"
+    ],
+    "ja": [
+     "⼍",
+     "冖"
+    ],
+    "ko": [
+     "민갓머리"
+    ]
+   }
+  },
+  "Q93345": {
+   "labels": {
+    "zh": "冫部",
+    "en": "Kangxi radical 15 (⼎)",
+    "ja": "冫部",
+    "ko": "⼎",
+    "zh-hans": "冫部",
+    "zh-hant": "冫部",
+    "vi": "Bộ Băng (冫)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "冫",
+     "⼎"
+    ],
+    "zh-hant": [
+     "冫",
+     "⼎"
+    ],
+    "zh": [
+     "冫",
+     "⼎"
+    ],
+    "ja": [
+     "冫",
+     "ひょうぶ",
+     "二水",
+     "にすい",
+     "⼎"
+    ],
+    "vi": [
+     "⼎",
+     "冫"
+    ],
+    "en": [
+     "KANGXI RADICAL ICE",
+     "⼎",
+     "radical ice",
+     "radical 15"
+    ],
+    "ko": [
+     "이수변"
+    ]
+   }
+  },
+  "Q93348": {
+   "labels": {
+    "zh": "几部",
+    "en": "Kangxi radical 16 (⼏)",
+    "ja": "几部",
+    "ko": "⼏",
+    "zh-hans": "几部",
+    "zh-hant": "几部",
+    "vi": "Bộ Kỷ (几)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "几",
+     "⼏"
+    ],
+    "zh-hant": [
+     "几",
+     "⼏"
+    ],
+    "zh": [
+     "几",
+     "⼏"
+    ],
+    "vi": [
+     "⼏",
+     "几"
+    ],
+    "en": [
+     "KANGXI RADICAL TABLE",
+     "radical table",
+     "radical 16"
+    ],
+    "ja": [
+     "⼏",
+     "几"
+    ],
+    "ko": [
+     "안석궤"
+    ]
+   }
+  },
+  "Q93350": {
+   "labels": {
+    "zh": "凵部",
+    "en": "Kangxi radical 17 (⼐)",
+    "ja": "凵部",
+    "ko": "⼐",
+    "zh-hans": "凵部",
+    "zh-hant": "凵部",
+    "vi": "Bộ Khảm (凵)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "凵",
+     "⼐"
+    ],
+    "zh-hant": [
+     "凵",
+     "⼐"
+    ],
+    "zh": [
+     "凵",
+     "⼐"
+    ],
+    "vi": [
+     "⼐",
+     "凵"
+    ],
+    "en": [
+     "KANGXI RADICAL OPEN BOX",
+     "⼐",
+     "radical open box",
+     "radical 17"
+    ],
+    "ja": [
+     "⼐",
+     "凵"
+    ],
+    "ko": [
+     "위튼입구몸",
+     "위터진입구"
+    ]
+   }
+  },
+  "Q93353": {
+   "labels": {
+    "zh": "刀部",
+    "en": "Kangxi radical 18 (⼑)",
+    "ja": "刀部",
+    "zh-hans": "刀部",
+    "zh-hant": "刀部",
+    "ko": "⼑",
+    "vi": "Bộ Đao (刀)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "刀",
+     "⼑"
+    ],
+    "zh-hant": [
+     "刀",
+     "⼑"
+    ],
+    "zh": [
+     "刀",
+     "⼑"
+    ],
+    "ja": [
+     "りっとう",
+     "立刀",
+     "刂",
+     "⼑",
+     "刀"
+    ],
+    "vi": [
+     "⼑",
+     "刀"
+    ],
+    "en": [
+     "KANGXI RADICAL KNIFE",
+     "⼑",
+     "radical knife",
+     "radical 18"
+    ],
+    "ko": [
+     "칼도"
+    ]
+   }
+  },
+  "Q93357": {
+   "labels": {
+    "zh": "力部",
+    "en": "Kangxi radical 19 (⼒)",
+    "ja": "力部",
+    "zh-hans": "力部",
+    "zh-hant": "力部",
+    "ko": "⼒",
+    "vi": "Bộ Lực (力)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "力",
+     "⼒"
+    ],
+    "zh-hant": [
+     "力",
+     "⼒"
+    ],
+    "zh": [
+     "力",
+     "⼒"
+    ],
+    "vi": [
+     "⼒",
+     "力"
+    ],
+    "en": [
+     "⼒",
+     "力",
+     "KANGXI RADICAL POWER",
+     "radical power",
+     "radical 19"
+    ],
+    "ja": [
+     "⼒",
+     "力"
+    ],
+    "ko": [
+     "힘력"
+    ]
+   }
+  },
+  "Q93361": {
+   "labels": {
+    "zh": "勹部",
+    "en": "Kangxi radical 20 (⼓)",
+    "ja": "勹部",
+    "zh-hans": "勹部",
+    "zh-hant": "勹部",
+    "vi": "Bộ Bao (勹)",
+    "ko": "⼓"
+   },
+   "aliases": {
+    "zh-hans": [
+     "勹",
+     "⼓"
+    ],
+    "zh-hant": [
+     "勹",
+     "⼓"
+    ],
+    "zh": [
+     "勹",
+     "⼓"
+    ],
+    "vi": [
+     "⼓",
+     "勹"
+    ],
+    "en": [
+     "⼓",
+     "勹",
+     "KANGXI RADICAL WRAP",
+     "radical wrap",
+     "radical 20"
+    ],
+    "ja": [
+     "⼓",
+     "勹"
+    ],
+    "ko": [
+     "쌀포몸"
+    ]
+   }
+  },
+  "Q93369": {
+   "labels": {
+    "zh": "匕部",
+    "en": "Kangxi radical 21 (⼔)",
+    "ja": "匕部",
+    "zh-hans": "匕部",
+    "zh-hant": "匕部",
+    "vi": "Bộ Chủy (匕)",
+    "ko": "⼔"
+   },
+   "aliases": {
+    "zh-hans": [
+     "匕",
+     "⼔"
+    ],
+    "zh-hant": [
+     "匕",
+     "⼔"
+    ],
+    "zh": [
+     "匕",
+     "⼔"
+    ],
+    "vi": [
+     "⼔",
+     "匕"
+    ],
+    "en": [
+     "⼔",
+     "匕",
+     "KANGXI RADICAL SPOON",
+     "radical spoon",
+     "radical 21"
+    ],
+    "ja": [
+     "⼔",
+     "匕"
+    ],
+    "ko": [
+     "비수비"
+    ]
+   }
+  },
+  "Q93407": {
+   "labels": {
+    "zh": "匚部",
+    "en": "Kangxi radical 22 (⼕)",
+    "ja": "匚部",
+    "zh-hans": "匚部",
+    "zh-hant": "匚部",
+    "vi": "Bộ Phương (匚)",
+    "ko": "⼕"
+   },
+   "aliases": {
+    "zh-hans": [
+     "匚",
+     "⼕"
+    ],
+    "zh-hant": [
+     "匚",
+     "⼕"
+    ],
+    "zh": [
+     "匚",
+     "⼕"
+    ],
+    "vi": [
+     "⼕",
+     "匚"
+    ],
+    "en": [
+     "⼕",
+     "匚",
+     "KANGXI RADICAL RIGHT OPEN BOX",
+     "radical right open box",
+     "radical 22"
+    ],
+    "ja": [
+     "⼕",
+     "匚"
+    ],
+    "ko": [
+     "튼입구몸",
+     "터진입구"
+    ]
+   }
+  },
+  "Q93552": {
+   "labels": {
+    "zh": "匸部",
+    "en": "Kangxi radical 23 (⼖)",
+    "ja": "匸部",
+    "zh-hans": "匸部",
+    "zh-hant": "匸部",
+    "vi": "Bộ Hệ (匸)",
+    "ko": "⼖"
+   },
+   "aliases": {
+    "zh-hans": [
+     "匸",
+     "⼖"
+    ],
+    "zh-hant": [
+     "匸",
+     "⼖"
+    ],
+    "zh": [
+     "匸",
+     "⼖"
+    ],
+    "vi": [
+     "⼖",
+     "匸"
+    ],
+    "en": [
+     "⼖",
+     "匸",
+     "KANGXI RADICAL HIDING ENCLOSURE",
+     "radical hiding enclosure",
+     "radical 23"
+    ],
+    "ja": [
+     "⼖",
+     "匸"
+    ],
+    "ko": [
+     "감출혜몸",
+     "터진에운담"
+    ]
+   }
+  },
+  "Q93599": {
+   "labels": {
+    "zh": "十部",
+    "en": "Kangxi radical 24 (⼗)",
+    "ja": "十部",
+    "zh-hans": "十部",
+    "zh-hant": "十部",
+    "vi": "Bộ Thập (十)",
+    "ko": "〸"
+   },
+   "aliases": {
+    "zh-hans": [
+     "十",
+     "⼗"
+    ],
+    "zh-hant": [
+     "十",
+     "⼗"
+    ],
+    "zh": [
+     "十",
+     "⼗"
+    ],
+    "vi": [
+     "⼗",
+     "十"
+    ],
+    "en": [
+     "⼗",
+     "KANGXI RADICAL TEN",
+     "radical 24",
+     "radical ten"
+    ],
+    "ja": [
+     "⼗",
+     "十"
+    ],
+    "ko": [
+     "열십"
+    ]
+   }
+  },
+  "Q94724": {
+   "labels": {
+    "zh": "卜部",
+    "en": "Kangxi radical 25 (⼘)",
+    "ja": "卜部",
+    "zh-hans": "卜部",
+    "zh-hant": "卜部",
+    "vi": "Bộ Bốc (卜)",
+    "ko": "⼘"
+   },
+   "aliases": {
+    "zh-hans": [
+     "卜",
+     "⼘"
+    ],
+    "zh-hant": [
+     "卜",
+     "⼘"
+    ],
+    "zh": [
+     "卜",
+     "⼘"
+    ],
+    "vi": [
+     "⼘",
+     "卜"
+    ],
+    "en": [
+     "⼘",
+     "卜",
+     "KANGXI RADICAL DIVINATION",
+     "radical divination",
+     "radical 25"
+    ],
+    "ja": [
+     "⼘",
+     "卜"
+    ],
+    "ko": [
+     "점복"
+    ]
+   }
+  },
+  "Q94769": {
+   "labels": {
+    "zh": "卩部",
+    "en": "Kangxi radical 26 (⼙)",
+    "ja": "卩部",
+    "zh-hans": "卩部",
+    "zh-hant": "卩部",
+    "vi": "Bộ Tiết (卩)",
+    "ko": "⼙"
+   },
+   "aliases": {
+    "zh-hans": [
+     "卩",
+     "⼙"
+    ],
+    "zh-hant": [
+     "卩",
+     "⼙"
+    ],
+    "zh": [
+     "卩",
+     "节部",
+     "⼙"
+    ],
+    "vi": [
+     "⼙",
+     "卩"
+    ],
+    "en": [
+     "KANGXI RADICAL SEAL",
+     "⼙",
+     "radical seal",
+     "radical 26"
+    ],
+    "ja": [
+     "⼙",
+     "卩"
+    ],
+    "ko": [
+     "병부절"
+    ]
+   }
+  },
+  "Q94820": {
+   "labels": {
+    "zh": "厂部",
+    "en": "Kangxi radical 27 (⼚)",
+    "ja": "厂部",
+    "zh-hans": "厂部",
+    "zh-hant": "厂部",
+    "vi": "Bộ Hán (厂)",
+    "ko": "⼚"
+   },
+   "aliases": {
+    "zh-hans": [
+     "厂",
+     "⼚"
+    ],
+    "zh-hant": [
+     "厂",
+     "⼚"
+    ],
+    "zh": [
+     "厂",
+     "⼚"
+    ],
+    "ja": [
+     "厂",
+     "かんぶ",
+     "がんだれ",
+     "かん",
+     "⼚"
+    ],
+    "vi": [
+     "⼚",
+     "厂"
+    ],
+    "en": [
+     "⼚",
+     "KANGXI RADICAL CLIFF",
+     "radical cliff",
+     "radical 27"
+    ],
+    "ko": [
+     "민엄호",
+     "민엄호밑"
+    ]
+   }
+  },
+  "Q94989": {
+   "labels": {
+    "zh": "厶部",
+    "en": "Kangxi radical 28 (⼛)",
+    "ja": "厶部",
+    "zh-hans": "厶部",
+    "zh-hant": "厶部",
+    "vi": "Bộ Tư (厶)",
+    "ko": "⼛"
+   },
+   "aliases": {
+    "zh-hans": [
+     "厶",
+     "⼛"
+    ],
+    "zh-hant": [
+     "厶",
+     "⼛"
+    ],
+    "zh": [
+     "厶",
+     "⼛"
+    ],
+    "ja": [
+     "厶",
+     "しぶ",
+     "ム部",
+     "ム",
+     "む",
+     "⼛"
+    ],
+    "vi": [
+     "⼛",
+     "厶"
+    ],
+    "en": [
+     "KANGXI RADICAL PRIVATE",
+     "⼛",
+     "radical private",
+     "radical 28"
+    ],
+    "ko": [
+     "마늘모"
+    ]
+   }
+  },
+  "Q95009": {
+   "labels": {
+    "zh": "又部",
+    "en": "Kangxi radical 29 (⼜)",
+    "ja": "又部",
+    "zh-hans": "又部",
+    "zh-hant": "又部",
+    "vi": "Bộ Hựu (又)",
+    "ko": "⼜"
+   },
+   "aliases": {
+    "zh-hans": [
+     "又",
+     "⼜"
+    ],
+    "zh-hant": [
+     "又",
+     "⼜"
+    ],
+    "zh": [
+     "又",
+     "⼜"
+    ],
+    "vi": [
+     "⼜",
+     "又"
+    ],
+    "en": [
+     "⼜",
+     "KANGXI RADICAL AGAIN",
+     "radical again",
+     "radical 29"
+    ],
+    "ja": [
+     "⼜",
+     "又"
+    ],
+    "ko": [
+     "또우"
+    ]
+   }
+  },
+  "Q95058": {
+   "labels": {
+    "zh": "口部",
+    "en": "Kangxi radical 30 (⼝)",
+    "ja": "口部",
+    "zh-hans": "口部",
+    "zh-hant": "口部",
+    "ko": "⼝",
+    "vi": "Bộ Khẩu (口)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "口",
+     "⼝"
+    ],
+    "zh-hant": [
+     "口",
+     "⼝"
+    ],
+    "zh": [
+     "口",
+     "⼝"
+    ],
+    "ja": [
+     "口",
+     "こうぶ",
+     "口偏",
+     "くちへん",
+     "⼝"
+    ],
+    "vi": [
+     "⼝",
+     "口"
+    ],
+    "en": [
+     "KANGXI RADICAL MOUTH",
+     "⼝",
+     "radical mouth",
+     "radical 30"
+    ],
+    "ko": [
+     "입구"
+    ]
+   }
+  },
+  "Q95108": {
+   "labels": {
+    "zh": "囗部",
+    "en": "Kangxi radical 31 (⼞)",
+    "ja": "囗部",
+    "zh-hans": "囗部",
+    "zh-hant": "囗部",
+    "ko": "⼞",
+    "vi": "Bộ Vi (囗)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "囗",
+     "⼞"
+    ],
+    "zh-hant": [
+     "囗",
+     "⼞"
+    ],
+    "zh": [
+     "囗",
+     "⼞",
+     "附錄:部首索引/⼞"
+    ],
+    "ja": [
+     "囗",
+     "いぶ",
+     "い",
+     "くにがまえ",
+     "国構え",
+     "Wiktionary:漢字索引 部首 八",
+     "⼞"
+    ],
+    "en": [
+     "⼞",
+     "康熙激進圍剿",
+     "激進分子31",
+     "激進的圈地運動",
+     "激進的柵欄",
+     "激進邊界"
+    ],
+    "ko": [
+     "큰입구몸",
+     "큰입구"
+    ],
+    "vi": [
+     "⼞",
+     "囗"
+    ]
+   }
+  },
+  "Q95507": {
+   "labels": {
+    "zh": "土部",
+    "en": "Kangxi radical 32 (⼟)",
+    "ja": "土部",
+    "zh-hans": "土部",
+    "zh-hant": "土部",
+    "vi": "Bộ Thổ (土)",
+    "ko": "⼟"
+   },
+   "aliases": {
+    "zh-hans": [
+     "土",
+     "⼟"
+    ],
+    "zh-hant": [
+     "土",
+     "⼟"
+    ],
+    "zh": [
+     "土",
+     "⼟"
+    ],
+    "ja": [
+     "土",
+     "どぶ",
+     "土偏",
+     "つちへん",
+     "⼟"
+    ],
+    "vi": [
+     "⼟",
+     "土"
+    ],
+    "en": [
+     "KANGXI RADICAL EARTH",
+     "⼟",
+     "radical earth",
+     "radical 32"
+    ],
+    "ko": [
+     "흙토"
+    ]
+   }
+  },
+  "Q95526": {
+   "labels": {
+    "zh": "士部",
+    "en": "Kangxi radical 33 (⼠)",
+    "ja": "士部",
+    "zh-hans": "士部",
+    "zh-hant": "士部",
+    "vi": "Bộ Sĩ (士)",
+    "ko": "⼠"
+   },
+   "aliases": {
+    "zh-hans": [
+     "士",
+     "⼠"
+    ],
+    "zh-hant": [
+     "士",
+     "⼠"
+    ],
+    "zh": [
+     "士",
+     "⼠"
+    ],
+    "vi": [
+     "⼠",
+     "士"
+    ],
+    "en": [
+     "KANGXI RADICAL SCHOLAR",
+     "⼠",
+     "radical scholar",
+     "radical 33"
+    ],
+    "ja": [
+     "⼠",
+     "士"
+    ],
+    "ko": [
+     "선비사"
+    ]
+   }
+  },
+  "Q95544": {
+   "labels": {
+    "zh": "夂部",
+    "en": "Kangxi radical 34 (⼡)",
+    "ja": "夂部",
+    "zh-hans": "夂部",
+    "zh-hant": "夂部",
+    "ko": "⼡",
+    "vi": "Bộ Trĩ (夂)"
+   },
+   "aliases": {
+    "zh-hans": [
+     "夂",
+     "⼡"
+    ],
+    "zh-hant": [
+     "夂",
+     "⼡"
+    ],
+    "zh": [
+     "夂",
+     "⼡"
+    ],
+    "vi": [
+     "⼡",
+     "夂"
+    ],
+    "en": [
+     "⼡",
+     "KANGXI RADICAL GO",
+     "radical go",
+     "radical follow",
+     "radical 34"
+    ],
+    "ja": [
+     "⼡",
+     "夂"
+    ],
+    "ko": [
+     "뒤쳐올치",
+     "뒤처져올치"
+    ]
+   }
+  },
+  "Q95559": {
+   "labels": {
+    "zh": "夊部",
+    "en": "Kangxi radical 35 (⼢)",
+    "ja": "夊部",
+    "zh-hans": "夊部",
+    "zh-hant": "夊部",
+    "vi": "Bộ Tuy (夊)",
+    "ko": "⼢"
+   },
+   "aliases": {
+    "zh-hans": [
+     "夊",
+     "⼢"
+    ],
+    "zh-hant": [
+     "夊",
+     "⼢"
+    ],
+    "zh": [
+     "夊",
+     "⼢"
+    ],
+    "ja": [
+     "夊",
+     "すいぶ",
+     "すいにょう",
+     "すいにゅう",
+     "なつあし",
+     "⼢"
+    ],
+    "vi": [
+     "⼢",
+     "夊"
+    ],
+    "en": [
+     "⼢",
+     "KANGXI RADICAL GO SLOWLY",
+     "radical go slowly",
+     "radical 35"
+    ],
+    "ko": [
+     "천천히걸을쇠발",
+     "천천히걸을쇠"
+    ]
+   }
+  },
+  "Q95571": {
+   "labels": {
+    "zh": "夕部",
+    "en": "Kangxi radical 36 (⼢)",
+    "ja": "夕部",
+    "zh-hans": "夕部",
+    "zh-hant": "夕部",
+    "vi": "Bộ Tịch (夕)",
+    "ko": "⼣"
+   },
+   "aliases": {
+    "zh-hans": [
+     "夕",
+     "⼣"
+    ],
+    "zh-hant": [
+     "夕",
+     "⼣"
+    ],
+    "zh": [
+     "夕",
+     "⼣"
+    ],
+    "vi": [
+     "⼣",
+     "夕"
+    ],
+    "en": [
+     "⼣",
+     "KANGXI RADICAL EVENING",
+     "radical evening",
+     "radical 36"
+    ],
+    "ja": [
+     "⼣",
+     "夕"
+    ],
+    "ko": [
+     "저녁석"
+    ]
+   }
+  },
+  "Q95581": {
+   "labels": {
+    "zh": "大部",
+    "en": "Kangxi radical 37 (⼤)",
+    "ja": "大部",
+    "zh-hans": "大部",
+    "zh-hant": "大部",
+    "vi": "Bộ Đại (大)",
+    "ko": "⼤"
+   },
+   "aliases": {
+    "zh-hans": [
+     "大",
+     "⼤"
+    ],
+    "zh-hant": [
+     "大",
+     "⼤"
+    ],
+    "zh": [
+     "大",
+     "⼤"
+    ],
+    "vi": [
+     "⼤",
+     "大"
+    ],
+    "en": [
+     "KANGXI RADICAL BIG",
+     "⼤",
+     "radical 37",
+     "radical big",
+     "radical large",
+     "radical high",
+     "radical vast"
+    ],
+    "ja": [
+     "⼤",
+     "大"
+    ],
+    "ko": [
+     "큰대"
+    ]
+   }
+  },
+  "Q95592": {
+   "labels": {
+    "zh": "女部",
+    "en": "Kangxi radical 38 (⼥)",
+    "ja": "女部",
+    "zh-hans": "女部",
+    "zh-hant": "女部",
+    "vi": "Bộ Nữ (女)",
+    "ko": "⼥"
+   },
+   "aliases": {
+    "zh-hans": [
+     "女",
+     "⼥"
+    ],
+    "zh-hant": [
+     "女",
+     "⼥"
+    ],
+    "zh": [
+     "女",
+     "⼥"
+    ],
+    "ja": [
+     "女",
+     "じょぶ",
+     "女偏",
+     "おんなへん",
+     "⼥"
+    ],
+    "vi": [
+     "⼥",
+     "女"
+    ],
+    "en": [
+     "⼥",
+     "KANGXI RADICAL WOMAN",
+     "radical woman",
+     "radical 38"
+    ],
+    "ko": [
+     "여자녀"
+    ]
+   }
+  },
+  "Q95601": {
+   "labels": {
+    "zh": "子部",
+    "en": "Kangxi radical 39 (⼦)",
+    "ja": "子部",
+    "zh-hans": "子部",
+    "zh-hant": "子部",
+    "vi": "Bộ Tử (子)",
+    "ko": "⼦"
+   },
+   "aliases": {
+    "zh-hans": [
+     "子",
+     "⼦"
+    ],
+    "zh-hant": [
+     "子",
+     "⼦"
+    ],
+    "zh": [
+     "子",
+     "⼦"
+    ],
+    "ja": [
+     "子",
+     "しぶ",
+     "子偏",
+     "こへん",
+     "⼦"
+    ],
+    "vi": [
+     "⼦",
+     "子"
+    ],
+    "en": [
+     "⼦",
+     "KANGXI RADICAL CHILD",
+     "radical child",
+     "radical 39"
+    ],
+    "ko": [
+     "아들자"
+    ]
+   }
+  },
+  "Q95616": {
+   "labels": {
+    "zh": "宀部",
+    "en": "Kangxi radical 40 (⼧)",
+    "ja": "宀部",
+    "zh-hans": "宀部",
+    "zh-hant": "宀部",
+    "vi": "Bộ Miên (宀)",
+    "ko": "⼧"
+   },
+   "aliases": {
+    "zh-hans": [
+     "宀",
+     "⼧"
+    ],
+    "zh-hant": [
+     "宀",
+     "⼧"
+    ],
+    "zh": [
+     "宀",
+     "⼧"
+    ],
+    "ja": [
+     "うかんむり",
+     "ウ冠",
+     "⼧",
+     "宀"
+    ],
+    "vi": [
+     "⼧",
+     "宀"
+    ],
+    "en": [
+     "⼧",
+     "KANGXI RADICAL ROOF",
+     "radical roof",
+     "radical 40"
+    ],
+    "ko": [
+     "갓머리"
+    ]
+   }
+  },
+  "Q95625": {
+   "labels": {
+    "zh": "寸部",
+    "en": "Kangxi radical 41 (⼨)",
+    "ja": "寸部",
+    "zh-hans": "寸部",
+    "zh-hant": "寸部",
+    "vi": "Bộ Thốn (寸)",
+    "ko": "⼨"
+   },
+   "aliases": {
+    "zh-hans": [
+     "寸",
+     "⼨"
+    ],
+    "zh-hant": [
+     "寸",
+     "⼨"
+    ],
+    "zh": [
+     "寸",
+     "⼨"
+    ],
+    "vi": [
+     "⼨",
+     "寸"
+    ],
+    "en": [
+     "KANGXI RADICAL INCH",
+     "⼨",
+     "radical inch",
+     "radical cùn",
+     "radical 41"
+    ],
+    "ja": [
+     "⼨",
+     "寸"
+    ],
+    "ko": [
+     "마디촌"
+    ]
+   }
+  },
+  "Q95666": {
+   "labels": {
+    "zh": "小部",
+    "en": "Kangxi radical 42 (⼩)",
+    "ja": "小部",
+    "zh-hans": "小部",
+    "zh-hant": "小部",
+    "vi": "Bộ Tiểu (小)",
+    "ko": "⼩"
+   },
+   "aliases": {
+    "zh-hans": [
+     "小",
+     "⼩"
+    ],
+    "zh-hant": [
+     "小",
+     "⼩"
+    ],
+    "zh": [
+     "小",
+     "⼩"
+    ],
+    "vi": [
+     "⼩",
+     "小"
+    ],
+    "en": [
+     "⼩",
+     "KANGXI RADICAL SMALL",
+     "radical small",
+     "radical insignificant",
+     "radical 42"
+    ],
+    "ja": [
+     "⼩",
+     "小"
+    ],
+    "ko": [
+     "작을소"
+    ]
+   }
+  },
+  "Q99611": {
+   "labels": {
+    "zh": "尢部",
+    "en": "Kangxi radical 43 (⼪)",
+    "ja": "尢部",
+    "zh-hans": "尢部",
+    "zh-hant": "尢部",
+    "vi": "Bộ Uông (尢)",
+    "ko": "⼪"
+   },
+   "aliases": {
+    "zh-hans": [
+     "尢",
+     "⼪"
+    ],
+    "zh-hant": [
+     "尢",
+     "⼪"
+    ],
+    "zh": [
+     "尢",
+     "⼪"
+    ],
+    "vi": [
+     "⼪",
+     "尢"
+    ],
+    "en": [
+     "KANGXI RADICAL LAME",
+     "⼪",
+     "radical lame",
+     "radical 43"
+    ],
+    "ja": [
+     "⼪",
+     "尢"
+    ],
+    "ko": [
+     "절름발이왕"
+    ]
+   }
+  },
+  "Q99640": {
+   "labels": {
+    "zh": "尸部",
+    "en": "Kangxi radical 44 (⼫)",
+    "ja": "尸部",
+    "zh-hans": "尸部",
+    "zh-hant": "尸部",
+    "vi": "Bộ Thi (尸)",
+    "ko": "⼫"
+   },
+   "aliases": {
+    "zh-hans": [
+     "尸",
+     "⼫"
+    ],
+    "zh-hant": [
+     "尸",
+     "⼫"
+    ],
+    "zh": [
+     "尸",
+     "⼫"
+    ],
+    "ja": [
+     "尸",
+     "しぶ",
+     "しかばね",
+     "かばね",
+     "⼫"
+    ],
+    "vi": [
+     "⼫",
+     "尸"
+    ],
+    "en": [
+     "KANGXI RADICAL CORPSE",
+     "⼫",
+     "radical corpse",
+     "radical 44"
+    ],
+    "ko": [
+     "주검시엄",
+     "주검시"
+    ]
+   }
+  },
+  "Q99656": {
+   "labels": {
+    "zh": "屮部",
+    "en": "Kangxi radical 45 (⼬)",
+    "ja": "屮部",
+    "zh-hans": "屮部",
+    "zh-hant": "屮部",
+    "vi": "Bộ Triệt (屮)",
+    "ko": "⼬"
+   },
+   "aliases": {
+    "zh-hans": [
+     "屮",
+     "⼬"
+    ],
+    "zh-hant": [
+     "屮",
+     "⼬"
+    ],
+    "zh": [
+     "屮",
+     "⼬"
+    ],
+    "vi": [
+     "⼬",
+     "屮"
+    ],
+    "en": [
+     "KANGXI RADICAL SPROUT",
+     "radical 45",
+     "radical sprout"
+    ],
+    "ja": [
+     "⼬",
+     "屮"
+    ],
+    "ko": [
+     "왼손좌"
+    ]
+   }
+  },
+  "Q99671": {
+   "labels": {
+    "zh": "山部",
+    "en": "Kangxi radical 46 (⼭)",
+    "ja": "山部",
+    "zh-hans": "山部",
+    "zh-hant": "山部",
+    "vi": "Bộ Sơn (山)",
+    "ko": "⼭"
+   },
+   "aliases": {
+    "zh-hans": [
+     "山",
+     "⼭"
+    ],
+    "zh-hant": [
+     "山",
+     "⼭"
+    ],
+    "zh": [
+     "山",
+     "⼭"
+    ],
+    "ja": [
+     "山",
+     "さんぶ",
+     "山偏",
+     "やまへん",
+     "⼭"
+    ],
+    "en": [
+     "shān",
+     "山",
+     "⼭",
+     "KANGXI RADICAL MOUNTAIN",
+     "radical 46"
+    ],
+    "vi": [
+     "⼭",
+     "山"
+    ],
+    "ko": [
+     "뫼산"
+    ]
+   }
+  },
+  "Q99688": {
+   "labels": {
+    "zh": "巛部",
+    "en": "Radical 47",
+    "ja": "巛部",
+    "zh-hans": "巛部",
+    "zh-hant": "巛部",
+    "vi": "Bộ Xuyên (巛)",
+    "ko": "⼮"
+   },
+   "aliases": {
+    "zh-hans": [
+     "巛",
+     "⼮"
+    ],
+    "zh-hant": [
+     "巛",
+     "⼮"
+    ],
+    "zh": [
+     "巛",
+     "⼮"
+    ],
+    "vi": [
+     "⼮",
+     "巛"
+    ],
+    "en": [
+     "⼮",
+     "巛",
+     "KANGXI RADICAL RIVER"
+    ],
+    "ja": [
+     "⼮",
+     "巛"
+    ],
+    "ko": [
+     "개미허리"
+    ]
+   }
+  },
+  "Q99972": {
+   "labels": {
+    "zh": "工部",
+    "en": "Kangxi radical 48 (⼯)",
+    "ja": "工部",
+    "zh-hans": "工部",
+    "zh-hant": "工部",
+    "vi": "Bộ Công (工)",
+    "ko": "⼯"
+   },
+   "aliases": {
+    "zh-hans": [
+     "工",
+     "⼯"
+    ],
+    "zh-hant": [
+     "工",
+     "⼯"
+    ],
+    "zh": [
+     "工",
+     "⼯"
+    ],
+    "vi": [
+     "⼯",
+     "工"
+    ],
+    "en": [
+     "⼯",
+     "工",
+     "KANGXI RADICAL WORK"
+    ],
+    "ja": [
+     "⼯",
+     "工"
+    ],
+    "ko": [
+     "장인공"
+    ]
+   }
+  },
+  "Q99984": {
+   "labels": {
+    "zh": "己部",
+    "en": "Kangxi radical 49 (⼰)",
+    "ja": "己部",
+    "zh-hans": "己部",
+    "zh-hant": "己部",
+    "vi": "Bộ Kỷ (己)",
+    "ko": "⼰"
+   },
+   "aliases": {
+    "zh-hans": [
+     "己",
+     "⼰"
+    ],
+    "zh-hant": [
+     "己",
+     "⼰"
+    ],
+    "zh": [
+     "己",
+     "⼰"
+    ],
+    "vi": [
+     "⼰",
+     "己"
+    ],
+    "en": [
+     "KANGXI RADICAL ONESELF",
+     "radical oneself",
+     "radical 49"
+    ],
+    "ja": [
+     "⼰",
+     "己"
+    ],
+    "ko": [
+     "몸기"
+    ]
+   }
+  },
+  "Q99998": {
+   "labels": {
+    "zh": "巾部",
+    "en": "Radical 50",
+    "ja": "巾部",
+    "zh-hans": "巾部",
+    "zh-hant": "巾部",
+    "vi": "Bộ Cân (巾)",
+    "ko": "⼱"
+   },
+   "aliases": {
+    "zh-hans": [
+     "巾",
+     "⼱"
+    ],
+    "zh-hant": [
+     "巾",
+     "⼱"
+    ],
+    "zh": [
+     "巾",
+     "⼱"
+    ],
+    "vi": [
+     "⼱",
+     "巾"
+    ],
+    "en": [
+     "⼱",
+     "巾",
+     "KANGXI RADICAL TURBAN"
+    ],
+    "ja": [
+     "⼱",
+     "巾"
+    ],
+    "ko": [
+     "수건건"
+    ]
+   }
+  }
+ }
+}
