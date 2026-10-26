@@ -59,6 +59,7 @@
   "app.menu": "Menu",
   "app.more": "More",
   "app.output": "Output",
+  "app.panels.resize": "Resize the panels",
   "app.prefs.composer": "Preview drawings from",
   "app.prefs.composerHint": "A han-compose export folder (export-web). Empty uses the default.",
   "app.prefs.keyHints": "Key hints on buttons",

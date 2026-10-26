@@ -30,3 +30,21 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+/* Scrollbars follow the theme instead of the browser's bright default. */
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{background:transparent}
+*::-webkit-scrollbar-thumb{background:var(--line-strong);border:2px solid transparent;border-radius:999px;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:padding-box}
+/* A key hint under a toolbar control: one cap per key, on hover or focus. */
+.key-hint{position:relative}
+.key-hint-pop{display:none;position:absolute;z-index:50;top:calc(100% + 7px);left:50%;align-items:center;gap:8px;
+  padding:5px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:var(--shadow-pop);
+  white-space:nowrap;pointer-events:none;transform:translateX(-50%)}
+.key-hint:hover .key-hint-pop,.key-hint:focus-visible .key-hint-pop,.key-hint:focus-within .key-hint-pop{display:flex}
+.key-hint .combo{display:flex;align-items:center;gap:4px}
+.key-hint kbd{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:1px solid var(--line-strong);border-bottom-width:2px;
+  border-radius:5px;background:var(--surface-2);color:var(--ink);font:600 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;box-shadow:0 1px 0 var(--line)}
+.key-hint .plus{color:var(--muted);font:500 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+.key-hint .alt{color:var(--muted);font-size:11px;padding:0 2px}
+.end .key-hint .key-hint-pop{left:auto;right:0;transform:none}

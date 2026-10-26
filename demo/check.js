@@ -57,6 +57,57 @@ try {
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
   pass('the workshop opens on 疑, matched to its character')
 
+  // The toolbar buttons share one height; a shortcut shows under its button on hover; scrollbars
+  // follow the theme rather than the browser's default.
+  const heights = await page.locator('.bar .tool').evaluateAll(els => [...new Set(els.filter(el => el.offsetParent).map(el => Math.round(el.getBoundingClientRect().height)))])
+  assert(JSON.stringify(heights) === '[32]', `toolbar button heights: ${heights}`)
+  const segments = await page.locator('.group .tool').evaluateAll(els => els.map(el => { const r = el.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)] }))
+  assert(segments.length === 3 && segments[0][1] === segments[1][0] && segments[1][1] === segments[2][0], `undo, redo and history touch: ${JSON.stringify(segments)}`)
+  const undoButton = page.locator('.bar button[aria-label^="Undo"]')
+  await undoButton.hover()
+  await page.waitForTimeout(250)
+  assert(await undoButton.locator('.key-hint-pop').isVisible(), 'undo shows its keys on hover')
+  const caps = await undoButton.locator('.key-hint-pop kbd').allTextContents()
+  assert(caps.length === 2 && caps[1] === 'Z' && /^(Ctrl|⌘)$/.test(caps[0]), `undo keycaps: ${caps}`)
+  assert(await page.evaluate(() => getComputedStyle(document.querySelector('.pane')).scrollbarWidth === 'thin'), 'themed scrollbars')
+  pass('one toolbar height, key hints on hover, themed scrollbars')
+
+  // The middle column: the tree starts larger than the search and the divider resizes them.
+  const splitPage = await open()
+  const splitter = splitPage.locator('.split')
+  const upper = await splitPage.locator('.middle .tree').boundingBox()
+  const lower = await splitPage.locator('.middle .results').boundingBox()
+  assert(upper.height > lower.height, `the tree starts above the search: ${upper.height} against ${lower.height}`)
+  assert(await splitter.getAttribute('role') === 'separator' && await splitter.getAttribute('aria-valuenow') === '60', 'the divider is a separator at 60%')
+  const bar = await splitter.boundingBox()
+  await splitPage.mouse.move(bar.x + bar.width / 2, bar.y + bar.height / 2)
+  await splitPage.mouse.down()
+  await splitPage.mouse.move(bar.x + bar.width / 2, bar.y + bar.height / 2 + 40, { steps: 4 })
+  await splitPage.mouse.up()
+  assert(Number(await splitter.getAttribute('aria-valuenow')) > 60, 'dragging moves the divider')
+  await splitter.dblclick()
+  assert(await splitter.getAttribute('aria-valuenow') === '60', 'double-click resets the divider')
+  await splitter.focus()
+  await splitPage.keyboard.press('ArrowDown')
+  assert(await splitter.getAttribute('aria-valuenow') === '58', 'the arrow keys move the divider')
+  await splitPage.reload()
+  await splitPage.locator('.ids-field input').waitFor()
+  assert(await splitPage.locator('.split').getAttribute('aria-valuenow') === '58', 'the divider keeps its place')
+  await splitPage.context().close()
+  pass('the tree panel starts larger, and the divider resizes and keeps the panels')
+
+  // A dense tree keeps every glyph inside its box.
+  const dense = await open('#' + encodeURIComponent('⿰言⿱⿰木木⿰木木'))
+  await dense.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰言⿱⿰木木⿰木木', null, { timeout: 15000 })
+  const overflowing = await dense.locator('.ids-part').evaluateAll(els => els.filter(el => {
+    const box = el.getBoundingClientRect(), cell = el.parentElement.getBoundingClientRect()
+    return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 ||
+      box.left < cell.left - 1 || box.right > cell.right + 1 || box.top < cell.top - 1 || box.bottom > cell.bottom + 1
+  }).length)
+  assert(overflowing === 0, `parts overflowing their boxes: ${overflowing}`)
+  await dense.context().close()
+  pass('a dense tree keeps its glyphs inside their boxes')
+
   // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
   await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
   // How long after a fresh page began to load its first hits stood (polled, so at most this).
@@ -76,7 +127,9 @@ try {
   assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
   await page.locator('.ids-search-results input').fill('')
   await page.locator('.bar button[aria-label^="Undo"]').click()
+  await page.waitForTimeout(250)
   await page.locator('.ids-search-results .hit').first().hover()
+  await page.waitForTimeout(150)
   assert(await page.locator('.ids-search-results .hit').first().locator('.code').isVisible()
     && await page.locator('.ids-search-results .hit').first().locator('.seq').isHidden(), 'a hovered card shows its code point')
   pass(`the search follows the tree (first results by ${firstResults} ms after navigation, index built in a worker), narrows by terms, opens a hit and takes its parts, its cards showing Unicode on hover`)
@@ -177,6 +230,9 @@ try {
   assert(await value() === '⿰亻⿻七木', `undo: ${await value()}`)
   await page.keyboard.press('Control+Shift+z')
   assert(await value() === '⿰亻七', `redo: ${await value()}`)
+  await page.keyboard.press('Control+z')
+  await page.keyboard.press('Control+y')
+  assert(await value() === '⿰亻七', `redo by Ctrl+Y: ${await value()}`)
   await page.locator('button[aria-label^="Undo"]').click()
   assert(await value() === '⿰亻⿻七木', `undo by the toolbar: ${await value()}`)
   pass('swaps, refusals, × and undo and redo by key and toolbar')
@@ -304,10 +360,20 @@ try {
   await drawn.getByRole('button', { name: 'Preferences' }).click()
   await drawn.locator('.prefs input[type="checkbox"]').click()
   await drawn.keyboard.press('Escape')
+  await drawn.waitForTimeout(200)
   assert(await drawn.locator('.ids-kbd').count() === 0, 'key hints hidden')
-  await drawn.locator('.bar select.locale').selectOption('ja')
+  assert(await drawn.locator('.bar button[aria-label^="Undo"] .key-hint-pop').count() === 0, 'hover key hints hidden too')
+  await drawn.keyboard.press('Control+,')
+  await drawn.locator('dialog[open] .prefs').waitFor({ timeout: 5000 })
+  await drawn.keyboard.press('Escape')
+  const localeButton = drawn.locator('.bar button[aria-label^="Language:"]')
+  assert(await localeButton.getAttribute('aria-haspopup') === 'menu', 'the language is a menu')
+  await localeButton.click()
+  assert(await localeButton.getAttribute('aria-expanded') === 'true', 'the language menu opens')
+  assert(await drawn.getByRole('menuitemradio', { name: 'English' }).getAttribute('aria-checked') === 'true', 'the current language is checked')
+  await drawn.getByRole('menuitemradio', { name: '日本語' }).click()
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
-  pass('theme switch, no flash, key hints off, the language')
+  pass('theme switch, no flash, key hints off, the language menu')
   await drawn.setViewportSize({ width: 641, height: 900 })
   await drawn.getByRole('button', { name: '例' }).click()
   await drawn.waitForTimeout(100)
@@ -318,7 +384,7 @@ try {
 
   // A browser set to Traditional Chinese opens the traditional catalogue.
   const zhTw = await open('', { locale: 'zh-TW' })
-  assert(await zhTw.locator('.bar select.locale').inputValue() === 'zh-Hant', `zh-TW locale: ${await zhTw.locator('.bar select.locale').inputValue()}`)
+  assert(await zhTw.locator('.bar button[aria-label*="繁體中文"]').count() === 1, `zh-TW locale: ${await zhTw.locator('.bar button').first().getAttribute('aria-label')}`)
   assert(await zhTw.locator('.ids-op-label').first().textContent() === '單部件', 'Traditional Chinese throughout')
   assert(!zhTw.errors.length, `page errors: ${zhTw.errors.join('; ')}`)
   await zhTw.context().close()
@@ -346,7 +412,11 @@ try {
 
   // On a phone: a top bar of undo, redo and one menu, which holds the rest.
   const phone = await open('', { width: 375, height: 812 })
-  assert(await phone.locator('.bar .locale').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
+  assert(await phone.locator('.bar .end').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
+  assert(await phone.locator('.group .tool').evaluateAll(els => {
+    const shown = els.filter(el => el.offsetParent)
+    return getComputedStyle(shown[shown.length - 1]).borderTopRightRadius
+  }) === '9px', 'the last segment on the phone keeps its round corner')
   await phone.locator('.bar .more').click()
   await phone.locator('dialog[open] .more-sheet').waitFor()
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')

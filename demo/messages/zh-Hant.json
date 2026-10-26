@@ -57,6 +57,7 @@
   "app.menu": "選單",
   "app.more": "更多",
   "app.output": "輸出",
+  "app.panels.resize": "調整面板高度",
   "app.prefs.composer": "預覽字形資料來源",
   "app.prefs.composerHint": "han-compose的export-web輸出目錄。留空則用預設值。",
   "app.prefs.keyHints": "按鈕上顯示按鍵",
