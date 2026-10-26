@@ -120,7 +120,7 @@ try {
   assert(await valueOf(menus) === '⿰日口', 'New sequence can be undone')
 
   await menus.evaluate(() => {
-    const range = document.createRange(), text = document.querySelector('output.seq').firstChild
+    const range = document.createRange(), text = document.querySelector('output.tree-whole').firstChild
     range.setStart(text, 1); range.setEnd(text, 2)
     getSelection().removeAllRanges(); getSelection().addRange(range)
     document.activeElement.blur()
@@ -188,9 +188,25 @@ try {
   pass('radical counts and first-stroke groups')
 
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
-  await page.locator('.seq-row .char').first().waitFor({ timeout: 15000 })
-  assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
-  pass('the workshop opens on 疑, matched to its character')
+  await page.locator('.ids-preview-detail').waitFor({ timeout: 15000 })
+  assert(await page.locator('.ids-preview-detail').textContent() === 'U+7591', 'the preview names the code point of the encoded character')
+  assert(await page.locator('.seq-row, .output-head').count() === 0, 'the old output row is gone')
+  assert(await page.locator('.tree-whole').textContent() === '⿰𠤕⿱龴疋', 'the sequence sits under the tree')
+  assert(await page.locator('.seq-copy').isEnabled(), 'the copy button sits beside the sequence input')
+  const fieldBox = await page.locator('.ids-field input').boundingBox()
+  const copyBox = await page.locator('.seq-copy').boundingBox()
+  const inside = copyBox.x >= fieldBox.x && copyBox.x + copyBox.width <= fieldBox.x + fieldBox.width && copyBox.y >= fieldBox.y && copyBox.y + copyBox.height <= fieldBox.y + fieldBox.height
+  const centered = Math.abs((fieldBox.y + fieldBox.height / 2) - (copyBox.y + copyBox.height / 2)) < 1
+  assert(inside && centered, `copy aligns inside the input: ${JSON.stringify([fieldBox, copyBox])}`)
+  await page.locator('.seq-copy').click()
+  assert(await page.evaluate(() => navigator.clipboard.readText()) === '⿰𠤕⿱龴疋', 'the copy button copies the sequence')
+  const pointsButton = page.locator('.label-row .points-btn')
+  assert(await pointsButton.isVisible(), 'the code points sit beside the sequence label')
+  await pointsButton.click()
+  assert(await page.getByRole('dialog').locator('li').count() === 5, 'the code points open in a dialog')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+  pass('the workshop opens on 疑, matched to its character, with the sequence and code points in reach')
 
   // The toolbar buttons share one height; a shortcut shows under its button on hover; scrollbars
   // follow the theme rather than the browser's default.

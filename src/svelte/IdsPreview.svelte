@@ -22,9 +22,9 @@
 
   /** @typedef {{ dx?: number, dy?: number, scale?: number, rotate?: number }} PartAdjustment */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, drawing?: Drawing | null, editable?: boolean, adjustments?: Record<string, PartAdjustment>, onchoose?: ((path: Path) => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, drawing?: Drawing | null, editable?: boolean, adjustments?: Record<string, PartAdjustment>, onchoose?: ((path: Path) => void) | null }}
    */
-  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, drawing = $bindable(null),
+  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', drawing = $bindable(null),
     editable = false, adjustments = $bindable({}), onchoose = null } = $props()
   const t = $derived(translator(messages, locale))
 
@@ -342,6 +342,7 @@
   {#if small || !quiet}
     <figcaption class="ids-preview-meta">
       {#if small}<div class="ids-preview-small">{@render picture('small', false)}</div>{/if}
+      {#if detail}<code class="ids-preview-detail">{detail}</code>{/if}
       {#if !quiet}
         {#if step === 'loading'}<span class="ids-preview-spinner" aria-hidden="true"></span>{/if}
         <span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>
@@ -364,6 +365,7 @@
   .ids-preview-spinner{flex:none;width:11px;height:11px;border:1.5px solid color-mix(in srgb,var(--_muted) 28%,transparent);border-top-color:var(--_accent);border-radius:50%;animation:ids-preview-spin .8s linear infinite}
   .ids-preview-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;min-height:22px;max-width:100%}
   .ids-preview-small{width:20px;height:20px;color:var(--_ink)}
+  .ids-preview-detail{font:11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .frame{position:relative;width:100%;height:100%}
   .layer{position:absolute;inset:0}
   .ids-preview-large .layer{inset:5%}
