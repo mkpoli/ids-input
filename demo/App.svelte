@@ -277,10 +277,11 @@
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
     const text = editor.usable ? editor.whole : '', ask = adapter.encoded
-    encoded = []
+    const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
+    encoded = known
     if (!text || !ask) return
     let live = true
-    ask(text).then(found => { if (live) encoded = found }, () => {})
+    ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
   })
   /** @param {string} ch */
