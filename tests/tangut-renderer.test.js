@@ -4,7 +4,7 @@ import { gunzipSync } from 'node:zlib'
 import { tangutSource, onlyTangut } from '../src/composer/tangut.js'
 import { compose, createSource, sketch } from '../src/composer/loader.js'
 import { drawingSvg } from '../src/core/index.js'
-import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
+import { EXAMPLES } from '../demo/lib/examples.js'
 import { leaves, parse } from '../src/core/ids.js'
 import { files } from './fixtures/composer-export.js'
 
@@ -13,7 +13,7 @@ const source = () => tangutSource({ load: async () => outlines })
 
 it('draws every Tangut example from their designed outlines without a Han export', async () => {
   const local = source()
-  for (const { sequence, char } of EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples) {
+  for (const { sequence, char } of EXAMPLES.filter(example => onlyTangut(example.sequence))) {
     const drawn = await compose(local, sequence)
     expect(drawn.d).toBe((await compose(local, char)).d)
     expect(drawn.d.length).toBeGreaterThan(500)
