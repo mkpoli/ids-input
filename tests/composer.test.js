@@ -6,7 +6,8 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { badge, placeholder } from '../src/core/preview.js'
+import { Composer } from '../src/composer/compose.js'
+import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops } from './fixtures/composer-export.js'
 import { parse } from '../src/core/ids.js'
 
@@ -40,6 +41,64 @@ const encodedSource = () => {
 }
 
 describe('the composer', () => {
+  it('opens 行 around the middle operand while preserving editor leaf indices', async () => {
+    const extra = new Map()
+    for (const ch of [...'彳亍氵弓鬲士冖一殳米几方𠂉其亠𧘇果𤣩王文辛言隹糸']) {
+      extra.set(gShard(ch), gzipSync(JSON.stringify({ [hex(ch)]: {
+        k: ch, G: boxGlyph([100, 0, 300, 800]), ink: 2000, nl: 1, o: 1,
+      } })))
+    }
+    const source = createSource(async name => {
+      const body = extra.get(name) ?? files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const inkOnly = drawing => ({ ...drawing, parts: drawing.parts.map(({ leaf, ...part }) => part) })
+    for (const inner of ['氵', '⬚', '⿱木⬚', '⿴行⬚']) {
+      for (const separate of [false, true]) {
+        expect(inkOnly(await compose(source, `⿴行${inner}`, { separate })))
+          .toEqual(inkOnly(await compose(source, `⿲彳${inner}亍`, { separate })))
+      }
+    }
+    for (const [outer, render, component] of [
+      ['⿸𭤨', inner => `⿰方⿱𠂉${inner}`, '其'],
+      ['⿴衣', inner => `⿳亠${inner}𧘇`, '果'],
+      ['⿴弜', inner => `⿲弓${inner}弓`, '米'],
+      ['⿴玨', inner => `⿲𤣩${inner}王`, '文'],
+      ['⿴辡', inner => `⿲辛${inner}辛`, '言'],
+      ['⿴雔', inner => `⿲隹${inner}隹`, '言'],
+      ['⿶𩰲', inner => `⿱⿲弓${inner}弓鬲`, '米'],
+      ['⿹𣪊', inner => `⿰⿱⿳士冖一${inner}殳`, '几'],
+    ]) {
+      for (const inner of [component, '⬚', '⿱木⬚', '⿴行⬚']) {
+        for (const separate of [false, true]) {
+          expect(inkOnly(await compose(source, outer + inner, { separate })))
+            .toEqual(inkOnly(await compose(source, render(inner), { separate })))
+        }
+        const leaves = await sketch(source, outer + inner)
+        const drawing = await compose(source, outer + inner, { separate: true })
+        expect(groupParts(drawing.parts, leaves)).not.toBeNull()
+        expect(leaves.map(leaf => leaf.index)).toEqual(leaves.map((_, index) => index))
+        expect(leaves.filter(leaf => leaf.empty)).toHaveLength(inner.includes('⬚') ? 1 : 0)
+      }
+      const leaves = await sketch(source, outer + component)
+      expect(leaves).toHaveLength(2)
+      const original = new Composer(source.store()).parse(outer + component)
+      expect(original).toEqual([[...outer][0], [...outer][1], component])
+    }
+    const leaves = await sketch(source, '⿴行氵')
+    const explicit = await sketch(source, '⿲彳氵亍')
+    expect(leaves).toHaveLength(2)
+    expect(leaves[1]).toEqual({ ...explicit[1], index: 1 })
+    const drawn = await compose(source, '⿴行氵', { separate: true })
+    expect(groupParts(drawn.parts, leaves)?.map(group => group.parts)).toEqual([[0, 2], [1]])
+    const empty = await sketch(source, '⿴行⬚')
+    expect(empty[1]).toEqual({ ...leaves[1], empty: true })
+    const composer = new Composer(source.store())
+    expect(composer.parse('⿴行氵')).toEqual(['⿴', '行', '氵'])
+    expect(composer.respelled(['⿴', '口', '木'])).toEqual(['⿴', '口', '木'])
+    expect(composer.respelled(['⿵', '行', '木'])).toEqual(['⿵', '行', '木'])
+    expect(composer.respelled(['⿸', '㫃', '其'])).toEqual(['⿸', '㫃', '其'])
+  })
   it('draws the same whether its files arrive at once or as it asks for them', async () => {
     const lazy = sourceOf(), eager = sourceOf()
     await eager.ready()
