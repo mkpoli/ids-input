@@ -10,18 +10,22 @@ from their readings and meanings:
 
 - anzumura/kanji-tools `data/radicals.txt`: the 214 radicals with their Japanese names and readings
   (のぎ, のぶん, うかんむり), MIT licence.
-- KANJIDIC2 (EDRDG): further Japanese radical names, CC BY-SA 4.0.
+- KANJIDIC2 (EDRDG): further Japanese radical names and the Korean and Vietnamese readings of the
+  radicals, CC BY-SA 4.0.
 - Japanese Wikipedia: the redirects to each radical's article (ノ文 to 攴部, ノ木偏 to 禾部), CC BY-SA 4.0.
 - catusf/tudien `dict/radical_name.txt`: the Chinese names of the radicals (宝盖头, 绞丝旁, 反文旁), CC0 1.0.
-- amzxyz/rime-wanxiang `lua/data/others.txt`: the block of Chinese radical nicknames (宝盖, 绞丝, 秃宝盖), CC BY 4.0.
+- amzxyz/rime-wanxiang `lua/data/others.txt`: the block of Chinese radical nicknames (宝盖, 绞丝,
+  秃宝盖) and the names it gives non-radical parts (倒八, 卷字头, 石字头, 仓字底), CC BY 4.0.
 - Mararsh/MyBox `docs/data2d/ChineseRadicals_example_zh.csv`: one Chinese name for each radical (鱼字旁,
   鸟字旁, 门字框, 骨字旁), Apache 2.0.
 - Chinese Wikipedia: the redirects to each radical's article (絞絲旁, 三點水, 寶蓋頭), CC BY-SA 4.0.
-- Unihan 18.0.0: kDefinition, kMandarin, kJapaneseOn and kJapaneseKun of each radical (water, silk,
-  roof, shui, sui, mizu), Unicode License v3.
-- KANJIDIC2: the English meanings, Japanese readings and pinyin of each radical (thread, person, みず,
-  いと), CC BY-SA 4.0.
+- Unihan 18.0.0: kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese of
+  each radical (water, silk, roof, shui, sui, mizu, 수, thủy), Unicode License v3.
+- KANJIDIC2: the English meanings, Japanese readings, pinyin, Korean and Vietnamese readings of
+  each radical (thread, person, みず, いと, 수, thủy), CC BY-SA 4.0.
 - pypinyin 0.55.0: the pinyin of each Chinese name (baogaitou, jiaosipang, sandianshui), MIT.
+- Wikidata: labels and aliases for the radicals in English, Japanese, Chinese, Korean and
+  Vietnamese (Kangxi radical 120, 糸部, 실사, Bộ Thủy), CC0 1.0.
 - An editorial Hepburn and Kunrei table: the romanization of each kana name (nobun, sanzui, ukanmuri, nogihen; si, ti, tu, hu for the Kunrei spellings).
 
 The traditional or simplified spelling of a Chinese name is added through OpenCC (Apache 2.0) when it
@@ -65,6 +69,8 @@ CACHE = ROOT / "cache"
 TARGET = ROOT / "data" / "component-names.tsv"
 FOLDS_TARGET = ROOT / "data" / "component-name-folds.tsv"
 REDIRECTS = ROOT / "data" / "component-name-redirects.json"
+WIKIDATA = ROOT / "data" / "component-name-wikidata.json"
+WIKIDATA_LANGUAGES = ("en", "ja", "zh", "zh-hans", "zh-hant", "ko", "vi")
 
 KANJI_TOOLS_REV = "c3e52cbca38a1fdbf9a96abb1dd015450cc1411c"
 KANJI_TOOLS_URL = f"https://raw.githubusercontent.com/anzumura/kanji-tools/{KANJI_TOOLS_REV}/data/radicals.txt"
@@ -109,6 +115,8 @@ DENY = {
 }
 # Radicals that must not be replaced by a homophone when a name is written in traditional script.
 PROTECT = "几厂干尸里凶虫斗鬥"
+# Wikidata records 들입 for both 入 and 八; only 入 is right.
+WIKIDATA_DENY = {("들입", "八")}
 PLACE = {char: chr(0xE000 + i) for i, char in enumerate(PROTECT)}
 BACK = {place: char for char, place in PLACE.items()}
 
@@ -222,8 +230,18 @@ def read_tudien(path: Path) -> dict[str, list[str]]:
     return names
 
 
-def read_rime(path: Path) -> dict[str, list[str]]:
-    """The radical-nickname block's names → the components they stand for."""
+def read_palette() -> dict[str, dict]:
+    """The parts the palette holds, keyed by the part character."""
+    doc = json.loads((ROOT / "data" / "ids-parts.json").read_text(encoding="utf-8"))
+    columns = doc["columns"]
+    return {row[0]: dict(zip(columns, row)) for row in doc["parts"]}
+
+
+RIME_SKIP = {"八部"}
+
+
+def read_rime(path: Path, parts: set[str]) -> dict[str, list[str]]:
+    """The nickname block's names → the components they stand for, radical or not."""
     lines = path.read_text(encoding="utf-8").splitlines()
     start = next(index for index, line in enumerate(lines) if line.startswith("厂部\t"))
     end = next(index for index, line in enumerate(lines) if line.startswith("石字头\t"))
@@ -238,8 +256,8 @@ def read_rime(path: Path) -> dict[str, list[str]]:
             continue
         chars = [char for char in value.replace(" ", "") if CJK.fullmatch(char)]
         extra = [char for char in chars if char not in key]
-        targets = [char for char in extra if canonical(char) in RADICAL_SET]
-        if targets:
+        targets = [char for char in extra if canonical(char) in RADICAL_SET or char in parts]
+        if targets and key not in RIME_SKIP:
             names.setdefault(key, []).append(targets[0])
     return names
 
@@ -258,8 +276,9 @@ def read_mybox(path: Path) -> dict[str, str]:
 
 
 def read_unihan(path: Path) -> dict[str, dict[str, str]]:
-    """Unihan's readings for the radicals: kDefinition, kMandarin, kJapaneseOn and kJapaneseKun."""
-    fields = {"kDefinition": {}, "kMandarin": {}, "kJapaneseOn": {}, "kJapaneseKun": {}}
+    """Unihan's readings for the radicals: definitions, Mandarin, Japanese, Korean and Vietnamese."""
+    fields = {"kDefinition": {}, "kMandarin": {}, "kJapaneseOn": {}, "kJapaneseKun": {},
+              "kHangul": {}, "kVietnamese": {}}
     with zipfile.ZipFile(path) as archive:
         text = archive.read("Unihan_Readings.txt").decode("utf-8")
     for line in text.splitlines():
@@ -450,6 +469,36 @@ def read_wikipedia(refresh: bool) -> dict:
     return result
 
 
+def read_wikidata(wikipedia: dict, refresh: bool) -> dict:
+    """Wikidata labels and aliases for the radicals, in the languages the catalogues use."""
+    if not refresh and WIKIDATA.exists():
+        return json.loads(WIKIDATA.read_text(encoding="utf-8"))
+    qids = sorted(set(wikipedia["qid_by_title"].values()))
+    langs = "|".join(WIKIDATA_LANGUAGES)
+    items: dict[str, dict] = {}
+    for chunk in batched(qids, 50):
+        url = ("https://www.wikidata.org/w/api.php?action=wbgetentities&format=json&formatversion=2"
+               "&props=labels|aliases&languages=" + langs + "&ids=" + urllib.parse.quote("|".join(chunk)))
+        for qid, entity in get_json(url)["entities"].items():
+            labels = {lang: value["value"] for lang, value in entity.get("labels", {}).items()
+                      if lang in WIKIDATA_LANGUAGES}
+            aliases = {lang: [alias["value"] for alias in values]
+                       for lang, values in entity.get("aliases", {}).items() if lang in WIKIDATA_LANGUAGES}
+            items[qid] = {"labels": labels, "aliases": aliases}
+        time.sleep(1)
+    if len(items) != 214:
+        raise ValueError(f"Wikidata returned {len(items)} entities, not 214")
+    result = {
+        "note": "Wikidata labels and aliases for the 214 Kangxi radicals. CC0 1.0, "
+                "https://creativecommons.org/publicdomain/zero/1.0/.",
+        "fetched": date.today().isoformat(),
+        "languages": list(WIKIDATA_LANGUAGES),
+        "items": items,
+    }
+    WIKIDATA.write_text(json.dumps(result, ensure_ascii=False, indent=1), encoding="utf-8")
+    return result
+
+
 def protected(text: str) -> str:
     return "".join(PLACE.get(char, char) for char in text)
 
@@ -464,10 +513,11 @@ JAPANESE_SOURCES = {"kanji-tools", "kanjidic2", "ja-wikipedia"}
 KANA_ONLY = re.compile(r"^[\u3041-\u3096\u30a1-\u30fa\u30fc・\s　]+$")
 
 
-def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str, str, str, str]]:
+def build(wikipedia: dict, wikidata: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str, str, str, str]]:
     kanji_tools = read_kanji_tools(CACHE / "kanji-tools-radicals.txt")
+    palette = read_palette()
     tudien = read_tudien(CACHE / "tudien-radical-name.txt")
-    rime = read_rime(CACHE / "rime-others.txt")
+    rime = read_rime(CACHE / "rime-others.txt", set(palette))
     mybox = read_mybox(CACHE / "mybox-radicals.csv")
     kanjidic = ET.parse(CACHE / "kanjidic2.xml").getroot()
     by_literal = {character.findtext("literal"): character for character in kanjidic.iter("character") if character.findtext("literal")}
@@ -475,6 +525,8 @@ def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str,
     mandarins = unihan["kMandarin"]
     on_readings = unihan["kJapaneseOn"]
     kun_readings = unihan["kJapaneseKun"]
+    hangul_readings = unihan["kHangul"]
+    vietnamese_readings = unihan["kVietnamese"]
 
     rows: list[tuple[str, str, str, str]] = []
 
@@ -585,6 +637,15 @@ def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str,
                     kunrei = kunrei_reading(word)
                     if kunrei != word:
                         add(kunrei, char, "romaji", f"Kunrei of {label} of {radical}")
+        for value in (hangul_readings.get(radical) or hangul_readings.get(char) or "").split():
+            # kHangul values carry a frequency flag after a colon: 수:0E.
+            word = value.split(":", 1)[0]
+            if word:
+                add(word, char, "unihan", f"kHangul of {radical}")
+        for value in (vietnamese_readings.get(radical) or vietnamese_readings.get(char) or "").split():
+            word = value.strip()
+            if len(word) >= 2:
+                add(word, char, "unihan", f"kVietnamese of {radical}")
         entry = by_literal.get(radical)
         if entry is None:
             entry = by_literal.get(char)
@@ -613,8 +674,54 @@ def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str,
                 clean = re.sub(r"[^a-z]", "", value.lower())
                 if len(clean) >= 2:
                     add(clean, char, "kanjidic2", f"pinyin of {radical}")
+            elif kind == "korean_h":
+                for word in value.split():
+                    add(word, char, "kanjidic2", f"korean reading of {radical}")
+            elif kind == "vietnam":
+                add(value, char, "kanjidic2", f"vietnam reading of {radical}")
 
-    # 9. The traditional or simplified spelling of each Chinese name. The variants are made from
+    # 9. Wikidata's labels and aliases: English "Kangxi radical 120", Japanese and Chinese names,
+    # Korean and Vietnamese names. Latin-only aliases other than the English numbers are left out.
+    def wikidata_name(value: str, lang: str) -> str:
+        value = re.sub(r"\s*[\(（][^)）]*[\)）]\s*", " ", value).strip()
+        value = re.sub(r"\s+", " ", value)
+        if not 2 <= len(value) <= 40 or re.fullmatch(r"[\W_]+", value):
+            return ""
+        if ":" in value or "：" in value or "/" in value:
+            return ""
+        if lang == "en":
+            return value if re.fullmatch(r"(?i)(kangxi )?radical \d+", value) else ""
+        if lang in ("ja", "zh", "zh-hans", "zh-hant"):
+            if re.search(r"[A-Za-z]", value) or not re.search(r"[\u3040-\u30ff\u3400-\u9fff]", value):
+                return ""
+        elif lang == "ko":
+            if re.search(r"[A-Za-z]", value) or not re.search(r"[\uac00-\ud7a3]", value):
+                return ""
+        elif lang == "vi":
+            if re.search(r"[\u3400-\u9fff]", value) or not re.search(r"[A-Za-zÀ-ỹ]", value):
+                return ""
+        return value
+
+    for number, forms, long_name, _ in kanji_tools:
+        first = unicodedata.normalize("NFKC", forms.split()[0])
+        char = target(first)
+        match = re.match(r"^([^（(]+)[（(]", long_name)
+        base = match.group(1) if match else long_name
+        qid = wikipedia["qid_by_title"].get(JA_TITLES.get(base, base))
+        entity = wikidata.get("items", {}).get(qid) if qid else None
+        if not entity:
+            continue
+        for lang, value in entity.get("labels", {}).items():
+            name = wikidata_name(value, lang)
+            if name and (name, char) not in WIKIDATA_DENY:
+                add(name, char, "wikidata", f"label of radical {number} ({lang})")
+        for lang, values in entity.get("aliases", {}).items():
+            for value in values:
+                name = wikidata_name(value, lang)
+                if name and (name, char) not in WIKIDATA_DENY:
+                    add(name, char, "wikidata", f"alias of radical {number} ({lang})")
+
+    # 10. The traditional or simplified spelling of each Chinese name. The variants are made from
     # the names as they stand, never from a variant, so a simplified name is not turned back and forth.
     rows = dedupe(rows)
     variants = []
@@ -631,7 +738,7 @@ def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str,
             variants.append((name.replace("斗", "鬥"), char, source, (detail + "; " if detail else "") + "traditional spelling for radical 191"))
     rows = dedupe(rows + variants)
 
-    # 10. The pinyin of each Chinese name, so a name can be typed on a Latin keyboard.
+    # 11. The pinyin of each Chinese name, so a name can be typed on a Latin keyboard.
     pinyin_rows = []
     for name, char, source, detail in rows:
         if not set(source.split(",")) & CHINESE_SOURCES:
@@ -640,7 +747,7 @@ def build(wikipedia: dict, unihan: dict[str, dict[str, str]]) -> list[tuple[str,
             pinyin_rows.append((written, char, "pypinyin", f"pinyin of {name}"))
     rows = dedupe(rows + pinyin_rows)
 
-    # 11. The Hepburn romanization of each kana name, so a reading can be typed the same way.
+    # 12. The Hepburn romanization of each kana name, so a reading can be typed the same way.
     romaji_rows = []
     for name, char, source, detail in rows:
         if not set(source.split(",")) & JAPANESE_SOURCES or not KANA_ONLY.fullmatch(name):
@@ -724,7 +831,7 @@ def build_folds(rows: list[tuple[str, str, str, str]]) -> list[tuple[str, str, s
     return out
 
 
-def header(wikipedia: dict, rows: list[tuple[str, str, str, str]]) -> str:
+def header(wikipedia: dict, wikidata: dict, rows: list[tuple[str, str, str, str]]) -> str:
     return f"""# The names, words and readings people use for components, for the component search (src/core/names.js).
 # columns: name, char, source, detail
 # rows: {len(rows)}
@@ -732,19 +839,21 @@ def header(wikipedia: dict, rows: list[tuple[str, str, str, str]]) -> str:
 # source kanji-tools: anzumura/kanji-tools data/radicals.txt at {KANJI_TOOLS_REV}; MIT; Copyright (c) 2022 Dan H
 #   https://github.com/anzumura/kanji-tools
 # source kanjidic2: KANJIDIC2 (file version 4, database version 2026-299, created 2026-10-26), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
-#   names, meanings, Japanese readings and pinyin of the radicals; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
+#   names, meanings, Japanese, Korean and Vietnamese readings and pinyin of the radicals; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
 # source ja-wikipedia: the redirects to the Japanese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched {wikipedia['fetched']}
 #   https://ja.wikipedia.org/
 # source tudien: catusf/tudien dict/radical_name.txt at {TUDIEN_REV}, CC0 1.0; source pleco.hk 偏旁
 #   https://github.com/catusf/tudien
-# source rime-wanxiang: amzxyz/rime-wanxiang lua/data/others.txt at {RIME_REV}, CC BY 4.0; the radical-nickname block; by amzxyz
+# source rime-wanxiang: amzxyz/rime-wanxiang lua/data/others.txt at {RIME_REV}, CC BY 4.0; the radical-nickname block, including non-radical parts; by amzxyz
 #   https://github.com/amzxyz/rime-wanxiang
 # source mybox: Mararsh/MyBox docs/data2d/ChineseRadicals_example_zh.csv at {MYBOX_REV}, Apache 2.0; the Chinese name of each radical
 #   https://github.com/Mararsh/MyBox
 # source zh-wikipedia: the article titles and redirects to the Chinese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched {wikipedia['fetched']}
 #   https://zh.wikipedia.org/
+# source wikidata: Wikidata labels and aliases for the 214 radicals, in English, Japanese, Chinese, Korean and Vietnamese, CC0 1.0; fetched {wikidata['fetched']}
+#   https://www.wikidata.org/
 # source redirects: data/component-name-redirects.json, CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/; the exact redirects used, read {wikipedia['fetched']}
-# source unihan: Unihan 18.0.0 (Unicode Character Database), Unicode License v3, Copyright Unicode, Inc.; kDefinition, kMandarin, kJapaneseOn and kJapaneseKun of the radicals; SHA-256 {UNIHAN_SHA256}
+# source unihan: Unihan 18.0.0 (Unicode Character Database), Unicode License v3, Copyright Unicode, Inc.; kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese of the radicals; SHA-256 {UNIHAN_SHA256}
 #   https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip
 # source pypinyin: pypinyin 0.55.0, MIT; pinyin of Chinese names; by mozillazg
 #   https://github.com/mozillazg/python-pinyin
@@ -784,10 +893,11 @@ def main(argv: list[str] | None = None) -> int:
         import gzip
         (CACHE / "kanjidic2.xml").write_bytes(gzip.decompress((CACHE / "kanjidic2.xml.gz").read_bytes()))
     wikipedia = read_wikipedia(args.refresh)
+    wikidata = read_wikidata(wikipedia, args.refresh)
     unihan = read_unihan(CACHE / "Unihan.zip")
-    rows = build(wikipedia, unihan)
+    rows = build(wikipedia, wikidata, unihan)
     folds = build_folds(rows)
-    TARGET.write_text(header(wikipedia, rows) + "".join("\t".join(row) + "\n" for row in rows), encoding="utf-8")
+    TARGET.write_text(header(wikipedia, wikidata, rows) + "".join("\t".join(row) + "\n" for row in rows), encoding="utf-8")
     FOLDS_TARGET.write_text(folds_header(folds) + "".join("\t".join(row) + "\n" for row in folds), encoding="utf-8")
     print(f"wrote {TARGET} ({len(rows)} names) and {FOLDS_TARGET} ({len(folds)} folds)")
     return 0
