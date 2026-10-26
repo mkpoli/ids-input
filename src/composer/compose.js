@@ -87,6 +87,7 @@ export class Composer {
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
+    this.approximate = new Set()
   }
 
   arity = ch => this.arities.get(ch) ?? 0
@@ -140,6 +141,7 @@ export class Composer {
   // ---------------------------------------------------------------- the composer's entry
   /** The parts drawing `sequence`, weighted. */
   compose(sequence) {
+    this.approximate.clear()
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.parse(sequence))
@@ -172,7 +174,8 @@ export class Composer {
         const leaves = out.splice(start)
         const leafCount = n => Array.isArray(n) ? n.slice(1).reduce((sum, kid) => sum + leafCount(kid), 0) : 1
         const inner = leaves.splice(enclosure.innerIndex, leafCount(node[2]))
-        out.push({ index: out.length, box: union(leaves.map(leaf => leaf.box)), empty: false })
+        if (leafCount(node[1]) === 1) out.push({ index: out.length, box: union(leaves.map(leaf => leaf.box)), empty: false })
+        else for (const leaf of leaves) out.push({ ...leaf, index: out.length })
         for (const leaf of inner) out.push({ ...leaf, index: out.length })
         return
       }
@@ -328,11 +331,11 @@ export class Composer {
       const enclosure = this.splitEnclosure(node)
       if (enclosure) {
         split = true
-        const outer = index++, inner = walk(node[2])
+        const outer = walk(node[1]), inner = walk(node[2])
         const count = n => Array.isArray(n) ? n.slice(1).reduce((sum, child) => sum + count(child), 0) : 1
         const sourceInner = count(node[2])
-        return [...Array(enclosure.innerIndex).fill(outer), ...inner,
-          ...Array(count(enclosure.tree) - sourceInner - enclosure.innerIndex).fill(outer)]
+        const outside = outer.length === 1 ? Array(count(enclosure.tree) - sourceInner).fill(outer[0]) : outer
+        return [...outside.slice(0, enclosure.innerIndex), ...inner, ...outside.slice(enclosure.innerIndex)]
       }
       // Other rewrites can merge or introduce leaves; leave their grouping to geometry.
       if (this.respelled(node) !== node) valid = false
@@ -350,6 +353,10 @@ export class Composer {
     if (op === '⿴' && Object.hasOwn(sides, outer)) return { tree: ['⿲', sides[outer][0], inner, sides[outer][1]], innerIndex: 1 }
     if (op === '⿴' && outer === '衣') return { tree: ['⿳', '亠', inner, '𧘇'], innerIndex: 1 }
     if (op === '⿸' && outer === '𭤨') return { tree: ['⿰', '方', ['⿱', '𠂉', inner]], innerIndex: 2 }
+    if (op === '⿴' && (outer === '𨺅' || keyOf(outer) === '⿰𨸏⿾𨸏')) return { tree: ['⿲', '𨸏', inner, ['⿾', '𨸏']], innerIndex: 1 }
+    if (op === '⿹' && outer === '頃') return { tree: ['⿰', ['⿱', '匕', inner], '頁'], innerIndex: 1 }
+    if (op === '⿴' && outer === '㗊') return { tree: ['⿳', '吅', inner, '吅'], innerIndex: 1 }
+    if (op === '⿸' && outer === '倝') return { tree: ['⿰', '𠦝', ['⿱', '𠆢', inner]], innerIndex: 2 }
     if (op === '⿶' && outer === '𩰲') return { tree: ['⿱', ['⿲', '弓', inner, '弓'], '鬲'], innerIndex: 1 }
     if (op === '⿹' && outer === '𣪊') return { tree: ['⿰', ['⿱', ['⿳', '士', '冖', '一'], inner], '殳'], innerIndex: 3 }
     return null
@@ -724,6 +731,7 @@ export class Composer {
   // ---------------------------------------------------------------- operators beyond the composer
   /** ⿾ its operand mirrored left to right, ⿿ turned half round, about the region's centre. */
   flipped(op, child, region, atRoot) {
+    this.approximate.add(op)
     const out = this.node(child, region, atRoot)
     const about = [(region[0] + region[2]) / 2, (region[1] + region[3]) / 2]
     for (const p of out) p.flips = [...p.flips ?? [], { x: true, y: op === ROTATE, about }]

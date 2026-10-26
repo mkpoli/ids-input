@@ -41,9 +41,9 @@ const encodedSource = () => {
 }
 
 describe('the composer', () => {
-  it('opens 行 around the middle operand while preserving editor leaf indices', async () => {
+  it('opens split enclosures while preserving editor leaf indices', async () => {
     const extra = new Map()
-    for (const ch of [...'彳亍氵弓鬲士冖一殳米几方𠂉其亠𧘇果𤣩王文辛言隹糸']) {
+    for (const ch of [...'彳亍氵弓鬲士冖一殳米几方𠂉其亠𧘇果𤣩王文辛言隹糸𨸏匕頁吅𠦝𠆢羽犬禾']) {
       extra.set(gShard(ch), gzipSync(JSON.stringify({ [hex(ch)]: {
         k: ch, G: boxGlyph([100, 0, 300, 800]), ink: 2000, nl: 1, o: 1,
       } })))
@@ -66,6 +66,10 @@ describe('the composer', () => {
       ['⿴玨', inner => `⿲𤣩${inner}王`, '文'],
       ['⿴辡', inner => `⿲辛${inner}辛`, '言'],
       ['⿴雔', inner => `⿲隹${inner}隹`, '言'],
+      ['⿴𨺅', inner => `⿲𨸏${inner}⿾𨸏`, '木'],
+      ['⿹頃', inner => `⿰⿱匕${inner}頁`, '禾'],
+      ['⿴㗊', inner => `⿳吅${inner}吅`, '犬'],
+      ['⿸倝', inner => `⿰𠦝⿱𠆢${inner}`, '羽'],
       ['⿶𩰲', inner => `⿱⿲弓${inner}弓鬲`, '米'],
       ['⿹𣪊', inner => `⿰⿱⿳士冖一${inner}殳`, '几'],
     ]) {
@@ -85,6 +89,15 @@ describe('the composer', () => {
       const original = new Composer(source.store()).parse(outer + component)
       expect(original).toEqual([[...outer][0], [...outer][1], component])
     }
+    for (const inner of ['木', '⬚', '⿴行⬚']) {
+      const sequence = `⿴⿰𨸏⿾𨸏${inner}`
+      const drawing = await compose(source, sequence, { separate: true })
+      expect(inkOnly(drawing)).toEqual(inkOnly(await compose(source, `⿲𨸏${inner}⿾𨸏`, { separate: true })))
+      const leaves = await sketch(source, sequence)
+      expect(groupParts(drawing.parts, leaves)).not.toBeNull()
+      expect(leaves.map(leaf => leaf.index)).toEqual(leaves.map((_, i) => i))
+    }
+    expect((await compose(source, '⿴𨺅木')).approximate).toEqual(['⿾'])
     const leaves = await sketch(source, '⿴行氵')
     const explicit = await sketch(source, '⿲彳氵亍')
     expect(leaves).toHaveLength(2)
@@ -94,6 +107,10 @@ describe('the composer', () => {
     const empty = await sketch(source, '⿴行⬚')
     expect(empty[1]).toEqual({ ...leaves[1], empty: true })
     const composer = new Composer(source.store())
+    composer.compose('⿴𨺅木')
+    expect([...composer.approximate]).toEqual(['⿾'])
+    composer.compose('木')
+    expect([...composer.approximate]).toEqual([])
     expect(composer.parse('⿴行氵')).toEqual(['⿴', '行', '氵'])
     expect(composer.respelled(['⿴', '口', '木'])).toEqual(['⿴', '口', '木'])
     expect(composer.respelled(['⿵', '行', '木'])).toEqual(['⿵', '行', '木'])
