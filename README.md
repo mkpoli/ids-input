@@ -555,6 +555,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   [音樂展覽 – 古琴篇](https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html),
   Hong Kong Music Office, explains a related 減字譜 symbol with 大七六 above 勹四;
   the example here uses 五. The `〾` marker is preserved in the IDS and marks approximate rendering.
+- [Bangumi discussion, 2017-02-17](https://chii.in/group/topic/342213): `⿱成龙` (duang).
+- [Adobe-KR](https://github.com/adobe-type-tools/Adobe-KR#special-notes): `⿰氵恩`, now
+  encoded as 𰜩 (U+30729). The documentation's pending-encoding note is historical.
+- [CNS11643 character record](https://www.cns11643.gov.tw/wordView.jsp?ID=149313):
+  覅, `⿰要勿`.
+- [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
+  `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
+  `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
