@@ -56,7 +56,7 @@ try {
     assert(await normalized.count() === 1, 'encoded alias has one candidate')
     assert((await normalized.innerText()).trim() === char, 'encoded alias displays its character')
     assert((await normalized.getAttribute('title')).includes(ids), 'encoded alias preserves IDS in tooltip')
-    await page.locator('.ids-part').last().click()
+    if (!await page.locator('.ids-part').last().evaluate(node => node.classList.contains('chosen'))) await page.locator('.ids-part').last().click()
     await normalized.click()
     await page.waitForFunction(expected => document.querySelector('.ids-field input').value === expected, `⿰木${char}`)
   }
@@ -65,7 +65,7 @@ try {
   const cell = page.locator('.part.compound')
   assert(await cell.count() === 1, 'full IDS filter')
   assert((await cell.getAttribute('title')).includes('4'), 'manual shortcut stroke count')
-  await page.locator('.ids-part').last().click()
+  if (!await page.locator('.ids-part').last().evaluate(node => node.classList.contains('chosen'))) await page.locator('.ids-part').last().click()
   await cell.click()
   await page.waitForFunction(() => document.querySelector('.ids-field input').value === '⿰木⿰冫⿱丿丶')
   await page.locator('.ids-preview[data-step="composed"]').waitFor()
