@@ -571,6 +571,7 @@ try {
   const moved = await firstPart.getAttribute('transform')
   assert(moved?.includes('translate'), 'a dragged part gets a transform')
   assert(await edit.locator('.ids-preview-large .selection').count() === 1, 'the dragged part gets handles')
+  await edit.waitForTimeout(150)
   await edit.keyboard.press('ArrowRight')
   assert(await firstPart.getAttribute('transform') !== moved, 'the arrow keys move the chosen part')
   const [edited] = await Promise.all([edit.waitForEvent('download'), edit.locator('.export .primary').click()])
