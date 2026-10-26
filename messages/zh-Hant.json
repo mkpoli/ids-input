@@ -21,7 +21,7 @@
   "ids.do.type": "輸入{text}",
   "ids.do.unwrap": "去掉{op}",
   "ids.empty": "空位",
-  "ids.find.placeholder": "名稱、字或碼位…",
+  "ids.find.placeholder": "名稱、詞、字或碼位…",
   "ids.from.atomic": "無更細的拆分記錄",
   "ids.from.collapse": "收起{part}的部件",
   "ids.from.containing": "含有{parts}的字",

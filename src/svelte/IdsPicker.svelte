@@ -109,10 +109,10 @@
   .ids-find{display:flex;flex-direction:column;gap:6px}
   .ids-find input{font-size:14px;padding:7px 10px}
   .ids-found{display:flex;flex-wrap:wrap;gap:4px}
-  .ids-hit{display:flex;align-items:baseline;gap:6px;padding:2px 8px;border-color:transparent;background:var(--_surface-subtle)}
+  .ids-hit{display:flex;align-items:baseline;gap:6px;max-width:100%;min-width:0;padding:2px 8px;border-color:transparent;background:var(--_surface-subtle)}
   .ids-hit:not(:disabled):hover{border-color:var(--_accent)}
-  .ids-hit-char{font-size:22px;font-family:var(--_font)}
-  .ids-hit-label{font-size:11px;color:var(--_muted);font-variant-numeric:tabular-nums}
+  .ids-hit-char{flex:none;font-size:22px;font-family:var(--_font)}
+  .ids-hit-label{min-width:0;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--_muted);font-variant-numeric:tabular-nums}
   .ids-note{margin:0;font-size:11px;color:var(--_muted)}
   .ids-note.fault{color:var(--_fault)}
 </style>

@@ -3,7 +3,7 @@
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
-import { createNameSearch, readNames } from '../core/names.js'
+import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { isComponent, isSequence } from '../core/ids.js'
 
 /**
@@ -54,6 +54,9 @@ export async function readText(response) {
   return new Response(stream).text()
 }
 
+/** Components the forms table folds that the names keep apart. */
+const SEPARATE = new Set(['斗', '鬥'])
+
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 
@@ -63,16 +66,19 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * `table` and `palette` hand the data over directly instead. `forms` is the URL of
  * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
  * components by and the component search opens the names of a component's other forms with.
- * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names the
- * component search knows (絞絲, ノ文, のぎ, 宝盖); without it the search still takes characters
- * and code points. The description search (`findByIds`) runs in a Web Worker made by `worker`
- * where there is one, its index built there once; elsewhere it runs on the caller's thread.
+ * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names, words and
+ * readings the component search knows (絞絲, ノ文, のぎ, 宝盖, water, shui, mizu); without it the
+ * search still takes characters and code points. `folds` is the URL of
+ * `data/component-name-folds.tsv` (or `foldsText` its text), which folds Chinese scripts and
+ * component forms together before a name is compared. The description search (`findByIds`) runs in
+ * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
+ * on the caller's thread.
  * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   folds?: string | URL, foldsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = given ? Promise.resolve(given) : null
@@ -142,11 +148,16 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   let named = null
   const nameIndex = () => named ??= Promise.all([
     namesText !== undefined ? namesText : names ? load(names).then(response => response.text()) : '',
-    // A names table without the forms table still finds the component the name records.
+    // A names table without the forms or folds tables still finds the component the name records.
     formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
-  ]).then(([nameText, formText]) => {
-    const { search } = createNameSearch(readNames(nameText))
-    const byForm = readForms(formText)
+    foldsText !== undefined ? foldsText : folds ? load(folds).then(response => response.text()).catch(() => '') : '',
+  ]).then(([nameText, formText, foldText]) => {
+    // A broken forms or folds table costs the search those forms or folds, not its names.
+    let byForm = new Map()
+    try { byForm = readForms(formText) } catch { /* names as they are written */ }
+    let folds = new Map()
+    try { folds = readFolds(foldText) } catch { /* names as they are written */ }
+    const { search } = createNameSearch(readNames(nameText), { folds })
     /** @type {Map<string, Set<string>>} */
     const reverse = new Map()
     for (const [form, canonical] of byForm) {
@@ -159,7 +170,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
 
   // The palette's parts, as the set a named component's other forms must belong to, and how often
   // each is used, to put the forms people meet first. Without a palette every component form is offered.
-  /** @type {Promise<{ parts: Set<string>, uses: Map<string, number> } | null> | null} */
+  /** @type {Promise<{ parts: Set<string>, uses: Map<string, number>, rank: Map<string, number> } | null> | null} */
   let namePalette = null
   const paletteForNames = () => {
     if (!parts && !givenPalette) return Promise.resolve(null)
@@ -168,8 +179,14 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       const held = new Set()
       /** @type {Map<string, number>} */
       const uses = new Map()
-      for (const row of rows) { held.add(row.part); uses.set(row.part, row.uses ?? 0) }
-      return { parts: held, uses }
+      /** @type {Map<string, number>} */
+      const rank = new Map()
+      for (const row of rows) {
+        held.add(row.part)
+        uses.set(row.part, row.uses ?? 0)
+        rank.set(row.part, row.kind === 'c' ? 2 : row.kind === 's' ? 1 : 0)
+      }
+      return { parts: held, uses, rank }
     }).catch(() => { namePalette = null; return null })
   }
 
@@ -182,12 +199,15 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
    * @param {{ forms: Map<string, string>, reverse: Map<string, Set<string>> }} index
    */
   function formsOf(char, palette, index) {
+    // 斗 (radical 68) and 鬥 (radical 191) are different radicals; the forms table folds them for
+    // the description search, but a name that finds one should not offer the other.
+    if (SEPARATE.has(char)) return [char]
     const canonical = index.forms.get(char) ?? char
     const members = new Set([char, canonical, ...(index.reverse.get(canonical) ?? [])])
     /** @type {string[]} */
     const forms = [char]
     for (const form of members) {
-      if (form === char || !isComponent(form)) continue
+      if (form === char || SEPARATE.has(form) || !isComponent(form)) continue
       const point = /** @type {number} */ (form.codePointAt(0))
       // The Kangxi Radicals block is a compatibility spelling of the unified ideograph: ⽔ for 水.
       if (point >= 0x2F00 && point <= 0x2FD5) continue
@@ -237,9 +257,15 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
           const found = index.search(text, { limit })
           if (found.length) {
             const palette = await paletteForNames()
+            // The closest names first; among names that fit equally, the components people meet most.
+            const ordered = found.map((hit, at) => ({ hit, at })).sort((a, b) =>
+              a.hit.score - b.hit.score
+              || (a.hit.score === 0 ? (palette?.rank.get(b.hit.char) ?? 0) - (palette?.rank.get(a.hit.char) ?? 0) : 0)
+              || (a.hit.score === 0 ? (palette?.uses.get(b.hit.char) ?? 0) - (palette?.uses.get(a.hit.char) ?? 0) : 0)
+              || a.at - b.at).map(({ hit }) => hit)
             /** @type {{ char: string, label: string }[]} */
             const named = []
-            for (const hit of found) for (const char of formsOf(hit.char, palette, index)) named.push({ char, label: hit.label })
+            for (const hit of ordered) for (const char of formsOf(hit.char, palette, index)) named.push({ char, label: hit.label })
             hits = [...named, ...direct]
           }
         } catch { /* The names are a convenience; the characters typed still stand. */ }

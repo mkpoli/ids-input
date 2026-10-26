@@ -81,14 +81,17 @@ rows), each row naming its source.
 
 ## component-names.tsv
 
-The names people call components by, for the parts finder's search: 絞絲 and 绞丝 for 糸, ノ文 and
-のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀. 1,727 names, 79 KB (14 KB gzipped), built by
+The names, words and readings people use for components, for the parts finder's search: 絞絲 and
+绞丝 for 糸, ノ文 and のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀, and water, silk,
+みず, shui, mizu, jiaosipang for the same components. 5,456 rows, 237 KB (46 KB gzipped), built by
 `scripts/build_component_names.py`. Format: `name`, `char`, `source`, `detail`, one name for one
 component per row; comments start with `#`.
 
-The search folds a query and a name (NFKC, katakana as hiragana, spaces and punctuation out) and takes
-a name that is the whole query, then one it starts, then one it stands inside. The adapter opens the
-component a name found into its forms from `component-forms.tsv`, keeping the forms the palette
+The search folds a query and a name (NFKC, katakana as hiragana, Latin accents off, spaces and
+punctuation out, Chinese scripts through `component-name-folds.tsv`) and takes a name that is the
+whole query, then one it starts, then one it stands inside; a Latin query matches whole words and
+their starts, and a word of five letters or more may stand inside a longer name. The adapter opens
+the component a name found into its forms from `component-forms.tsv`, keeping the forms the palette
 holds, so 絞絲 offers 纟, 糹 and 糸.
 
 - Licence: **CC BY-SA 4.0** for the file as a whole, because its KANJIDIC2 and Wikipedia rows are
@@ -102,7 +105,8 @@ Sources:
   うかんむり).
 - KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
-  and Development Group: further Japanese radical names (`rad_name`).
+  and Development Group: further Japanese radical names (`rad_name`), and the English meanings,
+  Japanese readings and pinyin of the radicals.
 - The redirects to the Japanese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA
   4.0 (`https://ja.wikipedia.org/`): ノ文 and のぶん to 攴部, ノ木偏 to 禾部, 草冠 to 艸部.
 - catusf/tudien `dict/radical_name.txt` at a214ee3 (`https://github.com/catusf/tudien`), CC0 1.0: the
@@ -112,17 +116,43 @@ Sources:
 - Mararsh/MyBox `docs/data2d/ChineseRadicals_example_zh.csv` at 107ddc3
   (`https://github.com/Mararsh/MyBox`), Apache 2.0: one Chinese name for each radical (鱼字旁,
   鸟字旁, 门字框, 骨字旁).
-- The redirects to the Chinese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA 4.0
-  (`https://zh.wikipedia.org/`): 絞絲旁, 三點水, 寶蓋頭.
+- The article titles and redirects to the Chinese Wikipedia articles on the 214 radicals, read
+  2026-10-26, CC BY-SA 4.0 (`https://zh.wikipedia.org/`): 絞絲旁, 三點水, 寶蓋頭.
+- Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
+  Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
+  kDefinition, kMandarin, kJapaneseOn and kJapaneseKun of each radical (water, silk, shui, sui, mizu).
+- pypinyin 0.55.0 (`https://github.com/mozillazg/python-pinyin`), MIT: the pinyin of each Chinese
+  name (baogaitou, jiaosipang, sandianshui), derived from the name.
+- A Hepburn and Kunrei table in the build script, after the kana names and readings: nobun, sanzui,
+  ukanmuri, nogihen, and the Kunrei spellings si, ti, tu, hu. These rows are romanizations, not
+  another dictionary's names.
 - OpenCC 1.4.2 (`https://github.com/BYVoid/OpenCC`), Apache 2.0, by BYVoid: the traditional
   or simplified spelling of a Chinese name where it differs, marked in `detail`. Characters that are
   radicals in their own right (几, 厂, 干, 尸, 里, 凶, 虫) are kept as they are, since 几 must not
   become 幾 and 尸 must not become 屍. A redirect naming another radical than the article it points
   to (男部 to 女部, 鳥偏 to 酉部) is left out.
 
-The kanji-tools, tudien, rime-wanxiang, MyBox and KANJIDIC2 files are pinned by revision and SHA-256 in
-the script. The exact Wikipedia redirects used are kept in `data/component-name-redirects.json`, read
-2026-10-26 (CC BY-SA 4.0); `--refresh` fetches them again and rewrites that file.
+The kanji-tools, tudien, rime-wanxiang, MyBox, KANJIDIC2 and Unihan files are pinned by revision or
+SHA-256 in the script. The exact Wikipedia redirects used are kept in
+`data/component-name-redirects.json`, read 2026-10-26 (CC BY-SA 4.0); `--refresh` fetches them again
+and rewrites that file, and also rebuilds the folds.
+
+## component-name-folds.tsv
+
+The characters folded together before a component name is compared: the traditional and simplified
+spellings of a character, the positional forms of a component, and the Japanese shinjitai forms the
+other tables leave apart. 591 folds, 15 KB, built by `scripts/build_component_names.py`. Format:
+`form`, `char`, `source`; comments start with `#`.
+
+- Source `component-forms`: `component-forms.tsv`, so 氵, 氺 and 水 fold together, as do 糹 and 纟
+  with 糸, and 阝 with both 阜 and 邑.
+- Source `opencc`: OpenCC 1.4.2, Apache 2.0, by BYVoid, for the traditional and simplified spellings
+  (寶 to 宝, 龍 to 龙).
+- Source `ja-variants`: the Japanese shinjitai forms 竜, 亀, 斉 and 歯, read with the forms they
+  stand for (龍, 龜, 齊, 齒).
+- Licence: **CC BY-SA 4.0** for the file as a whole
+  (<https://creativecommons.org/licenses/by-sa/4.0/>); the component forms and OpenCC rows keep their
+  own notices.
 
 ## Tangut
 
