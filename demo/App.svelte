@@ -47,17 +47,30 @@
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
+  /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
+  function exportUrl(value) {
+    try {
+      const url = new URL(value, location.href)
+      if (!url.pathname.endsWith('/')) url.pathname += '/'
+      return url.href
+    } catch { return null }
+  }
+  const preparedBase = exportUrl(COMPOSER_BASE)
   /** A preview that answers the prepared examples at once and the composer otherwise. @param {string} at */
   function previewFor(at) {
     const known = previewsWithExamples.get(at)
     if (known) return known
     const composed = previewAt(at)
-    if (at !== COMPOSER_BASE) { previewsWithExamples.set(at, composed); return composed }
+    if (exportUrl(at) !== preparedBase) { previewsWithExamples.set(at, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       return prepared.get(sequence) ?? composed(sequence, options)
-    }, { warm: composed.warm })
+    }, {
+      warm: (/** @type {string | undefined} */ sequence) => {
+        if (sequence === undefined || !prepared.has(sequence)) composed.warm()
+      },
+    })
     previewsWithExamples.set(at, preview)
     return preview
   }

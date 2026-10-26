@@ -15,7 +15,7 @@ export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgB
  * @typedef {import('../adapter/types.js').Drawing} Drawing
  * @typedef {import('../adapter/types.js').PreviewOptions} PreviewOptions
  * @typedef {import('./client.js').WorkerLike} WorkerLike
- * @typedef {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm: () => void }} ComposerPreview
+ * @typedef {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm: (sequence?: string) => void }} ComposerPreview
  */
 
 /** A sequence larger than the composer draws (`LIMITS`). */
