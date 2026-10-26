@@ -27,11 +27,8 @@
   "app.edit.selectAll": "Chọn tất cả",
   "app.encoded": "Được mã hóa thành",
   "app.examples": "Ví dụ",
-  "app.examples.han": "Chữ Hán",
-  "app.examples.hybrid": "Kết hợp hệ chữ",
   "app.examples.tangut": "Chữ Tây Hạ",
   "app.examples.none": "(chưa được mã hóa)",
-  "app.examples.unencoded": "Chưa có điểm mã",
   "app.export.background": "Nền",
   "app.export.bg.black": "Đen",
   "app.export.bg.custom": "Chọn màu",
@@ -111,5 +108,10 @@
   "app.examples.cards": "Thẻ",
   "app.examples.list": "Danh sách",
   "app.source.sealFont": "76 glyph từ bản của Trần Xương Trí. Việc duyệt thượng nguồn chưa hoàn tất.",
-  "app.source.smallSeal": "Phân tích Thuyết Văn bản Jiguge: 49 chữ và 31 thành phần đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý."
+  "app.source.smallSeal": "Phân tích Thuyết Văn bản Jiguge: 49 chữ và 31 thành phần đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý.",
+  "app.examples.basic": "Cấu trúc cơ bản",
+  "app.examples.complex": "Cấu trúc phức tạp",
+  "app.examples.repeated": "Bộ phận lặp lại",
+  "app.examples.enclosures": "Kết cấu bao quanh",
+  "app.examples.mixed": "Hệ chữ hỗn hợp"
 }
