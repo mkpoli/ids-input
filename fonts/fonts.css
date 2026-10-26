@@ -6,6 +6,7 @@
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;
   unicode-range:U+2B1A,U+31C0-31E3}
 
-@font-face{font-family:"Klee One";src:url("./KleeOne-Regular.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"Kureedo";src:url("./Kureedo-Regular.woff2") format("woff2");font-display:swap}
+@font-face{font-family:"GenZui Sans";src:url("./GenZuiSans-Regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+17000-18AFF,U+18D00-18DFF}

@@ -18,7 +18,7 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import exampleDrawings from './lib/example-drawings.json'
-  import { COMPOSER_BASE } from './lib/composer.js'
+  import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
@@ -40,9 +40,13 @@
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
 
   const params = new URLSearchParams(location.search)
+  /** @type {'sans' | 'serif' | 'klee'} */
+  let face = $state(load('font', 'sans'))
+  $effect(() => save('font', face === 'sans' ? undefined : face))
+  $effect(() => { document.documentElement.dataset.font = face })
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
   let composer = $state(params.get('composer') || load('composer', '') || '')
-  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
+  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const babel = babelStoneAdapter({ ids, parts, forms, names, folds })
   // Manual changes to the preview belong to the active document tab.
@@ -168,10 +172,6 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
-  /** @type {'sans' | 'serif' | 'klee'} */
-  let face = $state(load('font', 'sans'))
-  $effect(() => save('font', face === 'sans' ? undefined : face))
-  $effect(() => { document.documentElement.dataset.font = face })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   // The share of the middle column given to the tree; the search takes the rest.
@@ -558,7 +558,7 @@
 
 <svelte:window onkeydown={keys} />
 
-<div class="app" lang={locale}>
+<div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
       <a class="brand" href="./" aria-label={t('app.title')}>
