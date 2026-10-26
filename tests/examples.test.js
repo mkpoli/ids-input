@@ -5,7 +5,7 @@ import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { parseIdsTable } from '../src/adapter/babelstone.js'
 import { onlyTangut } from '../src/composer/tangut.js'
 import { size } from '../src/composer/loader.js'
-import { LONGEST, parse, leaves } from '../src/core/index.js'
+import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 
 const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 /** The characters BabelStone describes with each sequence. */
@@ -61,4 +61,12 @@ it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', ()
     expect(parse(sequence).problem).toBeUndefined()
   }
   expect(leaves(parse('⿰木⿳ㄙㄨㄙ').tree).map(leaf => leaf.char)).toEqual(['木', 'ㄙ', 'ㄨ', 'ㄙ'])
+})
+
+
+it('illustrates every IDC outside the separate Tangut section', () => {
+  const sequences = EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples.map(example => example.sequence))
+  for (const [operator] of OPERATORS) {
+    expect(sequences.some(sequence => sequence.includes(operator))).toBe(true)
+  }
 })
