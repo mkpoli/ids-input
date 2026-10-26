@@ -169,7 +169,8 @@ different components to it.
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
-asks it for the tree being edited.
+searches for the selected part, or the whole tree when nothing is selected. Each operator frame
+shows its subsequence in muted text. Selecting an empty slot clears the search.
 
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions

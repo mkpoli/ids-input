@@ -78,6 +78,15 @@
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); items[event.key === 'Home' ? 0 : items.length - 1]?.focus() }
   }
   const menuPart = $derived(menu ? partAt(editor.tree, menu.path) : undefined)
+  /** A click on a node's frame, away from its parts and buttons, chooses it. @param {MouseEvent} event @param {Path} path */
+  function frameClick(event, path) {
+    if (editor.disabled) return
+    const target = /** @type {HTMLElement} */ (event.target)
+    const frame = /** @type {HTMLElement} */ (event.currentTarget)
+    const parts = /** @type {HTMLElement | null} */ (frame.querySelector(':scope > .ids-parts'))
+    if (target.closest('button') || parts?.contains(target)) return
+    editor.choose(path)
+  }
 </script>
 
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) closeMenu({ refocus: false }) }} />
@@ -86,12 +95,14 @@
   {@const selected = samePath(editor.chosen, path)}
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
-    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op}>
+    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
+    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
+        <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrap')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -152,12 +163,14 @@
   :where(.ids-tree) button{font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);cursor:pointer}
   :where(.ids-tree) button:disabled{cursor:default;opacity:.55}
   :where(.ids-tree) button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;
+  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;cursor:pointer;
     transition:border-color .12s,background-color .12s}
+  .ids-node.disabled{cursor:default}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
   .ids-head{position:absolute;top:3px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
-  .ids-head button{pointer-events:auto}
+  .ids-head button{pointer-events:auto;flex-shrink:0}
+  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px/1.4 var(--_font);color:var(--_muted)}
   .ids-op{display:grid;place-items:center;padding:1px 3px;border-color:transparent;background:none}
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
   .ids-unwrap{padding:0 5px;font-size:13px;line-height:1.2;color:var(--_muted);border-color:transparent;background:none}
