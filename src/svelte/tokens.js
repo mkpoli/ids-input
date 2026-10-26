@@ -31,3 +31,10 @@ export function tint(path) {
   const hue = path.length ? [205, 145, 35][path[0] % 3] + path.slice(1).reduce((sum, n, i) => sum + (n - .5) * 24 / (i + 1), 0) : 265
   return `oklch(65% 0.12 ${hue})`
 }
+
+/** The smallest subtree containing a nonempty text range. @param {Token[]} spans @param {number} start @param {number} end */
+export function rangeToken(spans, start, end) {
+  if (start === end) return null
+  return spans.filter(token => token.start <= start && token.end >= end)
+    .sort((a, b) => b.path.length - a.path.length)[0] ?? null
+}

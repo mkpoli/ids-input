@@ -8,6 +8,7 @@
 // the tree is chosen at a time. Every change is a named step in the history ("Split ⬚ with ⿰",
 // "Put 木"), so it can be undone and redone, a hundred steps each way; a run of typing in the field
 // is one step.
+import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, samePath, unwrap,
   write } from '../core/ids.js'
@@ -48,6 +49,7 @@ export function createEditor(options) {
   const text = part => part === null || part === undefined ? '' : write(part)
 
   let tree = $state.raw(/** @type {Part} */ (null))
+  let selectionVersion = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   let draft = $state(''), piece = $state(''), note = $state('')
@@ -100,7 +102,7 @@ export function createEditor(options) {
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
     hovered = null
-    tree = next; chosen = select; note = ''
+    tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     if (!typing) draft = next === null ? '' : write(next)
     const part = select ? partAt(next, select) : undefined
@@ -202,6 +204,7 @@ export function createEditor(options) {
   }
   /** Choose the part at `path`, or none; choosing the chosen part again lets it go. @param {Path | null} path @param {{ toggle?: boolean }} [how] */
   function choose(path, { toggle = true } = {}) {
+    selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
     note = ''
     const part = chosen ? partAt(tree, chosen) : undefined
@@ -292,6 +295,17 @@ export function createEditor(options) {
     hover(path) { hovered = disabled() ? null : path },
     /** @param {Path} path */
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
+    get selectionVersion() { return selectionVersion },
+    get selectionRange() { return chosen === null ? null : tokens(draft).find(token => samePath(token.path, chosen)) ?? null },
+    /** @param {number} start @param {number} end */
+    selectText(start, end) {
+      const token = rangeToken(tokens(draft), start, end)
+      chosen = token?.path ?? null
+      piece = text(chosen ? partAt(tree, chosen) : undefined)
+      if (typeof picked === 'string') lookup.read(lookupChar(picked))
+    },
+    /** @param {Path} path */
+    isSelected(path) { return chosen !== null && chosen.every((n, i) => path[i] === n) },
     get tree() { return tree },
     get chosen() { return chosen },
     get draft() { return draft },

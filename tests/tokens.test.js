@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test'
-import { tokens, tint } from '../src/svelte/tokens.js'
+import { tokens, tint, rangeToken } from '../src/svelte/tokens.js'
 
 test('tokens map nested subtrees with UTF-16 ranges', () => {
   const text = '⿰⿱木𠀀\u{E0100}水'
@@ -18,4 +18,12 @@ test('branch tints are stable and distinct', () => {
   expect(tint([0])).toBe(tint([0]))
   expect(tint([0])).not.toBe(tint([1]))
   expect(tint([0, 0])).not.toBe(tint([0, 1]))
+})
+
+test('ranges select the smallest enclosing subtree without splitting selectors', () => {
+  const spans = tokens('⿰⿱木𠀀\u{E0100}水')
+  expect(rangeToken(spans, 3, 4)?.path).toEqual([0, 1])
+  expect(rangeToken(spans, 2, 7)?.path).toEqual([0])
+  expect(rangeToken(spans, 2, 8)?.path).toEqual([])
+  expect(rangeToken(spans, 2, 2)).toBeNull()
 })

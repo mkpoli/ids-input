@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
   let scroll = $state(0)
   let composing = $state(false)
@@ -23,6 +24,29 @@
     return () => observer.disconnect()
   })
   /** @type {HTMLDivElement | null} */ let paint = $state(null)
+  $effect(() => {
+    editor.selectionVersion
+    untrack(() => {
+      const range = editor.selectionRange
+      if (field && range) field.setSelectionRange(range.start, range.end)
+    })
+  })
+  function select() {
+    if (field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+  }
+  // Expand a partial token or crossing range before the browser replaces it.
+  function expandSelection() {
+    const range = editor.selectionRange
+    if (field && field.selectionStart !== field.selectionEnd && range) field.setSelectionRange(range.start, range.end)
+  }
+  /** @param {InputEvent} event */
+  function beforeInput(event) {
+    expandSelection()
+    if (!event.isComposing && event.inputType.startsWith('delete') && field && field.selectionStart !== field.selectionEnd && editor.chosen !== null) {
+      event.preventDefault()
+      editor.empty(editor.chosen)
+    }
+  }
   /** @param {PointerEvent} event */
   function hover(event) {
     const elements = paint?.querySelectorAll('span') ?? []
@@ -39,10 +63,10 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:hovered={editor.isHovered(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => composing = true} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
+    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={expandSelection} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => { expandSelection(); composing = true }} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
     onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
@@ -71,4 +95,5 @@
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
   .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 30%,transparent);box-shadow:inset 0 -2px var(--_accent)}
+  .sequence-paint span.selected{background:color-mix(in oklab,var(--_accent) 22%,var(--tint) 12%);box-shadow:inset 0 -2px var(--_accent)}
 </style>
