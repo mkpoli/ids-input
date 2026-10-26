@@ -1,21 +1,28 @@
 #!/usr/bin/env bun
-// Rebuild demo/lib/example-drawings.json: every starter example composed once against the export at
+// Rebuild demo/lib/example-drawings.json: every starter example composed once using bundled Tangut outlines or the export at
 // COMPOSER_BASE, so the demo opens an example without waiting for the composer. Run it whenever
 // COMPOSER_BASE changes; tests/example-drawings.test.js fails until the file matches the export.
 //
 //   bun run build:example-drawings
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
+import { hasTangut, onlyTangut, tangutSource } from '../../src/composer/tangut.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
+const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
+const tangut = tangutSource({ load: loadTangut })
+const mixed = tangutSource({ load: loadTangut, fallback: source })
 await source.ready()
 const drawings = {}
 const failed = []
 for (const example of EXAMPLES) {
   try {
-    drawings[example.sequence] = { char: example.char, drawn: await compose(source, example.sequence) }
+    const selected = onlyTangut(example.sequence) ? tangut : hasTangut(example.sequence) ? mixed : source
+    const drawn = await compose(selected, example.sequence)
+    drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
   } catch (error) {
     failed.push({ sequence: example.sequence, char: example.char, name: error?.name, message: String(error?.message ?? error) })

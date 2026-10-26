@@ -6,10 +6,13 @@
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { EXAMPLES } from './lib/examples.js'
+import { checkPanelWidths } from './check-panels.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
 import { files as composerFiles } from '../tests/fixtures/composer-export.js'
+
+const UNENCODED = EXAMPLES.filter(example => !example.char).length
 
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const shots = arg('--shots') ?? 'shots'
@@ -270,6 +273,8 @@ try {
   assert(await splitPage.locator('.split').getAttribute('aria-valuenow') === '58', 'the divider keeps its place')
   await splitPage.context().close()
   pass('the tree panel starts larger, and the divider resizes and keeps the panels')
+  await checkPanelWidths(open, assert)
+  pass('column width dividers: drag, keys, reset, persistence and responsive bounds')
 
   // Below 1280 the page scrolls; the input panel matches the middle column instead of ending early.
   const narrow = await open('', { width: 1243, height: 1120 })
@@ -382,7 +387,7 @@ try {
   const middle = await page.locator('.middle').boundingBox()
   const tree = await page.locator('.middle .tree').boundingBox()
   const results = await page.locator('.results').boundingBox()
-  assert(await page.locator('.work > *').count() === 3, 'the workshop has three columns')
+  assert(await page.locator('.work > .pane, .work > .middle').count() === 3, 'the workshop has three content columns')
   assert(results.y > tree.y + tree.height - 1, 'the search is its own panel under the tree')
   assert(Math.abs(results.width - middle.width) < 2, `the search spans the middle column (${results.width} against ${middle.width})`)
   assert(Math.abs(root.width - root.height) < 2 && root.width > box.width * 0.85, `the tree is square and fills its frame (${root.width}×${root.height} in ${box.width})`)
@@ -393,7 +398,7 @@ try {
   // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
-  assert(JSON.stringify(exampleHeads) === JSON.stringify(['With a code point', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'Script hybrids', 'Constructed samples', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
@@ -401,10 +406,10 @@ try {
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
   assert((await biang.locator('.label').textContent())?.includes('⿺') === true, 'the biang label keeps its IDC')
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
-  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
-  const firstUnencoded = page.locator('.menu .item', { hasText: '(unencoded)' }).first()
-  assert(await firstUnencoded.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
-  assert((await firstUnencoded.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
+  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === UNENCODED, `${UNENCODED} forms with no code point`)
+  const unencodedItem = page.locator('.menu .item', { hasText: '(unencoded)' }).last()
+  assert(await unencodedItem.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
+  assert((await unencodedItem.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
   await biang.click()
   assert(await value() === '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', `example opened: ${await value()}`)
   pass('examples show textual IDS, code points or none, and open')
@@ -558,6 +563,33 @@ try {
   await noUrl.context().close()
   pass('the preview degrades without its export, or with a base that is no URL')
   assert(!page.errors.length, `page errors: ${page.errors.join('; ')}`)
+
+  // Tangut draws locally even when the configured Han export is invalid.
+  const tangut = await open(`?composer=${encodeURIComponent('http://[')}#${encodeURIComponent('⿱𘠀⿰𘢰𘠆')}`)
+  await tangut.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await tangut.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
+  const tangutPath = await tangut.locator('.ids-preview-large .ink').getAttribute('d')
+  assert(tangutPath.length > 500, 'Tangut example has real outlines')
+  const [tangutSvg] = await Promise.all([tangut.waitForEvent('download'), tangut.locator('.export .primary').click()])
+  const tangutText = readFileSync(await tangutSvg.path(), 'utf8')
+  assert(tangutText.includes(tangutPath) && !tangutText.includes('<text'), 'Tangut SVG carries outlines')
+  await tangut.locator('.export [role="radio"]', { hasText: 'PNG' }).click()
+  const [tangutPng] = await Promise.all([tangut.waitForEvent('download'), tangut.locator('.export .primary').click()])
+  assert(readFileSync(await tangutPng.path()).readUInt32BE(16) === 1024, 'Tangut exports a 1024 px PNG')
+  await tangut.screenshot({ path: join(shots, 'tangut-renderer.png'), fullPage: true })
+  await tangut.getByRole('button', { name: 'Adjust layout' }).click()
+  await tangut.waitForFunction(() => document.querySelectorAll('.ids-preview-large .part').length === 3)
+  await tangut.getByRole('button', { name: 'Done' }).click()
+  await tangut.locator('.ids-field input').fill('⿰𘠀⬚')
+  await tangut.locator('.ids-preview[data-step="composed"] .slot:not(.faint)').first().waitFor()
+  assert(await tangut.locator('.ids-preview-large .ink').count() > 0, 'edited Tangut retains ink')
+  assert(!tangut.errors.length, `Tangut page errors: ${tangut.errors.join('; ')}`)
+  await tangut.context().close()
+  const mixed = await open(`${fixture}#${encodeURIComponent('⿰木𘠁')}`)
+  await mixed.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  assert((await mixed.locator('.ids-preview-large .ink').getAttribute('d')).length > 100, 'mixed Han–Tangut draws')
+  await mixed.context().close()
+  pass('Tangut outlines, edited slots, SVG/PNG exports and mixed Han–Tangut rendering')
 
   // With an export: the filled part drawn, the slot a placeholder; SVG and PNG saved as files named
   // after the sequence, on the background and in the ink chosen; the settings kept.
@@ -715,7 +747,7 @@ try {
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')
   assert(await phoneExamples.locator('.item.rich').count() === EXAMPLES.length, 'the phone sheet holds every example')
   assert(await phoneExamples.locator('.note', { hasText: 'U+30EDE' }).count() === 1, 'the phone sheet shows a code point')
-  assert(await phoneExamples.locator('.leading.spacer').count() === 7, 'the phone sheet leaves the character column empty for forms with no code point')
+  assert(await phoneExamples.locator('.leading.spacer').count() === UNENCODED, 'the phone sheet leaves the character column empty for forms with no code point')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="File"]').count() === 1, 'File commands in the phone menu')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="Edit"]').count() === 1, 'Edit commands in the phone menu')
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()

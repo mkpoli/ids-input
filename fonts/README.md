@@ -26,4 +26,5 @@ LLC, SIL Open Font License 1.1 (`OFL-NotoSerifTangut.txt`), from
 [notofonts/noto-fonts](https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut).
 It covers all 768 original Tangut components. Rebuild with
 `uv run scripts/build_tangut_font.py`; the script pins the source SHA-256.
-This text font does not supply the separate han-compose outline dataset.
+Its outlines are also exported by `scripts/build_tangut_outlines.py` for composition
+and SVG/PNG export, under the same font licence.

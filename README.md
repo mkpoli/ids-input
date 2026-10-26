@@ -31,8 +31,8 @@ The package has three layers, and an optional preview:
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
 The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
-tab. Import `fonts.css` for Tangut text. The preview draws Han sequences only: han-compose's export
-holds no Tangut outlines, so a Tangut sequence is edited and searched but not drawn.
+tab. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -254,7 +254,8 @@ own stays the character it is, and without `names` the search takes characters a
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. It reads the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
+Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -268,7 +269,8 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it the preview keeps its placeholders and shows no badge; when the export
+origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
+use the bundled outlines. When the export
 loads but a part has no drawing, its badge reads "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
@@ -326,8 +328,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
   SIL Open Font License 1.1.
-- `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
-  are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
+- `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
+  (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
+- `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
+  outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
   `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
@@ -368,6 +372,13 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
+- SCRIPT-HYBRID (BiangBiangCon v19), slides dated 2026-10-16 (JST), supplied 2026-10-26, for the
+  hybrid examples. ⿴口도 is the slide's proposed 図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+  CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
+  L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
+  and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
+  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone. ⿰木あ, ⿰木Д and ⿰木？
+  are constructed samplers, not attested characters.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
@@ -389,7 +400,9 @@ and in a bottom drawer on mobile. The tree panel switches between the Shape
 of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
 keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
-double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
+double-click restores the default. Vertical dividers resize the columns: drag, use Left/Right
+(Shift for larger steps), or double-click to reset. Column widths are saved and fit the window.
+Toolbar buttons show their keys on hover. The address carries the
 sequence
 (`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts, the theme and the font face stay in the browser's
 `localStorage` under `ids-input:`.
@@ -458,6 +471,6 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
-The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
-`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+The prepared drawings in `demo/lib/example-drawings.json` use bundled Tangut outlines or the Han
+export at `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
