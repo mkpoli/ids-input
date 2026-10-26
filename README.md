@@ -400,7 +400,9 @@ and in a bottom drawer on mobile. The tree panel switches between the Shape
 of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
 keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
-double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
+double-click restores the default. Vertical dividers resize the columns: drag, use Left/Right
+(Shift for larger steps), or double-click to reset. Column widths are saved and fit the window.
+Toolbar buttons show their keys on hover. The address carries the
 sequence
 (`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
 `localStorage` under `ids-input:`.
