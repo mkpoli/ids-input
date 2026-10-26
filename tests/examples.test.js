@@ -37,7 +37,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps Tangut in its own examples section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'unencoded'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'hybrid', 'samples', 'unencoded'])
   expect(EXAMPLE_GROUPS[1].examples.map(example => example.char)).toEqual(['𗀀', '𘴅'])
   expect(EXAMPLE_GROUPS[0].examples.every(example => !/[\u{17000}-\u{18DFF}]/u.test(example.char))).toBe(true)
 })

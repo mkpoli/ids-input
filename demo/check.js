@@ -11,6 +11,8 @@ import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
 import { files as composerFiles } from '../tests/fixtures/composer-export.js'
 
+const UNENCODED = EXAMPLES.filter(example => !example.char).length
+
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const shots = arg('--shots') ?? 'shots'
 const executablePath = arg('--chromium') ?? process.env.CHROMIUM_PATH
@@ -387,7 +389,7 @@ try {
   // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
-  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'Script hybrids', 'Constructed samples', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
@@ -395,10 +397,10 @@ try {
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
   assert((await biang.locator('.label').textContent())?.includes('⿺') === true, 'the biang label keeps its IDC')
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
-  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
-  const firstUnencoded = page.locator('.menu .item', { hasText: '(unencoded)' }).first()
-  assert(await firstUnencoded.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
-  assert((await firstUnencoded.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
+  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === UNENCODED, `${UNENCODED} forms with no code point`)
+  const unencodedItem = page.locator('.menu .item', { hasText: '(unencoded)' }).last()
+  assert(await unencodedItem.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
+  assert((await unencodedItem.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
   await biang.click()
   assert(await value() === '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', `example opened: ${await value()}`)
   pass('examples show textual IDS, code points or none, and open')
@@ -926,7 +928,7 @@ try {
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')
   assert(await phoneExamples.locator('.item.rich').count() === EXAMPLES.length, 'the phone sheet holds every example')
   assert(await phoneExamples.locator('.note', { hasText: 'U+30EDE' }).count() === 1, 'the phone sheet shows a code point')
-  assert(await phoneExamples.locator('.leading.spacer').count() === 7, 'the phone sheet leaves the character column empty for forms with no code point')
+  assert(await phoneExamples.locator('.leading.spacer').count() === UNENCODED, 'the phone sheet leaves the character column empty for forms with no code point')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="File"]').count() === 1, 'File commands in the phone menu')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="Edit"]').count() === 1, 'Edit commands in the phone menu')
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()
