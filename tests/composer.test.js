@@ -2,6 +2,8 @@
 // network is all zeros: two-operand nodes fall back to the composer's shares, which space and fit
 // their parts with masks.
 import { describe, expect, it } from 'bun:test'
+import { createHash } from 'node:crypto'
+import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
 import { badge, placeholder } from '../src/core/preview.js'
@@ -14,6 +16,28 @@ const sourceOf = (fetched = []) => createSource(async name => {
   return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
 })
 const SEQUENCES = ['⿰木口', '⿱口木', '⿴口木', '⿲木口木', '⿱⿰木木口', '⿾⿰木口', '㇯口木', '⿼口木']
+
+// The fixture with one description the export draws whole, `𪱳`, so `separate` has a glyph to skip.
+const hex = text => createHash('sha256').update(text).digest('hex')
+const gShard = key => `g/${hex(key).slice(0, 3)}.json`
+const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
+const boxGlyph = ([x0, y0, x1, y1]) => ({ v: 1, b: [x0, y0, x1, y1],
+  p: [['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(value => value * 4)), int16(Array(8).fill(0))]] })
+const encodedSource = () => {
+  const extra = new Map()
+  const add = (key, record) => {
+    const name = gShard(key), file = extra.get(name) ?? {}
+    file[hex(key)] = record
+    extra.set(name, gzipSync(JSON.stringify(file)))
+  }
+  add('⿰木口', { k: '⿰木口', e: '𪱳' })
+  const glyph = boxGlyph([40, 40, 960, 960])
+  add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
+  return createSource(async name => {
+    const body = extra.get(name) ?? files[name]
+    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+  })
+}
 
 describe('the composer', () => {
   it('draws the same whether its files arrive at once or as it asks for them', async () => {
@@ -33,6 +57,16 @@ describe('the composer', () => {
     const plain = await compose(source, '⿰木口')
     expect(plain.approximate).toEqual([])
     expect(plain.kanjivg).toBe(false)
+  })
+  it('writes each placed part as its own path, and unfolds a description drawn whole when asked', async () => {
+    const whole = await compose(encodedSource(), '⿰木口')
+    expect(whole.parts).toHaveLength(1)
+    expect(whole.parts[0]).toMatchObject({ origin: 'glyph 𪱳', cut: false })
+    expect(whole.parts[0].d.length).toBeGreaterThan(20)
+    const split = await compose(encodedSource(), '⿰木口', { separate: true })
+    expect(split.parts.map(part => part.origin)).toEqual(['glyph 木', 'glyph 口'])
+    expect(split.d).toBe(split.parts.map(part => part.d).join(''))
+    expect(await compose(encodedSource(), '⿰木口', { separate: true })).toEqual(split)
   })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'

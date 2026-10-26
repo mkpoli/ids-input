@@ -1,4 +1,13 @@
 {
+  "ids.adjust.done": "完成",
+  "ids.adjust.hint": "拖曳部件移動，拖角縮放，拖圓點旋轉。",
+  "ids.adjust.move": "移動{part}",
+  "ids.adjust.rotate": "旋轉{part}",
+  "ids.adjust.scale": "縮放{part}",
+  "ids.adjust.reset": "重設此部件",
+  "ids.adjust.resetAll": "全部重設",
+  "ids.adjust.title": "調整佈局",
+  "ids.adjust.unavailable": "此字形無法拆分部件。",
   "ids.choose": "選擇{part}",
   "ids.chooseFirst": "請先選擇要填的部件。",
   "ids.clear": "清空部件",
