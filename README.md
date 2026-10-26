@@ -572,6 +572,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
 - [𰻞𰻞會 / BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/),
   October 2026 presentations: a general source for some of the examples.
+- [BabelStone Erjian](https://www.babelstone.co.uk/Fonts/Erjian.html), entries 2.2:007 and
+  2.2:003: `⿺辶比` (避) and `⿱艹半` (瓣). Jyutnet records JYN00013 and JYN00017 supply
+  `⿵門覃` and `⿰舟邊`. 嫑 (`⿱不要`) follows BabelStone IDS.
 - BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
   臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
   of all 17 IDCs; the approximation marker `〾` is represented separately.
@@ -683,7 +686,6 @@ bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
-bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
