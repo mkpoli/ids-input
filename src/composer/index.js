@@ -31,13 +31,14 @@ const CACHE = 32
  * holding `manifest.json`). It answers the drawing, or rejects: with a `TooLargeError` for a
  * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
- * it has no drawing for). A sequence drawn once is answered from memory next time. `warm()` starts
- * the worker on the manifest and layout before the first drawing. `worker` makes the Web Worker; the
- * default is the module worker beside this file.
- * @param {{ base: string, worker?: () => WorkerLike }} options
+ * it has no drawing for). `separate` draws every operand of a description instead of a glyph that
+ * spells it, so every leaf has a piece of its own. A sequence drawn once is answered from memory
+ * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
+ * `worker` makes the Web Worker; the default is the module worker beside this file.
+ * @param {{ base: string, separate?: boolean, worker?: () => WorkerLike }} options
  * @returns {ComposerPreview}
  */
-export function composerPreview({ base, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
+export function composerPreview({ base, separate = false, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
   /** @type {ReturnType<typeof createDrawer> | null} */
   let drawer = null
   let asking = 0
@@ -75,7 +76,7 @@ export function composerPreview({ base, worker = () => new Worker(new URL('./wor
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
     try {
-      const answer = await asked.draw(sequence, leaves => { if (!signal?.aborted) onSketch?.(leaves) })
+      const answer = await asked.draw(sequence, leaves => { if (!signal?.aborted) onSketch?.(leaves) }, { separate })
       if (answer.status === 'composed') { remember(sequence, answer.drawn); return answer.drawn }
       if (answer.status === 'cancelled') throw new DOMException('The drawing was replaced.', 'AbortError')
       throw answer.unavailable ? new UnavailableError(answer.error) : new Error(answer.error)

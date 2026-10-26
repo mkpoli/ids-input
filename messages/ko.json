@@ -1,4 +1,13 @@
 {
+  "ids.adjust.done": "완료",
+  "ids.adjust.hint": "부품을 끌어 옮기고, 모서리로 크기를 바꾸고, 원으로 돌립니다.",
+  "ids.adjust.move": "{part} 이동",
+  "ids.adjust.rotate": "{part} 회전",
+  "ids.adjust.scale": "{part} 크기 조절",
+  "ids.adjust.reset": "이 부품 되돌리기",
+  "ids.adjust.resetAll": "모두 되돌리기",
+  "ids.adjust.title": "배치 조정",
+  "ids.adjust.unavailable": "이 글자는 부품으로 나눌 수 없습니다.",
   "ids.choose": "{part} 고르기",
   "ids.chooseFirst": "채울 구성 요소를 고르세요.",
   "ids.clear": "구성 요소 지우기",

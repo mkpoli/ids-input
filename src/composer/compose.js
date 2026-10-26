@@ -67,9 +67,11 @@ export class Composer {
   /**
    * `data`: `{ manifest, layout, rec(key), hosts(key, place), places(key) }`; `exclude`: characters nothing is taken from (a
    * character redrawn to test, with its twins); `face`: the box a whole character fills, when those
-   * characters change it (the manifest's is the median of `FULL` with none excluded).
+   * characters change it (the manifest's is the median of `FULL` with none excluded); `separate`:
+   * draw every operand of a description instead of a glyph or instance that spells it, so a view
+   * that changes one part gets a piece for each leaf rather than a drawing merged into one glyph.
    */
-  constructor(data, { exclude = [], face = null } = {}) {
+  constructor(data, { exclude = [], face = null, separate = false } = {}) {
     this.data = data
     const m = data.manifest, c = m.constants
     this.C = c
@@ -81,6 +83,7 @@ export class Composer {
     this.INSIDE = { ...c.INSIDE, ...EXTRA_INSIDE }
     this.SLOTS = c.SLOTS
     this.face = face ?? c.face
+    this.separate = separate
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -255,6 +258,7 @@ export class Composer {
       const redrawn = [...this.exclude].find(ch => this.sequenceOf(ch) === keyOf(node))
       if (redrawn) encoded = redrawn
     }
+    if (this.separate && Array.isArray(node)) encoded = null
     if (encoded && !this.expanding.has(encoded) && (typeof node === 'string' || !this.excluded(encoded))) {
       const glyph = this.glyph(encoded)
       let tree = typeof node !== 'string' ? node : null
@@ -279,7 +283,7 @@ export class Composer {
       if (!glyph) throw new LookupError(`No glyph or sequence draws ${node}.`)
       return [this.place(glyph, region, this.ink(node), `glyph ${node}`)]
     }
-    const found = this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
+    const found = this.separate || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
     if (found) return [found]
     node = this.respelled(node)
     const op = node[0], children = node.slice(1)
@@ -292,7 +296,7 @@ export class Composer {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
-    if (atRoot && op in this.AXIS) {
+    if (!this.separate && atRoot && op in this.AXIS) {
       const moved = this.transplant(op, children)
       if (moved) return moved
     }
@@ -312,6 +316,9 @@ export class Composer {
   // ---------------------------------------------------------------- hosts
   /** The drawn part closest to what `node` needs at `index` of `op` inside `box`, as [record, piece]. */
   host(op, index, node, siblings, box, isPlaced = false) {
+    // A separated drawing gives each leaf its own piece, so a host for a whole operand sequence is
+    // not used; the sequence is drawn through `node` instead.
+    if (this.separate && Array.isArray(node)) return null
     const ranked = this.ranked(op, index, node, siblings, box, isPlaced)
     return ranked.length ? ranked[0][1] : null
   }

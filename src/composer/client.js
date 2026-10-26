@@ -14,11 +14,12 @@
 
 /**
  * A drawer over workers made by `makeWorker`, drawing from the export at `base`. `draw(sequence,
- * onSketch)` answers `{ status: 'composed', drawn }`, `{ status: 'failed', error, unavailable }` (`unavailable`
- * when the export itself could not be read), or `{ status:
+ * onSketch, { separate })` answers `{ status: 'composed', drawn }`, `{ status: 'failed', error,
+ * unavailable }` (`unavailable` when the export itself could not be read), or `{ status:
  * 'cancelled' }` when it was replaced or `cancel` was called first; `onSketch` hears where the layout
- * puts each part before the drawing is done. `warm()` starts the worker on the export's manifest and
- * layout before the first drawing.
+ * puts each part before the drawing is done, and `separate` asks the composer to draw every operand
+ * rather than a glyph that spells the whole description. `warm()` starts the worker on the export's
+ * manifest and layout before the first drawing.
  * @param {() => WorkerLike} makeWorker
  * @param {string} base
  */
@@ -57,15 +58,16 @@ export function createDrawer(makeWorker, base) {
   /**
    * @param {string} sequence
    * @param {((leaves: SketchLeaf[]) => void) | null} [onSketch]
+   * @param {{ separate?: boolean }} [options]
    * @returns {Promise<Answer>}
    */
-  function draw(sequence, onSketch = null) {
+  function draw(sequence, onSketch = null, { separate = false } = {}) {
     cancel()
     const live = connect()
     const id = ++next
     return new Promise(resolve => {
       pending = { id, resolve, onSketch }
-      live.postMessage({ id, sequence, base })
+      live.postMessage({ id, sequence, base, separate })
     })
   }
   return { draw, cancel, warm, dispose: () => { cancel(); end() } }

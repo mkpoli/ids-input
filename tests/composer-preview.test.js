@@ -43,6 +43,13 @@ describe('the composer preview', () => {
     worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M2 2Z' } })
     expect(await drawing).toEqual({ d: 'M2 2Z' })
   })
+  it('asks the worker to separate every operand when told to', async () => {
+    FakeWorker.made = []
+    const draw = composerPreview({ base: 'https://example.org/composer/v1', separate: true, worker: () => new FakeWorker() })
+    draw('⿱木口')
+    const [worker] = FakeWorker.made
+    expect(worker.posted[0]).toMatchObject({ sequence: '⿱木口', separate: true })
+  })
   it('refuses a description larger than it draws without asking the worker', async () => {
     const draw = preview()
     const error = await draw('⿰木'.repeat(9) + '口').catch(e => e)

@@ -1,4 +1,13 @@
 {
+  "ids.adjust.done": "完了",
+  "ids.adjust.hint": "部品をドラッグで移動、角で拡大縮小、丸で回転。",
+  "ids.adjust.move": "{part}を移動",
+  "ids.adjust.rotate": "{part}を回転",
+  "ids.adjust.scale": "{part}を拡大縮小",
+  "ids.adjust.reset": "この部品を戻す",
+  "ids.adjust.resetAll": "すべて戻す",
+  "ids.adjust.title": "配置を調整",
+  "ids.adjust.unavailable": "この字形は部品に分けられません。",
   "ids.choose": "{part}を選ぶ",
   "ids.chooseFirst": "埋める部品を選んでください。",
   "ids.clear": "部品を消す",
