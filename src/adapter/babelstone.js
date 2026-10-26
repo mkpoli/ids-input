@@ -1,7 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
-import { sealTable, sealNames } from './seal-data.js'
+import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -43,10 +43,15 @@ export function parseIdsTable(text) {
 
 /**
  * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][] }} document
+ * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string> } }} document
  * @returns {PalettePart[]}
  */
-export const paletteRows = ({ columns, parts }) => parts.map(row => /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]]))))
+export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
+  const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
+  const aliases = Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids)
+  if (aliases.length) part.aliases = aliases
+  return part
+})
 
 /**
  * A response's text, gunzipped when it is a gzip file served as it is (as GitHub Pages serves a
@@ -81,12 +86,13 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern equivalents supply component-search labels only.
  * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   folds?: string | URL, foldsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -104,8 +110,8 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '']).then(([found, text]) =>
-    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: readForms(text) })).catch(error => { local = null; throw error })
+  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
+    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
   function inWorker(query, limit) {
     if (!searcher && worker) {
@@ -168,6 +174,17 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   // the forms that stand for it, loaded together once.
   /** @type {Promise<{ search: ReturnType<typeof createNameSearch>['search'], forms: Map<string, string>, reverse: Map<string, Set<string>> }> | null} */
   let named = null
+  /** @type {Promise<ReturnType<typeof createNameSearch>> | null} */
+  let characterNames = null
+  const characterIndex = () => characterNames ??= Promise.all([
+    charactersText !== undefined ? charactersText : characters ? load(characters).then(readText) : '',
+    foldsText !== undefined ? foldsText : folds ? load(folds).then(response => response.text()).catch(() => '') : '',
+  ]).then(([text, foldText]) => {
+    let folds = new Map()
+    try { folds = readFolds(foldText) } catch { /* names as they are written */ }
+    return createNameSearch(readNames(text), { folds })
+  }).catch(error => { characterNames = null; throw error })
+
   const nameIndex = () => named ??= Promise.all([
     namesText !== undefined ? namesText : names ? load(names).then(response => response.text()) : '',
     // A names table without the forms or folds tables still finds the component the name records.
@@ -303,7 +320,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       }
       if (smallSeal) {
         const doc = await readSeal()
-        if (doc) hits = [...hits, ...sealNames(doc, text)]
+        if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
       signal?.throwIfAborted()
       const seen = new Set()
@@ -336,8 +353,22 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       signal?.throwIfAborted()
       return result
     },
+    ...(characters !== undefined || charactersText !== undefined ? {
+      /** @param {string} query @param {import('./types.js').Options} [options] */
+      async searchCharacters(query, { limit = 24, signal } = {}) {
+        if (limit <= 0) return []
+        const text = query.trim()
+        if (!text) return []
+        const search = await characterIndex()
+        signal?.throwIfAborted()
+        return search.search(text, { limit }).map(({ char, label }) => ({ char, label }))
+      },
+    } : {}),
     async containing(asked, { limit = 24 } = {}) {
-      index ??= componentIndex(new Map([...(await read())].map(([char, sequences]) => [char, sequences.map(s => s.text)])))
+      if (!index) {
+        const [found, search] = await Promise.all([read(), smallSeal ? localSearch() : null])
+        index = componentIndex(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
+      }
       return index.search(asked, limit)
     },
     parts: readPalette,

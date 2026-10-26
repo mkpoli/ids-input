@@ -119,7 +119,6 @@
   "ids.view": "檢視",
   "ids.view.shape": "結構圖",
   "ids.view.tree": "樹狀",
-
   "ids.use": "採用此字形",
   "parts.byStrokes": "筆畫數",
   "parts.failed": "無法載入部件。",
@@ -139,9 +138,12 @@
   "parts.tab.seal": "小篆",
   "parts.tab.tangut": "西夏",
   "parts.tab.common": "常用",
-  "parts.tab.difficult": "難輸入",
+  "parts.tab.difficult": "筆畫數",
   "parts.tab.recent": "最近",
   "parts.tab.strokes": "筆畫",
   "parts.unknownStrokes": "未記錄筆畫數",
-  "parts.uses.other": "用於{count}個字"
+  "parts.uses.other": "用於{count}個字",
+  "ids.characters.none": "沒有匹配的字。",
+  "ids.characters.placeholder": "讀音、拼音或意義…",
+  "ids.pick.characters": "字"
 }

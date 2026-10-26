@@ -6,6 +6,7 @@ import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, parseTree } from './c
 import { ASCENT } from './geometry.js'
 import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
+import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hexOf } from './sha256.js'
 
 export { LookupError } from './compose.js'
@@ -135,10 +136,17 @@ export function size(tree) {
 export const tooLarge = tree => { const { nodes, depth } = size(tree); return nodes > LIMITS.nodes || depth > LIMITS.depth }
 
 /** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot. */
-function keysOf(tree, out = []) {
+function keysOf(tree, out = [], separate = false) {
+  if ((separate ? isGroupedForm : isComponentForm)(keyOf(tree))) return out
   if (!keyOf(tree).includes(EMPTY)) out.push(keyOf(tree))
-  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out))
+  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out, separate))
   return out
+}
+
+// A dedicated form consumes its internal operators, including the mirrored spelling.
+function extraOperators(tree) {
+  if (typeof tree === 'string' || isComponentForm(keyOf(tree))) return []
+  return [tree[0], ...tree.slice(1).flatMap(extraOperators)].filter(op => APPROXIMATE.includes(op))
 }
 
 /** A box in font units (y up) as the drawing's SVG box has it: [x, y, width, height], y down. */
@@ -148,9 +156,9 @@ export const svgBox = b => [b[0], ASCENT - b[3], b[2] - b[0], b[3] - b[1]]
  * Where each leaf of `sequence` goes before it is drawn (`Composer.sketch`), once the manifest and the
  * layout have loaded: `[{ index, box, empty }]`, boxes as `svgBox` gives them.
  */
-export async function sketch(source, sequence) {
+export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
   await source.ready()
-  return new Composer(source.store()).sketch(sequence).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
+  return new Composer(source.store(), { fontStyle }).sketch(sequence).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
 }
 
 /**
@@ -166,7 +174,7 @@ export async function sketch(source, sequence) {
  * that spells it (falling back to that glyph when the operands cannot be drawn).
  * Throws LookupError when a part can be drawn no way or the sequence is larger than `LIMITS`.
  */
-export async function compose(source, sequence, { exclude = [], face = null, separate = false } = {}) {
+export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
   await source.ready()
   const arity = ch => {
     const c = source.manifest.constants
@@ -174,15 +182,15 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
   }
   const tree = parseTree(sequence, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
-  await source.load(source.filesOf(keysOf(tree)))
+  await source.load(source.filesOf(keysOf(tree, [], separate)))
   for (let round = 0; round < ROUNDS; round++) {
     const store = source.store()
     let drawn = null, failure = null, composer = null
-    try { composer = new Composer(store, { exclude, face, separate }); drawn = composer.compose(sequence) } catch (error) {
+    try { composer = new Composer(store, { exclude, face, separate, fontStyle }); drawn = composer.compose(sequence) } catch (error) {
       // A separated drawing can fail where the whole glyph exists. Keep the glyph rather than fail
       // the preview: a view then finds one piece and leaves it alone.
       if (separate && !store.missing.size && error instanceof LookupError) {
-        try { composer = new Composer(store, { exclude, face }); drawn = composer.compose(sequence) } catch (again) { failure = again }
+        try { composer = new Composer(store, { exclude, face, fontStyle }); drawn = composer.compose(sequence) } catch (again) { failure = again }
       } else failure = error
     }
     // A pass that met data not loaded yet only gathers what to load (`Composer.partial`); the drawing
@@ -194,7 +202,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...sequence, ...composer.approximate].filter(ch => APPROXIMATE.includes(ch)))] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(tree), ...composer.approximate])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }
