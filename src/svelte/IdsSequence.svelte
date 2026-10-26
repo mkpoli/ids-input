@@ -1,4 +1,6 @@
 <script>
+  import { parse } from '../core/ids.js'
+  import { unalias } from '../core/aliases.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
   let scroll = $state(0)
@@ -32,13 +34,43 @@
     })
   })
   function select() {
-    if (field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
+    if (!composing && field && document.activeElement === field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
   }
   // Expand a partial token or crossing range before the browser replaces it.
   function expandSelection() {
     if (field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
     const range = editor.selectionRange
     if (field && field.selectionStart !== field.selectionEnd && range) field.setSelectionRange(range.start, range.end)
+  }
+  /** @param {string} text */
+  function replaceText(text) {
+    if (!field || field.selectionStart === field.selectionEnd || parse(unalias(text), { open: true }).problem) return false
+    expandSelection()
+    if (editor.chosen === null) return false
+    editor.take(text)
+    field.value = editor.draft
+    return true
+  }
+  /** @param {ClipboardEvent} event */
+  function paste(event) {
+    if (replaceText(event.clipboardData?.getData('text/plain') ?? '')) event.preventDefault()
+    else expandSelection()
+  }
+  /** @type {{start: number, end: number} | null} */ let compositionRange = null
+  function startComposition() {
+    expandSelection()
+    compositionRange = field ? {start: field.selectionStart ?? 0, end: field.selectionEnd ?? 0} : null
+    composing = true
+  }
+  /** @param {CompositionEvent} event */
+  function endComposition(event) {
+    composing = false
+    if (field && compositionRange && compositionRange.start !== compositionRange.end && event.data && !parse(unalias(event.data), {open:true}).problem) {
+      editor.selectText(compositionRange.start, compositionRange.end)
+      editor.take(event.data)
+      field.value = editor.draft
+    } else edit()
+    compositionRange = null
   }
   /** @param {InputEvent} event */
   function beforeInput(event) {
@@ -47,6 +79,8 @@
       if (event.inputType === 'historyUndo') editor.undo(); else editor.redo()
       return
     }
+    if (event.isComposing) return
+    if (event.data && event.inputType.startsWith('insert') && replaceText(event.data)) { event.preventDefault(); return }
     expandSelection()
     if (!event.isComposing && event.inputType.startsWith('delete') && field && field.selectionStart !== field.selectionEnd && editor.chosen !== null) {
       event.preventDefault()
@@ -72,7 +106,7 @@
     <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={expandSelection} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => { expandSelection(); composing = true }} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
+    onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
     onkeydown={event => { if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
