@@ -11,6 +11,8 @@ import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
 import { files as composerFiles } from '../tests/fixtures/composer-export.js'
 
+const UNENCODED = EXAMPLES.filter(example => !example.char).length
+
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const shots = arg('--shots') ?? 'shots'
 const executablePath = arg('--chromium') ?? process.env.CHROMIUM_PATH
@@ -371,7 +373,7 @@ try {
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
   assert((await biang.locator('.label').textContent())?.includes('⿺') === true, 'the biang label keeps its IDC')
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
-  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
+  assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === UNENCODED, `${UNENCODED} forms with no code point`)
   const firstUnencoded = page.locator('.menu .item', { hasText: '(unencoded)' }).first()
   assert(await firstUnencoded.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
   assert((await firstUnencoded.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
@@ -685,7 +687,7 @@ try {
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')
   assert(await phoneExamples.locator('.item.rich').count() === EXAMPLES.length, 'the phone sheet holds every example')
   assert(await phoneExamples.locator('.note', { hasText: 'U+30EDE' }).count() === 1, 'the phone sheet shows a code point')
-  assert(await phoneExamples.locator('.leading.spacer').count() === 7, 'the phone sheet leaves the character column empty for forms with no code point')
+  assert(await phoneExamples.locator('.leading.spacer').count() === UNENCODED, 'the phone sheet leaves the character column empty for forms with no code point')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="File"]').count() === 1, 'File commands in the phone menu')
   assert(await phone.locator('dialog[open] [role="group"][aria-label="Edit"]').count() === 1, 'Edit commands in the phone menu')
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()
