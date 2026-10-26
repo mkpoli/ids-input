@@ -145,5 +145,12 @@
   "parts.uses.other": "{count}字に使用",
   "ids.characters.none": "合う字がありません。",
   "ids.characters.placeholder": "読み・拼音・意味…",
-  "ids.pick.characters": "字"
+  "ids.pick.characters": "字",
+  "parts.seal.basic": "基本",
+  "parts.seal.compound": "複合",
+  "parts.seal.other": "その他",
+  "parts.seal.groups": "小篆の分類",
+  "parts.seal.filter": "小篆・漢字で絞り込み",
+  "parts.seal.estimate": "≈ 現代漢字から推定した分類",
+  "parts.seal.inferred": "現代漢字のIDSから分類を推定: {ids}"
 }
