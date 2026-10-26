@@ -526,6 +526,16 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
 
+## Licenses
+
+The code is licensed under [MIT](LICENSE). Data is provided under Creative Commons
+or the terms of its original sources; see the [data notices](data/README.md) for
+each dataset's license and attribution.
+
+Generated items are subject to the applicable terms of the original fonts; see the
+[font notices](fonts/README.md). The IDS Workshop imposes no additional restrictions
+on their use.
+
 ## Development
 
 ```sh

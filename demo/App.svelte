@@ -686,7 +686,7 @@
     <span class="foot-separator" aria-hidden="true">·</span>
     <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
     <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />MIT</a>
+    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />{t('app.about.codeLicense')}</a>
     <span class="foot-separator" aria-hidden="true">·</span>
     <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
   </footer>
