@@ -7,6 +7,7 @@
 import { createDrawer } from './client.js'
 import { LIMITS, tooLarge } from './loader.js'
 import { parse } from '../core/ids.js'
+import { onlyTangut } from './tangut.js'
 
 export { createDrawer } from './client.js'
 export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
@@ -28,7 +29,8 @@ const CACHE = 32
 
 /**
  * A `preview` for an IDS adapter, drawing with han-compose from the export at `base` (a folder URL
- * holding `manifest.json`). It answers the drawing, or rejects: with a `TooLargeError` for a
+ * holding `manifest.json`). Tangut outlines are bundled; pure Tangut descriptions need no Han
+ * export, and mixed descriptions combine both sources. It answers the drawing, or rejects: with a `TooLargeError` for a
  * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
  * it has no drawing for). `separate` draws every operand of a description instead of a glyph that
@@ -55,11 +57,13 @@ export function composerPreview({ base, separate = false, worker = () => new Wor
     }
   }
   /** The drawer, made once; a base that is no URL is reported as unavailable. */
-  function open() {
-    if (drawer) return drawer
+  function open(sequence = '') {
     let root
-    try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch { throw new UnavailableError(`${base} is not a URL.`) }
-    drawer = createDrawer(worker, root)
+    try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch {
+      if (!onlyTangut(sequence)) throw new UnavailableError(`${base} is not a URL.`)
+      root = base
+    }
+    if (!drawer) drawer = createDrawer(worker, root)
     return drawer
   }
   const preview = /** @type {ComposerPreview} */ (async (sequence, { signal, onSketch } = {}) => {
@@ -74,7 +78,7 @@ export function composerPreview({ base, separate = false, worker = () => new Wor
       return cached.drawn
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
-    const asked = open(), mine = ++asking
+    const asked = open(sequence), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
     try {
