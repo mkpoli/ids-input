@@ -102,6 +102,7 @@
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
+        <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrap')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -168,7 +169,8 @@
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
   .ids-head{position:absolute;top:3px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
-  .ids-head button{pointer-events:auto}
+  .ids-head button{pointer-events:auto;flex-shrink:0}
+  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px/1.4 var(--_font);color:var(--_muted)}
   .ids-op{display:grid;place-items:center;padding:1px 3px;border-color:transparent;background:none}
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
   .ids-unwrap{padding:0 5px;font-size:13px;line-height:1.2;color:var(--_muted);border-color:transparent;background:none}

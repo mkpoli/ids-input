@@ -105,6 +105,7 @@
   $effect(() => save('split', split === 60 ? undefined : split))
 
   const editor = createEditor(() => ({ adapter, messages, locale }))
+  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   let fromText_ = $state('')
@@ -270,8 +271,8 @@
         <span class="grip" aria-hidden="true"></span>
       </div>
       <section class="pane results" aria-label={t('ids.search.title')}>
-        <h2 class="label">{t('ids.search.title')}</h2>
-        <IdsSearch {adapter} query={editor.tree === null ? '' : editor.whole} {messages} {locale}
+        <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+        <IdsSearch {adapter} query={searchQuery} {messages} {locale}
           onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
       </section>
     </div>

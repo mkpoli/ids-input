@@ -1,7 +1,7 @@
 <script>
   // Characters found by a description query (the adapter's `findByIds`), closest first, each with the
   // description it matched in and the matched part marked. `query` comes from the host (in the
-  // workshop, the tree being edited); what is typed in the field is added to it as further terms.
+  // workshop, the selected part or the whole tree).
   // The query is asked once the editing settles, and an answer for a query since replaced is
   // dropped. A hit opens its description (`onopen`), hands its character on (`ontake`), or is
   // dragged as its character.
@@ -13,8 +13,7 @@
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
   let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, onopen, ontake } = $props()
   const t = $derived(translator(messages, locale))
-  let extra = $state('')
-  const asked = $derived([query, extra].map(q => q.trim()).filter(Boolean).join(' '))
+  const asked = $derived(query.trim())
   let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra', hits: IdsHit[], total: number }} */ ({ status: 'idle', hits: [], total: 0 }))
   let asks = 0
   $effect(() => {
@@ -41,11 +40,10 @@
 </script>
 
 <section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
-  <input type="search" bind:value={extra} lang="ja" spellcheck="false" autocomplete="off" aria-label={t('ids.search.more')} placeholder="⿰？口　木木" title={t('ids.search.hint')} />
   <p class="count" aria-live="polite">
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
     {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
-    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}<span lang="ja" class="asked">{asked}</span>{t('ids.search.count', { count: found.total })}{/if}
+    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: found.total })}{/if}
   </p>
   {#if found.hits.length}
     <ol class="hits" class:stale={found.status === 'loading'}>
@@ -77,11 +75,8 @@
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Strokes","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
-  input{min-width:0;height:36px;padding:0 10px;font:inherit;font-size:15px;font-family:var(--_font);color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
-  input::placeholder{color:color-mix(in srgb,var(--_muted) 70%,transparent)}
-  :is(input,button):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
+  button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}
-  .asked{margin-right:6px;font-family:var(--_font);color:var(--_ink)}
   .fault{color:var(--_fault)}
   .hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;margin:0;padding:0;list-style:none;transition:opacity .15s}
   .hits.stale{opacity:.55}
