@@ -10,17 +10,20 @@ import { compose, fromUrl, sketch } from './loader.js'
 import { hasTangut, tangutSource } from './tangut.js'
 
 import { hasBopomofo, bopomofoSource } from './bopomofo.js'
+import { hasSmallSeal, smallSealSource } from './small-seal.js'
 import { onlyBundled } from './local.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, warm } }) => {
   const local = !warm && onlyBundled(sequence)
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
-  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}`
+  const seal = !warm && hasSmallSeal(sequence)
+  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}`
   if (!sources.has(key)) {
     let source = local ? null : fromUrl(base)
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
+    if (seal) source = smallSealSource({ fallback: source })
     sources.set(key, source)
   }
   const source = sources.get(key)

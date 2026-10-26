@@ -1,6 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
+import { sealTable, sealNames } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -77,18 +78,20 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * `data/component-name-folds.tsv` (or `foldsText` its text), which folds Chinese scripts and
  * component forms together before a name is compared. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
- * on the caller's thread.
+ * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * same table and palette; its modern equivalents supply component-search labels only.
  * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
-  let table = given ? Promise.resolve(given) : null
+  let table = null
   /** @type {Promise<PalettePart[]> | null} */
-  let palette = givenPalette ? Promise.resolve(givenPalette) : null
+  let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
   /** @type {Promise<Map<string, string[]>> | null} */
@@ -127,7 +130,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText })
+      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -137,15 +140,29 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response
   }
-  const read = () => table ??= (ids
-    ? load(ids).then(readText).then(parseIdsTable)
-    : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given'))
-  ).catch(error => { table = null; throw error })
+  /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
+  let seal = null
+  const readSeal = () => seal ??= (async () => {
+    if (!smallSeal) return null
+    const doc = typeof smallSeal === 'string' || smallSeal instanceof URL
+      ? /** @type {import('./seal-data.js').SmallSealData} */ (JSON.parse(await readText(await load(smallSeal)))) : smallSeal
+    sealTable(doc) // Validate the format before exposing any of its data.
+    return doc
+  })().catch(error => { seal = null; throw error })
 
-  const readPalette = () => palette ??= (parts
-    ? load(parts).then(response => response.json()).then(paletteRows)
-    : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given'))
-  ).catch(error => { palette = null; throw error })
+  const read = () => table ??= Promise.all([
+    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
+      : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+    readSeal(),
+  ]).then(([base, doc]) => doc ? new Map([...base, ...sealTable(doc)]) : base)
+    .catch(error => { table = null; throw error })
+
+  const readPalette = () => palette ??= Promise.all([
+    givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
+      : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
+    readSeal(),
+  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into
   // the forms that stand for it, loaded together once.
@@ -249,8 +266,9 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
 
   return {
     table: read,
-    async structure(char) {
+    async structure(char, { signal } = {}) {
       const found = (await read()).get(char) ?? []
+      signal?.throwIfAborted()
       // A sequence with no operator names the character itself: it has no smaller parts.
       return found.filter(sequence => isSequence(sequence.text))
     },
@@ -282,6 +300,10 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
             hits = [...named, ...direct]
           }
         } catch { /* The names are a convenience; the characters typed still stand. */ }
+      }
+      if (smallSeal) {
+        const doc = await readSeal()
+        if (doc) hits = [...hits, ...sealNames(doc, text)]
       }
       signal?.throwIfAborted()
       const seen = new Set()

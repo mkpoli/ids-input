@@ -21,9 +21,9 @@
   --shadow-pop:light-dark(0 12px 32px rgb(20 20 40 / .18),0 12px 32px rgb(0 0 0 / .55));
   --toast-bg:light-dark(#1c1c22,#ececf2);
   --toast-ink:light-dark(#ffffff,#111114);
-  --cjk-sans:"IDS Strokes","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
-  --cjk-serif:"IDS Strokes","IDS Parts","IDS Tangut","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",serif;
-  --cjk-klee:"IDS Strokes","IDS Parts","IDS Tangut","Klee One","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
+  --cjk-sans:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
+  --cjk-serif:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",serif;
+  --cjk-klee:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Klee One","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
   --cjk:var(--cjk-sans);--ids-font:var(--cjk-sans);
   /* The components' tokens, from the workshop's. */
   --ids-ink:var(--ink);--ids-muted:var(--muted);--ids-line:var(--line);--ids-line-strong:var(--line-strong);

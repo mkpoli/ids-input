@@ -6,10 +6,11 @@
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
   import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
-  import { babelStoneAdapter } from '../src/adapter/index.js'
+  import { smallSealAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
@@ -44,7 +45,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts, forms, names, folds })
+  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */

@@ -209,3 +209,56 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## Small Seal
+
+`small-seal.json.gz` contains the Jiguge (汲古閣) edition's IDS from
+[CHISE-IDS](https://gitlab.chise.org/CHISE/ids), maintained by MORIOKA Tomohiko and
+contributors. It is GPL-2.0-or-later; see `COPYING-small-seal.txt`. The complete input
+IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
+
+| Coverage | Count |
+| --- | ---: |
+| Source character records | 11,114 |
+| Explicit, unambiguous entity-to-Unicode mappings | 816 |
+| Editor-ready descriptions / head characters | 49 |
+| Seal components used by those descriptions | 31 |
+| Empty descriptions | 337 |
+| Descriptions with an unmapped head character | 10,010 |
+| Descriptions with unresolved component identifiers | 747 |
+
+There are 29 additional apparent-form descriptions, so the description statuses total
+11,143. An empty field does not distinguish an atomic character from unfinished data.
+The editor's 49 descriptions are machine-validated imports, without a separate
+palaeographic review.
+
+Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
+
+- [`IDS-SW-JIGUGE.txt`](https://gitlab.chise.org/CHISE/ids/-/blob/ac35413635608512f5e10187812cfab3b6ea47c1/IDS-SW-JIGUGE.txt),
+  CHISE-IDS revision `ac35413635608512f5e10187812cfab3b6ea47c1`.
+- [`ShuoWen-SR001.el` through `ShuoWen-SR540.el`](https://gitlab.chise.org/CHISE/xemacs-chise/-/tree/0dc65c74293d3b74eda1a9861273675a5b26fd99/lisp/utf-2000),
+  XEmacs CHISE revision `0dc65c74293d3b74eda1a9861273675a5b26fd99`.
+
+The importer reads Lisp as data. A seal code point must occur as a direct `=ucs`
+property on the same record as the exact `=shuowen-jiguge` identifier (or an explicitly
+named edition identifier). Nested properties, glyph inheritance, modern Han equivalents,
+and ambiguous mappings cannot establish identity. Unresolved references remain literal
+`&…;` strings. Only complete, supported Unicode IDS enters `table`.
+
+JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
+labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
+character or null, original structural description, and a `descriptions` list. Each
+description preserves `original`, `kind` (`structural` or `apparent`), resolved `text`,
+`status`, and any `unresolved` identifiers. `unsupported` covers resolved expressions
+that the editor cannot parse. These audit records remain available even when the
+character has no usable description.
+
+Rebuild with `python3 scripts/build_small_seal.py`; downloads are cached and checked
+against pinned SHA-256 digests. `--cache` and `--out` select their locations. The source
+archive is written beside the output. Test mapping safeguards with
+`python3 -m unittest discover -s scripts -p test_small_seal.py`.
+
+`small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
+mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
+for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
+quality, licensing and rebuilding.
