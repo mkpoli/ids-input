@@ -470,10 +470,10 @@ try {
   // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
-  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Basic structures', 'Complex structures', 'Repeated components', 'Enclosures', 'Mixed scripts']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Basic structures', 'Complex structures', 'Repeated components', 'Enclosures', 'Mixed scripts', 'Tangut']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
-  assert(await page.locator('.menu .label[lang="txg"]').count() === 12, 'Tangut labels retain their language across categories')
+  assert(await page.locator('.menu .label[lang="txg"]').count() === 12, 'Tangut labels retain their language')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
   assert(await biang.count() === 1, 'the biang example shows U+30EDE')
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')

@@ -29,8 +29,6 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿲𠂤日千', char: '' },
     { sequence: '⿱一心', char: '' },
     { sequence: '⿰忄実', char: '' },
-    { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
-    { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },
   ] },
   { key: 'complex', examples: [
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
@@ -39,9 +37,6 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰鼻囊', char: '齉' },
     { sequence: '⿱⿱⿴𦥑同冖𤍾', char: '爨' },
     { sequence: '⿰氵鬱', char: '灪' },
-    { sequence: '⿰𘧥⿱𘧉⿰𘢤𘢱', char: '𘔉' },
-    { sequence: '⿱𘣘⿰𘧨⿱𘡊⿰𘠳𘠢', char: '𗷖' },
-    { sequence: '⿰⿱𘡎⿰𘠡𘪧𘣹', char: '𘟷' },
   ] },
   { key: 'repeated', examples: [
     { sequence: '⿱木林', char: '森' },
@@ -53,17 +48,10 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱雷⿰雷雷', char: '靐' },
     { sequence: '⿱⿰鏡鏡⿰鏡鏡', char: '𰽔' },
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
-    { sequence: '⿰𘫿𘫿', char: '𘴅' },
-    { sequence: '⿳𘠛𘠛⿲𘠐𘧤𘦗', char: '𗰮' },
-    { sequence: '⿱𘡊⿰𘢌⿱𘠀⿲𘠁𘢌𘠁', char: '𗓟' },
-    { sequence: '⿱𘡩⿰𘢌⿳𘡊⿰𘠗𘠗𘥷', char: '𗟕' },
   ] },
   { key: 'enclosures', examples: [
     { sequence: '⿴囗或', char: '國' },
     { sequence: '⿴囗書', char: '圕' },
-    { sequence: '⿱𘡍⿰𘤧⿺𘢍𘡹', char: '𗕉' },
-    { sequence: '⿰𘠣⿸𘡋⿱𘫽𘣗', char: '𗌣' },
-    { sequence: '⿳𘠛𘠛⿵𘠒⿲𘡃𘠁𘡃', char: '𗰭' },
   ] },
   { key: 'mixed', examples: [
     { sequence: '⿱⿰力田𠂇', char: '𫦫' },
@@ -85,6 +73,20 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
+  ] },
+  { key: 'tangut', examples: [
+    { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
+    { sequence: '⿰𘫿𘫿', char: '𘴅' },
+    { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },
+    { sequence: '⿳𘠛𘠛⿲𘠐𘧤𘦗', char: '𗰮' },
+    { sequence: '⿰𘧥⿱𘧉⿰𘢤𘢱', char: '𘔉' },
+    { sequence: '⿱𘡍⿰𘤧⿺𘢍𘡹', char: '𗕉' },
+    { sequence: '⿰𘠣⿸𘡋⿱𘫽𘣗', char: '𗌣' },
+    { sequence: '⿳𘠛𘠛⿵𘠒⿲𘡃𘠁𘡃', char: '𗰭' },
+    { sequence: '⿱𘡊⿰𘢌⿱𘠀⿲𘠁𘢌𘠁', char: '𗓟' },
+    { sequence: '⿱𘡩⿰𘢌⿳𘡊⿰𘠗𘠗𘥷', char: '𗟕' },
+    { sequence: '⿱𘣘⿰𘧨⿱𘡊⿰𘠳𘠢', char: '𗷖' },
+    { sequence: '⿰⿱𘡎⿰𘠡𘪧𘣹', char: '𘟷' },
   ] },
 ]
 export const EXAMPLES = EXAMPLE_GROUPS.flatMap(group => group.examples)
