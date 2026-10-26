@@ -37,29 +37,43 @@
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const babel = babelStoneAdapter({ ids, parts, forms, names })
+  // Manual adjustments of the drawing: leaf path -> move, scale and turn. They change the preview
+  // and what is exported, never the sequence. Adjust mode draws each operand separately, and the
+  // output stays separate while an adjustment is kept, so what is exported is what is seen.
+  let adjusting = $state(false)
+  /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
+  let adjustments = $state({})
+  const adjustmentCount = $derived(Object.keys(adjustments).length)
+  const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at */
-  const previewAt = at => { if (!previews.has(at)) previews.set(at, composerPreview({ base: at })); return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(at)) }
+  /** @param {string} at @param {boolean} split */
+  const previewAt = (at, split) => {
+    const key = `${at}\0${split ? '1' : '0'}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split }))
+    return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
+  }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
-  /** A preview that answers the prepared examples at once and the composer otherwise. @param {string} at */
-  function previewFor(at) {
-    const known = previewsWithExamples.get(at)
+  /** A preview that answers the prepared examples at once and the composer otherwise. A separated
+   *  drawing is never prepared: it needs the composer's own pieces. @param {string} at @param {boolean} split */
+  function previewFor(at, split) {
+    const key = `${at}\0${split ? '1' : '0'}`
+    const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at)
-    if (at !== COMPOSER_BASE) { previewsWithExamples.set(at, composed); return composed }
+    const composed = previewAt(at, split)
+    if (split || at !== COMPOSER_BASE) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       return prepared.get(sequence) ?? composed(sequence, options)
     }, { warm: composed.warm })
-    previewsWithExamples.set(at, preview)
+    previewsWithExamples.set(key, preview)
     return preview
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base) })
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate) })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -141,6 +155,26 @@
   /** @type {{ save: (format?: 'svg' | 'png') => Promise<void> } | undefined} */
   let exportPanel = $state()
   /** @type {HTMLButtonElement | null} */ let settingsButton = $state(null)
+
+  // Adjustments are keyed by leaf path and belong to the sequence they were made on. A new
+  // sequence drops them; moving a part does not touch the sequence.
+  const pathKey = (/** @type {number[]} */ path) => path.join('.')
+  let knownSequence = ''
+  $effect(() => {
+    const sequence = editor.whole
+    untrack(() => {
+      if (sequence === knownSequence) return
+      knownSequence = sequence
+      adjustments = {}
+    })
+  })
+  /** Reset the chosen part's adjustment, and the adjustments under it. */
+  function resetChosen() {
+    const at = editor.chosen
+    if (!at) return
+    const key = pathKey(at)
+    adjustments = Object.fromEntries(Object.entries(adjustments).filter(([name]) => name !== key && !name.startsWith(`${key}.`)))
+  }
 
   // Where the page starts: the link's sequence, else the draft left last time, else 疑.
   editor.reset(sequenceFrom(location) || load('current', '') || EXAMPLES[0].sequence)
@@ -369,7 +403,20 @@
     </div>
 
     <section class="pane output" aria-label={t('app.output')}>
-      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')} bind:drawing /></div>
+      <div class="preview">
+        <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
+          editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+        <div class="adjust">
+          <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
+            title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
+            onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+          {#if adjusting}
+            <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
+            <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
+            <span class="adjust-hint">{t('ids.adjust.hint')}</span>
+          {/if}
+        </div>
+      </div>
       <div class="details">
         <div class="block"><ExportPanel bind:this={exportPanel} {drawing} sequence={editor.whole} {t} onnote={note} /></div>
       </div>
@@ -460,6 +507,13 @@
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
+  .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
+  .adjust button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button:hover:not(:disabled){border-color:var(--accent)}
+  .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .adjust button:disabled{opacity:.45;cursor:default}
+  .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .adjust-hint{font-size:11px;color:var(--muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
   .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
   .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}

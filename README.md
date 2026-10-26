@@ -139,6 +139,10 @@ A component is an ideograph, a radical, a stroke, a katakana letter standing for
 that shape (コ, マ), a private-use character or `？` for a part no character names, with an
 optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+`drawingSvg(drawing, options)` writes a drawing as an SVG file, applying the per-part `transforms` a
+view set. `groupParts(parts, leaves)` groups the pieces of a drawing by the leaf they belong to, and
+`partTransform(adjustment, box)` writes the transform `IdsPreview` uses.
+
 ## Adapters
 
 ```ts
@@ -157,6 +161,8 @@ interface Drawing {          // in a 1000-unit box, y down
   cut?: string               // what ㇯ takes away
   slots?: { index: number, box: [x, y, width, height] }[]   // each empty slot (⬚), in reading order
   stroke?: [number, number] | null                          // stroke widths placeholders follow
+  parts?: { origin: string, box: [x, y, width, height], d: string, cut?: boolean }[]   // each placed part, in reading order
+  transforms?: (string | null)[]   // one SVG transform per part, as a view adjusted it
   approximate?: string[]     // operators drawn by an approximation
   kanjivg?: boolean          // a part was cut along KanjiVG's groups (CC BY-SA 3.0)
 }
@@ -172,6 +178,15 @@ Error named `TooLargeError` for a sequence larger than it draws, `UnavailableErr
 cannot be read at all, and any other Error when it cannot draw. `IdsPreview` shows placeholders in the layout's boxes until a drawing arrives, a badge
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
+
+`IdsPreview` can also finish a drawing by hand: pass `editable`, `bind:adjustments` and
+`onchoose(path)`. A part is dragged to move it, its corner square scales it and the circle turns
+it; the arrow keys nudge, `+` and `-` scale, `[` and `]` turn and `0` resets the chosen part.
+Adjustments are keyed by the leaf's path and change the drawing and its export, not the sequence;
+they are dropped when the sequence changes and are not written to drafts or links. The drawing
+needs a piece per leaf, which `composerPreview({ base, separate: true })` asks the composer for:
+it draws every operand instead of a glyph that spells the whole description. A drawing made with
+㇯ keeps its cut mask and cannot be adjusted.
 
 `babelStoneAdapter({ ids, parts, forms, names })` answers `structure`, `search` (a character,
 `U+6728` or bare hex, or a name such as 絞絲 or のぶん when `names` is given), `containing` and
@@ -251,10 +266,12 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
 origin by CORS. Without it the preview keeps its placeholders and shows no badge; when the export
-loads but a part has no drawing, its badge reads "Could not compose". Sequences over 12 operators or 4 levels are not drawn. Under
+loads but a part has no drawing, its badge reads "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
+`separate: true` draws each operand instead of a glyph or host that spells the whole description,
+so the drawing has a piece for every leaf; `IdsPreview`'s Adjust layout uses it.
 
 The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
 `?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
@@ -357,8 +374,10 @@ the tree in a square panel in the middle, and at the end the drawing in a square
 with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
 PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
 a chosen one, with a margin, empty slots left out unless asked for. File and Edit menus at the top
-left provide new sequences, browser drafts, sharing, image export and editing commands. The toolbar
-holds Undo and Redo with the history of named steps, examples
+left provide new sequences, browser drafts, sharing, image export and editing commands. Adjust layout
+separates the drawing into its parts, which can be moved, scaled and turned before export; the
+exported file and the PNG keep those changes, the sequence does not. The toolbar holds Undo and Redo
+with the history of named steps, examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
 the language, settings and the sources. Settings contain the system, light and dark themes,
 key hints on buttons, and the preview data source. They open beside the toolbar button on desktop

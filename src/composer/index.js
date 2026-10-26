@@ -31,23 +31,24 @@ const CACHE = 32
  * holding `manifest.json`). It answers the drawing, or rejects: with a `TooLargeError` for a
  * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
- * it has no drawing for). A sequence drawn once is answered from memory next time. `warm()` starts
- * the worker on the manifest and layout before the first drawing. `worker` makes the Web Worker; the
- * default is the module worker beside this file.
- * @param {{ base: string, worker?: () => WorkerLike }} options
+ * it has no drawing for). `separate` draws every operand of a description instead of a glyph that
+ * spells it, so every leaf has a piece of its own. A sequence drawn once is answered from memory
+ * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
+ * `worker` makes the Web Worker; the default is the module worker beside this file.
+ * @param {{ base: string, separate?: boolean, worker?: () => WorkerLike }} options
  * @returns {ComposerPreview}
  */
-export function composerPreview({ base, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
+export function composerPreview({ base, separate = false, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
   /** @type {ReturnType<typeof createDrawer> | null} */
   let drawer = null
   let asking = 0
   let warmed = false
-  /** @type {Map<string, Drawing>} */
+  /** @type {Map<string, { drawn: Drawing, sketch: import('../adapter/types.js').SketchLeaf[] | null }>} */
   const drawings = new Map()
-  /** @param {string} sequence @param {Drawing} drawn */
-  function remember(sequence, drawn) {
+  /** @param {string} sequence @param {Drawing} drawn @param {import('../adapter/types.js').SketchLeaf[] | null} sketch */
+  function remember(sequence, drawn, sketch) {
     drawings.delete(sequence)
-    drawings.set(sequence, drawn)
+    drawings.set(sequence, { drawn, sketch })
     if (drawings.size > CACHE) {
       const oldest = drawings.keys().next().value
       if (oldest !== undefined) drawings.delete(oldest)
@@ -68,15 +69,21 @@ export function composerPreview({ base, worker = () => new Worker(new URL('./wor
     if (cached) {
       drawings.delete(sequence)
       drawings.set(sequence, cached)
-      return cached
+      // The sketch is part of the answer: a view needs it to group the drawing's parts.
+      if (cached.sketch) onSketch?.(cached.sketch)
+      return cached.drawn
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
     const asked = open(), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
     try {
-      const answer = await asked.draw(sequence, leaves => { if (!signal?.aborted) onSketch?.(leaves) })
-      if (answer.status === 'composed') { remember(sequence, answer.drawn); return answer.drawn }
+      let sketch = null
+      const answer = await asked.draw(sequence, leaves => {
+        sketch = leaves
+        if (!signal?.aborted) onSketch?.(leaves)
+      }, { separate })
+      if (answer.status === 'composed') { remember(sequence, answer.drawn, sketch); return answer.drawn }
       if (answer.status === 'cancelled') throw new DOMException('The drawing was replaced.', 'AbortError')
       throw answer.unavailable ? new UnavailableError(answer.error) : new Error(answer.error)
     } finally { signal?.removeEventListener('abort', stop) }
