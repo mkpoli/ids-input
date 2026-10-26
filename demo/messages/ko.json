@@ -51,6 +51,9 @@
   "app.file": "파일",
   "app.file.export": "{format} 내보내기",
   "app.file.new": "새 기술열",
+  "app.font": "글꼴",
+  "app.font.sans": "산세리프",
+  "app.font.serif": "세리프",
   "app.footer.about": "출처와 영감",
   "app.history": "기록",
   "app.history.empty": "아직 변경 없음",
@@ -69,6 +72,7 @@
   "app.prefs.composer": "미리보기 자형 데이터",
   "app.prefs.composerHint": "han-compose export-web 출력 폴더. 비우면 기본값.",
   "app.prefs.keyHints": "버튼에 키 표시",
+
   "app.prefs.theme": "테마",
   "app.prefs.title": "설정",
   "app.share": "공유",

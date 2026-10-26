@@ -155,6 +155,9 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
+  let sans = $state(load('sans', true))
+  $effect(() => save('sans', sans ? undefined : false))
+  $effect(() => { document.documentElement.dataset.font = sans ? 'sans' : 'serif' })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   // The share of the middle column given to the tree; the search takes the rest.
@@ -543,6 +546,10 @@
           <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
         <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
+      <div class="font-switch" role="group" aria-label={t('app.font')}>
+        <button type="button" class="font-choice" aria-pressed={sans} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => sans = true}><span class="aa">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={!sans} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => sans = false}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
+      </div>
       </nav>
       <div class="end">
         <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
@@ -685,6 +692,14 @@
   .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11px;cursor:pointer}
+  .font-choice .aa{font-size:14px;line-height:1;color:var(--ink);font-family:var(--cjk-sans)}
+  .font-choice .aa.serif{font-family:var(--cjk-serif)}
+  .font-choice:hover{color:var(--ink)}
+  .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+  .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  @media (max-width:1100px){.font-choice .wide{display:none}}
   .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
   .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}

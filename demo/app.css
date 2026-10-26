@@ -21,7 +21,9 @@
   --shadow-pop:light-dark(0 12px 32px rgb(20 20 40 / .18),0 12px 32px rgb(0 0 0 / .55));
   --toast-bg:light-dark(#1c1c22,#ececf2);
   --toast-ink:light-dark(#ffffff,#111114);
-  --cjk:"IDS Strokes","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
+  --cjk-sans:"IDS Strokes","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif;
+  --cjk-serif:"IDS Strokes","IDS Parts","IDS Tangut","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",serif;
+  --cjk:var(--cjk-sans);--ids-font:var(--cjk-sans);
   /* The components' tokens, from the workshop's. */
   --ids-ink:var(--ink);--ids-muted:var(--muted);--ids-line:var(--line);--ids-line-strong:var(--line-strong);
   --ids-surface:var(--surface);--ids-surface-subtle:var(--surface-2);--ids-surface-selected:var(--hover);
@@ -48,3 +50,6 @@ body{background:var(--bg);color:var(--ink);font:14px/1.5 system-ui,-apple-system
 .key-hint .plus{color:var(--muted);font:500 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
 .key-hint .alt{color:var(--muted);font-size:11px;padding:0 2px}
 .end .key-hint .key-hint-pop{left:auto;right:0;transform:none}
+
+/* The glyph font the reader chooses, leaving the interface in its sans face. */
+:root[data-font="serif"]{--cjk:var(--cjk-serif);--ids-font:var(--cjk-serif)}

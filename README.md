@@ -412,7 +412,7 @@ settings and the sources. Settings hold the system, light and dark themes, key h
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. Settings, drafts and the theme stay in `localStorage`; the keys
+`localStorage` to seed a new window. The toolbar’s Sans/Serif switch chooses the face for Han text. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
 use the `ids-input:` prefix.
 
 ## Inspired by

@@ -176,6 +176,24 @@ try {
   await settingsPage.context().close()
   pass('settings popover focus, dismissal and mobile drawer')
 
+  // The toolbar's Sans/Serif switch changes the Han face and stays chosen.
+  const fontPage = await open()
+  const fontSwitch = fontPage.locator('.font-switch')
+  const sansChoice = fontSwitch.getByRole('button', { name: 'Sans', exact: true })
+  const serifChoice = fontSwitch.getByRole('button', { name: 'Serif', exact: true })
+  assert(await sansChoice.getAttribute('aria-pressed') === 'true', 'sans is chosen by default')
+  await serifChoice.click()
+  assert((await fontPage.locator('.ids-field input').evaluate(el => getComputedStyle(el).fontFamily)).includes('Noto Serif CJK JP'), 'the serif stack applies')
+  await fontPage.reload({ waitUntil: 'commit' })
+  await fontPage.locator('.ids-field input').waitFor()
+  assert(await fontPage.evaluate(() => document.documentElement.dataset.font === 'serif'), 'the serif choice stays')
+  assert((await fontPage.locator('.ids-field input').evaluate(el => getComputedStyle(el).fontFamily)).includes('Noto Serif CJK JP'), 'the serif stack stays')
+  await fontPage.locator('.font-switch').getByRole('button', { name: 'Sans', exact: true }).click()
+  assert((await fontPage.locator('.ids-field input').evaluate(el => getComputedStyle(el).fontFamily)).includes('Noto Sans CJK JP'), 'the switch returns to sans')
+  assert(!fontPage.errors.length, `font page errors: ${fontPage.errors.join('; ')}`)
+  await fontPage.context().close()
+  pass('the visible Sans/Serif switch changes the Han face and stays chosen')
+
   // Tangut components use the same picker and recent history as Han parts.
   await page.getByRole('tab', { name: 'Parts', exact: true }).click()
   await page.getByRole('tab', { name: 'Tangut', exact: true }).click()
@@ -872,7 +890,7 @@ try {
   await drawn.keyboard.press('Escape')
   assert(await drawn.evaluate(() => document.documentElement.dataset.theme === undefined && localStorage.getItem('ids-input:theme') === null), 'system theme clears it')
   await drawn.getByRole('button', { name: 'Settings' }).click()
-  await drawn.locator('.prefs input[type="checkbox"]').click()
+  await drawn.locator('dialog[open]').getByRole('switch', { name: 'Key hints on buttons' }).click()
   await drawn.keyboard.press('Escape')
   await drawn.waitForTimeout(200)
   assert(await drawn.locator('.ids-kbd').count() === 0, 'key hints hidden')
