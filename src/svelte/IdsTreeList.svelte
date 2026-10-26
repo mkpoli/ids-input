@@ -116,11 +116,11 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={rowLabel(row)} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
-        onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
+        onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
         ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
         {#if row.node}
@@ -155,4 +155,5 @@
   .part.empty{font-size:15px;color:var(--_muted)}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
   li{background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  li.hovered{box-shadow:inset 0 0 0 2px color-mix(in oklab,var(--_accent) 65%,transparent)}
 </style>
