@@ -63,18 +63,31 @@
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
+  /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
+  function exportUrl(value) {
+    try {
+      const url = new URL(value, location.href)
+      if (!url.pathname.endsWith('/')) url.pathname += '/'
+      return url.href
+    } catch { return null }
+  }
+  const preparedBase = exportUrl(COMPOSER_BASE)
   /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
   function previewFor(at, split) {
     const key = `${at}\0${split ? '1' : '0'}`
     const known = previewsWithExamples.get(key)
     if (known) return known
     const composed = previewAt(at, split)
-    if (split || at !== COMPOSER_BASE) { previewsWithExamples.set(key, composed); return composed }
+    if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       return prepared.get(sequence) ?? composed(sequence, options)
-    }, { warm: composed.warm })
+    }, {
+      warm: (/** @type {string | undefined} */ sequence) => {
+        if (sequence === undefined || !prepared.has(sequence)) composed.warm()
+      },
+    })
     previewsWithExamples.set(key, preview)
     return preview
   }
@@ -87,7 +100,7 @@
     if (!iconDrawings.has(at)) {
       const composed = composerPreview({ base: at })
       iconDrawings.set(at, createIconDrawings(async sequence =>
-        (at === COMPOSER_BASE ? prepared.get(sequence) : null) ?? composed(sequence)))
+        (exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
   }

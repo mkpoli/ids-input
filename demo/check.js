@@ -6,6 +6,7 @@
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { EXAMPLES } from './lib/examples.js'
+import { COMPOSER_BASE } from './lib/composer.js'
 import { checkPanelWidths } from './check-panels.js'
 import { checkTabDuplication } from './check-tab-duplication.js'
 import { chromium } from 'playwright-core'
@@ -41,6 +42,10 @@ async function open(path = '', { width = 1440, height = 900, scheme = 'light', l
   await context.route('https://glyphatlas.org/**', route => route.abort())
   const page = await context.newPage()
   page.errors = []
+  page.composerRequests = []
+  context.on('request', request => {
+    if (request.url().startsWith(COMPOSER_BASE.replace(/\/$/, ''))) page.composerRequests.push(request.url())
+  })
   page.on('pageerror', error => page.errors.push(error.message))
   await page.goto(url + path)
   await page.locator('.ids-field input').waitFor()
@@ -55,6 +60,25 @@ async function choose(page, n) {
 }
 
 try {
+  for (const base of [COMPOSER_BASE, COMPOSER_BASE.replace(/\/$/, '')]) {
+    const prepared = await open(`?composer=${encodeURIComponent(base)}`)
+    await prepared.locator('.ids-preview[data-step="composed"]').waitFor()
+    await prepared.locator('.tab-icon svg path').first().waitFor()
+    assert(prepared.composerRequests.length === 0, 'prepared preview and tab icon make no composer requests')
+    const request = prepared.context().waitForEvent('request', { predicate: request => request.url().startsWith(COMPOSER_BASE) })
+    await prepared.locator('.ids-field input').fill('⿰木木')
+    await request
+    assert(prepared.composerRequests.length > 0, 'an unprepared edit loads the composer')
+    await prepared.context().close()
+  }
+  const separate = await open()
+  await separate.locator('.ids-preview[data-step="composed"]').waitFor()
+  const splitRequest = separate.context().waitForEvent('request', { predicate: request => request.url().startsWith(COMPOSER_BASE) })
+  await separate.getByRole('button', { name: 'Adjust layout' }).click()
+  await splitRequest
+  await separate.context().close()
+  pass('prepared previews and tab icons stay local; edits and layout adjustment start the composer')
+
   await checkTabDuplication(open, assert)
   pass('File and context-menu tab duplication, independent history, keyboard and phone layout')
   const page = await open()
@@ -583,8 +607,8 @@ try {
   pass('a component found by its code point replaces the chosen part')
 
   // The preview without its export: placeholders and no badge, since nothing could be tried. The
-  // default base has prepared drawings, so use a base that is not prepared and let the route abort it.
-  const bad = await open(`?composer=${encodeURIComponent('https://glyphatlas.org/atlas/composer/not-prepared/')}`)
+  // default base has prepared drawings, so use a same-origin base that is not prepared.
+  const bad = await open(`?composer=${encodeURIComponent(`${url}composer-not-there/`)}`)
   await bad.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   assert(await bad.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
   assert(await bad.locator('.ids-preview-badge').count() === 0, 'no badge without data')
