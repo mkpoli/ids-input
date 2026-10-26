@@ -84,3 +84,112 @@ describe('the search', () => {
     expect(search.search('').problem).toBe('empty')
   })
 })
+
+
+describe('visual substitutes in IDS queries', () => {
+  const shapes = createSearch(new Map(Object.entries({
+    人: ['人'], 亼: ['⿱𠆢一'], 从: ['⿰人人'], 众: ['⿱人从'],
+    休: ['⿰亻木'], 合: ['⿱亼口'], 余: ['⿱亼朩'], 木: ['木'], 口: ['口'],
+  })), { forms })
+  const result = query => shapes.search(query)
+
+  it('accepts the requested shapes in runs and structures, including positional forms', () => {
+    for (const [alias, canonical] of [
+      ['ㅅ', '人'], ['ᄉ', '人'], ['ᆺ', '人'], ['스', '亼'], ['스', '亼'],
+      ['⿰ㅅ木', '⿰人木'], ['⿱스口', '⿱亼口'], ['⿱스口', '⿱亼口'],
+      ['ㅅㅅ', '人人'], ['스口', '亼口'], ['⿱스？ 口', '⿱亼？ 口'],
+    ]) {
+      expect(result(alias)).toEqual(result(canonical))
+      expect(result(alias).hits.length).toBeGreaterThan(0)
+    }
+    expect(result('⿰ㅅ木').hits[0].char).toBe('休')
+    expect(result('⿱스口').hits[0]).toMatchObject({ char: '合', sequence: '⿱亼口', spans: [[0, 3]] })
+    expect(result('ㅅㅅ').hits.map(hit => hit.char)).not.toContain('休')
+  })
+
+  it('keeps the entered term, leaves other Hangul alone, and checks structure arity', () => {
+    expect(parseQuery('⿱스口').terms[0]).toMatchObject({ text: '⿱스口', tree: { op: '⿱', parts: ['亼', '口'] } })
+    expect(parseQuery('수').terms[0]).toMatchObject({ text: '수', leaves: ['수'] })
+    expect(result('⿱스口木').problem).toBe('extra')
+  })
+})
+
+
+it('preserves Han compatibility components and unrelated Hangul syllables', () => {
+  const index = createSearch(new Map([['甲', ['⿰神木']], ['乙', ['⿰神木']]]))
+  expect(index.search('⿰神木').hits.map(hit => hit.char)).toEqual(['甲'])
+  expect(index.search('⿰神木').hits.map(hit => hit.char)).toEqual(['乙'])
+  expect(parseQuery('슨').terms[0].leaves).toEqual(['슨'])
+})
+
+
+it('preserves attached variation selectors when mapping a visual substitute', () => {
+  for (const selector of ['\uFE00', '\u{E0100}']) {
+    for (const [alias, canonical] of [['ㅅ', '人'], ['스', '亼']]) {
+      const written = canonical + selector
+      const index = createSearch(new Map([['甲', [`⿰${written}木`]]]))
+      for (const wrap of [part => part, part => `⿰${part}木`]) {
+        const query = wrap(alias + selector)
+        expect(index.search(query)).toEqual(index.search(wrap(written)))
+        expect(index.search(query).hits.map(hit => hit.char)).toEqual(['甲'])
+        expect(parseQuery(query).terms[0].leaves[0]).toBe(written)
+      }
+    }
+  }
+})
+
+
+it('accepts Hangul and kana lookalikes without rewriting the result descriptions', () => {
+  const table = new Map(Object.entries({
+    加: ['⿰力口'], 江: ['⿰氵工'], 名: ['⿱夕口'], 外: ['⿰夕卜'],
+    仁: ['⿰亻二'], 分: ['⿱八刀'], 取: ['⿰耳又'], 私: ['⿰禾厶'],
+    化: ['⿰亻匕'], 归: ['⿰刂彐'], 众: ['⿱人从'],
+    匠: ['⿷匚斤'], 中: ['⿻口丨'], 旦: ['⿱日一'],
+    甲: ['⿰𠃍口'], 乙: ['⿰𠃊口'], 丙: ['⿰〇口'],
+  }))
+  const index = createSearch(table)
+  for (const [query, canonical, expected] of [
+    ['⿰カロ', '⿰力口', '加'], ['⿰ｶﾛ', '⿰力口', '加'],
+    ['⿰氵エ', '⿰氵工', '江'], ['⿱タㅁ', '⿱夕口', '名'],
+    ['⿰タト', '⿰夕卜', '外'], ['⿰亻ニ', '⿰亻二', '仁'],
+    ['⿱ハ刀', '⿱八刀', '分'], ['⿰耳ヌ', '⿰耳又', '取'],
+    ['⿰禾ム', '⿰禾厶', '私'], ['⿰亻ヒ', '⿰亻匕', '化'],
+    ['⿰刂ヨ', '⿰刂彐', '归'], ['⿱ㅅㅆ', '⿱人从', '众'],
+    ['⿷ㄷ斤', '⿷匚斤', '匠'], ['⿻ㅁㅣ', '⿻口丨', '中'],
+    ['⿱日ㅡ', '⿱日一', '旦'], ['⿰ㄱロ', '⿰𠃍口', '甲'],
+    ['⿰ㄴロ', '⿰𠃊口', '乙'], ['⿰ㅇロ', '⿰〇口', '丙'],
+  ]) {
+    expect(index.search(query)).toEqual(index.search(canonical))
+    expect(index.search(query).hits[0]).toMatchObject({ char: expected, sequence: canonical })
+    const parts = query.replace(/[⿰⿱⿷⿻]/gu, ''), canonicalParts = canonical.replace(/[⿰⿱⿷⿻]/gu, '')
+    expect(index.search(parts)).toEqual(index.search(canonicalParts))
+    expect(index.search(parts).hits.map(hit => hit.char)).toContain(expected)
+  }
+  expect(parseQuery('ノ').terms[0].leaves).toEqual(['丿'])
+  expect(parseQuery('ㅁㅁ').terms[0].leaves).toEqual(['口', '口'])
+  // A complete syllable stays a syllable, and ambiguous kana are not guessed.
+  expect(parseQuery('미スヘ').terms[0].leaves).toEqual(['미', 'ス', 'ヘ'])
+  for (const query of ['ガ', 'カ\u3099', 'ｶﾞ', 'カ゛', 'ハ゜', 'ハ\u309A', 'ﾊﾟ']) {
+    const leaves = parseQuery(query).terms[0].leaves
+    expect(leaves).not.toContain('力')
+    expect(leaves).not.toContain('八')
+  }
+})
+
+
+it('leaves unlisted halfwidth and enclosed kana out of the alias mapping', () => {
+  const index = createSearch(new Map([['甲', ['⿰ｽ口']], ['乙', ['⿰ス口']]]))
+  expect(index.search('⿰ｽ口').hits.map(hit => hit.char)).toEqual(['甲'])
+  expect(index.search('⿰ス口').hits.map(hit => hit.char)).toEqual(['乙'])
+  expect(parseQuery('⿰㋕口').terms[0].leaves).toEqual(['㋕', '口'])
+})
+
+
+it('keeps the circle constraint in bare and mixed-component queries', () => {
+  const index = createSearch(new Map([['甲', ['⿰〇口']], ['乙', ['⿰木口']]]))
+  for (const circle of ['〇', 'ㅇ', 'ᄋ', 'ᆼ', '\uFFB7']) {
+    expect(index.search(circle).hits.map(hit => hit.char)).toEqual(['甲'])
+    expect(index.search(circle + '口').hits.map(hit => hit.char)).toEqual(['甲'])
+    expect(index.search(circle + circle).hits).toEqual([])
+  }
+})

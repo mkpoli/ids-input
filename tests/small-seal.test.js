@@ -41,8 +41,8 @@ it('looks up seal decompositions without replacing modern Han structures', async
   expect(await adapter.encoded(sequence)).toEqual([seal])
   expect(await adapter.encoded('⿰王王')).toEqual(['玨'])
   expect((await adapter.search('玨')).map(h => h.char)).toEqual(['玨', seal])
-  expect((await adapter.search('U+3D10C')).map(h => h.char)).toEqual([seal])
-  expect((await adapter.search(seal)).map(h => h.char)).toEqual([seal])
+  expect((await adapter.search('U+3D10C')).map(h => h.char)).toEqual([seal, '玨', '珏'])
+  expect((await adapter.search(seal)).map(h => h.char)).toEqual([seal, '玨', '珏'])
   expect((await adapter.parts()).every(p => p.kind === 'seal')).toBe(true)
 })
 
@@ -102,4 +102,64 @@ it('expands Han leaves inside seal IDS and deduplicates overlapping input tables
   expect(found.hits.filter(h => h.char === seal)).toHaveLength(1)
   expect(found.total).toBe(found.hits.length)
   expect(data.table[head]).toEqual([`⿱${grass}浸`])
+})
+
+it('cross-searches seal and CJK components in either direction', async () => {
+  const cross = smallSealAdapter({ data, table: new Map([
+    ['珏', [{ text: '⿰玉玉', regions: '' }]],
+    ['宝', [{ text: '⿱宀玉', regions: '' }]],
+  ]) })
+  for (const query of ['玉玉', jade + jade, jade + '玉', '⿰玉玉', sequence]) {
+    const result = await cross.findByIds(query)
+    expect(result.hits.map(h => h.char)).toContain(seal)
+    expect(result.hits.map(h => h.char)).toContain('珏')
+    expect(result.hits.map(h => h.char)).not.toContain('宝')
+    expect(result.hits.find(h => h.char === seal).sequence).toBe(sequence)
+    expect(result.hits.find(h => h.char === '珏').sequence).toBe('⿰玉玉')
+  }
+  for (const query of ['玉玉', jade + jade, jade + '玉']) {
+    expect((await cross.containing(query)).items).toContain(seal)
+    expect((await cross.containing(query)).items).toContain('珏')
+    expect((await cross.containing(query)).items).not.toContain('宝')
+  }
+  expect(await cross.encoded('⿰玉玉')).toEqual(['珏'])
+  expect(await cross.encoded(sequence)).toEqual([seal])
+  expect((await cross.search('U+3D10C', { limit: 1 })).map(h => h.char)).toEqual([seal])
+})
+
+it('combines radical folds and multiple modern spellings in search groups', async () => {
+  const water = String.fromCodePoint(0x3D000), ambiguous = String.fromCodePoint(0x3D001)
+  const cross = smallSealAdapter({
+    data: { format: 1, parts: [], modern: { [water]: ['水', '氵'], [ambiguous]: ['茶', '荼'] }, table: {
+      [seal]: [`⿰${water}${water}`], [ambiguous]: ['⿰木木'],
+    } },
+    formsText: '氵\t水\n',
+    table: new Map([['沝', [{ text: '⿰水氵', regions: '' }]], ['字', [{ text: '⿰茶木', regions: '' }]]]),
+  })
+  for (const query of ['水氵', water + water, `⿰${water}氵`]) {
+    expect((await cross.findByIds(query)).hits.map(h => h.char)).toEqual(expect.arrayContaining(['沝', seal]))
+  }
+  expect((await cross.search(ambiguous)).map(h => h.char)).toEqual([ambiguous, '茶', '荼'])
+  expect((await cross.findByIds('荼木')).hits.map(h => h.char)).toContain('字')
+  expect((await cross.findByIds(ambiguous + '木')).hits.map(h => h.char)).toContain('字')
+  expect((await cross.findByIds('茶荼')).hits.map(h => h.char)).not.toContain('字')
+})
+
+it('preserves literal component queries and subtraction in containing searches', async () => {
+  const cross = smallSealAdapter({ data: { format: 1, modern: {}, table: {}, parts: [] }, table: new Map([
+    ['乙', [{ text: '⿰LR', regions: '' }]],
+    ['丙', [{ text: '⿰木土', regions: '' }]],
+    ['林', [{ text: '⿰木木', regions: '' }]],
+    ['森', [{ text: '⿱木林', regions: '' }]],
+    ['甲', [{ text: '㇯森木', regions: '' }]],
+  ]) })
+  expect((await cross.containing('LR')).items).toEqual(['乙'])
+  expect((await cross.containing('木木')).items).toEqual(expect.arrayContaining(['林', '森', '甲']))
+})
+
+it('looks up mappings even when the seal has no resolved decomposition', async () => {
+  const unmappedStructure = String.fromCodePoint(0x3D001)
+  expect((await adapter.search(unmappedStructure)).map(h => h.char)).toContain('弌')
+  expect((await adapter.search('弌')).map(h => h.char)).toContain(unmappedStructure)
+  expect(await adapter.structure(unmappedStructure)).toEqual([])
 })

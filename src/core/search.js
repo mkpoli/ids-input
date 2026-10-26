@@ -28,6 +28,28 @@ import { tokens } from './decompose.js'
 /** The common ideographs (U+4E00–9FFF) first, then Extension A, then the rest: a rarer character ranks as if a little farther. @param {string} char */
 const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); return cp >= 0x4E00 && cp <= 0x9FFF ? 0 : cp >= 0x3400 && cp <= 0x4DBF ? 1 : 2 }
 
+// Visual substitutes accepted only in IDS search queries. These are not Unicode equivalences
+// and must not rewrite stored descriptions, rendering operands, or Korean name searches.
+/** @type {Readonly<Record<string, string>>} */
+const SHAPE_ALIASES = Object.fromEntries([
+  ['ㅅᄉᆺ', '人'], ['ㅆᄊᆻ', '从'], ['스', '亼'],
+  ['ㅁᄆᆷロ', '口'], ['ㅇᄋᆼ', '〇'], ['ㅣᅵ', '丨'], ['ㅡᅳ', '一'],
+  ['ㄱᄀᆨ', '𠃍'], ['ㄴᄂᆫ', '𠃊'], ['ㄷᄃᆮ', '匚'],
+  ['エ', '工'], ['カ', '力'], ['タ', '夕'], ['ト', '卜'], ['ニ', '二'],
+  ['ハ', '八'], ['ヌ', '又'], ['ノ', '丿'], ['ム', '厶'], ['ヒ', '匕'], ['ヨ', '彐'],
+].flatMap(([shapes, component]) => [...shapes].map(shape => [shape, component])))
+const SHAPE_COMPONENTS = new Set(Object.values(SHAPE_ALIASES))
+/** @param {string} token @param {string | undefined} next */
+const searchShape = (token, next) => {
+  // Voicing marks belong to the kana before them, even when written as spacing marks.
+  if (/^[\u3099-\u309C\uFF9E\uFF9F]/u.test(next ?? '')) return token
+  const base = [...token][0]
+  // Only halfwidth kana/jamo may use compatibility folding; circled kana keep their circles.
+  const lookup = /^[\uFF66-\uFF9D\uFFA0-\uFFDC]$/u.test(base) ? base.normalize('NFKC') : base
+  const alias = SHAPE_ALIASES[lookup]
+  return alias ? alias + token.slice(base.length) : token
+}
+
 /** How many components deep a match may open. */
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
@@ -51,10 +73,13 @@ export function parseQuery(text) {
   /** @type {Term[]} */
   const terms = []
   for (const term of written) {
+    // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
+    const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
+    const typed = tokens(matching), list = typed.map((token, i) => searchShape(token, typed[i + 1]))
     if (isSequence(term)) {
       /** @type {(t: Tree) => Pattern} */
       const pattern = t => typeof t === 'string' ? (EMPTY_MARKS.includes(t) || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
-      const list = tokens(term), cursor = { at: 0 }
+      const cursor = { at: 0 }
       const tree = pattern(readTree(list, cursor))
       if (cursor.at < list.length) return { terms, problem: 'extra' }
       /** @type {string[]} */
@@ -64,7 +89,7 @@ export function parseQuery(text) {
       collect(tree)
       terms.push({ kind: 'structure', text: term, tree, leaves })
     } else {
-      const leaves = tokens(term).filter(t => isComponent([...t][0]) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
+      const leaves = list.filter(t => (isComponent([...t][0]) || SHAPE_COMPONENTS.has([...t][0])) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
       if (leaves.length) terms.push({ kind: 'components', text: term, leaves })
     }
   }

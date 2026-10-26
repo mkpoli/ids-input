@@ -155,7 +155,9 @@ written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part mis
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
 Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
-finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`.
+finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
+`𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
+uses all 816 mapped seal forms; some have no resolved decomposition or bundled glyph.
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -168,14 +170,19 @@ const adapter = smallSealAdapter({
 ```
 
 `data` accepts a URL or the decoded JSON document. The remaining options are those of
-`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index. Modern-character correspondences help component search;
-each script keeps its own decompositions. Import `fonts.css` to display the supported
+`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index.
+Component and IDS searches match mapped seal and modern forms in either direction:
+`玉玉`, `𽁭𽁭`, and `⿰玉𽁭` can find the seal 玨. Mappings join the existing radical-form
+groups; a seal form with several modern spellings makes those spellings match one
+another too. Repeated components are counted across the group. These groups concern
+glyph correspondence; modern spellings can differ in meaning.
+Each script keeps its own decompositions, result glyphs, and exact `encoded()` lookup. Import `fonts.css` to display the supported
 seal characters. Their bundled outlines support previews and SVG/PNG export; mixed
 Han–seal compositions also need the host's Han export.
 
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
-excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
+excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
 provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents
@@ -200,9 +207,13 @@ functions (`replaceNode`, `replaceWithSequence`, `decompose`, `wrapNode`, `unwra
 `changeOperator`, `deleteLayer`) keep the selected layer's ID, name and transform. Pass one
 allocator across a session (`allocatorFor(document, retainedIds)`) so a removed ID is not reused.
 
-The model reads and writes the document shape and validates its structure and transforms. The current
-editor still edits positional trees and the current preview still draws canvas-space paths; a
-document renderer, storage and the editor binding are the next layer.
+The model reads and writes the document shape and validates its structure and transforms. The
+transform engine evaluates affine, projective and Möbius chains on paths: affine chains stay exact,
+a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
+hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
+local geometry and each operator child's placement, applies the nested layer transforms, and reports
+missing geometry or unsupported transforms. Compositing (including ㇯), storage and the editor binding
+are not part of these modules yet.
 
 ## Adapters
 
@@ -262,6 +273,29 @@ there instead. It has no `variants`, `drawing` or `preview`.
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
+
+IDS queries accept these visual substitutes, including halfwidth forms where available:
+
+| Shapes typed | Component searched |
+|---|---|
+| `ㅅ` | `人` |
+| `ㅆ` | `从` |
+| `스` | `亼` |
+| `ㅁ`, `ロ` | `口` |
+| `ㅇ` | `〇` |
+| `ㅣ`, `ㅡ` | `丨`, `一` respectively |
+| `ㄱ`, `ㄴ`, `ㄷ` | `𠃍`, `𠃊`, `匚` respectively |
+| `エ`, `カ`, `タ`, `ト` | `工`, `力`, `夕`, `卜` respectively |
+| `ニ`, `ハ`, `ヌ`, `ノ` | `二`, `八`, `又`, `丿` respectively |
+| `ム`, `ヒ`, `ヨ` | `厶`, `匕`, `彐` respectively |
+
+The corresponding conjoining Hangul jamo also work. Decomposed `스` searches
+like `스`; other complete syllables keep their identity. Attached variation
+selectors are preserved. For example, `⿰ㅅ木` finds `休` through the existing
+`人`/`亻` component forms, and `⿰カロ` finds `加`.
+These are approximate visual aliases for IDS search. Entered text, stored
+descriptions, rendering, exact `encoded` lookup, and Korean or Japanese name
+searches retain their spelling.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">

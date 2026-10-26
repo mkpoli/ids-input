@@ -10,3 +10,17 @@ export {
   unwrapNode,
   wrapNode,
 } from './edits.js'
+export {
+  IDENTITY,
+  TransformError,
+  affineForChain,
+  applyAffine,
+  applyChain,
+  applyOperation,
+  chainIsAffine,
+  multiplyAffine,
+  parsePath,
+  transformPieces,
+  transformPath,
+} from './transform.js'
+export { renderLayers } from './render.js'

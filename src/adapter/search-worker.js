@@ -3,8 +3,8 @@
 // receives `{ id, ids, forms, formsText, smallSeal, query, limit }`: the first message loads the table at `ids`
 // and the forms at `forms` (or takes `formsText`) and builds the index; a failed load is tried again
 // on the next message. Each answers `{ id, result }` or `{ id, error }`.
-import { sealTable } from './seal-data.js'
-import { createSearch, readForms } from '../core/search.js'
+import { sealTable, sealForms } from './seal-data.js'
+import { createSearch } from '../core/search.js'
 import { parseIdsTable, readText } from './babelstone.js'
 
 /** @type {Promise<ReturnType<typeof createSearch>> | null} */
@@ -17,7 +17,7 @@ async function load(ids, forms, given, smallSeal) {
   const doc = typeof smallSeal === 'string' ? JSON.parse(await readText(await get(smallSeal))) : smallSeal
   const merged = new Map([...parseIdsTable(text), ...(doc ? sealTable(doc) : [])])
   const table = new Map([...merged].map(([char, sequences]) => [char, sequences.map(s => s.text)]))
-  const search = createSearch(table, { forms: readForms(formsText) })
+  const search = createSearch(table, { forms: sealForms(formsText, doc) })
   search.index()
   return search
 }
