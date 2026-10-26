@@ -214,8 +214,13 @@ transform engine evaluates affine, projective and Möbius chains on paths: affin
 a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
 hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
 local geometry and each operator child's placement, applies the nested layer transforms, and reports
-missing geometry or unsupported transforms. Compositing (including ㇯), storage and the editor binding
-are not part of these modules yet.
+missing geometry or unsupported transforms.
+
+`createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
+reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
+`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+whole documents. `listen` tells a host when to redraw. Compositing (including ㇯), storage and the
+editor binding are not part of these modules yet.
 
 ## Adapters
 

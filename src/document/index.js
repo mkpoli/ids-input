@@ -24,3 +24,4 @@ export {
   transformPath,
 } from './transform.js'
 export { renderLayers } from './render.js'
+export { createDocumentSession } from './session.js'
