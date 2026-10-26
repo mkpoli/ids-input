@@ -1,8 +1,11 @@
 <script>
+  import { tokens, tint } from './tokens.js'
+  let scroll = $state(0)
   // The sequence field of `editor`: the description as text, read as it is typed, ASCII operator
   // names (LR, ud) becoming operators. Enter calls `onenter`; a problem marks the field invalid.
   /** @type {{ editor: import('./editor.svelte.js').Editor, label?: boolean, placeholder?: string, onenter?: () => void }} */
   let { editor, label = true, placeholder = '⿰⿱匕失⿱コ疋', onenter } = $props()
+  const spans = $derived(tokens(editor.draft))
   const t = $derived(editor.t)
   /** @type {HTMLInputElement | null} */ let field = $state(null)
   /** @param {Event} [event] */
@@ -11,10 +14,13 @@
 
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
+  <div class="sequence-wrap">
+    <div class="sequence-paint" aria-hidden="true"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    oninput={edit} oncompositionend={() => edit()} onblur={() => editor.settle()}
+    onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionend={() => edit()} onblur={() => editor.settle()}
     onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
+  </div>
 </label>
 
 <style>
@@ -28,9 +34,12 @@
     --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--_ink)}
   .ids-title{font-size:11px;color:var(--_muted)}
-  input{min-width:0;font:inherit;font-size:22px;padding:6px 10px;font-family:var(--_font);color:inherit;
-    border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
-  input::placeholder{color:color-mix(in srgb,var(--_muted) 70%,transparent)}
+  .sequence-wrap{position:relative;min-width:0}
+  .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
+  .sequence-paint span{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent);border-radius:3px}
+  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;padding:6px 10px;font-family:var(--_font);color:inherit;
+    border:1px solid var(--_line);border-radius:8px;background:transparent}
+  input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
   input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   input[aria-invalid="true"]{border-color:var(--_fault)}
 </style>
