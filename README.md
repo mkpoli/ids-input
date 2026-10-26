@@ -179,6 +179,12 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
+`IdsPreview` supports manual drawing adjustments through `editable`, `bind:adjustments` and
+`onchoose(path)`. Drag a part to move it, its corner square to scale it, or its circle to turn it.
+Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen part. Adjustments are
+keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
+for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
+
 `babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
 `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
 is given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's

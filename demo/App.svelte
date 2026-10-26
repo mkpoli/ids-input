@@ -451,7 +451,7 @@
       unencoded: !example.char,
       lang,
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
-      run: () => openSequence(example.sequence),
+      run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
