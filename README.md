@@ -307,7 +307,7 @@ The demo is a full-width workshop with one tab for each description being edited
 between the toolbar's examples and its end controls; on narrow screens the tabs take a second row of
 the same bar. A tab is the description's composed drawing at a small size, and a dot while its text
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
-name, not written in it. The active tab has an accent border, and the + button opens an empty tab.
+name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
 start; the Shape or indented Tree view with the search under it; and at the end the drawing
 in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its

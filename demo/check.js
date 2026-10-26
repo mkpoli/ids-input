@@ -459,6 +459,9 @@ try {
   assert(await valueOf(tabbed) === '⿰木⬚', `each tab keeps its own history: ${await valueOf(tabbed)}`)
   pass('switching tabs restores each description and its own undo history')
 
+  await tabs().nth(1).click()
+  await tabbed.locator('.ids-field input').fill('⿱木口')
+  await tabs().first().click()
   await tabbed.getByRole('tab', { name: 'Tree', exact: true }).click()
   const tabRows = tabbed.locator('.ids-treelist [role="treeitem"]')
   await tabRows.first().focus()
