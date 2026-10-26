@@ -82,7 +82,9 @@
     const key = `${at}\0${split ? '1' : '0'}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split)
+    // The compact Serif export covers the BMP; a sequence outside it draws from the sans export.
+    const usable = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff) ? COMPOSER_BASE : at
+    const composed = previewAt(usable, split)
     if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
