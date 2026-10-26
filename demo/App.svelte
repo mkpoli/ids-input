@@ -259,7 +259,12 @@
   <main class="work" bind:this={work}>
     <section class="pane input" aria-label={t('app.input')}>
       <div class="block">
-        <h2 class="label">{t('ids.label')}</h2>
+        <div class="label-row">
+          <h2 class="label">{t('ids.label')}</h2>
+          {#if points.length}
+            <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+          {/if}
+        </div>
         <div class="seq-line">
           <IdsSequence {editor} label={false} />
           <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
@@ -301,17 +306,7 @@
     </div>
 
     <section class="pane output" aria-label={t('app.output')}>
-      {#if encoded.length || points.length}
-        <div class="output-head">
-          {#each encoded as ch (ch)}
-            <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
-          {/each}
-          {#if points.length}
-            <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
-          {/if}
-        </div>
-      {/if}
-      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
+      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')} bind:drawing /></div>
       <div class="details">
         <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
       </div>
@@ -390,6 +385,7 @@
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
+  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
   .seq-line{display:flex;align-items:flex-start;gap:6px}
   .seq-line :global(.ids-field){flex:1;min-width:0}
   .seq-line .seq-copy{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer}
@@ -402,18 +398,13 @@
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .output-head{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
-  .points-btn{height:28px;margin-left:auto;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
   .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
   .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .point-sheet{display:flex;flex-direction:column;gap:14px}
   .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
   .point-list li span{font-family:var(--cjk);font-size:18px}
-  .char{display:inline-flex;flex:none;align-items:center;gap:6px;padding:0 8px 0 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
-  .char span{font-family:var(--cjk);font-size:22px;line-height:1.3}
-  .char:hover{border-color:var(--accent)}
-  .char:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}

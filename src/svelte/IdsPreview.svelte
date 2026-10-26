@@ -20,8 +20,8 @@
    * @typedef {import('../core/ids.js').Path} Path
    */
 
-  /** @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, drawing?: Drawing | null }} */
-  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, drawing = $bindable(null) } = $props()
+  /** @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, drawing?: Drawing | null }} */
+  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', drawing = $bindable(null) } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -120,6 +120,7 @@
   {#if small || !quiet}
     <figcaption class="ids-preview-meta">
       {#if small}<div class="ids-preview-small">{@render picture('small')}</div>{/if}
+      {#if detail}<code class="ids-preview-detail">{detail}</code>{/if}
       {#if !quiet}<span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>{/if}
     </figcaption>
   {/if}
@@ -135,6 +136,7 @@
   .ids-preview-large{position:relative;width:100%;aspect-ratio:1;border:1px solid var(--_line);border-radius:10px;background:var(--_surface);color:var(--_ink);overflow:hidden}
   .ids-preview-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;min-height:22px;max-width:100%}
   .ids-preview-small{width:20px;height:20px;color:var(--_ink)}
+  .ids-preview-detail{font:11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .frame{position:relative;width:100%;height:100%}
   .layer{position:absolute;inset:0}
   .ids-preview-large .layer{inset:5%}
