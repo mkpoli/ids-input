@@ -111,12 +111,15 @@
 
 <style>
   .tabbar{display:flex;align-items:center;gap:6px;flex:1;min-width:0;height:100%}
-  .tabs{position:relative;display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;
+  .tabs{position:relative;display:flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0;height:100%;padding:0 10px;border-bottom:1px solid var(--line);overflow-x:auto;overflow-y:hidden;
     scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
-  .tab{position:relative;flex:none;width:68px;height:32px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--muted)}
+  .tab{position:relative;flex:none;width:68px;height:32px;border:1px solid var(--line);border-bottom:0;border-radius:9px 9px 0 0;background:var(--surface);color:var(--muted)}
   .tab:not(.on):hover{background:var(--hover);color:var(--ink)}
   .tab.on{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+  .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
+  .tab.on::before{right:100%;background:radial-gradient(circle at top left,transparent 9px,var(--accent) 9.5px 10px,var(--accent-soft) 10.5px)}
+  .tab.on::after{left:100%;background:radial-gradient(circle at top right,transparent 9px,var(--accent) 9.5px 10px,var(--accent-soft) 10.5px)}
   .tab-main{display:flex;align-items:center;width:100%;height:100%;padding:3px 24px 3px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{display:grid;place-items:center;flex:none;width:24px;height:24px}

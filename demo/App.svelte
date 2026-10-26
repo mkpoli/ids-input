@@ -353,6 +353,14 @@
   })
 
   let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
+  async function focusActiveEditor() {
+    await tick()
+    if (!work) return
+    if (view === 'tree') {
+      const row = /** @type {HTMLElement | null} */ (work.querySelector('.ids-treelist [aria-selected="true"]') ?? work.querySelector('.ids-treelist [tabindex="0"]'))
+      row?.focus()
+    } else await editor.focusChosen(work)
+  }
   /** @param {KeyboardEvent} event */
   function keys(event) {
     if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) { event.preventDefault(); prefsOpen = true; return }
@@ -366,7 +374,7 @@
       const inEditor = target instanceof Node && Boolean(work?.contains(target))
       cycle(event.key === 'Tab' ? (event.shiftKey ? -1 : 1) : (event.key === 'PageDown' ? 1 : -1))
       if (inStrip) tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
-      else if (inEditor) tick().then(() => { if (work) editor.focusChosen(work) })
+      else if (inEditor) focusActiveEditor()
       return
     }
     if (command && event.key.toLowerCase() === 's' && !event.shiftKey) { event.preventDefault(); keepDraft(); return }
@@ -435,7 +443,9 @@
           {#if view === 'shape'}
             <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
           {:else}
-            <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+            {#key activeId}
+              <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+            {/key}
           {/if}
           <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
         </section>
