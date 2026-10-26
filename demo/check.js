@@ -487,6 +487,21 @@ try {
   assert(await activeTitle() === active, 'the active tab comes back')
   assert(await tabbed.locator('.tabbar .tab-dot').count() === marked, 'the edited marks come back')
   assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
+  await tabbed.locator('.tabbar .tab.on [role="tab"]').focus()
+  await tabbed.keyboard.press('Tab')
+  assert(await tabbed.evaluate(() => document.activeElement?.classList.contains('tab-new')), 'Tab leaves the tablist without stopping on its close button')
+
+  // A second browser window can save its own tabs without losing them when this one edits.
+  const sibling = await tabbed.context().newPage()
+  await sibling.goto(`${url}${fixture}#${encodeURIComponent('⿱永口')}`)
+  await sibling.locator('.ids-field input').waitFor()
+  assert(await sibling.locator('.tabbar [role="tab"][title="⿱永口"]').count() === 1, 'the other window opens its linked tab')
+  await tabbed.locator('.tab-new').click()
+  await tabbed.locator('.ids-field input').fill('⿱口木')
+  await sibling.reload()
+  await sibling.locator('.ids-field input').waitFor()
+  assert(await sibling.locator('.tabbar [role="tab"][title="⿱永口"]').count() === 1, 'another window saving does not replace this window’s tabs')
+  await sibling.close()
 
   // Two tabs may hold the same text; a reload keeps the one that was active.
   await tabbed.locator('.tab-new').click()
@@ -498,7 +513,22 @@ try {
   assert(await onTab() === duplicate, `the active tab stays when texts match: ${await onTab()} against ${duplicate}`)
   assert(!tabbed.errors.length, `page errors: ${tabbed.errors.join('; ')}`)
   await tabbed.context().close()
-  pass('the tabs and the active one survive a reload')
+  pass('the tabs and the active one survive a reload, with separate working sets in separate windows')
+
+  // Existing users' single-document autosave becomes a tab on their first visit after upgrading.
+  const legacy = await open()
+  await legacy.evaluate(() => {
+    sessionStorage.removeItem('ids-input:tabs')
+    sessionStorage.removeItem('ids-input:activeTab')
+    localStorage.removeItem('ids-input:tabs')
+    localStorage.removeItem('ids-input:activeTab')
+    localStorage.setItem('ids-input:current', JSON.stringify('⿱木口'))
+  })
+  await legacy.goto(url)
+  await legacy.locator('.ids-field input').waitFor()
+  assert(await valueOf(legacy) === '⿱木口', 'the old autosave opens as the first tab')
+  await legacy.context().close()
+  pass('the old single-document autosave is kept on upgrade')
 
   // An unreadable draft is not an empty tab: opening another document keeps its tab.
   const unreadable = await open(`#${encodeURIComponent('⿱木林')}`)

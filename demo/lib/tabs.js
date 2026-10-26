@@ -8,6 +8,19 @@ import { load, save } from './storage.js'
 /** @typedef {{ id: string, sequence: string, saved: string, whole: string }} Tab */
 
 let made = 0
+// Each browser window keeps its own working set through reloads. localStorage seeds a new window
+// and remembers the latest set for the next visit; another open window cannot replace this one's tabs.
+/** @param {string} name */
+const sessionValue = name => {
+  try {
+    const raw = sessionStorage.getItem(`ids-input:${name}`)
+    return raw === null ? null : JSON.parse(raw)
+  } catch { return null }
+}
+/** @param {string} name @param {unknown} value */
+const keepSession = (name, value) => {
+  try { sessionStorage.setItem(`ids-input:${name}`, JSON.stringify(value)) } catch { /* Storage unavailable. */ }
+}
 /** A new tab's id: random where the page may make one, else the time and a count. */
 const newId = () => globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${++made}-${Math.random().toString(36).slice(2, 8)}`
 
@@ -29,7 +42,7 @@ export function makeTab(sequence = '', saved = sequence) {
 
 /** The tabs kept from an earlier visit, oldest first. @returns {Tab[]} */
 export function readTabs() {
-  const kept = load('tabs', null)
+  const kept = sessionValue('tabs') ?? load('tabs', null)
   if (!Array.isArray(kept)) return []
   const seen = new Set()
   return kept.flatMap(item => {
@@ -43,12 +56,15 @@ export function readTabs() {
 
 /** Keep the tabs and the active one for the next visit. @param {Tab[]} tabs @param {string} activeId */
 export function writeTabs(tabs, activeId) {
-  save('tabs', tabs.map(tab => ({ id: tab.id, sequence: tab.sequence, saved: tab.saved })))
+  const records = tabs.map(tab => ({ id: tab.id, sequence: tab.sequence, saved: tab.saved }))
+  keepSession('tabs', records)
+  keepSession('activeTab', activeId)
+  save('tabs', records)
   save('activeTab', activeId)
 }
 
 /** The active tab kept from an earlier visit, or null. @returns {string | null} */
 export function readActiveTab() {
-  const id = load('activeTab', null)
+  const id = sessionValue('activeTab') ?? load('activeTab', null)
   return typeof id === 'string' ? id : null
 }

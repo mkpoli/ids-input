@@ -307,22 +307,25 @@ The demo is a full-width workshop with one tab for each description being edited
 between the toolbar's examples and its end controls; on narrow screens the tabs take a second row of
 the same bar. A tab is the description's composed drawing at a small size, and a dot while its text
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
-name, not written in it. The active tab joins the panel area below, and the + after the tabs is an
+name, not written in it. The active tab joins the bar's lower edge, and the + after the tabs is an
 empty tab. Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
 start; the tree in a square panel with the search under it; and at the end the drawing
 in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its
 code points, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. A click, the arrow keys or, where the browser leaves them to the page, `Ctrl+Tab` and
-`Ctrl+Shift+Tab` move between tabs, and × closes a tab (Undo brings it back; the last tab stays). The
-tree and search panels in the middle column are divided by a draggable splitter, the tree starting
+for. A click, the arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
+`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
+closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
+column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Toolbar buttons show their
 keys on hover. The toolbar holds Undo and Redo with the history of named steps, saved drafts (also
 read from and written to a text file), examples (each with its character and code point, or marked
 when it has none), a share link with its QR code, the language, a system, light or dark theme,
 preferences (key hints on buttons, where the preview draws from) and the sources. An example opens a
-tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs,
-settings, drafts and the theme stay in the browser's `localStorage` under `ids-input:`.
+tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
+`sessionStorage` to keep each browser window's working set separate through reloads, and
+`localStorage` to seed a new window. Settings, drafts and the theme stay in `localStorage`; the keys
+use the `ids-input:` prefix.
 
 ## Inspired by
 

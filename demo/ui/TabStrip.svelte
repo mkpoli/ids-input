@@ -100,7 +100,7 @@
           {#if marked}<span class="tab-dot" title={t('app.tabs.edited')} aria-hidden="true"></span>{/if}
         </button>
         {#if tabs.length > 1}
-          <button type="button" class="tab-close" tabindex={tab.id === activeId ? 0 : -1} title={t('app.tabs.close', { name })} aria-label={t('app.tabs.close', { name })}
+          <button type="button" class="tab-close" tabindex="-1" title={t('app.tabs.close', { name })} aria-label={t('app.tabs.close', { name })}
             onclick={() => close(tab.id)} onkeydown={event => key(event, at)}><Icon name="close" size={11} /></button>
         {/if}
       </div>

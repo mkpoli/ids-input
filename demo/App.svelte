@@ -130,6 +130,11 @@
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
   const stored = readTabs(), linked = canonical(sequenceFrom(location))
+  // Bring the old single-document autosave into the first tab on upgrade.
+  if (!stored.length) {
+    const previous = load('current', '')
+    if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
+  }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
   const linkedTab = linked ? stored.find(tab => tab.sequence === linked) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
