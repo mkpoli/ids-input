@@ -142,7 +142,7 @@ function poleOutside(operation, box) {
   }
 }
 
-/** @typedef {{ type: 'M' | 'L', p: Point } | { type: 'Q', p: Point, c: Point, end: Point } | { type: 'C', p: Point, c1: Point, c2: Point, end: Point } | { type: 'Z' }} Segment */
+/** @typedef {{ type: 'M' | 'L', p: Point } | { type: 'Q', p: Point, c: Point, end: Point } | { type: 'C', p: Point, c1: Point, c2: Point, end: Point } | { type: 'Z', p: Point, start: Point }} Segment */
 /** @typedef {{ segments: Segment[], points: Point[] }} Path */
 
 /** Parse the absolute M, L, Q, C and Z subset a document geometry uses. @param {string} d @returns {Path} */
@@ -161,7 +161,7 @@ export function parsePath(d) {
     if (!command) return
     if (command === 'Z') {
       if (values.length) throw new TransformError('path', 'Z takes no numbers')
-      segments.push({ type: 'Z' }); current = start; command = ''; values = []; return
+      segments.push({ type: 'Z', p: current, start }); current = start; command = ''; values = []; return
     }
     if (command === 'M' || command === 'L') {
       if (values.length < 2 || values.length % 2) throw new TransformError('path', `${command} needs coordinate pairs`)
@@ -218,31 +218,59 @@ const mapped = (point, map) => {
 /** @param {Point} point */
 const pointText = point => `${number(point[0])} ${number(point[1])}`
 
-/** The distance from `p` to the line through `a` and `b`. @param {Point} p @param {Point} a @param {Point} b */
-function flatness(p, a, b) {
+/** The distance from `p` to the segment `a`-`b`. @param {Point} p @param {Point} a @param {Point} b */
+function distanceToSegment(p, a, b) {
   const dx = b[0] - a[0], dy = b[1] - a[1]
-  const denominator = Math.hypot(dx, dy)
-  return denominator < 1e-12 ? Math.hypot(p[0] - a[0], p[1] - a[1]) : Math.abs(dy * p[0] - dx * p[1] + b[0] * a[1] - b[1] * a[0]) / denominator
+  const length = dx * dx + dy * dy
+  if (length < 1e-24) return Math.hypot(p[0] - a[0], p[1] - a[1])
+  const t = Math.max(0, Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / length))
+  return Math.hypot(p[0] - (a[0] + t * dx), p[1] - (a[1] + t * dy))
 }
 
 /** @param {Point} a @param {Point} b @returns {Point} */
 const midpoint = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]
 
-/** Flatten a quadratic curve after `map`. @param {Point} p0 @param {Point} c @param {Point} p2 @param {(point: Point) => Point | null} map @param {number} tolerance @param {Point[]} out @param {number} depth */
+/** Flatten a source line after `map`, keeping the mapped midpoint within `tolerance` of the chord.
+ *  @param {Point} p0 @param {Point} p1 @param {(point: Point) => Point | null} map @param {number} tolerance @param {Point[]} out @param {number} depth */
+function flattenLine(p0, p1, map, tolerance, out, depth) {
+  const q0 = mapped(p0, map), q1 = mapped(p1, map), qm = mapped(midpoint(p0, p1), map)
+  if (distanceToSegment(qm, q0, q1) <= tolerance) { out.push(q1); return }
+  if (depth >= 18) throw new TransformError('precision', 'the line does not flatten within the work limit')
+  const middle = midpoint(p0, p1)
+  flattenLine(p0, middle, map, tolerance, out, depth + 1)
+  flattenLine(middle, p1, map, tolerance, out, depth + 1)
+}
+
+/** Flatten a quadratic after `map`, checking the mapped curve's own midpoint.
+ *  @param {Point} p0 @param {Point} c @param {Point} p2 @param {(point: Point) => Point | null} map @param {number} tolerance @param {Point[]} out @param {number} depth */
 function flattenQuadratic(p0, c, p2, map, tolerance, out, depth) {
-  const q0 = mapped(p0, map), q1 = mapped(c, map), q2 = mapped(p2, map)
-  if (flatness(q1, q0, q2) <= tolerance) { out.push(q2); return }
+  const q0 = mapped(p0, map), q2 = mapped(p2, map)
+  const samples = [0.25, 0.5, 0.75].map(t => {
+    const u = 1 - t
+    const point = /** @type {Point} */ ([u * u * p0[0] + 2 * u * t * c[0] + t * t * p2[0], u * u * p0[1] + 2 * u * t * c[1] + t * t * p2[1]])
+    return mapped(point, map)
+  })
+  if (samples.every(point => distanceToSegment(point, q0, q2) <= tolerance)) { out.push(q2); return }
   if (depth >= 18) throw new TransformError('precision', 'the curve does not flatten within the work limit')
   const p01 = midpoint(p0, c), p12 = midpoint(c, p2), p012 = midpoint(p01, p12)
   flattenQuadratic(p0, p01, p012, map, tolerance, out, depth + 1)
   flattenQuadratic(p012, p12, p2, map, tolerance, out, depth + 1)
 }
 
-/** Flatten a cubic curve after `map`. @param {Point} p0 @param {Point} c1 @param {Point} c2 @param {Point} p3 @param {(point: Point) => Point | null} map @param {number} tolerance @param {Point[]} out @param {number} depth */
+/** Flatten a cubic after `map`, checking the mapped curve's own midpoint.
+ *  @param {Point} p0 @param {Point} c1 @param {Point} c2 @param {Point} p3 @param {(point: Point) => Point | null} map @param {number} tolerance @param {Point[]} out @param {number} depth */
 function flattenCubic(p0, c1, c2, p3, map, tolerance, out, depth) {
   if (depth >= 18) throw new TransformError('precision', 'the curve does not flatten within the work limit')
-  const q0 = mapped(p0, map), q1 = mapped(c1, map), q2 = mapped(c2, map), q3 = mapped(p3, map)
-  if (Math.max(flatness(q1, q0, q3), flatness(q2, q0, q3)) <= tolerance) { out.push(q3); return }
+  const q0 = mapped(p0, map), q3 = mapped(p3, map)
+  const samples = [0.25, 0.5, 0.75].map(t => {
+    const u = 1 - t
+    const point = /** @type {Point} */ ([
+      u * u * u * p0[0] + 3 * u * u * t * c1[0] + 3 * u * t * t * c2[0] + t * t * t * p3[0],
+      u * u * u * p0[1] + 3 * u * u * t * c1[1] + 3 * u * t * t * c2[1] + t * t * t * p3[1],
+    ])
+    return mapped(point, map)
+  })
+  if (samples.every(point => distanceToSegment(point, q0, q3) <= tolerance)) { out.push(q3); return }
   const p01 = midpoint(p0, c1), p12 = midpoint(c1, c2), p23 = midpoint(c2, p3)
   const p012 = midpoint(p01, p12), p123 = midpoint(p12, p23), p0123 = midpoint(p012, p123)
   flattenCubic(p0, p01, p012, p0123, map, tolerance, out, depth + 1)
@@ -297,19 +325,37 @@ export function transformPath(d, chain, { tolerance = 0.1 } = {}) {
     return middle ? applyAffine(suffixMatrix, middle) : null
   }
   const out = []
+  let current = /** @type {Point} */ ([0, 0])
   for (const segment of path.segments) {
-    if (segment.type === 'Z') { out.push('Z'); continue }
-    if (segment.type === 'M') out.push(`M${pointText(mapped(segment.p, map))}`)
-    else if (segment.type === 'L') out.push(`L${pointText(mapped(segment.p, map))}`)
-    else if (segment.type === 'Q') {
+    if (segment.type === 'M') { current = segment.p; out.push(`M${pointText(mapped(segment.p, map))}`); continue }
+    if (segment.type === 'L') {
       const points = /** @type {Point[]} */ ([])
-      flattenQuadratic(segment.p, segment.c, segment.end, map, tolerance, points, 0)
+      flattenLine(current, segment.p, map, tolerance, points, 0)
       for (const point of points) out.push(`L${pointText(point)}`)
-    } else if (segment.type === 'C') {
+      current = segment.p
+      continue
+    }
+    if (segment.type === 'Q') {
       const points = /** @type {Point[]} */ ([])
-      flattenCubic(segment.p, segment.c1, segment.c2, segment.end, map, tolerance, points, 0)
+      flattenQuadratic(current, segment.c, segment.end, map, tolerance, points, 0)
       for (const point of points) out.push(`L${pointText(point)}`)
-    } else throw new TransformError('path', 'unexpected path segment')
+      current = segment.end
+      continue
+    }
+    if (segment.type === 'C') {
+      const points = /** @type {Point[]} */ ([])
+      flattenCubic(current, segment.c1, segment.c2, segment.end, map, tolerance, points, 0)
+      for (const point of points) out.push(`L${pointText(point)}`)
+      current = segment.end
+      continue
+    }
+    // Z: the closing edge is a line too under a nonlinear map.
+    if (segment.type !== 'Z') throw new TransformError('path', 'unexpected path segment')
+    const points = /** @type {Point[]} */ ([])
+    flattenLine(current, segment.start, map, tolerance, points, 0)
+    for (const point of points) out.push(`L${pointText(point)}`)
+    out.push('Z')
+    current = segment.start
   }
   return { d: out.join(''), approximate: true }
 }

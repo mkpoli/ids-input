@@ -73,6 +73,39 @@ describe('transformPath', () => {
     expect(far.d).not.toContain('C')
     expect(far.d).toStartWith('M0.5')
   })
+  it('flattens straight edges and closing edges under a nonlinear map', () => {
+    const inversion = { type: 'mobius', a: [0, 0], b: [1, 0], c: [1, 0], d: [0, 0] }
+    const line = transformPath('M-1 1L1 1', [inversion], { tolerance: 0.01 })
+    expect(line.approximate).toBe(true)
+    const points = parsePath(line.d).points
+    expect(points.length).toBeGreaterThan(2)
+    expect(points.some(([x, y]) => Math.hypot(x - 0, y + 1) < 0.1)).toBe(true)
+    const closed = transformPath('M1 1L2 1L2 2L1 2Z', [inversion], { tolerance: 0.01 })
+    expect(parsePath(closed.d).segments.filter(segment => segment.type === 'L').length).toBeGreaterThanOrEqual(8)
+  })
+  it('samples the curve itself, not its transformed control points', () => {
+    const inversion = { type: 'mobius', a: [0, 0], b: [1, 0], c: [1, 0], d: [0, 0] }
+    const result = transformPath('M1 0Q0.5 0.5 0.2 0.4', [inversion], { tolerance: 0.01 })
+    const points = parsePath(result.d).points
+    expect(points.some(([x, y]) => Math.hypot(x - 1.2941176470588236, y + 0.8235294117647057) < 0.1)).toBe(true)
+  })
+  it('keeps a curve that doubles back along its chord', () => {
+    const identity = { type: 'projective', matrix: [1, 0, 0, 0, 1, 0, 0, 0, 1] }
+    const result = transformPath('M0 0Q100 0 1 0', [identity], { tolerance: 0.1 })
+    const points = parsePath(result.d).points
+    expect(Math.max(...points.map(([x]) => x))).toBeGreaterThan(40)
+  })
+  it('applies affine operations before and after one nonlinear operation', () => {
+    const inversion = { type: 'mobius', a: [0, 0], b: [1, 0], c: [1, 0], d: [0, 0] }
+    const result = transformPath('M2 1L3 1', [
+      { type: 'affine', matrix: [1, 0, 0, 1, 0, 0] },
+      inversion,
+      { type: 'affine', matrix: [1, 0, 0, 1, 10, 20] },
+    ], { tolerance: 0.01 })
+    const first = parsePath(result.d).points[0]
+    expect(first[0]).toBeCloseTo(10.4, 6)
+    expect(first[1]).toBeCloseTo(19.8, 6)
+  })
   it('refuses a Möbius pole inside the control hull', () => {
     expect(() => transformPath(square, [{ type: 'mobius', a: [1, 0], b: [0, 0], c: [1, 0], d: [0, 0] }])).toThrow('pole')
   })
