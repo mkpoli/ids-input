@@ -82,7 +82,9 @@
   function frameClick(event, path) {
     if (editor.disabled) return
     const target = /** @type {HTMLElement} */ (event.target)
-    if (target.closest('button, .ids-parts')) return
+    const frame = /** @type {HTMLElement} */ (event.currentTarget)
+    const parts = /** @type {HTMLElement | null} */ (frame.querySelector(':scope > .ids-parts'))
+    if (target.closest('button') || parts?.contains(target)) return
     editor.choose(path)
   }
 </script>
@@ -94,7 +96,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
@@ -162,6 +164,7 @@
   :where(.ids-tree) button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;cursor:pointer;
     transition:border-color .12s,background-color .12s}
+  .ids-node.disabled{cursor:default}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
   .ids-head{position:absolute;top:3px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}

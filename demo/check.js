@@ -76,7 +76,10 @@ try {
   const rootFrame = page.locator('.ids-node').first()
   await rootFrame.click({ position: { x: 4, y: 80 } })
   assert(await rootFrame.evaluate(el => el.classList.contains('chosen')), 'a click on the frame chooses its node')
-  pass('a click on a frame chooses its node')
+  const nestedFrame = page.locator('.ids-node').nth(1)
+  await nestedFrame.click({ position: { x: 4, y: 80 } })
+  assert(await nestedFrame.evaluate(el => el.classList.contains('chosen')), 'a click on a nested frame chooses that node')
+  pass('a click on a frame chooses its node, nested frames included')
 
   // The middle column: the tree starts larger than the search and the divider resizes them.
   const splitPage = await open()
