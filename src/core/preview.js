@@ -14,6 +14,7 @@ import { isDescription as isWhole } from './ids.js'
  * @returns {{ label: string, params: Record<string, string> }}
  */
 export function badge(step, drawn = null) {
+  if (step === 'loading') return { label: 'loading', params: {} }
   if (step === 'final') return { label: 'final', params: {} }
   if (step === 'failed') return { label: 'failed', params: {} }
   if (step === 'capped') return { label: 'tooLarge', params: {} }

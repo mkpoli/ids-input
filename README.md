@@ -5,10 +5,11 @@ layers, and an optional preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
-  (`LR` for ⿰), maps keys to operators, and steps through decomposition trees.
+  (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
+  the names people call them (絞絲, ノ文, 宝盖).
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS and the parts palette from two static files, so nothing needs a
-  server.
+  adapter reads BabelStone IDS, the parts palette, component forms and component names from static
+  files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
@@ -46,8 +47,10 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
   import parts from 'ids-input/data/ids-parts.json?url'
+  import forms from 'ids-input/data/component-forms.tsv?url'
+  import names from 'ids-input/data/component-names.tsv?url'
 
-  const adapter = babelStoneAdapter({ ids, parts })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names })
   let value = $state('')
 </script>
 
@@ -160,12 +163,14 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`babelStoneAdapter({ ids, parts })` answers `structure`, `search` (a character, `U+6728` or bare
-hex), `containing` and `parts` from the two files in `data/`. Its component search builds an index
-in memory on first use: under Bun, about half a second for the most frequent components and
-150 MB of heap with the table loaded; a host with a server can answer `containing` there instead. It has
-no `variants`, `drawing` or `preview`, and no table of component forms, so `⺡` and `氵` are
-different components to it.
+`babelStoneAdapter({ ids, parts, forms, names })` answers `structure`, `search` (a character,
+`U+6728` or bare hex, or a name such as 絞絲 or のぶん when `names` is given), `containing` and
+`parts` from the files in `data/`. `forms` folds the description search's components and opens a
+named component into the forms that stand for it; without it `⺡` and `氵` are different components
+and a name finds only the form the table records. The containing search builds an index in memory on
+first use: under Bun, about half a second for the most frequent components and 150 MB of heap with
+the table loaded; a host with a server can answer `containing` there instead. It has no `variants`,
+`drawing` or `preview`.
 
 ## Search
 
@@ -198,6 +203,20 @@ the full table (97,680 characters) under Bun 1.3.14 on an AMD Ryzen 7 9800X3D, b
 take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, which matches 91,193 characters,
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
 5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
+
+### Names
+
+The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
+point, or one of the names people call a component (`data/component-names.tsv`, 1,727 names in
+Japanese and Chinese, traditional and simplified). A query and every name are folded alike: NFKC,
+katakana as hiragana, spaces and punctuation out. A name that is the whole query comes first, then
+one the query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds
+絞絲旁.
+
+The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
+those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. A single component typed on its
+own stays the character it is, and without `names` the search takes characters and code points only.
 
 ## Preview
 
@@ -260,6 +279,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
+- `data/component-names.tsv`: the names people call components by, CC BY-SA 4.0 as a whole
+  (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2 and
+  Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
+  (Apache 2.0); its header names each (79 KB). Its Wikipedia redirects are kept in
+  `data/component-name-redirects.json`.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
@@ -269,7 +293,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
-`scripts/build_ids_data.py` and `scripts/build_ids_parts.py` (`uv run scripts/…`) rebuild them.
+`scripts/build_ids_data.py`, `scripts/build_ids_parts.py` and `scripts/build_component_names.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
 
@@ -383,5 +407,10 @@ COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against 
 bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
+
+The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
+`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+`tests/example-drawings.test.js` fails while the file and the export disagree.
