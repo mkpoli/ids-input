@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, root?: string, sequence?: string, note?: string, unencoded?: boolean, run?: () => void } | { heading: string } | { separator: true }} Item */
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, unencoded?: boolean, run?: () => void } | { heading: string } | { separator: true }} Item */
 </script>
 
 <script>
@@ -65,13 +65,13 @@
         {:else if 'heading' in item}<p class="heading">{item.heading}</p>
         {:else}
           <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
-            class:rich={item.leading !== undefined || item.root !== undefined} disabled={item.disabled}
-            aria-label={item.sequence !== undefined ? `${item.leading ?? item.root ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+            class:rich={item.sequence !== undefined} disabled={item.disabled}
+            aria-label={item.sequence !== undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
             title={item.hint} onclick={() => { hide(); item.run?.() }}>
             {#if item.leading !== undefined}
               <span class="leading" lang={item.lang}>{item.leading}</span>
-            {:else if item.root !== undefined}
-              <span class="leading root" lang={item.lang}>{item.root}</span>
+            {:else if item.sequence !== undefined}
+              <span class="leading spacer" aria-hidden="true"></span>
             {:else}
               <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
             {/if}
@@ -99,7 +99,7 @@
   .item:disabled{opacity:.45;cursor:default}
   .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ink);font-family:var(--cjk);font-size:26px;line-height:1}
-  .leading.root{color:var(--muted)}
+  .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
   .label:lang(ja){font-family:var(--cjk)}

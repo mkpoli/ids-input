@@ -129,9 +129,8 @@
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
-      root: example.char ? undefined : [...example.sequence][0],
       label: example.sequence,
-      sequence: example.char ? example.sequence : [...example.sequence].slice(1).join(''),
+      sequence: example.sequence,
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
       lang: 'ja',

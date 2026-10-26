@@ -95,7 +95,7 @@ try {
   assert(Math.abs(card.width - card.height) < 2, `a hit is a square card (${card.width}×${card.height})`)
   pass('the search is its own panel under the square tree, its hits as square cards')
 
-  // Examples: the character or root operator, the textual IDS, and the code point.
+  // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
   assert(JSON.stringify(exampleHeads) === JSON.stringify(['With a code point', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
@@ -108,8 +108,8 @@ try {
   assert(await page.locator('.menu .item', { hasText: 'U+3106C' }).count() === 1, 'the taito example shows U+3106C')
   assert(await page.locator('.menu .item', { hasText: '(unencoded)' }).count() === 7, 'seven forms with no code point')
   const firstUnencoded = page.locator('.menu .item', { hasText: '(unencoded)' }).first()
-  assert(await firstUnencoded.locator('.leading.root').count() === 1, 'a form without a code point leads with its root operator')
-  assert(await firstUnencoded.locator('.leading.root').textContent() === '⿰', 'the root operator is text')
+  assert(await firstUnencoded.locator('.leading.spacer').count() === 1, 'a form without a code point leaves the character column empty')
+  assert((await firstUnencoded.locator('.label').textContent())?.includes('⿰') === true, 'the unencoded label keeps its textual IDS')
   await biang.click()
   assert(await value() === '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', `example opened: ${await value()}`)
   pass('examples show textual IDS, code points or none, and open')
@@ -346,7 +346,7 @@ try {
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')
   assert(await phoneExamples.locator('.item.rich').count() === 17, 'the phone sheet holds every example')
   assert(await phoneExamples.locator('.note', { hasText: 'U+30EDE' }).count() === 1, 'the phone sheet shows a code point')
-  assert(await phoneExamples.locator('.leading.root').count() === 7, 'the phone sheet shows the root operators as text')
+  assert(await phoneExamples.locator('.leading.spacer').count() === 7, 'the phone sheet leaves the character column empty for forms with no code point')
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()
   await phone.locator('dialog[open] .about').waitFor()
   await phone.keyboard.press('Escape')
