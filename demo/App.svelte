@@ -266,7 +266,11 @@
     backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
-  .group{gap:2px}
+  .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+  .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
+  .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
+  .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
+  .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:auto}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}

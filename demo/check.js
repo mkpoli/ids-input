@@ -61,6 +61,8 @@ try {
   // follow the theme rather than the browser's default.
   const heights = await page.locator('.bar .tool').evaluateAll(els => [...new Set(els.filter(el => el.offsetParent).map(el => Math.round(el.getBoundingClientRect().height)))])
   assert(JSON.stringify(heights) === '[32]', `toolbar button heights: ${heights}`)
+  const segments = await page.locator('.group .tool').evaluateAll(els => els.map(el => { const r = el.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)] }))
+  assert(segments.length === 3 && segments[0][1] === segments[1][0] && segments[1][1] === segments[2][0], `undo, redo and history touch: ${JSON.stringify(segments)}`)
   const undoButton = page.locator('.bar button[aria-label^="Undo"]')
   await undoButton.hover()
   await page.waitForTimeout(250)
@@ -87,7 +89,9 @@ try {
   assert((await page.locator('.ids-field input').inputValue()).includes('冫') || (await page.locator('.ids-field input').inputValue()).startsWith('⿰'), 'a hit opens its description')
   await page.locator('.ids-search-results input').fill('')
   await page.locator('.bar button[aria-label^="Undo"]').click()
+  await page.waitForTimeout(250)
   await page.locator('.ids-search-results .hit').first().hover()
+  await page.waitForTimeout(150)
   assert(await page.locator('.ids-search-results .hit').first().locator('.code').isVisible()
     && await page.locator('.ids-search-results .hit').first().locator('.seq').isHidden(), 'a hovered card shows its code point')
   pass(`the search follows the tree (first results by ${firstResults} ms after navigation, index built in a worker), narrows by terms, opens a hit and takes its parts, its cards showing Unicode on hover`)
