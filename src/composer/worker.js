@@ -7,10 +7,17 @@
 // first drawing starts with them. The page ends a worker whose answer it no longer needs
 // (`client.js`).
 import { compose, fromUrl, sketch } from './loader.js'
+import { hasTangut, onlyTangut, tangutSource } from './tangut.js'
 
-let source = null, at = null
+const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, warm } }) => {
-  if (at !== base) { source = fromUrl(base); at = base }
+  const local = !warm && onlyTangut(sequence), mixed = !warm && !local && hasTangut(sequence)
+  const key = local ? 'tangut' : `${mixed ? 'mixed' : 'han'}:${base}`
+  if (!sources.has(key)) {
+    const fallback = local ? null : fromUrl(base)
+    sources.set(key, local || mixed ? tangutSource({ fallback }) : fallback)
+  }
+  const source = sources.get(key)
   try { await source.ready() } catch (error) {
     self.postMessage(warm ? { id, warm: true, error: String(error?.message ?? error) } : { id, error: String(error?.message ?? error), unavailable: true })
     return

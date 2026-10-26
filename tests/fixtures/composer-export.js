@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gzipSync } from 'node:zlib'
 
-export const constants = JSON.parse(readFileSync(join(import.meta.dirname, 'composer-constants.json'), 'utf8'))
+export const constants = JSON.parse(readFileSync(join(import.meta.dirname, '../../src/composer/constants.json'), 'utf8'))
 const hex = text => createHash('sha256').update(text).digest('hex')
 /** The shard a key's record or host list is in: the first three hex digits of its SHA-256. */
 export const shardOf = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`

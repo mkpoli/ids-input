@@ -31,8 +31,8 @@ The package has three layers, and an optional preview:
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
 The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
-tab. Import `fonts.css` for Tangut text. The preview draws Han sequences only: han-compose's export
-holds no Tangut outlines, so a Tangut sequence is edited and searched but not drawn.
+tab. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -251,7 +251,8 @@ own stays the character it is, and without `names` the search takes characters a
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. It reads the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
+Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -265,7 +266,8 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it the preview keeps its placeholders and shows no badge; when the export
+origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
+use the bundled outlines. When the export
 loads but a part has no drawing, its badge reads "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
@@ -322,8 +324,10 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
   SIL Open Font License 1.1.
-- `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
-  are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
+- `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
+  (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
+- `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
+  outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
   `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 

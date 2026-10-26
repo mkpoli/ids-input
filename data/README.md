@@ -138,3 +138,18 @@ with `kind: "t"` and usage counts from those records. Stroke counts and first-st
 classes are unknown. Components Supplement is accepted by the parser but is absent
 from this source edition and the palette. Both data builders include Tangut through
 `scripts/tangut.py`; the Han totals above describe the Han portion only.
+
+## `tangut-outlines.json.gz`
+
+Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
+`uv run scripts/build_tangut_outlines.py`. The file records the font checksum and
+licence (SIL OFL 1.1; see `fonts/OFL-NotoSerifTangut.txt`). It includes the font's Tangut
+characters and components, plus exact-description mappings from the IDS table.
+Malformed descriptions and descriptions naming missing glyphs are excluded from those mappings.
+
+Tangut previews load these outlines locally. Exact descriptions use the corresponding
+character's glyph; edited descriptions use the composition engine's geometric layout.
+Mixed Han–Tangut descriptions also load the host's Han export. The shared layout
+constants in `src/composer/constants.json` come from han-compose at bd0829b (MIT),
+previously used by the composer's test fixture. Tangut Components Supplement glyphs
+are absent from this font version and report a missing glyph.
