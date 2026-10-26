@@ -676,11 +676,15 @@
   </main>
 
   <footer class="foot">
-    <a href="https://github.com/mkpoli/ids-input"><Icon name="github" size={14} />ids-input</a>
-    <span aria-hidden="true">·</span>
-    <button type="button" class="link" onclick={() => aboutOpen = true}>{t('app.footer.about')}</button>
-    <span aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/han-compose">han-compose</a>
+    <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <button type="button" class="link" aria-label={t('app.footer.about')} onclick={() => aboutOpen = true}><Icon name="book" size={14} /><span class="foot-full">{t('app.footer.about')}</span><span class="foot-short" aria-hidden="true">{t('app.footer.sources')}</span></button>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />MIT</a>
+    <span class="foot-separator" aria-hidden="true">·</span>
+    <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
   </footer>
 </div>
 
@@ -785,9 +789,15 @@
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
-  .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
-  .foot .link{color:inherit}
+  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;padding:4px max(16px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-size:12px;line-height:16px;color:var(--muted)}
+  .foot a,.foot .link{display:inline-flex;align-items:center;gap:5px;color:inherit;white-space:nowrap}
+  .foot-short{display:none}
+  @media (max-width:600px){
+    .foot{column-gap:8px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+    .foot a,.foot .link{gap:4px}
+    .foot-full,.foot-separator,.repository span{display:none}
+    .foot-short{display:inline}
+  }
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}
