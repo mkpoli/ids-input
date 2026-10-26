@@ -6,6 +6,7 @@ import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, parseTree } from './c
 import { ASCENT } from './geometry.js'
 import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
+import { isRepetition } from './repetition.js'
 import { hexOf } from './sha256.js'
 
 export { LookupError } from './compose.js'
@@ -136,9 +137,16 @@ export const tooLarge = tree => { const { nodes, depth } = size(tree); return no
 
 /** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot. */
 function keysOf(tree, out = []) {
+  if (isRepetition(keyOf(tree))) return out
   if (!keyOf(tree).includes(EMPTY)) out.push(keyOf(tree))
   if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out))
   return out
+}
+
+// A dedicated form consumes its internal operators, including the mirrored spelling.
+function extraOperators(tree) {
+  if (typeof tree === 'string' || isRepetition(keyOf(tree))) return []
+  return [tree[0], ...tree.slice(1).flatMap(extraOperators)].filter(op => APPROXIMATE.includes(op))
 }
 
 /** A box in font units (y up) as the drawing's SVG box has it: [x, y, width, height], y down. */
@@ -194,7 +202,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...sequence, ...composer.approximate].filter(ch => APPROXIMATE.includes(ch)))] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(tree), ...composer.approximate])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

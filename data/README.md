@@ -214,7 +214,13 @@ Common also shows hard-to-type components used by at least 50 characters
 It includes compound IDS occurring below the root in at least 50
 characters, matching the existing component frequency cutoff. The current
 corpus supplies seven entries. The manual shortcut `⿰冫⿱丿丶` is included with
-zero corpus uses and an estimated four strokes. Compound cells show a rendered
+113 corpus uses and an estimated four strokes. BabelStone’s source component
+`{11}` (bottom of 軣, `⿰⿱丶㇀⿱㇒丶`) supplies those uses; its exact source
+spelling remains in the raw report. The shortcut count deduplicates characters
+across the source placeholder and literal spelling. Its dedicated four-dot outline
+also renders the equivalent spelling `⿰冫⿾冫`, both alone and inside larger IDS.
+These original outlines retain an open centre and omit the central hook of 氺;
+they are code-native geometry under the repository’s MIT licence. Compound cells show a rendered
 icon with an `IDS` marker; hovering reveals the sequence and stroke count.
 Picking or dragging one inserts its complete tree. Stroke counts are searchable
 with the existing numeric filter. These counts are additive estimates from the existing palette's

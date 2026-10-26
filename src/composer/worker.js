@@ -10,6 +10,7 @@ import { compose, fromUrl, sketch } from './loader.js'
 import { hasTangut, tangutSource } from './tangut.js'
 
 import { hasBopomofo, bopomofoSource } from './bopomofo.js'
+import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
 
 const sources = new Map()
@@ -21,6 +22,7 @@ self.onmessage = async ({ data: { id, sequence, base, separate, warm } }) => {
     let source = local ? null : fromUrl(base)
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
+    source ??= bundledSource({ load: async () => ({ records: {} }), matches: () => false })
     sources.set(key, source)
   }
   const source = sources.get(key)

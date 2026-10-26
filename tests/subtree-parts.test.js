@@ -1,7 +1,9 @@
 import { expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
-import { gunzipSync } from 'node:zlib'
-import { subtrees, frequencies, strokeCounter, MANUAL_PARTS } from '../scripts/build_subtree_parts.mjs'
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { pathToFileURL } from 'node:url'
+import { gzipSync, gunzipSync } from 'node:zlib'
+import { subtrees, frequencies, strokeCounter, MANUAL_PARTS, manualUses, build } from '../scripts/build_subtree_parts.mjs'
 import { parseIdsTable } from '../src/adapter/babelstone.js'
 import { parse, write, replaceAt } from '../src/core/ids.js'
 
@@ -37,16 +39,37 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => [...row[0]].length > 1)
   expect(compounds).toHaveLength(8)
-  expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 0, 4, 1, null, 'c'])
+  expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
-    if (MANUAL_PARTS.includes(text)) expect(uses).toBe(0)
+    if (MANUAL_PARTS.includes(text)) expect(uses).toBe(113)
     else expect(uses).toBeGreaterThanOrEqual(50)
     expect(strokes).toBeGreaterThan(0)
     expect(derived).toBe(1)
     expect(kind).toBe('c')
     const tree = parse(text).tree
     expect(write(replaceAt(parse('⿰木水').tree, [1], tree))).toBe(`⿰木${text}`)
-    expect(report.parts.find(row => row[0] === text)?.[1] ?? 0).toBe(uses)
+    expect(report.parts.find(row => row[0] === (MANUAL_PARTS.includes(text) ? '{11}' : text))?.[1]).toBe(uses)
   }
+})
+
+it('counts source placeholders and literal shortcuts once per character', () => {
+  const table = parseIdsTable('甲\t⿱口{11}(G) ⿱口⿰冫⿱丿丶(T)\n乙\t⿰{11}{11}(G)\n丙\t⿱口{110}(G)')
+  expect(manualUses(table, '⿰冫⿱丿丶')).toBe(2)
+})
+
+it('keeps raw counts when a literal manual shortcut crosses the frequency cutoff', () => {
+  const root = mkdtempSync(`${tmpdir()}/ids-subtrees-`)
+  try {
+    mkdirSync(`${root}/data`)
+    const lines = Array.from({ length: 50 }, (_, i) => `${String.fromCodePoint(0x4e00 + i)}\t⿱口⿰冫⿱丿丶(G)`)
+    lines.push('乙\t⿱口{11}(G)')
+    writeFileSync(`${root}/data/babelstone-ids.tsv.gz`, gzipSync(lines.join('\n')))
+    writeFileSync(`${root}/data/ids-parts.json`, JSON.stringify({ parts: [['冫', 0, 2, 0, null, 'd'], ['丿', 0, 1, 0, null, 's'], ['丶', 0, 1, 0, null, 's']] }))
+    build(pathToFileURL(root + '/'))
+    const palette = JSON.parse(readFileSync(`${root}/data/ids-parts.json`))
+    const report = JSON.parse(gunzipSync(readFileSync(`${root}/data/ids-subtrees.json.gz`)))
+    expect(palette.parts.find(row => row[0] === '⿰冫⿱丿丶')[1]).toBe(51)
+    expect(report.parts.find(row => row[0] === '⿰冫⿱丿丶')[1]).toBe(50)
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })

@@ -72,6 +72,19 @@ export function strokeCounter(table, rows) {
 
 // Useful unencoded components absent from the corpus remain explicit manual shortcuts.
 export const MANUAL_PARTS = ['⿰冫⿱丿丶']
+// IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
+export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'] }
+
+export function manualUses(table, text) {
+  const spellings = new Set([text, ...(SOURCE_ALIASES[text] ?? [])])
+  let uses = 0
+  for (const sequences of table.values()) {
+    if (sequences.some(({ text }) => {
+      try { return subtrees(text).some(node => spellings.has(node.text)) } catch { return false }
+    })) uses++
+  }
+  return uses
+}
 
 export function build(root = new URL('../', import.meta.url)) {
   const data = name => new URL(`data/${name}`, root)
@@ -85,14 +98,17 @@ export function build(root = new URL('../', import.meta.url)) {
   const usage = new Map(entries.map(entry => [entry.text, entry.uses]))
   for (const row of rows) row[1] = usage.get(row[0]) ?? 0
   const threshold = 50
-  const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem)
+  const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem).map(entry => ({ ...entry }))
   for (const text of MANUAL_PARTS) {
-    if (!selected.some(entry => entry.text === text)) selected.push({ ...subtrees(text).at(-1), uses: usage.get(text) ?? 0 })
+    const existing = selected.find(entry => entry.text === text)
+    const uses = manualUses(table, text)
+    if (existing) existing.uses = uses
+    else selected.push({ ...subtrees(text).at(-1), uses })
   }
   for (const entry of selected) rows.push([entry.text, entry.uses, count(entry), 1, null, 'c'])
   rows.sort((a, b) => (a[5] === 't') - (b[5] === 't') || (a[5] === 't' ? a[0].codePointAt(0) - b[0].codePointAt(0) : b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)))
   palette.parts = rows
-  palette.subtrees = { threshold, manual: MANUAL_PARTS, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
+  palette.subtrees = { threshold, manual: MANUAL_PARTS, sourceAliases: SOURCE_ALIASES, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
   writeFileSync(data('ids-parts.json'), JSON.stringify(palette) + '\n')
   const report = {
     columns: ['part', 'uses', 'occurrences', 'nestedUses', 'strokes'],

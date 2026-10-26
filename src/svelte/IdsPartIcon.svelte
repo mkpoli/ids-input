@@ -1,5 +1,6 @@
 <script>
   // Draw compound palette entries only when their cells enter the scroll area.
+  import { repetitionDrawing } from '../composer/repetition.js'
   import { parse } from '../core/ids.js'
   import { roughLayout, runPreview } from '../core/preview.js'
 
@@ -24,9 +25,10 @@
 
   $effect(() => {
     const text = sequence, { icon, drawing } = adapter
-    drawn = null
+    const localDrawing = repetitionDrawing(text)
+    drawn = localDrawing
     url = null
-    if (!visible) return
+    if (!visible || localDrawing) return
     const controller = new AbortController()
     runPreview(text, { preview: icon, drawing, signal: controller.signal }, patch => {
       if (patch.url) url = patch.url
