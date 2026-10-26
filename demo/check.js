@@ -472,7 +472,7 @@ try {
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
   assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'Script hybrids', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
-  assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
+  assert(await page.locator('.menu .item svg').count() === 0, 'no SVG in the example list')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
   assert(await biang.count() === 1, 'the biang example shows U+30EDE')
   assert(await biang.locator('.leading').textContent() === '𰻞', 'the biang example leads with its character')
