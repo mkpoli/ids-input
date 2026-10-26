@@ -107,5 +107,7 @@
   "app.theme.light": "Sáng",
   "app.theme.system": "Theo hệ thống",
   "app.title": "Xưởng IDS",
-  "app.toolbar": "Công cụ"
+  "app.toolbar": "Công cụ",
+  "app.source.sealFont": "76 glyph từ bản khắc của Trần Xương Trị. Việc rà soát thượng nguồn chưa hoàn tất.",
+  "app.source.smallSeal": "Phân tích Thuyết văn của Jiguge: 49 chữ và 31 bộ phận đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý."
 }
