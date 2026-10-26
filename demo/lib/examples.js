@@ -21,9 +21,15 @@
 // right component also has a dot. ASCII 3 here specifies a drawing shape, not that component's origin.
 // ⿰木き, ⿰木⿳ㄙㄨㄙ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
 // communication, 2026-10-27. No published source is recorded here.
+// ⿺辶說, ⿱龹幸, ⿶む子 and 〾⿱⿰大⿱七六⿵勹五: mkpoli, personal communication,
+// 2026-10-27. Published sources for these exact forms are not recorded here.
+// The last is a Jianzipu-style transcription; 〾 marks its approximate shape.
+// Related notation (with 四 in place of 五): 謝俊仁, 音樂展覽 – 古琴篇, Hong Kong Music Office,
+// https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
+    { sequence: '⿱龹幸', char: '' },
     { sequence: '⿱艹堀', char: '' },
     { sequence: '⿱投石', char: '' },
     { sequence: '⿲𠂤日千', char: '' },
@@ -31,6 +37,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰忄実', char: '' },
   ] },
   { key: 'complex', examples: [
+    { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
     { sequence: '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', char: '𰻞' },
     { sequence: '⿱䨺龘', char: '𱁬' },
@@ -39,6 +46,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰氵鬱', char: '灪' },
   ] },
   { key: 'repeated', examples: [
+    { sequence: '⿰⿱興興⿱興興', char: '𠔻' },
+    { sequence: '⿱七⿰七七', char: '㐂' },
     { sequence: '⿱木林', char: '森' },
     { sequence: '⿱龖龖', char: '𪚥' },
     { sequence: '⿱龍龖', char: '龘' },
@@ -50,10 +59,13 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
+    { sequence: '⿺辶說', char: '' },
+    { sequence: '⿺克千', char: '兛' },
     { sequence: '⿴囗或', char: '國' },
     { sequence: '⿴囗書', char: '圕' },
   ] },
   { key: 'mixed', examples: [
+    { sequence: '⿶む子', char: '' },
     { sequence: '⿱⿰力田𠂇', char: '𫦫' },
     { sequence: '⿳宀𭕄木', char: '𫳍' },
     { sequence: '⿰車卜', char: '𨊣' },
