@@ -368,17 +368,22 @@ try {
   await wide.context().close()
   pass('the input panel fills the row, and each pane scrolls once')
 
-  // A dense tree keeps every glyph inside its box.
-  const dense = await open('#' + encodeURIComponent('⿰言⿱⿰木木⿰木木'))
-  await dense.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰言⿱⿰木木⿰木木', null, { timeout: 15000 })
-  const overflowing = await dense.locator('.ids-part').evaluateAll(els => els.filter(el => {
-    const box = el.getBoundingClientRect(), cell = el.parentElement.getBoundingClientRect()
-    return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 ||
-      box.left < cell.left - 1 || box.right > cell.right + 1 || box.top < cell.top - 1 || box.bottom > cell.bottom + 1
-  }).length)
-  assert(overflowing === 0, `parts overflowing their boxes: ${overflowing}`)
-  await dense.context().close()
-  pass('a dense tree keeps its glyphs inside their boxes')
+  // Nested headers, enclosures and glyphs must fit, including the dense biang structure.
+  for (const sequence of ['⿰言⿱⿰木木⿰木木', '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', '⿴囗'.repeat(8) + '木']) {
+    for (const width of [1440, 768, 375]) {
+      const dense = await open('#' + encodeURIComponent(sequence), { width })
+      await dense.waitForFunction(sequence => document.querySelector('.ids-field input')?.value === sequence, sequence)
+      const overflowing = await dense.locator('.ids-node, .ids-head, .ids-part').evaluateAll(els => els.filter(el => {
+        if (!el.getClientRects().length) return false
+        const box = el.getBoundingClientRect(), cell = el.parentElement.getBoundingClientRect()
+        return el.scrollWidth > el.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1 ||
+          box.left < cell.left - 1 || box.right > cell.right + 1 || box.top < cell.top - 1 || box.bottom > cell.bottom + 1
+      }).map(el => el.className))
+      assert(overflowing.length === 0, `tree overflow at ${width} for ${sequence}: ${overflowing}`)
+      await dense.context().close()
+    }
+  }
+  pass('complex trees keep headers, enclosures and glyphs inside their boxes')
 
   // The tree panel switches to an indented, editable tree of the same description.
   const treePage = await open()
