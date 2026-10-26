@@ -26,8 +26,16 @@
 // The last is a Jianzipu-style transcription; 〾 marks its approximate shape.
 // Related notation (with 四 in place of 五): 謝俊仁, 音樂展覽 – 古琴篇, Hong Kong Music Office,
 // https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html
+// ⿱成龙 (duang): https://chii.in/group/topic/342213 (2017-02-17).
+// ⿰氵恩 (𰜩, U+30729): https://github.com/adobe-type-tools/Adobe-KR#special-notes
+// ⿰要勿 (覅): https://www.cns11643.gov.tw/wordView.jsp?ID=149313
+// ⿹⿺㇉一卄 (與 variant), JYN00001; ⿰扌⿸厃⿱儿𢀛 (擔 variant), JYN00010:
+// https://jyutnet.github.io/unencoded-characters/ (dictionary evidence linked per record).
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
+    { sequence: '⿱成龙', char: '' },
+    { sequence: '⿰氵恩', char: '𰜩' },
+    { sequence: '⿰要勿', char: '覅' },
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
     { sequence: '⿱龹幸', char: '' },
     { sequence: '⿱艹堀', char: '' },
@@ -37,6 +45,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰忄実', char: '' },
   ] },
   { key: 'complex', examples: [
+    { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
     { sequence: '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', char: '𰻞' },
@@ -59,6 +68,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
+    { sequence: '⿹⿺㇉一卄', char: '' },
     { sequence: '⿺辶說', char: '' },
     { sequence: '⿺克千', char: '兛' },
     { sequence: '⿴囗或', char: '國' },
