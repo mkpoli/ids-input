@@ -1,5 +1,5 @@
 <script>
-  import { parse } from '../core/ids.js'
+  import { parse, arity } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
@@ -44,7 +44,20 @@
   }
   /** @param {string} text */
   function replaceText(text) {
-    if (!field || field.selectionStart === field.selectionEnd || parse(unalias(text), { open: true }).problem) return false
+    if (!field || !text || parse(unalias(text), { open: true }).problem) return false
+    if (field.selectionStart === field.selectionEnd) {
+      const offset = field.selectionStart ?? 0
+      const inserted = unalias(text)
+      const candidate = unalias(editor.draft.slice(0, offset) + text + editor.draft.slice(offset))
+      if (parse(editor.draft, {open:true}).problem || (!arity(inserted) && !parse(candidate, {open:true}).problem)) return false
+      editor.selectText(offset, offset)
+      if (arity(inserted)) editor.operator(inserted)
+      else editor.take(text)
+      field.value = editor.draft
+      const range = editor.selectionRange
+      if (range) field.setSelectionRange(range.start, range.end)
+      return true
+    }
     expandSelection()
     if (editor.chosen === null) return false
     const start = field.selectionStart ?? 0
@@ -69,7 +82,7 @@
   /** @param {CompositionEvent} event */
   function endComposition(event) {
     composing = false
-    if (field && compositionRange && compositionRange.start !== compositionRange.end && event.data) {
+    if (field && compositionRange && event.data) {
       const composed = field.value
       field.value = editor.draft
       field.setSelectionRange(compositionRange.start, compositionRange.end)
@@ -102,7 +115,7 @@
     editor.hover(spans[index]?.path ?? null)
   }
   /** @param {Event} [event] */
-  const edit = event => { if (!/** @type {InputEvent | undefined} */ (event)?.isComposing && field) editor.edit(field) }
+  const edit = event => { if (!/** @type {InputEvent | undefined} */ (event)?.isComposing && field) { editor.edit(field); select() } }
 </script>
 
 <label class="ids-field">
