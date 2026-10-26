@@ -106,6 +106,10 @@
   "ids.undo.named": "元に戻す：{step}",
   "ids.unwrap": "この階層を外す",
   "ids.unwrapNode": "{what}を外す",
+  "ids.view": "表示",
+  "ids.view.shape": "図",
+  "ids.view.tree": "ツリー",
+
   "ids.use": "この字形にする",
   "parts.byStrokes": "画数",
   "parts.failed": "部品を読み込めませんでした。",

@@ -309,7 +309,9 @@ a chosen one, with a margin, empty slots left out unless asked for. The toolbar 
 with the history of named steps, saved drafts (also read from and written to a text file), examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
 the language, a system, light or dark theme, preferences (key hints on
-buttons, where the preview draws from) and the sources. The tree and search panels in the middle
+buttons, where the preview draws from) and the sources. The tree panel switches between the Shape
+of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
+keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
 double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
 sequence
