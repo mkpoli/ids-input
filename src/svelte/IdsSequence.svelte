@@ -36,11 +36,17 @@
   }
   // Expand a partial token or crossing range before the browser replaces it.
   function expandSelection() {
+    if (field) editor.selectText(field.selectionStart ?? 0, field.selectionEnd ?? 0)
     const range = editor.selectionRange
     if (field && field.selectionStart !== field.selectionEnd && range) field.setSelectionRange(range.start, range.end)
   }
   /** @param {InputEvent} event */
   function beforeInput(event) {
+    if (event.inputType === 'historyUndo' || event.inputType === 'historyRedo') {
+      event.preventDefault()
+      if (event.inputType === 'historyUndo') editor.undo(); else editor.redo()
+      return
+    }
     expandSelection()
     if (!event.isComposing && event.inputType.startsWith('delete') && field && field.selectionStart !== field.selectionEnd && editor.chosen !== null) {
       event.preventDefault()
@@ -67,7 +73,7 @@
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={expandSelection} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => { expandSelection(); composing = true }} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
-    onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
+    onkeydown={event => { if (!event.isComposing && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); if (event.shiftKey) editor.redo(); else editor.undo(); return } if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
 
