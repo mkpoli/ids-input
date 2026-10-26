@@ -137,9 +137,20 @@
   "parts.strokeCount.other": "{count} nét",
   "parts.tab.tangut": "Tây Hạ",
   "parts.tab.common": "Thường dùng",
-  "parts.tab.difficult": "Khó nhập",
+  "parts.tab.difficult": "Số nét",
   "parts.tab.recent": "Gần đây",
   "parts.tab.strokes": "Nét",
+  "parts.tab.seal": "Triện",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
-  "parts.uses.other": "dùng trong {count} chữ"
+  "parts.uses.other": "dùng trong {count} chữ",
+  "ids.characters.none": "Không có chữ phù hợp.",
+  "ids.characters.placeholder": "Cách đọc, bính âm, nghĩa…",
+  "ids.pick.characters": "Chữ",
+  "parts.seal.basic": "Cơ bản",
+  "parts.seal.compound": "Phức hợp",
+  "parts.seal.other": "Khác",
+  "parts.seal.groups": "Nhóm tiểu triện",
+  "parts.seal.filter": "Lọc theo tiểu triện hoặc chữ Hán",
+  "parts.seal.estimate": "≈ Phân nhóm suy từ chữ Hán hiện đại",
+  "parts.seal.inferred": "Phân nhóm suy từ IDS chữ Hán hiện đại: {ids}"
 }

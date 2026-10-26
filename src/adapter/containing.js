@@ -36,8 +36,9 @@ const add = (into, from) => { for (const [k, n] of from) into.set(k, (into.get(k
 /**
  * A component search over `table` (char → its sequences, region tags dropped).
  * @param {Map<string, string[]>} table
+ * @param {{ fold?: (char: string) => string }} [options]
  */
-export function componentIndex(table) {
+export function componentIndex(table, { fold = char => char } = {}) {
   /** @type {Map<string, Described>} */
   const described = new Map()
   /** @type {Map<string, Tree[]>} */
@@ -61,9 +62,9 @@ export function componentIndex(table) {
       // A description leading back to a character being expanded describes nothing new.
       if (path.has(leaf)) return [{ held: new Map(), size: 1, top: new Set() }, true]
       const [inner, short] = describe(leaf, new Set([...path, char]))
-      const held = new Map([[leaf, 1]])
+      const held = new Map([[fold(leaf), 1]])
       add(held, inner.held)
-      return [{ held, size: 1 + inner.size, top: new Set([leaf]) }, short]
+      return [{ held, size: 1 + inner.size, top: new Set([fold(leaf)]) }, short]
     }
     const parts = []
     let short = false
@@ -78,7 +79,7 @@ export function componentIndex(table) {
       const [whole, taken] = parts
       const held = new Map(whole.held)
       const minuend = /** @type {Tree[]} */ (value)[0]
-      if (minuend[0] === 'leaf') held.delete(/** @type {string} */ (minuend[1]))
+      if (minuend[0] === 'leaf') held.delete(fold(/** @type {string} */ (minuend[1])))
       for (const [k, n] of taken.held) held.set(k, (held.get(k) ?? 0) - n)
       for (const [k, n] of held) if (n <= 0) held.delete(k)
       return [{ held, size: Math.max(whole.size - taken.size, 1), top: new Set() }, short]
@@ -107,7 +108,7 @@ export function componentIndex(table) {
     return [found, short]
   }
   /** @param {string} char */
-  const components = char => { const held = new Map(describe(char, new Set())[0].held); held.delete(char); return held }
+  const components = char => { const held = new Map(describe(char, new Set())[0].held); held.delete(fold(char)); return held }
 
   // Which characters name each component directly, so the characters holding one are found by
   // walking up from it.
@@ -118,8 +119,8 @@ export function componentIndex(table) {
     users = new Map()
     for (const [char, sequences] of table) for (const text of sequences) for (const token of tokens(text)) {
       if (arity(token) || token === char) continue
-      let set = users.get(token)
-      if (!set) users.set(token, set = new Set())
+      let set = users.get(fold(token))
+      if (!set) users.set(fold(token), set = new Set())
       set.add(char)
     }
     return users
@@ -127,7 +128,7 @@ export function componentIndex(table) {
   /** Every character holding `part` at any depth. @param {string} part */
   const holders = part => {
     const direct = usersOf(), out = new Set(), queue = [part]
-    while (queue.length) for (const char of direct.get(/** @type {string} */ (queue.pop())) ?? []) if (!out.has(char)) { out.add(char); queue.push(char) }
+    while (queue.length) for (const char of direct.get(/** @type {string} */ (queue.pop())) ?? []) if (!out.has(char)) { out.add(char); queue.push(fold(char)) }
     out.delete(part)
     return out
   }
@@ -174,7 +175,7 @@ export function componentIndex(table) {
     if (chars.length < 2 || chars.length > PARTS) return { items: [], more: false }
     /** @type {Map<string, number>} */
     const wanted = new Map()
-    for (const c of chars) wanted.set(c, (wanted.get(c) ?? 0) + 1)
+    for (const c of chars) wanted.set(fold(c), (wanted.get(fold(c)) ?? 0) + 1)
     const lists = [...wanted.keys()].map(part => ({ part, n: /** @type {number} */ (wanted.get(part)), chars: holders(part) })).sort((a, b) => a.chars.size - b.chars.size)
     const order = /** @param {string} a @param {string} b */ (a, b) => tier(a) - tier(b) || size(a) - size(b) || /** @type {number} */ (a.codePointAt(0)) - /** @type {number} */ (b.codePointAt(0))
     const scanned = [...lists[0].chars].sort(order).slice(0, SCAN)

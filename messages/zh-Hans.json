@@ -119,7 +119,6 @@
   "ids.view": "视图",
   "ids.view.shape": "结构图",
   "ids.view.tree": "树形",
-
   "ids.use": "采用此字形",
   "parts.byStrokes": "笔画数",
   "parts.failed": "无法加载部件。",
@@ -139,9 +138,19 @@
   "parts.tab.seal": "小篆",
   "parts.tab.tangut": "西夏",
   "parts.tab.common": "常用",
-  "parts.tab.difficult": "难输入",
+  "parts.tab.difficult": "笔画数",
   "parts.tab.recent": "最近",
   "parts.tab.strokes": "笔画",
   "parts.unknownStrokes": "未记录笔画数",
-  "parts.uses.other": "用于{count}个字"
+  "parts.uses.other": "用于{count}个字",
+  "ids.characters.none": "没有匹配的字。",
+  "ids.characters.placeholder": "读音、拼音或意义…",
+  "ids.pick.characters": "字",
+  "parts.seal.basic": "基础",
+  "parts.seal.compound": "复合",
+  "parts.seal.other": "其他",
+  "parts.seal.groups": "小篆分类",
+  "parts.seal.filter": "按小篆或汉字筛选",
+  "parts.seal.estimate": "≈ 根据现代汉字推定的分类",
+  "parts.seal.inferred": "根据现代汉字IDS推定分类：{ids}"
 }

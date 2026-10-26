@@ -119,7 +119,6 @@
   "ids.view": "보기",
   "ids.view.shape": "도형",
   "ids.view.tree": "트리",
-
   "ids.use": "이 자형으로 하기",
   "parts.byStrokes": "획수",
   "parts.failed": "구성 요소를 불러오지 못했습니다.",
@@ -139,9 +138,19 @@
   "parts.tab.seal": "소전",
   "parts.tab.tangut": "서하",
   "parts.tab.common": "자주 쓰는",
-  "parts.tab.difficult": "입력하기 어려운",
+  "parts.tab.difficult": "획수",
   "parts.tab.recent": "최근",
   "parts.tab.strokes": "획",
   "parts.unknownStrokes": "획수 기록 없음",
-  "parts.uses.other": "{count}자에 쓰임"
+  "parts.uses.other": "{count}자에 쓰임",
+  "ids.characters.none": "맞는 글자가 없습니다.",
+  "ids.characters.placeholder": "읽기·병음·뜻…",
+  "ids.pick.characters": "글자",
+  "parts.seal.basic": "기본",
+  "parts.seal.compound": "복합",
+  "parts.seal.other": "기타",
+  "parts.seal.groups": "소전 분류",
+  "parts.seal.filter": "소전 또는 한자로 필터",
+  "parts.seal.estimate": "≈ 현대 한자로 추정한 분류",
+  "parts.seal.inferred": "현대 한자 IDS로 추정한 분류: {ids}"
 }

@@ -121,7 +121,6 @@
   "ids.view": "View",
   "ids.view.shape": "Shape",
   "ids.view.tree": "Tree",
-
   "ids.use": "Use this form",
   "parts.byStrokes": "Stroke count",
   "parts.failed": "The parts could not be loaded.",
@@ -142,10 +141,20 @@
   "parts.tab.seal": "Small Seal",
   "parts.tab.tangut": "Tangut",
   "parts.tab.common": "Common",
-  "parts.tab.difficult": "Hard to type",
+  "parts.tab.difficult": "Stroke count",
   "parts.tab.recent": "Recent",
   "parts.tab.strokes": "Strokes",
   "parts.unknownStrokes": "Stroke count not recorded",
   "parts.uses.one": "used in {count} character",
-  "parts.uses.other": "used in {count} characters"
+  "parts.uses.other": "used in {count} characters",
+  "ids.characters.none": "No characters match.",
+  "ids.characters.placeholder": "Reading, pinyin or meaning…",
+  "ids.pick.characters": "Characters",
+  "parts.seal.basic": "Basic",
+  "parts.seal.compound": "Compound",
+  "parts.seal.other": "Other",
+  "parts.seal.groups": "Small Seal groups",
+  "parts.seal.filter": "Filter by seal or CJK character",
+  "parts.seal.estimate": "≈ Group inferred from modern CJK",
+  "parts.seal.inferred": "Grouping inferred from modern IDS: {ids}"
 }

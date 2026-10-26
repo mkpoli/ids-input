@@ -18,17 +18,18 @@ The package has four layers, and an optional preview:
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
-  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
+  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ), and a
+  character by its readings or meanings.
 - **document**: the layer model behind `.ids.json` documents: stable layer IDs, transforms, IDS
   import and projection, and identity-preserving edits. The editor does not use it yet.
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
-  static files, so nothing needs a server.
+  adapter reads BabelStone IDS, the parts palette, component forms, names, script folds and the
+  character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
-  decomposition browser, a search) and the preview, each placeable on its own or together as
-  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese,
-  Korean and Vietnamese.
+  decomposition browser, a search, a character search) and the preview, each placeable on its own
+  or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
+  Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
@@ -65,8 +66,9 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
   import folds from 'ids-input/data/component-name-folds.tsv?url'
+  import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -122,7 +124,10 @@ and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps 
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. The components take colours from CSS custom properties with light and dark defaults
+also work without an editor. Compound palette cells show an `IDS` marker and expose
+the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+without it, the cells use a font-based layout. Icon rendering must accept concurrent
+requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
 `--ids-font` and others; see the top of each component's style). The defaults use `light-dark()`,
 so the page needs `color-scheme: light dark` for its dark scheme.
@@ -150,9 +155,16 @@ written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part mis
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
-Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
+Its current Unicode mapping supports **49 character descriptions and 1,334 drawable palette forms**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
-finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`.
+finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
+`𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
+uses 1,353 mapped seal forms; some have no resolved decomposition or bundled glyph.
+
+The Small Seal palette opens on 138 selected basic parts. Compound parts and
+unclassified forms have separate groups. Type a modern character such as 木 or 口
+to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
+these estimates do not enter the seal decomposition table.
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -165,14 +177,19 @@ const adapter = smallSealAdapter({
 ```
 
 `data` accepts a URL or the decoded JSON document. The remaining options are those of
-`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index. Modern-character correspondences help component search;
-each script keeps its own decompositions. Import `fonts.css` to display the supported
+`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index.
+Component and IDS searches match mapped seal and modern forms in either direction:
+`玉玉`, `𽁭𽁭`, and `⿰玉𽁭` can find the seal 玨. Mappings join the existing radical-form
+groups; a seal form with several modern spellings makes those spellings match one
+another too. Repeated components are counted across the group. These groups concern
+glyph correspondence; modern spellings can differ in meaning.
+Each script keeps its own decompositions, result glyphs, and exact `encoded()` lookup. Import `fonts.css` to display the supported
 seal characters. Their bundled outlines support previews and SVG/PNG export; mixed
 Han–seal compositions also need the host's Han export.
 
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
-excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
+excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
 provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents
@@ -197,9 +214,13 @@ functions (`replaceNode`, `replaceWithSequence`, `decompose`, `wrapNode`, `unwra
 `changeOperator`, `deleteLayer`) keep the selected layer's ID, name and transform. Pass one
 allocator across a session (`allocatorFor(document, retainedIds)`) so a removed ID is not reused.
 
-The model reads and writes the document shape and validates its structure and transforms. The current
-editor still edits positional trees and the current preview still draws canvas-space paths; a
-document renderer, storage and the editor binding are the next layer.
+The model reads and writes the document shape and validates its structure and transforms. The
+transform engine evaluates affine, projective and Möbius chains on paths: affine chains stay exact,
+a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
+hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
+local geometry and each operator child's placement, applies the nested layer transforms, and reports
+missing geometry or unsupported transforms. Compositing (including ㇯), storage and the editor binding
+are not part of these modules yet.
 
 ## Adapters
 
@@ -208,9 +229,11 @@ interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
   search?(query, options?): Promise<{ char: string, label?: string }[]>
+  searchCharacters?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
+  icon?(sequence, options?): Promise<Drawing | null>    // concurrent palette icons, separate from preview
   preview?(sequence, options?): Promise<Drawing>          // rejects when it cannot draw
 }
 
@@ -241,9 +264,10 @@ Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen par
 keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
 for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
 
-`babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
-`U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
-is given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+`babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
+(a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん
+when `names` is given), `searchCharacters` (a character by a reading or meaning when `characters` is
+given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -258,6 +282,54 @@ there instead. It has no `variants`, `drawing` or `preview`.
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
+
+IDS queries accept visual substitutes. The kana families follow the encoded
+components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
+and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).
+All 46 basic kana are covered; the table below lists their search alternatives.
+
+| Kana | Components | Kana | Components |
+|---|---|---|---|
+| ア | 了 ㇌ 卩 刀 丫 | イ | 亻 𠂆 人 入 㐄 井 |
+| ウ | 宀 | エ | 工 |
+| オ | 才 扌 | カ | 力 尸 |
+| キ | 十 弋 | ク | 𠂊 勹 |
+| ケ | 亼 个 | コ | 凵 囗 〇 |
+| サ | 卄 廾 艹 䒑 | シ | 氵 辶 辶 丨 |
+| ス | 大 丌 | セ | 七 土 士 廿 |
+| ソ | 丷 | タ | 夕 月 |
+| チ | 千 干 | ツ | 灬 小 川 巛 𫶧 |
+| テ | 亍 于 | ト | 卜 ⺊ 𠂉 |
+| ナ | 𠂇 | ニ | 二 |
+| ヌ | 又 | ネ | 礻 |
+| ノ | 丿 ㇢ 亅 | ハ | 八 |
+| ヒ | 匕 匚 匸 | フ | 乛 丆 厂 |
+| ヘ | 乀 乁 一 ㇀ | ホ | 木 朩 𣎳 |
+| マ | 龴 丅 丁 | ミ | 三 彡 |
+| ム | 厶 | メ | 乂 |
+| モ | 乇 王 壬 | ヤ | 巾 㔾 |
+| ユ | 丄 亠 | ヨ | 彐 ⺕ 日 |
+| ラ | 广 | リ | 刂 |
+| ル | 儿 几 𠘧 | レ | 𠄌 ㇗ ㇄ 乚 𡿨 乙 |
+| ロ | 口 | ワ | 冖 冂 |
+| ヲ | 丩 丬 山 屮 | ン | 冫 丶 |
+
+`ヰ` also searches for `井`. Hangul aliases remain available:
+`ㅅ → 人`, `ㅆ → 从`, `스 → 亼`, `ㅁ → 口`, `ㅇ → 〇`,
+`ㅣ → 丨`, `ㅡ → 一`, `ㄱ → 𠃍`, `ㄴ → 𠃊`, and `ㄷ → 匚`.
+Conjoining jamo and corresponding halfwidth forms work too; decomposed `스`
+searches like `스`. Attached variation selectors are preserved. Kana followed
+by a voicing mark keep their literal search behavior.
+
+Each shape requests one of its alternatives. For example, `⿰イ木` can match
+`⿰亻木` or `⿰井木`; `イイ` needs two matching components, and `イ人` cannot
+reuse one `人` for both requests. Literal Han queries retain their distinctions.
+The original IDS and result descriptions remain unchanged.
+
+This is component and structural search using Ashide's shape families. Its
+five-keystroke selection rules and unencoded stroke fragments are outside this
+search table. Direct insertion, name lookup, rendering, and exact `encoded`
+lookup retain their existing behavior.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
@@ -310,6 +382,15 @@ jiaosipang, baogaitou, sandianshui, nobun, nogi, ukanmuri, 수, thủy and Bộ 
 components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph or kana typed on
 its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
 characters and code points only.
+
+### Characters
+
+The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: the common
+characters Unicode marks with `kIICore` (9,810, all with an IDS description), with 102,456 readings,
+pinyin, romanizations, Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and
+thủy find 水; person finds 人; silk finds 糸. Results are characters, not the forms the Find tab
+opens; among equally close names the more common character comes first, by KANJIDIC2's newspaper
+frequency or Unihan's school grade. Without `characters` the tab is not shown.
 
 ## Preview
 
@@ -375,6 +456,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Code: MIT (`LICENSE`).
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
   (`data/COPYING-small-seal.txt`).
+- `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
+  (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
@@ -394,6 +477,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
+- `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
+  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 102,456
+  rows, 831 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
@@ -406,7 +492,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
-`scripts/build_ids_data.py`, `scripts/build_ids_parts.py` and `scripts/build_component_names.py` (`uv run scripts/…`) rebuild them.
+`scripts/build_ids_data.py`, `scripts/build_ids_parts.py`, `scripts/build_component_names.py` and
+`scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
 
@@ -419,7 +506,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
-  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component names.
+  definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component and character
+  names.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.
@@ -470,6 +558,28 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The example `⿰亻A` uses ASCII A.
 - mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
+- mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
+  `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.
+  The musical form is an approximate Jianzipu-style transcription. 謝俊仁's
+  [音樂展覽 – 古琴篇](https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html),
+  Hong Kong Music Office, explains a related 減字譜 symbol with 大七六 above 勹四;
+  the example here uses 五. The `〾` marker is preserved in the IDS and marks approximate rendering.
+- [Bangumi discussion, 2017-02-17](https://chii.in/group/topic/342213): `⿱成龙` (duang).
+- [Adobe-KR](https://github.com/adobe-type-tools/Adobe-KR#special-notes): `⿰氵恩`, now
+  encoded as 𰜩 (U+30729). The documentation's pending-encoding note is historical.
+- [CNS11643 character record](https://www.cns11643.gov.tw/wordView.jsp?ID=149313):
+  覅, `⿰要勿`.
+- [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
+  `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
+  `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
+- [BabelStone Erjian](https://www.babelstone.co.uk/Fonts/Erjian.html), entries 2.2:007 and
+  2.2:003: `⿺辶比` (避) and `⿱艹半` (瓣). Jyutnet records JYN00013 and JYN00017 supply
+  `⿵門覃` and `⿰舟邊`. 嫑 (`⿱不要`) follows BabelStone IDS.
+- BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
+  臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
+  of all 17 IDCs; the approximation marker `〾` is represented separately.
+  [IRG N2572, p.2](https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2) also illustrates
+  the descriptions of 㕚, 氷 and 𧰧.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
@@ -502,7 +612,7 @@ settings and the sources. Settings hold the system, light and dark themes, key h
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
 use the `ids-input:` prefix.
 
 ## Inspired by
@@ -576,7 +686,6 @@ bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
-bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at

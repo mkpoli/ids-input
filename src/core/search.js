@@ -17,11 +17,13 @@
 import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
 import { tokens } from './decompose.js'
+import { searchShape, SHAPE_COMPONENTS } from './search-shapes.js'
 
 /**
  * @typedef {string | { op: string, parts: Tree[], from?: string }} Tree A component, or a node; `from` names the component a node was opened from.
- * @typedef {null | string | { op: string, parts: Pattern[] }} Pattern A query's structure; null matches any part.
- * @typedef {{ kind: 'structure', text: string, tree: Pattern, leaves: string[] } | { kind: 'components', text: string, leaves: string[] }} Term
+ * @typedef {string | import('./search-shapes.js').Shape} QueryLeaf
+ * @typedef {null | QueryLeaf | { op: string, parts: Pattern[] }} Pattern A query's structure; null matches any part.
+ * @typedef {{ kind: 'structure', text: string, tree: Pattern, leaves: QueryLeaf[] } | { kind: 'components', text: string, leaves: QueryLeaf[] }} Term
  * @typedef {{ char: string, sequence: string, spans: [number, number][], score: number }} Hit
  */
 
@@ -51,20 +53,29 @@ export function parseQuery(text) {
   /** @type {Term[]} */
   const terms = []
   for (const term of written) {
+    // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
+    const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
+    const typed = tokens(matching), list = typed.map((token, i) => searchShape(token, typed[i + 1]))
     if (isSequence(term)) {
-      /** @type {(t: Tree) => Pattern} */
-      const pattern = t => typeof t === 'string' ? (EMPTY_MARKS.includes(t) || t === UNKNOWN ? null : t) : { op: t.op, parts: t.parts.map(pattern) }
-      const list = tokens(term), cursor = { at: 0 }
-      const tree = pattern(readTree(list, cursor))
+      const cursor = { at: 0 }
+      /** @returns {Pattern} */
+      const read = () => {
+        const token = list[cursor.at++] ?? UNKNOWN
+        if (typeof token !== 'string') return token
+        const n = arity(token)
+        return n ? { op: token, parts: Array.from({ length: n }, read) }
+          : EMPTY_MARKS.includes(token) || token === UNKNOWN ? null : token
+      }
+      const tree = read()
       if (cursor.at < list.length) return { terms, problem: 'extra' }
-      /** @type {string[]} */
+      /** @type {QueryLeaf[]} */
       const leaves = []
       /** @param {Pattern} p */
-      const collect = p => { if (typeof p === 'string') leaves.push(p); else if (p) p.parts.forEach(collect) }
+      const collect = p => { if (p === null) return; if (typeof p === 'string' || 'anyOf' in p) leaves.push(p); else p.parts.forEach(collect) }
       collect(tree)
       terms.push({ kind: 'structure', text: term, tree, leaves })
     } else {
-      const leaves = tokens(term).filter(t => isComponent([...t][0]) && t !== UNKNOWN && !EMPTY_MARKS.includes(t))
+      const leaves = list.filter(t => typeof t !== 'string' || ((isComponent([...t][0]) || SHAPE_COMPONENTS.has([...t][0])) && t !== UNKNOWN && !EMPTY_MARKS.includes(t)))
       if (leaves.length) terms.push({ kind: 'components', text: term, leaves })
     }
   }
@@ -99,6 +110,31 @@ export function readForms(text) {
 }
 
 /**
+ * Assign each request one compatible resource without exceeding its count. With partial=true,
+ * return a maximum matching and mark unmatched requests -1 (for ranking and highlighting).
+ * @param {number[][]} needs @param {(id: number) => number} capacity @param {boolean} [partial]
+ * @returns {number[] | null}
+ */
+function allocate(needs, capacity, partial = false) {
+  /** @type {Map<number, number[]>} */
+  const owners = new Map()
+  const assigned = needs.map(() => -1)
+  /** @param {number} request @param {Set<number>} seen @returns {boolean} */
+  const place = (request, seen) => {
+    for (const id of needs[request]) {
+      if (seen.has(id) || capacity(id) <= 0) continue
+      seen.add(id)
+      const held = owners.get(id) ?? []
+      if (held.length < capacity(id)) { held.push(request); owners.set(id, held); assigned[request] = id; return true }
+      for (let i = 0; i < held.length; i++) if (place(held[i], seen)) { held[i] = request; assigned[request] = id; return true }
+    }
+    return false
+  }
+  for (let i = 0; i < needs.length; i++) if (!place(i, new Set()) && !partial) return null
+  return assigned
+}
+
+/**
  * A search over `table` (char → its descriptions, region tags dropped) folding components by `forms`
  * (from `readForms`). The index of what each character holds is built on the first query.
  * @param {Map<string, string[]>} table
@@ -107,6 +143,8 @@ export function readForms(text) {
 export function createSearch(table, { forms = new Map() } = {}) {
   /** @param {string} c */
   const fold = c => forms.get(c) ?? forms.get([...c][0]) ?? c
+  /** @param {QueryLeaf} leaf */
+  const choices = leaf => [...new Set((typeof leaf === 'string' ? [leaf] : leaf.anyOf).map(fold))]
   /** @type {Map<string, Tree[]>} */
   const trees = new Map()
   /** @param {string} char @returns {Tree[]} */
@@ -203,6 +241,172 @@ export function createSearch(table, { forms = new Map() } = {}) {
   }
 
   /**
+   * Keep nested alternate descriptions mutually exclusive. States count fulfilled query groups,
+   * not distributions of Han components: all six イ alternatives are interchangeable when the
+   * query only repeats イ. Counts are capped by demand; dominated partial matches are discarded.
+   * @param {number[][]} needs
+   */
+  function consistentRun(needs) {
+    /** @type {number[][]} */
+    const groups = []
+    /** @type {number[]} */
+    const limits = []
+    const byGroup = new Map()
+    for (const choices of needs) {
+      const sorted = choices.slice().sort((a, b) => a - b), name = sorted.join(',')
+      let i = byGroup.get(name)
+      if (i === undefined) { i = groups.length; byGroup.set(name, i); groups.push(sorted); limits.push(0) }
+      limits[i]++
+    }
+    const ids = new Set(needs.flat()), zero = groups.map(() => 0)
+    /** @typedef {{ states: number[][], cut: boolean }} Matches */
+    /** @type {Map<string, number[][]>} */
+    const cache = new Map()
+    /** @param {number[]} state */
+    const full = state => state.every((n, i) => n === limits[i])
+    /** @param {number[][]} into @param {number[]} state */
+    const keep = (into, state) => {
+      if (into.some(other => state.every((n, i) => other[i] >= n))) return
+      for (let i = into.length - 1; i >= 0; i--) if (into[i].every((n, j) => state[j] >= n)) into.splice(i, 1)
+      into.push(state)
+    }
+    /** @param {number[][]} left @param {number[][]} right */
+    const add = (left, right) => {
+      /** @type {number[][]} */
+      const out = []
+      for (const a of left) for (const b of right) {
+        const state = a.map((n, i) => Math.min(limits[i], n + b[i]))
+        if (full(state)) return [state]
+        keep(out, state)
+      }
+      return out
+    }
+    /** @param {number | undefined} id @param {Set<number>} blocked */
+    const direct = (id, blocked) => {
+      if (id === undefined || blocked.has(id)) return [zero]
+      const matching = groups.flatMap((choices, i) => choices.includes(id) ? [zero.map((_, j) => i === j ? 1 : 0)] : [])
+      return matching.length ? matching : [zero]
+    }
+    /** @param {string} char @param {Set<string>} path @param {Set<number>} blocked @returns {Matches} */
+    const describe = (char, path, blocked) => {
+      if (path.has(char) || path.size > 12) return { states: [zero], cut: true }
+      // As in holdingsIn, a component's expansion never supplies another copy of itself.
+      const own = keyOf.get(fold(char)), without = new Set(blocked)
+      if (own !== undefined && ids.has(own)) without.add(own)
+      const cacheKey = char + ':' + [...without].sort((a, b) => a - b).join(',')
+      const known = cache.get(cacheKey)
+      if (known) return { states: known, cut: false }
+      const maximum = held.get(char) ?? EMPTY_HELD
+      if (![...ids].some(id => !without.has(id) && countIn(maximum, id))) return { states: [zero], cut: false }
+      const inner = new Set([...path, char])
+      /** @type {number[][]} */
+      const states = []
+      let cut = false
+      for (const tree of treesOf(char)) {
+        const result = walk(tree, char, inner, without)
+        cut ||= result.cut
+        for (const state of result.states) keep(states, state)
+      }
+      const out = states.length ? states : [zero]
+      if (!cut) cache.set(cacheKey, out)
+      return { states: out, cut }
+    }
+    /** @param {Tree} tree @param {string} char @param {Set<string>} path @param {Set<number>} blocked @returns {Matches} */
+    const walk = (tree, char, path, blocked) => {
+      if (typeof tree === 'string') {
+        if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return { states: [zero], cut: false }
+        const inner = describe(tree, path, blocked)
+        return { states: add(direct(keyOf.get(fold(tree)), blocked), inner.states), cut: inner.cut }
+      }
+      if (tree.op === '㇯') return { states: [zero], cut: false }
+      let states = [zero], cut = false
+      for (const part of tree.parts) {
+        const inner = walk(part, char, path, blocked)
+        states = add(states, inner.states)
+        cut ||= inner.cut
+      }
+      return { states, cut }
+    }
+    // Cheap necessary bounds count the most resources available in one compatible expansion.
+    // Per-key maxima alone incorrectly add resources from mutually exclusive descriptions.
+    const bounds = [[...ids], ...groups].map((wanted, i) => {
+      const target = new Set(wanted), demand = i === 0 ? needs.length : limits[i - 1]
+      /** @type {Map<string, number>} */
+      const memo = new Map()
+      /** @param {Tree} tree @param {string} char @param {Set<string>} path @param {Set<number>} blocked @returns {{ count: number, cut: boolean }} */
+      const maximum = (tree, char, path, blocked) => {
+        if (typeof tree !== 'string') {
+          if (tree.op === '㇯') return { count: 0, cut: false }
+          let count = 0, cut = false
+          for (const part of tree.parts) {
+            const result = maximum(part, char, path, blocked)
+            count += result.count; cut ||= result.cut
+          }
+          return { count: Math.min(demand, count), cut }
+        }
+        if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return { count: 0, cut: false }
+        const id = keyOf.get(fold(tree)), direct = id !== undefined && target.has(id) && !blocked.has(id) ? 1 : 0
+        if (path.has(tree) || path.size > 12) return { count: direct, cut: true }
+        const without = new Set(blocked)
+        if (id !== undefined && target.has(id)) without.add(id)
+        const name = tree + ':' + [...without].sort((a, b) => a - b).join(',')
+        const known = memo.get(name)
+        if (known !== undefined) return { count: Math.min(demand, direct + known), cut: false }
+        let count = 0, cut = false
+        const inner = new Set([...path, tree])
+        for (const description of treesOf(tree)) {
+          const result = maximum(description, tree, inner, without)
+          count = Math.max(count, result.count); cut ||= result.cut
+        }
+        if (!cut) memo.set(name, count)
+        return { count: Math.min(demand, direct + count), cut }
+      }
+      return { maximum, demand }
+    })
+    // A complete greedy assignment is a valid witness. Incomplete assignments still use the
+    // exact frontier below, so traversal order can never remove a legitimate result.
+    /** @param {Tree} tree @param {string} char @param {Set<string>} path @param {Set<number>} blocked @param {number[]} state @returns {number[]} */
+    const witness = (tree, char, path, blocked, state) => {
+      if (full(state)) return state
+      if (typeof tree !== 'string') {
+        if (tree.op === '㇯') return state
+        for (const part of tree.parts) state = witness(part, char, path, blocked, state)
+        return state
+      }
+      if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return state
+      const id = keyOf.get(fold(tree))
+      let next = state.slice()
+      if (id !== undefined && !blocked.has(id)) {
+        const available = groups.map((_, i) => i).filter(i => next[i] < limits[i] && groups[i].includes(id))
+        available.sort((a, b) => groups[a].length - groups[b].length)
+        if (available.length) next[available[0]]++
+      }
+      if (full(next) || path.has(tree) || path.size > 12) return next
+      const without = new Set(blocked)
+      if (id !== undefined && ids.has(id)) without.add(id)
+      const maximum = held.get(tree) ?? EMPTY_HELD
+      if (![...ids].some(k => !without.has(k) && countIn(maximum, k))) return next
+      const inner = new Set([...path, tree]), start = next
+      let score = next.reduce((a, b) => a + b, 0)
+      for (const description of treesOf(tree)) {
+        const trial = witness(description, tree, inner, without, start)
+        if (full(trial)) return trial
+        const got = trial.reduce((a, b) => a + b, 0)
+        if (got > score) { next = trial; score = got }
+      }
+      return next
+    }
+    /** @param {Tree} tree @param {string} char */
+    return (tree, char) => {
+      const own = keyOf.get(fold(char)), blocked = new Set(own !== undefined && ids.has(own) ? [own] : [])
+      const path = new Set([char])
+      if (bounds.some(({ maximum, demand }) => maximum(tree, char, path, blocked).count < demand)) return false
+      if (full(witness(tree, char, path, blocked, zero))) return true
+      return walk(tree, char, path, blocked).states.some(full)
+    }
+  }
+
+  /**
    * `pattern` matched against `data`: the data subtree, components opened where the pattern needed
    * them, or null. `opened` counts the components opened.
    * @param {Pattern} pattern @param {Tree} data @param {number} depth @param {{ opened: number }} cost
@@ -210,7 +414,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
    */
   function match(pattern, data, depth, cost) {
     if (pattern === null) return data
-    if (typeof pattern === 'string') return typeof data === 'string' && fold(data) === fold(pattern) ? data : null
+    if (typeof pattern === 'string' || 'anyOf' in pattern) return typeof data === 'string' && choices(pattern).includes(fold(data)) ? data : null
     if (typeof data !== 'string') {
       if (data.op !== pattern.op || data.parts.length !== pattern.parts.length) return null
       // ⿻ lays its parts over each other, so either order is the same shape.
@@ -311,31 +515,33 @@ export function createSearch(table, { forms = new Map() } = {}) {
     const { terms, problem } = parseQuery(query)
     if (problem) return { hits: [], total: 0, problem }
     const by = index()
-    // What every term needs held, counted, as the first filter: the components and the operators.
-    /** @type {Map<string, number>} */
-    const need = new Map()
-    for (const term of terms) {
-      /** @type {Map<string, number>} */
-      const counts = new Map()
-      for (const leaf of term.leaves) counts.set(fold(leaf), (counts.get(fold(leaf)) ?? 0) + 1)
+    // Each leaf needs one of its alternatives. Keep the descriptions' keys separate: an イ
+    // query may find 人 or 井, but a literal 人 query must never start finding 井.
+    const requested = terms.map(term => term.leaves.map(leaf => choices(leaf)
+      .map(k => keyOf.get(k)).filter((id) => id !== undefined)))
+    const consistent = terms.map((term, i) => term.kind === 'components' && requested[i].length > 1
+      ? consistentRun(requested[i]) : null)
+    const required = requested.map((leaves, i) => {
+      const all = leaves.slice(), term = terms[i]
       if (term.kind === 'structure') {
         /** @param {Pattern} p */
-        const ops = p => { if (p && typeof p !== 'string') { counts.set(p.op, (counts.get(p.op) ?? 0) + 1); p.parts.forEach(ops) } }
+        const ops = p => { if (p && typeof p !== 'string' && !('anyOf' in p)) { const id = keyOf.get(p.op); all.push(id === undefined ? [] : [id]); p.parts.forEach(ops) } }
         ops(term.tree)
       }
-      for (const [k, n] of counts) if (n > (need.get(k) ?? 0)) need.set(k, n)
-    }
-    /** @type {[number, number][]} */
-    const wanted = []
-    for (const [k, n] of need) { const id = keyOf.get(k); if (id === undefined) return { hits: [], total: 0 }; wanted.push([id, n]) }
-    wanted.sort((a, b) => (by.of.get(a[0])?.length ?? 0) - (by.of.get(b[0])?.length ?? 0))
-    const first = by.of.get(wanted[0][0])
-    if (!first) return { hits: [], total: 0 }
+      return all
+    })
+    if (required.some(needs => needs.some(ids => !ids.length))) return { hits: [], total: 0 }
+    // Start with the rarest union of alternative postings, never their Cartesian product.
+    const groups = new Map(required.flat().map(ids => [ids.join(','), ids]))
+    const rarest = [...groups.values()].sort((a, b) =>
+      a.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0) - b.reduce((n, id) => n + (by.of.get(id)?.length ?? 0), 0))[0]
+    if (!rarest) return { hits: [], total: 0 }
+    const first = new Set(rarest.flatMap(id => [...(by.of.get(id) ?? [])]))
     /** @type {{ char: string, tree: Tree, paths: number[][], score: number }[]} */
     const found = []
     for (const c of first) {
       const char = by.chars[c], holds = /** @type {Int32Array} */ (held.get(char))
-      if (wanted.some(([k, n]) => countIn(holds, k) < n)) continue
+      if (required.some(needs => !allocate(needs, id => countIn(holds, id)))) continue
       // Every structure term placed in one of the character's descriptions; the closest wins.
       /** @type {{ tree: Tree, paths: number[][], score: number } | null} */
       let best = null
@@ -359,22 +565,24 @@ export function createSearch(table, { forms = new Map() } = {}) {
         const runs = terms.filter(term => term.kind === 'components')
         if (runs.length) {
           const holds = holdingsIn(tree, char, new Set([char]))
-          if (runs.some(term => {
-            /** @type {Map<string, number>} */
-            const want = new Map()
-            for (const leaf of term.leaves) want.set(fold(leaf), (want.get(fold(leaf)) ?? 0) + 1)
-            return [...want].some(([k, n]) => (holds.get(keyOf.get(k) ?? -1) ?? 0) < n)
-          })) continue
+          if (terms.some((term, i) => term.kind === 'components'
+            && (!allocate(requested[i], id => holds.get(id) ?? 0) || consistent[i]?.(tree, char) === false))) continue
         }
-        // A components term costs less where its components stand in the description itself.
-        for (const term of terms) if (term.kind === 'components') {
-          /** @type {string[]} */
-          const top = []
+        // Match top-level components with the same allocation used for counts. An ambiguous
+        // alias cannot consume a component needed by a more specific request.
+        terms.forEach((term, i) => {
+          if (term.kind !== 'components') return
+          /** @type {Map<number, number>} */
+          const top = new Map()
           /** @param {Tree} t */
-          const collect = t => { if (typeof t === 'string') top.push(fold(t)); else t.parts.forEach(collect) }
+          const collect = t => {
+            if (typeof t === 'string') { const id = keyOf.get(fold(t)); if (id !== undefined) top.set(id, (top.get(id) ?? 0) + 1) }
+            else t.parts.forEach(collect)
+          }
           collect(tree)
-          for (const leaf of term.leaves) { const i = top.indexOf(fold(leaf)); if (i >= 0) top.splice(i, 1); else score += 1 }
-        }
+          const assigned = allocate(requested[i], id => top.get(id) ?? 0, true)
+          score += (assigned ?? []).filter(id => id === -1).length
+        })
         score = score * 10 + count(tree)
         if (best === null || score < best.score) best = { tree: root, paths, score }
       }
@@ -387,16 +595,23 @@ export function createSearch(table, { forms = new Map() } = {}) {
     // Only the hits handed back are written out, with their spans.
     const hits = found.slice(0, limit).map(({ char, tree, paths, score }) => {
       const { text, spans } = written(tree, paths)
-      // A components term is shown on the leaves that hold its components.
-      for (const term of terms) if (term.kind === 'components') {
-        const want = term.leaves.map(fold)
+      // Allocate highlighted occurrences too, so overlapping alias families do not reuse a leaf.
+      terms.forEach((term, i) => {
+        if (term.kind !== 'components') return
+        const writtenTokens = tokens(text)
+        /** @type {Map<number, number>} */
+        const counts = new Map()
+        for (const token of writtenTokens) { const id = keyOf.get(fold(token)); if (id !== undefined) counts.set(id, (counts.get(id) ?? 0) + 1) }
+        const assigned = allocate(requested[i], id => counts.get(id) ?? 0, true) ?? []
+        const wanted = new Map()
+        for (const id of assigned) if (id !== -1) wanted.set(id, (wanted.get(id) ?? 0) + 1)
         let at = 0
-        for (const token of tokens(text)) {
-          const len = [...token].length, i = want.indexOf(fold(token))
-          if (i >= 0) { spans.push([at, at + len]); want.splice(i, 1) }
+        for (const token of writtenTokens) {
+          const len = [...token].length, id = keyOf.get(fold(token))
+          if (id !== undefined && wanted.get(id)) { spans.push([at, at + len]); wanted.set(id, wanted.get(id) - 1) }
           at += len
         }
-      }
+      })
       return { char, sequence: text, spans, score }
     })
     return { hits, total: found.length }

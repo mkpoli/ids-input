@@ -146,3 +146,15 @@ describe('the description search', () => {
     expect((await adapter.findByIds('⿰⺡骨')).hits.map(h => h.char)).toEqual(['滑'])
   })
 })
+
+
+it('limits visual aliases to IDS search, leaving direct and exact lookups intact', async () => {
+  const adapter = babelStoneAdapter({ table: parseIdsTable('休\t⿰亻木(G)\n合\t⿱亼口(G)\n'),
+    formsText: 'form\tchar\tsource\tdetail\n亻\t人\tfixture\tleft\n' })
+  expect((await adapter.findByIds('⿰ㅅ木')).hits[0].char).toBe('休')
+  expect((await adapter.findByIds('⿱스口')).hits[0].char).toBe('合')
+  expect((await adapter.search('스')).map(hit => hit.char)).toEqual(['스'])
+  expect(await adapter.encoded('⿱스口')).toEqual([])
+  expect(await adapter.encoded('⿱亼口')).toEqual(['合'])
+  expect(await adapter.structure('스')).toEqual([])
+})

@@ -7,6 +7,7 @@
   import { tick, untrack } from 'svelte'
   import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
+  import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -15,6 +16,7 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
+  import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
@@ -49,7 +51,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
+  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -58,10 +60,10 @@
   const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split */
-  const previewAt = (at, split) => {
-    const key = `${at}\0${split ? '1' : '0'}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split }))
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  const previewAt = (at, split, style) => {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
@@ -77,15 +79,17 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
-  function previewFor(at, split) {
-    const key = `${at}\0${split ? '1' : '0'}`
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  function previewFor(at, split, style) {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
     if (known) return known
     // The compact Serif export covers the BMP; a sequence outside it draws from the sans export.
-    const usable = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff) ? COMPOSER_BASE : at
-    const composed = previewAt(usable, split)
-    if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    const outsideSerif = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff)
+    const usableAt = outsideSerif ? COMPOSER_BASE : at
+    const usableStyle = outsideSerif ? 'sans' : style
+    const composed = previewAt(usableAt, split, usableStyle)
+    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -98,20 +102,22 @@
     previewsWithExamples.set(key, preview)
     return preview
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate) })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** @param {string} at */
-  const iconsAt = at => {
-    if (!iconDrawings.has(at)) {
-      const composed = composerPreview({ base: at })
-      iconDrawings.set(at, createIconDrawings(async sequence =>
-        (exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
+  /** @param {string} at @param {'sans' | 'serif'} style */
+  const iconsAt = (at, style) => {
+    const key = `${at}\0${style}`
+    if (!iconDrawings.has(key)) {
+      const composed = composerPreview({ base: at, fontStyle: style })
+      iconDrawings.set(key, createIconDrawings(async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
     }
-    return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const icons = $derived(iconsAt(base))
+  const componentStyle = $derived(face === 'serif' ? 'serif' : 'sans')
+  const icons = $derived(iconsAt(base, componentStyle))
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -178,6 +184,8 @@
   $effect(() => save('keyHints', keyHints ? undefined : false))
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
+  let exampleCards = $state(load('exampleCards', false))
+  $effect(() => save('exampleCards', exampleCards ? true : undefined))
   // The share of the middle column given to the tree; the search takes the rest.
   let split = $state(clampSplit(load('split', 60)))
   /** @type {HTMLElement | null} */ let middleEl = $state(null)
@@ -483,14 +491,16 @@
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
       lang,
+      drawing: prepared.get(example.sequence),
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, group.key === 'tangut' ? 'txg' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
   ]))
+  const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -579,7 +589,7 @@
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
+        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
       <div class="font-switch" role="group" aria-label={t('app.font')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
@@ -618,7 +628,7 @@
           {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">
@@ -705,7 +715,7 @@
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
