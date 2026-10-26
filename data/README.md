@@ -77,3 +77,18 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 (Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
+
+## Tangut
+
+The same IDS table also includes 6,145 records from Andrew West's
+[BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt).
+The pinned source digest is recorded in the table header and `scripts/tangut.py`.
+These factual decompositions carry no regional tags. Eight malformed source sequences
+are preserved verbatim (𗆽 𗈫 𗈬 𗌜 𗓜 𗱋 𗽉 𗽧); they cannot be loaded as complete editor trees.
+Single-component descriptions are also preserved.
+
+The palette adds 768 Tangut components (U+18800–U+18AFF), ordered by code point,
+with `kind: "t"` and usage counts from those records. Stroke counts and first-stroke
+classes are unknown. Components Supplement is accepted by the parser but is absent
+from this source edition and the palette. Both data builders include Tangut through
+`scripts/tangut.py`; the Han totals above describe the Han portion only.
