@@ -381,8 +381,8 @@ try {
   pass('a component found by its code point replaces the chosen part')
 
   // The preview without its export: placeholders and no badge, since nothing could be tried. The
-  // default base has prepared drawings, so use a base that is not prepared and let the route abort it.
-  const bad = await open(`?composer=${encodeURIComponent('https://glyphatlas.org/atlas/composer/not-prepared/')}`)
+  // default base has prepared drawings, so use a same-origin base that is not prepared.
+  const bad = await open(`?composer=${encodeURIComponent(`${url}composer-not-there/`)}`)
   await bad.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
   assert(await bad.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
   assert(await bad.locator('.ids-preview-badge').count() === 0, 'no badge without data')
