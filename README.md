@@ -17,6 +17,10 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
+Tangut characters and components are accepted in IDS. The bundled data includes Tangut
+decompositions, a Tangut parts tab, and examples. Import `fonts.css` for Tangut text
+coverage; composed previews still depend on the host’s han-compose dataset.
+
 Demo: <https://ids.mkpo.li/>
 
 [![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
@@ -167,7 +171,8 @@ different components to it.
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
-asks it for the tree being edited.
+searches for the selected part, or the whole tree when nothing is selected. Each operator frame
+shows its subsequence in muted text. Selecting an empty slot clears the search.
 
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions

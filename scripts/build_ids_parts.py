@@ -529,6 +529,8 @@ def main(argv: list[str] | None = None) -> int:
         unihan_fields(unihan_path),
         {char: cls for char, (cls, _, _) in agreed.items() if cls},
     )
+    from tangut import read_tangut, tangut_parts, SOURCE
+    rows.extend(tangut_parts(read_tangut(args.cache)))
     document = {
         "columns": ["part", "uses", "strokes", "derived", "first", "kind"],
         "common": f"常用漢字 (Unihan kJoyoKanji) or 通用规范汉字表 level 1 (Unihan kTGH ≤ {TGH_FIRST_LEVEL})",
@@ -537,6 +539,7 @@ def main(argv: list[str] | None = None) -> int:
             f"hfhchan/ids v1.0.2, MIT, Copyright (c) 2021 Henry Chan, {HFHCHAN_URL}",
             f"Unihan {UNICODE_VERSION}, Unicode License v3, Copyright Unicode, Inc., {UNIHAN_URL}",
             f"KanjiVG r20260714, CC BY-SA 3.0, Copyright (C) 2009-2013 Ulrich Apel, {KANJIVG_URL}; the first column adapts it and is shared alike under CC BY-SA 3.0",
+            SOURCE,
         ],
         "parts": rows,
     }

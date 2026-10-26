@@ -19,3 +19,11 @@ Plane, Extension A included, comes from the reader's own CJK font.
   subset, SIL Open Font License 1.1 (`OFL-Plangothic.txt`). The font declares no Reserved Font Name.
   Source SHA-256s: P1 `550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6`, P2
   `681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f`.
+
+`NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
+examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google
+LLC, SIL Open Font License 1.1 (`OFL-NotoSerifTangut.txt`), from
+[notofonts/noto-fonts](https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut).
+It covers all 768 original Tangut components. Rebuild with
+`uv run scripts/build_tangut_font.py`; the script pins the source SHA-256.
+This text font does not supply the separate han-compose outline dataset.
