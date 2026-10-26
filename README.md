@@ -278,28 +278,53 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
-IDS queries accept these visual substitutes, including halfwidth forms where available:
+IDS queries accept visual substitutes. The kana families follow the encoded
+components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
+and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).
+All 46 basic kana are covered; the table below lists their search alternatives.
 
-| Shapes typed | Component searched |
-|---|---|
-| `ㅅ` | `人` |
-| `ㅆ` | `从` |
-| `스` | `亼` |
-| `ㅁ`, `ロ` | `口` |
-| `ㅇ` | `〇` |
-| `ㅣ`, `ㅡ` | `丨`, `一` respectively |
-| `ㄱ`, `ㄴ`, `ㄷ` | `𠃍`, `𠃊`, `匚` respectively |
-| `エ`, `カ`, `タ`, `ト` | `工`, `力`, `夕`, `卜` respectively |
-| `ニ`, `ハ`, `ヌ`, `ノ` | `二`, `八`, `又`, `丿` respectively |
-| `ム`, `ヒ`, `ヨ` | `厶`, `匕`, `彐` respectively |
+| Kana | Components | Kana | Components |
+|---|---|---|---|
+| ア | 了 ㇌ 卩 刀 丫 | イ | 亻 𠂆 人 入 㐄 井 |
+| ウ | 宀 | エ | 工 |
+| オ | 才 扌 | カ | 力 尸 |
+| キ | 十 弋 | ク | 𠂊 勹 |
+| ケ | 亼 个 | コ | 凵 囗 〇 |
+| サ | 卄 廾 艹 䒑 | シ | 氵 辶 辶 丨 |
+| ス | 大 丌 | セ | 七 土 士 廿 |
+| ソ | 丷 | タ | 夕 月 |
+| チ | 千 干 | ツ | 灬 小 川 巛 𫶧 |
+| テ | 亍 于 | ト | 卜 ⺊ 𠂉 |
+| ナ | 𠂇 | ニ | 二 |
+| ヌ | 又 | ネ | 礻 |
+| ノ | 丿 ㇢ 亅 | ハ | 八 |
+| ヒ | 匕 匚 匸 | フ | 乛 丆 厂 |
+| ヘ | 乀 乁 一 ㇀ | ホ | 木 朩 𣎳 |
+| マ | 龴 丅 丁 | ミ | 三 彡 |
+| ム | 厶 | メ | 乂 |
+| モ | 乇 王 壬 | ヤ | 巾 㔾 |
+| ユ | 丄 亠 | ヨ | 彐 ⺕ 日 |
+| ラ | 广 | リ | 刂 |
+| ル | 儿 几 𠘧 | レ | 𠄌 ㇗ ㇄ 乚 𡿨 乙 |
+| ロ | 口 | ワ | 冖 冂 |
+| ヲ | 丩 丬 山 屮 | ン | 冫 丶 |
 
-The corresponding conjoining Hangul jamo also work. Decomposed `스` searches
-like `스`; other complete syllables keep their identity. Attached variation
-selectors are preserved. For example, `⿰ㅅ木` finds `休` through the existing
-`人`/`亻` component forms, and `⿰カロ` finds `加`.
-These are approximate visual aliases for IDS search. Entered text, stored
-descriptions, rendering, exact `encoded` lookup, and Korean or Japanese name
-searches retain their spelling.
+`ヰ` also searches for `井`. Hangul aliases remain available:
+`ㅅ → 人`, `ㅆ → 从`, `스 → 亼`, `ㅁ → 口`, `ㅇ → 〇`,
+`ㅣ → 丨`, `ㅡ → 一`, `ㄱ → 𠃍`, `ㄴ → 𠃊`, and `ㄷ → 匚`.
+Conjoining jamo and corresponding halfwidth forms work too; decomposed `스`
+searches like `스`. Attached variation selectors are preserved. Kana followed
+by a voicing mark keep their literal search behavior.
+
+Each shape requests one of its alternatives. For example, `⿰イ木` can match
+`⿰亻木` or `⿰井木`; `イイ` needs two matching components, and `イ人` cannot
+reuse one `人` for both requests. Literal Han queries retain their distinctions.
+The original IDS and result descriptions remain unchanged.
+
+This is component and structural search using Ashide's shape families. Its
+five-keystroke selection rules and unencoded stroke fragments are outside this
+search table. Direct insertion, name lookup, rendering, and exact `encoded`
+lookup retain their existing behavior.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
