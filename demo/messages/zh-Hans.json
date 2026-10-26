@@ -28,6 +28,8 @@
   "app.examples.repeated": "重复部件",
   "app.examples.enclosures": "包围结构",
   "app.examples.mixed": "混合文字",
+  "app.examples.cards": "卡片",
+  "app.examples.list": "列表",
   "app.examples.tangut": "西夏文",
   "app.examples.none": "（未编码）",
   "app.export.background": "背景",

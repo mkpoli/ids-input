@@ -175,6 +175,8 @@
   $effect(() => { document.documentElement.dataset.font = face })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
+  let exampleCards = $state(load('exampleCards', false))
+  $effect(() => save('exampleCards', exampleCards ? true : undefined))
   // The share of the middle column given to the tree; the search takes the rest.
   let split = $state(clampSplit(load('split', 60)))
   /** @type {HTMLElement | null} */ let middleEl = $state(null)
@@ -480,6 +482,7 @@
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
       lang,
+      drawing: prepared.get(example.sequence),
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
@@ -488,6 +491,7 @@
     { heading: t(`app.examples.${group.key}`) },
     ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
   ]))
+  const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -575,7 +579,7 @@
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
+        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
       <div class="font-switch" role="group" aria-label={t('app.font')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
@@ -701,7 +705,7 @@
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
