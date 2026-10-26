@@ -111,18 +111,18 @@
 
 <style>
   .tabbar{display:flex;align-items:stretch;gap:6px;flex:1;min-width:0;height:100%}
-  .tabs{display:flex;align-items:stretch;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;
+  .tabs{display:flex;align-items:flex-end;gap:4px;flex:0 1 auto;min-width:0;height:100%;overflow-x:auto;overflow-y:hidden;
     scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
-  .tab{position:relative;flex:none;width:72px;height:40px;border-right:1px solid var(--line);color:var(--muted)}
+  .tab{position:relative;flex:none;width:76px;height:36px;border:1px solid transparent;border-bottom:0;border-radius:10px 10px 0 0;color:var(--muted)}
   .tab:not(.on):hover{background:var(--hover);color:var(--ink)}
-  .tab.on{background:var(--surface);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
+  .tab.on{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
   .tab-main{display:flex;align-items:center;width:100%;height:100%;padding:6px 24px 4px 11px;border:0;background:none;color:inherit;cursor:pointer}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{display:grid;place-items:center;flex:none;width:26px;height:26px}
   .tab:not(.on) .tab-icon{opacity:.6}
-  .tab-dot{position:absolute;right:12px;bottom:7px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
-  .tab-close{position:absolute;z-index:2;top:6px;right:7px;display:grid;place-items:center;width:18px;height:18px;padding:0;border:0;border-radius:5px;
+  .tab-dot{position:absolute;right:12px;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--accent)}
+  .tab-close{position:absolute;z-index:2;top:4px;right:7px;display:grid;place-items:center;width:18px;height:18px;padding:0;border:0;border-radius:5px;
     background:none;color:var(--muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
   .tab.on .tab-close,.tab:hover .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--hover);color:var(--ink)}

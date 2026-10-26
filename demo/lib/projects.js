@@ -1,5 +1,4 @@
-// Drafts saved per viewer: each a sequence with the time it was saved, the newest first. They can be
-// written to a text file, one sequence a line, and read back from one.
+// Drafts kept in this browser, newest first.
 import { load, save } from './storage.js'
 
 /** @typedef {{ id: string, sequence: string, saved: number }} Draft */
@@ -27,9 +26,3 @@ export function forget(id) {
   save('drafts', list)
   return list
 }
-
-/** Drafts as a text file's contents, one sequence a line. @param {Draft[]} list */
-export const toText = list => list.map(d => d.sequence).join('\n') + '\n'
-
-/** The sequences of a text file, one a line, blank lines and `#` comments left out. @param {string} text */
-export const fromText = text => text.split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'))

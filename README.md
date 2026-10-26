@@ -275,8 +275,10 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens preferences. Toolbar buttons show their keys
-on hover.
+Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
+on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
+part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
+menus support arrow keys, Home/End and Escape.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
@@ -367,10 +369,11 @@ arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Toolbar buttons show their
-keys on hover. The toolbar holds Undo and Redo with the history of named steps, saved drafts (also
-read from and written to a text file), examples (each with its character and code point, or marked
-when it has none), a share link with its QR code, the language, a system, light or dark theme,
-preferences (key hints on buttons, where the preview draws from) and the sources. An example opens a
+keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
+commands. The toolbar holds Undo and Redo with the history of named steps, examples (each with its
+character and code point, or marked when it has none), a share link with its QR code, the language,
+settings and the sources. Settings hold the system, light and dark themes, key hints, and the
+preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. Settings, drafts and the theme stay in `localStorage`; the keys
