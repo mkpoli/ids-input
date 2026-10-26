@@ -149,7 +149,7 @@ export class Composer {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.parse(sequence))
-    const out = this.node(this.standaloneMouthGrid(tree) ?? this.normalizeMouthGrids(tree), this.face.slice(), true)
+    const out = this.node(this.standalonePyramid(tree) ?? this.standaloneMouthGrid(tree) ?? this.normalizeMouthGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
     const ownership = this.separate ? this.leafOwners(tree) : null
@@ -372,6 +372,13 @@ export class Composer {
     }
     const owners = walk(tree)
     return valid ? { owners, split } : null
+  }
+
+  /** Whole-character lookup for attested expanded pyramid-glyphs; nested editing keeps its leaves. */
+  standalonePyramid(node) {
+    const equivalents = {"⿱木⿰木木": "森", "⿱日⿰日日": "晶", "⿱金⿰金金": "鑫", "⿱水⿰水水": "淼", "⿱火⿰火火": "焱", "⿱土⿰土土": "垚", "⿱女⿰女女": "姦", "⿱子⿰子子": "孨", "⿱口⿰口口": "品", "⿱吉⿰吉吉": "嚞", "⿱隹⿰隹隹": "雥", "⿱魚⿰魚魚": "鱻", "⿱牛⿰牛牛": "犇", "⿱馬⿰馬馬": "驫", "⿱羊⿰羊羊": "羴", "⿱犬⿰犬犬": "猋", "⿱貝⿰貝貝": "贔", "⿱毛⿰毛毛": "毳", "⿱手⿰手手": "掱", "⿱耳⿰耳耳": "聶", "⿱虫⿰虫虫": "蟲", "⿱車⿰車車": "轟", "⿱力⿰力力": "劦"}
+    const char = equivalents[keyOf(node)]
+    return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
   /** A complete four-mouth character uses its designed glyph, including separated previews. */
