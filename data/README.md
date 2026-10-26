@@ -82,8 +82,9 @@ rows), each row naming its source.
 ## component-names.tsv
 
 The names, words and readings people use for components, for the parts finder's search: 絞絲 and
-绞丝 for 糸, ノ文 and のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀, and water, silk,
-みず, shui, mizu, jiaosipang for the same components. 5,456 rows, 237 KB (46 KB gzipped), built by
+绞丝 for 糸, ノ文 and のぶん for 攵, ノ木 and のぎ for 禾, 宝盖 and 寶蓋 for 宀, 倒八 for 丷,
+卷字头 for 龹, and water, silk, みず, shui, mizu, jiaosipang, 수, thủy, Bộ Thủy, Kangxi radical 120
+for the same components. 6,642 rows, 298 KB (58 KB gzipped), built by
 `scripts/build_component_names.py`. Format: `name`, `char`, `source`, `detail`, one name for one
 component per row; comments start with `#`.
 
@@ -106,13 +107,14 @@ Sources:
 - KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: further Japanese radical names (`rad_name`), and the English meanings,
-  Japanese readings and pinyin of the radicals.
+  Japanese, Korean and Vietnamese readings and pinyin of the radicals (みず, 수, thủy).
 - The redirects to the Japanese Wikipedia articles on the 214 radicals, read 2026-10-26, CC BY-SA
   4.0 (`https://ja.wikipedia.org/`): ノ文 and のぶん to 攴部, ノ木偏 to 禾部, 草冠 to 艸部.
 - catusf/tudien `dict/radical_name.txt` at a214ee3 (`https://github.com/catusf/tudien`), CC0 1.0: the
   Chinese names of the radicals (宝盖头, 绞丝旁, 反文旁).
 - amzxyz/rime-wanxiang `lua/data/others.txt` at 275c61b (`https://github.com/amzxyz/rime-wanxiang`),
-  CC BY 4.0, by amzxyz: its radical-nickname block (宝盖, 绞丝, 秃宝盖).
+  CC BY 4.0, by amzxyz: its radical-nickname block (宝盖, 绞丝, 秃宝盖) and the names it gives
+  non-radical parts (倒八, 卷字头, 石字头, 仓字底).
 - Mararsh/MyBox `docs/data2d/ChineseRadicals_example_zh.csv` at 107ddc3
   (`https://github.com/Mararsh/MyBox`), Apache 2.0: one Chinese name for each radical (鱼字旁,
   鸟字旁, 门字框, 骨字旁).
@@ -120,7 +122,12 @@ Sources:
   2026-10-26, CC BY-SA 4.0 (`https://zh.wikipedia.org/`): 絞絲旁, 三點水, 寶蓋頭.
 - Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
   Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
-  kDefinition, kMandarin, kJapaneseOn and kJapaneseKun of each radical (water, silk, shui, sui, mizu).
+  kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese of each radical
+  (water, silk, shui, sui, mizu, 수, thủy).
+- Wikidata labels and aliases for the 214 radicals, read 2026-10-27, CC0 1.0
+  (`https://www.wikidata.org/`): English (Kangxi radical 120), Japanese (いとがしら), Chinese,
+  Korean (실사) and Vietnamese (Bộ Thủy) names. The exact values are kept in
+  `data/component-name-wikidata.json`; Latin aliases in other languages are left out.
 - pypinyin 0.55.0 (`https://github.com/mozillazg/python-pinyin`), MIT: the pinyin of each Chinese
   name (baogaitou, jiaosipang, sandianshui), derived from the name.
 - A Hepburn and Kunrei table in the build script, after the kana names and readings: nobun, sanzui,
@@ -128,20 +135,30 @@ Sources:
   another dictionary's names.
 - OpenCC 1.4.2 (`https://github.com/BYVoid/OpenCC`), Apache 2.0, by BYVoid: the traditional
   or simplified spelling of a Chinese name where it differs, marked in `detail`. Characters that are
-  radicals in their own right (几, 厂, 干, 尸, 里, 凶, 虫) are kept as they are, since 几 must not
-  become 幾 and 尸 must not become 屍. A redirect naming another radical than the article it points
-  to (男部 to 女部, 鳥偏 to 酉部) is left out.
+  radicals in their own right (几, 厂, 干, 尸, 里, 凶, 虫, 斗, 鬥) are kept as they are, since 几
+  must not become 幾 and 斗 must not become 鬥. A redirect naming another radical than the article
+  it points to (男部 to 女部, 鳥偏 to 酉部) is left out.
 
 The kanji-tools, tudien, rime-wanxiang, MyBox, KANJIDIC2 and Unihan files are pinned by revision or
 SHA-256 in the script. The exact Wikipedia redirects used are kept in
-`data/component-name-redirects.json`, read 2026-10-26 (CC BY-SA 4.0); `--refresh` fetches them again
-and rewrites that file, and also rebuilds the folds.
+`data/component-name-redirects.json`, read 2026-10-26 (CC BY-SA 4.0), and Wikidata's labels and
+aliases in `data/component-name-wikidata.json`, read 2026-10-27 (CC0 1.0); `--refresh` fetches both
+again and rewrites them, and also rebuilds the folds.
+
+## component-name-wikidata.json
+
+The labels and aliases of the 214 radicals' Wikidata items, in English, Japanese, Chinese (all three
+variants), Korean and Vietnamese, read 2026-10-27. The build keeps a value when it is a name of the
+radical: an English `Kangxi radical N`, a Japanese or Chinese spelling, a Korean radical name
+(실사, 사람인) or a Vietnamese `Bộ …` name. Values that are only the radical character, namespace
+page paths, Latin aliases in other languages and values over 40 characters are left out. CC0 1.0,
+214 items, 131 KB.
 
 ## component-name-folds.tsv
 
 The characters folded together before a component name is compared: the traditional and simplified
 spellings of a character, the positional forms of a component, and the Japanese shinjitai forms the
-other tables leave apart. 591 folds, 15 KB, built by `scripts/build_component_names.py`. Format:
+other tables leave apart. 593 folds, 15 KB, built by `scripts/build_component_names.py`. Format:
 `form`, `char`, `source`; comments start with `#`.
 
 - Source `component-forms`: `component-forms.tsv`, so 氵, 氺 and 水 fold together, as do 糹 and 纟
@@ -192,3 +209,56 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## Small Seal
+
+`small-seal.json.gz` contains the Jiguge (汲古閣) edition's IDS from
+[CHISE-IDS](https://gitlab.chise.org/CHISE/ids), maintained by MORIOKA Tomohiko and
+contributors. It is GPL-2.0-or-later; see `COPYING-small-seal.txt`. The complete input
+IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
+
+| Coverage | Count |
+| --- | ---: |
+| Source character records | 11,114 |
+| Explicit, unambiguous entity-to-Unicode mappings | 816 |
+| Editor-ready descriptions / head characters | 49 |
+| Seal components used by those descriptions | 31 |
+| Empty descriptions | 337 |
+| Descriptions with an unmapped head character | 10,010 |
+| Descriptions with unresolved component identifiers | 747 |
+
+There are 29 additional apparent-form descriptions, so the description statuses total
+11,143. An empty field does not distinguish an atomic character from unfinished data.
+The editor's 49 descriptions are machine-validated imports, without a separate
+palaeographic review.
+
+Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
+
+- [`IDS-SW-JIGUGE.txt`](https://gitlab.chise.org/CHISE/ids/-/blob/ac35413635608512f5e10187812cfab3b6ea47c1/IDS-SW-JIGUGE.txt),
+  CHISE-IDS revision `ac35413635608512f5e10187812cfab3b6ea47c1`.
+- [`ShuoWen-SR001.el` through `ShuoWen-SR540.el`](https://gitlab.chise.org/CHISE/xemacs-chise/-/tree/0dc65c74293d3b74eda1a9861273675a5b26fd99/lisp/utf-2000),
+  XEmacs CHISE revision `0dc65c74293d3b74eda1a9861273675a5b26fd99`.
+
+The importer reads Lisp as data. A seal code point must occur as a direct `=ucs`
+property on the same record as the exact `=shuowen-jiguge` identifier (or an explicitly
+named edition identifier). Nested properties, glyph inheritance, modern Han equivalents,
+and ambiguous mappings cannot establish identity. Unresolved references remain literal
+`&…;` strings. Only complete, supported Unicode IDS enters `table`.
+
+JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
+labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
+character or null, original structural description, and a `descriptions` list. Each
+description preserves `original`, `kind` (`structural` or `apparent`), resolved `text`,
+`status`, and any `unresolved` identifiers. `unsupported` covers resolved expressions
+that the editor cannot parse. These audit records remain available even when the
+character has no usable description.
+
+Rebuild with `python3 scripts/build_small_seal.py`; downloads are cached and checked
+against pinned SHA-256 digests. `--cache` and `--out` select their locations. The source
+archive is written beside the output. Test mapping safeguards with
+`python3 -m unittest discover -s scripts -p test_small_seal.py`.
+
+`small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
+mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
+for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
+quality, licensing and rebuilding.
