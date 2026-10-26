@@ -677,9 +677,9 @@
 
 <style>
   .app{display:flex;flex-direction:column;min-height:100dvh}
-  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));border-bottom:1px solid var(--line)}
+    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
   .brand{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
@@ -699,7 +699,7 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;height:40px;min-width:0;padding-inline:max(16px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden}
+  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
