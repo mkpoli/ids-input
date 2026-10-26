@@ -6,11 +6,12 @@
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
   import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
-  import { babelStoneAdapter } from '../src/adapter/index.js'
+  import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
@@ -45,7 +46,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts, forms, names, folds })
+  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -114,6 +115,7 @@
     ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
     ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
   $effect(() => save('locale', locale))
+  $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
   const localeName = $derived(LOCALES.find(([code]) => code === locale)?.[1] ?? 'English')
@@ -562,6 +564,7 @@
 </script>
 
 <svelte:window onkeydown={keys} />
+<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale}>
   <div class="chrome">
@@ -690,7 +693,7 @@
     <span class="foot-separator" aria-hidden="true">·</span>
     <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
     <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />MIT</a>
+    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />{t('app.about.codeLicense')}</a>
     <span class="foot-separator" aria-hidden="true">·</span>
     <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
   </footer>

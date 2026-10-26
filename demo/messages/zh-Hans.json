@@ -1,4 +1,8 @@
 {
+  "app.about.licenses": "许可",
+  "app.about.codeLicense": "代码：MIT",
+  "app.about.dataLicense": "数据采用 Creative Commons 许可或遵循原始来源的使用条款，详情见来源署名及数据许可说明。",
+  "app.about.outputLicense": "生成内容须遵循原始字体中适用于该内容的许可条款。本站不附加任何使用限制。",
   "app.about.inspired": "灵感来源",
   "app.about.lead": "以树形组建表意文字描述序列，并即时查看字形。",
   "app.about.sources": "数据与代码",
@@ -89,6 +93,8 @@
   "app.source.hanCompose": "用现有字的部件绘制预览。",
   "app.source.hfhchan": "部件表中不再拆分的部件。",
   "app.source.kanjivg": "组字器的部分切分；含此切分的字形须以相同方式共享。",
+  "app.source.smallSeal": "汲古阁本《说文解字》构形数据：49个已映射字及31个部件，其余原始记录尚未完成映射。",
+  "app.source.sealFont": "取自陈昌治本的76个字形，来源项目尚未完成审校。",
   "app.source.tangut": "西夏文显示与组字所用的字形。",
   "app.source.noto": "han-compose所用的字形轮廓及部件字体。",
   "app.source.plangothic": "Noto Sans CJK所缺部件的字形。",

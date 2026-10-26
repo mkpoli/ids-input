@@ -93,8 +93,8 @@
     <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
       {#if view}
         <div class="views" role="group" aria-label={label}>
-          <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}>{view.list}</button>
-          <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}>{view.cards}</button>
+          <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
+          <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
         </div>
       {/if}
       {#if view?.cardsSelected}
@@ -175,20 +175,20 @@
   .heading{margin:9px 10px 3px;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
   .heading:first-child{margin-top:4px}
   .views{position:sticky;top:-6px;z-index:1;display:flex;gap:2px;margin:0 0 5px;padding:3px;border-radius:9px;background:var(--surface)}
-  .view{flex:1;padding:5px 8px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+  .view{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;padding:4px 8px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .view[aria-checked="true"]{background:var(--hover);color:var(--ink)}
   .view:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:4px 4px 8px}
-  .card{display:flex;flex-direction:column;gap:6px;min-width:0;padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:2px 4px 6px}
+  .card{display:flex;align-items:center;gap:7px;min-width:0;min-height:52px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
   .card:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .card:disabled{opacity:.45;cursor:default}
-  .card-art{display:block;width:64px;height:64px;align-self:center;color:var(--ink)}
+  .card-art{display:block;flex:none;width:40px;height:40px;color:var(--ink)}
   .card-art path{fill:currentColor}
-  .card-glyph{display:grid;place-items:center;min-height:64px;font-family:var(--cjk);font-size:30px;line-height:1.15;color:var(--ink);text-align:center;overflow-wrap:anywhere}
-  .card-text{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .card-label{font-family:var(--cjk);font-size:11.5px;line-height:1.35;color:var(--ink);overflow-wrap:anywhere}
-  .card-note{color:var(--muted);font:500 10.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card-note.unencoded{font:inherit;font-size:11px;font-style:italic}
-  @media (max-width:600px){.cards{grid-template-columns:1fr}}
+  .card-glyph{display:block;flex:none;width:40px;height:40px;overflow:hidden;font-family:var(--cjk);font-size:22px;line-height:40px;color:var(--ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
+  .card-text{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
+  .card-label{font-family:var(--cjk);font-size:10.5px;line-height:1.35;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-note{color:var(--muted);font:500 9.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-note.unencoded{font:inherit;font-size:10px;font-style:italic}
+  @media (max-width:600px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>

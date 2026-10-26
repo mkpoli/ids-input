@@ -8,6 +8,7 @@
 import { EXAMPLES } from './lib/examples.js'
 import { COMPOSER_BASE } from './lib/composer.js'
 import { checkPanelWidths } from './check-panels.js'
+import { checkSmallSeal } from './check-small-seal.js'
 import { checkTabDuplication } from './check-tab-duplication.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
@@ -60,6 +61,7 @@ async function choose(page, n) {
 }
 
 try {
+  await checkSmallSeal({ open, shots, assert, pass })
   for (const base of [COMPOSER_BASE, COMPOSER_BASE.replace(/\/$/, '')]) {
     const prepared = await open(`?composer=${encodeURIComponent(base)}`)
     await prepared.locator('.ids-preview[data-step="composed"]').waitFor()
@@ -472,7 +474,7 @@ try {
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
   assert(JSON.stringify(exampleHeads) === JSON.stringify(['Basic structures', 'Complex structures', 'Repeated components', 'Enclosures', 'Mixed scripts', 'Tangut']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
-  assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
+  assert(await page.locator('.menu .item svg').count() === 0, 'no SVG in the example list')
   assert(await page.locator('.menu .label[lang="txg"]').count() === 12, 'Tangut labels retain their language')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
   assert(await biang.count() === 1, 'the biang example shows U+30EDE')
@@ -633,7 +635,16 @@ try {
   await page.locator('.ids-find input').fill('water')
   await page.locator('.ids-hit-char').first().waitFor()
   assert((await page.locator('.ids-hit-char').first().textContent()) === '水', 'water finds 水')
-  pass('a component found through the other script or a word')
+  await page.locator('.ids-find input').fill('卷字头')
+  await page.locator('.ids-hit-char').first().waitFor()
+  assert((await page.locator('.ids-hit-char').first().textContent()) === '龹', '卷字头 finds 龹')
+  await page.locator('.ids-find input').fill('bộ thủy')
+  await page.locator('.ids-hit-char').first().waitFor()
+  assert((await page.locator('.ids-hit-char').first().textContent()) === '水', 'bộ thủy finds 水')
+  await page.locator('.ids-find input').fill('수')
+  await page.locator('.ids-hit-char').first().waitFor()
+  assert((await page.locator('.ids-hit-char').first().textContent()) === '水', '수 finds 水')
+  pass('a non-radical part and Korean and Vietnamese names')
   await choose(page, 0)
   await page.locator('.ids-find input').fill('U+6728')
   await page.locator('.ids-hit').first().click()

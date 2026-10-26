@@ -1,6 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
+import { sealTable, sealNames } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -13,6 +14,11 @@ import { isComponent, isSequence } from '../core/ids.js'
  */
 
 const REGIONS = /\(([^)]*)\)$/
+/** A CJK or Tangut character, the characters a mixed query may name as components. */
+const IDEOGRAPH = /[\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
+const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}]/u
+/** The scripts a mixed query may name as components: ideographs, kana and Bopomofo. */
+const SCRIPT = /[\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}\u{20000}-\u{3FFFD}]/u
 
 /**
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
@@ -72,18 +78,20 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * `data/component-name-folds.tsv` (or `foldsText` its text), which folds Chinese scripts and
  * component forms together before a name is compared. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
- * on the caller's thread.
+ * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
+ * same table and palette; its modern equivalents supply component-search labels only.
  * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
-  let table = given ? Promise.resolve(given) : null
+  let table = null
   /** @type {Promise<PalettePart[]> | null} */
-  let palette = givenPalette ? Promise.resolve(givenPalette) : null
+  let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
   /** @type {Promise<Map<string, string[]>> | null} */
@@ -122,7 +130,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText })
+      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -132,15 +140,29 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response
   }
-  const read = () => table ??= (ids
-    ? load(ids).then(readText).then(parseIdsTable)
-    : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given'))
-  ).catch(error => { table = null; throw error })
+  /** @type {Promise<import('./seal-data.js').SmallSealData | null> | null} */
+  let seal = null
+  const readSeal = () => seal ??= (async () => {
+    if (!smallSeal) return null
+    const doc = typeof smallSeal === 'string' || smallSeal instanceof URL
+      ? /** @type {import('./seal-data.js').SmallSealData} */ (JSON.parse(await readText(await load(smallSeal)))) : smallSeal
+    sealTable(doc) // Validate the format before exposing any of its data.
+    return doc
+  })().catch(error => { seal = null; throw error })
 
-  const readPalette = () => palette ??= (parts
-    ? load(parts).then(response => response.json()).then(paletteRows)
-    : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given'))
-  ).catch(error => { palette = null; throw error })
+  const read = () => table ??= Promise.all([
+    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
+      : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+    readSeal(),
+  ]).then(([base, doc]) => doc ? new Map([...base, ...sealTable(doc)]) : base)
+    .catch(error => { table = null; throw error })
+
+  const readPalette = () => palette ??= Promise.all([
+    givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
+      : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
+    readSeal(),
+  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into
   // the forms that stand for it, loaded together once.
@@ -232,14 +254,21 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     for (const value of hex) { const code = parseInt(value, 16); if (code <= 0x10FFFF) chars.push(String.fromCodePoint(code)) }
     // An ASCII letter or digit counts only alone: a word or a code point's digits names none.
     const rest = [...text.replace(/[Uu]\+[0-9A-Fa-f]{4,6}/g, '')]
-    for (const char of rest) if (isComponent(char) && (rest.length === 1 || !/[0-9A-Za-z]/.test(char))) chars.push(char)
+    for (const char of rest) {
+      if (!isComponent(char)) continue
+      // A Latin letter or Hangul syllable in a longer query is part of a word; scripts that
+      // components use (ideographs, kana, Bopomofo) still count.
+      if (rest.length > 1 && !SCRIPT.test(char)) continue
+      chars.push(char)
+    }
     return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
   }
 
   return {
     table: read,
-    async structure(char) {
+    async structure(char, { signal } = {}) {
       const found = (await read()).get(char) ?? []
+      signal?.throwIfAborted()
       // A sequence with no operator names the character itself: it has no smaller parts.
       return found.filter(sequence => isSequence(sequence.text))
     },
@@ -247,11 +276,13 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       if (limit <= 0) return []
       const text = query.trim()
       const direct = typed(text)
-      // One component typed on its own is that component; names are for what is longer than one.
+      // One ideograph typed on its own is that component; names are for what is longer than one.
+      // A lone letter or syllable (수, の) also searches names, so Korean and kana readings work.
       const single = [...text].length === 1 && isComponent(text)
+      const singleIdeograph = single && (IDEOGRAPH.test(text) || KANA.test(text))
       /** @type {{ char: string, label: string }[]} */
       let hits = direct
-      if (!single && (namesText !== undefined || names)) {
+      if (!singleIdeograph && (namesText !== undefined || names)) {
         try {
           const index = await nameIndex()
           const found = index.search(text, { limit })
@@ -269,6 +300,10 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
             hits = [...named, ...direct]
           }
         } catch { /* The names are a convenience; the characters typed still stand. */ }
+      }
+      if (smallSeal) {
+        const doc = await readSeal()
+        if (doc) hits = [...hits, ...sealNames(doc, text)]
       }
       signal?.throwIfAborted()
       const seen = new Set()

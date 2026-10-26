@@ -4,16 +4,18 @@ import en from '../../messages/en.json' with { type: 'json' }
 import ja from '../../messages/ja.json' with { type: 'json' }
 import zhHans from '../../messages/zh-Hans.json' with { type: 'json' }
 import zhHant from '../../messages/zh-Hant.json' with { type: 'json' }
+import vi from '../../messages/vi.json' with { type: 'json' }
 import ko from '../../messages/ko.json' with { type: 'json' }
 import appEn from '../messages/en.json' with { type: 'json' }
 import appJa from '../messages/ja.json' with { type: 'json' }
 import appZhHans from '../messages/zh-Hans.json' with { type: 'json' }
 import appZhHant from '../messages/zh-Hant.json' with { type: 'json' }
+import appVi from '../messages/vi.json' with { type: 'json' }
 import appKo from '../messages/ko.json' with { type: 'json' }
 
 /** @type {[string, string, Record<string, string>][]} */
-export const LOCALES = [['en', 'English', en], ['ja', '日本語', ja], ['zh-Hans', '简体中文', zhHans], ['zh-Hant', '繁體中文', zhHant], ['ko', '한국어', ko]]
+export const LOCALES = [['en', 'English', en], ['ja', '日本語', ja], ['zh-Hans', '简体中文', zhHans], ['zh-Hant', '繁體中文', zhHant], ['ko', '한국어', ko], ['vi', 'Tiếng Việt', vi]]
 /** @type {Record<string, Record<string, string>>} */
-const APP = { en: appEn, ja: appJa, 'zh-Hans': appZhHans, 'zh-Hant': appZhHant, ko: appKo }
+const APP = { en: appEn, ja: appJa, 'zh-Hans': appZhHans, 'zh-Hant': appZhHant, ko: appKo, vi: appVi }
 /** @param {string} locale */
 export const appMessages = locale => APP[locale] ?? appEn

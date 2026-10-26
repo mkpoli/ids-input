@@ -1,4 +1,8 @@
 {
+  "app.about.licenses": "Licenses",
+  "app.about.codeLicense": "Code: MIT",
+  "app.about.dataLicense": "Data is provided under Creative Commons or the terms of its original sources; see the source credits and data notices for details.",
+  "app.about.outputLicense": "Generated items are subject to the applicable terms of the original fonts. This site imposes no additional restrictions on their use.",
   "app.about.inspired": "Inspired by",
   "app.about.lead": "Build ideographic description sequences as trees and see them drawn.",
   "app.about.sources": "Data and code",
@@ -90,6 +94,8 @@
   "app.source.hanCompose": "Draws the preview from parts other characters already have.",
   "app.source.hfhchan": "Which components the palette leaves whole.",
   "app.source.kanjivg": "Some component cuts used by the composer; drawings with those cuts are shared alike.",
+  "app.source.smallSeal": "Jiguge Shuowen decompositions: 49 mapped characters and 31 components. Other source records remain unresolved.",
+  "app.source.sealFont": "76 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
   "app.source.tangut": "Tangut text and composition outlines.",
   "app.source.noto": "The outlines han-compose moves, and the parts font.",
   "app.source.plangothic": "Outlines for parts Noto Sans CJK lacks.",
