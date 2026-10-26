@@ -372,6 +372,13 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
+- SCRIPT-HYBRID (BiangBiangCon v19), slides dated 2026-10-16 (JST), supplied 2026-10-26, for the
+  hybrid examples. ⿴口도 is the slide's proposed 図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+  CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
+  L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
+  and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
+  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone. ⿰木あ, ⿰木Д and ⿰木？
+  are constructed samplers, not attested characters.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
