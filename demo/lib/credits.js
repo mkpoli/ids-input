@@ -5,7 +5,6 @@
 
 /** @type {Credit[]} Data, fonts and code the workshop runs on. */
 export const SOURCES = [
-  { name: '𰻞𰻞會 / BiangBiangCon (2026-10)', url: 'https://sites.google.com/dhii.asia/biangbiangcon/', key: 'biangbiangcon' },
   { name: 'CHISE Small Seal IDS', by: 'MORIOKA Tomohiko, CHISE contributors', licence: 'GPL-2.0-or-later', url: 'https://gitlab.chise.org/CHISE/ids', key: 'smallSeal' },
   { name: 'IDS Seal / Kaiyuan Small Seal', by: 'Kaiyuan Small Seal Font Contributors', licence: 'Kaiyuan font license', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/OFL.txt', key: 'sealFont' },
   { name: 'BabelStone IDS', by: 'Andrew West', licence: 'Public domain', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', key: 'babelstone' },

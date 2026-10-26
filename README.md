@@ -155,11 +155,16 @@ written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part mis
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
-Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
+Its current Unicode mapping supports **49 character descriptions and 1,334 drawable palette forms**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
 finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
 `𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
-uses all 816 mapped seal forms; some have no resolved decomposition or bundled glyph.
+uses 1,353 mapped seal forms; some have no resolved decomposition or bundled glyph.
+
+The Small Seal palette opens on 138 selected basic parts. Compound parts and
+unclassified forms have separate groups. Type a modern character such as 木 or 口
+to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
+these estimates do not enter the seal decomposition table.
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -450,6 +455,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Code: MIT (`LICENSE`).
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
   (`data/COPYING-small-seal.txt`).
+- `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
+  (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
@@ -563,11 +570,6 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
   `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
   `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
-- [𰻞𰻞會 / BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/),
-  October 2026 presentations: a general source for some of the examples.
-- [BabelStone Erjian](https://www.babelstone.co.uk/Fonts/Erjian.html), entries 2.2:007 and
-  2.2:003: `⿺辶比` (避) and `⿱艹半` (瓣). Jyutnet records JYN00013 and JYN00017 supply
-  `⿵門覃` and `⿰舟邊`. 嫑 (`⿱不要`) follows BabelStone IDS.
 - BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
   臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
   of all 17 IDCs; the approximation marker `〾` is represented separately.
