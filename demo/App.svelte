@@ -330,6 +330,19 @@
     store()
     return tab
   }
+  /** Copy a document beside its source, including its editor history and drawing adjustments. @param {string} id */
+  function duplicateTab(id) {
+    const source = tabs.find(tab => tab.id === id)
+    if (!source) return
+    flush()
+    const tab = makeTab(source.sequence, source.saved)
+    const state = states.get(id)
+    if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
+    const adjusted = adjustedStates.get(id)
+    if (adjusted) adjustedStates.set(tab.id, structuredClone(adjusted))
+    tabs.splice(tabs.indexOf(source) + 1, 0, tab)
+    activate(tab.id)
+  }
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
     const text = canonical(sequence)
@@ -407,6 +420,7 @@
   }
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
@@ -560,7 +574,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
     </div>
   </div>
 
@@ -606,7 +620,6 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          {#if editor.whole}<output class="tree-whole" lang="ja" title={t('ids.label')} aria-label={`${t('ids.label')}: ${editor.whole}`}>{editor.whole}</output>{/if}
           <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
@@ -738,7 +751,6 @@
   .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
-  .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
@@ -791,7 +803,7 @@
     .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
