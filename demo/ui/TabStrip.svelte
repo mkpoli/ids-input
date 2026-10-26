@@ -9,9 +9,9 @@
   /**
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
-   *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void }}
+   *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -53,6 +53,45 @@
     return () => { watch.disconnect(); cancelAnimationFrame(frame) }
   })
 
+  /** @type {{ id: string, x: number, y: number } | null} */ let menu = $state(null)
+  /** @type {HTMLDivElement | null} */ let menuEl = $state(null)
+  /** @param {string} id @param {number} x @param {number} y */
+  async function openMenu(id, x, y) {
+    menu = { id, x, y }
+    await tick()
+    if (!menuEl || menu?.id !== id) return
+    menuEl.showPopover()
+    const rect = menuEl.getBoundingClientRect()
+    menuEl.style.left = `${Math.max(8, Math.min(x, innerWidth - rect.width - 8))}px`
+    menuEl.style.top = `${Math.max(8, Math.min(y, innerHeight - rect.height - 8))}px`
+    menuEl.querySelector('button')?.focus()
+  }
+  /** @param {boolean} [refocus] */
+  function dismiss(refocus = false) {
+    const id = menu?.id
+    menu = null
+    if (refocus && id) focus(id)
+  }
+  async function duplicate() {
+    const id = menu?.id
+    if (!id) return
+    dismiss()
+    onduplicate(id)
+    await tick()
+    focus(activeId)
+  }
+  /** @param {KeyboardEvent} event */
+  function menuKey(event) {
+    if (event.key === 'Escape' || event.key === 'Tab') {
+      if (event.key === 'Escape') event.preventDefault()
+      event.stopPropagation()
+      dismiss(true)
+    } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+      event.preventDefault()
+      menuEl?.querySelector('button')?.focus()
+    }
+  }
+
   /** @param {string} id */
   function focus(id) {
     const found = /** @type {HTMLElement | undefined} */ ([...(strip?.children ?? [])].find(child => /** @type {HTMLElement} */ (child).dataset.tabId === id))
@@ -78,13 +117,22 @@
    */
   function key(event, at) {
     const last = tabs.length - 1
-    if (event.key === 'ArrowRight') { event.preventDefault(); move((at + 1) % tabs.length) }
+    if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) {
+      event.preventDefault()
+      const rect = /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect()
+      openMenu(tabs[at].id, rect.left, rect.bottom)
+    }
+    else if (event.key === 'ArrowRight') { event.preventDefault(); move((at + 1) % tabs.length) }
     else if (event.key === 'ArrowLeft') { event.preventDefault(); move((at - 1 + tabs.length) % tabs.length) }
     else if (event.key === 'Home') { event.preventDefault(); move(0) }
     else if (event.key === 'End') { event.preventDefault(); move(last) }
     else if ((event.key === 'Delete' || event.key === 'Backspace') && tabs.length > 1) { event.preventDefault(); close(tabs[at].id) }
   }
 </script>
+
+<svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) dismiss() }}
+  onfocusin={event => { if (menu && menuEl && !menuEl.contains(/** @type {Node} */ (event.target))) dismiss() }}
+  onresize={() => dismiss()} />
 
 <div class="tabbar">
   <div class="tabs" role="tablist" aria-label={t('app.tabs')} bind:this={strip}>
@@ -95,7 +143,8 @@
         onauxclick={event => { if (event.button === 1) { event.preventDefault(); if (tabs.length > 1) close(tab.id) } }}>
         <button type="button" class="tab-main" role="tab" id={`${panelId}-tab-${tab.id}`} aria-selected={tab.id === activeId}
           aria-controls={panelId} tabindex={tab.id === activeId ? 0 : -1} title={name} aria-label={marked ? `${name}, ${t('app.tabs.edited')}` : name}
-          onclick={() => onselect(tab.id)} onkeydown={event => key(event, at)}>
+          onclick={() => onselect(tab.id)} onkeydown={event => key(event, at)}
+          oncontextmenu={event => { event.preventDefault(); openMenu(tab.id, event.clientX, event.clientY) }}>
           <span class="tab-icon"><TabIcon sequence={tab.whole || tab.sequence} {draw} />
             {#if marked}<span class="tab-dot" title={t('app.tabs.edited')} aria-hidden="true"></span>{/if}
           </span>
@@ -110,7 +159,17 @@
   <button type="button" class="tab-new" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
 </div>
 
+{#if menu}
+  <div class="tab-menu" role="menu" tabindex="-1" popover="manual" bind:this={menuEl}
+    aria-label={t('app.tabs.menu')} style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
+    <button type="button" role="menuitem" onclick={duplicate}><Icon name="copy" size={16} />{t('app.tabs.duplicate')}</button>
+  </div>
+{/if}
+
 <style>
+  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 8px 28px #0003}
+  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .tab-menu button:hover,.tab-menu button:focus-visible{background:var(--hover);outline:none}
   .tabbar{display:flex;align-items:flex-end;gap:8px;flex:1;min-width:0;height:100%}
   .tabs{position:relative;display:flex;align-items:flex-end;gap:4px;flex:0 1 auto;min-width:0;height:100%;padding-inline:10px;
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
