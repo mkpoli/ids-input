@@ -102,7 +102,8 @@
 </div>
 
 <style>
-  .tool.menubar{padding:0 10px;border-color:transparent;background:none;border-radius:6px}
+  .tool.menubar{padding:0 8px;border-color:transparent;background:none;border-radius:6px;color:var(--muted)}
+  .tool.menubar:is(:hover,:focus-visible,.on){color:var(--ink)}
   .menu-wrap{position:relative}
   .menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:220px;max-width:min(340px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;
     padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-pop)}
