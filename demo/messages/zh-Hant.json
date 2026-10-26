@@ -89,6 +89,7 @@
   "app.share.qr": "連結的QR碼",
   "app.share.title": "分享",
   "app.share.tooLong": "連結過長，無法產生QR碼。",
+  "app.source.biangbiangcon": "2026年10月的發表資料，部分範例的來源。",
   "app.source.babelstone": "各字的結構描述，用於拆分、部件表與比對。",
   "app.source.hanCompose": "用現有字的部件繪製預覽。",
   "app.source.hfhchan": "部件表中不再拆分的部件。",

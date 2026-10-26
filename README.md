@@ -570,6 +570,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
   `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
   `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
+- [𰻞𰻞會 / BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/),
+  October 2026 presentations: a general source for some of the examples.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 

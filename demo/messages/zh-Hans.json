@@ -89,6 +89,7 @@
   "app.share.qr": "链接的二维码",
   "app.share.title": "分享",
   "app.share.tooLong": "链接过长，无法生成二维码。",
+  "app.source.biangbiangcon": "2026年10月的报告资料，部分示例的来源。",
   "app.source.babelstone": "各字的结构描述，用于拆分、部件表与比对。",
   "app.source.hanCompose": "用现有字的部件绘制预览。",
   "app.source.hfhchan": "部件表中不再拆分的部件。",
