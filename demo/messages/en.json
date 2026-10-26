@@ -67,7 +67,7 @@
   "app.prefs.composerHint": "A han-compose export folder (export-web). Empty uses the default.",
   "app.prefs.keyHints": "Key hints on buttons",
   "app.prefs.theme": "Theme",
-  "app.prefs.title": "Preferences",
+  "app.prefs.title": "Settings",
   "app.share": "Share",
   "app.share.copied": "Link copied",
   "app.share.link": "Link",
