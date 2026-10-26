@@ -81,6 +81,11 @@ try {
   assert(await page.locator('.seq-row, .output-head').count() === 0, 'the old output row is gone')
   assert(await page.locator('.tree-whole').textContent() === '⿰𠤕⿱龴疋', 'the sequence sits under the tree')
   assert(await page.locator('.seq-copy').isEnabled(), 'the copy button sits beside the sequence input')
+  const fieldBox = await page.locator('.ids-field input').boundingBox()
+  const copyBox = await page.locator('.seq-copy').boundingBox()
+  const inside = copyBox.x >= fieldBox.x && copyBox.x + copyBox.width <= fieldBox.x + fieldBox.width && copyBox.y >= fieldBox.y && copyBox.y + copyBox.height <= fieldBox.y + fieldBox.height
+  const centered = Math.abs((fieldBox.y + fieldBox.height / 2) - (copyBox.y + copyBox.height / 2)) < 1
+  assert(inside && centered, `copy aligns inside the input: ${JSON.stringify([fieldBox, copyBox])}`)
   await page.locator('.seq-copy').click()
   assert(await page.evaluate(() => navigator.clipboard.readText()) === '⿰𠤕⿱龴疋', 'the copy button copies the sequence')
   const pointsButton = page.locator('.label-row .points-btn')

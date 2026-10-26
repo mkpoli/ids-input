@@ -406,11 +406,12 @@
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
-  .seq-line{display:flex;align-items:flex-start;gap:6px}
-  .seq-line :global(.ids-field){flex:1;min-width:0}
-  .seq-line .seq-copy{display:grid;place-items:center;flex:none;width:36px;height:36px;padding:0;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);cursor:pointer}
-  .seq-line .seq-copy:hover{color:var(--ink);border-color:var(--line-strong)}
-  .seq-line .seq-copy:disabled{color:var(--muted);background:var(--surface-2);cursor:default}
+  .seq-line{position:relative}
+  .seq-line :global(.ids-field){width:100%}
+  .seq-line :global(.ids-field input){padding-right:44px}
+  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}
+  .seq-line .seq-copy:hover{background:var(--surface-2);color:var(--ink)}
+  .seq-line .seq-copy:disabled{color:var(--muted);background:none;cursor:default}
   .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
