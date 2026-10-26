@@ -152,7 +152,9 @@ written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part mis
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
 Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
-finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`.
+finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
+`𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
+uses all 816 mapped seal forms; some have no resolved decomposition or bundled glyph.
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -165,14 +167,19 @@ const adapter = smallSealAdapter({
 ```
 
 `data` accepts a URL or the decoded JSON document. The remaining options are those of
-`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index. Modern-character correspondences help component search;
-each script keeps its own decompositions. Import `fonts.css` to display the supported
+`babelStoneAdapter`; omit them to use Small Seal alone. All descriptions share one search index.
+Component and IDS searches match mapped seal and modern forms in either direction:
+`玉玉`, `𽁭𽁭`, and `⿰玉𽁭` can find the seal 玨. Mappings join the existing radical-form
+groups; a seal form with several modern spellings makes those spellings match one
+another too. Repeated components are counted across the group. These groups concern
+glyph correspondence; modern spellings can differ in meaning.
+Each script keeps its own decompositions, result glyphs, and exact `encoded()` lookup. Import `fonts.css` to display the supported
 seal characters. Their bundled outlines support previews and SVG/PNG export; mixed
 Han–seal compositions also need the host's Han export.
 
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
-excluded from editor lookup. See [the data notes](data/README.md#small-seal) for coverage,
+excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
 provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents

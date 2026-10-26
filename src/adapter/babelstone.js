@@ -1,7 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
-import { sealTable, sealNames } from './seal-data.js'
+import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -104,8 +104,8 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '']).then(([found, text]) =>
-    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: readForms(text) })).catch(error => { local = null; throw error })
+  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
+    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
   function inWorker(query, limit) {
     if (!searcher && worker) {
@@ -303,7 +303,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       }
       if (smallSeal) {
         const doc = await readSeal()
-        if (doc) hits = [...hits, ...sealNames(doc, text)]
+        if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
       signal?.throwIfAborted()
       const seen = new Set()
@@ -337,7 +337,10 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       return result
     },
     async containing(asked, { limit = 24 } = {}) {
-      index ??= componentIndex(new Map([...(await read())].map(([char, sequences]) => [char, sequences.map(s => s.text)])))
+      if (!index) {
+        const [found, search] = await Promise.all([read(), smallSeal ? localSearch() : null])
+        index = componentIndex(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
+      }
       return index.search(asked, limit)
     },
     parts: readPalette,
