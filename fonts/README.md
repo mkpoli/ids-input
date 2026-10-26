@@ -34,3 +34,31 @@ It covers all 768 original Tangut components. Rebuild with
 `uv run scripts/build_tangut_font.py`; the script pins the source SHA-256.
 Its outlines are also exported by `scripts/build_tangut_outlines.py` for composition
 and SVG/PNG export, under the same font licence.
+
+## IDS Seal
+
+`IDSSeal-Regular.woff2` is a 76-glyph derivative of
+[Kaiyuan Small Seal](https://github.com/frankslin/kaiyuan-small-seal-font) at revision
+`97433695858330ec9fdb7de9c4604da2f635eba6`, by Kaiyuan Small Seal Font Contributors.
+It covers the head characters and seal components used by the bundled CHISE subset.
+Other Small Seal code points need another installed font.
+
+The SVGs are traced from the Chen Changzhi edition of 說文解字. Upstream describes the
+font as under review; these outlines have not received a separate glyph-by-glyph
+review here. They can differ from the Jiguge shapes described by CHISE. Upstream marks 74 of the
+76 selected glyphs `approved`; U+3D320 and U+3D32F are only `aligned`. The outline
+metadata retains each glyph's full review record.
+`IDSSeal-sources.tar.gz` includes the original SVGs with crop references, upstream
+provenance and approval tables, and the original license. File digests and the pinned
+revision are in `small-seal-sources.json`.
+
+The font uses the verbatim [Kaiyuan font license](LICENSE-IDSSeal.txt). Although its
+header calls it SIL OFL 1.1, its conditions differ from the standard SIL license.
+The derivative family is named IDS Seal and retains Kaiyuan Small Seal in the
+Compatible Fullname field. The license and copyright notice are embedded in the font.
+
+Build the webfont and `data/small-seal-outlines.json.gz` with
+`uv run scripts/build_small_seal_font.py`. This uses the bundled SVG sources, checks
+their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
+and writes deterministic font and outline files. Exact-description mappings in the
+outline data come from CHISE and retain its GPL-2.0-or-later license.
