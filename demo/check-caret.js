@@ -60,6 +60,10 @@ try {
   await page.keyboard.insertText('水')
   await page.keyboard.insertText('火')
   assert.equal(await field.inputValue(), '⿲水火日')
+  await field.fill('⿰木日')
+  await select(3,3)
+  await page.keyboard.insertText('⿱')
+  assert.equal(await field.inputValue(), '⿲木日⿱⬚⬚')
   assert.deepEqual(errors, [])
   console.log('PASS caret typing, operator insertion/replacement, paste, IME, palette, undo, length limit')
 } finally { await browser.close() }

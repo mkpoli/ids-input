@@ -6,6 +6,7 @@ import { tokens } from './tokens.js'
  * other filled positions gain a local pair so existing parts are preserved.
  * @param {import('../core/ids.js').Part} tree @param {string} draft @param {number} offset
  * @param {import('../core/ids.js').Part} part @param {string} [operator]
+ * @returns {{tree: import('../core/ids.js').Part, path: number[], operator?: boolean}}
  */
 export function insertAt(tree, draft, offset, part, operator) {
   const spans = tokens(draft)
@@ -15,6 +16,10 @@ export function insertAt(tree, draft, offset, part, operator) {
   const path = token?.path ?? []
   const before = !token || offset <= token.start
   const current = partAt(tree, path) ?? null
+  if (operator && !before && current !== null) {
+    const next = insertAt(tree, draft, offset, wrap(operator, null))
+    return { tree: next.tree, path: nextEmpty(next.tree, next.path) ?? next.path, operator: true }
+  }
   if (operator) {
     const next = replaceAt(tree, path, wrap(operator, current))
     return { tree: next, path: nextEmpty(next, path) ?? path, operator: true }

@@ -23,3 +23,7 @@ test('caret never splits supplementary characters or their selector', () => {
 test('inserting an operator wraps the adjacent subtree', () => {
   expect(insert('⿰⿱木水火',1,null,'⿴')).toBe('⿰⿴⿱木水⬚火')
 })
+
+test('an operator at the end starts a subtree after the last part', () => {
+  expect(insert('⿰木日',3,null,'⿱')).toBe('⿲木日⿱⬚⬚')
+})
