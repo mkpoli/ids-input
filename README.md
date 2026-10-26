@@ -135,9 +135,12 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a katakana letter standing for a component of
-that shape (コ, マ), a private-use character or `？` for a part no character names, with an
-optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
+`？` for a part no character names, with an optional variation selector. The letters and digits are
+those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
+shape), Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
+preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
+written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 `drawingSvg(drawing, options)` writes a drawing as an SVG file, applying the per-part `transforms` a
 view set. `groupParts(parts, leaves)` groups the pieces of a drawing by the leaf they belong to, and
@@ -302,7 +305,8 @@ Ctrl+Shift+Z elsewhere).
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
 either case become operators: LR ⿰, UD ⿱, LL ⿲, UU ⿳, OC ⿴, OD ⿵, OU ⿶, OR ⿷, RD ⿸, LD ⿹, RU ⿺,
-XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow keys move through the tree,
+XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. Two capitals that spell a name are read as that operator, so
+letters such as L and R side by side go in from the part field, one slot at a time. In "Take parts from", the arrow keys move through the tree,
 `ArrowRight` opens a part and reaches its swaps, and `Enter` takes a part or a whole node.
 
 ## Licences

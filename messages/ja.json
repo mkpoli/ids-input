@@ -91,7 +91,7 @@
   "ids.preview.tooLarge": "大きすぎ",
   "ids.preview.tooLargeNote": "大きすぎて組めません。枠は配置を示します。",
   "ids.problem.character": "⿰や⿱などの演算子から始めてください。",
-  "ids.problem.component": "部品は漢字・西夏文字・部首・筆画・カタカナで書きます。",
+  "ids.problem.component": "部品は漢字・西夏文字・部首・筆画・かなやラテン文字などの文字・数字で書きます。",
   "ids.problem.drop": "{name}では部品が減ります。外れる部品を先に消してください。",
   "ids.problem.empty": "{name}の{n}番目が空いています。部品を入れるか、字で表せない部品なら？を入力してください。",
   "ids.problem.extra": "演算子がとるより部品が多すぎます。",
