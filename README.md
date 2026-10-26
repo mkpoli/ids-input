@@ -309,11 +309,12 @@ the same bar. A tab is the description's composed drawing at a small size, and a
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
 name, not written in it. The active tab has an accent border, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, the operators and the part pickers at the
-start; the tree in a square panel with the search under it; and at the end the drawing
+start; the Shape or indented Tree view with the search under it; and at the end the drawing
 in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its
 code points, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. A click, the arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
+for. Rows in the Tree view select parts, expand with the arrow keys and accept drops. A click, the
+arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
 closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting

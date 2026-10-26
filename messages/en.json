@@ -108,6 +108,10 @@
   "ids.undo.named": "Undo: {step}",
   "ids.unwrap": "Remove this level",
   "ids.unwrapNode": "Remove {what}",
+  "ids.view": "View",
+  "ids.view.shape": "Shape",
+  "ids.view.tree": "Tree",
+
   "ids.use": "Use this form",
   "parts.byStrokes": "Stroke count",
   "parts.failed": "The parts could not be loaded.",
