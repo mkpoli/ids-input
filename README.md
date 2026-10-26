@@ -25,8 +25,8 @@ The package has three layers, and an optional preview:
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
-  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese
-  and Korean.
+  `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese, Traditional Chinese,
+  Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
