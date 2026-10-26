@@ -51,6 +51,9 @@
   "app.file": "ファイル",
   "app.file.export": "{format}を書き出す",
   "app.file.new": "新しい記述列",
+  "app.font": "字形",
+  "app.font.sans": "サンセリフ",
+  "app.font.serif": "明朝",
   "app.footer.about": "出典と着想元",
   "app.history": "履歴",
   "app.history.empty": "まだ変更なし",
@@ -69,6 +72,7 @@
   "app.prefs.composer": "プレビューの字形データ",
   "app.prefs.composerHint": "han-composeのexport-web出力のフォルダ。空欄なら既定値。",
   "app.prefs.keyHints": "ボタンにキーを表示",
+
   "app.prefs.theme": "テーマ",
   "app.prefs.title": "設定",
   "app.share": "共有",

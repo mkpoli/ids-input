@@ -3,7 +3,7 @@
   import Dialog from './Dialog.svelte'
   import ThemeSwitch from './ThemeSwitch.svelte'
   /** @type {{ open: boolean, anchor?: HTMLElement | null, theme: import('../lib/theme.js').Theme, keyHints: boolean, composer: string, defaultComposer: string,
-   *   t: (key: string, params?: Record<string, string | number>) => string, ontheme: (theme: import('../lib/theme.js').Theme) => void }} */
+   *   sans?: boolean, t: (key: string, params?: Record<string, string | number>) => string, ontheme: (theme: import('../lib/theme.js').Theme) => void }} */
   let { open = $bindable(false), anchor = null, theme, keyHints = $bindable(true), composer = $bindable(''), defaultComposer, t, ontheme } = $props()
 </script>
 

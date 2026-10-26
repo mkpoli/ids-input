@@ -52,6 +52,9 @@
   "app.file": "File",
   "app.file.export": "Export {format}",
   "app.file.new": "New sequence",
+  "app.font": "Glyph font",
+  "app.font.sans": "Sans",
+  "app.font.serif": "Serif",
   "app.footer.about": "Sources and inspiration",
   "app.history": "History",
   "app.history.empty": "No changes yet",
@@ -70,6 +73,7 @@
   "app.prefs.composer": "Preview drawings from",
   "app.prefs.composerHint": "A han-compose export folder (export-web). Empty uses the default.",
   "app.prefs.keyHints": "Key hints on buttons",
+
   "app.prefs.theme": "Theme",
   "app.prefs.title": "Settings",
   "app.share": "Share",
