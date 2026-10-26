@@ -399,7 +399,7 @@ the toolbar. A tab is the description's composed drawing at a small size, and a 
 differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
 name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
 Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
-at the start; the Shape or indented Tree view with the sequence and search under it; and at the end
+at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;

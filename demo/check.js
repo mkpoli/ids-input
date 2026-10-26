@@ -134,10 +134,16 @@ try {
   assert(await valueOf(menus) === '⿰日口', 'Edit menu Redo works after a tab switch')
 
   await menus.evaluate(() => {
-    const range = document.createRange(), text = document.querySelector('output.tree-whole').firstChild
-    range.setStart(text, 1); range.setEnd(text, 2)
-    getSelection().removeAllRanges(); getSelection().addRange(range)
-    document.activeElement.blur()
+    const heading = document.querySelector('.results h2'), walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT)
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const at = node.data.indexOf('日')
+      if (at < 0) continue
+      const range = document.createRange()
+      range.setStart(node, at); range.setEnd(node, at + 1)
+      getSelection().removeAllRanges(); getSelection().addRange(range)
+      document.activeElement.blur()
+      return
+    }
   })
   await menus.keyboard.press('Control+c')
   await menus.waitForFunction(async () => await navigator.clipboard.readText() === '日')
@@ -223,7 +229,6 @@ try {
   await page.locator('.ids-preview-detail').waitFor({ timeout: 15000 })
   assert(await page.locator('.ids-preview-detail').textContent() === 'U+7591', 'the preview names the code point of the encoded character')
   assert(await page.locator('.seq-row, .output-head').count() === 0, 'the old output row is gone')
-  assert(await page.locator('.tree-whole').textContent() === '⿰𠤕⿱龴疋', 'the sequence sits under the tree')
   assert(await page.locator('.seq-copy').isEnabled(), 'the copy button sits beside the sequence input')
   const fieldBox = await page.locator('.ids-field input').boundingBox()
   const copyBox = await page.locator('.seq-copy').boundingBox()
