@@ -236,7 +236,7 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens preferences. Toolbar buttons show their keys
+Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
 part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
 menus support arrow keys, Home/End and Escape.
@@ -312,8 +312,9 @@ a chosen one, with a margin, empty slots left out unless asked for. File and Edi
 left provide new sequences, browser drafts, sharing, image export and editing commands. The toolbar
 holds Undo and Redo with the history of named steps, examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
-the language, preferences and the sources. Preferences contain the system, light and dark themes,
-key hints on buttons, and the preview data source. The tree panel switches between the Shape
+the language, settings and the sources. Settings contain the system, light and dark themes,
+key hints on buttons, and the preview data source. They open beside the toolbar button on desktop
+and in a bottom drawer on mobile. The tree panel switches between the Shape
 of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
 keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
