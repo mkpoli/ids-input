@@ -1,4 +1,8 @@
 {
+  "app.about.licenses": "ライセンス",
+  "app.about.codeLicense": "コード：MIT",
+  "app.about.dataLicense": "データには、Creative Commons または各出典の利用条件が適用されます。詳しくは出典とデータのライセンス表記をご覧ください。",
+  "app.about.outputLicense": "生成物には、元のフォントの利用条件が適用される場合があります。当サイト独自の利用制限はありません。",
   "app.about.inspired": "着想元",
   "app.about.lead": "表意文字記述列を木として組み立て、字形で確かめる工房。",
   "app.about.sources": "データとコード",
