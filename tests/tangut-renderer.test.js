@@ -4,18 +4,23 @@ import { gunzipSync } from 'node:zlib'
 import { tangutSource, onlyTangut } from '../src/composer/tangut.js'
 import { compose, createSource, sketch } from '../src/composer/loader.js'
 import { drawingSvg } from '../src/core/index.js'
+import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
+import { leaves, parse } from '../src/core/ids.js'
 import { files } from './fixtures/composer-export.js'
 
 const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/tangut-outlines.json.gz', import.meta.url))))
 const source = () => tangutSource({ load: async () => outlines })
 
-it('draws both Tangut examples from their designed outlines without a Han export', async () => {
+it('draws every Tangut example from their designed outlines without a Han export', async () => {
   const local = source()
-  for (const [sequence, char] of [['⿱𘠀⿰𘢰𘠆', '𗀀'], ['⿰𘫿𘫿', '𘴅']]) {
+  for (const { sequence, char } of EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples) {
     const drawn = await compose(local, sequence)
     expect(drawn.d).toBe((await compose(local, char)).d)
     expect(drawn.d.length).toBeGreaterThan(500)
     expect(drawn.kanjivg).toBe(false)
+    const separated = await compose(local, sequence, { separate: true })
+    expect(separated.parts).toHaveLength(leaves(parse(sequence).tree).length)
+    expect(separated.parts.every(part => part.d.length > 0)).toBe(true)
     const svg = drawingSvg(drawn)
     expect(svg).toContain('<path')
     expect(svg).not.toContain('<text')
