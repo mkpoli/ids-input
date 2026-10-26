@@ -64,6 +64,17 @@ try {
   assert(await page.evaluate(async () => (await document.fonts.load('22px "IDS Tangut"', '𘠀')).length > 0), 'Tangut webfont loads')
   await page.getByRole('tab', { name: 'Common', exact: true }).click()
   pass('Tangut palette has all 768 components')
+  await page.getByRole('tab', { name: 'Hard to type', exact: true }).click()
+  assert(await page.locator('.parts-counts button', { hasText: /^\?$/ }).count() === 0, 'all Han components have stroke counts')
+  await page.locator('.parts-counts button', { hasText: /^2$/ }).click()
+  for (const char of ['⺊', '⺈', '⺀', '⺆']) {
+    assert(await page.locator('.parts-grid .part', { hasText: new RegExp('^' + char + '$') }).count() === 1, char + ' appears under 2 strokes')
+  }
+  assert(!(await page.locator('.parts-class').allTextContents()).includes('First stroke not recorded'), 'two-stroke components have first-stroke classes')
+  await page.screenshot({ path: join(shots, 'radical-counts.png') })
+  await page.getByRole('tab', { name: 'Common', exact: true }).click()
+  pass('radical counts and first-stroke groups')
+
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
   await page.locator('.output-head .char').first().waitFor({ timeout: 15000 })
   assert((await page.locator('.output-head .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')

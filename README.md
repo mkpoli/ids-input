@@ -256,8 +256,8 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
-- `data/ids-parts.json`: CC BY-SA 3.0 as a whole, since its first-stroke column adapts KanjiVG;
-  anything made from that column must be shared alike (42 KB).
+- `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
+  source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
 - `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
   are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
@@ -276,8 +276,9 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, and the IRG source regions named in the decomposition tree.
-- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: first strokes
-  (share-alike, see above).
+- Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
+- KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
+  used by the composer.
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
