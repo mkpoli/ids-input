@@ -1,8 +1,9 @@
 // @ts-nocheck: a port of han-compose's Python, kept line for line; its types are the arrays it reads.
 // A port of han-compose's composer (`compose.py`, `Composer.compose`) over its web export: a sequence
 // drawn from parts other characters' designers drew. The export carries what the composer reads
-// when it draws: the learned layout, each character's glyph, and the pieces its hosts give each
-// operand in each place, already cut and ranked as `Composer._ranked` would weigh them. What it
+// when it draws: the learned layout, each character's glyph, and every host of each operand in each
+// place in the composer's index order, each with its cut; `ranked` weighs the whole list against
+// the target as `Composer._ranked` does, so an entry with no clean cut still takes a place. What it
 // does not carry (teachers, KanjiVG's groups for overlays, the standalone model) falls back the way
 // the composer falls back without them: rows of three share their axis by `SHARES`.
 //
@@ -10,18 +11,18 @@
 // draws its second operand as a cut out of the first, and ⿼ ⿽ enclose from the right and the lower
 // right, their inner part placed in the room the outer one leaves.
 //
-// Everything here is synchronous. `data.rec(key)` answers a key's record, `data.hosts(key, place)` the
-// pieces hosts give it there and `data.places(key)` the places it is held in; each answers empty for
-// a key the export lacks or whose file is not loaded yet (which the caller loads before drawing again).
+// Everything here is synchronous. `data.rec(key)` answers a key's record, `data.hosts(key, place)`
+// every host entry of it there, cut or not, and `data.places(key)` the places it is held in; each
+// answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
+// before drawing again).
 import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { features, forward } from './layout.js'
 
 export class LookupError extends Error { name = 'LookupError' }
 
-/** The first `n` hosts of a list in the composer's index order: by position `r` where the export
- *  gives it (a list may leave out entries the composer cannot cut), else by place in the list. */
-const upTo = (list, n) => list[0]?.r === undefined ? list.slice(0, n) : list.filter(h => h.r < n)
+/** The first `n` hosts of a list in the composer's index order, by each entry's position `r`. */
+const upTo = (list, n) => list.filter(h => h.r < n)
 
 const isSelector = ch => ch !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(ch)
 
@@ -172,6 +173,14 @@ export class Composer {
         walk(kids[0], region, false)
         const [x0, y0, x1, y1] = this.INSIDE[op], w = region[2] - region[0], h = region[3] - region[1]
         walk(kids[1], [region[0] + x0 * w, region[1] + y0 * h, region[0] + x1 * w, region[1] + y1 * h], false)
+      } else if (op === MIRROR || op === ROTATE) {
+        // About the region's centre, as `flipped` draws it: ⿾ mirrors each box, ⿿ turns it half round.
+        const from = out.length
+        walk(kids[0], region, atRoot)
+        for (const leaf of out.slice(from)) {
+          const [x0, y0, x1, y1] = leaf.box, turned = op === ROTATE
+          leaf.box = [region[0] + region[2] - x1, turned ? region[1] + region[3] - y1 : y0, region[0] + region[2] - x0, turned ? region[1] + region[3] - y0 : y1]
+        }
       } else kids.forEach(kid => walk(kid, region, false))
     }
     walk(this.parse(sequence), this.face.slice(), true)
@@ -325,14 +334,8 @@ export class Composer {
       for (const [h, alien] of candidates) {
         if (this.excluded(h.h)) continue
         if (hand !== null) {
-          // The export names the hand an entry's node writes (`hd`); before it did, it is looked up.
-          let writes = h.hd
-          if (writes === undefined && h.c === undefined) {
-            const here = [...h.ok.slice(0, h.i), written, ...h.ok.slice(h.i)]
-            const named = h.d ? this.bySequence(h.op + here.join('')) ?? '' : this.bySequence(h.op + here.join('')) ?? h.h
-            writes = this.rec(named)?.hand
-          }
-          if (writes !== hand) continue
+          // The hand an entry's node writes (`hd`).
+          if (h.hd !== hand) continue
         }
         let exact = h.op === op && h.ok.length === siblingKeys.length && h.ok.every((k, j) => k === siblingKeys[j])
         exact = exact && h.j === 1
@@ -437,7 +440,7 @@ export class Composer {
         } else return this.node(['⿰', ...children], frameOf)
       }
       if (op in this.ENCLOSE && i === 1 && groups[0].every(p => p.origin.startsWith('glyph'))) {
-        groups.push([placed(source, source.box, fitted(source.box, box, C.STRETCH), drawn.n, `learned ${drawn.h}`)])
+        groups.push([placed(source, source.box, fitted(source.box, box, C.STRETCH), this.ink(drawn.h), `learned ${drawn.h}`)])
         this.fit(groups[0], groups[1], frameOf, stem, C, { room: box })
         continue
       }
@@ -451,7 +454,7 @@ export class Composer {
           if (stretchOf(source.box, room) > C.STRETCH) {
             groups.push(this.node(child, room))
             anchor = [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2]
-          } else groups.push([this.place(source, room, drawn.n, `learned ${drawn.h}`)])
+          } else groups.push([this.place(source, room, this.ink(drawn.h), `learned ${drawn.h}`)])
           this.fit(groups[0], groups[1], frameOf, stem, C, { room, anchor })
           continue
         }
@@ -464,7 +467,7 @@ export class Composer {
         }
       }
       if (op in this.AXIS && stretchOf(source.box, box) > C.STRETCH) return null
-      groups.push([placed(source, source.box, box, drawn.n, `learned ${drawn.h}`)])
+      groups.push([placed(source, source.box, box, this.ink(drawn.h), `learned ${drawn.h}`)])
       if (op === '⿸' && Array.isArray(children[0]) && i === 1 && this.collide(groups[0], groups[1], frameOf, 256) > C.COLLIDE)
         this.fit(groups[0], groups[1], frameOf, stem, C, { size: 256, room: box })
       if (C.CLEARED.includes(op) && i === 1 && this.collide(groups[0], groups[1], frameOf, 64) > C.COLLIDE) {
@@ -505,7 +508,7 @@ export class Composer {
     }
     const [cost, chain] = best.reduce((a, b) => b[0] < a[0] ? b : a)
     if (cost > C.TRANSPLANT_TOLERANCE * (children.length - 1)) return null
-    return chain.map(([, h]) => { const piece = this.pieceOf(h); return placed(piece, piece.box, piece.box.slice(), h.n, `transplant ${h.h}`) })
+    return chain.map(([, h]) => { const piece = this.pieceOf(h); return placed(piece, piece.box, piece.box.slice(), this.ink(h.h), `transplant ${h.h}`) })
   }
 
   // ---------------------------------------------------------------- no layout to follow
@@ -539,7 +542,7 @@ export class Composer {
       box[axis] = lo + a * span
       box[axis + 2] = lo + b * span
       const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
-      if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), part.record.n, `host ${part.record.h}`)])
+      if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
       else groups.push(this.row(child, box, children.length))
     })
     this.space(axis, groups)
@@ -577,7 +580,7 @@ export class Composer {
     }
     if (!best) return null
     const piece = this.pieceOf(best[1])
-    return placed(piece, piece.box, region.slice(), best[1].n, `instance ${best[1].h}`)
+    return placed(piece, piece.box, region.slice(), this.ink(best[1].h), `instance ${best[1].h}`)
   }
 
   // ---------------------------------------------------------------- overlays
@@ -629,7 +632,7 @@ export class Composer {
     return children.flatMap((child, j) => {
       const box = mapped(shares[j], [0, 0, 1, 1], region)
       const donor = chosen.find(t => t.written[j] === keys[j])
-      if (donor) { const piece = this.pieceOf(donor.pieces[j]); return [placed(piece, piece.box, box, donor.pieces[j].n, `overlay ${donor.ch}`)] }
+      if (donor) { const piece = this.pieceOf(donor.pieces[j]); return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)] }
       return this.node(child, box)
     })
   }
@@ -649,7 +652,7 @@ export class Composer {
       const room = [rooms[i][0] - grow, rooms[i][1], rooms[i][2] + grow, rooms[i][3]]
       const found = this.host('⿰', i, child, [tree[2 - i]], room)
       if (!found) return this.node(child, room)
-      return [placed(found.piece, found.piece.box, fitted(found.piece.box, room, C.CELL_STRETCH), found.record.n, `host ${found.record.h}`)]
+      return [placed(found.piece, found.piece.box, fitted(found.piece.box, room, C.CELL_STRETCH), this.ink(found.record.h), `host ${found.record.h}`)]
     })
   }
 

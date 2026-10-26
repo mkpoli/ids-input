@@ -11,7 +11,7 @@ export const constants = JSON.parse(readFileSync(join(import.meta.dirname, 'comp
 const hex = text => createHash('sha256').update(text).digest('hex')
 /** The shard a key's record or host list is in: the first three hex digits of its SHA-256. */
 export const shardOf = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
-/** Format 4's shards: each entry under the full hash of its text, gzipped. */
+/** Format 5's shards: each entry under the full hash of its text, gzipped. */
 export const shards = (folder, entries) => {
   const out = {}
   for (const [text, value] of entries) ((out[shardOf(folder, text)] ??= {})[hex(text)] = value)
@@ -34,7 +34,7 @@ const records = {
 }
 /** Each file of the export by its name: JSON text, or gzip bytes for a shard. */
 export const files = {
-  'manifest.json': JSON.stringify({ format: 4, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
+  'manifest.json': JSON.stringify({ format: 5, files: { layout: { path: 'layout.json' } }, constants, spelled: [] }),
   'layout.json': JSON.stringify(layout),
   ...shards('g', Object.entries(records)),
 }
