@@ -113,6 +113,7 @@
     ?? (traditional.test(wanted) ? 'zh-Hant' : undefined)
     ?? LOCALES.find(([code]) => wanted.startsWith(code.split('-')[0]))?.[0] ?? 'en')
   $effect(() => save('locale', locale))
+  $effect(() => { document.documentElement.lang = locale })
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
   const localeName = $derived(LOCALES.find(([code]) => code === locale)?.[1] ?? 'English')
@@ -557,6 +558,7 @@
 </script>
 
 <svelte:window onkeydown={keys} />
+<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale}>
   <div class="chrome">

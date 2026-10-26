@@ -4,7 +4,7 @@ import { translator } from '../src/svelte/i18n.js'
 
 const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.json`, import.meta.url), 'utf8'))
 const en = catalogue('en')
-const LOCALES = ['ja', 'zh-Hans', 'zh-Hant', 'ko']
+const LOCALES = ['ja', 'zh-Hans', 'zh-Hant', 'ko', 'vi']
 
 describe('the message catalogues', () => {
   it('give every key the components use', () => {
@@ -46,5 +46,31 @@ describe('a translator', () => {
     expect(t('ids.clear')).toBe('Clear part')
     expect(t('nothing.here')).toBe('nothing.here')
     expect(translator(catalogue('ja'), 'ja')('parts.strokeCount', { count: 1 })).toBe(catalogue('ja')['parts.strokeCount.other'].replace('{count}', '1'))
+  })
+})
+
+
+describe('Vietnamese workshop messages', () => {
+  it('covers every app message and preserves its placeholders', () => {
+    const read = locale => JSON.parse(readFileSync(new URL(`../demo/messages/${locale}.json`, import.meta.url), 'utf8'))
+    const english = read('en'), vietnamese = read('vi')
+    expect(Object.keys(vietnamese).sort()).toEqual(Object.keys(english).filter(key => !key.endsWith('.one')).sort())
+    const placeholders = text => [...text.matchAll(/\{(\w+)\}/g)].map(match => match[1]).sort()
+    for (const [key, text] of Object.entries(vietnamese)) {
+      expect(text.trim().length).toBeGreaterThan(0)
+      expect([key, placeholders(text)]).toEqual([key, placeholders(english[key])])
+    }
+  })
+  it('registers both catalogs and formats Vietnamese counts', async () => {
+    const { LOCALES, appMessages } = await import('../demo/lib/locales.js')
+    const [, label, messages] = LOCALES.find(([code]) => code === 'vi')
+    expect(label).toBe('Tiếng Việt')
+    const t = translator({ ...messages, ...appMessages('vi') }, 'vi')
+    expect(t('app.title')).toBe('Xưởng IDS')
+    for (const count of [0, 1, 2, 1234]) {
+      const number = new Intl.NumberFormat('vi').format(count)
+      expect(t('parts.strokeCount', { count })).toBe(`${number} nét`)
+      expect(t('app.codePoints', { count })).toBe(`${number} điểm mã`)
+    }
   })
 })
