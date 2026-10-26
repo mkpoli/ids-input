@@ -67,3 +67,10 @@ it('retries a failed outline load and reports unavailable glyphs', async () => {
   await expect(compose(local, '⿰𘠀𘠁')).resolves.toHaveProperty('d')
   await expect(compose(local, '⿰𘠀\u{18DF2}')).rejects.toThrow('No glyph')
 })
+
+it('separates Tangut operands for layout adjustment', async () => {
+  const drawn = await compose(source(), '⿱𘠀⿰𘢰𘠆', { separate: true })
+  expect(drawn.parts).toHaveLength(3)
+  expect(drawn.parts.every(part => part.d.length > 0)).toBe(true)
+  expect(drawn.origins).toEqual(['glyph 𘠀', 'glyph 𘢰', 'glyph 𘠆'])
+})
