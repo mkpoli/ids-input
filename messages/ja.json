@@ -78,6 +78,7 @@
   "ids.preview.failed": "組めません",
   "ids.preview.failedNote": "この記述は組めませんでした。",
   "ids.preview.final": "確定",
+  "ids.preview.loading": "組字中…",
   "ids.preview.tooLarge": "大きすぎ",
   "ids.preview.tooLargeNote": "大きすぎて組めません。枠は配置を示します。",
   "ids.problem.character": "⿰や⿱などの演算子から始めてください。",

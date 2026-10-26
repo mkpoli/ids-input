@@ -78,6 +78,7 @@
   "ids.preview.failed": "無法組字",
   "ids.preview.failedNote": "無法組合此序列。",
   "ids.preview.final": "定稿",
+  "ids.preview.loading": "組字中…",
   "ids.preview.tooLarge": "過大",
   "ids.preview.tooLargeNote": "過大，未組字，框線顯示佈局。",
   "ids.problem.character": "請以⿰、⿱等結構符開頭。",
