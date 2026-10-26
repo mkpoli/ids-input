@@ -118,6 +118,24 @@ try {
   await splitPage.context().close()
   pass('the tree panel starts larger, and the divider resizes and keeps the panels')
 
+  // Below 1280 the page scrolls; the input panel matches the middle column instead of ending early.
+  const narrow = await open('', { width: 1243, height: 1120 })
+  const inputBox = await narrow.locator('.pane.input').boundingBox()
+  const middleBox = await narrow.locator('.middle').boundingBox()
+  assert(Math.abs(inputBox.y + inputBox.height - (middleBox.y + middleBox.height)) < 2, `the input panel fills the row: ${inputBox.y + inputBox.height} against ${middleBox.y + middleBox.height}`)
+  assert(await narrow.evaluate(() => document.documentElement.scrollHeight > innerHeight + 1), 'the page scrolls below 1280')
+  await narrow.context().close()
+  // At 1280 and up the page is fixed and each pane is the only scroller in its column.
+  const wide = await open('', { width: 1722, height: 961 })
+  assert(await wide.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1), 'no page scroll at 1280 and up')
+  const nested = await wide.evaluate(() => [...document.querySelectorAll('.pane.input *')].filter(el => {
+    const style = getComputedStyle(el)
+    return /(auto|scroll)/.test(style.overflowY) && el.scrollHeight > el.clientHeight + 2 && el.clientHeight > 0
+  }).length)
+  assert(nested === 0, `nested scrollers in the input pane: ${nested}`)
+  await wide.context().close()
+  pass('the input panel fills the row, and each pane scrolls once')
+
   // A dense tree keeps every glyph inside its box.
   const dense = await open('#' + encodeURIComponent('⿰言⿱⿰木木⿰木木'))
   await dense.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰言⿱⿰木木⿰木木', null, { timeout: 15000 })
