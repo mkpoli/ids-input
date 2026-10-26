@@ -1,7 +1,19 @@
 # ids-input
 
-Type or build ideographic description sequences (IDS) such as `⿰亻⿱七木`. The package has three
-layers, and an optional preview:
+ids-input is a JavaScript library and a set of Svelte components for writing ideographic
+description sequences (IDS), strings such as `⿰亻⿱七木` that describe a character by its parts.
+Use it to write down a character that has no code point, to find characters by their parts, or to
+put an IDS editor in a web page. It reads Han characters, those of Chữ Nôm included (𡨸 `⿰宁字`),
+and Tangut characters and components.
+
+Demo: the IDS Workshop, <https://ids.mkpo.li/>
+
+<a href="https://ids.mkpo.li/"><picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/workshop-dark.png">
+  <img src="docs/images/workshop-light.png" alt="The IDS Workshop: the sequence ⿰𠤕⿱龴疋 with the operator palette and parts on the left, its tree in the middle above the characters that contain it, and its drawing with export settings on the right">
+</picture></a>
+
+The package has three layers, and an optional preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
@@ -17,13 +29,14 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-Tangut characters and components are accepted in IDS. The bundled data includes Tangut
-decompositions, a Tangut parts tab, and examples. Import `fonts.css` for Tangut text
-coverage; composed previews still depend on the host’s han-compose dataset.
+The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
+tab. Import `fonts.css` for Tangut text. The preview draws Han sequences only: han-compose's export
+holds no Tangut outlines, so a Tangut sequence is edited and searched but not drawn.
 
-Demo: <https://ids.mkpo.li/>
-
-[![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
+  <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
+</picture>
 
 ## Install
 
@@ -172,6 +185,11 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
+  <img src="docs/images/search-light.png" width="600" alt="Search results for the part 疋: 定, 旋, 是, 楚 and other characters, each with its description below and the matched 疋 marked">
+</picture>
+
 - A term starting with an operator (or its ASCII name) is a structure, matched wherever its shape
   stands in a character's description, at any depth, components opened into their own descriptions
   as needed: `⿱木⿰木木` finds 森 (`⿱木林`, 林 being `⿰木木`).
@@ -252,13 +270,15 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 ## Licences
 
 - Code: MIT (`LICENSE`).
-- `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain (777 KB).
+- `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
+  Tangut IDS, factual decompositions (798 KB).
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets, SIL Open Font License 1.1 (58 KB together).
+- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
+  SIL Open Font License 1.1.
 - `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
   are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
   `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
@@ -272,6 +292,8 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
   (<https://github.com/kawabata/ids>) and IRG submissions.
+- BabelStone Tangut IDS, Andrew West, <https://www.babelstone.co.uk/Tangut/TangutIDS.txt>, pinned
+  by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
@@ -281,6 +303,8 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
   used by the composer.
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
+- Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
+  <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
   export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
