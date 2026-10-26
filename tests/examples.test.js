@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { EXAMPLES } from '../demo/lib/examples.js'
+import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { parseIdsTable } from '../src/adapter/babelstone.js'
 import { LONGEST, parse } from '../src/core/index.js'
 
@@ -34,4 +34,10 @@ describe('the demo examples', () => {
   it('are distinct', () => {
     expect(new Set(EXAMPLES.map(example => example.sequence)).size).toBe(EXAMPLES.length)
   })
+})
+
+it('keeps Tangut in its own examples section', () => {
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'unencoded'])
+  expect(EXAMPLE_GROUPS[1].examples.map(example => example.char)).toEqual(['𗀀', '𘴅'])
+  expect(EXAMPLE_GROUPS[0].examples.every(example => !/[\u{17000}-\u{18DFF}]/u.test(example.char))).toBe(true)
 })

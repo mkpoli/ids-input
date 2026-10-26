@@ -10,7 +10,7 @@ import { hexOf } from './sha256.js'
 
 export { LookupError } from './compose.js'
 
-async function unpack(buffer) {
+export async function unpack(buffer) {
   const head = new Uint8Array(buffer, 0, 2)
   if (head[0] !== 0x1f || head[1] !== 0x8b) return new TextDecoder().decode(buffer)
   const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream('gzip'))

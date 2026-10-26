@@ -14,7 +14,7 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { EXAMPLES } from './lib/examples.js'
+  import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE } from './lib/composer.js'
@@ -417,8 +417,8 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example */
-  function exampleItem(example) {
+  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
@@ -426,17 +426,15 @@
       sequence: example.sequence,
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
-      lang: 'ja',
+      lang,
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => openSequence(example.sequence),
     }
   }
-  const exampleItems = $derived([
-    { heading: t('app.examples.encoded') },
-    ...EXAMPLES.filter(example => example.char).map(exampleItem),
-    { heading: t('app.examples.unencoded') },
-    ...EXAMPLES.filter(example => !example.char).map(exampleItem),
-  ])
+  const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
+    { heading: t(`app.examples.${group.key}`) },
+    ...group.examples.map(example => exampleItem(example, group.key === 'tangut' ? 'txg' : 'ja')),
+  ]))
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -716,10 +714,6 @@
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .points summary{cursor:pointer;font-size:12px;color:var(--muted)}
-  .points ol{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0;padding:0;list-style:none}
-  .points li{display:flex;align-items:baseline;gap:4px}
-  .points li span{font-family:var(--cjk);font-size:16px}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}

@@ -281,6 +281,7 @@
                     role={interactive ? 'button' : undefined} tabindex={interactive ? -1 : undefined}
                     aria-label={interactive ? t('ids.adjust.move', { part: partName(group.index) }) : undefined}
                     onpointerdown={interactive ? event => startDrag(event, group, 'move') : undefined}>
+                    {#if interactive}<rect x={group.box[0]} y={group.box[1]} width={group.box[2]} height={group.box[3]} fill="transparent" pointer-events="all" />{/if}
                     {#each group.parts as index (index)}
                       <path class="ink" d={drawn.parts?.[index]?.d} />
                     {/each}

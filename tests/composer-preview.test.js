@@ -82,6 +82,18 @@ describe('the composer preview', () => {
   })
 })
 
+it('draws Tangut after an invalid Han warmup while still rejecting Han requests', async () => {
+  FakeWorker.made = []
+  const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
+  draw.warm()
+  expect(FakeWorker.made).toHaveLength(0)
+  const request = draw('⿰𘠀𘠁')
+  const worker = FakeWorker.made[0]
+  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
+  expect(await request).toEqual({ d: 'M0 0Z' })
+  expect((await draw('⿰木口').catch(error => error)).name).toBe('UnavailableError')
+})
+
 describe('the rough layout', () => {
   it('splits rows and columns evenly, encloses, and mirrors what ⿾ holds', () => {
     expect(roughLayout({ op: '⿰', parts: ['木', null] }).map(l => l.box)).toEqual([[0, 0, 0.5, 1], [0.5, 0, 1, 1]])
