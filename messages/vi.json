@@ -141,5 +141,6 @@
   "parts.tab.recent": "Gần đây",
   "parts.tab.strokes": "Nét",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
-  "parts.uses.other": "dùng trong {count} chữ"
+  "parts.uses.other": "dùng trong {count} chữ",
+  "parts.tab.seal": "Tiểu triện"
 }
