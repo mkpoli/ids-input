@@ -384,7 +384,8 @@ arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
 closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting
-larger; the arrow keys move it and a double-click restores the default. Toolbar buttons show their
+larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
+columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
 commands. The toolbar holds Undo and Redo with the history of named steps, examples (each with its
 character and code point, or marked when it has none), a share link with its QR code, the language,

@@ -6,6 +6,7 @@
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { EXAMPLES } from './lib/examples.js'
+import { checkPanelWidths } from './check-panels.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
@@ -266,6 +267,8 @@ try {
   assert(await splitPage.locator('.split').getAttribute('aria-valuenow') === '58', 'the divider keeps its place')
   await splitPage.context().close()
   pass('the tree panel starts larger, and the divider resizes and keeps the panels')
+  await checkPanelWidths(open, assert)
+  pass('column width dividers: drag, keys, reset, persistence and responsive bounds')
 
   // Below 1280 the page scrolls; the input panel matches the middle column instead of ending early.
   const narrow = await open('', { width: 1243, height: 1120 })
@@ -378,7 +381,7 @@ try {
   const middle = await page.locator('.middle').boundingBox()
   const tree = await page.locator('.middle .tree').boundingBox()
   const results = await page.locator('.results').boundingBox()
-  assert(await page.locator('.work > *').count() === 3, 'the workshop has three columns')
+  assert(await page.locator('.work > .pane, .work > .middle').count() === 3, 'the workshop has three content columns')
   assert(results.y > tree.y + tree.height - 1, 'the search is its own panel under the tree')
   assert(Math.abs(results.width - middle.width) < 2, `the search spans the middle column (${results.width} against ${middle.width})`)
   assert(Math.abs(root.width - root.height) < 2 && root.width > box.width * 0.85, `the tree is square and fills its frame (${root.width}×${root.height} in ${box.width})`)

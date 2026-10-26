@@ -23,6 +23,7 @@
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
+  import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
   import AboutDialog from './ui/AboutDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
@@ -35,6 +36,7 @@
   import ShareDialog from './ui/ShareDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
+  import ColumnSplitter from './ui/ColumnSplitter.svelte'
 
   const params = new URLSearchParams(location.search)
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
@@ -159,6 +161,23 @@
   /** @type {HTMLElement | null} */ let middleEl = $state(null)
   let resizing = false
   $effect(() => save('split', split === 60 ? undefined : split))
+
+  let workWidth = $state(innerWidth)
+  let inputWidth = $state(storedWidth(load('inputWidth', null)))
+  let outputWidth = $state(storedWidth(load('outputWidth', null)))
+  const columns = $derived(columnWidths(workWidth, inputWidth, outputWidth))
+  $effect(() => save('inputWidth', inputWidth ?? undefined))
+  $effect(() => save('outputWidth', outputWidth ?? undefined))
+  /** Freeze the other column at its displayed width during a resize. @param {'input' | 'output'} side @param {number | null} width */
+  function resizeColumn(side, width) {
+    if (side === 'input') {
+      if (width !== null && columns.desktop && columns.output !== (outputWidth ?? 400)) outputWidth = columns.output
+      inputWidth = width
+    } else {
+      if (width !== null && columns.input !== (inputWidth ?? 380)) inputWidth = columns.input
+      outputWidth = width
+    }
+  }
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale }))
@@ -538,8 +557,9 @@
   </div>
 
   <main class="workspace" bind:this={work}>
-    <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}>
-      <section class="pane input" aria-label={t('app.input')}>
+    <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
+      bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
+      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
         <div class="block">
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
@@ -557,6 +577,11 @@
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
         <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
       </section>
+
+      <div class="column-gap input-gap">
+        <ColumnSplitter value={columns.input} min={MIN_INPUT} max={columns.inputMax} label={t('app.panels.resizeWidth', { panel: t('app.input') })}
+          controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
+      </div>
 
       <div class="middle" bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
@@ -588,7 +613,11 @@
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
         </section>
       </div>
-      <section class="pane output" aria-label={t('app.output')}>
+      <div class="column-gap output-gap">
+        <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
+          controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
+      </div>
+      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
@@ -720,17 +749,22 @@
   .foot .link{color:inherit}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .column-gap{display:none}
   .split{display:none}
   .results{gap:6px}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
-    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:stretch}
+    .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr);column-gap:0;align-items:stretch}
+    .input{grid-column:1;grid-row:1}
+    .input-gap{display:block;grid-column:2;grid-row:1}
+    .middle{grid-column:3;grid-row:1}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
-    .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
+    .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr) 16px var(--output-width);min-height:0;align-items:stretch}
+    .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
     .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
@@ -740,7 +774,7 @@
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
     .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
-    .output{grid-column:auto;display:flex;flex-direction:column;align-items:stretch}
+    .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
