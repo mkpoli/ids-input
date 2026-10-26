@@ -1,8 +1,9 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
-// host serves (both ship in this package's `data/`). Nothing is asked of a server beyond the two files.
+// host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
+import { createNameSearch, readNames } from '../core/names.js'
 import { isComponent, isSequence } from '../core/ids.js'
 
 /**
@@ -61,13 +62,17 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
  * `table` and `palette` hand the data over directly instead. `forms` is the URL of
  * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
- * components by. The description search (`findByIds`) runs in a Web Worker made by `worker` where
- * there is one, its index built there once; elsewhere it runs on the caller's thread.
- * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ * components by and the component search opens the names of a component's other forms with.
+ * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names the
+ * component search knows (絞絲, ノ文, のぎ, 宝盖); without it the search still takes characters
+ * and code points. The description search (`findByIds`) runs in a Web Worker made by `worker`
+ * where there is one, its index built there once; elsewhere it runs on the caller's thread.
+ * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
+ *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = given ? Promise.resolve(given) : null
@@ -126,6 +131,89 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, 
     : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given'))
   ).catch(error => { table = null; throw error })
 
+  const readPalette = () => palette ??= (parts
+    ? load(parts).then(response => response.json()).then(paletteRows)
+    : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given'))
+  ).catch(error => { palette = null; throw error })
+
+  // The names the component search knows, and the forms table that opens a name's component into
+  // the forms that stand for it, loaded together once.
+  /** @type {Promise<{ search: ReturnType<typeof createNameSearch>['search'], forms: Map<string, string>, reverse: Map<string, Set<string>> }> | null} */
+  let named = null
+  const nameIndex = () => named ??= Promise.all([
+    namesText !== undefined ? namesText : names ? load(names).then(response => response.text()) : '',
+    // A names table without the forms table still finds the component the name records.
+    formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
+  ]).then(([nameText, formText]) => {
+    const { search } = createNameSearch(readNames(nameText))
+    const byForm = readForms(formText)
+    /** @type {Map<string, Set<string>>} */
+    const reverse = new Map()
+    for (const [form, canonical] of byForm) {
+      let classForms = reverse.get(canonical)
+      if (!classForms) reverse.set(canonical, classForms = new Set([canonical]))
+      classForms.add(form)
+    }
+    return { search, forms: byForm, reverse }
+  }).catch(error => { named = null; throw error })
+
+  // The palette's parts, as the set a named component's other forms must belong to, and how often
+  // each is used, to put the forms people meet first. Without a palette every component form is offered.
+  /** @type {Promise<{ parts: Set<string>, uses: Map<string, number> } | null> | null} */
+  let namePalette = null
+  const paletteForNames = () => {
+    if (!parts && !givenPalette) return Promise.resolve(null)
+    return namePalette ??= readPalette().then(rows => {
+      /** @type {Set<string>} */
+      const held = new Set()
+      /** @type {Map<string, number>} */
+      const uses = new Map()
+      for (const row of rows) { held.add(row.part); uses.set(row.part, row.uses ?? 0) }
+      return { parts: held, uses }
+    }).catch(() => { namePalette = null; return null })
+  }
+
+  /**
+   * The forms of `char` a component search offers: the component itself first, then the forms that
+   * stand for the same component, the ones people meet most first. A form outside the palette is
+   * left out when there is one; the component itself always stays.
+   * @param {string} char
+   * @param {{ parts: Set<string>, uses: Map<string, number> } | null} palette
+   * @param {{ forms: Map<string, string>, reverse: Map<string, Set<string>> }} index
+   */
+  function formsOf(char, palette, index) {
+    const canonical = index.forms.get(char) ?? char
+    const members = new Set([char, canonical, ...(index.reverse.get(canonical) ?? [])])
+    /** @type {string[]} */
+    const forms = [char]
+    for (const form of members) {
+      if (form === char || !isComponent(form)) continue
+      const point = /** @type {number} */ (form.codePointAt(0))
+      // The Kangxi Radicals block is a compatibility spelling of the unified ideograph: ⽔ for 水.
+      if (point >= 0x2F00 && point <= 0x2FD5) continue
+      if (palette) {
+        if (!palette.parts.has(form)) continue
+        // A form used once or twice is a rare spelling; the palette's own grid is the place for it.
+        if ((palette.uses.get(form) ?? 0) < 5) continue
+      }
+      forms.push(form)
+    }
+    forms.sort((a, b) => a === char ? -1 : b === char ? 1
+      : (palette?.uses.get(b) ?? 0) - (palette?.uses.get(a) ?? 0) || /** @type {number} */ (a.codePointAt(0)) - /** @type {number} */ (b.codePointAt(0)))
+    return forms
+  }
+
+  /** The characters typed, or the code points written. @param {string} text */
+  function typed(text) {
+    /** @type {string[]} */
+    const chars = []
+    // A code point written U+4E00, or as bare hex (with a digit) when that is all there is.
+    const hex = /^(?=.*\d)[0-9A-Fa-f]{4,6}$/.test(text) ? [text] : [...text.matchAll(/[Uu]\+([0-9A-Fa-f]{4,6})/g)].map(match => match[1])
+    for (const value of hex) { const code = parseInt(value, 16); if (code <= 0x10FFFF) chars.push(String.fromCodePoint(code)) }
+    for (const char of text.replace(/[Uu]\+[0-9A-Fa-f]{4,6}/g, '')) if (isComponent(char)) chars.push(char)
+    return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
+  }
+
   return {
     table: read,
     async structure(char) {
@@ -133,15 +221,38 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, 
       // A sequence with no operator names the character itself: it has no smaller parts.
       return found.filter(sequence => isSequence(sequence.text))
     },
-    async search(query) {
+    async search(query, { limit = 24, signal } = {}) {
+      if (limit <= 0) return []
       const text = query.trim()
-      /** @type {string[]} */
-      const chars = []
-      // A code point written U+4E00, or as bare hex (with a digit) when that is all there is.
-      const hex = /^(?=.*\d)[0-9A-Fa-f]{4,6}$/.test(text) ? [text] : [...text.matchAll(/[Uu]\+([0-9A-Fa-f]{4,6})/g)].map(match => match[1])
-      for (const value of hex) { const code = parseInt(value, 16); if (code <= 0x10FFFF) chars.push(String.fromCodePoint(code)) }
-      for (const char of text.replace(/[Uu]\+[0-9A-Fa-f]{4,6}/g, '')) if (isComponent(char)) chars.push(char)
-      return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
+      const direct = typed(text)
+      // One component typed on its own is that component; names are for what is longer than one.
+      const single = [...text].length === 1 && isComponent(text)
+      /** @type {{ char: string, label: string }[]} */
+      let hits = direct
+      if (!single && (namesText !== undefined || names)) {
+        try {
+          const index = await nameIndex()
+          const found = index.search(text, { limit })
+          if (found.length) {
+            const palette = await paletteForNames()
+            /** @type {{ char: string, label: string }[]} */
+            const named = []
+            for (const hit of found) for (const char of formsOf(hit.char, palette, index)) named.push({ char, label: hit.label })
+            hits = [...named, ...direct]
+          }
+        } catch { /* The names are a convenience; the characters typed still stand. */ }
+      }
+      signal?.throwIfAborted()
+      const seen = new Set()
+      /** @type {{ char: string, label: string }[]} */
+      const result = []
+      for (const hit of hits) {
+        if (seen.has(hit.char)) continue
+        seen.add(hit.char)
+        result.push(hit)
+        if (result.length >= limit) break
+      }
+      return result
     },
     async encoded(sequence) {
       // Built once from the table; a failed load is tried again on the next call.
@@ -166,9 +277,6 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, table: given, 
       index ??= componentIndex(new Map([...(await read())].map(([char, sequences]) => [char, sequences.map(s => s.text)])))
       return index.search(asked, limit)
     },
-    parts: () => palette ??= (parts
-      ? load(parts).then(response => response.json()).then(paletteRows)
-      : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given'))
-    ).catch(error => { palette = null; throw error }),
+    parts: readPalette,
   }
 }

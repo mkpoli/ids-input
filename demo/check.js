@@ -376,22 +376,32 @@ try {
   assert((await value()).startsWith(`⿰${taken}`), `taken: ${await value()} (${taken})`)
   pass(`疑 dropped on Take parts from, ${taken} taken from its tree`)
 
-  // Find: a component by its code point.
+  // Find: a component by a name people call it, then by its code point.
   await page.getByRole('tab', { name: 'Find' }).click()
+  await choose(page, 0)
+  await page.locator('.ids-find input').fill('絞絲')
+  await page.locator('.ids-hit').first().waitFor()
+  assert(/^[纟糹糸]/.test(await page.locator('.ids-hit-char').first().textContent()), '絞絲 finds a form of 糸')
+  await page.locator('.ids-hit').first().click()
+  assert(/^⿰[纟糹糸]/.test(await value()), `found by name: ${await value()}`)
+  pass('a component found by its name replaces the chosen part')
   await choose(page, 0)
   await page.locator('.ids-find input').fill('U+6728')
   await page.locator('.ids-hit').first().click()
   assert((await value()).startsWith('⿰木'), `found: ${await value()}`)
   pass('a component found by its code point replaces the chosen part')
 
-  // The preview without its export: placeholders and no badge, since nothing could be tried.
-  await page.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
-  assert(await page.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
-  assert(await page.locator('.ids-preview-badge').count() === 0, 'no badge without data')
-  assert(await page.locator('.export .primary').isDisabled(), 'nothing to export')
-  const bad = await open(`?composer=${encodeURIComponent('http://[')}`)
+  // The preview without its export: placeholders and no badge, since nothing could be tried. The
+  // default base has prepared drawings, so use a base that is not prepared and let the route abort it.
+  const bad = await open(`?composer=${encodeURIComponent('https://glyphatlas.org/atlas/composer/not-prepared/')}`)
   await bad.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+  assert(await bad.locator('.ids-preview-large .slot').count() >= 2, 'placeholders stand for the parts')
+  assert(await bad.locator('.ids-preview-badge').count() === 0, 'no badge without data')
+  assert(await bad.locator('.export .primary').isDisabled(), 'nothing to export')
   await bad.context().close()
+  const noUrl = await open(`?composer=${encodeURIComponent('http://[')}`)
+  await noUrl.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+  await noUrl.context().close()
   pass('the preview degrades without its export, or with a base that is no URL')
   assert(!page.errors.length, `page errors: ${page.errors.join('; ')}`)
 
@@ -529,7 +539,10 @@ try {
       await shot.keyboard.press('Escape')
     } else await shot.locator('.bar').getByRole('radio', { name: scheme === 'dark' ? 'Dark' : 'Light' }).click()
     await shot.locator('.ids-part').nth(1).click()
-    await shot.locator('.ids-preview[data-step="unavailable"]').waitFor({ timeout: 15000 })
+    // The default base has prepared drawings, so the preview may be composed, loading or failed;
+    // the screenshots show the workshop, not one preview state.
+    await shot.locator('.ids-preview').waitFor({ timeout: 15000 })
+    await shot.waitForTimeout(300)
     await shot.locator('.results .hit').first().waitFor({ timeout: 30000 })
     await shot.evaluate(() => document.fonts.ready)
     assert(await shot.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `no sideways scroll at ${width}`)
