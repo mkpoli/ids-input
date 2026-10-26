@@ -201,7 +201,7 @@ const around = boxes => {
  * them. Null when the pieces cannot be told apart by leaf: one piece spans two leaves (the composer
  * drew the whole description as one glyph), or a filled leaf has no piece. A leaf drawn in several
  * pieces groups them together.
- * @param {{ box: number[] }[]} pieces
+ * @param {{ box: number[], leaf?: number }[]} pieces
  * @param {{ index: number, box: number[], empty?: boolean }[]} leaves
  * @returns {{ index: number, parts: number[], box: number[] }[] | null}
  */
@@ -210,10 +210,17 @@ export function groupParts(pieces, leaves) {
   const filled = leaves.filter(leaf => leaf && !leaf.empty && Array.isArray(leaf.box) && leaf.box.length >= 4
     && leaf.box.slice(0, 4).every(Number.isFinite))
   if (!filled.length || pieces.length < filled.length) return null
+  if (!pieces.every(piece => Array.isArray(piece?.box) && piece.box.length >= 4 && piece.box.slice(0, 4).every(Number.isFinite))) return null
+  if (pieces.every(piece => Number.isInteger(piece.leaf))) {
+    const groups = filled.map(leaf => {
+      const parts = pieces.flatMap((piece, i) => piece.leaf === leaf.index ? [i] : [])
+      return { index: leaf.index, parts, box: parts.length ? around(parts.map(i => pieces[i].box)) : [] }
+    })
+    return groups.every(group => group.parts.length) && groups.reduce((sum, group) => sum + group.parts.length, 0) === pieces.length ? groups : null
+  }
   // A separated drawing gives each leaf one piece, in reading order. That is the only reliable map
   // when leaves share a box (⿻, an enclosure's outer part): the boxes cannot tell them apart.
   if (pieces.length === filled.length) {
-    if (!pieces.every(piece => Array.isArray(piece?.box) && piece.box.length >= 4 && piece.box.slice(0, 4).every(Number.isFinite))) return null
     return filled.map((leaf, i) => ({ index: leaf.index, parts: [i], box: pieces[i].box.slice(0, 4) }))
   }
   /** @type {Map<number, number[]>} */

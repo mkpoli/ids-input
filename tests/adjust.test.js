@@ -78,3 +78,11 @@ describe('a drawing with adjusted parts as an SVG file', () => {
     expect(svg).toContain('<g transform="translate(1 2)scriptalert(1)script"')
   })
 })
+
+
+it('rejects malformed pieces carrying explicit leaf ownership', () => {
+  const leaves = [{ index: 0, box: [0, 0, 100, 100] }]
+  expect(groupParts([{ leaf: 0 }], leaves)).toBeNull()
+  expect(groupParts([{ leaf: 0, box: [0, 0, NaN, 10] }], leaves)).toBeNull()
+  expect(groupParts([{ leaf: 5, box: [0, 0, 10, 10] }], leaves)).toBeNull()
+})
