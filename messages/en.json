@@ -12,7 +12,7 @@
   "ids.do.type": "Type {text}",
   "ids.do.unwrap": "Remove {op}",
   "ids.empty": "Empty slot",
-  "ids.find.placeholder": "Find a character…",
+  "ids.find.placeholder": "Name, character or code…",
   "ids.from.atomic": "No smaller parts recorded",
   "ids.from.collapse": "Hide the parts of {part}",
   "ids.from.containing": "Characters containing {parts}",

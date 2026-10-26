@@ -3,7 +3,9 @@
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
-  const adapter = babelStoneAdapter({ ids, parts })
+  import forms from '../data/component-forms.tsv?url'
+  import names from '../data/component-names.tsv?url'
+  const adapter = babelStoneAdapter({ ids, parts, forms, names })
   let value = $state('')
   let used = $state('')
 </script>

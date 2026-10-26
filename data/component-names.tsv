@@ -1,0 +1,1750 @@
+# The names people call components by, for the component search (src/core/names.js).
+# columns: name, char, source, detail
+# rows: 1727
+# Built by scripts/build_component_names.py.
+# source kanji-tools: anzumura/kanji-tools data/radicals.txt at c3e52cbca38a1fdbf9a96abb1dd015450cc1411c; MIT; Copyright (c) 2022 Dan H
+#   https://github.com/anzumura/kanji-tools
+# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-299, created 2026-10-26), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
+#   https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
+# source ja-wikipedia: the redirects to the Japanese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched 2026-10-26
+#   https://ja.wikipedia.org/
+# source tudien: catusf/tudien dict/radical_name.txt at a214ee303eac33528b8be9aa54c5b10cd70270b3, CC0 1.0; source pleco.hk 偏旁
+#   https://github.com/catusf/tudien
+# source rime-wanxiang: amzxyz/rime-wanxiang lua/data/others.txt at 275c61be289b57e7cc3fe854312e449bae82578c, CC BY 4.0; the radical-nickname block; by amzxyz
+#   https://github.com/amzxyz/rime-wanxiang
+# source mybox: Mararsh/MyBox docs/data2d/ChineseRadicals_example_zh.csv at 107ddc379fd2f4caad37e85c29367d21089b568c, Apache 2.0; the Chinese name of each radical
+#   https://github.com/Mararsh/MyBox
+# source zh-wikipedia: the redirects to the Chinese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched 2026-10-26
+#   https://zh.wikipedia.org/
+# source redirects: data/component-name-redirects.json, CC BY-SA 4.0, https://creativecommons.org/licenses/by-sa/4.0/; the exact redirects used, read 2026-10-26
+# source opencc: traditional and simplified spellings derived with OpenCC 1.4.2, Apache 2.0; by BYVoid
+#   https://github.com/BYVoid/OpenCC
+# The file as a whole is shared alike under CC BY-SA 4.0, because the Wikipedia and KANJIDIC2 rows are:
+# https://creativecommons.org/licenses/by-sa/4.0/
+いちぶ	一	kanji-tools	radical 001
+よこぼう	一	ja-wikipedia	redirect to 一部 (部首)
+イチ	一	kanji-tools	radical 001
+一字旁	一	tudien	zh name
+一部	一	kanji-tools	radical 001
+横	一	mybox	zh radical name
+橫	一	mybox	zh radical name; traditional via OpenCC
+こんぶ	丨	kanji-tools	radical 002
+たてぼう	丨	ja-wikipedia,kanji-tools	radical 002
+ぼう	丨	ja-wikipedia,kanji-tools,kanjidic2	radical 002
+コン部	丨	ja-wikipedia	redirect to 丨部
+丨部	丨	kanji-tools	radical 002
+竖	丨	mybox	zh radical name
+豎	丨	mybox	zh radical name; traditional via OpenCC
+ちゅぶ	丶	kanji-tools	radical 003
+てん	丶	kanji-tools,kanjidic2	radical 003
+丶字旁	丶	tudien	zh name
+丶部	丶	kanji-tools	radical 003
+点	丶	mybox	zh radical name
+點	丶	mybox	zh radical name; traditional via OpenCC
+の	丿	kanji-tools,kanjidic2	radical 004
+のかんむり	丿	kanjidic2	radical name of 丿
+はらいぼう	丿	ja-wikipedia,kanji-tools	radical 004
+へつぶ	丿	kanji-tools	radical 004
+丿部	丿	kanji-tools	radical 004
+払棒	丿	ja-wikipedia	redirect to 丿部
+撇	丿	mybox	zh radical name
+おつにょう	乙	ja-wikipedia,kanji-tools	radical 005
+おつぶ	乙	kanji-tools	radical 005
+つりばり	乙	ja-wikipedia,kanji-tools	radical 005
+れ	乙	kanjidic2	radical name of 乚
+オツ	乙	kanji-tools	radical 005
+乙字旁	乙	zh-wikipedia	redirect to 乙部
+乙繞	乙	ja-wikipedia	redirect to 乙部
+乙部	乙	kanji-tools	radical 005
+乛部	乙	zh-wikipedia	redirect to 乙部
+折	乙	mybox	zh radical name
+かぎ	亅	kanji-tools	radical 006
+けつぶ	亅	kanji-tools	radical 006
+はねぼう	亅	ja-wikipedia,kanji-tools,kanjidic2	radical 006
+ケツ	亅	kanji-tools	radical 006
+亅部	亅	kanji-tools	radical 006
+鉤	亅	mybox	zh radical name; traditional via OpenCC
+钩	亅	mybox	zh radical name
+にぶ	二	kanji-tools	radical 007
+ニ	二	kanji-tools	radical 007
+二字头	二	mybox	zh radical name
+二字頭	二	mybox	zh radical name; traditional via OpenCC
+二部	二	kanji-tools	radical 007
+けいさんかんむり	亠	ja-wikipedia,kanji-tools	radical 008
+けさんかんむり	亠	ja-wikipedia,kanji-tools	radical 008
+とうぶ	亠	kanji-tools	radical 008
+なべぶた	亠	ja-wikipedia,kanji-tools,kanjidic2	radical 008
+亠部	亠	kanji-tools	radical 008
+京字头	亠	rime-wanxiang	zh nickname
+京字頭	亠	rime-wanxiang	zh nickname; traditional via OpenCC
+六字头	亠	tudien	zh name
+六字頭	亠	tudien	zh name; traditional via OpenCC
+卦算冠	亠	ja-wikipedia	redirect to 亠部
+点横	亠	zh-wikipedia	redirect to 亠部; simplified via OpenCC
+点横头	亠	mybox	zh radical name
+點橫	亠	zh-wikipedia	redirect to 亠部
+點橫頭	亠	mybox	zh radical name; traditional via OpenCC
+じんぶ	人	kanji-tools	radical 009
+にんべん	人	kanji-tools	radical 009
+ひと	人	kanji-tools	radical 009
+ひとがしら	人	ja-wikipedia,kanji-tools	radical 009
+ひとやね	人	ja-wikipedia,kanji-tools	radical 009
+人へん	人	ja-wikipedia	redirect to 人部
+人べん	人	ja-wikipedia	redirect to 人部
+人偏	人	ja-wikipedia	redirect to 人部
+人部	人	kanji-tools	radical 009
+人頭	人	ja-wikipedia	redirect to 人部
+亻	人	kanji-tools	radical 009 form
+单人旁	人	rime-wanxiang,tudien,zh-wikipedia	zh name
+单立人	人	rime-wanxiang,tudien	zh name
+單人旁	人	rime-wanxiang,tudien,zh-wikipedia	redirect to 人部
+單立人	人	rime-wanxiang,tudien	zh name; traditional via OpenCC
+人字旁	亻	mybox,rime-wanxiang,zh-wikipedia	zh nickname
+じんぶ	儿	kanji-tools	radical 010
+にんにょう	儿	ja-wikipedia,kanji-tools,kanjidic2	radical 010
+ひとあし	儿	ja-wikipedia,kanji-tools,kanjidic2	radical 010
+人繞	儿	ja-wikipedia	redirect to 儿部
+儿字底	儿	mybox	zh radical name
+儿座底	儿	tudien	zh name
+儿繞	儿	ja-wikipedia	redirect to 儿部
+儿部	儿	kanji-tools	radical 010
+兒字底	儿	mybox	zh radical name; traditional via OpenCC
+兒座底	儿	tudien	zh name; traditional via OpenCC
+いりがしら	入	ja-wikipedia,kanji-tools	radical 011
+いりやね	入	ja-wikipedia,kanji-tools	radical 011
+いる	入	ja-wikipedia,kanji-tools	radical 011
+にゅうぶ	入	kanji-tools	radical 011
+ニュウ	入	kanji-tools	radical 011
+入字头	入	mybox	zh radical name
+入字旁	入	tudien	zh name
+入字頭	入	mybox	zh radical name; traditional via OpenCC
+入部	入	kanji-tools	radical 011
+はちがしら	八	ja-wikipedia,kanji-tools,kanjidic2	radical 012
+はちぶ	八	kanji-tools	radical 012
+ハチ	八	kanji-tools	radical 012
+八字头	八	mybox	zh radical name
+八字旁	八	tudien	zh name
+八字頭	八	mybox	zh radical name; traditional via OpenCC
+八部	八	kanji-tools	radical 012
+えながまえ	冂	kanjidic2	radical name of 冂
+えんがまえ	冂	ja-wikipedia,kanji-tools	radical 013
+けいがまえ	冂	ja-wikipedia,kanji-tools,kanjidic2	radical 013
+けいぶ	冂	kanji-tools	radical 013
+どうがまえ	冂	ja-wikipedia,kanji-tools,kanjidic2	radical 013
+まきがまえ	冂	ja-wikipedia,kanji-tools,kanjidic2	radical 013
+冂構	冂	ja-wikipedia	redirect to 冂部
+冂構え	冂	ja-wikipedia	redirect to 冂部
+冂部	冂	kanji-tools	radical 013
+円構	冂	ja-wikipedia	redirect to 冂部
+円構え	冂	ja-wikipedia	redirect to 冂部
+冏構	冂	ja-wikipedia	redirect to 冂部
+冏構え	冂	ja-wikipedia	redirect to 冂部
+同字匡	冂	tudien	zh name
+同字框	冂	mybox,rime-wanxiang	zh nickname
+同構	冂	ja-wikipedia	redirect to 冂部
+同構え	冂	ja-wikipedia	redirect to 冂部
+ひらかんむり	冖	ja-wikipedia	redirect to 冖部
+べきかんむり	冖	ja-wikipedia,kanji-tools,kanjidic2	radical 014
+べきぶ	冖	kanji-tools	radical 014
+わかんむり	冖	ja-wikipedia,kanji-tools,kanjidic2	radical 014
+ワ冠	冖	ja-wikipedia	redirect to 冖部
+冖冠	冖	ja-wikipedia	redirect to 冖部
+冖部	冖	kanji-tools	radical 014
+平冠	冖	ja-wikipedia	redirect to 冖部
+禿寶蓋	冖	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name; traditional via OpenCC
+秃宝盖	冖	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+にすい	冫	ja-wikipedia,kanji-tools,kanjidic2	radical 015
+ひょうぶ	冫	kanji-tools	radical 015
+两点水	冫	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+仌部	冫	zh-wikipedia	redirect to 冫部
+兩點水	冫	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name; traditional via OpenCC
+冫部	冫	kanji-tools	radical 015
+冰字旁	冫	rime-wanxiang	zh nickname
+冰部	冫	zh-wikipedia	redirect to 冫部
+双点水	冫	zh-wikipedia	redirect to 冫部
+雙點水	冫	zh-wikipedia	redirect to 冫部; traditional via OpenCC
+かざかんむり	几	ja-wikipedia	redirect to 几部
+かざがまえ	几	ja-wikipedia	redirect to 几部
+かぜかんむり	几	ja-wikipedia,kanji-tools	radical 016
+かぜがまえ	几	ja-wikipedia,kanji-tools	radical 016
+きにょう	几	kanji-tools	radical 016
+きぶ	几	kanji-tools	radical 016
+つくえ	几	kanji-tools,kanjidic2	radical 016
+つくえがまえ	几	ja-wikipedia	redirect to 几部
+つくえきにょう	几	ja-wikipedia,kanji-tools	radical 016
+几字旁	几	mybox,tudien	zh name
+几部	几	kanji-tools	radical 016
+風構え	几	ja-wikipedia	redirect to 几部
+うけばこ	凵	ja-wikipedia,kanji-tools,kanjidic2	radical 017
+かんがまえ	凵	ja-wikipedia	redirect to 凵部
+かんにょう	凵	ja-wikipedia,kanji-tools,kanjidic2	radical 017
+かんぶ	凵	kanji-tools	radical 017
+したばこ	凵	ja-wikipedia	redirect to 凵部
+凵構	凵	ja-wikipedia	redirect to 凵部
+凵構え	凵	ja-wikipedia	redirect to 凵部
+凵繞	凵	ja-wikipedia	redirect to 凵部
+凵部	凵	kanji-tools	radical 017
+凶字框	凵	mybox,rime-wanxiang,tudien	zh name
+かたな	刀	kanji-tools	radical 018
+とうぶ	刀	kanji-tools	radical 018
+りっとう	刀	ja-wikipedia,kanji-tools,kanjidic2	radical 018
+刀字旁	刀	mybox,tudien	zh name
+刀部	刀	kanji-tools,rime-wanxiang	radical 018
+刂	刀	kanji-tools	radical 018 form
+提刀旁	刀	zh-wikipedia	redirect to 刀部
+立刀旁	刀	rime-wanxiang,tudien,zh-wikipedia	zh name
+立刀	刂	ja-wikipedia,rime-wanxiang	zh nickname
+ちから	力	kanji-tools	radical 019
+りょくぶ	力	kanji-tools	radical 019
+力字旁	力	mybox,tudien	zh name
+力部	力	kanji-tools	radical 019
+つつみがまえ	勹	ja-wikipedia,kanji-tools,kanjidic2	radical 020
+ほうぶ	勹	kanji-tools	radical 020
+勹部	勹	kanji-tools	radical 020
+包み構え	勹	ja-wikipedia	redirect to 勹部
+包字头	勹	mybox,rime-wanxiang,tudien	zh name
+包字頭	勹	mybox,rime-wanxiang,tudien	zh name; traditional via OpenCC
+包構	勹	ja-wikipedia	redirect to 勹部
+包構え	勹	ja-wikipedia	redirect to 勹部
+包部	勹	zh-wikipedia	redirect to 勹部
+さじ	匕	kanji-tools	radical 021
+さじのひ	匕	ja-wikipedia,kanji-tools,kanjidic2	radical 021
+ひぶ	匕	kanji-tools	radical 021
+ヒ	匕	kanji-tools	radical 021
+匕字旁	匕	mybox,tudien	zh name
+匕部	匕	kanji-tools	radical 021
+はこがまえ	匚	ja-wikipedia,kanji-tools,kanjidic2	radical 022
+ほうぶ	匚	kanji-tools	radical 022
+三框	匚	rime-wanxiang	zh nickname
+三框儿	匚	rime-wanxiang	zh nickname
+三框兒	匚	rime-wanxiang	zh nickname; traditional via OpenCC
+匚構	匚	ja-wikipedia	redirect to 匚部
+匚構え	匚	ja-wikipedia	redirect to 匚部
+匚部	匚	kanji-tools	radical 022
+区字框	匚	mybox,rime-wanxiang	zh nickname
+医字框	匚	tudien	zh name
+區字框	匚	mybox,rime-wanxiang	zh nickname; traditional via OpenCC
+醫字框	匚	tudien	zh name; traditional via OpenCC
+かくしがまえ	匸	ja-wikipedia,kanji-tools,kanjidic2	radical 023
+けいぶ	匸	kanji-tools	radical 023
+匝字框	匸	mybox	zh radical name
+匸構	匸	ja-wikipedia	redirect to 匸部
+匸構え	匸	ja-wikipedia	redirect to 匸部
+匸部	匸	kanji-tools	radical 023
+じゅうぶ	十	kanji-tools	radical 024
+ジュウ	十	kanji-tools	radical 024
+十字旁	十	mybox,tudien	zh name
+十部	十	kanji-tools	radical 024
+うらない	卜	kanji-tools	radical 025
+ぼくのと	卜	ja-wikipedia,kanji-tools,kanjidic2	radical 025
+ぼくぶ	卜	kanji-tools	radical 025
+ボク	卜	kanji-tools	radical 025
+卜字旁	卜	mybox	zh radical name
+卜部	卜	kanji-tools	radical 025
+せつぶ	卩	kanji-tools	radical 026
+ふしづくり	卩	ja-wikipedia,kanji-tools,kanjidic2	radical 026
+まげわりふ	卩	ja-wikipedia,kanji-tools	radical 026
+わりふ	卩	ja-wikipedia,kanji-tools	radical 026
+单耳刀	卩	mybox,rime-wanxiang,tudien	zh name
+单耳旁	卩	rime-wanxiang	zh nickname
+单耳朵	卩	rime-wanxiang	zh nickname
+卩部	卩	kanji-tools	radical 026
+單耳刀	卩	mybox,rime-wanxiang,tudien	zh name; traditional via OpenCC
+單耳旁	卩	rime-wanxiang	zh nickname; traditional via OpenCC
+單耳朵	卩	rime-wanxiang	zh nickname; traditional via OpenCC
+節旁	卩	ja-wikipedia	redirect to 卩部
+耳刀旁	卩	rime-wanxiang	zh nickname
+かんぶ	厂	kanji-tools	radical 027
+がんだれ	厂	ja-wikipedia,kanji-tools,kanjidic2	radical 027
+厂垂	厂	ja-wikipedia	redirect to 厂部
+厂垂れ	厂	ja-wikipedia	redirect to 厂部
+厂字头	厂	zh-wikipedia	redirect to 厂部
+厂字旁	厂	mybox,tudien	zh name
+厂字頭	厂	zh-wikipedia	redirect to 厂部; traditional via OpenCC
+厂部	厂	kanji-tools	radical 027
+雁垂	厂	ja-wikipedia	redirect to 厂部
+雁垂れ	厂	ja-wikipedia	redirect to 厂部
+しぶ	厶	kanji-tools	radical 028
+む	厶	kanji-tools,kanjidic2	radical 028
+厶部	厶	kanji-tools	radical 028
+私字旁	厶	mybox,rime-wanxiang,tudien	zh name
+また	又	kanji-tools	radical 029
+ゆうぶ	又	kanji-tools	radical 029
+又字旁	又	mybox,tudien	zh name
+又部	又	kanji-tools	radical 029
+くち	口	kanji-tools	radical 030
+くちへん	口	ja-wikipedia,kanji-tools	radical 030
+こうぶ	口	kanji-tools	radical 030
+口偏	口	ja-wikipedia	redirect to 口部
+口字旁	口	mybox,tudien,zh-wikipedia	zh name
+口部	口	kanji-tools	radical 030
+いぶ	囗	kanji-tools	radical 031
+くにがまえ	囗	ja-wikipedia,kanji-tools,kanjidic2	radical 031
+囗構え	囗	ja-wikipedia	redirect to 囗部
+囗部	囗	kanji-tools	radical 031
+围部	囗	zh-wikipedia	redirect to 囗部; simplified via OpenCC
+国字框	囗	rime-wanxiang,tudien,zh-wikipedia	zh name
+国構	囗	ja-wikipedia	redirect to 囗部
+国構え	囗	ja-wikipedia	redirect to 囗部
+國字框	囗	rime-wanxiang,tudien,zh-wikipedia	zh name; traditional via OpenCC
+圍部	囗	zh-wikipedia	redirect to 囗部
+大口框	囗	rime-wanxiang	zh nickname
+方框	囗	mybox,rime-wanxiang	zh nickname
+つち	土	kanji-tools	radical 032
+つちへん	土	ja-wikipedia,kanji-tools	radical 032
+どぶ	土	kanji-tools	radical 032
+どへん	土	ja-wikipedia	redirect to 土部
+土へん	土	ja-wikipedia	redirect to 土部
+土偏	土	ja-wikipedia	redirect to 土部
+土字旁	土	zh-wikipedia	redirect to 土部
+土部	土	kanji-tools	radical 032
+提土旁	土	mybox,tudien,zh-wikipedia	zh name
+さむらい	士	kanji-tools,kanjidic2	radical 033
+さむらいかんむり	士	ja-wikipedia,kanji-tools	radical 033
+しぶ	士	kanji-tools	radical 033
+士字头	士	mybox	zh radical name
+士字旁	士	tudien	zh name
+士字頭	士	mybox	zh radical name; traditional via OpenCC
+士部	士	kanji-tools	radical 033
+ちかんむり	夂	ja-wikipedia,kanji-tools	radical 034
+ちぶ	夂	kanji-tools	radical 034
+のまた	夂	ja-wikipedia	redirect to 夂部
+のまたかんむり	夂	ja-wikipedia,kanji-tools	radical 034
+ふゆがしら	夂	ja-wikipedia,kanji-tools,kanjidic2	radical 034
+冬字头	夂	rime-wanxiang	zh nickname
+冬字頭	夂	rime-wanxiang	zh nickname; traditional via OpenCC
+冬頭	夂	ja-wikipedia	redirect to 夂部
+夂部	夂	kanji-tools	radical 034
+折文	夂	rime-wanxiang	zh nickname
+折文儿	夂	rime-wanxiang	zh nickname
+折文兒	夂	rime-wanxiang	zh nickname; traditional via OpenCC
+折文旁	夂	mybox,rime-wanxiang,tudien	zh name
+すいにょう	夊	ja-wikipedia,kanji-tools,kanjidic2	radical 035
+すいぶ	夊	kanji-tools	radical 035
+なつあし	夊	ja-wikipedia,kanji-tools	radical 035
+冬字头	夊	mybox	zh radical name
+冬字頭	夊	mybox	zh radical name; traditional via OpenCC
+夊繞	夊	ja-wikipedia	redirect to 夊部
+夊部	夊	kanji-tools	radical 035
+せきぶ	夕	kanji-tools	radical 036
+ゆう	夕	kanji-tools	radical 036
+ゆうべ	夕	ja-wikipedia,kanji-tools	radical 036
+タ	夕	kanji-tools	radical 036
+夕字旁	夕	mybox,tudien	zh name
+夕部	夕	kanji-tools	radical 036
+だいかしら	大	kanji-tools	radical 037
+だいかんむり	大	ja-wikipedia,kanji-tools	radical 037
+だいがしら	大	ja-wikipedia	redirect to 大部
+だいぶ	大	kanji-tools	radical 037
+ダイ	大	kanji-tools	radical 037
+大字头	大	mybox	zh radical name
+大字旁	大	tudien	zh name
+大字頭	大	mybox	zh radical name; traditional via OpenCC
+大部	大	kanji-tools	radical 037
+おんな	女	kanji-tools	radical 038
+おんなへん	女	ja-wikipedia,kanji-tools	radical 038
+じょぶ	女	kanji-tools	radical 038
+女へん	女	ja-wikipedia	redirect to 女部
+女偏	女	ja-wikipedia	redirect to 女部
+女字旁	女	mybox,tudien	zh name
+女部	女	kanji-tools	radical 038
+こ	子	kanji-tools	radical 039
+こども	子	kanji-tools	radical 039
+こどもへん	子	ja-wikipedia,kanji-tools	radical 039
+こへん	子	ja-wikipedia,kanji-tools	radical 039
+しぶ	子	kanji-tools	radical 039
+すてごへん	子	ja-wikipedia	redirect to 子部
+子偏	子	ja-wikipedia	redirect to 子部
+子字旁	子	mybox,rime-wanxiang,tudien	zh name
+子部	子	kanji-tools,rime-wanxiang	radical 039
+捨子偏	子	ja-wikipedia	redirect to 子部
+うかんむり	宀	ja-wikipedia,kanji-tools,kanjidic2	radical 040
+べんぶ	宀	kanji-tools	radical 040
+ウ冠	宀	ja-wikipedia	redirect to 宀部
+宀部	宀	kanji-tools	radical 040
+宝盖	宀	rime-wanxiang	zh nickname
+宝盖儿	宀	rime-wanxiang	zh nickname
+宝盖儿头	宀	rime-wanxiang	zh nickname
+宝盖头	宀	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+寶蓋	宀	rime-wanxiang	zh nickname; traditional via OpenCC
+寶蓋兒	宀	rime-wanxiang	zh nickname; traditional via OpenCC
+寶蓋兒頭	宀	rime-wanxiang	zh nickname; traditional via OpenCC
+寶蓋頭	宀	mybox,rime-wanxiang,tudien,zh-wikipedia	redirect to 宀部
+すんづくり	寸	ja-wikipedia	redirect to 寸部
+すんぶ	寸	kanji-tools	radical 041
+スン	寸	kanji-tools	radical 041
+寸字旁	寸	mybox,tudien	zh name
+寸旁	寸	ja-wikipedia	redirect to 寸部
+寸部	寸	kanji-tools	radical 041
+しょうがしら	小	ja-wikipedia,kanji-tools	radical 042
+しょうぶ	小	kanji-tools	radical 042
+ちいさい	小	kanji-tools	radical 042
+なおがしら	小	ja-wikipedia,kanji-tools	radical 042
+ショウ	小	kanji-tools	radical 042
+小字头	小	mybox	zh radical name
+小字頭	小	mybox	zh radical name; traditional via OpenCC
+小部	小	kanji-tools	radical 042
+当字头	小	tudien	zh name
+當字頭	小	tudien	zh name; traditional via OpenCC
+おうにょう	尢	ja-wikipedia,kanji-tools	radical 043
+おうぶ	尢	kanji-tools	radical 043
+だいのまげあし	尢	ja-wikipedia,kanji-tools,kanjidic2	radical 043
+まげあし	尢	ja-wikipedia,kanji-tools	radical 043
+もっとも	尢	kanjidic2	radical name of 尢
+オウ	尢	kanji-tools	radical 043
+尢繞	尢	ja-wikipedia	redirect to 尢部
+尢部	尢	kanji-tools	radical 043
+尣	尢	kanji-tools	radical 043 form
+尣部	尢	ja-wikipedia	redirect to 尢部
+尤字旁	尢	mybox,rime-wanxiang	zh nickname
+尤部	尢	zh-wikipedia	redirect to 尢部
+かばね	尸	kanji-tools	radical 044
+かばねだれ	尸	ja-wikipedia,kanji-tools	radical 044
+しかばね	尸	kanji-tools,kanjidic2	radical 044
+しかばねかんむり	尸	ja-wikipedia,kanji-tools,kanjidic2	radical 044
+しぶ	尸	kanji-tools	radical 044
+尸冠	尸	ja-wikipedia	redirect to 尸部
+尸垂	尸	ja-wikipedia	redirect to 尸部
+尸垂れ	尸	ja-wikipedia	redirect to 尸部
+尸字头	尸	mybox,tudien	zh name
+尸字頭	尸	mybox,tudien	zh name; traditional via OpenCC
+尸部	尸	kanji-tools	radical 044
+くさのめ	屮	kanji-tools	radical 045
+てつぶ	屮	kanji-tools	radical 045
+ふるくさ	屮	kanjidic2	radical name of 屮
+めばえ	屮	kanji-tools	radical 045
+テツ	屮	kanji-tools	radical 045
+テツ部	屮	ja-wikipedia	redirect to 屮部
+半草头	屮	mybox	zh radical name
+半草頭	屮	mybox	zh radical name; traditional via OpenCC
+屮部	屮	kanji-tools	radical 045
+さんぶ	山	kanji-tools	radical 046
+やま	山	kanji-tools	radical 046
+やまかんむり	山	ja-wikipedia	redirect to 山部
+やまへん	山	ja-wikipedia,kanji-tools	radical 046
+山へん	山	ja-wikipedia	redirect to 山部
+山偏	山	ja-wikipedia	redirect to 山部
+山冠	山	ja-wikipedia	redirect to 山部
+山字旁	山	mybox,tudien	zh name
+山部	山	kanji-tools	radical 046
+かわ	巛	kanji-tools	radical 047
+さんぼんがわ	巛	kanjidic2	radical name of 川
+さんぽがわ	巛	ja-wikipedia,kanji-tools	radical 047
+せんぶ	巛	kanji-tools	radical 047
+まがりかわ	巛	ja-wikipedia,kanji-tools	radical 047
+まがりがわ	巛	ja-wikipedia,kanjidic2	radical name of 巛
+まげかわ	巛	ja-wikipedia	redirect to 巛部
+三拐	巛	mybox,rime-wanxiang	zh nickname
+三拐儿	巛	rime-wanxiang	zh nickname
+三拐兒	巛	rime-wanxiang	zh nickname; traditional via OpenCC
+巛部	巛	kanji-tools	radical 047
+川	巛	kanji-tools	radical 047 form
+川部	巛	zh-wikipedia	redirect to 巛部
+こうぶ	工	kanji-tools	radical 048
+たくみ	工	kanji-tools,kanjidic2	radical 048
+たくみへん	工	ja-wikipedia,kanji-tools	radical 048
+コウ	工	kanji-tools	radical 048
+工字旁	工	mybox,tudien	zh name
+工部	工	kanji-tools	radical 048
+おのれ	己	kanji-tools	radical 049
+きぶ	己	kanji-tools	radical 049
+すでに	己	kanji-tools	radical 049
+み	己	kanji-tools	radical 049
+イ	己	kanji-tools	radical 049
+キ	己	kanji-tools	radical 049
+コ	己	kanji-tools	radical 049
+シ	己	kanji-tools	radical 049
+己字旁	己	mybox	zh radical name
+己部	己	kanji-tools	radical 049
+已	己	kanji-tools	radical 049 form
+已部	己	ja-wikipedia,zh-wikipedia	redirect to 己部
+巳	己	kanji-tools	radical 049 form
+巳部	己	ja-wikipedia,zh-wikipedia	redirect to 己部
+きんぶ	巾	kanji-tools	radical 050
+きんへん	巾	ja-wikipedia,kanji-tools	radical 050
+きんべん	巾	ja-wikipedia,kanji-tools	radical 050
+はば	巾	kanji-tools,kanjidic2	radical 050
+はばへん	巾	ja-wikipedia,kanji-tools	radical 050
+巾偏	巾	ja-wikipedia	redirect to 巾部
+巾字儿	巾	tudien	zh name
+巾字兒	巾	tudien	zh name; traditional via OpenCC
+巾字旁	巾	mybox	zh radical name
+巾部	巾	kanji-tools	radical 050
+いちじゅう	干	ja-wikipedia,kanji-tools	radical 051
+かんぶ	干	kanji-tools	radical 051
+ほす	干	ja-wikipedia,kanji-tools	radical 051
+カン	干	kanji-tools	radical 051
+干字旁	干	mybox,tudien	zh name
+干部	干	kanji-tools	radical 051
+いとがしら	幺	ja-wikipedia,kanji-tools,kanjidic2	radical 052
+ようぶ	幺	kanji-tools	radical 052
+ようへん	幺	kanjidic2	radical name of 幺
+ヨウ	幺	kanji-tools	radical 052
+么部	幺	zh-wikipedia	redirect to 幺部
+幺字旁	幺	mybox	zh radical name
+幺部	幺	kanji-tools	radical 052
+幼字旁	幺	rime-wanxiang	zh nickname
+糸頭	幺	ja-wikipedia	redirect to 幺部
+麼部	幺	zh-wikipedia	redirect to 幺部; traditional via OpenCC
+げんぶ	广	kanji-tools	radical 053
+まだれ	广	ja-wikipedia,kanji-tools,kanjidic2	radical 053
+广垂	广	ja-wikipedia	redirect to 广部
+广垂れ	广	ja-wikipedia	redirect to 广部
+广字头	广	zh-wikipedia	redirect to 广部
+广字旁	广	mybox,tudien	zh name
+广部	广	kanji-tools	radical 053
+廣字旁	广	mybox,tudien	zh name; traditional via OpenCC
+廣字頭	广	zh-wikipedia	redirect to 广部; traditional via OpenCC
+麻垂	广	ja-wikipedia	redirect to 广部
+麻垂れ	广	ja-wikipedia	redirect to 广部
+いんにょう	廴	ja-wikipedia,kanji-tools,kanjidic2	radical 054
+いんぶ	廴	kanji-tools	radical 054
+えんにゅう	廴	ja-wikipedia,kanji-tools	radical 054
+えんにょう	廴	ja-wikipedia,kanji-tools,kanjidic2	radical 054
+廴繞	廴	ja-wikipedia	redirect to 廴部
+廴部	廴	kanji-tools	radical 054
+延繞	廴	ja-wikipedia	redirect to 廴部
+建之旁	廴	rime-wanxiang,tudien	zh name
+建字底	廴	mybox	zh radical name
+きょうぶ	廾	kanji-tools	radical 055
+こまぬき	廾	ja-wikipedia,kanji-tools	radical 055
+にじゅうあし	廾	ja-wikipedia,kanji-tools,kanjidic2	radical 055
+キョウ	廾	kanji-tools	radical 055
+二十脚	廾	ja-wikipedia	redirect to 廾部
+廾部	廾	kanji-tools	radical 055
+弄字底	廾	mybox,rime-wanxiang,tudien	zh name
+しきがまえ	弋	ja-wikipedia,kanji-tools,kanjidic2	radical 056
+よくぶ	弋	kanji-tools	radical 056
+ヨク	弋	ja-wikipedia,kanji-tools	radical 056
+弋字旁	弋	mybox	zh radical name
+弋部	弋	kanji-tools	radical 056
+式構	弋	ja-wikipedia	redirect to 弋部
+きゅうぶ	弓	kanji-tools	radical 057
+ゆみ	弓	kanji-tools	radical 057
+ゆみへん	弓	ja-wikipedia,kanji-tools	radical 057
+弓偏	弓	ja-wikipedia	redirect to 弓部
+弓字旁	弓	mybox,tudien	zh name
+弓部	弓	kanji-tools	radical 057
+⺕部	彐	zh-wikipedia	redirect to 彐部
+いのこがしら	彐	ja-wikipedia,kanji-tools	radical 058
+けいがしら	彐	ja-wikipedia,kanji-tools,kanjidic2	radical 058
+けいぶ	彐	kanji-tools	radical 058
+ヨ部	彐	ja-wikipedia	redirect to 彐部
+彐	彐	kanji-tools	radical 058 form
+彐部	彐	kanji-tools	radical 058
+彐頭	彐	ja-wikipedia	redirect to 彐部
+彑	彐	kanji-tools	radical 058 form
+彑部	彐	ja-wikipedia,zh-wikipedia	redirect to 彐部
+彑頭	彐	ja-wikipedia	redirect to 彐部
+横山	彐	rime-wanxiang	zh nickname
+橫山	彐	rime-wanxiang	zh nickname; traditional via OpenCC
+雪字底	彐	mybox,rime-wanxiang	zh nickname
+かみかざり	彡	ja-wikipedia,kanji-tools,kanjidic2	radical 059
+けかざり	彡	kanji-tools	radical 059
+さんつくり	彡	ja-wikipedia	redirect to 彡部
+さんづくり	彡	ja-wikipedia,kanji-tools,kanjidic2	radical 059
+さんぶ	彡	kanji-tools	radical 059
+三撇	彡	mybox,rime-wanxiang	zh nickname
+三撇儿	彡	rime-wanxiang,tudien	zh name
+三撇兒	彡	rime-wanxiang,tudien	zh name; traditional via OpenCC
+三旁	彡	ja-wikipedia	redirect to 彡部
+彡旁	彡	ja-wikipedia	redirect to 彡部
+彡部	彡	kanji-tools	radical 059
+ぎょうにんべん	彳	ja-wikipedia,kanji-tools,kanjidic2	radical 060
+てきぶ	彳	kanji-tools	radical 060
+双人旁	彳	mybox,rime-wanxiang,zh-wikipedia	zh nickname
+双立人	彳	rime-wanxiang,tudien	zh name
+彳部	彳	kanji-tools	radical 060
+行人偏	彳	ja-wikipedia	redirect to 彳部
+雙人旁	彳	mybox,rime-wanxiang,zh-wikipedia	redirect to 彳部
+雙立人	彳	rime-wanxiang,tudien	zh name; traditional via OpenCC
+こころ	心	kanji-tools	radical 061
+こころへん	心	ja-wikipedia	redirect to 心部
+したごころ	心	ja-wikipedia,kanji-tools	radical 061
+しんぶ	心	kanji-tools	radical 061
+りっしんべん	心	ja-wikipedia,kanji-tools,kanjidic2	radical 061
+下心	心	ja-wikipedia	redirect to 心部
+心字底	心	mybox	zh radical name
+心部	心	kanji-tools,rime-wanxiang	radical 061
+忄	心	kanji-tools	radical 061 form
+立心偏	心	ja-wikipedia	redirect to 心部
+竖心旁	心	rime-wanxiang,tudien,zh-wikipedia	zh name
+豎心旁	心	rime-wanxiang,tudien,zh-wikipedia	redirect to 心部
+竖心	忄	rime-wanxiang	zh nickname
+豎心	忄	rime-wanxiang	zh nickname; traditional via OpenCC
+かのほこ	戈	ja-wikipedia,kanji-tools,kanjidic2	radical 062
+かぶ	戈	kanji-tools	radical 062
+たすき	戈	kanji-tools	radical 062
+ほこ	戈	kanji-tools	radical 062
+ほこがまえ	戈	ja-wikipedia,kanji-tools	radical 062
+ほこづくり	戈	kanji-tools	radical 062
+戈字旁	戈	mybox,tudien	zh name
+戈旁	戈	ja-wikipedia	redirect to 戈部
+戈構	戈	ja-wikipedia	redirect to 戈部
+戈構え	戈	ja-wikipedia	redirect to 戈部
+戈部	戈	kanji-tools	radical 062
+こぶ	戶	kanji-tools	radical 063
+と	戶	kanji-tools	radical 063
+とかんむり	戶	ja-wikipedia,kanji-tools	radical 063
+とだれ	戶	ja-wikipedia,kanji-tools	radical 063
+とびらのと	戶	ja-wikipedia,kanji-tools,kanjidic2	radical 063
+戶字旁	戶	tudien	zh name; traditional via OpenCC
+戶字頭	戶	mybox,zh-wikipedia	zh radical name; traditional via OpenCC
+戶部	戶	ja-wikipedia	redirect to 戸部 (部首)
+户字头	戶	mybox,zh-wikipedia	zh radical name
+户字旁	戶	tudien	zh name
+户部	戶	ja-wikipedia	redirect to 戸部 (部首)
+戸	戶	kanji-tools	radical 063 form
+戸冠	戶	ja-wikipedia	redirect to 戸部 (部首)
+戸垂	戶	ja-wikipedia	redirect to 戸部 (部首)
+戸垂れ	戶	ja-wikipedia	redirect to 戸部 (部首)
+戸部	戶	kanji-tools	radical 063
+しゅぶ	手	kanji-tools	radical 064
+て	手	kanji-tools	radical 064
+てへん	手	ja-wikipedia,kanji-tools,kanjidic2	radical 064
+手へん	手	ja-wikipedia	redirect to 手部
+手偏	手	ja-wikipedia	redirect to 手部
+手字旁	手	mybox	zh radical name
+手部	手	kanji-tools,rime-wanxiang	radical 064
+扌	手	kanji-tools	radical 064 form
+提手旁	手	rime-wanxiang,tudien,zh-wikipedia	zh name
+看字头	手	tudien	zh name
+看字頭	手	tudien	zh name; traditional via OpenCC
+えだにょう	支	ja-wikipedia,kanji-tools	radical 065
+しにょう	支	kanji-tools	radical 065
+しぶ	支	kanji-tools	radical 065
+しんよう	支	kanjidic2	radical name of 支
+じゅうまた	支	ja-wikipedia,kanji-tools,kanjidic2	radical 065
+支字旁	支	mybox	zh radical name
+支繞	支	ja-wikipedia	redirect to 支部 (部首)
+支部	支	kanji-tools	radical 065
+しぶん	攵	kanji-tools	radical 066
+とまた	攵	ja-wikipedia,kanji-tools,kanjidic2	radical 066
+のぶん	攵	ja-wikipedia,kanji-tools,kanjidic2	radical 066
+ぼくづくり	攵	ja-wikipedia,kanji-tools,kanjidic2	radical 066
+ぼくにょう	攵	ja-wikipedia,kanji-tools,kanjidic2	radical 066
+ぼくぶ	攵	kanji-tools	radical 066
+ノ文	攵	ja-wikipedia	redirect to 攴部
+反文	攵	rime-wanxiang	zh nickname
+反文旁	攵	rime-wanxiang,tudien,zh-wikipedia	zh name
+攴繞	攵	ja-wikipedia	redirect to 攴部
+攴部	攵	kanji-tools	radical 066
+攵	攵	kanji-tools	radical 066 form
+攵繞	攵	ja-wikipedia	redirect to 攴部
+攵部	攵	ja-wikipedia	redirect to 攴部
+敲字旁	攵	mybox	zh radical name
+旧反文旁	攵	tudien	zh name
+舊反文旁	攵	tudien	zh name; traditional via OpenCC
+ふみつくり	文	kanji-tools	radical 067
+ふみづくり	文	ja-wikipedia	redirect to 文部
+ぶんにょう	文	ja-wikipedia,kanji-tools,kanjidic2	radical 067
+ぶんぶ	文	ja-wikipedia,kanji-tools	radical 067
+ブン	文	kanji-tools	radical 067
+文字头	文	mybox	zh radical name
+文字頭	文	mybox	zh radical name; traditional via OpenCC
+文繞	文	ja-wikipedia	redirect to 文部
+文部	文	kanji-tools	radical 067
+とぶ	斗	kanji-tools	radical 068
+とます	斗	ja-wikipedia,kanji-tools,kanjidic2	radical 068
+ます	斗	kanji-tools	radical 068
+ト	斗	kanji-tools	radical 068
+斗字旁	斗	mybox	zh radical name
+斗部	斗	kanji-tools	radical 068
+鬥字旁	斗	mybox	zh radical name; traditional via OpenCC
+おの	斤	kanji-tools,kanjidic2	radical 069
+おのづくり	斤	ja-wikipedia,kanji-tools	radical 069
+きんぶ	斤	kanji-tools	radical 069
+キン	斤	kanji-tools	radical 069
+斤字旁	斤	mybox,tudien	zh name
+斤旁	斤	ja-wikipedia	redirect to 斤部
+斤部	斤	kanji-tools	radical 069
+斧旁	斤	ja-wikipedia	redirect to 斤部
+かたへん	方	kanji-tools	radical 070
+ほうぶ	方	kanji-tools	radical 070
+ほうへん	方	ja-wikipedia,kanji-tools	radical 070
+ホウ	方	kanji-tools	radical 070
+方偏	方	ja-wikipedia	redirect to 方部
+方字旁	方	mybox,tudien	zh name
+方部	方	kanji-tools	radical 070
+すでのつくり	无	ja-wikipedia,kanji-tools	radical 071
+なし	无	kanji-tools,kanjidic2	radical 071
+む	无	kanjidic2	radical name of 无
+むにょう	无	ja-wikipedia,kanji-tools,kanjidic2	radical 071
+むぶ	无	kanji-tools	radical 071
+ブ	无	kanji-tools	radical 071
+无字旁	无	mybox	zh radical name
+无繞	无	ja-wikipedia	redirect to 无部
+无部	无	kanji-tools	radical 071
+旡	无	kanji-tools	radical 071 form
+旡部	无	zh-wikipedia	redirect to 无部
+無字旁	无	mybox	zh radical name; traditional via OpenCC
+すでのつくり	旡	kanjidic2	radical name of 旡
+にち	日	kanji-tools	radical 072
+にちぶ	日	kanji-tools	radical 072
+にちへん	日	ja-wikipedia,kanji-tools	radical 072
+ひ	日	kanji-tools	radical 072
+ひへん	日	kanji-tools	radical 072
+日偏	日	ja-wikipedia	redirect to 日部
+日字旁	日	mybox,tudien	zh name
+日部	日	kanji-tools	radical 072
+いわく	曰	ja-wikipedia,kanji-tools	radical 073
+えつぶ	曰	kanji-tools	radical 073
+ひらび	曰	ja-wikipedia,kanji-tools,kanjidic2	radical 073
+曰字头	曰	mybox	zh radical name
+曰字頭	曰	mybox	zh radical name; traditional via OpenCC
+曰部	曰	kanji-tools	radical 073
+げつぶ	月	kanji-tools	radical 074
+つき	月	kanji-tools	radical 074
+つきへん	月	ja-wikipedia,kanji-tools	radical 074
+ふなづき	月	ja-wikipedia,kanji-tools	radical 074
+月偏	月	ja-wikipedia	redirect to 月部
+月字旁	月	mybox,tudien	zh name
+月部	月	kanji-tools	radical 074
+き	木	kanji-tools	radical 075
+きへん	木	ja-wikipedia,kanji-tools	radical 075
+もくぶ	木	kanji-tools	radical 075
+木へん	木	ja-wikipedia	redirect to 木部 (部首)
+木偏	木	ja-wikipedia	redirect to 木部 (部首)
+木字旁	木	mybox,tudien,zh-wikipedia	zh name
+木部	木	kanji-tools	radical 075
+あくび	欠	kanji-tools,kanjidic2	radical 076
+あくびづくり	欠	ja-wikipedia	redirect to 欠部
+かける	欠	kanji-tools	radical 076
+けんづくり	欠	ja-wikipedia	redirect to 欠部
+けんぶ	欠	kanji-tools	radical 076
+ふきづくり	欠	ja-wikipedia	redirect to 欠部
+吹旁	欠	ja-wikipedia	redirect to 欠部
+欠字旁	欠	mybox,tudien	zh name
+欠部	欠	kanji-tools	radical 076
+しぶ	止	kanji-tools	radical 077
+とまる	止	ja-wikipedia	redirect to 止部
+とめへん	止	ja-wikipedia,kanji-tools	radical 077
+とめる	止	ja-wikipedia,kanji-tools	radical 077
+止字旁	止	mybox,tudien	zh name
+止部	止	kanji-tools	radical 077
+いちたへん	歹	ja-wikipedia,kanji-tools,kanjidic2	radical 078
+かばねへん	歹	ja-wikipedia,kanji-tools	radical 078
+がつぶ	歹	kanji-tools	radical 078
+がつへん	歹	ja-wikipedia,kanji-tools,kanjidic2	radical 078
+しにがまえ	歹	kanji-tools,kanjidic2	radical 078
+ガツ	歹	ja-wikipedia,kanji-tools	radical 078
+一タ偏	歹	ja-wikipedia	redirect to 歹部
+一夕偏	歹	ja-wikipedia	redirect to 歹部
+歹偏	歹	ja-wikipedia	redirect to 歹部
+歹字旁	歹	mybox	zh radical name
+歹部	歹	kanji-tools	radical 078
+歺	歹	kanji-tools	radical 078 form
+歺偏	歹	ja-wikipedia	redirect to 歹部
+しゅぶ	殳	kanji-tools	radical 079
+ほこ	殳	kanji-tools	radical 079
+ほこつくり	殳	kanjidic2	radical name of 殳
+ほこづくり	殳	kanji-tools	radical 079
+るまた	殳	ja-wikipedia,kanji-tools,kanjidic2	radical 079
+ル又	殳	ja-wikipedia	redirect to 殳部
+殳字旁	殳	mybox,tudien	zh name
+殳旁	殳	ja-wikipedia	redirect to 殳部
+殳部	殳	kanji-tools	radical 079
+かんのはは	毋	kanjidic2	radical name of 毋
+なかれ	毋	ja-wikipedia,kanji-tools,kanjidic2	radical 080
+はは	毋	kanji-tools,kanjidic2	radical 080
+ははのかん	毋	ja-wikipedia,kanji-tools	radical 080
+ぶぶ	毋	kanji-tools	radical 080
+毋字旁	毋	mybox	zh radical name
+毋部	毋	kanji-tools	radical 080
+毌部	毋	ja-wikipedia	redirect to 毋部
+母	毋	kanji-tools	radical 080 form
+母部	毋	ja-wikipedia,zh-wikipedia	redirect to 毋部
+くらべる	比	ja-wikipedia,kanji-tools	radical 081
+ならびひ	比	ja-wikipedia,kanji-tools	radical 081
+ひぶ	比	kanji-tools	radical 081
+ヒ	比	kanji-tools	radical 081
+比字旁	比	mybox	zh radical name
+比部	比	kanji-tools	radical 081
+け	毛	kanji-tools	radical 082
+もうぶ	毛	kanji-tools	radical 082
+毛字旁	毛	mybox	zh radical name
+毛部	毛	kanji-tools	radical 082
+うじ	氏	kanji-tools	radical 083
+しぶ	氏	kanji-tools	radical 083
+氏字旁	氏	mybox	zh radical name
+氏部	氏	kanji-tools	radical 083
+きがまえ	气	kanji-tools,kanjidic2	radical 084
+きぶ	气	kanji-tools	radical 084
+气字头	气	mybox	zh radical name
+气構え	气	ja-wikipedia	redirect to 气部
+气部	气	kanji-tools,zh-wikipedia	radical 084
+気構	气	ja-wikipedia	redirect to 气部
+気構え	气	ja-wikipedia	redirect to 气部
+氣字頭	气	mybox	zh radical name; traditional via OpenCC
+氣部	气	zh-wikipedia	redirect to 气部
+さんずい	水	ja-wikipedia,kanji-tools	radical 085
+さんずいへん	水	ja-wikipedia	redirect to 水部
+したみず	水	ja-wikipedia,kanji-tools,kanjidic2	radical 085
+すいぶ	水	kanji-tools	radical 085
+みず	水	kanji-tools,kanjidic2	radical 085
+三点水	水	rime-wanxiang,tudien,zh-wikipedia	zh name
+三點水	水	rime-wanxiang,tudien,zh-wikipedia	redirect to 水部
+水字旁	水	mybox	zh radical name
+水部	水	kanji-tools,rime-wanxiang	radical 085
+水部 (部首)	水	zh-wikipedia	redirect to 水部
+氵	水	kanji-tools	radical 085 form
+氺	水	kanji-tools	radical 085 form
+かぶ	火	kanji-tools	radical 086
+ひ	火	kanji-tools	radical 086
+ひへん	火	kanji-tools	radical 086
+れっか	火	kanji-tools,kanjidic2	radical 086
+れんが	火	kanji-tools	radical 086
+列火	火	ja-wikipedia	redirect to 火部
+四点底	火	rime-wanxiang,tudien,zh-wikipedia	zh name
+四點底	火	rime-wanxiang,tudien,zh-wikipedia	zh name; traditional via OpenCC
+四點水	火	rime-wanxiang,zh-wikipedia	redirect to 火部
+火偏	火	ja-wikipedia	redirect to 火部
+火字旁	火	mybox,tudien	zh name
+火部	火	kanji-tools	radical 086
+灬	火	kanji-tools	radical 086 form
+連火	火	ja-wikipedia	redirect to 火部
+四点水	灬	rime-wanxiang,zh-wikipedia	zh nickname
+そうにょう	爪	kanji-tools	radical 087
+そうぶ	爪	kanji-tools	radical 087
+つめ	爪	kanji-tools	radical 087
+つめかんむり	爪	ja-wikipedia,kanji-tools,kanjidic2	radical 087
+つめがしら	爪	ja-wikipedia,kanjidic2	radical name of 爫
+受字头	爪	tudien	zh name
+受字頭	爪	tudien	zh name; traditional via OpenCC
+爪冠	爪	ja-wikipedia	redirect to 爪部
+爪繞	爪	ja-wikipedia	redirect to 爪部
+爪部	爪	kanji-tools	radical 087
+爫	爪	kanji-tools	radical 087 form
+爪字头	爫	mybox,rime-wanxiang,zh-wikipedia	zh nickname
+爪字頭	爫	mybox,rime-wanxiang,zh-wikipedia	zh nickname; traditional via OpenCC
+ちち	父	kanji-tools	radical 088
+ふぶ	父	kanji-tools	radical 088
+父字头	父	mybox	zh radical name
+父字頭	父	mybox	zh radical name; traditional via OpenCC
+父部	父	kanji-tools	radical 088
+こうぶ	爻	kanji-tools	radical 089
+まじわる	爻	ja-wikipedia,kanjidic2	radical name of 爻
+めめ	爻	kanjidic2	radical name of 爻
+コウ	爻	kanji-tools	radical 089
+爻字旁	爻	mybox	zh radical name
+爻部	爻	kanji-tools	radical 089
+しょうぶ	爿	kanji-tools	radical 090
+しょうへん	爿	ja-wikipedia,kanji-tools,kanjidic2	radical 090
+ショウ	爿	kanji-tools	radical 090
+丬部	爿	ja-wikipedia,zh-wikipedia	redirect to 爿部
+将字旁	爿	rime-wanxiang,tudien	zh name
+將字旁	爿	rime-wanxiang,tudien	zh name; traditional via OpenCC
+爿偏	爿	ja-wikipedia	redirect to 爿部
+爿字旁	爿	mybox	zh radical name
+爿部	爿	kanji-tools,rime-wanxiang	radical 090
+かた	片	kanji-tools	radical 091
+かたへん	片	kanji-tools	radical 091
+へんぶ	片	kanji-tools	radical 091
+片偏	片	ja-wikipedia	redirect to 片部
+片字旁	片	mybox	zh radical name
+片部	片	kanji-tools	radical 091
+がぶ	牙	kanji-tools	radical 092
+きば	牙	kanji-tools	radical 092
+きばへん	牙	kanji-tools,kanjidic2	radical 092
+牙字旁	牙	mybox	zh radical name
+牙部	牙	kanji-tools	radical 092
+うし	牛	kanji-tools	radical 093
+うしへん	牛	ja-wikipedia,kanji-tools,kanjidic2	radical 093
+ぎゅうぶ	牛	kanji-tools	radical 093
+牛偏	牛	ja-wikipedia	redirect to 牛部
+牛字旁	牛	mybox,rime-wanxiang,tudien	zh name
+牛部	牛	kanji-tools	radical 093
+牜	牛	kanji-tools	radical 093 form
+いぬ	犬	kanji-tools	radical 094
+けものへん	犬	ja-wikipedia,kanji-tools,kanjidic2	radical 094
+けんぶ	犬	kanji-tools	radical 094
+ケモノ	犬	kanjidic2	radical name of 犭
+反犬旁	犬	rime-wanxiang,tudien,zh-wikipedia	zh name
+犬字旁	犬	mybox	zh radical name
+犬部	犬	kanji-tools,rime-wanxiang	radical 094
+犭	犬	kanji-tools	radical 094 form
+犭偏	犬	ja-wikipedia	redirect to 犬部
+獣偏	犬	ja-wikipedia	redirect to 犬部
+げんぶ	玄	kanji-tools	radical 095
+ゲン	玄	kanji-tools	radical 095
+玄字旁	玄	mybox	zh radical name
+玄部	玄	kanji-tools	radical 095
+おうへん	玉	ja-wikipedia,kanji-tools	radical 096
+ぎょくぶ	玉	kanji-tools	radical 096
+たま	玉	kanji-tools	radical 096
+たまへん	玉	ja-wikipedia,kanji-tools	radical 096
+玉偏	玉	ja-wikipedia	redirect to 玉部
+玉部	玉	kanji-tools,rime-wanxiang	radical 096
+王	玉	kanji-tools	radical 096 form
+王へん	玉	ja-wikipedia	redirect to 玉部
+王偏	玉	ja-wikipedia	redirect to 玉部
+王字旁	玉	mybox,tudien,zh-wikipedia	zh name
+王部	玉	ja-wikipedia,zh-wikipedia	redirect to 玉部
+斜玉旁	王	mybox,rime-wanxiang	zh nickname
+うり	瓜	kanji-tools	radical 097
+かぶ	瓜	kanji-tools	radical 097
+瓜字旁	瓜	mybox	zh radical name
+瓜部	瓜	kanji-tools	radical 097
+かわら	瓦	kanji-tools	radical 098
+がぶ	瓦	kanji-tools	radical 098
+瓦字旁	瓦	mybox	zh radical name
+瓦部	瓦	kanji-tools	radical 098
+あまい	甘	kanji-tools	radical 099
+かんぶ	甘	kanji-tools	radical 099
+カン	甘	kanji-tools	radical 099
+甘字旁	甘	mybox	zh radical name
+甘部	甘	kanji-tools	radical 099
+いきる	生	ja-wikipedia,kanji-tools	radical 100
+うまれる	生	kanji-tools	radical 100
+せいぶ	生	kanji-tools	radical 100
+ショウ	生	kanji-tools	radical 100
+セイ	生	kanji-tools	radical 100
+生字旁	生	mybox	zh radical name
+生部	生	kanji-tools	radical 100
+もちいる	用	ja-wikipedia,kanji-tools	radical 101
+ようぶ	用	kanji-tools	radical 101
+ヨウ	用	kanji-tools	radical 101
+用字旁	用	mybox	zh radical name
+用部	用	kanji-tools	radical 101
+た	田	kanji-tools	radical 102
+たへん	田	ja-wikipedia,kanji-tools	radical 102
+でんぶ	田	kanji-tools	radical 102
+田偏	田	ja-wikipedia	redirect to 田部 (部首)
+田字旁	田	mybox,tudien	zh name
+田部	田	kanji-tools	radical 102
+しょぶ	疋	kanji-tools	radical 103
+ひきへん	疋	ja-wikipedia,kanji-tools	radical 103
+ヒキ	疋	ja-wikipedia,kanji-tools	radical 103
+疋偏	疋	ja-wikipedia	redirect to 疋部
+疋字底	疋	mybox,tudien	zh name
+疋部	疋	kanji-tools	radical 103
+だくぶ	疒	kanji-tools	radical 104
+やまいだれ	疒	kanji-tools,kanjidic2	radical 104
+ダク部	疒	ja-wikipedia	redirect to 疒部
+疒部	疒	kanji-tools	radical 104
+病垂	疒	ja-wikipedia	redirect to 疒部
+病垂れ	疒	ja-wikipedia	redirect to 疒部
+病字头	疒	rime-wanxiang	zh nickname
+病字旁	疒	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+病字頭	疒	rime-wanxiang	zh nickname; traditional via OpenCC
+病旁	疒	rime-wanxiang	zh nickname
+病部	疒	zh-wikipedia	redirect to 疒部
+はつがしら	癶	ja-wikipedia,kanji-tools,kanjidic2	radical 105
+はつぶ	癶	kanji-tools	radical 105
+癶部	癶	kanji-tools	radical 105
+発部	癶	ja-wikipedia	redirect to 癶部
+発頭	癶	ja-wikipedia	redirect to 癶部
+登字头	癶	mybox,rime-wanxiang,tudien	zh name
+登字頭	癶	mybox,rime-wanxiang,tudien	zh name; traditional via OpenCC
+しろ	白	kanji-tools	radical 106
+しろへん	白	ja-wikipedia,kanji-tools	radical 106
+はくぶ	白	kanji-tools	radical 106
+白偏	白	ja-wikipedia	redirect to 白部
+白字旁	白	mybox,tudien	zh name
+白部	白	kanji-tools	radical 106
+けがわ	皮	kanji-tools,kanjidic2	radical 107
+ひのかわ	皮	ja-wikipedia,kanji-tools	radical 107
+ひぶ	皮	kanji-tools	radical 107
+皮字旁	皮	mybox,tudien	zh name
+皮部	皮	kanji-tools	radical 107
+さら	皿	kanji-tools	radical 108
+べいぶ	皿	kanji-tools	radical 108
+皿字底	皿	mybox,tudien	zh name
+皿部	皿	kanji-tools	radical 108
+め	目	kanji-tools	radical 109
+めへん	目	ja-wikipedia,kanji-tools	radical 109
+もくぶ	目	kanji-tools	radical 109
+よこめ	目	kanji-tools	radical 109
+目偏	目	ja-wikipedia	redirect to 目部
+目字旁	目	mybox,tudien	zh name
+目部	目	kanji-tools	radical 109
+罒	目	kanji-tools	radical 109 form
+ほこ	矛	kanji-tools	radical 110
+ほこへん	矛	ja-wikipedia,kanji-tools	radical 110
+ぼうぶ	矛	kanji-tools	radical 110
+矛偏	矛	ja-wikipedia	redirect to 矛部
+矛字旁	矛	mybox	zh radical name
+矛部	矛	kanji-tools	radical 110
+しぶ	矢	kanji-tools	radical 111
+や	矢	kanji-tools	radical 111
+やへん	矢	ja-wikipedia,kanji-tools	radical 111
+矢偏	矢	ja-wikipedia	redirect to 矢部
+矢字旁	矢	mybox	zh radical name
+矢部	矢	kanji-tools	radical 111
+いし	石	ja-wikipedia,kanji-tools	radical 112
+いしへん	石	ja-wikipedia,kanji-tools	radical 112
+せきぶ	石	kanji-tools	radical 112
+石偏	石	ja-wikipedia	redirect to 石部
+石字旁	石	mybox,tudien	zh name
+石部	石	kanji-tools	radical 112
+しぶ	示	kanji-tools	radical 113
+しめす	示	ja-wikipedia,kanji-tools	radical 113
+しめすへん	示	ja-wikipedia,kanji-tools,kanjidic2	radical 113
+ねへん	示	ja-wikipedia,kanji-tools,kanjidic2	radical 113
+ネ偏	示	ja-wikipedia	redirect to 示部
+示偏	示	ja-wikipedia	redirect to 示部
+示字旁	示	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+示部	示	kanji-tools	radical 113
+礻	示	kanji-tools	radical 113 form
+礻部	示	ja-wikipedia	redirect to 示部
+示补	礻	rime-wanxiang	zh nickname
+示补儿	礻	rime-wanxiang	zh nickname
+示補	礻	rime-wanxiang	zh nickname; traditional via OpenCC
+示補兒	礻	rime-wanxiang	zh nickname; traditional via OpenCC
+ぐうのあし	禸	ja-wikipedia,kanji-tools,kanjidic2	radical 114
+じゅうぶ	禸	kanji-tools	radical 114
+ジュウ部	禸	ja-wikipedia	redirect to 禸部
+禸部	禸	kanji-tools	radical 114
+禺字旁	禸	mybox	zh radical name
+いね	禾	kanji-tools	radical 115
+いねへん	禾	kanji-tools	radical 115
+かぶ	禾	kanji-tools	radical 115
+のぎ	禾	kanji-tools,kanjidic2	radical 115
+のぎへん	禾	ja-wikipedia,kanji-tools,kanjidic2	radical 115
+ノ木偏	禾	ja-wikipedia	redirect to 禾部
+禾偏	禾	ja-wikipedia	redirect to 禾部
+禾木旁	禾	mybox,tudien	zh name
+禾部	禾	kanji-tools	radical 115
+あな	穴	kanji-tools	radical 116
+あなかんむり	穴	ja-wikipedia,kanji-tools	radical 116
+けつぶ	穴	kanji-tools	radical 116
+穴冠	穴	ja-wikipedia	redirect to 穴部
+穴宝盖	穴	mybox,tudien	zh name
+穴寶蓋	穴	mybox,tudien	zh name; traditional via OpenCC
+穴部	穴	kanji-tools	radical 116
+たつ	立	kanji-tools	radical 117
+たつへん	立	ja-wikipedia,kanji-tools	radical 117
+りゅうぶ	立	kanji-tools	radical 117
+立偏	立	ja-wikipedia	redirect to 立部
+立字旁	立	mybox,tudien	zh name
+立部	立	kanji-tools	radical 117
+たけ	竹	kanji-tools	radical 118
+たけかんむり	竹	ja-wikipedia,kanji-tools	radical 118
+ちくぶ	竹	kanji-tools	radical 118
+竹冠	竹	ja-wikipedia	redirect to 竹部
+竹字头	竹	mybox,tudien,zh-wikipedia	zh name
+竹字頭	竹	mybox,tudien,zh-wikipedia	redirect to 竹部
+竹部	竹	kanji-tools	radical 118
+こめ	米	kanji-tools	radical 119
+こめへん	米	ja-wikipedia,kanji-tools	radical 119
+べいぶ	米	kanji-tools	radical 119
+米偏	米	ja-wikipedia	redirect to 米部
+米字旁	米	mybox,tudien	zh name
+米部	米	kanji-tools	radical 119
+いと	糸	kanji-tools	radical 120
+いとへん	糸	ja-wikipedia,kanji-tools	radical 120
+べきぶ	糸	kanji-tools	radical 120
+丝部	糸	zh-wikipedia	redirect to 糸部; simplified via OpenCC
+糸偏	糸	ja-wikipedia	redirect to 糸部
+糸部	糸	kanji-tools,rime-wanxiang	radical 120
+糹部	糸	zh-wikipedia	redirect to 糸部; traditional via OpenCC
+絞絲旁	糸	mybox,rime-wanxiang,tudien,zh-wikipedia	redirect to 糸部
+絲部	糸	zh-wikipedia	redirect to 糸部
+纟部	糸	zh-wikipedia	redirect to 糸部
+绞丝旁	糸	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+走丝	糸	zh-wikipedia	redirect to 糸部
+走丝旁	糸	zh-wikipedia	redirect to 糸部
+走絲	糸	zh-wikipedia	redirect to 糸部; traditional via OpenCC
+走絲旁	糸	zh-wikipedia	redirect to 糸部; traditional via OpenCC
+乱绞丝	纟	rime-wanxiang	zh nickname
+乱绞丝儿	纟	rime-wanxiang	zh nickname
+亂絞絲	纟	rime-wanxiang	zh nickname; traditional via OpenCC
+亂絞絲兒	纟	rime-wanxiang	zh nickname; traditional via OpenCC
+絞絲	纟	rime-wanxiang,zh-wikipedia	zh nickname; traditional via OpenCC
+絞絲兒	纟	rime-wanxiang	zh nickname; traditional via OpenCC
+絞絲兒旁	纟	rime-wanxiang	zh nickname; traditional via OpenCC
+絞絲底	纟	rime-wanxiang	zh nickname; traditional via OpenCC
+绞丝	纟	rime-wanxiang,zh-wikipedia	zh nickname
+绞丝儿	纟	rime-wanxiang	zh nickname
+绞丝儿旁	纟	rime-wanxiang	zh nickname
+绞丝底	纟	rime-wanxiang	zh nickname
+ふぶ	缶	kanji-tools	radical 121
+ほとぎ	缶	ja-wikipedia,kanji-tools,kanjidic2	radical 121
+ほとぎへん	缶	ja-wikipedia,kanji-tools	radical 121
+カン	缶	kanji-tools	radical 121
+フ	缶	kanji-tools	radical 121
+缶偏	缶	ja-wikipedia	redirect to 缶部
+缶字旁	缶	mybox	zh radical name
+缶部	缶	kanji-tools	radical 121
+あみがしら	网	ja-wikipedia,kanji-tools,kanjidic2	radical 122
+あみめ	网	ja-wikipedia,kanji-tools	radical 122
+もうぶ	网	kanji-tools	radical 122
+よこめ	网	kanjidic2	radical name of 网
+よんかしら	网	kanjidic2	radical name of 网
+よんがしら	网	ja-wikipedia,kanji-tools	radical 122
+四字头	网	rime-wanxiang,tudien	zh name
+四字頭	网	rime-wanxiang,tudien	zh name; traditional via OpenCC
+四頭	网	ja-wikipedia	redirect to 网部
+網字頭	网	mybox	zh radical name; traditional via OpenCC
+網部	网	zh-wikipedia	redirect to 网部
+網頭	网	ja-wikipedia	redirect to 网部
+网字头	网	mybox	zh radical name
+网部	网	kanji-tools,zh-wikipedia	radical 122
+罒部	网	zh-wikipedia	redirect to 网部
+罔頭	网	ja-wikipedia	redirect to 网部
+扁四头	罒	rime-wanxiang	zh nickname
+扁四頭	罒	rime-wanxiang	zh nickname; traditional via OpenCC
+ひつじ	羊	kanji-tools	radical 123
+ひつじへん	羊	ja-wikipedia,kanji-tools	radical 123
+ようぶ	羊	kanji-tools	radical 123
+羊偏	羊	ja-wikipedia	redirect to 羊部
+羊字旁	羊	mybox,tudien	zh name
+羊部	羊	kanji-tools	radical 123
+うぶ	羽	kanji-tools	radical 124
+はね	羽	kanji-tools	radical 124
+羽	羽	kanji-tools	radical 124 form
+羽字旁	羽	mybox,tudien	zh name
+羽部	羽	kanji-tools	radical 124
+おいかんむり	老	ja-wikipedia,kanji-tools	radical 125
+おいがしら	老	ja-wikipedia,kanji-tools	radical 125
+おいる	老	kanji-tools	radical 125
+ろうぶ	老	kanji-tools	radical 125
+老冠	老	ja-wikipedia	redirect to 老部
+老字头	老	mybox,rime-wanxiang,tudien	zh name
+老字頭	老	mybox,rime-wanxiang,tudien	zh name; traditional via OpenCC
+老部	老	kanji-tools	radical 125
+老頭	老	ja-wikipedia	redirect to 老部
+耂	老	kanji-tools	radical 125 form
+耂部	老	ja-wikipedia	redirect to 老部
+しかして	而	ja-wikipedia,kanji-tools	radical 126
+しこうして	而	ja-wikipedia,kanji-tools	radical 126
+じぶ	而	kanji-tools	radical 126
+而字旁	而	mybox	zh radical name
+而部	而	kanji-tools	radical 126
+すきへん	耒	ja-wikipedia,kanji-tools	radical 127
+らいすき	耒	ja-wikipedia,kanji-tools,kanjidic2	radical 127
+らいすぎ	耒	ja-wikipedia	redirect to 耒部
+らいぶ	耒	kanji-tools	radical 127
+耒偏	耒	ja-wikipedia	redirect to 耒部
+耒字旁	耒	mybox	zh radical name
+耒部	耒	kanji-tools	radical 127
+じぶ	耳	kanji-tools	radical 128
+みみ	耳	kanji-tools	radical 128
+みみへん	耳	ja-wikipedia,kanji-tools	radical 128
+耳偏	耳	ja-wikipedia	redirect to 耳部
+耳字旁	耳	mybox,tudien	zh name
+耳部	耳	kanji-tools	radical 128
+いつぶ	聿	kanji-tools	radical 129
+ふでづくり	聿	ja-wikipedia,kanji-tools,kanjidic2	radical 129
+イツ	聿	kanji-tools	radical 129
+筆旁	聿	ja-wikipedia	redirect to 聿部
+聿字旁	聿	mybox	zh radical name
+聿部	聿	kanji-tools	radical 129
+にくづき	肉	ja-wikipedia,kanji-tools	radical 130
+にくぶ	肉	kanji-tools	radical 130
+ニク	肉	kanji-tools	radical 130
+月	肉	kanji-tools	radical 130 form
+肉月	肉	ja-wikipedia	redirect to 肉部
+肉月旁	肉	mybox	zh radical name
+肉部	肉	kanji-tools	radical 130
+しんぶ	臣	kanji-tools	radical 131
+シン	臣	kanji-tools	radical 131
+臣字旁	臣	mybox	zh radical name
+臣部	臣	kanji-tools	radical 131
+じぶ	自	kanji-tools	radical 132
+みずから	自	ja-wikipedia,kanji-tools	radical 132
+ジ	自	kanji-tools	radical 132
+自字头	自	mybox	zh radical name
+自字頭	自	mybox	zh radical name; traditional via OpenCC
+自部	自	kanji-tools	radical 132
+いたる	至	kanji-tools	radical 133
+いたるへん	至	ja-wikipedia,kanji-tools	radical 133
+しぶ	至	kanji-tools	radical 133
+至偏	至	ja-wikipedia	redirect to 至部
+至字旁	至	mybox	zh radical name
+至部	至	kanji-tools	radical 133
+うす	臼	kanji-tools	radical 134
+きゅうぶ	臼	kanji-tools	radical 134
+臼字旁	臼	mybox	zh radical name
+臼部	臼	kanji-tools	radical 134
+した	舌	kanji-tools	radical 135
+したへん	舌	ja-wikipedia,kanji-tools	radical 135
+ぜつぶ	舌	kanji-tools	radical 135
+舌偏	舌	ja-wikipedia	redirect to 舌部
+舌字旁	舌	mybox,tudien	zh name
+舌部	舌	kanji-tools	radical 135
+せんぶ	舛	kanji-tools	radical 136
+まいあし	舛	ja-wikipedia,kanji-tools,kanjidic2	radical 136
+ます	舛	kanji-tools	radical 136
+舛字旁	舛	mybox	zh radical name
+舛部	舛	kanji-tools	radical 136
+舞脚	舛	ja-wikipedia	redirect to 舛部
+しゅうぶ	舟	kanji-tools	radical 137
+ふなへん	舟	ja-wikipedia	redirect to 舟部
+ふね	舟	kanji-tools	radical 137
+ふねへん	舟	ja-wikipedia,kanji-tools	radical 137
+舟偏	舟	ja-wikipedia	redirect to 舟部
+舟字旁	舟	mybox,tudien	zh name
+舟部	舟	kanji-tools	radical 137
+うしとら	艮	kanji-tools	radical 138
+こんづくり	艮	ja-wikipedia,kanji-tools	radical 138
+ごんづくり	艮	ja-wikipedia,kanji-tools	radical 138
+ごんぶ	艮	kanji-tools	radical 138
+ねづくり	艮	ja-wikipedia,kanji-tools,kanjidic2	radical 138
+コン	艮	kanji-tools	radical 138
+ゴン	艮	ja-wikipedia,kanji-tools	radical 138
+根旁	艮	ja-wikipedia	redirect to 艮部
+艮字旁	艮	mybox,tudien	zh name
+艮旁	艮	ja-wikipedia	redirect to 艮部
+艮部	艮	kanji-tools	radical 138
+いろ	色	kanji-tools	radical 139
+しょくぶ	色	kanji-tools	radical 139
+色字旁	色	mybox	zh radical name
+色部	色	kanji-tools	radical 139
+くさ	艹	kanji-tools	radical 140
+くさかんむり	艹	ja-wikipedia,kanji-tools,kanjidic2	radical 140
+そうこう	艹	ja-wikipedia,kanji-tools,kanjidic2	radical 140
+そうぶ	艹	kanji-tools	radical 140
+艸部	艹	kanji-tools,rime-wanxiang	radical 140
+艹	艹	kanji-tools	radical 140 form
+艹部	艹	zh-wikipedia	redirect to 艸部
+草かんむり	艹	ja-wikipedia	redirect to 艸部
+草冠	艹	ja-wikipedia	redirect to 艸部
+草头	艹	rime-wanxiang	zh nickname
+草字头	艹	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+草字頭	艹	mybox,rime-wanxiang,tudien,zh-wikipedia	redirect to 艸部
+草花头	艹	zh-wikipedia	redirect to 艸部; simplified via OpenCC
+草花頭	艹	zh-wikipedia	redirect to 艸部
+草部	艹	ja-wikipedia,zh-wikipedia	redirect to 艸部
+草頭	艹	rime-wanxiang	zh nickname; traditional via OpenCC
+こぶ	虍	kanji-tools	radical 141
+とらかんむり	虍	ja-wikipedia,kanji-tools,kanjidic2	radical 141
+とらがしら	虍	ja-wikipedia,kanji-tools,kanjidic2	radical 141
+虍部	虍	kanji-tools	radical 141
+虎冠	虍	ja-wikipedia	redirect to 虍部
+虎字头	虍	mybox,rime-wanxiang	zh nickname
+虎字頭	虍	mybox,rime-wanxiang	zh nickname; traditional via OpenCC
+虎部	虍	ja-wikipedia,zh-wikipedia	redirect to 虍部
+虎頭	虍	ja-wikipedia	redirect to 虍部
+きぶ	虫	kanji-tools	radical 142
+むし	虫	kanji-tools	radical 142
+むしへん	虫	ja-wikipedia,kanji-tools	radical 142
+虫偏	虫	ja-wikipedia	redirect to 虫部
+虫字旁	虫	mybox,tudien	zh name
+虫部	虫	kanji-tools	radical 142
+けつぶ	血	kanji-tools	radical 143
+ち	血	kanji-tools	radical 143
+ちへん	血	ja-wikipedia	redirect to 血部
+血偏	血	ja-wikipedia	redirect to 血部
+血字旁	血	mybox	zh radical name
+血部	血	kanji-tools	radical 143
+ぎょうがまえ	行	ja-wikipedia,kanji-tools	radical 144
+こうぶ	行	kanji-tools	radical 144
+ゆきがまえ	行	ja-wikipedia,kanji-tools	radical 144
+行字旁	行	mybox	zh radical name
+行構	行	ja-wikipedia	redirect to 行部
+行構え	行	ja-wikipedia	redirect to 行部
+行部	行	kanji-tools	radical 144
+いぶ	衣	kanji-tools	radical 145
+ころも	衣	kanji-tools	radical 145
+ころもへん	衣	ja-wikipedia,kanji-tools,kanjidic2	radical 145
+衣偏	衣	ja-wikipedia	redirect to 衣部
+衣字旁	衣	mybox,rime-wanxiang,tudien	zh name
+衣部	衣	kanji-tools	radical 145
+衤	衣	kanji-tools	radical 145 form
+衣补	衤	rime-wanxiang	zh nickname
+衣补儿	衤	rime-wanxiang	zh nickname
+衣補	衤	rime-wanxiang	zh nickname; traditional via OpenCC
+衣補兒	衤	rime-wanxiang	zh nickname; traditional via OpenCC
+あぶ	襾	kanji-tools	radical 146
+おおいかんむり	襾	ja-wikipedia,kanji-tools	radical 146
+かなめのかしら	襾	ja-wikipedia	redirect to 襾部
+にし	襾	kanji-tools,kanjidic2	radical 146
+襾冠	襾	ja-wikipedia	redirect to 襾部
+襾部	襾	kanji-tools	radical 146
+西	襾	kanji-tools	radical 146 form
+西部 (部首)	襾	zh-wikipedia	redirect to 襾部
+覀	襾	kanji-tools	radical 146 form
+覀部	襾	zh-wikipedia	redirect to 襾部
+西字头	覀	mybox,rime-wanxiang	zh nickname
+西字頭	覀	mybox,rime-wanxiang	zh nickname; traditional via OpenCC
+けんぶ	見	kanji-tools	radical 147
+みる	見	kanji-tools	radical 147
+見字旁	見	mybox,tudien	zh name; traditional via OpenCC
+見部	見	kanji-tools,zh-wikipedia	radical 147
+见字旁	見	mybox,tudien	zh name
+见部	見	zh-wikipedia	redirect to 見部
+かくぶ	角	kanji-tools	radical 148
+つの	角	kanji-tools	radical 148
+つのへん	角	ja-wikipedia,kanji-tools	radical 148
+角偏	角	ja-wikipedia	redirect to 角部
+角字旁	角	mybox	zh radical name
+角部	角	kanji-tools	radical 148
+げんぶ	言	kanji-tools	radical 149
+ことば	言	kanji-tools	radical 149
+ごんべん	言	ja-wikipedia,kanji-tools	radical 149
+ゲン	言	kanji-tools	radical 149
+言偏	言	ja-wikipedia	redirect to 言部
+言字旁	言	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+言部	言	kanji-tools,rime-wanxiang	radical 149
+訁	言	kanji-tools	radical 149 form
+こくぶ	谷	kanji-tools	radical 150
+たに	谷	kanji-tools	radical 150
+たにへん	谷	ja-wikipedia,kanji-tools	radical 150
+谷字旁	谷	mybox	zh radical name
+谷部	谷	kanji-tools	radical 150
+とうぶ	豆	kanji-tools	radical 151
+まめ	豆	kanji-tools	radical 151
+まめへん	豆	ja-wikipedia,kanji-tools	radical 151
+豆字旁	豆	mybox	zh radical name
+豆部	豆	kanji-tools	radical 151
+いのこ	豕	kanji-tools,kanjidic2	radical 152
+いのこへん	豕	ja-wikipedia,kanji-tools	radical 152
+しぶ	豕	kanji-tools	radical 152
+ぶた	豕	kanji-tools	radical 152
+豕偏	豕	ja-wikipedia	redirect to 豕部
+豕字旁	豕	mybox	zh radical name
+豕部	豕	kanji-tools	radical 152
+ちぶ	豸	kanji-tools	radical 153
+むじなへん	豸	ja-wikipedia,kanji-tools,kanjidic2	radical 153
+豸偏	豸	ja-wikipedia	redirect to 豸部
+豸字旁	豸	mybox	zh radical name
+豸部	豸	kanji-tools	radical 153
+貉偏	豸	ja-wikipedia	redirect to 豸部
+かい	貝	kanji-tools	radical 154
+かいへん	貝	ja-wikipedia,kanji-tools	radical 154
+こがい	貝	ja-wikipedia,kanji-tools	radical 154
+ばいぶ	貝	kanji-tools	radical 154
+貝偏	貝	ja-wikipedia	redirect to 貝部
+貝字旁	貝	mybox,tudien	zh name; traditional via OpenCC
+貝部	貝	kanji-tools,zh-wikipedia	radical 154
+贝字旁	貝	mybox,tudien	zh name
+贝部	貝	zh-wikipedia	redirect to 貝部
+あか	赤	kanji-tools	radical 155
+あかへん	赤	ja-wikipedia,kanji-tools	radical 155
+せきぶ	赤	kanji-tools	radical 155
+赤偏	赤	ja-wikipedia	redirect to 赤部
+赤字旁	赤	mybox	zh radical name
+赤部	赤	kanji-tools	radical 155
+そうにょう	走	kanji-tools	radical 156
+そうぶ	走	kanji-tools	radical 156
+はしる	走	ja-wikipedia,kanji-tools	radical 156
+走字旁	走	mybox,tudien,zh-wikipedia	zh name
+走正旁	走	zh-wikipedia	redirect to 走部
+走繞	走	ja-wikipedia	redirect to 走部
+走部	走	kanji-tools	radical 156
+あし	足	kanji-tools	radical 157
+あしへん	足	ja-wikipedia,kanji-tools	radical 157
+そくぶ	足	kanji-tools	radical 157
+足偏	足	ja-wikipedia	redirect to 足部
+足字旁	足	mybox,tudien,zh-wikipedia	zh name
+足部	足	kanji-tools	radical 157
+𧾷	足	kanji-tools	radical 157 form
+しんぶ	身	kanji-tools	radical 158
+み	身	kanji-tools	radical 158
+みへん	身	ja-wikipedia,kanji-tools	radical 158
+身偏	身	ja-wikipedia	redirect to 身部
+身字旁	身	mybox	zh radical name
+身部	身	kanji-tools	radical 158
+くるま	車	kanji-tools	radical 159
+くるまへん	車	ja-wikipedia,kanji-tools	radical 159
+しゃぶ	車	kanji-tools	radical 159
+車偏	車	ja-wikipedia	redirect to 車部
+車字旁	車	mybox,tudien	zh name; traditional via OpenCC
+車部	車	kanji-tools,zh-wikipedia	radical 159
+车字旁	車	mybox,tudien	zh name
+车部	車	zh-wikipedia	redirect to 車部
+からい	辛	kanji-tools	radical 160
+しんぶ	辛	kanji-tools	radical 160
+シン	辛	kanji-tools	radical 160
+辛字旁	辛	mybox,tudien	zh name
+辛部	辛	kanji-tools	radical 160
+しんのたつ	辰	ja-wikipedia,kanji-tools,kanjidic2	radical 161
+しんぶ	辰	kanji-tools	radical 161
+辰字旁	辰	mybox	zh radical name
+辰部	辰	kanji-tools	radical 161
+1点之繞	辶	ja-wikipedia	redirect to 辵部
+2点之繞	辶	ja-wikipedia	redirect to 辵部
+しんにゅう	辶	ja-wikipedia,kanji-tools,kanjidic2	radical 162
+しんにょう	辶	ja-wikipedia,kanji-tools,kanjidic2	radical 162
+ちゃくぶ	辶	kanji-tools	radical 162
+チャク部	辶	ja-wikipedia	redirect to 辵部
+一点之繞	辶	ja-wikipedia	redirect to 辵部
+之繞	辶	ja-wikipedia	redirect to 辵部
+二点之繞	辶	ja-wikipedia	redirect to 辵部
+走之	辶	rime-wanxiang,zh-wikipedia	zh nickname
+走之儿	辶	zh-wikipedia	redirect to 辵部
+走之兒	辶	zh-wikipedia	redirect to 辵部; traditional via OpenCC
+走之底	辶	mybox,tudien,zh-wikipedia	zh name
+走之旁	辶	rime-wanxiang,zh-wikipedia	zh nickname
+辵部	辶	kanji-tools,rime-wanxiang	radical 162
+辶	辶	kanji-tools	radical 162 form
+辶部	辶	ja-wikipedia,zh-wikipedia	redirect to 辵部
+こよみのとり	酉	ja-wikipedia	redirect to 酉部
+さけつくり	酉	ja-wikipedia	redirect to 酉部
+さけのとり	酉	kanji-tools	radical 164
+とり	酉	kanji-tools	radical 164
+とりへん	酉	kanji-tools,kanjidic2	radical 164
+ひよみのとり	酉	ja-wikipedia,kanji-tools	radical 164
+ひよりのとり	酉	kanjidic2	radical name of 酉
+ゆうぶ	酉	kanji-tools	radical 164
+酉偏	酉	ja-wikipedia	redirect to 酉部
+酉字旁	酉	mybox,tudien	zh name
+酉部	酉	kanji-tools	radical 164
+のごめ	釆	ja-wikipedia,kanji-tools,kanjidic2	radical 165
+のごめへん	釆	ja-wikipedia,kanji-tools	radical 165
+はんぶ	釆	kanji-tools	radical 165
+ノ米偏	釆	ja-wikipedia	redirect to 釆部
+採字頭	釆	mybox	zh radical name; traditional via OpenCC
+採部	釆	zh-wikipedia	redirect to 釆部; traditional via OpenCC
+釆偏	釆	ja-wikipedia	redirect to 釆部
+釆部	釆	kanji-tools	radical 165
+采字头	釆	mybox	zh radical name
+采部	釆	zh-wikipedia	redirect to 釆部
+さと	里	kanji-tools	radical 166
+さとへん	里	ja-wikipedia,kanji-tools	radical 166
+りぶ	里	kanji-tools	radical 166
+里偏	里	ja-wikipedia	redirect to 里部
+里字旁	里	mybox,tudien	zh name
+里部	里	kanji-tools	radical 166
+かね	金	kanji-tools	radical 167
+かねへん	金	ja-wikipedia,kanji-tools	radical 167
+きんぶ	金	kanji-tools	radical 167
+金偏	金	ja-wikipedia	redirect to 金部
+金字旁	金	mybox,rime-wanxiang,tudien,zh-wikipedia	zh name
+金部	金	kanji-tools	radical 167
+金部 (部首)	金	zh-wikipedia	redirect to 金部
+釒	金	kanji-tools	radical 167 form
+ちょうぶ	長	kanji-tools	radical 168
+ながい	長	ja-wikipedia,kanji-tools,kanjidic2	radical 168
+長字旁	長	mybox	zh radical name; traditional via OpenCC
+長部	長	kanji-tools,zh-wikipedia	radical 168
+长字旁	長	mybox	zh radical name
+长部	長	zh-wikipedia	redirect to 長部
+かどがまえ	門	ja-wikipedia,kanji-tools	radical 169
+もんがまえ	門	ja-wikipedia,kanji-tools	radical 169
+もんぶ	門	kanji-tools	radical 169
+モン	門	kanji-tools	radical 169
+門字框	門	mybox,tudien,zh-wikipedia	zh name; traditional via OpenCC
+門構	門	ja-wikipedia	redirect to 門部
+門構え	門	ja-wikipedia	redirect to 門部
+門部	門	kanji-tools,zh-wikipedia	radical 169
+门字框	門	mybox,tudien,zh-wikipedia	zh name
+门部	門	zh-wikipedia	redirect to 門部
+おおざと	阝	ja-wikipedia,kanji-tools,kanjidic2	radical 163
+おか	阝	ja-wikipedia,kanji-tools	radical 170
+ぎふのふ	阝	kanjidic2	radical name of 阜
+こざと	阝	ja-wikipedia	redirect to 阜部
+こざとへん	阝	ja-wikipedia,kanji-tools,kanjidic2	radical 170
+ふぶ	阝	kanji-tools	radical 170
+むら	阝	kanji-tools	radical 163
+ゆうぶ	阝	kanji-tools	radical 163
+双耳刀	阝	rime-wanxiang,tudien	zh name
+双耳旁	阝	rime-wanxiang	zh nickname
+右耳刀	阝	rime-wanxiang	zh nickname
+右耳旁	阝	mybox	zh radical name
+右耳朵	阝	tudien	zh name
+小里偏	阝	ja-wikipedia	redirect to 阜部
+左耳刀	阝	rime-wanxiang,tudien	zh name
+左耳旁	阝	mybox	zh radical name
+耳刀	阝	zh-wikipedia	redirect to 阜部
+邑部	阝	kanji-tools,rime-wanxiang	radical 163
+阜偏	阝	ja-wikipedia	redirect to 阜部
+阜部	阝	kanji-tools,rime-wanxiang	radical 170
+阝	阝	kanji-tools	radical 163 form
+雙耳刀	阝	rime-wanxiang,tudien	zh name; traditional via OpenCC
+雙耳旁	阝	rime-wanxiang	zh nickname; traditional via OpenCC
+たいぶ	隶	kanji-tools	radical 171
+れいづくり	隶	ja-wikipedia,kanji-tools,kanjidic2	radical 171
+隶字旁	隶	mybox	zh radical name
+隶部	隶	kanji-tools,zh-wikipedia	radical 171
+隷旁	隶	ja-wikipedia	redirect to 隶部
+隸字旁	隶	mybox	zh radical name; traditional via OpenCC
+隸部	隶	zh-wikipedia	redirect to 隶部
+すいぶ	隹	kanji-tools	radical 172
+ふるとり	隹	ja-wikipedia,kanji-tools,kanjidic2	radical 172
+隹字旁	隹	mybox,tudien	zh name
+隹部	隹	kanji-tools	radical 172
+あまかんむり	雨	ja-wikipedia	redirect to 雨部
+あめ	雨	kanji-tools	radical 173
+あめかんむり	雨	ja-wikipedia,kanji-tools	radical 173
+うぶ	雨	kanji-tools	radical 173
+雨冠	雨	ja-wikipedia	redirect to 雨部
+雨字头	雨	mybox,tudien	zh name
+雨字頭	雨	mybox,tudien	zh name; traditional via OpenCC
+雨部	雨	kanji-tools	radical 173
+あお	靑	kanji-tools	radical 174
+せいぶ	靑	kanji-tools	radical 174
+靑部	靑	ja-wikipedia,zh-wikipedia	redirect to 青部
+青	靑	kanji-tools	radical 174 form
+青字旁	靑	mybox,tudien	zh name
+青部	靑	kanji-tools	radical 174
+あらず	非	ja-wikipedia,kanji-tools	radical 175
+ひぶ	非	kanji-tools	radical 175
+ヒ	非	kanji-tools	radical 175
+非字旁	非	mybox	zh radical name
+非部	非	kanji-tools	radical 175
+めんぶ	面	kanji-tools	radical 176
+メン	面	kanji-tools	radical 176
+面字旁	面	mybox	zh radical name
+面部	面	kanji-tools	radical 176
+かくのかわ	革	ja-wikipedia	redirect to 革部
+かくぶ	革	kanji-tools	radical 177
+かわへん	革	ja-wikipedia,kanji-tools	radical 177
+つくりがわ	革	ja-wikipedia,kanji-tools	radical 177
+革偏	革	ja-wikipedia	redirect to 革部
+革字旁	革	mybox	zh radical name
+革部	革	kanji-tools	radical 177
+いぶ	韋	kanji-tools	radical 178
+なめしがわ	韋	ja-wikipedia,kanji-tools,kanjidic2	radical 178
+韋字旁	韋	mybox	zh radical name; traditional via OpenCC
+韋部	韋	kanji-tools,zh-wikipedia	radical 178
+韦字旁	韋	mybox	zh radical name
+韦部	韋	zh-wikipedia	redirect to 韋部
+きゅうぶ	韭	kanji-tools	radical 179
+にら	韭	kanji-tools,kanjidic2	radical 179
+韭字旁	韭	mybox	zh radical name
+韭部	韭	kanji-tools	radical 179
+おと	音	ja-wikipedia,kanji-tools	radical 180
+おとへん	音	ja-wikipedia,kanji-tools	radical 180
+おんぶ	音	kanji-tools	radical 180
+音偏	音	ja-wikipedia	redirect to 音部
+音字旁	音	mybox	zh radical name
+音部	音	kanji-tools	radical 180
+いちのかい	頁	ja-wikipedia	redirect to 頁部
+おおがい	頁	ja-wikipedia,kanji-tools	radical 181
+けつぶ	頁	kanji-tools	radical 181
+一ノ貝	頁	ja-wikipedia	redirect to 頁部
+大貝	頁	ja-wikipedia	redirect to 頁部
+頁字旁	頁	mybox,tudien	zh name; traditional via OpenCC
+頁部	頁	kanji-tools,zh-wikipedia	radical 181
+页字旁	頁	mybox,tudien	zh name
+页部	頁	zh-wikipedia	redirect to 頁部
+かぜ	風	kanji-tools	radical 182
+ふうぶ	風	kanji-tools	radical 182
+風字旁	風	mybox	zh radical name; traditional via OpenCC
+風部	風	kanji-tools,zh-wikipedia	radical 182
+风字旁	風	mybox	zh radical name
+风部	風	zh-wikipedia	redirect to 風部
+とぶ	飛	kanji-tools	radical 183
+ひぶ	飛	kanji-tools	radical 183
+飛字旁	飛	mybox	zh radical name; traditional via OpenCC
+飛部	飛	kanji-tools,zh-wikipedia	radical 183
+飞字旁	飛	mybox	zh radical name
+飞部	飛	zh-wikipedia	redirect to 飛部
+しょくぶ	食	kanji-tools	radical 184
+しょくへん	食	ja-wikipedia,kanji-tools	radical 184
+ショク	食	kanji-tools	radical 184
+食偏	食	ja-wikipedia	redirect to 食部
+食字旁	食	mybox,rime-wanxiang,tudien	zh name
+食部	食	kanji-tools,rime-wanxiang	radical 184
+飠	食	kanji-tools	radical 184 form
+くび	首	kanji-tools	radical 185
+しゅぶ	首	kanji-tools	radical 185
+首字旁	首	mybox	zh radical name
+首部	首	kanji-tools	radical 185
+かおり	香	kanji-tools	radical 186
+こうぶ	香	kanji-tools	radical 186
+こうへん	香	ja-wikipedia	redirect to 香部
+カ	香	kanji-tools	radical 186
+香字旁	香	mybox	zh radical name
+香部	香	kanji-tools	radical 186
+うま	馬	kanji-tools	radical 187
+うまへん	馬	ja-wikipedia,kanji-tools	radical 187
+ばぶ	馬	kanji-tools	radical 187
+馬偏	馬	ja-wikipedia	redirect to 馬部
+馬字旁	馬	mybox,tudien	zh name; traditional via OpenCC
+馬部	馬	kanji-tools,zh-wikipedia	radical 187
+马字旁	馬	mybox,tudien	zh name
+马部	馬	zh-wikipedia	redirect to 馬部
+こつぶ	骨	kanji-tools	radical 188
+ほね	骨	kanji-tools	radical 188
+ほねへん	骨	ja-wikipedia,kanji-tools	radical 188
+骨偏	骨	ja-wikipedia	redirect to 骨部
+骨字旁	骨	mybox	zh radical name
+骨部	骨	kanji-tools	radical 188
+こうぶ	高	kanji-tools	radical 189
+たかい	高	ja-wikipedia,kanji-tools	radical 189
+はしごだか	高	ja-wikipedia	redirect to 高部
+はしご高	高	ja-wikipedia	redirect to 高部
+高字头	高	mybox	zh radical name
+高字頭	高	mybox	zh radical name; traditional via OpenCC
+高部	高	kanji-tools	radical 189
+かみかんむり	髟	ja-wikipedia,kanji-tools,kanjidic2	radical 190
+かみがしら	髟	ja-wikipedia,kanji-tools,kanjidic2	radical 190
+ひょうぶ	髟	kanji-tools	radical 190
+髟部	髟	kanji-tools	radical 190
+髦字头	髟	rime-wanxiang	zh nickname
+髦字頭	髟	rime-wanxiang	zh nickname; traditional via OpenCC
+髪冠	髟	ja-wikipedia	redirect to 髟部
+髪頭	髟	ja-wikipedia	redirect to 髟部
+鬓字头	髟	mybox	zh radical name
+鬢字頭	髟	mybox	zh radical name; traditional via OpenCC
+たたかいがまえ	鬥	ja-wikipedia,kanji-tools,kanjidic2	radical 191
+とうがまえ	鬥	ja-wikipedia,kanji-tools,kanjidic2	radical 191
+とうぶ	鬥	kanji-tools	radical 191
+斗字旁	鬥	mybox	zh radical name
+闘い構え	鬥	ja-wikipedia	redirect to 鬥部
+闘構	鬥	ja-wikipedia	redirect to 鬥部
+闘構え	鬥	ja-wikipedia	redirect to 鬥部
+鬥字旁	鬥	mybox	zh radical name; traditional via OpenCC
+鬥部	鬥	kanji-tools	radical 191
+ちょうぶ	鬯	kanji-tools	radical 192
+においざけ	鬯	ja-wikipedia,kanji-tools	radical 192
+チョウ	鬯	kanji-tools	radical 192
+鬯字旁	鬯	mybox	zh radical name
+鬯部	鬯	kanji-tools	radical 192
+かなえ	鬲	kanji-tools	radical 193
+れきぶ	鬲	kanji-tools	radical 193
+レキ	鬲	kanji-tools	radical 193
+鬲字旁	鬲	mybox	zh radical name
+鬲部	鬲	kanji-tools	radical 193
+おに	鬼	kanji-tools	radical 194
+おにへん	鬼	ja-wikipedia	redirect to 鬼部
+きにょう	鬼	kanji-tools	radical 194
+きぶ	鬼	kanji-tools	radical 194
+鬼字旁	鬼	mybox	zh radical name
+鬼繞	鬼	ja-wikipedia	redirect to 鬼部
+鬼部	鬼	kanji-tools	radical 194
+うお	魚	kanji-tools	radical 195
+うおへん	魚	ja-wikipedia,kanji-tools	radical 195
+ぎょぶ	魚	kanji-tools	radical 195
+さかな	魚	kanji-tools	radical 195
+さかなへん	魚	ja-wikipedia	redirect to 魚部
+魚偏	魚	ja-wikipedia	redirect to 魚部
+魚字旁	魚	mybox	zh radical name; traditional via OpenCC
+魚部	魚	kanji-tools,zh-wikipedia	radical 195
+鱼字旁	魚	mybox	zh radical name
+鱼部	魚	zh-wikipedia	redirect to 魚部
+ちょうぶ	鳥	kanji-tools	radical 196
+とり	鳥	kanji-tools	radical 196
+とりへん	鳥	kanji-tools	radical 196
+鳥字旁	鳥	mybox,tudien	zh name; traditional via OpenCC
+鳥部	鳥	kanji-tools,zh-wikipedia	radical 196
+鸟字旁	鳥	mybox,tudien	zh name
+鸟部	鳥	zh-wikipedia	redirect to 鳥部
+しお	鹵	kanji-tools	radical 197
+しおい	鹵	ja-wikipedia	redirect to 鹵部
+ろぶ	鹵	kanji-tools	radical 197
+ロ	鹵	kanji-tools	radical 197
+卤字旁	鹵	mybox	zh radical name
+卤部	鹵	zh-wikipedia	redirect to 鹵部
+滷字旁	鹵	mybox	zh radical name; traditional via OpenCC
+滷部	鹵	zh-wikipedia	redirect to 鹵部; traditional via OpenCC
+鹵部	鹵	kanji-tools	radical 197
+しか	鹿	kanji-tools	radical 198
+しかへん	鹿	ja-wikipedia	redirect to 鹿部
+ろくぶ	鹿	kanji-tools	radical 198
+鹿字旁	鹿	mybox	zh radical name
+鹿部	鹿	kanji-tools	radical 198
+ばくにゅう	麥	ja-wikipedia	redirect to 麦部
+ばくにょう	麥	ja-wikipedia,kanji-tools	radical 199
+ばくぶ	麥	kanji-tools	radical 199
+むぎ	麥	kanji-tools	radical 199
+麥字旁	麥	mybox	zh radical name; traditional via OpenCC
+麥繞	麥	ja-wikipedia	redirect to 麦部
+麥部	麥	ja-wikipedia,kanji-tools,zh-wikipedia	redirect to 麦部
+麦	麥	kanji-tools	radical 199 form
+麦字旁	麥	mybox	zh radical name
+麦繞	麥	ja-wikipedia	redirect to 麦部
+麦部	麥	kanji-tools,zh-wikipedia	radical 199
+あさ	麻	kanji-tools	radical 200
+あさかんむり	麻	ja-wikipedia,kanji-tools	radical 200
+まぶ	麻	kanji-tools	radical 200
+麻冠	麻	ja-wikipedia	redirect to 麻部
+麻字旁	麻	mybox	zh radical name
+麻部	麻	kanji-tools	radical 200
+き	黃	kanji-tools	radical 201
+こうぶ	黃	kanji-tools	radical 201
+黃字旁	黃	mybox	zh radical name; traditional via OpenCC
+黃部	黃	ja-wikipedia,kanji-tools,zh-wikipedia	redirect to 黄部
+黄	黃	kanji-tools	radical 201 form
+黄字旁	黃	mybox	zh radical name
+黄部	黃	kanji-tools,zh-wikipedia	radical 201
+きび	黍	kanji-tools	radical 202
+しょぶ	黍	kanji-tools	radical 202
+黍字旁	黍	mybox	zh radical name
+黍部	黍	kanji-tools	radical 202
+くろ	黑	kanji-tools	radical 203
+くろへん	黑	ja-wikipedia	redirect to 黒部
+こくぶ	黑	kanji-tools	radical 203
+黑字旁	黑	mybox	zh radical name
+黑部	黑	ja-wikipedia	redirect to 黒部
+黒	黑	kanji-tools	radical 203 form
+黒偏	黑	ja-wikipedia	redirect to 黒部
+黒部	黑	kanji-tools	radical 203
+ちぶ	黹	kanji-tools	radical 204
+ぬいとり	黹	ja-wikipedia,kanji-tools	radical 204
+ふつ	黹	kanjidic2	radical name of 黹
+ふつへん	黹	ja-wikipedia,kanji-tools	radical 204
+チ	黹	kanji-tools	radical 204
+黹偏	黹	ja-wikipedia	redirect to 黹部
+黹字旁	黹	mybox	zh radical name
+黹部	黹	kanji-tools	radical 204
+黻偏	黹	ja-wikipedia	redirect to 黹部
+かえる	黽	kanji-tools	radical 205
+べんあし	黽	ja-wikipedia,kanji-tools	radical 205
+ぼうぶ	黽	kanji-tools	radical 205
+ベン	黽	kanji-tools	radical 205
+黽字旁	黽	mybox	zh radical name; traditional via OpenCC
+黽脚	黽	ja-wikipedia	redirect to 黽部
+黽部	黽	kanji-tools,zh-wikipedia	radical 205
+黾字旁	黽	mybox	zh radical name
+黾部	黽	zh-wikipedia	redirect to 黽部
+かなえ	鼎	kanji-tools	radical 206
+ていぶ	鼎	kanji-tools	radical 206
+テイ	鼎	kanji-tools	radical 206
+鼎字旁	鼎	mybox	zh radical name
+鼎部	鼎	kanji-tools	radical 206
+こぶ	鼓	kanji-tools	radical 207
+つづみ	鼓	kanji-tools	radical 207
+鼓字旁	鼓	mybox	zh radical name
+鼓部	鼓	kanji-tools	radical 207
+そぶ	鼠	kanji-tools	radical 208
+ねずみ	鼠	kanji-tools	radical 208
+ねずみへん	鼠	ja-wikipedia,kanji-tools	radical 208
+鼠偏	鼠	ja-wikipedia	redirect to 鼠部
+鼠字旁	鼠	mybox	zh radical name
+鼠部	鼠	kanji-tools	radical 208
+はな	鼻	kanji-tools	radical 209
+はなへん	鼻	ja-wikipedia,kanji-tools	radical 209
+びぶ	鼻	kanji-tools	radical 209
+鼻字旁	鼻	mybox	zh radical name
+鼻部	鼻	kanji-tools	radical 209
+せいぶ	齊	kanji-tools	radical 210
+セイ	齊	kanji-tools	radical 210
+斉	齊	kanji-tools	radical 210 form
+斉部	齊	kanji-tools	radical 210
+齊字旁	齊	mybox	zh radical name; traditional via OpenCC
+齊部	齊	ja-wikipedia,zh-wikipedia	redirect to 斉部
+齐字旁	齊	mybox	zh radical name
+齐部	齊	zh-wikipedia	redirect to 齊部
+しぶ	齒	kanji-tools	radical 211
+は	齒	kanji-tools	radical 211
+はへん	齒	kanji-tools	radical 211
+歯	齒	kanji-tools	radical 211 form
+歯偏	齒	ja-wikipedia	redirect to 歯部
+歯部	齒	kanji-tools	radical 211
+齒字旁	齒	mybox	zh radical name; traditional via OpenCC
+齒部	齒	ja-wikipedia,zh-wikipedia	redirect to 歯部
+齿字旁	齒	mybox	zh radical name
+齿部	齒	zh-wikipedia	redirect to 齒部
+りゅうぶ	龍	kanji-tools	radical 212
+リュウ	龍	kanji-tools	radical 212
+竜	龍	kanji-tools	radical 212 form
+竜部	龍	kanji-tools	radical 212
+龍字旁	龍	mybox	zh radical name; traditional via OpenCC
+龍部	龍	ja-wikipedia,zh-wikipedia	redirect to 竜部
+龙字旁	龍	mybox	zh radical name
+龙部	龍	zh-wikipedia	redirect to 龍部
+かめ	龜	kanji-tools	radical 213
+きぶ	龜	kanji-tools	radical 213
+亀	龜	kanji-tools	radical 213 form
+亀部	龜	kanji-tools	radical 213
+龜字旁	龜	mybox	zh radical name; traditional via OpenCC
+龜部	龜	ja-wikipedia,zh-wikipedia	redirect to 亀部
+龟字旁	龜	mybox	zh radical name
+龟部	龜	zh-wikipedia	redirect to 龜部
+ふえ	龠	kanji-tools	radical 214
+やくのふえ	龠	ja-wikipedia	redirect to 龠部
+やくぶ	龠	kanji-tools	radical 214
+ヤク	龠	kanji-tools	radical 214
+龠字旁	龠	mybox	zh radical name
+龠部	龠	kanji-tools	radical 214
+几字头	𠘨	rime-wanxiang	zh nickname
+几字底	𠘨	rime-wanxiang	zh nickname
+几字頭	𠘨	rime-wanxiang	zh nickname; traditional via OpenCC
+凤字框	𠘨	rime-wanxiang	zh nickname
+風字頭	𠘨	rime-wanxiang	zh nickname; traditional via OpenCC
+风字头	𠘨	rime-wanxiang	zh nickname
+鳳字框	𠘨	rime-wanxiang	zh nickname; traditional via OpenCC
