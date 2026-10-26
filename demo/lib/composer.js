@@ -5,6 +5,6 @@ export const COMPOSER_BASE = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf
 // The Kaisho and Serif exports (han-compose `export-web`) are uploaded beside the sans one.
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
-  serif: 'https://glyphatlas.org/atlas/composer/6bf8919-serif-compose-layout-v4-serif-f5/',
+  serif: 'https://glyphatlas.org/atlas/composer/a1851bf-serif-compose-layout-v4-serif-f5/',
   klee: 'https://glyphatlas.org/atlas/composer/6bf8919-kaisho-compose-layout-v4-kaisho-f5/',
 }
