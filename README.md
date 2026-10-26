@@ -113,10 +113,12 @@ workshop in `demo/` does so:
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
 with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
 and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. In the tree, a click chooses a part, a part dragged from the
-palette, the decomposition tree, a search or the swaps is put where it is dropped, and the context
-menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
+them back, for a host switching between documents. In the tree, a click chooses a part, a part
+dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
+and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
+clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
+on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -143,10 +145,6 @@ shape), Hangul syllables and jamo, the full- and half-width forms and the kana s
 preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
 written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
-`drawingSvg(drawing, options)` writes a drawing as an SVG file, applying the per-part `transforms` a
-view set. `groupParts(parts, leaves)` groups the pieces of a drawing by the leaf they belong to, and
-`partTransform(adjustment, box)` writes the transform `IdsPreview` uses.
-
 ## Adapters
 
 ```ts
@@ -165,8 +163,6 @@ interface Drawing {          // in a 1000-unit box, y down
   cut?: string               // what ㇯ takes away
   slots?: { index: number, box: [x, y, width, height] }[]   // each empty slot (⬚), in reading order
   stroke?: [number, number] | null                          // stroke widths placeholders follow
-  parts?: { origin: string, box: [x, y, width, height], d: string, cut?: boolean }[]   // each placed part, in reading order
-  transforms?: (string | null)[]   // one SVG transform per part, as a view adjusted it
   approximate?: string[]     // operators drawn by an approximation
   kanjivg?: boolean          // a part was cut along KanjiVG's groups (CC BY-SA 3.0)
 }
@@ -183,14 +179,11 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`IdsPreview` can also finish a drawing by hand: pass `editable`, `bind:adjustments` and
-`onchoose(path)`. A part is dragged to move it, its corner square scales it and the circle turns
-it; the arrow keys nudge, `+` and `-` scale, `[` and `]` turn and `0` resets the chosen part.
-Adjustments are keyed by the leaf's path and change the drawing and its export, not the sequence;
-they are dropped when the sequence changes and are not written to drafts or links. The drawing
-needs a piece per leaf, which `composerPreview({ base, separate: true })` asks the composer for:
-it draws every operand instead of a glyph that spells the whole description. A drawing made with
-㇯ keeps its cut mask and cannot be adjusted.
+`IdsPreview` supports manual drawing adjustments through `editable`, `bind:adjustments` and
+`onchoose(path)`. Drag a part to move it, its corner square to scale it, or its circle to turn it.
+Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen part. Adjustments are
+keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
+for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
 
 `babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
 `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
@@ -278,13 +271,11 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
 origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
-use the bundled outlines. When the export
-loads but a part has no drawing, its badge reads "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
+use the bundled outlines. When the export loads but a part has no drawing, its badge reads
+"Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
-`separate: true` draws each operand instead of a glyph or host that spells the whole description,
-so the drawing has a piece for every leaf; `IdsPreview`'s Adjust layout uses it.
 
 The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
 `?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
@@ -403,29 +394,32 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 ## The workshop
 
-The demo is a full-width workshop: the sequence, the operators and the part pickers at the start,
-the tree in a square panel in the middle, and at the end the drawing in a square panel, the sequence
-with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
-PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
-a chosen one, with a margin, empty slots left out unless asked for. File and Edit menus at the top
-left provide new sequences, browser drafts, sharing, image export and editing commands. Adjust layout
-separates the drawing into its parts, which can be moved, scaled and turned before export; the
-exported file and the PNG keep those changes, the sequence does not. The toolbar holds Undo and Redo
-with the history of named steps, examples
-(each with its character and code point, or marked when it has none), a share link with its QR code,
-the language, settings and the sources. Settings contain the system, light and dark themes,
-key hints on buttons and the preview data source. They open beside the toolbar button on desktop
-and in a bottom drawer on mobile. The toolbar's Sans/Serif switch chooses a sans or serif face for Han
-text. The tree panel switches between the Shape
-of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
-keys and are drop targets. The tree and search panels in the middle
-column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
-double-click restores the default. Vertical dividers resize the columns: drag, use Left/Right
-(Shift for larger steps), or double-click to reset. Column widths are saved and fit the window.
-Toolbar buttons show their keys on hover. The address carries the
-sequence
-(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts, the theme and the font face stay in the browser's
-`localStorage` under `ids-input:`.
+The demo is a full-width workshop with one tab for each description being edited, in a strip below
+the toolbar. A tab is the description's composed drawing at a small size, and a dot while its text
+differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
+name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
+Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
+at the start; the Shape or indented Tree view with the sequence and search under it; and at the end
+the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
+for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
+those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand
+with the arrow keys and accept drops. A click, the
+arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
+`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
+closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
+column are divided by a draggable splitter, the tree starting
+larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
+columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
+keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
+commands. The toolbar holds Undo and Redo with the history of named steps, examples (each with its
+character and code point, or marked when it has none), a share link with its QR code, the language,
+settings and the sources. Settings hold the system, light and dark themes, key hints, and the
+preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
+tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
+`sessionStorage` to keep each browser window's working set separate through reloads, and
+`localStorage` to seed a new window. The toolbar’s Sans/Serif switch chooses the face for Han text. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
+use the `ids-input:` prefix.
 
 ## Inspired by
 
@@ -491,6 +485,6 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
-The prepared drawings in `demo/lib/example-drawings.json` use bundled Tangut outlines or the Han
-export at `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
+`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.

@@ -8,7 +8,7 @@
   // description too large to draw, or one the preview cannot draw, shows placeholders and says so;
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
-  import { leaves, samePath, write } from '../core/ids.js'
+  import { EMPTY, leaves, samePath, write } from '../core/ids.js'
   import { FACE, STROKE, badge, groupParts, partTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { translator } from './i18n.js'
 
@@ -44,7 +44,7 @@
   // A description is drawn after a short pause in editing. A newer one aborts the one before, and an
   // answer for a description since replaced is dropped.
   $effect(() => {
-    const text = sequence, empty = tree === null, ask = adapter.preview, final = adapter.drawing
+    const text = sequence, empty = text === EMPTY, ask = adapter.preview, final = adapter.drawing
     sketched = null
     if (empty || !(ask || final)) { step = 'idle'; shown = null; return }
     step = 'loading'
@@ -281,6 +281,7 @@
                     role={interactive ? 'button' : undefined} tabindex={interactive ? -1 : undefined}
                     aria-label={interactive ? t('ids.adjust.move', { part: partName(group.index) }) : undefined}
                     onpointerdown={interactive ? event => startDrag(event, group, 'move') : undefined}>
+                    {#if interactive}<rect x={group.box[0]} y={group.box[1]} width={group.box[2]} height={group.box[3]} fill="transparent" pointer-events="all" />{/if}
                     {#each group.parts as index (index)}
                       <path class="ink" d={drawn.parts?.[index]?.d} />
                     {/each}
