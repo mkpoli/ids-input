@@ -1,6 +1,7 @@
 // @ts-check
-// Duplicate-key detection for document JSON. JSON.parse keeps the last of two equal keys; the
-// document format rejects the ambiguity. The text must already be valid JSON.
+// JSON inspection for document files: duplicate object keys and numbers outside finite binary64.
+// JSON.parse keeps the last of two equal keys and turns overflowing numbers into Infinity; the
+// document format rejects both. The text must already be valid JSON.
 
 /**
  * Every object key that occurs more than once at the same level, at any depth.
@@ -8,9 +9,21 @@
  * @returns {string[]}
  */
 export function duplicateKeys(text) {
+  return inspectJson(text).duplicateKeys
+}
+
+/**
+ * The structural problems JSON.parse hides: duplicate object keys, and numbers that overflow or
+ * underflow binary64.
+ * @param {string} text
+ * @returns {{ duplicateKeys: string[], numbers: string[] }}
+ */
+export function inspectJson(text) {
   let at = 0
   /** @type {string[]} */
-  const found = []
+  const duplicateKeys = []
+  /** @type {string[]} */
+  const numbers = []
   const space = () => { while (at < text.length && /\s/.test(text[at])) at++ }
   /** @returns {string} */
   const string = () => {
@@ -23,12 +36,21 @@ export function duplicateKeys(text) {
     }
     throw new Error('unterminated string')
   }
+  const number = () => {
+    const start = at
+    while (at < text.length && /[0-9eE+.-]/.test(text[at])) at++
+    const raw = text.slice(start, at)
+    const value = Number(raw)
+    const significand = raw.split(/[eE]/)[0]
+    if (!Number.isFinite(value) || (value === 0 && /[1-9]/.test(significand))) numbers.push(raw)
+  }
   const value = () => {
     space()
     const char = text[at]
     if (char === '{') return object()
     if (char === '[') return array()
     if (char === '"') { string(); return }
+    if (char === '-' || (char >= '0' && char <= '9')) { number(); return }
     while (at < text.length && !/[\s,\]}]/.test(text[at])) at++
   }
   const object = () => {
@@ -39,7 +61,7 @@ export function duplicateKeys(text) {
     for (;;) {
       space()
       const key = string()
-      if (seen.has(key)) found.push(key)
+      if (seen.has(key)) duplicateKeys.push(key)
       seen.add(key)
       space()
       if (text[at] !== ':') throw new Error('expected a colon')
@@ -67,5 +89,5 @@ export function duplicateKeys(text) {
   value()
   space()
   if (at !== text.length) throw new Error('trailing text')
-  return found
+  return { duplicateKeys, numbers }
 }

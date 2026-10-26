@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   DocumentError, allocatorFor, changeOperator, createAllocator, decompose, deleteLayer, documentIds, duplicateSubtree,
   emptyDocument, findLayer, fromSequence, layers, readDocument, replaceNode, replaceWithSequence, toSequence, unwrapNode,
-  validateDocument, wrapNode, writeDocument,
+  validateChain, validateDocument, wrapNode, writeDocument,
 } from '../src/document/index.js'
 
 const child = (document, index) => layers(document.root)[index]
@@ -29,6 +29,9 @@ describe('a document from IDS', () => {
     expect(() => fromSequence('木口')).toThrow(DocumentError)
     expect(() => fromSequence('⿰木')).not.toThrow()
   })
+  it('rejects an IDS draft whose implicit slots project past the document limit', () => {
+    expect(() => fromSequence('⿰'.repeat(32))).toThrow(DocumentError)
+  })
   it('keeps IDs unique even when the root ID is one the allocator would make', () => {
     const document = fromSequence('⿰木口', { id: 'l2' })
     const ids = documentIds(document)
@@ -47,6 +50,16 @@ describe('document validation', () => {
   it('rejects duplicate object keys before schema validation', () => {
     const text = writeDocument(emptyDocument()).replace('"render"', '"title": "a", "title": "b", "render"')
     expect(() => readDocument(text)).toThrow('duplicate object key title')
+  })
+  it('rejects numbers outside finite binary64', () => {
+    const text = writeDocument(emptyDocument()).replace('"render"', '"extensions": {"example.org/x": 1e400}, "render"')
+    expect(() => readDocument(text)).toThrow('number outside finite binary64')
+  })
+  it('reports an oversized operation chain from validateChain', () => {
+    const issues = []
+    const chain = Array.from({ length: 65 }, () => ({ type: 'affine', matrix: [1, 0, 0, 1, 0, 0] }))
+    expect(validateChain(chain, '/t', issues)).toBe(false)
+    expect(issues.map(issue => issue.message)).toContain('at most 64 operations')
   })
   it('accepts a slot root, groups, unknown operations and opaque extensions', () => {
     expect(validateDocument(emptyDocument())).toEqual([])
@@ -106,6 +119,15 @@ describe('identity edits', () => {
     expect(kept?.node).toMatchObject({ id: target.id, kind: 'component', char: '水', name: '口', transform })
     expect(toSequence(next.root)).toBe('⿰木水')
     expect(document.root.children[1].char).toBe('口')
+  })
+  it('finds the immediate parent of a nested layer and replaces only that layer', () => {
+    const document = fromSequence('⿰⿱木火口')
+    const branch = document.root.children[0]
+    const wood = branch.children[0]
+    const hit = findLayer(document.root, wood.id)
+    expect(hit?.parent?.id).toBe(branch.id)
+    expect(hit?.index).toBe(0)
+    expect(toSequence(replaceWithSequence(document, wood.id, '水').root)).toBe('⿰⿱水火口')
   })
   it('replaces structured content and gives its children fresh IDs', () => {
     const document = fromSequence('⿰木口')
@@ -172,6 +194,10 @@ describe('identity edits', () => {
     expect(copy.id).not.toBe(target.id)
     expect(copy.transform).toEqual(transform)
     expect(documentIds({ ...document, root: copy })).not.toContain(target.id)
+  })
+  it('rejects an allocator prefix that cannot leave room for an ID', () => {
+    expect(() => createAllocator([], 'x'.repeat(71))).toThrow(DocumentError)
+    expect(() => createAllocator([], 'x'.repeat(79))).toThrow(DocumentError)
   })
   it('does not reuse an ID that a removed layer held', () => {
     const document = fromSequence('⿰木口')

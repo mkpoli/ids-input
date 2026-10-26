@@ -6,7 +6,7 @@
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
 import { arity, isComponent, isSelector, parse } from '../core/ids.js'
-import { duplicateKeys } from './json.js'
+import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
 export const VERSION = 1
@@ -55,7 +55,7 @@ export class DocumentError extends Error {
 
 /** An allocator over opaque layer IDs, seeded with IDs that must not be reused. @param {Iterable<string>} [seed] @param {string} [prefix] @returns {Allocator} */
 export function createAllocator(seed = [], prefix = 'l') {
-  if (!/^[A-Za-z0-9_-]{0,79}$/.test(prefix)) throw new DocumentError([{ path: '', message: 'allocator prefix must be 0 to 79 ID characters' }])
+  if (!/^[A-Za-z0-9_-]{0,70}$/.test(prefix)) throw new DocumentError([{ path: '', message: 'allocator prefix must be 0 to 70 ID characters' }])
   const ids = new Set(seed)
   let count = 0
   return {
@@ -65,6 +65,7 @@ export function createAllocator(seed = [], prefix = 'l') {
       let id
       do id = `${prefix}${(++count).toString(36)}`
       while (ids.has(id))
+      if (id.length > 80) throw new DocumentError([{ path: '', message: 'the allocator has no ID of at most 80 characters left' }])
       ids.add(id)
       return id
     },
@@ -119,7 +120,7 @@ export function fromSequence(sequence, { id = 'root', allocator = createAllocato
   if (typeof sequence !== 'string') throw new DocumentError([{ path: '', message: 'sequence must be a string' }])
   if (!ID.test(id)) throw new DocumentError([{ path: '/root/id', message: 'invalid layer ID' }])
   allocator.reserve(id)
-  return { format: FORMAT, version: VERSION, root: nodeFromTree(id, sequence, allocator), render: { mode: 'unbound' } }
+  return assertDocument({ format: FORMAT, version: VERSION, root: nodeFromTree(id, sequence, allocator), render: { mode: 'unbound' } })
 }
 
 /** The IDS projection of a layer: groups pass their child through, slots are `⬚`. @param {Node} node @returns {string} */
@@ -133,17 +134,22 @@ export function toSequence(node) {
 /** A layer and its descendants as `{ node, parent, key, index }`, or null. @param {Node} root @param {string} id
  *  @returns {{ node: Node, parent: OperatorNode | Group | null, key: 'children' | 'child' | null, index: number } | null} */
 export function findLayer(root, id) {
-  if (root.id === id) return { node: root, parent: null, key: null, index: -1 }
-  if (root.kind === 'operator') {
-    for (let i = 0; i < root.children.length; i++) {
-      const hit = findLayer(root.children[i], id)
-      if (hit) return { node: hit.node, parent: root, key: 'children', index: i }
+  /** @param {Node} node @param {OperatorNode | Group | null} parent @param {'children' | 'child' | null} key @param {number} index
+   *  @returns {{ node: Node, parent: OperatorNode | Group | null, key: 'children' | 'child' | null, index: number } | null} */
+  const search = (node, parent, key, index) => {
+    if (node.id === id) return { node, parent, key, index }
+    if (node.kind === 'operator') {
+      for (let i = 0; i < node.children.length; i++) {
+        const hit = search(node.children[i], node, 'children', i)
+        if (hit) return hit
+      }
+    } else if (node.kind === 'group') {
+      const hit = search(node.child, node, 'child', 0)
+      if (hit) return hit
     }
-  } else if (root.kind === 'group') {
-    const hit = findLayer(root.child, id)
-    if (hit) return { node: hit.node, parent: root, key: 'child', index: 0 }
+    return null
   }
-  return null
+  return search(root, null, null, -1)
 }
 
 /** A layer and its descendants in reading order. @param {Node} root @returns {Node[]} */
@@ -176,8 +182,8 @@ function closedFields(value, allowed, path, issues) {
 /** @param {unknown} value @param {string} path @param {Issue[]} issues @returns {boolean} */
 export function validateChain(value, path = '', issues = []) {
   if (!array(value)) { issues.push({ path, message: 'transform must be an array' }); return false }
-  if (value.length > MAX_OPERATIONS) issues.push({ path, message: `at most ${MAX_OPERATIONS} operations` })
   const before = issues.length
+  if (value.length > MAX_OPERATIONS) issues.push({ path, message: `at most ${MAX_OPERATIONS} operations` })
   value.forEach((op, i) => validateOperation(op, `${path}/${i}`, issues))
   return issues.length === before
 }
@@ -396,9 +402,13 @@ export function readDocument(text) {
   if (new TextEncoder().encode(text).length > MAX_BYTES) throw new DocumentError([{ path: '', message: `over ${MAX_BYTES} bytes` }])
   let parsed
   try { parsed = JSON.parse(text) } catch (error) { throw new DocumentError([{ path: '', message: `invalid JSON: ${error instanceof Error ? error.message : error}` }]) }
-  let duplicate
-  try { duplicate = duplicateKeys(text) } catch (error) { throw new DocumentError([{ path: '', message: `invalid JSON: ${error instanceof Error ? error.message : error}` }]) }
-  if (duplicate.length) throw new DocumentError(duplicate.map(key => ({ path: '', message: `duplicate object key ${key}` })))
+  let inspected
+  try { inspected = inspectJson(text) } catch (error) { throw new DocumentError([{ path: '', message: `invalid JSON: ${error instanceof Error ? error.message : error}` }]) }
+  const problems = [
+    ...inspected.duplicateKeys.map(key => ({ path: '', message: `duplicate object key ${key}` })),
+    ...inspected.numbers.map(number => ({ path: '', message: `number outside finite binary64: ${number}` })),
+  ]
+  if (problems.length) throw new DocumentError(problems)
   return assertDocument(/** @type {Document} */ (parsed))
 }
 
