@@ -7,20 +7,27 @@
   // or a heading between groups. A rich item leads with a character or a root operator and ends
   // with a note, as the examples menu does with a code point; its sequence keeps the IDS written
   // with the IDC characters. Arrow keys move, Escape closes and gives the focus back.
+  import { tick } from 'svelte'
   import Icon from './Icon.svelte'
   import KeyHint from './KeyHint.svelte'
-  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean }} */
-  let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel, wide = false, compact = false } = $props()
-  let open = $state(false)
+  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean,
+   * open?: boolean, menubar?: boolean, tabIndex?: number, onopenchange?: (open: boolean) => void, onfocus?: () => void, onhover?: () => void, onmove?: (key: string) => void }} */
+  let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel, wide = false, compact = false,
+    open = $bindable(false), menubar = false, tabIndex, onopenchange, onfocus, onhover, onmove } = $props()
   /** @type {HTMLElement | null} */ let box = $state(null)
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
   const uid = $props.id()
-  /** @param {boolean} [focus] */
-  function show(focus = false) {
-    open = true
-    if (focus) queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (box?.querySelector(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])'))?.focus())
+  /** @param {boolean} next */
+  function setOpen(next) { open = next; onopenchange?.(next) }
+  const enabled = () => /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])') ?? [])])
+  /** @param {boolean} [focus] @param {boolean} [last] */
+  async function show(focus = false, last = false) {
+    setOpen(true)
+    if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
-  function hide() { open = false; trigger?.focus() }
+  function hide() { setOpen(false); trigger?.focus() }
+  /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
+  export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
   // A wide menu can start left of the window when its trigger sits near that edge, as a short
   // locale label or a narrow desktop can put it. Shift the open menu back inside the window.
   $effect(() => {
@@ -42,22 +49,30 @@
   })
   /** @param {KeyboardEvent} event */
   function key(event) {
-    const all = /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])') ?? [])])
+    const all = enabled()
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
     else if (event.key === 'ArrowUp') { event.preventDefault(); all[(at - 1 + all.length) % all.length]?.focus() }
-    else if (event.key === 'Tab') open = false
+    else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); all.at(event.key === 'End' ? -1 : 0)?.focus() }
+    else if (menubar && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) { event.preventDefault(); onmove?.(event.key) }
+    else if (event.key === 'Tab') { trigger?.focus(); setOpen(false) }
   }
 </script>
 
-<svelte:window onpointerdown={event => { if (open && !box?.parentElement?.contains(/** @type {Node} */ (event.target))) open = false }} />
+<svelte:window onpointerdown={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }}
+  onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
 
 <div class="menu-wrap">
-  <button type="button" class="tool" class:on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} aria-haspopup="menu" aria-expanded={open} aria-controls={`${uid}-menu`}
-    title={label} aria-label={ariaLabel ?? (text ? undefined : label)} onclick={() => open ? (open = false) : show()}
-    onkeydown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); show(true) } }}>
-    {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}<Icon name="chevron" size={14} />{#if keys?.length}<KeyHint combos={keys} />{/if}
+  <button type="button" class="tool" class:menubar class:on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} role={menubar ? 'menuitem' : undefined} tabindex={tabIndex} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? `${uid}-menu` : undefined}
+    title={label} aria-label={ariaLabel ?? (text ? undefined : label)} onclick={() => open ? setOpen(false) : show(true)} {onfocus} onpointerenter={onhover}
+    onkeydown={event => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); show(true, event.key === 'ArrowUp') }
+      else if (menubar && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) { event.preventDefault(); onmove?.(event.key) }
+      else if (event.key === 'Escape' && open) { event.preventDefault(); event.stopPropagation(); hide() }
+      else if (event.key === 'Tab') setOpen(false)
+    }}>
+    {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}{#if !menubar}<Icon name="chevron" size={14} />{/if}{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
     <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
@@ -87,6 +102,7 @@
 </div>
 
 <style>
+  .tool.menubar{padding:0 10px;border-color:transparent;background:none;border-radius:6px}
   .menu-wrap{position:relative}
   .menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:220px;max-width:min(340px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;
     padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-pop)}

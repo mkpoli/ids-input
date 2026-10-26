@@ -52,7 +52,7 @@
   /** @param {string} key */
   function focusRow(key) {
     focusKey = key
-    queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (listEl?.querySelector(`[data-key="${CSS.escape(key)}"]`))?.focus())
+    queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (listEl?.querySelector(`[data-path="${CSS.escape(key)}"]`))?.focus())
   }
   /** @param {Row} row */
   function toggle(row) {
@@ -115,11 +115,11 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:over={over === row.key} data-key={row.key}
+      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={rowLabel(row)} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level}
-        onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
+        onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
         ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
         {#if row.node}

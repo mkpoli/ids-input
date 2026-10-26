@@ -12,10 +12,11 @@
   $effect(() => keepSettings($state.snapshot(s)))
   const thumb = $derived(drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
 
-  async function save() {
+  /** @param {'svg' | 'png'} [format] */
+  export async function save(format) {
     if (!drawing) return
     // The click's drawing, name and settings: the export runs on after the page has moved on.
-    const drawn = drawing, name = sequence, settings = $state.snapshot(s)
+    const drawn = drawing, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
       if (settings.format === 'svg') download(new Blob([svgOf(drawn, settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
       else download(await pngOf(drawn, settings), fileName(name, 'png'))
@@ -75,7 +76,7 @@
   </div>
   <div class="actions">
     <span class="thumb" class:none={!backgroundOf(s)} aria-hidden="true">{#if thumb}<img src={thumb} alt="" />{/if}</span>
-    <button type="button" class="primary" disabled={!drawing} title={drawing ? undefined : t('app.export.nothing')} onclick={save}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
+    <button type="button" class="primary" disabled={!drawing} title={drawing ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
     <button type="button" disabled={!drawing} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy')}</button>
   </div>
 </section>

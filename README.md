@@ -237,7 +237,9 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
 Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens preferences. Toolbar buttons show their keys
-on hover.
+on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
+part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
+menus support arrow keys, Home/End and Escape.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
@@ -306,8 +308,9 @@ The demo is a full-width workshop: the sequence, the operators and the part pick
 the tree in a square panel in the middle, and at the end the drawing in a square panel, the sequence
 with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
 PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
-a chosen one, with a margin, empty slots left out unless asked for. The toolbar holds Undo and Redo
-with the history of named steps, saved drafts (also read from and written to a text file), examples
+a chosen one, with a margin, empty slots left out unless asked for. File and Edit menus at the top
+left provide new sequences, browser drafts, sharing, image export and editing commands. The toolbar
+holds Undo and Redo with the history of named steps, examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
 the language, a system, light or dark theme, preferences (key hints on
 buttons, where the preview draws from) and the sources. The tree panel switches between the Shape
