@@ -26,8 +26,8 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,679 Han entries (674 common, 967 hard to type, 38 strokes),
-plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py`, whose docstring gives the rules.
+hard to type or a CJK stroke. 1,686 Han entries (681 common, 967 hard to type, 38 strokes),
+plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
@@ -231,6 +231,70 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## Subtree frequencies and compound palette entries
+
+Run `bun run build:subtrees` after rebuilding `ids-parts.json` or the bundled IDS
+corpus. This reads the shipped corpus without downloading a newer edition and
+writes `ids-subtrees.json.gz` plus the compound entries in `ids-parts.json`.
+
+The frequency report contains every exact subtree, including leaves, complete
+roots, numbered unknown components and variation selectors. Its columns are
+`[part, uses, occurrences, nestedUses, strokes]`: `uses` counts distinct source
+characters, `occurrences` counts tree positions across distinct IDS alternatives,
+and `nestedUses` counts characters using the tree below the root. Palette usage
+counts are refreshed from `uses` for single-character entries too. Identical
+regional alternatives count once. Characters are not recursively expanded and
+variant glyphs are not merged. The report records malformed sequences under
+`rejected`; the current corpus has eight, all Tangut.
+
+Common also shows hard-to-type components used by at least 50 characters
+(285 in this corpus), while keeping them available in their stroke groups.
+It includes compound IDS occurring below the root in at least 50
+characters, matching the existing component frequency cutoff. The current
+corpus supplies seven frequent trees. Two use encoded palette entries instead:
+`⿱宀儿 → 宂` and `⿻三丨 → 丰`. Their palette frequencies count each character
+once across either spelling (533 and 167, respectively); the raw report retains
+exact IDS counts. Their IDS remain searchable aliases and appear in hover text.
+The five remaining trees stay as compound shortcuts. The manual shortcut `⿰冫⿱丿丶` is included with
+113 corpus uses and an estimated four strokes. BabelStone’s source component
+`{11}` (bottom of 軣, `⿰⿱丶㇀⿱㇒丶`) supplies those uses; its exact source
+spelling remains in the raw report. The shortcut count deduplicates characters
+across the source placeholder and literal spelling. Its dedicated four-dot outline
+also renders the equivalent spelling `⿰冫⿾冫`, both alone and inside larger IDS.
+The Sans form uses the four detached contours of Noto Sans CJK JP 氺; the Serif
+form takes the dots from Noto Serif CJK JP 塁, detaching the upper-right stroke
+from 田. Both retain an open centre without the central hook. The outlines are
+under SIL OFL 1.1 (see `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-NotoSerifCJK.txt`). Compound cells show a rendered
+icon with an `IDS` marker; hovering reveals the sequence and stroke count.
+Picking or dragging one inserts its complete tree. Stroke counts are searchable
+with the existing numeric filter. The dotted `⿻者丶` is explicitly counted as nine strokes to avoid counting
+the regional dot twice. Other counts are additive estimates from the existing palette's
+stroke metadata, recursively resolving other leaves where possible. They are
+marked `derived` and displayed with `≈`; overlapping strokes can make the true
+count differ. Subtraction, unresolved leaves and cycles retain an unknown count.
+The generated report uses the same stroke calculation for every subtree.
+
+The report derives from the public-domain BabelStone Han and Tangut IDS and the
+stroke-count sources listed above. It contains no Rime stroke-order column.
+
+`src/composer/component-forms.json` contains selected Noto CJK JP outlines in
+Sans 2.004 and Serif 2.002. `scripts/build_component_forms.py` verifies the source
+TTC hashes recorded in the JSON before exporting them. Rebuild with
+`uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
+Detached forms retain their source position in the native em instead of being
+enlarged to fill the cell, preserving their stroke thickness and spacing. Palette icons share the surrounding
+text’s em size. The six-stroke `⿳士冖一` has a dedicated two-level layout:
+the intact `⿱士冖` crown from 壱 above the short 一 from 壹. The line moves
+vertically without scaling its strokes. `⿱⿱士冖一` uses the same layout. `⿻者丶` uses the glyph shared by
+者 + U+E0101 and U+FA5B, verified in both fonts' variation tables.
+Exact 塁 and 疂 descriptions use their complete native JP glyphs.
+`⿱宀儿` uses 宂 (U+5B82), whose source regions are HTKP; `⿻三丨` uses
+丰 (U+4E30), whose exact source regions are GJKPV. Explicit IDS typed in the
+editor remain unchanged; palette selection inserts the encoded counterparts.
+Bundled styles affect only these selected forms; other composed outlines still
+come from the configured Han export. Whole glyphs fall back to their operands
+in adjustment mode when the export supplies them.
 
 ## Small Seal
 

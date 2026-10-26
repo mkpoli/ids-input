@@ -124,7 +124,10 @@ and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps 
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. The components take colours from CSS custom properties with light and dark defaults
+also work without an editor. Compound palette cells show an `IDS` marker and expose
+the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+without it, the cells use a font-based layout. Icon rendering must accept concurrent
+requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
 `--ids-font` and others; see the top of each component's style). The defaults use `light-dark()`,
 so the page needs `color-scheme: light dark` for its dark scheme.
@@ -225,6 +228,7 @@ interface IdsAdapter {
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
+  icon?(sequence, options?): Promise<Drawing | null>    // concurrent palette icons, separate from preview
   preview?(sequence, options?): Promise<Drawing>          // rejects when it cannot draw
 }
 
@@ -552,7 +556,7 @@ settings and the sources. Settings hold the system, light and dark themes, key h
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
 use the `ids-input:` prefix.
 
 ## Inspired by
