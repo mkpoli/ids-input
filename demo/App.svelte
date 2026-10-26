@@ -42,29 +42,40 @@
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const babel = babelStoneAdapter({ ids, parts, forms, names })
+  // Manual changes to the preview belong to the active document tab.
+  let adjusting = $state(false)
+  /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
+  let adjustments = $state({})
+  const adjustmentCount = $derived(Object.keys(adjustments).length)
+  const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at */
-  const previewAt = at => { if (!previews.has(at)) previews.set(at, composerPreview({ base: at })); return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(at)) }
+  /** @param {string} at @param {boolean} split */
+  const previewAt = (at, split) => {
+    const key = `${at}\0${split ? '1' : '0'}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split }))
+    return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
+  }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
-  /** A preview that answers the prepared examples at once and the composer otherwise. @param {string} at */
-  function previewFor(at) {
-    const known = previewsWithExamples.get(at)
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
+  function previewFor(at, split) {
+    const key = `${at}\0${split ? '1' : '0'}`
+    const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at)
-    if (at !== COMPOSER_BASE) { previewsWithExamples.set(at, composed); return composed }
+    const composed = previewAt(at, split)
+    if (split || at !== COMPOSER_BASE) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       return prepared.get(sequence) ?? composed(sequence, options)
     }, { warm: composed.warm })
-    previewsWithExamples.set(at, preview)
+    previewsWithExamples.set(key, preview)
     return preview
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base) })
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate) })
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
@@ -182,6 +193,22 @@
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
   editor.reset(initial.sequence)
+  const pathKey = (/** @type {number[]} */ path) => path.join('.')
+  let knownSequence = editor.whole
+  $effect(() => {
+    const sequence = editor.whole
+    untrack(() => {
+      if (sequence === knownSequence) return
+      knownSequence = sequence
+      adjustments = {}
+    })
+  })
+  function resetChosen() {
+    const at = editor.chosen
+    if (!at) return
+    const key = pathKey(at)
+    adjustments = Object.fromEntries(Object.entries(adjustments).filter(([name]) => name !== key && !name.startsWith(`${key}.`)))
+  }
   // The address starts on the tab shown, as it does after every change.
   history.replaceState(null, '', linkTo(editor.draft, location))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
@@ -230,12 +257,26 @@
   // The tabs: choose one, open a new one, open a sequence in one, and close one. A tab closed by
   // mistake comes back from the note, with its tree and history.
   const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
+  /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
+  /** @type {Map<string, AdjustState>} */
+  const adjustedStates = new Map()
+  const currentAdjustments = () => ({ adjustments: structuredClone($state.snapshot(adjustments)), adjusting })
+  /** @param {string} id */
+  function restoreAdjustments(id) {
+    const kept = adjustedStates.get(id)
+    adjustments = kept?.adjustments ?? {}
+    adjusting = kept?.adjusting ?? false
+    knownSequence = editor.whole
+  }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
   function flush() {
     const tab = current()
-    if (tab) states.set(tab.id, editor.snapshot())
+    if (tab) {
+      states.set(tab.id, editor.snapshot())
+      adjustedStates.set(tab.id, currentAdjustments())
+    }
   }
   /** @param {string} id */
   function activate(id) {
@@ -249,6 +290,7 @@
     states.delete(id)
     if (kept) editor.restore(kept)
     else editor.reset(tab.sequence)
+    restoreAdjustments(id)
     store()
   }
   /** A new empty tab, or one over `sequence`, shown at once. @param {string} [sequence] */
@@ -259,6 +301,9 @@
     activeId = tab.id
     toast = null
     editor.reset(sequence)
+    adjustments = {}
+    adjusting = false
+    knownSequence = editor.whole
     store()
     return tab
   }
@@ -272,6 +317,9 @@
     if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
       toast = null
       editor.reset(text)
+      adjustments = {}
+      adjusting = false
+      knownSequence = editor.whole
       if (editor.draft === editor.whole) tab.saved = tab.sequence
       store()
       return
@@ -285,7 +333,9 @@
     if (at < 0) return
     const tab = tabs[at]
     const state = id === activeId ? editor.snapshot() : states.get(id)
+    const adjusted = id === activeId ? currentAdjustments() : adjustedStates.get(id)
     states.delete(id)
+    adjustedStates.delete(id)
     tabs.splice(at, 1)
     if (id === activeId) {
       const next = tabs[at] ?? tabs[at - 1]
@@ -294,21 +344,24 @@
       states.delete(next.id)
       if (saved) editor.restore(saved)
       else editor.reset(next.sequence)
+      restoreAdjustments(next.id)
     }
     toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
-      run: () => reopen(tab, state, at) }
+      run: () => reopen(tab, state, adjusted, at) }
     store()
   }
   /**
    * Put a closed tab back where it was.
    * @param {import('./lib/tabs.js').Tab} tab
    * @param {ReturnType<typeof editor.snapshot> | undefined} state
+   * @param {AdjustState | undefined} adjusted
    * @param {number} at
    */
-  function reopen(tab, state, at) {
+  function reopen(tab, state, adjusted, at) {
     if (tabs.some(kept => kept.id === tab.id)) return
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
+    if (adjusted) adjustedStates.set(tab.id, adjusted)
     activate(tab.id)
   }
   /** Show the tab `step` places on, round the strip. @param {number} step */
@@ -529,7 +582,22 @@
         </section>
       </div>
       <section class="pane output" aria-label={t('app.output')}>
-        <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
+        <div class="preview">
+          {#key activeId}
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+          {/key}
+          <div class="adjust">
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
+              title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
+              onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+            {#if adjusting}
+              <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
+              <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
+              <span class="adjust-hint">{t('ids.adjust.hint')}</span>
+            {/if}
+          </div>
+        </div>
         <div class="details">
           <div class="readout">
             <div class="seq-row">
@@ -623,6 +691,13 @@
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
+  .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
+  .adjust button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button:hover:not(:disabled){border-color:var(--accent)}
+  .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .adjust button:disabled{opacity:.45;cursor:default}
+  .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .adjust-hint{font-size:11px;color:var(--muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
   .readout{display:flex;flex-direction:column;gap:10px}
   .seq-row{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}

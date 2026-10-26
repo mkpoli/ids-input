@@ -158,13 +158,15 @@ export async function sketch(source, sequence) {
  * `d` the SVG path of its outlines in a 1000-unit box (y down, nonzero fill), `cut` the path of what
  * ㇯ takes away (empty when nothing is), `slots` each empty slot (⬚) as `{ index, box }`, numbered in
  * reading order, in the box the layout gave it (as `svgBox` gives it), `stroke` the stroke widths
- * the drawing is weighted to, across x and y, `parts` each drawn part's origin and box, `origins`
- * where each part came from, `kanjivg` whether a part was cut along KanjiVG's groups or a hand form
- * read from it, and `approximate` the operators it uses that the composer itself does not draw. `exclude` lists characters nothing is taken from, and `face` the box
- * a whole character fills without them. Throws LookupError when a part can be drawn no way or the
- * sequence is larger than `LIMITS`.
+ * the drawing is weighted to, across x and y, `parts` each drawn part's origin, box, path `d` and
+ * whether it is a cut, `origins` where each part came from, `kanjivg` whether a part was cut along
+ * KanjiVG's groups or a hand form read from it, and `approximate` the operators it uses that the
+ * composer itself does not draw. `exclude` lists characters nothing is taken from, `face` the box a
+ * whole character fills without them, and `separate` draws every operand of a description instead of a glyph
+ * that spells it (falling back to that glyph when the operands cannot be drawn).
+ * Throws LookupError when a part can be drawn no way or the sequence is larger than `LIMITS`.
  */
-export async function compose(source, sequence, { exclude = [], face = null } = {}) {
+export async function compose(source, sequence, { exclude = [], face = null, separate = false } = {}) {
   await source.ready()
   const arity = ch => {
     const c = source.manifest.constants
@@ -176,7 +178,13 @@ export async function compose(source, sequence, { exclude = [], face = null } = 
   for (let round = 0; round < ROUNDS; round++) {
     const store = source.store()
     let drawn = null, failure = null, composer = null
-    try { composer = new Composer(store, { exclude, face }); drawn = composer.compose(sequence) } catch (error) { failure = error }
+    try { composer = new Composer(store, { exclude, face, separate }); drawn = composer.compose(sequence) } catch (error) {
+      // A separated drawing can fail where the whole glyph exists. Keep the glyph rather than fail
+      // the preview: a view then finds one piece and leaves it alone.
+      if (separate && !store.missing.size && error instanceof LookupError) {
+        try { composer = new Composer(store, { exclude, face }); drawn = composer.compose(sequence) } catch (again) { failure = again }
+      } else failure = error
+    }
     // A pass that met data not loaded yet only gathers what to load (`Composer.partial`); the drawing
     // is made once all of it is here.
     if (store.missing.size) { await source.load(store.missing); continue }
@@ -184,7 +192,8 @@ export async function compose(source, sequence, { exclude = [], face = null } = 
     const ink = drawn.filter(p => p.empty === undefined)
     return { d: svgPath(ink.filter(p => !p.cut)), cut: svgPath(ink.filter(p => p.cut)),
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
-      stroke: composer.stroke ?? null, parts: ink.map(p => ({ origin: p.origin, box: svgBox(drawnBox(p)) })), origins: ink.map(p => p.origin),
+      stroke: composer.stroke ?? null,
+      parts: ink.map(p => ({ origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
       kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...sequence].filter(ch => APPROXIMATE.includes(ch)))] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)

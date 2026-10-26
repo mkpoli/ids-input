@@ -127,6 +127,8 @@ export function runPreview(text, { preview, drawing, signal }, update) {
 
 /** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
 const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
+/** A transform list with nothing but the functions `partTransform` writes: its letters, numbers, spaces, commas and brackets. */
+const transformData = t => String(t ?? '').slice(0, 500).replace(/[^a-zA-Z0-9()., \-]/g, '')
 /** A colour as an SVG attribute takes it: `#rgb`, `#rrggbb` or `#rrggbbaa`; anything else is refused. */
 const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value ?? '') ? value : fallback
 
@@ -135,7 +137,8 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * `background` (none for a transparent one), `padding` the share of the 1000-unit box added on each
  * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
  * draws each as the editor does, in the ink at half strength.
- * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null }} drawing
+ * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
+ *   parts?: { d: string, cut?: boolean }[], transforms?: (string | null)[] }} drawing
  * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
  * @returns {string}
  */
@@ -150,7 +153,20 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   if (back) out.push(`<rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="${back}"/>`)
   const d = pathData(drawing.d), cut = pathData(drawing.cut)
   if (cut) out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/><path d="${cut}" fill="#000"/></mask>`)
-  if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
+  // A view may hand over one transform per drawn part, to move, scale or turn a component. A cut
+  // drawing stays merged: its mask is taken across parts.
+  const transforms = Array.isArray(drawing.transforms) ? drawing.transforms : null
+  const pieces = Array.isArray(drawing.parts) ? drawing.parts : null
+  const split = !cut && transforms?.some(transform => typeof transform === 'string' && transform)
+    && pieces?.every(piece => typeof piece.d === 'string')
+  if (split) {
+    for (let i = 0; i < pieces.length; i++) {
+      const piece = pathData(pieces[i].d)
+      if (!piece) continue
+      const transform = transformData(transforms[i])
+      out.push(transform ? `<g transform="${transform}"><path d="${piece}" fill="${fill}"/></g>` : `<path d="${piece}" fill="${fill}"/>`)
+    }
+  } else if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
   if (placeholders) for (const slot of drawing.slots ?? []) {
     const box = (slot.box ?? []).slice(0, 4).map(v => num(v, 0))
     if (box.length < 4) continue
@@ -160,4 +176,94 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   }
   out.push('</svg>')
   return out.join('')
+}
+
+// ---------------------------------------------------------------- adjusting a drawing's parts
+// A view that lets a host move, scale or turn one component of a drawing needs each drawn part
+// grouped by the leaf it belongs to: the composer draws a part as one or more pieces, and the
+// sketch says where each leaf was laid out.
+
+/** The area two [x, y, width, height] boxes share. */
+const shared = (a, b) => {
+  const w = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])
+  const h = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1])
+  return w > 0 && h > 0 ? w * h : 0
+}
+/** The box around [x, y, width, height] boxes. */
+const around = boxes => {
+  const x = Math.min(...boxes.map(b => b[0])), y = Math.min(...boxes.map(b => b[1]))
+  return [x, y, Math.max(...boxes.map(b => b[0] + b[2])) - x, Math.max(...boxes.map(b => b[1] + b[3])) - y]
+}
+
+/**
+ * The drawn parts grouped by the leaf of `leaves` each belongs to: `{ index, parts, box }[]`, `index`
+ * the leaf's place in reading order, `parts` the indices into `pieces`, and `box` the box around
+ * them. Null when the pieces cannot be told apart by leaf: one piece spans two leaves (the composer
+ * drew the whole description as one glyph), or a filled leaf has no piece. A leaf drawn in several
+ * pieces groups them together.
+ * @param {{ box: number[] }[]} pieces
+ * @param {{ index: number, box: number[], empty?: boolean }[]} leaves
+ * @returns {{ index: number, parts: number[], box: number[] }[] | null}
+ */
+export function groupParts(pieces, leaves) {
+  if (!Array.isArray(pieces) || !Array.isArray(leaves)) return null
+  const filled = leaves.filter(leaf => leaf && !leaf.empty && Array.isArray(leaf.box) && leaf.box.length >= 4
+    && leaf.box.slice(0, 4).every(Number.isFinite))
+  if (!filled.length || pieces.length < filled.length) return null
+  // A separated drawing gives each leaf one piece, in reading order. That is the only reliable map
+  // when leaves share a box (⿻, an enclosure's outer part): the boxes cannot tell them apart.
+  if (pieces.length === filled.length) {
+    if (!pieces.every(piece => Array.isArray(piece?.box) && piece.box.length >= 4 && piece.box.slice(0, 4).every(Number.isFinite))) return null
+    return filled.map((leaf, i) => ({ index: leaf.index, parts: [i], box: pieces[i].box.slice(0, 4) }))
+  }
+  /** @type {Map<number, number[]>} */
+  const grouped = new Map(filled.map(leaf => [leaf.index, []]))
+  for (let i = 0; i < pieces.length; i++) {
+    const box = pieces[i]?.box
+    if (!Array.isArray(box) || box.length < 4 || !box.slice(0, 4).every(Number.isFinite)) return null
+    const shares = filled.map(leaf => ({ index: leaf.index, area: shared(box, leaf.box), leafArea: leaf.box[2] * leaf.box[3] }))
+      .sort((a, b) => b.area - a.area)
+    const best = shares[0]
+    if (!(best.area > 0)) return null
+    // A piece lying equally in two leaves belongs to the smaller, inner one when one leaf encloses the
+    // other (the part inside an enclosure), and to neither when the leaves are neighbours of a similar
+    // size: that is a whole glyph, not a part.
+    const near = shares.filter(share => share.area >= best.area * 0.99)
+    if (near.length > 1) {
+      const smallest = Math.min(...near.map(share => share.leafArea)), largest = Math.max(...near.map(share => share.leafArea))
+      if (smallest > largest * 0.75) return null
+      const inner = near.reduce((a, b) => a.leafArea <= b.leafArea ? a : b)
+      grouped.get(inner.index)?.push(i)
+    } else {
+      grouped.get(best.index)?.push(i)
+    }
+  }
+  const out = []
+  for (const leaf of filled) {
+    const parts = grouped.get(leaf.index)
+    if (!parts?.length) return null
+    out.push({ index: leaf.index, parts, box: around(parts.map(i => pieces[i].box)) })
+  }
+  return out
+}
+
+/**
+ * The SVG transform that moves, scales and turns a part about the centre of `box`: `translate(dx dy)`
+ * first, then scale and rotation about the centre. Empty when the adjustment changes nothing.
+ * @param {{ dx?: number, dy?: number, scale?: number, rotate?: number } | null | undefined} adjustment
+ * @param {number[]} box [x, y, width, height]
+ */
+export function partTransform(adjustment, box) {
+  const num = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.round(Number(value) * 1000) / 1000 : fallback
+  const dx = num(adjustment?.dx), dy = num(adjustment?.dy), scale = num(adjustment?.scale, 1), rotate = num(adjustment?.rotate)
+  if (!dx && !dy && scale === 1 && !rotate) return ''
+  const [x, y, width, height] = (Array.isArray(box) ? box : []).slice(0, 4).map(value => num(value))
+  const cx = num(x + width / 2), cy = num(y + height / 2)
+  const out = []
+  if (dx || dy) out.push(`translate(${dx} ${dy})`)
+  out.push(`translate(${cx} ${cy})`)
+  if (rotate) out.push(`rotate(${rotate})`)
+  if (scale !== 1) out.push(`scale(${scale})`)
+  out.push(`translate(${-cx} ${-cy})`)
+  return out.join(' ')
 }

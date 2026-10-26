@@ -363,7 +363,9 @@ start; the Shape or indented Tree view with the search under it; and at the end 
 in a square panel, the sequence with the encoded character it describes (`adapter.encoded`) and its
 code points, and export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Rows in the Tree view select parts, expand with the arrow keys and accept drops. A click, the
+for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
+those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand
+with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
 closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
