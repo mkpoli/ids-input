@@ -340,6 +340,7 @@
     .brand{margin-right:auto}
     .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
+    .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .grow{max-height:440px;overflow:auto}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}

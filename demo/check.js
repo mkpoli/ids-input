@@ -345,6 +345,10 @@ try {
   // On a phone: a top bar of undo, redo and one menu, which holds the rest.
   const phone = await open('', { width: 375, height: 812 })
   assert(await phone.locator('.bar .locale').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
+  assert(await phone.locator('.group .tool').evaluateAll(els => {
+    const shown = els.filter(el => el.offsetParent)
+    return getComputedStyle(shown[shown.length - 1]).borderTopRightRadius
+  }) === '9px', 'the last segment on the phone keeps its round corner')
   await phone.locator('.bar .more').click()
   await phone.locator('dialog[open] .more-sheet').waitFor()
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()
