@@ -122,7 +122,7 @@
   .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--bg) 10.5px)}
   .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--bg) 10.5px)}
   .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
-  .tab:not(.on) .tab-main{justify-content:center;padding-inline:12px}
+  .tab:not(.on) .tab-main,.tab:only-child .tab-main{padding-inline:12px}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:28px;height:28px}
   .tab:not(.on) .tab-icon{opacity:.7}
