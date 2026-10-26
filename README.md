@@ -18,10 +18,10 @@ The package has three layers, and an optional preview:
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
-  the names people call them (絞絲, ノ文, 宝盖).
+  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS, the parts palette, component forms and component names from static
-  files, so nothing needs a server.
+  adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
+  static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
@@ -62,8 +62,9 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import parts from 'ids-input/data/ids-parts.json?url'
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
+  import folds from 'ids-input/data/component-name-folds.tsv?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
   let value = $state('')
 </script>
 
@@ -178,14 +179,15 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`babelStoneAdapter({ ids, parts, forms, names })` answers `structure`, `search` (a character,
-`U+6728` or bare hex, or a name such as 絞絲 or のぶん when `names` is given), `containing` and
-`parts` from the files in `data/`. `forms` folds the description search's components and opens a
-named component into the forms that stand for it; without it `⺡` and `氵` are different components
-and a name finds only the form the table records. The containing search builds an index in memory on
-first use: under Bun, about half a second for the most frequent components and 150 MB of heap with
-the table loaded; a host with a server can answer `containing` there instead. It has no `variants`,
-`drawing` or `preview`.
+`babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
+`U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
+is given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+components and opens a named component into the forms that stand for it; `folds` folds Chinese
+scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
+different components and a name finds only the form and the script the table records. The containing
+search builds an index in memory on first use: under Bun, about half a second for the most frequent
+components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
+there instead. It has no `variants`, `drawing` or `preview`.
 
 ## Search
 
@@ -224,19 +226,25 @@ take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, wh
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
 5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
 
-### Names
+### Names and vocabulary
 
 The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
-point, or one of the names people call a component (`data/component-names.tsv`, 1,727 names in
-Japanese and Chinese, traditional and simplified). A query and every name are folded alike: NFKC,
-katakana as hiragana, spaces and punctuation out. A name that is the whole query comes first, then
-one the query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds
-絞絲旁.
+point, a name, a word or a reading (`data/component-names.tsv`, 5,456 names, words and readings from
+Japanese and Chinese radical dictionaries, with English glosses, pinyin and Hepburn and Kunrei
+romaji). A query and every name are folded alike: NFKC, katakana as hiragana, Latin accents off,
+spaces and punctuation out, and Chinese scripts through `data/component-name-folds.tsv`. A name
+that is the whole query comes first, then one the query starts, then one it stands inside, so 宝盖
+finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin query matches whole words and their starts,
+and a word of five letters or more may stand inside a longer name.
 
 The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
 those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
-and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. A single component typed on its
-own stays the character it is, and without `names` the search takes characters and code points only.
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. Either Chinese script finds
+either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀, and 龍部, 龙部 and 竜部 all give the forms of 龍.
+Readings, pinyin, romaji and English senses work the same way: water, silk, roof, thread, person,
+みず, mizu, sui, shui, jiaosipang, baogaitou, sandianshui, nobun, nogi and ukanmuri lead to their
+components; `radical 120` leads to 糸. A single component typed on its own stays the character it
+is, and without `names` the search takes characters and code points only.
 
 ## Preview
 
@@ -304,11 +312,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
-- `data/component-names.tsv`: the names people call components by, CC BY-SA 4.0 as a whole
-  (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2 and
-  Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
-  (Apache 2.0); its header names each (79 KB). Its Wikipedia redirects are kept in
-  `data/component-name-redirects.json`.
+- `data/component-names.tsv`: the names, words and readings people use for components, CC BY-SA 4.0
+  as a whole (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2
+  and Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
+  (Apache 2.0), Unihan 18.0.0 (Unicode License v3) and pypinyin (MIT); its header names each
+  (237 KB). Its Wikipedia redirects are kept in `data/component-name-redirects.json`.
+- `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
+  folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
+  (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
@@ -333,7 +344,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
-  counts, the common set, and the IRG source regions named in the decomposition tree.
+  counts, the common set, the IRG source regions named in the decomposition tree, and the
+  definitions, Mandarin and Japanese readings of the component names.
+- KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
+  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
+  the component names.
+- pypinyin 0.55.0, mozillazg, MIT, <https://github.com/mozillazg/python-pinyin>: the pinyin of
+  Chinese component names.
+- OpenCC 1.4.2, BYVoid, Apache 2.0, <https://github.com/BYVoid/OpenCC>: traditional and simplified
+  spellings of component names and their folds.
 - Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
 - KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
   used by the composer.

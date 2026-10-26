@@ -21,7 +21,7 @@
   "ids.do.type": "{text} 입력",
   "ids.do.unwrap": "{op} 없애기",
   "ids.empty": "빈 자리",
-  "ids.find.placeholder": "이름·글자·코드로 찾기…",
+  "ids.find.placeholder": "이름·단어·글자·코드로 찾기…",
   "ids.from.atomic": "더 나눈 기록 없음",
   "ids.from.collapse": "{part}의 구성 요소 숨기기",
   "ids.from.containing": "{parts}을(를) 포함하는 글자",
