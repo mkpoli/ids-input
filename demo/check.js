@@ -578,6 +578,12 @@ try {
   assert(editedSvg.includes('<g transform="translate('), 'the export keeps the adjustment')
   await edit.getByRole('button', { name: 'Reset all' }).click()
   assert(await firstPart.getAttribute('transform') === null, 'Reset all restores the drawing')
+  // A cached drawing keeps the sketch that lets the view group its parts, so re-entering Adjust works.
+  await edit.getByRole('button', { name: 'Done' }).click()
+  await edit.getByRole('button', { name: 'Adjust layout' }).click()
+  await edit.waitForFunction(() => document.querySelectorAll('.ids-preview-large .part').length === 2)
+  await edit.locator('.ids-preview-large .part').first().click()
+  assert(await edit.locator('.ids-preview-large .selection').count() === 1, 'a cached drawing still gives its parts')
   await edit.context().close()
   pass('the output can be adjusted part by part, and the export keeps it')
 

@@ -83,6 +83,19 @@
   // the leaf's path, so changing a part's character keeps them and changing the tree lets them go.
   /** @param {Path} path */
   const pathKey = path => path.join('.')
+  /** @param {number[]} a @param {number[]} b */
+  const overlapArea = (a, b) => {
+    const width = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])
+    const height = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1])
+    return width > 0 && height > 0 ? width * height : 0
+  }
+  /** Whether two boxes cover nearly the same area, as an overlay's operands do. @param {number[]} a @param {number[]} b */
+  const sameBox = (a, b) => {
+    const smaller = Math.min(a[2] * a[3], b[2] * b[3])
+    return smaller > 0 && overlapArea(a, b) >= smaller * 0.9
+  }
+  /** @param {DOMPoint} point @param {number[]} box */
+  const insideBox = (point, box) => point.x >= box[0] && point.x <= box[0] + box[2] && point.y >= box[1] && point.y <= box[1] + box[3]
   const saved = $derived(adjustments ?? {})
   const hasAdjustments = $derived(Object.keys(saved).length > 0)
   const groups = $derived.by(() => {
@@ -95,6 +108,8 @@
   const adjustable = $derived(Boolean(editable && groups?.length))
   const chosenIndex = $derived(chosen ? parts.findIndex(leaf => samePath(leaf.path, chosen)) : -1)
   const selection = $derived(chosenIndex >= 0 && groups ? groups.find(group => group.index === chosenIndex) ?? null : null)
+  // An overlay's operands cover one box, so a move grip on the selection keeps the chosen one movable.
+  const overlappingSelection = $derived(Boolean(selection && groups?.some(group => group.index !== selection.index && sameBox(group.box, selection.box))))
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !groups ? t('ids.adjust.unavailable') : '')
   /** The character of the leaf at `index`, for a handle's name. @param {number} index */
   const partName = index => {
@@ -156,19 +171,25 @@
     if (!adjustable) return
     event.preventDefault()
     event.stopPropagation()
-    const leaf = parts[group.index]
-    if (!leaf) return
-    onchoose?.(leaf.path)
-    const target = /** @type {SVGElement | null} */ (event.currentTarget)
-    const svg = /** @type {SVGSVGElement | null} */ (target?.ownerSVGElement ?? null)
+    const element = /** @type {SVGElement | null} */ (event.currentTarget)
+    const svg = /** @type {SVGSVGElement | null} */ (element?.ownerSVGElement ?? null)
     if (!svg) return
     const p = pointAt(svg, event)
     if (!p) return
-    const [x, y, width, height] = group.box
+    // A click on one of several parts sharing a box steps to the next of them, so both are reachable.
+    let picked = group
+    if (kind === 'move' && group.index === chosenIndex && groups && element?.classList.contains('part')) {
+      const stacked = groups.filter(candidate => insideBox(p, candidate.box) && sameBox(candidate.box, group.box))
+      if (stacked.length > 1) picked = stacked[(stacked.findIndex(candidate => candidate.index === group.index) + 1) % stacked.length]
+    }
+    const leaf = parts[picked.index]
+    if (!leaf) return
+    onchoose?.(leaf.path)
+    const [x, y, width, height] = picked.box
     const current = saved[pathKey(leaf.path)] ?? {}
     const start = { dx: current.dx ?? 0, dy: current.dy ?? 0, scale: current.scale ?? 1, rotate: current.rotate ?? 0 }
     const center = /** @type {[number, number]} */ ([x + width / 2 + start.dx, y + height / 2 + start.dy])
-    drag = { kind, index: group.index, svg, p0: p, start, center, d0: Math.hypot(p.x - center[0], p.y - center[1]), a0: Math.atan2(p.y - center[1], p.x - center[0]) }
+    drag = { kind, index: picked.index, svg, p0: p, start, center, d0: Math.hypot(p.x - center[0], p.y - center[1]), a0: Math.atan2(p.y - center[1], p.x - center[0]) }
     svg.setPointerCapture?.(event.pointerId)
     svg.focus?.({ preventScroll: true })
   }
@@ -256,16 +277,13 @@
               {/if}
               {#if useParts && groups}
                 {#each groups as group (group.index)}
-                  <g class="part" data-leaf={group.index} transform={transformOf(group.index) || undefined}>
+                  <g class="part" class:adjusting={interactive} data-leaf={group.index} transform={transformOf(group.index) || undefined}
+                    role={interactive ? 'button' : undefined} tabindex={interactive ? -1 : undefined}
+                    aria-label={interactive ? t('ids.adjust.move', { part: partName(group.index) }) : undefined}
+                    onpointerdown={interactive ? event => startDrag(event, group, 'move') : undefined}>
                     {#each group.parts as index (index)}
                       <path class="ink" d={drawn.parts?.[index]?.d} />
                     {/each}
-                    {#if interactive}
-                      {@const [x, y, width, height] = group.box}
-                      <rect class="part-hit" x={x} y={y} width={width} height={height} role="button" tabindex="-1"
-                        aria-label={t('ids.adjust.move', { part: partName(group.index) })}
-                        onpointerdown={event => startDrag(event, group, 'move')} />
-                    {/if}
                   </g>
                 {/each}
               {:else}
@@ -280,6 +298,14 @@
                 {@const size = 26 / Math.max(scale, 0.05)}
                 <g class="selection" transform={transformOf(selection.index) || undefined}>
                   <rect class="select-box" x={x} y={y} width={width} height={height} rx={6} />
+                  {#if overlappingSelection}
+                    {@const grip = Math.min(size * 0.45, Math.min(width, height) * 0.22)}
+                    <circle class="handle move" cx={x + width / 2} cy={y + height / 2} r={grip}
+                      role="button" tabindex="-1" aria-label={t('ids.adjust.move', { part: partName(selection.index) })}
+                      onpointerdown={event => startDrag(event, selection, 'move')} />
+                    <path class="grip-cross" pointer-events="none"
+                      d={`M${x + width / 2 - grip * 0.5} ${y + height / 2}H${x + width / 2 + grip * 0.5}M${x + width / 2} ${y + height / 2 - grip * 0.5}V${y + height / 2 + grip * 0.5}`} />
+                  {/if}
                   <line class="turn-line" x1={x + width / 2} y1={y} x2={x + width / 2} y2={y - size * 1.35} />
                   <circle class="handle rotate" cx={x + width / 2} cy={y - size * 1.9} r={size * 0.55}
                     role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part: partName(selection.index) })}
@@ -348,14 +374,16 @@
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}
-  .part-hit{fill:transparent;cursor:grab}
-  .part-hit:active{cursor:grabbing}
+  .adjusting .part{cursor:grab}
+  .adjusting .part:active{cursor:grabbing}
   .selection{pointer-events:none}
   .select-box{fill:none;stroke:var(--_accent);stroke-width:1.5;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
   .turn-line{stroke:var(--_accent);stroke-width:1.5;vector-effect:non-scaling-stroke}
   .handle{fill:var(--_surface);stroke:var(--_accent);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:all}
   .handle.scale{cursor:nwse-resize}
   .handle.rotate{cursor:grab}
+  .handle.move{cursor:move}
+  .grip-cross{stroke:var(--_accent);stroke-width:1.5;vector-effect:non-scaling-stroke}
   @media (forced-colors: active){.handle{fill:Canvas;stroke:CanvasText}.select-box,.turn-line{stroke:CanvasText}}
   .slot-fill{fill:color-mix(in srgb,var(--_accent) 6%,transparent)}
   .slot-line{fill:none;stroke:color-mix(in srgb,var(--_accent) 50%,var(--_muted));stroke-linecap:round}

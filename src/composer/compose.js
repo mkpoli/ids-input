@@ -639,7 +639,11 @@ export class Composer {
     return children.flatMap((child, j) => {
       const box = mapped(shares[j], [0, 0, 1, 1], region)
       const donor = chosen.find(t => t.written[j] === keys[j])
-      if (donor) { const piece = this.pieceOf(donor.pieces[j]); return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)] }
+      // A separated drawing unfolds a sequence operand rather than taking a teacher's piece for it.
+      if (donor && !(this.separate && Array.isArray(child))) {
+        const piece = this.pieceOf(donor.pieces[j])
+        return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)]
+      }
       return this.node(child, box)
     })
   }

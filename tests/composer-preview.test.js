@@ -23,14 +23,17 @@ describe('the composer preview', () => {
     expect(await drawing).toEqual({ d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] })
     expect(sketches).toHaveLength(1)
   })
-  it('answers a sequence it has drawn before from memory', async () => {
-    const draw = preview()
-    const first = draw('⿱木林')
+  it('answers a sequence it has drawn before from memory, sketch included', async () => {
+    const draw = preview(), sketches = []
+    const first = draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })
     const [worker] = FakeWorker.made
+    const sketch = [{ index: 0, box: [0, 0, 500, 1000], empty: false }]
+    worker.answer({ id: worker.posted[0].id, sketch })
     worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
     expect(await first).toEqual({ d: 'M0 0Z' })
-    expect(await draw('⿱木林')).toEqual({ d: 'M0 0Z' })
+    expect(await draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })).toEqual({ d: 'M0 0Z' })
     expect(worker.posted).toHaveLength(1)
+    expect(sketches).toEqual([sketch, sketch])
   })
   it('warms the worker on the export before the first drawing', async () => {
     const draw = preview()
