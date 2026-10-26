@@ -11,6 +11,7 @@
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
+  import names from '../data/component-names.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES } from './lib/examples.js'
   import exampleDrawings from './lib/example-drawings.json'
@@ -37,7 +38,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts, forms })
+  const babel = babelStoneAdapter({ ids, parts, forms, names })
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at */

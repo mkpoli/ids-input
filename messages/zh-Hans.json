@@ -12,7 +12,7 @@
   "ids.do.type": "输入{text}",
   "ids.do.unwrap": "去掉{op}",
   "ids.empty": "空位",
-  "ids.find.placeholder": "查找字…",
+  "ids.find.placeholder": "名称、字或码位…",
   "ids.from.atomic": "无更细的拆分记录",
   "ids.from.collapse": "收起{part}的部件",
   "ids.from.containing": "含有{parts}的字",

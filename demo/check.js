@@ -365,8 +365,15 @@ try {
   assert((await value()).startsWith(`⿰${taken}`), `taken: ${await value()} (${taken})`)
   pass(`疑 dropped on Take parts from, ${taken} taken from its tree`)
 
-  // Find: a component by its code point.
+  // Find: a component by a name people call it, then by its code point.
   await page.getByRole('tab', { name: 'Find' }).click()
+  await choose(page, 0)
+  await page.locator('.ids-find input').fill('絞絲')
+  await page.locator('.ids-hit').first().waitFor()
+  assert(/^[纟糹糸]/.test(await page.locator('.ids-hit-char').first().textContent()), '絞絲 finds a form of 糸')
+  await page.locator('.ids-hit').first().click()
+  assert(/^⿰[纟糹糸]/.test(await value()), `found by name: ${await value()}`)
+  pass('a component found by its name replaces the chosen part')
   await choose(page, 0)
   await page.locator('.ids-find input').fill('U+6728')
   await page.locator('.ids-hit').first().click()
