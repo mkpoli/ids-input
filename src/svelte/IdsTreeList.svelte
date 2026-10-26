@@ -35,7 +35,7 @@
         part.parts.forEach((inner, i) => walk(inner, [...path, i], level + 1, { op: part.op, n: i + 1 }))
         return
       }
-      const name = part === null ? t('ids.empty') : parent ? t('ids.part', { part, n: parent.n, name: editor.name(parent.op) }) : part
+      const name = parent ? t('ids.part', { part: part ?? t('ids.empty'), n: parent.n, name: editor.name(parent.op) }) : part === null ? t('ids.empty') : part
       out.push({ key: key(path), path, level, node: false, part, seq: part ?? '⬚', name })
     }
     if (editor.tree) walk(editor.tree, [], 0, null)
@@ -47,7 +47,7 @@
   /** @param {Row} row */
   const rowLabel = row => row.node
     ? t('ids.node', { name: row.name, sequence: row.seq })
-    : t('ids.choose', { part: row.part ?? t('ids.empty') })
+    : t('ids.choose', { part: row.name })
 
   /** @param {string} key */
   function focusRow(key) {
@@ -73,7 +73,7 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); editor.choose(row.path); return }
+    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = rows[index + (event.key === 'ArrowDown' ? 1 : -1)]
