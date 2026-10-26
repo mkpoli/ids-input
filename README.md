@@ -18,10 +18,10 @@ The package has three layers, and an optional preview:
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
   (`LR` for ⿰), maps keys to operators, steps through decomposition trees, and finds components by
-  the names people call them (絞絲, ノ文, 宝盖).
+  the names, words and readings people use for them (絞絲, ノ文, 宝盖, water, のぎ).
 - **adapter**: the data the components ask for, supplied by the host application. A default
-  adapter reads BabelStone IDS, the parts palette, component forms and component names from static
-  files, so nothing needs a server.
+  adapter reads BabelStone IDS, the parts palette, component forms, names and script folds from
+  static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
   decomposition browser, a search) and the preview, each placeable on its own or together as
@@ -31,8 +31,8 @@ The package has three layers, and an optional preview:
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
 The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
-tab. Import `fonts.css` for Tangut text. The preview draws Han sequences only: han-compose's export
-holds no Tangut outlines, so a Tangut sequence is edited and searched but not drawn.
+tab. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -62,8 +62,9 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import parts from 'ids-input/data/ids-parts.json?url'
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
+  import folds from 'ids-input/data/component-name-folds.tsv?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
   let value = $state('')
 </script>
 
@@ -112,10 +113,12 @@ workshop in `demo/` does so:
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
 with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
 and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. In the tree, a click chooses a part, a part dragged from the
-palette, the decomposition tree, a search or the swaps is put where it is dropped, and the context
-menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
-level or copies that part's sequence. "Take parts from" reads a character dropped on it.
+`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
+them back, for a host switching between documents. In the tree, a click chooses a part, a part
+dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
+and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
+clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
+on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -135,9 +138,12 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a katakana letter standing for a component of
-that shape (コ, マ), a private-use character or `？` for a part no character names, with an
-optional variation selector. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
+`？` for a part no character names, with an optional variation selector. The letters and digits are
+those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
+shape), Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
+preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
+written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ## Adapters
 
@@ -173,14 +179,21 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`babelStoneAdapter({ ids, parts, forms, names })` answers `structure`, `search` (a character,
-`U+6728` or bare hex, or a name such as 絞絲 or のぶん when `names` is given), `containing` and
-`parts` from the files in `data/`. `forms` folds the description search's components and opens a
-named component into the forms that stand for it; without it `⺡` and `氵` are different components
-and a name finds only the form the table records. The containing search builds an index in memory on
-first use: under Bun, about half a second for the most frequent components and 150 MB of heap with
-the table loaded; a host with a server can answer `containing` there instead. It has no `variants`,
-`drawing` or `preview`.
+`IdsPreview` supports manual drawing adjustments through `editable`, `bind:adjustments` and
+`onchoose(path)`. Drag a part to move it, its corner square to scale it, or its circle to turn it.
+Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen part. Adjustments are
+keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
+for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
+
+`babelStoneAdapter({ ids, parts, forms, names, folds })` answers `structure`, `search` (a character,
+`U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん when `names`
+is given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+components and opens a named component into the forms that stand for it; `folds` folds Chinese
+scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
+different components and a name finds only the form and the script the table records. The containing
+search builds an index in memory on first use: under Bun, about half a second for the most frequent
+components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
+there instead. It has no `variants`, `drawing` or `preview`.
 
 ## Search
 
@@ -219,24 +232,31 @@ take longer (`⿰？木` 0.2 to 0.3 s, `⿴囗？` 0.4 to 0.5 s, `⿰？？`, wh
 0.6 to 1 s). In the workshop under headless Chromium, a fresh page showed its first results 3.4 to
 5 s after navigation over three runs, the table's download and parsing included. Without a Worker (Bun, tests) the search runs on the caller's thread.
 
-### Names
+### Names and vocabulary
 
 The parts finder's Find tab asks the adapter's `search`; with `names` it takes a character, a code
-point, or one of the names people call a component (`data/component-names.tsv`, 1,727 names in
-Japanese and Chinese, traditional and simplified). A query and every name are folded alike: NFKC,
-katakana as hiragana, spaces and punctuation out. A name that is the whole query comes first, then
-one the query starts, then one it stands inside, so 宝盖 finds 宝盖 and 宝盖头, and 絞絲 finds
-絞絲旁.
+point, a name, a word or a reading (`data/component-names.tsv`, 5,456 names, words and readings from
+Japanese and Chinese radical dictionaries, with English glosses, pinyin and Hepburn and Kunrei
+romaji). A query and every name are folded alike: NFKC, katakana as hiragana, Latin accents off,
+spaces and punctuation out, and Chinese scripts through `data/component-name-folds.tsv`. A name
+that is the whole query comes first, then one the query starts, then one it stands inside, so 宝盖
+finds 宝盖 and 宝盖头, and 絞絲 finds 絞絲旁. A Latin query matches whole words and their starts,
+and a word of five letters or more may stand inside a longer name.
 
 The component a name finds is opened into its other forms through `component-forms.tsv`, keeping
 those the parts palette holds: 絞絲 and 绞丝 offer 纟, 糹 and 糸; ノ文, ノブン and のぶん offer 攵
-and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. A single component typed on its
-own stays the character it is, and without `names` the search takes characters and code points only.
+and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer 宀. Either Chinese script finds
+either: 寶蓋, 宝盖, 寶盖 and 宝蓋 all give 宀, and 龍部, 龙部 and 竜部 all give the forms of 龍.
+Readings, pinyin, romaji and English senses work the same way: water, silk, roof, thread, person,
+みず, mizu, sui, shui, jiaosipang, baogaitou, sandianshui, nobun, nogi and ukanmuri lead to their
+components; `radical 120` leads to 糸. A single component typed on its own stays the character it
+is, and without `names` the search takes characters and code points only.
 
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. It reads the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
+Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -250,8 +270,9 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it the preview keeps its placeholders and shows no badge; when the export
-loads but a part has no drawing, its badge reads "Could not compose". Sequences over 12 operators or 4 levels are not drawn. Under
+origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
+use the bundled outlines. When the export loads but a part has no drawing, its badge reads
+"Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
@@ -273,8 +294,10 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens preferences. Toolbar buttons show their keys
-on hover.
+Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
+on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
+part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
+menus support arrow keys, Home/End and Escape.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
@@ -283,7 +306,8 @@ Ctrl+Shift+Z elsewhere).
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
 either case become operators: LR ⿰, UD ⿱, LL ⿲, UU ⿳, OC ⿴, OD ⿵, OU ⿶, OR ⿷, RD ⿸, LD ⿹, RU ⿺,
-XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow keys move through the tree,
+XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. Two capitals that spell a name are read as that operator, so
+letters such as L and R side by side go in from the part field, one slot at a time. In "Take parts from", the arrow keys move through the tree,
 `ArrowRight` opens a part and reaches its swaps, and `Enter` takes a part or a whole node.
 
 ## Licences
@@ -294,17 +318,22 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
-- `data/component-names.tsv`: the names people call components by, CC BY-SA 4.0 as a whole
-  (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2 and
-  Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
-  (Apache 2.0); its header names each (79 KB). Its Wikipedia redirects are kept in
-  `data/component-name-redirects.json`.
+- `data/component-names.tsv`: the names, words and readings people use for components, CC BY-SA 4.0
+  as a whole (<https://creativecommons.org/licenses/by-sa/4.0/>), from kanji-tools (MIT), KANJIDIC2
+  and Wikipedia (CC BY-SA 4.0), tudien (CC0 1.0), rime-wanxiang (CC BY 4.0), MyBox and OpenCC
+  (Apache 2.0), Unihan 18.0.0 (Unicode License v3) and pypinyin (MIT); its header names each
+  (237 KB). Its Wikipedia redirects are kept in `data/component-name-redirects.json`.
+- `data/component-name-folds.tsv`: the Chinese scripts, component forms and Japanese shinjitai forms
+  folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
+  (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together) and Noto Serif Tangut (1 MB),
   SIL Open Font License 1.1.
-- `src/composer/`: a port of han-compose's composer, MIT. It bundles no data. The drawings it makes
-  are built from the export's outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
+- `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
+  (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
+- `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
+  outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
   `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
   KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
 
@@ -321,7 +350,15 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
-  counts, the common set, and the IRG source regions named in the decomposition tree.
+  counts, the common set, the IRG source regions named in the decomposition tree, and the
+  definitions, Mandarin and Japanese readings of the component names.
+- KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
+  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
+  the component names.
+- pypinyin 0.55.0, mozillazg, MIT, <https://github.com/mozillazg/python-pinyin>: the pinyin of
+  Chinese component names.
+- OpenCC 1.4.2, BYVoid, Apache 2.0, <https://github.com/BYVoid/OpenCC>: traditional and simplified
+  spellings of component names and their folds.
 - Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
 - KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
   used by the composer.
@@ -345,27 +382,47 @@ XX ⿻, OL ⿼, LU ⿽, MI ⿾, RO ⿿, SU ㇯. In "Take parts from", the arrow 
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
+- SCRIPT-HYBRID (BiangBiangCon v19), slides dated 2026-10-16 (JST), supplied 2026-10-26, for the
+  hybrid examples. ⿴口도 is the slide's proposed 図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+  CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
+  L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
+  and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
+  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone. ⿰木あ, ⿰木Д and ⿰木？
+  are constructed samplers, not attested characters.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
 ## The workshop
 
-The demo is a full-width workshop: the sequence, the operators and the part pickers at the start,
-the tree in a square panel in the middle, and at the end the drawing in a square panel, the sequence
-with the encoded character it describes (`adapter.encoded`) and its code points, and export as SVG or
-PNG (256 to 2048 px) on a transparent, white, black or chosen background, in an ink that suits it or
-a chosen one, with a margin, empty slots left out unless asked for. The toolbar holds Undo and Redo
-with the history of named steps, saved drafts (also read from and written to a text file), examples
-(each with its character and code point, or marked when it has none), a share link with its QR code,
-the language, a system, light or dark theme, preferences (key hints on
-buttons, where the preview draws from) and the sources. The tree panel switches between the Shape
-of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
-keys and are drop targets. The tree and search panels in the middle
-column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
-double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
-sequence
-(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
-`localStorage` under `ids-input:`.
+The demo is a full-width workshop with one tab for each description being edited, in a strip below
+the toolbar. A tab is the description's composed drawing at a small size, and a dot while its text
+differs from the text it was saved with; the sequence itself is the tab's tooltip and accessible
+name, not written in it. The active tab has an accent line along its top, and the + button opens an empty tab.
+Every panel follows the chosen tab: the sequence, its code points, the operators and the part pickers
+at the start; the Shape or indented Tree view with the sequence and search under it; and at the end
+the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
+background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
+for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
+those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand
+with the arrow keys and accept drops. A click, the
+arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
+`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
+closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
+column are divided by a draggable splitter, the tree starting
+larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
+columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
+keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
+commands. File → Duplicate tab copies the active document; right-clicking a tab or pressing
+Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
+selection, undo history and drawing adjustments, which can then be edited independently.
+The toolbar holds Undo and Redo with the history of named steps, examples (each with its
+character and code point, or marked when it has none), a share link with its QR code, the language,
+settings and the sources. Settings hold the system, light and dark themes, key hints, and the
+preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
+tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
+`sessionStorage` to keep each browser window's working set separate through reloads, and
+`localStorage` to seed a new window. The toolbar’s Sans/Serif switch chooses the face for Han text. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
+use the `ids-input:` prefix.
 
 ## Inspired by
 

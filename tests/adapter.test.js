@@ -60,6 +60,8 @@ describe('the BabelStone adapter', () => {
     expect((await adapter.search('U+2EBC')).map(found => found.char)).toEqual(['⺼'])
     expect((await adapter.search('6728')).map(found => found.char)).toEqual(['木'])
     expect(await adapter.search('face')).toEqual([])
+    expect(await adapter.search('K')).toEqual([{ char: 'K', label: 'U+004B' }])
+    expect((await adapter.search('コマ')).map(found => found.char)).toEqual(['コ', 'マ'])
   })
   it('finds the characters built from parts', async () => {
     const adapter = babelStoneAdapter({ table })

@@ -89,7 +89,7 @@ export function createEditor(options) {
   }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
-    history.clear(); note = ''
+    history.clear(); note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -99,7 +99,8 @@ export function createEditor(options) {
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
     tree = next; chosen = select; note = ''
-    if (!typing) draft = write(next)
+    // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
+    if (!typing) draft = next === null ? '' : write(next)
     const part = select ? partAt(next, select) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
@@ -128,6 +129,24 @@ export function createEditor(options) {
     if (!last) return
     change = { id: ++changes, label: label ?? '', destructive: false }
     commit(last.tree, last.chosen)
+  }
+
+  /**
+   * The editor's state, to put back later with `restore`: the tree, the chosen part, the text in the
+   * field, the part field and the history.
+   * @returns {{ tree: Part, chosen: Path | null, draft: string, piece: string, history: import('../core/history.js').HistoryState<{ tree: Part, chosen: Path | null }> }}
+   */
+  function snapshot() {
+    return { tree, chosen, draft, piece, history: history.snapshot() }
+  }
+  /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
+  function restore(state) {
+    history.restore(state.history)
+    tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
+    note = ''; typing = false; run = false; change = null
+    const part = chosen ? partAt(tree, chosen) : undefined
+    if (typeof part === 'string') lookup.read(lookupChar(part))
+    sync()
   }
 
   // Where an operator or a part goes when nothing is chosen: the first empty slot.
@@ -289,7 +308,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, take, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen,
+    reset, operator, put, take, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
     /** Hear every change: the text and whether it is a whole description. @param {(text: string, whole: boolean) => void} listen */

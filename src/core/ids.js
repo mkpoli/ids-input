@@ -2,9 +2,9 @@
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a Han or Tangut ideograph,
-// a Tangut component, a radical, a
-// stroke, a katakana letter standing for a component of that shape (コ, マ), a private-use character
-// or ？ for a part no character names, with an optional variation selector.
+// a Tangut component, a radical, a stroke, a letter or digit of an alphabet or syllabary (K and O in
+// ⿸广⿰KO, コ standing for a component of that shape), a private-use character or ？ for a part no
+// character names, with an optional variation selector.
 
 /**
  * @typedef {string} Component A component's text, with its variation selector if it has one.
@@ -35,8 +35,32 @@ export const OPERATOR_GROUPS = [
 
 /** The longest description, in code points. */
 export const LONGEST = 64
-const COMPONENTS = [[0x2E80, 0x2FDF], [0x30A1, 0x30FA], [0x31C0, 0x31EE], [0x3400, 0x4DBF], [0x4E00, 0x9FFF],
-  [0xE000, 0xF8FF], [0xF900, 0xFAFF], [0xFF1F, 0xFF1F], [0x17000, 0x18AFF], [0x18D00, 0x18DFF], [0x20000, 0x3FFFD], [0xF0000, 0x10FFFD]]
+/**
+ * The letters and digits a component may be: every letter (category L) and decimal digit of Latin,
+ * IPA, Greek, Cyrillic, hiragana, katakana, Hangul (syllables and jamo), the full- and half-width
+ * forms and the kana supplements that the composer's sans fonts draw (Noto Sans CJK JP 2.004 and
+ * Plangothic P1 and P2 2.9.5795), Hangul fillers left out. Read from the fonts' cmaps by
+ * han-compose's `web_export.letters`, which writes the composer's records for the same set.
+ */
+const LETTERS = [
+  [0x30, 0x39], [0x41, 0x5A], [0x61, 0x7A], [0xAA, 0xAA], [0xB5, 0xB5], [0xBA, 0xBA], [0xC0, 0xD6],
+  [0xD8, 0xF6], [0xF8, 0x103], [0x110, 0x113], [0x11A, 0x11B], [0x128, 0x12C], [0x12E, 0x12E],
+  [0x130, 0x130], [0x132, 0x132], [0x143, 0x144], [0x147, 0x148], [0x14C, 0x14F], [0x152, 0x153],
+  [0x168, 0x16D], [0x192, 0x192], [0x197, 0x197], [0x1A0, 0x1A1], [0x1AF, 0x1B0], [0x1CD, 0x1DC],
+  [0x1F8, 0x1F9], [0x208, 0x208], [0x20A, 0x20A], [0x251, 0x251], [0x261, 0x261], [0x295, 0x295],
+  [0x38A, 0x38A], [0x391, 0x3A1], [0x3A3, 0x3AA], [0x3B1, 0x3C9], [0x3F5, 0x3F5], [0x401, 0x401],
+  [0x404, 0x404], [0x406, 0x407], [0x410, 0x44F], [0x451, 0x451], [0x4C0, 0x4C0], [0x4CF, 0x4CF],
+  [0x1100, 0x115E], [0x1161, 0x11FF], [0x1E2C, 0x1E2C], [0x1E2E, 0x1E2E], [0x1E3E, 0x1E3F],
+  [0x1EA0, 0x1EF9], [0x1F38, 0x1F3F], [0x1FD8, 0x1FDB], [0x3041, 0x3096], [0x309D, 0x309F],
+  [0x30A1, 0x30FA], [0x30FC, 0x30FF], [0x3131, 0x3163], [0x3165, 0x318E], [0x31F0, 0x31FF],
+  [0xA960, 0xA97C], [0xAC00, 0xD7A3], [0xD7B0, 0xD7C6], [0xD7CB, 0xD7FB], [0xFF10, 0xFF19],
+  [0xFF21, 0xFF3A], [0xFF41, 0xFF5A], [0xFF66, 0xFF9F], [0xFFA1, 0xFFBE], [0xFFC2, 0xFFC7],
+  [0xFFCA, 0xFFCF], [0xFFD2, 0xFFD7], [0xFFDA, 0xFFDC], [0x1B000, 0x1B122], [0x1B132, 0x1B132],
+  [0x1B150, 0x1B152], [0x1B155, 0x1B155], [0x1B164, 0x1B167]
+]
+const COMPONENTS = [[0x2E80, 0x2FDF], [0x31C0, 0x31EE], [0x3400, 0x4DBF], [0x4E00, 0x9FFF],
+  [0xE000, 0xF8FF], [0xF900, 0xFAFF], [0xFF1F, 0xFF1F], [0x17000, 0x18AFF], [0x18D00, 0x18DFF], [0x20000, 0x3FFFD], [0xF0000, 0x10FFFD],
+  ...LETTERS]
 /** The part no character names. */
 export const UNKNOWN = '？'
 /** A slot still to fill, as the editor writes it (U+2B1A DOTTED SQUARE). It is never a component, so a draft holding one never passes as whole. */
@@ -51,6 +75,12 @@ export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E
 export const isComponent = char => {
   const point = char?.codePointAt(0)
   return point !== undefined && COMPONENTS.some(([low, high]) => point >= low && point <= high)
+}
+
+/** Whether `char` is a letter or digit of an alphabet or syllabary (`LETTERS`). @param {string | undefined | null} char */
+export const isLetter = char => {
+  const point = char?.codePointAt(0)
+  return point !== undefined && LETTERS.some(([low, high]) => point >= low && point <= high)
 }
 
 /** How many descriptions an operator takes; 0 for anything else. @param {string | undefined} char */

@@ -1,48 +1,64 @@
 <script>
-  // The IDS workshop: the input at the start (the sequence, the operators, where parts come from),
-  // the tree in the middle, the output at the end (the drawing, the sequence, the character it
-  // encodes, its code points, export). A toolbar holds undo and redo with the history, examples,
-  // saved drafts, sharing, the theme, the language, preferences and sources.
-  import { untrack } from 'svelte'
+  // The IDS workshop: a tab for each description being edited, each its composed drawing, in a strip
+  // below the toolbar; under it the input at the start (the sequence, the operators, where
+  // parts come from), the tree and search in the middle, and the output at the end (the drawing, the
+  // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
+  // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
+  import { tick, untrack } from 'svelte'
   import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { babelStoneAdapter } from '../src/adapter/index.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { isSequence, parse, write } from '../src/core/index.js'
+  import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
+  import folds from '../data/component-name-folds.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { EXAMPLES } from './lib/examples.js'
+  import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
+  import { createIconDrawings } from './lib/icons.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE } from './lib/composer.js'
-  import { drafts as storedDrafts, forget, fromText, keep, toText } from './lib/projects.js'
+  import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
+  import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
-  import { download, pickText } from './lib/files.js'
+  import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
   import AboutDialog from './ui/AboutDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
   import Menu from './ui/Menu.svelte'
+  import MenuBar from './ui/MenuBar.svelte'
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
+  import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
+  import ColumnSplitter from './ui/ColumnSplitter.svelte'
 
   const params = new URLSearchParams(location.search)
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = babelStoneAdapter({ ids, parts, forms, names })
+  const babel = babelStoneAdapter({ ids, parts, forms, names, folds })
+  // Manual changes to the preview belong to the active document tab.
+  let adjusting = $state(false)
+  /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
+  let adjustments = $state({})
+  const adjustmentCount = $derived(Object.keys(adjustments).length)
+  const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at */
-  const previewAt = at => { if (!previews.has(at)) previews.set(at, composerPreview({ base: at })); return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(at)) }
+  /** @param {string} at @param {boolean} split */
+  const previewAt = (at, split) => {
+    const key = `${at}\0${split ? '1' : '0'}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split }))
+    return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
+  }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
@@ -56,12 +72,13 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A preview that answers the prepared examples at once and the composer otherwise. @param {string} at */
-  function previewFor(at) {
-    const known = previewsWithExamples.get(at)
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
+  function previewFor(at, split) {
+    const key = `${at}\0${split ? '1' : '0'}`
+    const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at)
-    if (exportUrl(at) !== preparedBase) { previewsWithExamples.set(at, composed); return composed }
+    const composed = previewAt(at, split)
+    if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -71,10 +88,23 @@
         if (sequence === undefined || !prepared.has(sequence)) composed.warm()
       },
     })
-    previewsWithExamples.set(at, preview)
+    previewsWithExamples.set(key, preview)
     return preview
   }
-  const adapter = $derived({ ...babel, preview: previewFor(base) })
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate) })
+  // Tab icons need their own drawer so their requests cannot cancel the main preview.
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const iconDrawings = new Map()
+  /** @param {string} at */
+  const iconsAt = at => {
+    if (!iconDrawings.has(at)) {
+      const composed = composerPreview({ base: at })
+      iconDrawings.set(at, createIconDrawings(async sequence =>
+        (exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
+    }
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
+  }
+  const icons = $derived(iconsAt(base))
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -138,6 +168,9 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
+  let sans = $state(load('sans', true))
+  $effect(() => save('sans', sans ? undefined : false))
+  $effect(() => { document.documentElement.dataset.font = sans ? 'sans' : 'serif' })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   // The share of the middle column given to the tree; the search takes the rest.
@@ -146,6 +179,24 @@
   let resizing = false
   $effect(() => save('split', split === 60 ? undefined : split))
 
+  let workWidth = $state(innerWidth)
+  let inputWidth = $state(storedWidth(load('inputWidth', null)))
+  let outputWidth = $state(storedWidth(load('outputWidth', null)))
+  const columns = $derived(columnWidths(workWidth, inputWidth, outputWidth))
+  $effect(() => save('inputWidth', inputWidth ?? undefined))
+  $effect(() => save('outputWidth', outputWidth ?? undefined))
+  /** Freeze the other column at its displayed width during a resize. @param {'input' | 'output'} side @param {number | null} width */
+  function resizeColumn(side, width) {
+    if (side === 'input') {
+      if (width !== null && columns.desktop && columns.output !== (outputWidth ?? 400)) outputWidth = columns.output
+      inputWidth = width
+    } else {
+      if (width !== null && columns.input !== (inputWidth ?? 380)) inputWidth = columns.input
+      outputWidth = width
+    }
+  }
+
+  const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale }))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
@@ -153,14 +204,58 @@
   let fromText_ = $state('')
   /** @type {import('../src/adapter/types.js').Drawing | null} */
   let drawing = $state.raw(null)
+  /** @type {{ save: (format?: 'svg' | 'png') => Promise<void> } | undefined} */
+  let exportPanel = $state()
+  /** @type {HTMLButtonElement | null} */ let settingsButton = $state(null)
 
-  // Where the page starts: the link's sequence, else the draft left last time, else 疑.
-  editor.reset(sequenceFrom(location) || load('current', '') || EXAMPLES[0].sequence)
-  // Each change is kept for the next visit and written into the address, so the link opens it.
+  // The tabs of the workspace: one description each, the open ones and the active one kept for the
+  // next visit. A tab's tree and history wait in `states` while another tab is shown.
+  const stored = readTabs(), linked = canonical(sequenceFrom(location))
+  // Bring the old single-document autosave into the first tab on upgrade.
+  if (!stored.length) {
+    const previous = load('current', '')
+    if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
+  }
+  const keptTab = stored.find(tab => tab.id === readActiveTab())
+  const linkedTab = linked ? stored.find(tab => tab.sequence === linked) : undefined
+  // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
+  // the one kept active stays.
+  const fromLink = linked && !linkedTab ? makeTab(linked) : undefined
+  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
+  const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
+  let tabs = $state(opening)
+  let activeId = $state(initial.id)
+  const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
+  /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
+  const states = new Map()
+  editor.reset(initial.sequence)
+  const pathKey = (/** @type {number[]} */ path) => path.join('.')
+  let knownSequence = editor.whole
+  $effect(() => {
+    const sequence = editor.whole
+    untrack(() => {
+      if (sequence === knownSequence) return
+      knownSequence = sequence
+      adjustments = {}
+    })
+  })
+  function resetChosen() {
+    const at = editor.chosen
+    if (!at) return
+    const key = pathKey(at)
+    adjustments = Object.fromEntries(Object.entries(adjustments).filter(([name]) => name !== key && !name.startsWith(`${key}.`)))
+  }
+  // The address starts on the tab shown, as it does after every change.
+  history.replaceState(null, '', linkTo(editor.draft, location))
+  // Each change stays in its tab and is written into the address, so the link opens it; the tabs
+  // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
-    save('current', text)
+    const tab = tabs.find(tab => tab.id === activeId)
+    if (tab) { tab.sequence = text; tab.whole = editor.tree === null ? '' : editor.whole }
+    store()
     history.replaceState(null, '', linkTo(text, location))
   }))
+  untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
   /** @type {{ id: number, text: string, action?: string, run?: () => void } | null} */
@@ -195,28 +290,185 @@
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
   }
 
+  // The tabs: choose one, open a new one, open a sequence in one, and close one. A tab closed by
+  // mistake comes back from the note, with its tree and history.
+  const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
+  /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
+  /** @type {Map<string, AdjustState>} */
+  const adjustedStates = new Map()
+  const currentAdjustments = () => ({ adjustments: structuredClone($state.snapshot(adjustments)), adjusting })
+  /** @param {string} id */
+  function restoreAdjustments(id) {
+    const kept = adjustedStates.get(id)
+    adjustments = kept?.adjustments ?? {}
+    adjusting = kept?.adjusting ?? false
+    knownSequence = editor.whole
+  }
+  /** Keep the open tabs and the chosen one for the next visit. */
+  function store() { writeTabs(tabs, activeId) }
+  /** Keep the active tab's tree and history before another is shown. */
+  function flush() {
+    const tab = current()
+    if (tab) {
+      states.set(tab.id, editor.snapshot())
+      adjustedStates.set(tab.id, currentAdjustments())
+    }
+  }
+  /** @param {string} id */
+  function activate(id) {
+    if (id === activeId) return
+    const tab = tabs.find(tab => tab.id === id)
+    if (!tab) return
+    flush()
+    activeId = id
+    toast = null
+    const kept = states.get(id)
+    states.delete(id)
+    if (kept) editor.restore(kept)
+    else editor.reset(tab.sequence)
+    restoreAdjustments(id)
+    store()
+  }
+  /** A new empty tab, or one over `sequence`, shown at once. @param {string} [sequence] */
+  function addTab(sequence = '') {
+    flush()
+    const tab = makeTab(sequence)
+    tabs.push(tab)
+    activeId = tab.id
+    toast = null
+    editor.reset(sequence)
+    adjustments = {}
+    adjusting = false
+    knownSequence = editor.whole
+    store()
+    return tab
+  }
+  /** Copy a document beside its source, including its editor history and drawing adjustments. @param {string} id */
+  function duplicateTab(id) {
+    const source = tabs.find(tab => tab.id === id)
+    if (!source) return
+    flush()
+    const tab = makeTab(source.sequence, source.saved)
+    const state = states.get(id)
+    if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
+    const adjusted = adjustedStates.get(id)
+    if (adjusted) adjustedStates.set(tab.id, structuredClone(adjusted))
+    tabs.splice(tabs.indexOf(source) + 1, 0, tab)
+    activate(tab.id)
+  }
+  /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
+  function openSequence(sequence) {
+    const text = canonical(sequence)
+    const open = tabs.find(tab => tab.sequence === text)
+    if (open) { activate(open.id); return }
+    const tab = current()
+    // Only an empty tab is reused: an unreadable draft, or one with history, keeps its tab.
+    if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
+      toast = null
+      editor.reset(text)
+      adjustments = {}
+      adjusting = false
+      knownSequence = editor.whole
+      if (editor.draft === editor.whole) tab.saved = tab.sequence
+      store()
+      return
+    }
+    addTab(text)
+  }
+  /** Close a tab, showing its neighbour; the note brings it back. @param {string} id */
+  function closeTab(id) {
+    if (tabs.length < 2) return
+    const at = tabs.findIndex(tab => tab.id === id)
+    if (at < 0) return
+    const tab = tabs[at]
+    const state = id === activeId ? editor.snapshot() : states.get(id)
+    const adjusted = id === activeId ? currentAdjustments() : adjustedStates.get(id)
+    states.delete(id)
+    adjustedStates.delete(id)
+    tabs.splice(at, 1)
+    if (id === activeId) {
+      const next = tabs[at] ?? tabs[at - 1]
+      activeId = next.id
+      const saved = states.get(next.id)
+      states.delete(next.id)
+      if (saved) editor.restore(saved)
+      else editor.reset(next.sequence)
+      restoreAdjustments(next.id)
+    }
+    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
+      run: () => reopen(tab, state, adjusted, at) }
+    store()
+  }
+  /**
+   * Put a closed tab back where it was.
+   * @param {import('./lib/tabs.js').Tab} tab
+   * @param {ReturnType<typeof editor.snapshot> | undefined} state
+   * @param {AdjustState | undefined} adjusted
+   * @param {number} at
+   */
+  function reopen(tab, state, adjusted, at) {
+    if (tabs.some(kept => kept.id === tab.id)) return
+    tabs.splice(Math.min(at, tabs.length), 0, tab)
+    if (state) states.set(tab.id, state)
+    if (adjusted) adjustedStates.set(tab.id, adjusted)
+    activate(tab.id)
+  }
+  /** Show the tab `step` places on, round the strip. @param {number} step */
+  function cycle(step) {
+    const at = tabs.findIndex(tab => tab.id === activeId)
+    if (tabs.length < 2 || at < 0) return
+    activate(tabs[(at + step + tabs.length) % tabs.length].id)
+  }
+
   // Saved drafts.
   let drafts = $state(storedDrafts())
-  function keepDraft() { if (editor.tree !== null) { drafts = keep(editor.whole); note(t('app.drafts.kept', { sequence: editor.whole })) } }
-  async function importDrafts() {
-    const text = await pickText('.txt,text/plain')
-    if (text === null) return
-    const found = fromText(text).filter(s => isSequence(s) && !parse(s, { open: true }).problem).map(s => write(parse(s, { open: true }).tree ?? null))
-    for (const sequence of found.reverse()) drafts = keep(sequence)
-    note(t('app.drafts.imported', { count: found.length }))
+  function keepDraft() {
+    if (editor.tree === null) return
+    drafts = keep(editor.whole)
+    const tab = current()
+    // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
+    if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
+    store()
+    note(t('app.drafts.kept', { sequence: editor.whole }))
   }
-  const draftItems = $derived([
-    { label: t('app.drafts.new'), icon: 'plus', disabled: editor.tree === null, run: () => editor.open('') },
+  const fileItems = $derived([
+    { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
-    ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => editor.open(d.sequence) }))] : []),
     { separator: /** @type {const} */ (true) },
-    { label: t('app.drafts.import'), icon: 'upload', run: importDrafts },
-    { label: t('app.drafts.export'), icon: 'download', disabled: !drafts.length, run: () => download(new Blob([toText(drafts)], { type: 'text/plain' }), 'ids-drafts.txt') },
-    ...(drafts.length ? [{ label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
+    { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
+    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
+    ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
+      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openSequence(d.sequence) })),
+      { separator: /** @type {const} */ (true) },
+      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
   ])
-  /** @param {{ sequence: string, char: string }} example */
-  function exampleItem(example) {
+
+  const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
+  const canCopy = $derived(editor.chosen ? editor.picked != null : editor.tree !== null)
+  /** Clipboard writes must succeed before a cut changes the tree. @param {boolean} [cut] */
+  async function copySelection(cut = false) {
+    const tree = editor.tree, path = editor.chosen ?? [], text = selectedText
+    if (!canCopy) return
+    try {
+      await navigator.clipboard.writeText(text)
+      if (cut && editor.tree === tree) editor.empty(path)
+      else note(t('app.copied', { text }))
+    } catch { note(t('app.copyFailed')) }
+  }
+  async function pasteSelection() {
+    const tree = editor.tree, path = editor.chosen
+    try {
+      const text = unalias((await navigator.clipboard.readText()).trim())
+      if (editor.tree !== tree) return
+      if (!text || parse(text, { open: true }).problem) { note(t('app.edit.invalidPaste')); return }
+      if (path) editor.take(text, path)
+      else editor.open(text)
+    } catch { note(t('app.edit.pasteFailed')) }
+  }
+  function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
+  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
@@ -224,17 +476,15 @@
       sequence: example.sequence,
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
-      lang: 'ja',
+      lang,
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
-      run: () => editor.open(example.sequence),
+      run: () => addTab(canonical(example.sequence)),
     }
   }
-  const exampleItems = $derived([
-    { heading: t('app.examples.encoded') },
-    ...EXAMPLES.filter(example => example.char).map(exampleItem),
-    { heading: t('app.examples.unencoded') },
-    ...EXAMPLES.filter(example => !example.char).map(exampleItem),
-  ])
+  const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
+    { heading: t(`app.examples.${group.key}`) },
+    ...group.examples.map(example => exampleItem(example, group.key === 'tangut' ? 'txg' : 'ja')),
+  ]))
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -246,16 +496,60 @@
     ]
   })
 
-  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false)
+  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  async function focusActiveEditor() {
+    await tick()
+    if (!work) return
+    if (view === 'tree') {
+      const row = /** @type {HTMLElement | null} */ (work.querySelector('.ids-treelist [aria-selected="true"]') ?? work.querySelector('.ids-treelist [tabindex="0"]'))
+      row?.focus()
+    } else await editor.focusChosen(work)
+  }
   /** @param {KeyboardEvent} event */
   function keys(event) {
-    if ((event.ctrlKey || event.metaKey) && event.key === ',' && !event.shiftKey) { event.preventDefault(); prefsOpen = true; return }
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's' && !event.shiftKey) { event.preventDefault(); keepDraft(); return }
+    if (event.defaultPrevented || event.isComposing) return
+    const target = /** @type {HTMLElement} */ (event.target)
+    if (target.closest('dialog, [role="dialog"]')) return
+    const command = (event.ctrlKey || event.metaKey) && !event.altKey
+    const mod = command && !event.shiftKey
+    if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    // The browser may keep Ctrl+Tab for itself; where it does not, it moves between the tabs.
+    if (command && tabs.length > 1 && (event.key === 'Tab' || event.key === 'PageDown' || event.key === 'PageUp')) {
+      event.preventDefault()
+      const inStrip = Boolean(target.closest('.tabbar'))
+      const inEditor = target instanceof Node && Boolean(work?.contains(target))
+      cycle(event.key === 'Tab' ? (event.shiftKey ? -1 : 1) : (event.key === 'PageDown' ? 1 : -1))
+      if (inStrip) tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
+      else if (inEditor) focusActiveEditor()
+      return
+    }
+    if (mod && event.key.toLowerCase() === 's') { event.preventDefault(); keepDraft(); return }
+    if (target.closest('input, textarea, select, [contenteditable="true"], [role="menu"]')) return
+    if (mod && ['c', 'x', 'v', 'a'].includes(event.key.toLowerCase())) {
+      if (['c', 'x'].includes(event.key.toLowerCase()) && !getSelection()?.isCollapsed) return
+      event.preventDefault()
+      if (event.key.toLowerCase() === 'a') selectAll()
+      else if (event.key.toLowerCase() === 'v') pasteSelection()
+      else copySelection(event.key.toLowerCase() === 'x')
+      return
+    }
     editor.keydown(event, { root: work, slot })
   }
   const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo'))
   const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo'))
-  const themeLabels = $derived({ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') })
+  const editItems = $derived([
+    { label: undoTitle, icon: 'undo', shortcut: shortcut('mod+z'), disabled: !editor.canUndo, run: () => editor.undo() },
+    { label: redoTitle, icon: 'redo', shortcut: shortcut('mod+shift+z'), disabled: !editor.canRedo, run: () => editor.redo() },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.edit.cut'), icon: 'cut', shortcut: shortcut('mod+x'), disabled: !canCopy, run: () => { copySelection(true) } },
+    { label: t('app.copy'), icon: 'copy', shortcut: shortcut('mod+c'), disabled: !canCopy, run: () => { copySelection() } },
+    { label: t('app.edit.paste'), icon: 'paste', shortcut: shortcut('mod+v'), run: () => { pasteSelection() } },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.edit.selectAll'), shortcut: shortcut('mod+a'), disabled: editor.tree === null, run: selectAll },
+    { label: t('ids.clear'), icon: 'trash', disabled: editor.picked == null, run: () => editor.empty(editor.chosen) },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.prefs.title'), icon: 'settings', shortcut: shortcut('mod+,'), run: () => prefsOpen = true },
+  ])
   /** @param {import('./lib/theme.js').Theme} next */
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
@@ -263,92 +557,123 @@
 <svelte:window onkeydown={keys} />
 
 <div class="app" lang={locale}>
-  <header class="bar">
-    <a class="brand" href="./" aria-label={t('app.title')}>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
-      <span>{t('app.title')}</span>
-    </a>
-    <nav class="tools" aria-label={t('app.toolbar')}>
-      <div class="group">
-        <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
-          <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
-        <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
-          <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-        <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
-      </div>
-      <span class="wide-only"><Menu label={t('app.drafts')} icon="folder" items={draftItems} keys={keyHints ? ['mod+s'] : undefined} {keyHints} /></span>
-      <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
-    </nav>
-    <div class="end">
-      <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
-      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <button type="button" class="tool key-hint" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
-      <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
-    </div>
-    <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" onclick={() => moreOpen = true}><Icon name="menu" /></button>
-  </header>
-
-  <main class="work" bind:this={work}>
-    <section class="pane input" aria-label={t('app.input')}>
-      <div class="block">
-        <h2 class="label">{t('ids.label')}</h2>
-        <IdsSequence {editor} label={false} />
-        {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
-        {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
-      </div>
-      <div class="block"><IdsOperators {editor} {keyHints} /></div>
-      <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
-    </section>
-
-    <div class="middle" bind:this={middleEl} style:--upper="{split}%">
-      <section class="pane tree" aria-label={t('ids.structure')}>
-        <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
-          <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
-            onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
-          <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
-            onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
+  <div class="chrome">
+    <header class="bar">
+      <a class="brand" href="./" aria-label={t('app.title')}>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
+        <span>{t('app.title')}</span>
+      </a>
+      <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file'), items: fileItems }, { label: t('app.edit'), items: editItems }]} {keyHints} /></span>
+      <nav class="tools" aria-label={t('app.toolbar')}>
+        <div class="group">
+          <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+            <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
+          <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
+            <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
+          <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        {#if view === 'shape'}
-          <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
-        {:else}
-          <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
-        {/if}
-        <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
-      </section>
-      <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
-        aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
-        onpointerdown={splitStart} onpointermove={splitMove} onpointerup={splitEnd} onpointercancel={splitEnd}
-        onkeydown={splitKey} ondblclick={splitReset}>
-        <span class="grip" aria-hidden="true"></span>
+        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
+      <div class="font-switch" role="group" aria-label={t('app.font')}>
+        <button type="button" class="font-choice" aria-pressed={sans} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => sans = true}><span class="aa">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={!sans} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => sans = false}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
       </div>
-      <section class="pane results" aria-label={t('ids.search.title')}>
-        <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
-        <IdsSearch {adapter} query={searchQuery} {messages} {locale}
-          onopen={hit => editor.open(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
-      </section>
+      </nav>
+      <div class="end">
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
+        <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
+        <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
+        <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
+      </div>
+      <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
+    </header>
+    <div class="tabs-slot">
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
     </div>
+  </div>
 
-    <section class="pane output" aria-label={t('app.output')}>
-      <div class="preview"><IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} bind:drawing /></div>
-      <div class="details">
-        <div class="readout">
-          <div class="seq-row">
-            <output class="seq" lang="ja">{editor.whole}</output>
-            {#each encoded as ch (ch)}
-              <button type="button" class="char" title={t('app.copyChar', { char: ch })} aria-label={`${t('app.encoded')} ${ch}`} onclick={() => copy(ch)}><span lang="ja">{ch}</span><code>{cp(ch)}</code></button>
-            {/each}
-            <button type="button" class="tool" title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+  <main class="workspace" bind:this={work}>
+    <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
+      bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
+      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
+        <div class="block">
+          <div class="label-row">
+            <h2 class="label">{t('ids.label')}</h2>
+            {#if points.length}
+              <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+            {/if}
           </div>
-          <details class="points">
-            <summary>{t('app.codePoints', { count: points.length })}</summary>
-            <ol>{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
-            <button type="button" class="link" onclick={() => copy(points.map(p => p.cp).join(' '))}>{t('app.copyPoints')}</button>
-          </details>
+          <div class="seq-line">
+            <IdsSequence {editor} label={false} />
+            <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+          </div>
+          {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
+          {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
         </div>
-        <div class="block"><ExportPanel {drawing} sequence={editor.whole} {t} onnote={note} /></div>
+        <div class="block"><IdsOperators {editor} {keyHints} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
+      </section>
+
+      <div class="column-gap input-gap">
+        <ColumnSplitter value={columns.input} min={MIN_INPUT} max={columns.inputMax} label={t('app.panels.resizeWidth', { panel: t('app.input') })}
+          controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
-    </section>
+
+      <div class="middle" bind:this={middleEl} style:--upper="{split}%">
+        <section class="pane tree" aria-label={t('ids.structure')}>
+          <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
+            <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
+              onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
+            <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
+              onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
+          </div>
+          {#if view === 'shape'}
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+          {:else}
+            {#key activeId}
+              <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+            {/key}
+          {/if}
+          {#if editor.whole}<output class="tree-whole" lang="ja" title={t('ids.label')} aria-label={`${t('ids.label')}: ${editor.whole}`}>{editor.whole}</output>{/if}
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+        </section>
+        <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
+          aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
+          onpointerdown={splitStart} onpointermove={splitMove} onpointerup={splitEnd} onpointercancel={splitEnd}
+          onkeydown={splitKey} ondblclick={splitReset}>
+          <span class="grip" aria-hidden="true"></span>
+        </div>
+        <section class="pane results" aria-label={t('ids.search.title')}>
+          <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+          <IdsSearch {adapter} query={searchQuery} {messages} {locale}
+            onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+        </section>
+      </div>
+      <div class="column-gap output-gap">
+        <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
+          controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
+      </div>
+      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
+        <div class="preview">
+          {#key activeId}
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+          {/key}
+          <div class="adjust">
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
+              title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
+              onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+            {#if adjusting}
+              <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
+              <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
+              <span class="adjust-hint">{t('ids.adjust.hint')}</span>
+            {/if}
+          </div>
+        </div>
+        <div class="details">
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} sequence={editor.whole} {t} onnote={note} /></div>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer class="foot">
@@ -364,31 +689,44 @@
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
     <div class="more-row">
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.drafts')} items={draftItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
-      { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
-      { label: t('app.prefs.title'), icon: 'settings', run: () => prefsOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
-<PreferencesDialog bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
+<Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
+  <div class="point-sheet">
+    <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
+    <button type="button" class="tool" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
+  </div>
+</Dialog>
 
 <style>
   .app{display:flex;flex-direction:column;min-height:100dvh}
-  .bar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left));background:color-mix(in srgb,var(--bg) 88%,transparent);
-    backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .brand{display:flex;align-items:center;gap:8px;margin-right:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
+  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
+  .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
+  .brand{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
+  .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
+  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11px;cursor:pointer}
+  .font-choice .aa{font-size:14px;line-height:1;color:var(--ink);font-family:var(--cjk-sans)}
+  .font-choice .aa.serif{font-family:var(--cjk-serif)}
+  .font-choice:hover{color:var(--ink)}
+  .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+  .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  @media (max-width:1100px){.font-choice .wide{display:none}}
   .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
   .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
@@ -404,10 +742,19 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
+  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
+  .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
   .block{display:flex;flex-direction:column;gap:6px;min-width:0}
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
+  .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+  .seq-line{position:relative}
+  .seq-line :global(.ids-field){width:100%}
+  .seq-line :global(.ids-field input){padding-right:44px}
+  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}
+  .seq-line .seq-copy:hover{background:var(--surface-2);color:var(--ink)}
+  .seq-line .seq-copy:disabled{color:var(--muted);background:none;cursor:default}
   .status{margin:0;font-size:12px;line-height:1.45;color:var(--muted)}
   .status.fault{color:var(--fault)}
   .view-tabs{display:flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
@@ -416,42 +763,51 @@
   .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+  .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
+  .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
+  .adjust button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button:hover:not(:disabled){border-color:var(--accent)}
+  .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .adjust button:disabled{opacity:.45;cursor:default}
+  .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .adjust-hint{font-size:11px;color:var(--muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .readout{display:flex;flex-direction:column;gap:10px}
-  .seq-row{display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
-  .seq{flex:1;min-width:0;font-family:var(--cjk);font-size:22px;overflow-wrap:anywhere}
-  .char{display:inline-flex;flex:none;align-items:center;gap:6px;padding:0 8px 0 4px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);cursor:pointer;font:inherit}
-  .char span{font-family:var(--cjk);font-size:22px;line-height:1.3}
-  .char:hover{border-color:var(--accent)}
-  .char:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
+  .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .point-sheet{display:flex;flex-direction:column;gap:14px}
+  .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
+  .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
+  .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .points summary{cursor:pointer;font-size:12px;color:var(--muted)}
-  .points ol{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0;padding:0;list-style:none}
-  .points li{display:flex;align-items:baseline;gap:4px}
-  .points li span{font-family:var(--cjk);font-size:16px}
   .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;padding:4px 16px 12px;font-size:12px;color:var(--muted)}
   .foot a{display:inline-flex;align-items:center;gap:5px;color:inherit}
   .foot .link{color:inherit}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .column-gap{display:none}
   .split{display:none}
   .results{gap:6px}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
-    .work{grid-template-columns:minmax(300px,360px) minmax(0,1fr);align-items:stretch}
+    .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr);column-gap:0;align-items:stretch}
+    .input{grid-column:1;grid-row:1}
+    .input-gap{display:block;grid-column:2;grid-row:1}
+    .middle{grid-column:3;grid-row:1}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
     .app{height:100dvh;min-height:0}
-    .work{grid-template-columns:minmax(320px,380px) minmax(0,1fr) minmax(340px,400px);min-height:0;align-items:stretch}
+    .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr) 16px var(--output-width);min-height:0;align-items:stretch}
+    .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
     .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
@@ -460,8 +816,8 @@
     .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 154px)))}
-    .output{grid-column:auto;display:flex;flex-direction:column}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
+    .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
     .results :global(.hits){flex:1;min-height:0;overflow:auto}
@@ -469,6 +825,7 @@
   }
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
+    .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}
     .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}

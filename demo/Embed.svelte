@@ -5,7 +5,8 @@
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
-  const adapter = babelStoneAdapter({ ids, parts, forms, names })
+  import folds from '../data/component-name-folds.tsv?url'
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds })
   let value = $state('')
   let used = $state('')
 </script>

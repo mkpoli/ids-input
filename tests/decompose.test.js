@@ -12,6 +12,8 @@ describe('what the box decomposes', () => {
     expect(roots('疑 骨疑')).toEqual([{ kind: 'char', char: '疑' }, { kind: 'char', char: '骨' }])
     expect(roots('⿰亻')).toEqual([{ kind: 'char', char: '亻' }])
     expect(roots('abc？')).toEqual([])
+    expect(roots('K')).toEqual([{ kind: 'char', char: 'K' }])
+    expect(roots('コマ')).toEqual([{ kind: 'char', char: 'コ' }, { kind: 'char', char: 'マ' }])
     expect(roots('')).toEqual([])
   })
   it('keeps a variation selector with its character and asks for the character alone', () => {
