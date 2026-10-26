@@ -41,6 +41,48 @@ const encodedSource = () => {
 }
 
 describe('the composer', () => {
+  it('renders the four-mouth grid by row while keeping the original leaf order', async () => {
+    const glyph = gzipSync(JSON.stringify({ [hex('㗊')]: { k: '㗊', G: boxGlyph([40, 80, 920, 960]), ink: 3520, nl: 1, o: 1 } }))
+    const source = createSource(async name => {
+      const body = name === gShard('㗊') ? glyph : files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const columns = '⿰⿱口口⿱口口', rows = '⿱⿰口口⿰口口'
+    const inkOnly = drawing => ({ ...drawing, parts: drawing.parts.map(({ leaf, ...part }) => part) })
+    for (const separate of [false, true]) {
+      for (const wrap of [grid => grid, grid => `⿱木${grid}`, grid => `⿴${grid}木`, grid => `⿴${grid}⬚`, grid => `⿴${grid}⿱木⬚`]) {
+        expect(inkOnly(await compose(source, wrap(columns), { separate })))
+          .toEqual(inkOnly(await compose(source, wrap(rows), { separate })))
+      }
+    }
+    expect(inkOnly(await compose(sourceOf(), columns))).toEqual(inkOnly(await compose(sourceOf(), rows)))
+    const colSketch = await sketch(source, columns), rowSketch = await sketch(source, rows)
+    expect(colSketch.map(leaf => leaf.box)).toEqual([0, 2, 1, 3].map(i => rowSketch[i].box))
+    const grid = await compose(source, columns, { separate: true })
+    expect(grid.parts).toEqual((await compose(source, '㗊', { separate: true })).parts)
+    expect((await compose(source, columns)).parts).toEqual((await compose(source, '㗊')).parts)
+    const enclosed = await compose(source, `⿴${columns}木`, { separate: true })
+    expect(groupParts(enclosed.parts, await sketch(source, `⿴${columns}木`)).map(group => group.parts))
+      .toEqual([[0], [3], [1], [4], [2]])
+    const composer = new Composer(source.store())
+    expect(composer.parse(columns)).toEqual(['⿰', ['⿱', '口', '口'], ['⿱', '口', '口']])
+    expect(composer.mouthGrid(composer.parse('⿰⿱木口⿱口口'))).toBeNull()
+    composer.predict = (op, kids) => {
+      const split = JSON.stringify(kids[1]) === JSON.stringify(composer.parse(columns)) ? 800 : 600
+      return [[0, split, 1000, 1000], [0, 0, 1000, split]]
+    }
+    const nestedColumns = composer.sketch(`⿱木${columns}`), nestedRows = composer.sketch(`⿱木${rows}`)
+    expect(nestedColumns.map(leaf => leaf.box)).toEqual([0, 1, 3, 2, 4].map(i => nestedRows[i].box))
+
+    const store = source.store()
+    for (const wrap of [grid => grid, grid => `⿱木${grid}`]) {
+      const lookup = new Composer({ ...store, rec: key => key === wrap(columns) ? { e: '木' }
+        : key === wrap(rows) ? { e: '口' } : store.rec(key) })
+      expect(lookup.compose(wrap(columns)).map(part => part.origin)).toEqual([wrap(columns) === columns ? 'glyph 㗊' : 'glyph 口'])
+      expect(lookup.compose(wrap(columns))).toEqual(lookup.compose(wrap(rows)))
+    }
+  })
+
   it('opens split enclosures while preserving editor leaf indices', async () => {
     const extra = new Map()
     for (const ch of [...'彳亍氵弓鬲士冖一殳米几方𠂉其亠𧘇果𤣩王文辛言隹糸𨸏匕頁吅𠦝𠆢羽犬禾']) {

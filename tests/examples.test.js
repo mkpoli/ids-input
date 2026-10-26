@@ -21,12 +21,16 @@ describe('the demo examples', () => {
       expect([...sequence].length).toBeLessThanOrEqual(LONGEST)
     }
   })
-  it('name a character BabelStone gives for the sequence, and none when they name none', () => {
-    for (const { sequence, char } of EXAMPLES) {
+  it('name a character from BabelStone or a cited alternative description', () => {
+    for (const example of EXAMPLES) {
+      const { sequence, char } = example
       const found = described.get(sequence) ?? []
       if (char) {
         expect([...char]).toHaveLength(1)
-        expect(found).toContain(char)
+        if ('source' in example) {
+          expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
+          expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
+        } else expect(found).toContain(char)
       } else {
         expect(found).toEqual([])
       }
@@ -38,7 +42,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps Tangut in its own examples section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'hybrid', 'samples', 'unencoded'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'hybrid', 'unencoded'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => /^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(example.char))).toBe(true)
   const trees = tangut.map(example => parse(example.sequence).tree)
@@ -46,4 +50,12 @@ it('keeps Tangut in its own examples section', () => {
   expect(trees.filter(tree => leaves(tree).length >= 6).length).toBeGreaterThanOrEqual(3)
   for (const operator of ['⿲', '⿳', '⿸', '⿵', '⿺']) expect(tangut.some(example => example.sequence.includes(operator))).toBe(true)
   expect(EXAMPLE_GROUPS[0].examples.every(example => !/[\u{17000}-\u{18DFF}]/u.test(example.char))).toBe(true)
+})
+
+it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {
+  for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄙ', '⿰木⿱ㄅㄞ', '⿰木き']) {
+    expect(EXAMPLES.some(example => example.sequence === sequence)).toBe(true)
+    expect(parse(sequence).problem).toBeUndefined()
+  }
+  expect(leaves(parse('⿰木⿳ㄙㄨㄙ').tree).map(leaf => leaf.char)).toEqual(['木', 'ㄙ', 'ㄨ', 'ㄙ'])
 })

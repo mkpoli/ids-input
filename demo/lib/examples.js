@@ -1,5 +1,5 @@
-// Starter sequences. The characters use a description BabelStone IDS lists for them; the rest
-// describe forms with no code point.
+// Starter sequences. Encoded characters use BabelStone IDS or the cited alternative description;
+// the remaining entries have no encoded character assigned here.
 //
 // Sources for the forms with no code point, X posts seen on 2026-10-26 (JST): ⿱艹堀 (@JUMANJIKYO, a
 // Kagoshima place-name character read ホキ), ⿱投石 (@dmnefkt, 逆{⿱投石}橋 in Ōzu, Ehime, read
@@ -11,8 +11,16 @@
 // 2026-10-26). The encoded forms use BabelStone IDS. The forms with no code point: ⿴口도 is the
 // slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
 // Japanese Military and Technical Terms (1945-07-30) p.217, L2/24-201 Fig.44, with images from
-// @xWcvlUaljn96009; ⿰门T is after N2744 Fig.8 and N2741 p.10 (唐蘭『古文字学導論』p.134). ⿰木あ,
-// ⿰木Д and ⿰木？ are constructed samplers for scripts without an attested form here.
+// @xWcvlUaljn96009; ⿰门T is after N2744 Fig.8 and N2741 p.10 (唐蘭『古文字学導論』p.134).
+// ⿰𛂦方 describes 𭤪 (U+2D92A): Gen Kojitani, Reply to N2741, IRG N2744 (2024-10-20), p.7.
+// https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7
+// BabelStone retains ⿰？方, so this example supplies the explicit hentaigana component.
+// ⿰亻A uses ASCII A for the full-width Ａ in Kojitani's IRG N2637 (2023-06-23), Table 1, no.1 / Fig.1.
+// https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf#page=2
+// ⿰扌3 is a shape approximation to the Sawndip form in N2744 Fig.7 (p.8), whose pictographic
+// right component also has a dot. ASCII 3 here specifies a drawing shape, not that component's origin.
+// ⿰木き, ⿰木⿳ㄙㄨㄙ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
+// communication, 2026-10-27. No published source is recorded here.
 export const EXAMPLE_GROUPS = [
   { key: 'han', examples: [
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
@@ -60,11 +68,12 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰艦ツ', char: '' },
     { sequence: '⿰掌キ', char: '' },
     { sequence: '⿰门T', char: '' },
-  ] },
-  { key: 'samples', examples: [
-    { sequence: '⿰木あ', char: '' },
-    { sequence: '⿰木Д', char: '' },
-    { sequence: '⿰木？', char: '' },
+    { sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' },
+    { sequence: '⿰亻A', char: '' },
+    { sequence: '⿰扌3', char: '' },
+    { sequence: '⿰木⿳ㄙㄨㄙ', char: '' },
+    { sequence: '⿰木⿱ㄅㄞ', char: '' },
+    { sequence: '⿰木き', char: '' },
   ] },
   { key: 'unencoded', examples: [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },

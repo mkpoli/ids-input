@@ -28,7 +28,6 @@
   "app.examples.list": "List",
   "app.examples.han": "Han characters",
   "app.examples.hybrid": "Script hybrids",
-  "app.examples.samples": "Constructed samples",
   "app.examples.tangut": "Tangut",
   "app.examples.none": "(unencoded)",
   "app.examples.unencoded": "No code point",
