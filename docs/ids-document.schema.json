@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ids-input:document:1",
+  "title": "IDS document",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "sequence",
+    "layers"
+  ],
+  "properties": {
+    "format": {
+      "const": "ids-input/document"
+    },
+    "version": {
+      "const": 1
+    },
+    "sequence": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "created": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "modified": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "layers": {
+      "type": "array",
+      "maxItems": 1000,
+      "items": {
+        "$ref": "#/$defs/layer"
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "path": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "complex": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "number"
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "affine": {
+      "type": "object",
+      "required": [
+        "type",
+        "matrix"
+      ],
+      "properties": {
+        "type": {
+          "const": "affine"
+        },
+        "matrix": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 6,
+          "maxItems": 6
+        }
+      },
+      "additionalProperties": true
+    },
+    "projective": {
+      "type": "object",
+      "required": [
+        "type",
+        "matrix"
+      ],
+      "properties": {
+        "type": {
+          "const": "projective"
+        },
+        "matrix": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "number"
+            }
+          ],
+          "minItems": 9,
+          "maxItems": 9
+        }
+      },
+      "additionalProperties": true
+    },
+    "mobius": {
+      "type": "object",
+      "required": [
+        "type",
+        "a",
+        "b",
+        "c",
+        "d"
+      ],
+      "properties": {
+        "type": {
+          "const": "mobius"
+        },
+        "a": {
+          "$ref": "#/$defs/complex"
+        },
+        "b": {
+          "$ref": "#/$defs/complex"
+        },
+        "c": {
+          "$ref": "#/$defs/complex"
+        },
+        "d": {
+          "$ref": "#/$defs/complex"
+        }
+      },
+      "additionalProperties": true
+    },
+    "operation": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/affine"
+        },
+        {
+          "$ref": "#/$defs/projective"
+        },
+        {
+          "$ref": "#/$defs/mobius"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "not": {
+                "enum": [
+                  "affine",
+                  "projective",
+                  "mobius"
+                ]
+              }
+            }
+          },
+          "additionalProperties": true
+        }
+      ]
+    },
+    "layer": {
+      "type": "object",
+      "required": [
+        "path"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "stroke": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "transform": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/operation"
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "format": "ids-input/document",
+  "version": 1,
+  "sequence": "⿰木⿱口木",
+  "title": "nested example",
+  "layers": [
+    {
+      "path": [1],
+      "name": "the ⿱ part",
+      "transform": [
+        { "type": "affine", "matrix": [0.95, 0, 0, 0.95, 25, 8] }
+      ]
+    },
+    {
+      "path": [1, 0],
+      "name": "口",
+      "transform": [
+        { "type": "affine", "matrix": [1, 0, 0, 1, -8, 3] }
+      ]
+    },
+    {
+      "path": [1, 0],
+      "stroke": 1,
+      "transform": [
+        { "type": "mobius", "a": [1, 0], "b": [0, 0], "c": [0.001, 0], "d": [1, 0] }
+      ]
+    }
+  ]
+}
