@@ -3,8 +3,8 @@
   import Dialog from './Dialog.svelte'
   import ThemeSwitch from './ThemeSwitch.svelte'
   /** @type {{ open: boolean, anchor?: HTMLElement | null, theme: import('../lib/theme.js').Theme, keyHints: boolean, composer: string, defaultComposer: string,
-   *   t: (key: string, params?: Record<string, string | number>) => string, ontheme: (theme: import('../lib/theme.js').Theme) => void }} */
-  let { open = $bindable(false), anchor = null, theme, keyHints = $bindable(true), composer = $bindable(''), defaultComposer, t, ontheme } = $props()
+   *   sans?: boolean, t: (key: string, params?: Record<string, string | number>) => string, ontheme: (theme: import('../lib/theme.js').Theme) => void }} */
+  let { open = $bindable(false), anchor = null, theme, keyHints = $bindable(true), sans = $bindable(true), composer = $bindable(''), defaultComposer, t, ontheme } = $props()
 </script>
 
 <Dialog bind:open {anchor} popover title={t('app.prefs.title')} closeLabel={t('app.close')}>
@@ -16,6 +16,10 @@
     <label class="pref">
       <span>{t('app.prefs.keyHints')}</span>
       <input type="checkbox" role="switch" bind:checked={keyHints} />
+    </label>
+    <label class="pref">
+      <span>{t('app.prefs.sansSerif')}</span>
+      <input type="checkbox" role="switch" bind:checked={sans} />
     </label>
     <label class="pref column">
       <span>{t('app.prefs.composer')}</span>

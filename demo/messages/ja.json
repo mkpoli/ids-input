@@ -65,6 +65,8 @@
   "app.prefs.composer": "プレビューの字形データ",
   "app.prefs.composerHint": "han-composeのexport-web出力のフォルダ。空欄なら既定値。",
   "app.prefs.keyHints": "ボタンにキーを表示",
+  "app.prefs.sansSerif": "サンセリフ",
+
   "app.prefs.theme": "テーマ",
   "app.prefs.title": "設定",
   "app.share": "共有",

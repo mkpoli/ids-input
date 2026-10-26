@@ -137,6 +137,9 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
+  let sans = $state(load('sans', true))
+  $effect(() => save('sans', sans ? undefined : false))
+  $effect(() => { document.documentElement.dataset.font = sans ? 'sans' : 'serif' })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   // The share of the middle column given to the tree; the search takes the rest.
@@ -448,7 +451,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
-<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:sans bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">

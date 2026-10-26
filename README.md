@@ -384,14 +384,14 @@ exported file and the PNG keep those changes, the sequence does not. The toolbar
 with the history of named steps, examples
 (each with its character and code point, or marked when it has none), a share link with its QR code,
 the language, settings and the sources. Settings contain the system, light and dark themes,
-key hints on buttons, and the preview data source. They open beside the toolbar button on desktop
+key hints on buttons, a sans or serif face for Han text, and the preview data source. They open beside the toolbar button on desktop
 and in a bottom drawer on mobile. The tree panel switches between the Shape
 of the description and an indented Tree list, whose rows choose a part, open or close with the arrow
 keys and are drop targets. The tree and search panels in the middle
 column are divided by a draggable splitter, the tree starting larger; the arrow keys move it and a
 double-click restores the default. Toolbar buttons show their keys on hover. The address carries the
 sequence
-(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts and the theme stay in the browser's
+(`#⿰亻哥`, or `?ids=`), so a link opens it. Settings, drafts, the theme and the font face stay in the browser's
 `localStorage` under `ids-input:`.
 
 ## Inspired by

@@ -66,6 +66,8 @@
   "app.prefs.composer": "Preview drawings from",
   "app.prefs.composerHint": "A han-compose export folder (export-web). Empty uses the default.",
   "app.prefs.keyHints": "Key hints on buttons",
+  "app.prefs.sansSerif": "Sans serif",
+
   "app.prefs.theme": "Theme",
   "app.prefs.title": "Settings",
   "app.share": "Share",
