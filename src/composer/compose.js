@@ -145,7 +145,7 @@ export class Composer {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.parse(sequence))
-    const out = this.node(this.normalizeMouthGrids(tree), this.face.slice(), true)
+    const out = this.node(this.standaloneMouthGrid(tree) ?? this.normalizeMouthGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
     const ownership = this.separate ? this.leafOwners(tree) : null
@@ -360,6 +360,11 @@ export class Composer {
     }
     const owners = walk(tree)
     return valid ? { owners, split } : null
+  }
+
+  /** A complete four-mouth character uses its designed glyph, including separated previews. */
+  standaloneMouthGrid(node) {
+    return ['⿰⿱口口⿱口口', '⿱⿰口口⿰口口'].includes(keyOf(node)) && !this.excluded('㗊') && this.glyph('㗊') ? '㗊' : null
   }
 
   /** Canonicalize only the exact grid before glyph/host lookup; keep the editor tree intact. */
