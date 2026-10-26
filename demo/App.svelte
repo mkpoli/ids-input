@@ -331,6 +331,19 @@
     store()
     return tab
   }
+  /** Copy a document beside its source, including its editor history and drawing adjustments. @param {string} id */
+  function duplicateTab(id) {
+    const source = tabs.find(tab => tab.id === id)
+    if (!source) return
+    flush()
+    const tab = makeTab(source.sequence, source.saved)
+    const state = states.get(id)
+    if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
+    const adjusted = adjustedStates.get(id)
+    if (adjusted) adjustedStates.set(tab.id, structuredClone(adjusted))
+    tabs.splice(tabs.indexOf(source) + 1, 0, tab)
+    activate(tab.id)
+  }
   /** A sequence opened in the active tab when it is empty, in the tab already showing it, else in a new tab. @param {string} sequence */
   function openSequence(sequence) {
     const text = canonical(sequence)
@@ -408,6 +421,7 @@
   }
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
@@ -562,7 +576,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
     </div>
   </div>
 

@@ -7,6 +7,7 @@
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
 import { EXAMPLES } from './lib/examples.js'
 import { checkPanelWidths } from './check-panels.js'
+import { checkTabDuplication } from './check-tab-duplication.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
@@ -54,6 +55,8 @@ async function choose(page, n) {
 }
 
 try {
+  await checkTabDuplication(open, assert)
+  pass('File and context-menu tab duplication, independent history, keyboard and phone layout')
   const page = await open()
   const value = () => valueOf(page)
   // Desktop menus own their navigation keys and preserve the editor's selection.
@@ -668,6 +671,15 @@ try {
   const editedSvg = readFileSync(await edited.path(), 'utf8')
   assert(editedSvg.includes('<g transform="translate('), 'the export keeps the adjustment')
   const adjustedTab = await edit.locator('.tabbar .tab.on').getAttribute('data-tab-id')
+  const sourceTransform = await firstPart.getAttribute('transform')
+  await edit.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await edit.getByRole('menuitem', { name: 'Duplicate tab', exact: true }).click()
+  await edit.waitForFunction(() => Boolean(document.querySelector('.ids-preview-large .part[transform]')))
+  assert(await firstPart.getAttribute('transform') === sourceTransform, 'a duplicate keeps the drawing adjustment')
+  await edit.getByRole('button', { name: 'Reset all' }).click()
+  await edit.locator(`.tabbar .tab[data-tab-id="${adjustedTab}"] [role="tab"]`).click()
+  await edit.waitForFunction(() => Boolean(document.querySelector('.ids-preview-large .part[transform]')))
+  assert(await firstPart.getAttribute('transform') === sourceTransform, 'resetting the duplicate leaves its source adjustment intact')
   await edit.locator('.tab-new').click()
   assert(await edit.locator('.adjust-toggle').getAttribute('aria-pressed') === 'false', 'a new tab starts outside Adjust layout')
   await edit.locator(`.tabbar .tab[data-tab-id="${adjustedTab}"] [role="tab"]`).click()
