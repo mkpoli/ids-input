@@ -54,6 +54,7 @@
   "app.font": "字体",
   "app.font.sans": "无衬线",
   "app.font.serif": "衬线",
+  "app.font.klee": "楷书",
   "app.footer.about": "来源与灵感",
   "app.footer.sources": "来源",
   "app.history": "历史",

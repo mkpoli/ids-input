@@ -36,7 +36,7 @@
     // The theme kept from the last visit, set before the page paints.
     try { const theme = JSON.parse(localStorage.getItem('ids-input:theme') ?? 'null'); if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme } catch {}
     // The glyph face kept from the last visit, set before the page paints.
-    try { if (JSON.parse(localStorage.getItem('ids-input:sans') ?? 'true') === false) document.documentElement.dataset.font = 'serif' } catch {}
+    try { const face = JSON.parse(localStorage.getItem('ids-input:font') ?? '"sans"'); if (face === 'serif' || face === 'klee') document.documentElement.dataset.font = face } catch {}
   </script>
 </head>
 <body>
