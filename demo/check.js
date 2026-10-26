@@ -379,7 +379,7 @@ try {
   // Examples: the character or an empty column, the textual IDS, and the code point.
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
-  assert(JSON.stringify(exampleHeads) === JSON.stringify(['With a code point', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
+  assert(JSON.stringify(exampleHeads) === JSON.stringify(['Han characters', 'Tangut', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
   assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
@@ -544,6 +544,33 @@ try {
   await noUrl.context().close()
   pass('the preview degrades without its export, or with a base that is no URL')
   assert(!page.errors.length, `page errors: ${page.errors.join('; ')}`)
+
+  // Tangut draws locally even when the configured Han export is invalid.
+  const tangut = await open(`?composer=${encodeURIComponent('http://[')}#${encodeURIComponent('⿱𘠀⿰𘢰𘠆')}`)
+  await tangut.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  await tangut.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
+  const tangutPath = await tangut.locator('.ids-preview-large .ink').getAttribute('d')
+  assert(tangutPath.length > 500, 'Tangut example has real outlines')
+  const [tangutSvg] = await Promise.all([tangut.waitForEvent('download'), tangut.locator('.export .primary').click()])
+  const tangutText = readFileSync(await tangutSvg.path(), 'utf8')
+  assert(tangutText.includes(tangutPath) && !tangutText.includes('<text'), 'Tangut SVG carries outlines')
+  await tangut.locator('.export [role="radio"]', { hasText: 'PNG' }).click()
+  const [tangutPng] = await Promise.all([tangut.waitForEvent('download'), tangut.locator('.export .primary').click()])
+  assert(readFileSync(await tangutPng.path()).readUInt32BE(16) === 1024, 'Tangut exports a 1024 px PNG')
+  await tangut.screenshot({ path: join(shots, 'tangut-renderer.png'), fullPage: true })
+  await tangut.getByRole('button', { name: 'Adjust layout' }).click()
+  await tangut.waitForFunction(() => document.querySelectorAll('.ids-preview-large .part').length === 3)
+  await tangut.getByRole('button', { name: 'Done' }).click()
+  await tangut.locator('.ids-field input').fill('⿰𘠀⬚')
+  await tangut.locator('.ids-preview[data-step="composed"] .slot:not(.faint)').first().waitFor()
+  assert(await tangut.locator('.ids-preview-large .ink').count() > 0, 'edited Tangut retains ink')
+  assert(!tangut.errors.length, `Tangut page errors: ${tangut.errors.join('; ')}`)
+  await tangut.context().close()
+  const mixed = await open(`${fixture}#${encodeURIComponent('⿰木𘠁')}`)
+  await mixed.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 15000 })
+  assert((await mixed.locator('.ids-preview-large .ink').getAttribute('d')).length > 100, 'mixed Han–Tangut draws')
+  await mixed.context().close()
+  pass('Tangut outlines, edited slots, SVG/PNG exports and mixed Han–Tangut rendering')
 
   // With an export: the filled part drawn, the slot a placeholder; SVG and PNG saved as files named
   // after the sequence, on the background and in the ink chosen; the settings kept.

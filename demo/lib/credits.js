@@ -8,6 +8,7 @@ export const SOURCES = [
   { name: 'BabelStone IDS', by: 'Andrew West', licence: 'Public domain', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', key: 'babelstone' },
   { name: 'han-compose', by: 'mkpoli', licence: 'MIT', url: 'https://github.com/mkpoli/han-compose', key: 'hanCompose' },
   { name: 'Noto Sans CJK JP', by: 'Adobe, Google', licence: 'SIL OFL 1.1', url: 'https://github.com/notofonts/noto-cjk', key: 'noto' },
+  { name: 'Noto Serif Tangut', by: 'Google', licence: 'SIL OFL 1.1', url: 'https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut', key: 'tangut' },
   { name: 'Plangothic', by: 'Fitzgerald P. Köeingsegg', licence: 'SIL OFL 1.1', url: 'https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project', key: 'plangothic' },
   { name: 'Rime 五筆畫', by: '四季的風, 雪齋, Kunki Chou, 宋天', licence: 'LGPL-3.0', url: 'https://github.com/rime/rime-stroke', key: 'rime' },
   { name: 'KanjiVG', by: 'Ulrich Apel', licence: 'CC BY-SA 3.0', url: 'https://kanjivg.tagaini.net/', key: 'kanjivg' },

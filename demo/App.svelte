@@ -12,7 +12,7 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import { LOCALES, appMessages } from './lib/locales.js'
-  import { EXAMPLES } from './lib/examples.js'
+  import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
@@ -255,8 +255,8 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example */
-  function exampleItem(example) {
+  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
@@ -264,17 +264,15 @@
       sequence: example.sequence,
       note: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
-      lang: 'ja',
+      lang,
       hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => editor.open(example.sequence),
     }
   }
-  const exampleItems = $derived([
-    { heading: t('app.examples.encoded') },
-    ...EXAMPLES.filter(example => example.char).map(exampleItem),
-    { heading: t('app.examples.unencoded') },
-    ...EXAMPLES.filter(example => !example.char).map(exampleItem),
-  ])
+  const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
+    { heading: t(`app.examples.${group.key}`) },
+    ...group.examples.map(example => exampleItem(example, group.key === 'tangut' ? 'txg' : 'ja')),
+  ]))
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
