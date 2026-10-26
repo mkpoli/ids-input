@@ -53,10 +53,10 @@
   const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split */
-  const previewAt = (at, split) => {
-    const key = `${at}\0${split ? '1' : '0'}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split }))
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  const previewAt = (at, split, style) => {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}`
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
@@ -72,13 +72,13 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split */
-  function previewFor(at, split) {
-    const key = `${at}\0${split ? '1' : '0'}`
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  function previewFor(at, split, style) {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split)
-    if (split || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    const composed = previewAt(at, split, style)
+    if (split || style !== 'sans' || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -94,17 +94,19 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** @param {string} at */
-  const iconsAt = at => {
-    if (!iconDrawings.has(at)) {
-      const composed = composerPreview({ base: at })
-      iconDrawings.set(at, createIconDrawings(async sequence =>
-        (exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
+  /** @param {string} at @param {'sans' | 'serif'} style */
+  const iconsAt = (at, style) => {
+    const key = `${at}\0${style}`
+    if (!iconDrawings.has(key)) {
+      const composed = composerPreview({ base: at, fontStyle: style })
+      iconDrawings.set(key, createIconDrawings(async sequence =>
+        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
     }
-    return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(at))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const icons = $derived(iconsAt(base))
-  const adapter = $derived({ ...babel, preview: previewFor(base, separate), icon: icons })
+  const componentStyle = $derived(face === 'serif' ? 'serif' : 'sans')
+  const icons = $derived(iconsAt(base, componentStyle))
+  const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.

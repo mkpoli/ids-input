@@ -60,3 +60,47 @@ it('recognizes only complete specialized subtrees for local rendering', () => {
   expect(repetitionParts('⿰冫⿱丿⬚')).toBeNull()
   expect(repetitionParts('⿰冫⿱丿')).toBeNull()
 })
+
+it('uses distinct native styles without losing alias equivalence', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const a = await compose(local(), REPETITION, { fontStyle })
+    const b = await compose(local(), REPETITION_MIRRORED, { fontStyle })
+    expect(a.d).toBe(b.d)
+    expect(a.d.match(/M/g)).toHaveLength(4)
+    expect(a.d).toBe(repetitionDrawing(REPETITION, fontStyle).d)
+  }
+  expect(repetitionDrawing(REPETITION, 'sans').d).not.toBe(repetitionDrawing(REPETITION, 'serif').d)
+})
+
+it('uses native complete glyphs for the recorded 塁 and 疂 descriptions', async () => {
+  for (const bottom of ['土', '冝']) for (const fontStyle of ['sans', 'serif']) {
+    const text = `⿳田${REPETITION}${bottom}`
+    expect(onlyBundled(text)).toBe(true)
+    const a = await compose(local(), text, { fontStyle })
+    const b = await compose(local(), `⿳田${REPETITION_MIRRORED}${bottom}`, { fontStyle })
+    expect(a.d).toBe(b.d)
+    expect(a.parts).toHaveLength(1)
+    expect(a.approximate).toEqual([])
+  }
+})
+
+it('keeps native atomic forms from becoming a single adjustable operand', async () => {
+  for (const text of ['⿱宀儿', '⿻三丨', '⿻者丶', `⿳田${REPETITION}土`]) {
+    const source = local()
+    const drawn = await compose(source, text, { separate: true })
+    const boxes = await sketch(source, text)
+    expect(boxes.length).toBeGreaterThan(drawn.parts.length)
+    expect(groupParts(drawn.parts, boxes)).toBeNull()
+  }
+})
+
+it('retains three designed groups for the six-stroke component in either style', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const source = local()
+    const drawn = await compose(source, '⿳士冖一', { separate: true, fontStyle })
+    const boxes = await sketch(source, '⿳士冖一', { fontStyle })
+    expect(drawn.parts).toHaveLength(3)
+    expect(groupParts(drawn.parts, boxes)).toHaveLength(3)
+    expect(drawn.parts[2].box[2] - drawn.parts[2].box[0]).toBeLessThan(drawn.parts[1].box[2] - drawn.parts[1].box[0])
+  }
+})

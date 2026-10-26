@@ -1,6 +1,6 @@
 <script>
   // Draw compound palette entries only when their cells enter the scroll area.
-  import { repetitionDrawing } from '../composer/repetition.js'
+  import { componentDrawing } from '../composer/component-forms.js'
   import { parse } from '../core/ids.js'
   import { roughLayout, runPreview } from '../core/preview.js'
 
@@ -25,7 +25,7 @@
 
   $effect(() => {
     const text = sequence, { icon, drawing } = adapter
-    const localDrawing = repetitionDrawing(text)
+    const localDrawing = componentDrawing(text, adapter.fontStyle)
     drawn = localDrawing
     url = null
     if (!visible || localDrawing) return

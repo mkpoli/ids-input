@@ -17,7 +17,7 @@
 // before drawing again).
 import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
-import { containsRepetition, isRepetition, repetitionInk, repetitionParts, repetitionRecord } from './repetition.js'
+import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 
 export class LookupError extends Error { name = 'LookupError' }
@@ -72,7 +72,7 @@ export class Composer {
    * draw every operand of a description instead of a glyph or instance that spells it, so a view
    * that changes one part gets a piece for each leaf rather than a drawing merged into one glyph.
    */
-  constructor(data, { exclude = [], face = null, separate = false } = {}) {
+  constructor(data, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
     this.data = data
     const m = data.manifest, c = m.constants
     this.C = c
@@ -85,6 +85,7 @@ export class Composer {
     this.SLOTS = c.SLOTS
     this.face = face ?? c.face
     this.separate = separate
+    this.fontStyle = fontStyle
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -94,7 +95,7 @@ export class Composer {
   arity = ch => this.arities.get(ch) ?? 0
   parse = sequence => parseTree(sequence, this.arity)
   // A key holding an empty slot has no record and no hosts: nothing is asked for it.
-  rec = key => key.includes(EMPTY) ? null : isRepetition(key) ? repetitionRecord : this.data.rec(key)
+  rec = key => key.includes(EMPTY) ? null : (componentRecord(key, this.fontStyle) ?? this.data.rec(key))
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
 
@@ -108,7 +109,7 @@ export class Composer {
 
   /** Outline length: a glyph's, or for an excluded or glyphless character its sequence's operands'. */
   ink(node, seen = new Set()) {
-    if (isRepetition(keyOf(node))) return repetitionInk
+    if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).ink
     if (typeof node !== 'string') return node.slice(1).reduce((s, n) => s + this.ink(n, seen), 0)
     const r = this.rec(node)
     if (!this.excluded(node) && r?.G) return r.ink
@@ -120,7 +121,7 @@ export class Composer {
 
   /** Permitted outline count; zero when an operand is unknown. */
   outlines(node, seen = new Set()) {
-    if (isRepetition(keyOf(node))) return 4
+    if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).o
     if (typeof node === 'string') {
       const r = this.rec(node)
       if (!this.excluded(node)) return r?.G ? r.G.p.length : 0
@@ -169,7 +170,7 @@ export class Composer {
   sketch(sequence) {
     const out = []
     const walk = (node, region, atRoot) => {
-      const repeated = repetitionParts(keyOf(node), region)
+      const repeated = isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
       if (repeated) {
         for (const part of repeated) out.push({ index: out.length, box: part.target, empty: false })
         return
@@ -292,9 +293,9 @@ export class Composer {
 
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
-    const repeated = repetitionParts(keyOf(node), region)
+    const repeated = !this.separate || isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
-    const hasRepetition = containsRepetition(keyOf(node))
+    const hasRepetition = containsComponentForm(keyOf(node))
     const C = this.C
     let encoded = typeof node === 'string' ? node : hasRepetition ? null : this.spelled.has(keyOf(node)) ? null : this.bySequence(keyOf(node))
     if (atRoot && typeof node !== 'string') {
@@ -428,7 +429,7 @@ export class Composer {
   // ---------------------------------------------------------------- hosts
   /** The drawn part closest to what `node` needs at `index` of `op` inside `box`, as [record, piece]. */
   host(op, index, node, siblings, box, isPlaced = false) {
-    if (containsRepetition(keyOf(node))) return null
+    if (containsComponentForm(keyOf(node))) return null
     // A separated drawing gives each leaf its own piece, so a host for a whole operand sequence is
     // not used; the sequence is drawn through `node` instead.
     if (this.separate && Array.isArray(node)) return null
@@ -753,7 +754,7 @@ export class Composer {
       const box = mapped(shares[j], [0, 0, 1, 1], region)
       const donor = chosen.find(t => t.written[j] === keys[j])
       // A separated drawing unfolds a sequence operand rather than taking a teacher's piece for it.
-      if (donor && !containsRepetition(keyOf(child)) && !(this.separate && Array.isArray(child))) {
+      if (donor && !containsComponentForm(keyOf(child)) && !(this.separate && Array.isArray(child))) {
         const piece = this.pieceOf(donor.pieces[j])
         return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)]
       }
@@ -763,7 +764,7 @@ export class Composer {
 
   /** A side-by-side pair in the two cells a stroke down the middle of an opening makes (山's in 幽). */
   cells(op, outer, region, inner) {
-    if (isRepetition(keyOf(inner))) return null
+    if (isComponentForm(keyOf(inner))) return null
     const C = this.C
     let tree = Array.isArray(inner) ? inner : null
     if (!tree && this.sequenceOf(inner)) { try { tree = this.parse(this.sequenceOf(inner)) } catch { tree = null } }
@@ -871,7 +872,7 @@ export class Composer {
     // The stroke widths the whole drawing is brought to, which a placeholder's outline follows.
     this.stroke = [curve(density, 0), curve(density, 1)]
     for (const p of group) {
-      if (p.empty !== undefined) continue
+      if (p.empty !== undefined || p.fixed) continue
       const weight = [], target = p.target.slice(), scale = scaleOf(p)
       for (const axis of [0, 1]) {
         const extent = p.source[axis + 2] - p.source[axis]

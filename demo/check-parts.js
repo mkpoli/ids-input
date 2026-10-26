@@ -35,7 +35,7 @@ const base = `http://127.0.0.1:${server.port}/`
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 const assert = (condition, message) => { if (!condition) throw Error(message) }
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await page.route('https://glyphatlas.org/**', route => route.abort())
@@ -77,6 +77,18 @@ try {
     await page.locator('.ids-preview[data-step="composed"]').waitFor()
     await page.waitForFunction(() => document.querySelectorAll('.ids-preview-large .layer').length === 1)
     assert(await page.locator('.ids-preview-large .ink').getAttribute('d') === repetitionDrawing(sequence).d, 'specialized form renders without remote export')
+  }
+  await page.getByRole('button', { name: 'Serif', exact: true }).click()
+  await page.waitForFunction(expected => document.querySelector('.ids-preview-large .ink')?.getAttribute('d') === expected, repetitionDrawing(REPETITION_MIRRORED, 'serif').d)
+  await page.getByRole('tab', { name: 'Parts', exact: true }).click()
+  await page.locator('.parts-filter').fill('冫')
+  assert(await page.locator('.part.compound .part-icon svg > path').getAttribute('d') === repetitionDrawing(REPETITION, 'serif').d, 'serif palette and preview agree')
+  if (process.env.IDS_PARTS_SHOTS) {
+    for (const style of ['Sans', 'Serif']) for (const colorScheme of ['light', 'dark']) {
+      await page.getByRole('button', { name: style, exact: true }).click()
+      await page.emulateMedia({ colorScheme })
+      await page.locator('.ids-parts[role=group]').screenshot({ path: `${process.env.IDS_PARTS_SHOTS}/after-${style.toLowerCase()}-${colorScheme}.png` })
+    }
   }
   assert(errors.length === 0, errors.join('\n'))
   console.log('PASS compound icons, hover IDS, manual shortcut, insertion, filters, Recent, concurrent preview, light/dark desktop/mobile')

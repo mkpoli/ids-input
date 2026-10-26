@@ -48,6 +48,8 @@ export function frequencies(table, rejected = []) {
 
 export function strokeCounter(table, rows) {
   const known = new Map(rows.filter(row => row[2] != null && !arity([...row[0]][0])).map(row => [row[0], row[2]]))
+  // The JP dotted 者 is nine strokes; a regional nine-stroke base plus 丶 double-counts its dot.
+  known.set('⿻者丶', 9)
   function count(node, seen = new Set()) {
     if (known.has(node.text)) return known.get(node.text)
     // Subtraction needs stroke geometry. Other operators use an additive estimate.

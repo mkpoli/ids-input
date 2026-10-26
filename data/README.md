@@ -219,11 +219,14 @@ corpus supplies seven entries. The manual shortcut `⿰冫⿱丿丶` is included
 spelling remains in the raw report. The shortcut count deduplicates characters
 across the source placeholder and literal spelling. Its dedicated four-dot outline
 also renders the equivalent spelling `⿰冫⿾冫`, both alone and inside larger IDS.
-These original outlines retain an open centre and omit the central hook of 氺;
-they are code-native geometry under the repository’s MIT licence. Compound cells show a rendered
+The Sans form uses the four detached contours of Noto Sans CJK JP 氺; the Serif
+form takes the dots from Noto Serif CJK JP 塁, detaching the upper-right stroke
+from 田. Both retain an open centre without the central hook. The outlines are
+under SIL OFL 1.1 (see `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-NotoSerifCJK.txt`). Compound cells show a rendered
 icon with an `IDS` marker; hovering reveals the sequence and stroke count.
 Picking or dragging one inserts its complete tree. Stroke counts are searchable
-with the existing numeric filter. These counts are additive estimates from the existing palette's
+with the existing numeric filter. The dotted `⿻者丶` is explicitly counted as nine strokes to avoid counting
+the regional dot twice. Other counts are additive estimates from the existing palette's
 stroke metadata, recursively resolving other leaves where possible. They are
 marked `derived` and displayed with `≈`; overlapping strokes can make the true
 count differ. Subtraction, unresolved leaves and cycles retain an unknown count.
@@ -231,3 +234,17 @@ The generated report uses the same stroke calculation for every subtree.
 
 The report derives from the public-domain BabelStone Han and Tangut IDS and the
 stroke-count sources listed above. It contains no Rime stroke-order column.
+
+`src/composer/component-forms.json` contains selected Noto CJK JP outlines in
+Sans 2.004 and Serif 2.002. `scripts/build_component_forms.py` verifies the source
+TTC hashes recorded in the JSON before exporting them. Rebuild with
+`uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
+The six-stroke `⿳士冖一` preserves its proportions from 彀; the Sans export
+clips away the adjoining 殳 at x=491. `⿻者丶` uses the glyph shared by
+者 + U+E0101 and U+FA5B, verified in both fonts' variation tables.
+Exact 塁 and 疂 descriptions use their complete native JP glyphs.
+`⿱宀儿` uses 宂 (U+5B82), whose source regions are HTKP; `⿻三丨` uses
+丰 (U+4E30), whose exact source regions are GJKPV. Literal IDS stay unchanged.
+Bundled styles affect only these selected forms; other composed outlines still
+come from the configured Han export. Whole glyphs fall back to their operands
+in adjustment mode when the export supplies them.
