@@ -471,6 +471,6 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
-The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
-`demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
+The prepared drawings in `demo/lib/example-drawings.json` use bundled Tangut outlines or the Han
+export at `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.

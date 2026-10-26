@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { parseIdsTable } from '../src/adapter/babelstone.js'
-import { LONGEST, parse } from '../src/core/index.js'
+import { size } from '../src/composer/loader.js'
+import { LONGEST, parse, leaves } from '../src/core/index.js'
 
 const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 /** The characters BabelStone describes with each sequence. */
@@ -38,6 +39,11 @@ describe('the demo examples', () => {
 
 it('keeps Tangut in its own examples section', () => {
   expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['han', 'tangut', 'hybrid', 'samples', 'unencoded'])
-  expect(EXAMPLE_GROUPS[1].examples.map(example => example.char)).toEqual(['𗀀', '𘴅'])
+  const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
+  expect(tangut.every(example => /^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(example.char))).toBe(true)
+  const trees = tangut.map(example => parse(example.sequence).tree)
+  expect(trees.filter(tree => size(tree).depth >= 4).length).toBeGreaterThanOrEqual(3)
+  expect(trees.filter(tree => leaves(tree).length >= 6).length).toBeGreaterThanOrEqual(3)
+  for (const operator of ['⿲', '⿳', '⿸', '⿵', '⿺']) expect(tangut.some(example => example.sequence.includes(operator))).toBe(true)
   expect(EXAMPLE_GROUPS[0].examples.every(example => !/[\u{17000}-\u{18DFF}]/u.test(example.char))).toBe(true)
 })
