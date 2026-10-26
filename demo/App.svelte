@@ -26,7 +26,6 @@
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
-  import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import Toast from './ui/Toast.svelte'
 
   const params = new URLSearchParams(location.search)
@@ -267,7 +266,6 @@
     { separator: /** @type {const} */ (true) },
     { label: t('app.prefs.title'), icon: 'settings', shortcut: shortcut('mod+,'), run: () => prefsOpen = true },
   ])
-  const themeLabels = $derived({ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') })
   /** @param {import('./lib/theme.js').Theme} next */
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
@@ -294,7 +292,6 @@
     <div class="end">
       <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
       <button type="button" class="tool key-hint" title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
       <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
     </div>
@@ -375,7 +372,6 @@
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
     <div class="more-row">
-      <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
