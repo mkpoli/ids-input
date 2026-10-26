@@ -21,41 +21,51 @@
 // right component also has a dot. ASCII 3 here specifies a drawing shape, not that component's origin.
 // ⿰木き, ⿰木⿳ㄙㄨㄙ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
 // communication, 2026-10-27. No published source is recorded here.
+// ⿺辶說, ⿱龹幸, ⿶む子 and 〾⿱⿰大⿱七六⿵勹五: mkpoli, personal communication,
+// 2026-10-27. Published sources for these exact forms are not recorded here.
+// The last is a Jianzipu-style transcription; 〾 marks its approximate shape.
+// Related notation (with 四 in place of 五): 謝俊仁, 音樂展覽 – 古琴篇, Hong Kong Music Office,
+// https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html
 export const EXAMPLE_GROUPS = [
-  { key: 'han', examples: [
+  { key: 'basic', examples: [
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
-    { sequence: '⿱木林', char: '森' },
-    { sequence: '⿴囗或', char: '國' },
+    { sequence: '⿱龹幸', char: '' },
+    { sequence: '⿱艹堀', char: '' },
+    { sequence: '⿱投石', char: '' },
+    { sequence: '⿲𠂤日千', char: '' },
+    { sequence: '⿱一心', char: '' },
+    { sequence: '⿰忄実', char: '' },
+  ] },
+  { key: 'complex', examples: [
+    { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
     { sequence: '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', char: '𰻞' },
     { sequence: '⿱䨺龘', char: '𱁬' },
+    { sequence: '⿰鼻囊', char: '齉' },
+    { sequence: '⿱⿱⿴𦥑同冖𤍾', char: '爨' },
+    { sequence: '⿰氵鬱', char: '灪' },
+  ] },
+  { key: 'repeated', examples: [
+    { sequence: '⿰⿱興興⿱興興', char: '𠔻' },
+    { sequence: '⿱七⿰七七', char: '㐂' },
+    { sequence: '⿱木林', char: '森' },
     { sequence: '⿱龖龖', char: '𪚥' },
     { sequence: '⿱龍龖', char: '龘' },
     { sequence: '⿱⿰雷雷⿰雷雷', char: '䨻' },
-    { sequence: '⿰鼻囊', char: '齉' },
     { sequence: '⿱馬騳', char: '驫' },
     { sequence: '⿱鹿𱋁', char: '麤' },
-    { sequence: '⿱⿱⿴𦥑同冖𤍾', char: '爨' },
-    { sequence: '⿰氵鬱', char: '灪' },
     { sequence: '⿱雷⿰雷雷', char: '靐' },
     { sequence: '⿱⿰鏡鏡⿰鏡鏡', char: '𰽔' },
+    { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
+  ] },
+  { key: 'enclosures', examples: [
+    { sequence: '⿺辶說', char: '' },
+    { sequence: '⿺克千', char: '兛' },
+    { sequence: '⿴囗或', char: '國' },
     { sequence: '⿴囗書', char: '圕' },
   ] },
-  { key: 'tangut', examples: [
-    { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
-    { sequence: '⿰𘫿𘫿', char: '𘴅' },
-    { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },
-    { sequence: '⿳𘠛𘠛⿲𘠐𘧤𘦗', char: '𗰮' },
-    { sequence: '⿰𘧥⿱𘧉⿰𘢤𘢱', char: '𘔉' },
-    { sequence: '⿱𘡍⿰𘤧⿺𘢍𘡹', char: '𗕉' },
-    { sequence: '⿰𘠣⿸𘡋⿱𘫽𘣗', char: '𗌣' },
-    { sequence: '⿳𘠛𘠛⿵𘠒⿲𘡃𘠁𘡃', char: '𗰭' },
-    { sequence: '⿱𘡊⿰𘢌⿱𘠀⿲𘠁𘢌𘠁', char: '𗓟' },
-    { sequence: '⿱𘡩⿰𘢌⿳𘡊⿰𘠗𘠗𘥷', char: '𗟕' },
-    { sequence: '⿱𘣘⿰𘧨⿱𘡊⿰𘠳𘠢', char: '𗷖' },
-    { sequence: '⿰⿱𘡎⿰𘠡𘪧𘣹', char: '𘟷' },
-  ] },
-  { key: 'hybrid', examples: [
+  { key: 'mixed', examples: [
+    { sequence: '⿶む子', char: '' },
     { sequence: '⿱⿰力田𠂇', char: '𫦫' },
     { sequence: '⿳宀𭕄木', char: '𫳍' },
     { sequence: '⿰車卜', char: '𨊣' },
@@ -74,15 +84,21 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿳ㄙㄨㄙ', char: '' },
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
-  ] },
-  { key: 'unencoded', examples: [
-    { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
-    { sequence: '⿱艹堀', char: '' },
-    { sequence: '⿱投石', char: '' },
-    { sequence: '⿲𠂤日千', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
-    { sequence: '⿱一心', char: '' },
-    { sequence: '⿰忄実', char: '' },
+  ] },
+  { key: 'tangut', examples: [
+    { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
+    { sequence: '⿰𘫿𘫿', char: '𘴅' },
+    { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },
+    { sequence: '⿳𘠛𘠛⿲𘠐𘧤𘦗', char: '𗰮' },
+    { sequence: '⿰𘧥⿱𘧉⿰𘢤𘢱', char: '𘔉' },
+    { sequence: '⿱𘡍⿰𘤧⿺𘢍𘡹', char: '𗕉' },
+    { sequence: '⿰𘠣⿸𘡋⿱𘫽𘣗', char: '𗌣' },
+    { sequence: '⿳𘠛𘠛⿵𘠒⿲𘡃𘠁𘡃', char: '𗰭' },
+    { sequence: '⿱𘡊⿰𘢌⿱𘠀⿲𘠁𘢌𘠁', char: '𗓟' },
+    { sequence: '⿱𘡩⿰𘢌⿳𘡊⿰𘠗𘠗𘥷', char: '𗟕' },
+    { sequence: '⿱𘣘⿰𘧨⿱𘡊⿰𘠳𘠢', char: '𗷖' },
+    { sequence: '⿰⿱𘡎⿰𘠡𘪧𘣹', char: '𘟷' },
   ] },
 ]
 export const EXAMPLES = EXAMPLE_GROUPS.flatMap(group => group.examples)
