@@ -51,6 +51,8 @@
   $effect(() => save('locale', locale))
   const messages = $derived(LOCALES.find(([code]) => code === locale)?.[2])
   const t = $derived(translator({ ...appMessages('en'), ...messages, ...appMessages(locale) }, locale))
+  const localeName = $derived(LOCALES.find(([code]) => code === locale)?.[1] ?? 'English')
+  const localeItems = $derived(LOCALES.map(([code, name]) => ({ label: name, lang: code, checked: code === locale, run: () => { locale = code } })))
 
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
@@ -171,9 +173,7 @@
     </nav>
     <div class="end">
       <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
-      <select class="locale" bind:value={locale} aria-label={t('app.language')} title={t('app.language')}>
-        {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
-      </select>
+      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} />
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
       <button type="button" class="tool key-hint" data-keys={keyHints ? shortcut('mod+,') : undefined} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = true}><Icon name="settings" /></button>
       <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
@@ -241,9 +241,7 @@
   <div class="more-sheet">
     <div class="more-row">
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={themeLabels} onchange={setTheme} />
-      <select class="locale" bind:value={locale} aria-label={t('app.language')}>
-        {#each LOCALES as [code, label] (code)}<option value={code}>{label}</option>{/each}
-      </select>
+      <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} />
     </div>
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.drafts')} items={draftItems} onpick={() => moreOpen = false} />
@@ -276,12 +274,11 @@
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
   :global(.tool:disabled){opacity:.4;cursor:default}
-  :global(.tool:focus-visible),.locale:focus-visible,.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  :global(.tool:focus-visible),.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .locale{height:32px;padding:0 6px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
 
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}

@@ -309,14 +309,19 @@ try {
   await drawn.keyboard.press('Control+,')
   await drawn.locator('dialog[open] .prefs').waitFor({ timeout: 5000 })
   await drawn.keyboard.press('Escape')
-  await drawn.locator('.bar select.locale').selectOption('ja')
+  const localeButton = drawn.locator('.bar button[aria-label^="Language:"]')
+  assert(await localeButton.getAttribute('aria-haspopup') === 'menu', 'the language is a menu')
+  await localeButton.click()
+  assert(await localeButton.getAttribute('aria-expanded') === 'true', 'the language menu opens')
+  assert(await drawn.getByRole('menuitemradio', { name: 'English' }).getAttribute('aria-checked') === 'true', 'the current language is checked')
+  await drawn.getByRole('menuitemradio', { name: '日本語' }).click()
   assert(await drawn.locator('.brand span').textContent() === 'IDS工房' && await drawn.locator('.ids-op-label').first().textContent() === '1部品', 'Japanese throughout')
-  pass('theme switch, no flash, key hints off, the language')
+  pass('theme switch, no flash, key hints off, the language menu')
   assert(!drawn.errors.length, `page errors: ${drawn.errors.join('; ')}`)
 
   // A browser set to Traditional Chinese opens the traditional catalogue.
   const zhTw = await open('', { locale: 'zh-TW' })
-  assert(await zhTw.locator('.bar select.locale').inputValue() === 'zh-Hant', `zh-TW locale: ${await zhTw.locator('.bar select.locale').inputValue()}`)
+  assert(await zhTw.locator('.bar button[aria-label*="繁體中文"]').count() === 1, `zh-TW locale: ${await zhTw.locator('.bar button').first().getAttribute('aria-label')}`)
   assert(await zhTw.locator('.ids-op-label').first().textContent() === '單部件', 'Traditional Chinese throughout')
   assert(!zhTw.errors.length, `page errors: ${zhTw.errors.join('; ')}`)
   await zhTw.context().close()
@@ -344,7 +349,7 @@ try {
 
   // On a phone: a top bar of undo, redo and one menu, which holds the rest.
   const phone = await open('', { width: 375, height: 812 })
-  assert(await phone.locator('.bar .locale').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
+  assert(await phone.locator('.bar .end').isHidden() && await phone.locator('.bar .more').isVisible(), 'the phone bar is compact')
   assert(await phone.locator('.group .tool').evaluateAll(els => {
     const shown = els.filter(el => el.offsetParent)
     return getComputedStyle(shown[shown.length - 1]).borderTopRightRadius

@@ -6,8 +6,8 @@
   // A menu behind a button: items with an optional icon, a shortcut on the right, and a separator
   // or a heading between groups. Arrow keys move, Escape closes and gives the focus back.
   import Icon from './Icon.svelte'
-  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string }} */
-  let { label, icon, items, align = 'start', text = true, keyHints = true, keys } = $props()
+  /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string, ariaLabel?: string }} */
+  let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel } = $props()
   let open = $state(false)
   /** @type {HTMLElement | null} */ let box = $state(null)
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
@@ -33,7 +33,7 @@
 
 <div class="menu-wrap">
   <button type="button" class="tool" class:on={open} class:key-hint={Boolean(keys)} data-keys={keys} bind:this={trigger} aria-haspopup="menu" aria-expanded={open} aria-controls={`${uid}-menu`}
-    title={label} aria-label={text ? undefined : label} onclick={() => open ? (open = false) : show()}
+    title={label} aria-label={ariaLabel ?? (text ? undefined : label)} onclick={() => open ? (open = false) : show()}
     onkeydown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); show(true) } }}>
     {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}<Icon name="chevron" size={14} />
   </button>
