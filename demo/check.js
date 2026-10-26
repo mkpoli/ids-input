@@ -5,6 +5,7 @@
 // at 2x in light and dark through the theme switch, at desktop, tablet and phone widths.
 //
 //   bun run build:demo && bun demo/check.js [--shots DIR] [--chromium PATH]
+import { EXAMPLES } from './lib/examples.js'
 import { chromium } from 'playwright-core'
 import { mkdirSync, readFileSync } from 'node:fs'
 import { join, normalize } from 'node:path'
@@ -52,6 +53,17 @@ async function choose(page, n) {
 try {
   const page = await open()
   const value = () => valueOf(page)
+  // Tangut components use the same picker and recent history as Han parts.
+  await page.getByRole('tab', { name: 'Parts', exact: true }).click()
+  await page.getByRole('tab', { name: 'Tangut', exact: true }).click()
+  await page.locator('.parts-grid .part').first().waitFor()
+  assert(await page.locator('.parts-grid .part').count() === 768, 'Tangut component palette')
+  await page.locator('.parts-filter').fill('𘠀')
+  assert(await page.locator('.parts-grid .part').count() === 1, 'filter Tangut components')
+  await page.locator('.parts-filter').fill('')
+  assert(await page.evaluate(async () => (await document.fonts.load('22px "IDS Tangut"', '𘠀')).length > 0), 'Tangut webfont loads')
+  await page.getByRole('tab', { name: 'Common', exact: true }).click()
+  pass('Tangut palette has all 768 components')
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰𠤕⿱龴疋', null, { timeout: 15000 })
   await page.locator('.seq-row .char').first().waitFor({ timeout: 15000 })
   assert((await page.locator('.seq-row .char').first().textContent()).startsWith('疑'), 'the output names the character it encodes')
@@ -152,7 +164,7 @@ try {
   await page.getByRole('button', { name: 'Examples' }).click()
   const exampleHeads = await page.locator('.menu .heading').allTextContents()
   assert(JSON.stringify(exampleHeads) === JSON.stringify(['With a code point', 'No code point']), `example headings: ${JSON.stringify(exampleHeads)}`)
-  assert(await page.locator('.menu .item').count() === 17, 'seventeen examples')
+  assert(await page.locator('.menu .item').count() === EXAMPLES.length, 'all examples')
   assert(await page.locator('.menu svg').count() === 0, 'no SVG in the examples menu')
   const biang = page.locator('.menu .item', { hasText: 'U+30EDE' })
   assert(await biang.count() === 1, 'the biang example shows U+30EDE')
@@ -420,7 +432,7 @@ try {
   await phone.locator('.bar .more').click()
   await phone.locator('dialog[open] .more-sheet').waitFor()
   const phoneExamples = phone.locator('dialog[open] .more-sheet [role="group"][aria-label="Examples"]')
-  assert(await phoneExamples.locator('.item.rich').count() === 17, 'the phone sheet holds every example')
+  assert(await phoneExamples.locator('.item.rich').count() === EXAMPLES.length, 'the phone sheet holds every example')
   assert(await phoneExamples.locator('.note', { hasText: 'U+30EDE' }).count() === 1, 'the phone sheet shows a code point')
   assert(await phoneExamples.locator('.leading.spacer').count() === 7, 'the phone sheet leaves the character column empty for forms with no code point')
   await phone.locator('dialog[open] .item', { hasText: 'About' }).click()

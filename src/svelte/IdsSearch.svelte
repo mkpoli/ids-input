@@ -75,7 +75,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Parts","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
   input{min-width:0;height:36px;padding:0 10px;font:inherit;font-size:15px;font-family:var(--_font);color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
   input::placeholder{color:color-mix(in srgb,var(--_muted) 70%,transparent)}

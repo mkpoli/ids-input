@@ -17,6 +17,10 @@ layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
+Tangut characters and components are accepted in IDS. The bundled data includes Tangut
+decompositions, a Tangut parts tab, and examples. Import `fonts.css` for Tangut text
+coverage; composed previews still depend on the host’s han-compose dataset.
+
 Demo: <https://ids.mkpo.li/>
 
 [![The IDS Workshop at ids.mkpo.li](https://github.com/mkpoli/ids-input/raw/main/docs/workshop.png)](https://ids.mkpo.li/)
