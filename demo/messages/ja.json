@@ -63,6 +63,7 @@
   "app.more": "その他",
   "app.output": "出力",
   "app.panels.resize": "パネルの高さを変える",
+  "app.panels.resizeWidth": "{panel}パネルの幅を変える",
   "app.prefs.composer": "プレビューの字形データ",
   "app.prefs.composerHint": "han-composeのexport-web出力のフォルダ。空欄なら既定値。",
   "app.prefs.keyHints": "ボタンにキーを表示",
