@@ -1,6 +1,8 @@
 <script>
   import { tokens, tint } from './tokens.js'
   let scroll = $state(0)
+  let composing = $state(false)
+  let metrics = $state('')
   // The sequence field of `editor`: the description as text, read as it is typed, ASCII operator
   // names (LR, ud) becoming operators. Enter calls `onenter`; a problem marks the field invalid.
   /** @type {{ editor: import('./editor.svelte.js').Editor, label?: boolean, placeholder?: string, onenter?: () => void }} */
@@ -8,17 +10,29 @@
   const spans = $derived(tokens(editor.draft))
   const t = $derived(editor.t)
   /** @type {HTMLInputElement | null} */ let field = $state(null)
+  $effect(() => {
+    if (!field) return
+    const element = field
+    const measure = () => {
+      const css = getComputedStyle(element)
+      metrics = `padding:${css.padding};font:${css.font};letter-spacing:${css.letterSpacing};line-height:${css.lineHeight}`
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    measure()
+    return () => observer.disconnect()
+  })
   /** @param {Event} [event] */
   const edit = event => { if (!/** @type {InputEvent | undefined} */ (event)?.isComposing && field) editor.edit(field) }
 </script>
 
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
-  <div class="sequence-wrap">
-    <div class="sequence-paint" aria-hidden="true"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div>
+  <div class="sequence-wrap" class:composing>
+    <div class="sequence-paint" style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionend={() => edit()} onblur={() => editor.settle()}
+    onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => composing = true} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
     onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
@@ -42,4 +56,8 @@
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
   input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   input[aria-invalid="true"]{border-color:var(--_fault)}
+  .sequence-viewport{overflow:hidden}
+  .composing .sequence-paint{visibility:hidden}
+  .composing input{-webkit-text-fill-color:var(--_ink)}
+  @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
 </style>
