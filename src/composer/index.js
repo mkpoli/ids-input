@@ -7,7 +7,7 @@
 import { createDrawer } from './client.js'
 import { LIMITS, tooLarge } from './loader.js'
 import { parse } from '../core/ids.js'
-import { onlyTangut } from './tangut.js'
+import { onlyBundled } from './local.js'
 
 export { createDrawer } from './client.js'
 export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
@@ -29,7 +29,7 @@ const CACHE = 32
 
 /**
  * A `preview` for an IDS adapter, drawing with han-compose from the export at `base` (a folder URL
- * holding `manifest.json`). Tangut outlines are bundled; pure Tangut descriptions need no Han
+ * holding `manifest.json`). Tangut and Bopomofo outlines are bundled; descriptions using only these need no Han
  * export, and mixed descriptions combine both sources. It answers the drawing, or rejects: with a `TooLargeError` for a
  * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
@@ -60,7 +60,7 @@ export function composerPreview({ base, separate = false, worker = () => new Wor
   function open(sequence = '') {
     let root
     try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch {
-      if (!onlyTangut(sequence)) throw new UnavailableError(`${base} is not a URL.`)
+      if (!onlyBundled(sequence)) throw new UnavailableError(`${base} is not a URL.`)
       root = base
     }
     if (!drawer) drawer = createDrawer(worker, root)

@@ -633,7 +633,6 @@
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
             {/key}
           {/if}
-          {#if editor.whole}<output class="tree-whole" lang="ja" title={t('ids.label')} aria-label={`${t('ids.label')}: ${editor.whole}`}>{editor.whole}</output>{/if}
           <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
         </section>
         <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
@@ -763,7 +762,6 @@
   .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
-  .tree-whole{display:block;width:100%;padding:4px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);font-family:var(--cjk);font-size:18px;line-height:1.5;overflow-wrap:anywhere;color:var(--ink)}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
@@ -816,7 +814,7 @@
     .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
     .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
     .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 153px)))}
+    .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:hidden}
     .results :global(.ids-search-results){flex:1;min-height:0}
