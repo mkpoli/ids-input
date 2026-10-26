@@ -399,6 +399,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The example `⿰亻A` uses ASCII A.
 - mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
+- mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
+  `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.
+  The musical form is an approximate Jianzipu-style transcription. 謝俊仁's
+  [音樂展覽 – 古琴篇](https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html),
+  Hong Kong Music Office, explains a related 減字譜 symbol with 大七六 above 勹四;
+  the example here uses 五. The `〾` marker is preserved in the IDS and marks approximate rendering.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
