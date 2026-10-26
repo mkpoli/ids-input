@@ -54,6 +54,7 @@
   "app.font": "字體",
   "app.font.sans": "無襯線",
   "app.font.serif": "襯線",
+  "app.font.klee": "Klee One",
   "app.footer.about": "來源與靈感",
   "app.history": "歷史",
   "app.history.empty": "尚無更改",
@@ -72,7 +73,6 @@
   "app.prefs.composer": "預覽字形資料來源",
   "app.prefs.composerHint": "han-compose的export-web輸出目錄。留空則用預設值。",
   "app.prefs.keyHints": "按鈕上顯示按鍵",
-
   "app.prefs.theme": "主題",
   "app.prefs.title": "設定",
   "app.share": "分享",

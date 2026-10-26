@@ -2,7 +2,9 @@
 
 Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
 Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). `scripts/build_ids_parts.py --font` cuts them from
+the editor's empty-slot mark ⬚ (U+2B1A). Klee One supplies an optional handwritten glyph face.
+
+`scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
 (U+2B1A, U+31C0–U+31E3) and `IDS Parts` (U+2E80–U+2EFF, U+31E4–U+31EF, U+20000–U+3FFFF), with ranges
 that do not overlap. The rest of the Basic Multilingual
@@ -19,6 +21,8 @@ Plane, Extension A included, comes from the reader's own CJK font.
   subset, SIL Open Font License 1.1 (`OFL-Plangothic.txt`). The font declares no Reserved Font Name.
   Source SHA-256s: P1 `550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6`, P2
   `681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f`.
+
+`KleeOne-Regular.woff2` (2.8 MB) supplies the optional `Klee One` face. Klee One Regular, Copyright 2020 The Klee Project Authors (Fontworks), SIL Open Font License 1.1 (`OFL-KleeOne.txt`), from [google/fonts](https://github.com/google/fonts/tree/main/ofl/kleeone). Source TTF SHA-256 `bf4063f030cc2ae6adf0a11424a1888e5c0eb4438f1f6d02f52294af868e9b3a`; this woff2 SHA-256 `396db4748a1e8a3f8c5604893368e6cdd27bc19c802bff859bc23d1c7e9ac8a8`.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google

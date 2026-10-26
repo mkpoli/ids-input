@@ -155,9 +155,10 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
-  let sans = $state(load('sans', true))
-  $effect(() => save('sans', sans ? undefined : false))
-  $effect(() => { document.documentElement.dataset.font = sans ? 'sans' : 'serif' })
+  /** @type {'sans' | 'serif' | 'klee'} */
+  let face = $state(load('font', 'sans'))
+  $effect(() => save('font', face === 'sans' ? undefined : face))
+  $effect(() => { document.documentElement.dataset.font = face })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   // The share of the middle column given to the tree; the search takes the rest.
@@ -547,8 +548,9 @@
         </div>
         <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide /></span>
       <div class="font-switch" role="group" aria-label={t('app.font')}>
-        <button type="button" class="font-choice" aria-pressed={sans} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => sans = true}><span class="aa">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={!sans} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => sans = false}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
       </div>
       </nav>
       <div class="end">
@@ -696,6 +698,7 @@
   .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11px;cursor:pointer}
   .font-choice .aa{font-size:14px;line-height:1;color:var(--ink);font-family:var(--cjk-sans)}
   .font-choice .aa.serif{font-family:var(--cjk-serif)}
+  .font-choice .aa.klee{font-family:var(--cjk-klee)}
   .font-choice:hover{color:var(--ink)}
   .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
   .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
