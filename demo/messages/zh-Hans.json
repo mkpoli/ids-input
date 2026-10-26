@@ -23,6 +23,8 @@
   "app.edit.selectAll": "全选",
   "app.encoded": "对应字符",
   "app.examples": "示例",
+  "app.examples.cards": "卡片",
+  "app.examples.list": "列表",
   "app.examples.han": "汉字",
   "app.examples.hybrid": "混成文字",
   "app.examples.samples": "构造样例",

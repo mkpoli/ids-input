@@ -23,6 +23,8 @@
   "app.edit.selectAll": "すべて選択",
   "app.encoded": "該当する文字",
   "app.examples": "例",
+  "app.examples.cards": "カード",
+  "app.examples.list": "一覧",
   "app.examples.han": "漢字",
   "app.examples.hybrid": "混成文字",
   "app.examples.samples": "構成した見本",

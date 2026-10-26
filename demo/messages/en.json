@@ -24,6 +24,8 @@
   "app.edit.selectAll": "Select all",
   "app.encoded": "Encoded as",
   "app.examples": "Examples",
+  "app.examples.cards": "Cards",
+  "app.examples.list": "List",
   "app.examples.han": "Han characters",
   "app.examples.hybrid": "Script hybrids",
   "app.examples.samples": "Constructed samples",
