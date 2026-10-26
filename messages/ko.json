@@ -107,6 +107,10 @@
   "ids.undo.named": "실행 취소: {step}",
   "ids.unwrap": "이 단계 없애기",
   "ids.unwrapNode": "{what} 없애기",
+  "ids.view": "보기",
+  "ids.view.shape": "도형",
+  "ids.view.tree": "트리",
+
   "ids.use": "이 자형으로 하기",
   "parts.byStrokes": "획수",
   "parts.failed": "구성 요소를 불러오지 못했습니다.",

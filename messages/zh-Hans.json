@@ -107,6 +107,10 @@
   "ids.undo.named": "撤销：{step}",
   "ids.unwrap": "去掉这一层",
   "ids.unwrapNode": "去掉{what}",
+  "ids.view": "视图",
+  "ids.view.shape": "结构图",
+  "ids.view.tree": "树形",
+
   "ids.use": "采用此字形",
   "parts.byStrokes": "笔画数",
   "parts.failed": "无法加载部件。",

@@ -107,6 +107,10 @@
   "ids.undo.named": "復原：{step}",
   "ids.unwrap": "去掉這一層",
   "ids.unwrapNode": "去掉{what}",
+  "ids.view": "檢視",
+  "ids.view.shape": "結構圖",
+  "ids.view.tree": "樹狀",
+
   "ids.use": "採用此字形",
   "parts.byStrokes": "筆畫數",
   "parts.failed": "無法載入部件。",

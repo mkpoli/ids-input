@@ -108,6 +108,26 @@ try {
   await dense.context().close()
   pass('a dense tree keeps its glyphs inside their boxes')
 
+  // The tree panel switches to an indented, editable tree of the same description.
+  const treePage = await open()
+  await treePage.getByRole('tab', { name: 'Tree' }).click()
+  const items = treePage.locator('.ids-treelist [role="treeitem"]')
+  assert(await items.count() === 5, `tree rows: ${await items.count()}`)
+  await items.first().click()
+  assert(await treePage.locator('.ids-treelist .chosen').count() === 1, 'a click chooses a row')
+  await items.first().focus()
+  await treePage.keyboard.press('ArrowLeft')
+  assert(await items.count() === 1, 'ArrowLeft closes a row')
+  await treePage.keyboard.press('ArrowRight')
+  assert(await items.count() === 5, 'ArrowRight opens it')
+  await treePage.keyboard.press('ArrowDown')
+  await treePage.keyboard.press('Enter')
+  assert(await items.nth(1).evaluate(el => el.classList.contains('chosen')), 'the arrow keys and Enter choose a part')
+  await treePage.getByRole('tab', { name: 'Shape' }).click()
+  assert(await treePage.locator('.ids-tree').isVisible(), 'back to the shape')
+  await treePage.context().close()
+  pass('a tree view of the description, chosen by row or key')
+
   // The search follows the tree: 疑's own description first, its match marked; more terms narrow it.
   await page.locator('.ids-search-results .hit').first().waitFor({ timeout: 30000 })
   // How long after a fresh page began to load its first hits stood (polled, so at most this).
