@@ -158,3 +158,17 @@ it('limits visual aliases to IDS search, leaving direct and exact lookups intact
   expect(await adapter.encoded('⿱亼口')).toEqual(['合'])
   expect(await adapter.structure('스')).toEqual([])
 })
+
+it('finds ideographic zero and arbitrary graphic components literally or by code point', async () => {
+  const adapter = babelStoneAdapter({ table: new Map() })
+  for (const char of ['〇', '〆', '〡', 'ӂ', 'ꙮ', 'ά', 'א', '∞', '😀']) {
+    expect((await adapter.search(char)).map(hit => hit.char)).toContain(char)
+    expect((await adapter.search(`U+${char.codePointAt(0).toString(16).padStart(4, '0')}`)).map(hit => hit.char)).toContain(char)
+  }
+  expect((await adapter.search('〇木')).map(hit => hit.char)).toEqual(['〇', '木'])
+})
+
+it('finds literal braces as contained components', async () => {
+  const adapter = babelStoneAdapter({ table: new Map([['甲', [{ text: '⿳{1}', regions: '' }]]]) })
+  expect((await adapter.containing('{1')).items).toContain('甲')
+})

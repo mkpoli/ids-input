@@ -302,3 +302,13 @@ it('bounds mixed demands across mutually exclusive expansions before building fr
   const query = [...'イカキクコサ'].map(c => c.repeat(14)).join('')
   expect(index.search(query).hits.map(hit => hit.char)).toEqual(['丁'])
 })
+
+it('searches literal brace and digit operands in a complete description', () => {
+  const search = createSearch(new Map([['甲', ['⿳{1}']]]))
+  expect(search.search('⿳{1}').hits.map(hit => hit.char)).toEqual(['甲'])
+})
+
+it('preserves halfwidth kana voicing marks as component constraints', () => {
+  const search = createSearch(new Map([['甲', ['⿰ｶﾞ']], ['乙', ['⿰ｶ木']]]))
+  expect(search.search('ｶﾞ').hits.map(hit => hit.char)).toEqual(['甲'])
+})
