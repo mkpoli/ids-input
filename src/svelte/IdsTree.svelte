@@ -217,10 +217,11 @@
   .ids-part.chosen{border:min(2px,2cqw,2cqh) solid var(--_accent);background:var(--_accent-light)}
   .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
 
-  /* Device-pixel minimum borders and controls cannot fit in the smallest cells. */
+  /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
+     Clip the header visually while keeping its node button available to keyboard navigation. */
   @container (max-height:12px) or (max-width:12px){
     .ids-node{border-width:0;padding:0}
-    .ids-head{display:none}
+    .ids-head{inset:0;overflow:hidden;clip-path:inset(50%)}
     .ids-part,.ids-part.chosen,.ids-part.over{border-width:0;padding:0}
   }
 

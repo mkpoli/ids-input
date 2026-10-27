@@ -33,6 +33,7 @@ Each part carries:
 
     uv run scripts/build_ids_parts.py          # write data/ids-parts.json
     uv run scripts/build_ids_parts.py --font   # and the webfont subsets in fonts/
+    bun run build:subtrees                    # then add compound parts from the bundled corpus
 
 `--font` subsets Noto Sans CJK JP for the CJK strokes and Plangothic for the rest (both SIL OFL
 1.1) to the parts few installed fonts draw: CJK strokes, CJK Radicals Supplement and the

@@ -145,5 +145,12 @@
   "parts.uses.other": "{count}자에 쓰임",
   "ids.characters.none": "맞는 글자가 없습니다.",
   "ids.characters.placeholder": "읽기·병음·뜻…",
-  "ids.pick.characters": "글자"
+  "ids.pick.characters": "글자",
+  "parts.seal.basic": "기본",
+  "parts.seal.compound": "복합",
+  "parts.seal.other": "기타",
+  "parts.seal.groups": "소전 분류",
+  "parts.seal.filter": "소전 또는 한자로 필터",
+  "parts.seal.estimate": "≈ 현대 한자로 추정한 분류",
+  "parts.seal.inferred": "현대 한자 IDS로 추정한 분류: {ids}"
 }

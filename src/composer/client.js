@@ -58,16 +58,16 @@ export function createDrawer(makeWorker, base) {
   /**
    * @param {string} sequence
    * @param {((leaves: SketchLeaf[]) => void) | null} [onSketch]
-   * @param {{ separate?: boolean }} [options]
+   * @param {{ separate?: boolean, fontStyle?: 'sans' | 'serif' }} [options]
    * @returns {Promise<Answer>}
    */
-  function draw(sequence, onSketch = null, { separate = false } = {}) {
+  function draw(sequence, onSketch = null, { separate = false, fontStyle = 'sans' } = {}) {
     cancel()
     const live = connect()
     const id = ++next
     return new Promise(resolve => {
       pending = { id, resolve, onSketch }
-      live.postMessage({ id, sequence, base, separate })
+      live.postMessage({ id, sequence, base, separate, fontStyle })
     })
   }
   return { draw, cancel, warm, dispose: () => { cancel(); end() } }

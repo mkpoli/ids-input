@@ -43,10 +43,15 @@ export function parseIdsTable(text) {
 
 /**
  * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][] }} document
+ * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string> } }} document
  * @returns {PalettePart[]}
  */
-export const paletteRows = ({ columns, parts }) => parts.map(row => /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]]))))
+export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
+  const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
+  const aliases = Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids)
+  if (aliases.length) part.aliases = aliases
+  return part
+})
 
 /**
  * A response's text, gunzipped when it is a gzip file served as it is (as GitHub Pages serves a
