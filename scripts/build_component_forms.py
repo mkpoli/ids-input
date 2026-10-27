@@ -160,5 +160,6 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     result['forms'][style]=forms
-    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0}
+    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
+        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
