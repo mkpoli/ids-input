@@ -15,18 +15,17 @@ describe('the prepared example drawings', () => {
     expect(data.drawings['⿴口도'].drawn.d.length).toBeGreaterThan(10)
   })
   it('prepares every digit, hentaigana, Latin and Bopomofo example', () => {
-    for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄙ', '⿰木⿱ㄅㄞ', '⿰木き']) {
+    for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄥ', '⿰木⿱ㄅㄞ', '⿰木き']) {
       const drawn = data.drawings[sequence]?.drawn
       expect(drawn?.d.length).toBeGreaterThan(100)
       expect(drawn.d).not.toMatch(/NaN|Infinity/)
-      const expected = { '⿰扌3': 2, '⿰𛂦方': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄙ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
+      const expected = { '⿰扌3': 2, '⿰𛂦方': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄥ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
       expect(drawn.parts).toHaveLength(expected[sequence])
     }
     expect(data.drawings['⿰扌3'].drawn.origins).toContain('glyph 3')
     expect(data.drawings['⿰𛂦方'].drawn.origins).toContain('glyph 𛂦')
     expect(data.drawings['⿰亻A'].drawn.origins).toContain('glyph A')
-    expect(data.drawings['⿰木⿳ㄙㄨㄙ'].drawn.origins.filter(origin => origin === 'glyph ㄙ')).toHaveLength(2)
-    expect(data.drawings['⿰木⿳ㄙㄨㄙ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ']))
+    expect(data.drawings['⿰木⿳ㄙㄨㄥ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ', 'glyph ㄥ']))
     expect(data.drawings['⿰木⿱ㄅㄞ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄅ', 'glyph ㄞ']))
   })
   it('holds exactly the current examples', () => {
