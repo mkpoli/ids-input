@@ -145,12 +145,17 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
-`？` for a part no character names, with an optional variation selector. The letters and digits are
-those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
-shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
-preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
-written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
+private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
+letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
+controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
+allocation U+3D000–U+3FC3F.
+Combining marks are individual components; only a variation selector attaches to the preceding
+component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
+preview font coverage: an accepted component may have no outline in the selected composer export.
+`isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
+The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
+supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ### Small Seal (小篆)
 
@@ -665,6 +670,11 @@ What this package offers that Mojidata, as far as its pages and repositories sho
   the parts few fonts draw.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
+
+## Acknowledgments
+
+Thanks to Fn ([@integuraru_P](https://x.com/integuraru_P)) for reporting that 〇 was rejected
+as a kanji component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 
 ## Licenses
 

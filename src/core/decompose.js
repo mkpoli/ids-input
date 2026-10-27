@@ -28,7 +28,10 @@ const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
 export function tokens(text) {
   /** @type {string[]} */
   const out = []
-  for (const [token] of (text ?? '').matchAll(/\{\d+\}|./gsu)) {
+  // A complete description can use braces and digits as literal graphic operands.
+  // Otherwise retain BabelStone's unresolved {n} notation as one token.
+  const pattern = isDescription(text) ? /./gsu : /\{\d+\}|./gsu
+  for (const [token] of (text ?? '').matchAll(pattern)) {
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
     else out.push(token)
   }
@@ -42,7 +45,7 @@ export const unencoded = token => /^\{(\d+)\}$/.exec(token ?? '')?.[1] ?? null
 export const lookupChar = part => [...(part ?? '')][0] ?? ''
 
 /** Whether a part can be looked up: one encoded component, not ？. @param {unknown} part @returns {part is string} */
-export const decomposable = part => typeof part === 'string' && isComponent(lookupChar(part)) && lookupChar(part) !== '？'
+export const decomposable = part => typeof part === 'string' && unencoded(part) === null && isComponent(lookupChar(part)) && lookupChar(part) !== '？'
 
 /**
  * What is decomposed for the text typed: a description (typed with operators or their ASCII names)
