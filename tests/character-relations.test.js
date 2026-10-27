@@ -103,6 +103,7 @@ test('adapter coverage, labelled lookup/usage links, forms, and cross-script ran
  }
  const onlyMeanings=babelStoneAdapter({characterInfo:doc})
  expect((await onlyMeanings.search('water')).map(h=>h.char)).toContain('𗋽')
+ expect((await onlyMeanings.search('horse')).find(h=>h.char==='𘥇')?.label).toBe('associated with horses')
  expect((await onlyMeanings.characterInfo('𘥇')).association).toBe('associated with horses')
  expect(index.search('die',{limit:1000}).find(h=>h.label.startsWith('component of 𗆮'))?.label).toContain('(of a monarch) to die')
 })

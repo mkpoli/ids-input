@@ -17,7 +17,7 @@ const lemma = text => text.replace(/^(?:\([^)]*\)\s*)+/, '').replace(/^(?:to|a|a
  */
 export function createRelationSearch(doc, seal, table) {
   const lookup = createCharacterInfo(doc, seal)
-  /** @typedef {'meaning' | 'seal' | 'emoji' | 'usage'} Kind */
+  /** @typedef {'meaning' | 'association' | 'seal' | 'emoji' | 'usage'} Kind */
   /** @typedef {{ char: string, kind: Kind, sense?: string }} Edge */
   /** @typedef {{ label: string, sense?: string, curated?: boolean }} Meaning */
   /** @type {Map<string, Edge[]>} */ const graph = new Map()
@@ -68,9 +68,9 @@ export function createRelationSearch(doc, seal, table) {
       }
     }
     if (info.association) alias(char, info.association, info.association)
-    for (const row of info.relations) link(char, row.char, row.kind === 'seal' || row.kind === 'modern' ? 'seal' : 'meaning', row.meaning)
+    for (const row of info.relations) link(char, row.char, row.kind === 'seal' || row.kind === 'modern' ? 'seal' : info.association ? 'association' : 'meaning', info.association ? undefined : row.meaning)
     for (const emoji of info.emoji) {
-      link(char, emoji.text, 'emoji', emoji.meaning)
+      link(char, emoji.text, 'emoji', info.association ? undefined : emoji.meaning)
       alias(emoji.text, emoji.meaning, emoji.meaning, senseOf(emoji.meaning), true)
       labels.set(emoji.text, emoji.meaning)
     }
@@ -131,7 +131,7 @@ export function createRelationSearch(doc, seal, table) {
         if (edge.kind === 'usage') label = characterScript(edge.char) === 'component'
           ? `component of ${current.char} · ${(current.sense ? senseLabels.get(`${current.char}\0${current.sense}`) : undefined) ?? labels.get(current.char) ?? code(current.char)}`
           : `contains ${current.char} · ${label}`
-        const expand = edge.kind === 'meaning' || edge.kind === 'seal' || edge.kind === 'emoji' && Boolean(direct?.has(current.char))
+        const expand = edge.kind === 'meaning' || edge.kind === 'association' || edge.kind === 'seal' || edge.kind === 'emoji' && Boolean(direct?.has(current.char))
         add(edge.char, label, edge.kind === 'usage' ? 100 + current.rank : Math.max(2, current.rank + 1), current.depth + 1, expand, sense)
       }
     }
