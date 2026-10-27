@@ -24,7 +24,8 @@ import { translator } from './i18n.js'
  * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
  * @typedef {import('../core/ids.js').Part} Part
  * @typedef {import('../core/ids.js').Path} Path
- * @typedef {{ adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
+ * @typedef {'hover' | 'on' | 'off'} TintMode
+ * @typedef {{ tintMode?: TintMode, adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
  * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean }} Change
  */
 
@@ -317,6 +318,11 @@ export function createEditor(options) {
   return {
     /** @param {Path | null} path */
     hover(path) { hovered = disabled() ? null : path },
+    /** @param {Path} path */
+    isTinted(path) {
+      const mode = options().tintMode ?? 'hover'
+      return mode === 'on' || (mode === 'hover' && hovered !== null && hovered.every((n, i) => path[i] === n))
+    },
     /** @param {Path} path */
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
     get selectionVersion() { return selectionVersion },
