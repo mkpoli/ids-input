@@ -19,6 +19,7 @@
   "ids.do.split": "用{op}拆分{part}",
   "ids.do.swap": "將{from}改為{op}",
   "ids.do.type": "輸入{text}",
+  "ids.do.wrap": "用{op}包住",
   "ids.do.unwrap": "去掉{op}",
   "ids.empty": "空位",
   "ids.find.placeholder": "名稱、詞、字或碼位…",

@@ -54,6 +54,7 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) {
       event.preventDefault()
       const r = /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect()
@@ -126,7 +127,10 @@
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)}>
+  }} onpointerleave={() => editor.hover(null)} onpointerdown={event => {
+    const target = /** @type {HTMLElement} */ (event.target)
+    if (!editor.disabled && (target === event.currentTarget || target.classList.contains('ids-tree-root'))) editor.choose(null)
+  }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}

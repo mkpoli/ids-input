@@ -74,6 +74,7 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
@@ -112,7 +113,10 @@
   }
 </script>
 
-<div class="ids-treelist" bind:this={listEl}>
+<div class="ids-treelist" role="presentation" bind:this={listEl} onpointerdown={event => {
+  const target = /** @type {HTMLElement} */ (event.target)
+  if (!editor.disabled && (target === event.currentTarget || target.matches('ul[role="tree"]'))) editor.choose(null)
+}}>
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->

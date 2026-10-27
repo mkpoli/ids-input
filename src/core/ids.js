@@ -249,8 +249,7 @@ export function swapOp(tree, path, op) {
 
 /**
  * Where an operator goes in a draft, and what the tree becomes. On a node it swaps the operator; on
- * a slot or a component it splits it, the old part first. With no target (every slot filled and none
- * chosen) the whole tree becomes the operator's first part. Answers the new tree and the part to
+ * a slot or a component it splits it, the old part first. With no target, the whole tree becomes the operator's first part. Answers the new tree and the part to
  * choose next, or `{ problem: 'drop' }`.
  * @param {Part} tree
  * @param {Path | null} at

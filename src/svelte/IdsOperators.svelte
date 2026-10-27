@@ -1,6 +1,6 @@
 <script>
   // The operator palette, grouped by how many parts each operator takes. A button puts its operator on
-  // the chosen part (or the first empty slot) of `editor`; each shows its key in a corner unless
+  // the chosen part of `editor`, or wraps the whole tree if none is chosen; each shows its key unless
   // `keyHints` is off, and names itself with its key on hover.
   import { OPERATOR_GROUPS } from '../core/ids.js'
   import { KEY_OF } from '../core/keys.js'
