@@ -204,7 +204,7 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}

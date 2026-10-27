@@ -75,7 +75,7 @@ export function strokeCounter(table, rows) {
 }
 
 // Requested literal IDS remain selectable even below the frequency cutoff.
-export const MANUAL_PARTS = ['⿰冫⿱丿丶', '⿳亠㐅厂', '⿳亠丷厂', '⿻𢆶戈', '⿸尸彳', '㇯鹿比', '㇯馬灬', '㇯鳥灬', '⿳亠口冖', '⿸尸氺', '⿳𰀉冖木', '⿳卝罒冖', '⿱丿乚', '⿰氵氵', '⿱𰀪亻']
+export const MANUAL_PARTS = ['⿰冫⿱丿丶', '⿳亠㐅厂', '⿳亠丷厂', '⿻𢆶戈', '⿸尸彳', '㇯鹿比', '㇯馬灬', '㇯鳥灬', '⿳亠口冖', '⿸尸氺', '⿳𰀉冖木', '⿳卝罒冖', '⿱丿乚', '⿰氵氵', '⿱𰀪亻', '⿲彳⿱山一攵']
 // IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
 // Exact root descriptions in the bundled corpus. Preserve regional spellings as aliases.
 export const ENCODED_PARTS = {

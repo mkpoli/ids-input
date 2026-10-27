@@ -13,29 +13,33 @@ import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
 import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
+import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { unicodeSource } from './unicode.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
-  const local = !warm && onlyBundled(sequence, separate)
+  const local = !warm && onlyBundled(sequence, separate, false, fontStyle)
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
   const seal = !warm && hasSmallSeal(sequence)
-  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}`
+  const palette = !warm && [...sequence].some(hasPaletteGlyph)
+  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${palette}`
   if (!sources.has(key)) {
     let source = local ? null : fromUrl(base)
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
     if (seal) source = smallSealSource({ fallback: source })
+    if (palette) source = paletteSource({ fallback: source })
     source ??= bundledSource({ load: async () => ({ records: {} }), matches: () => false })
     sources.set(key, source)
   }
   let source = sources.get(key)
   try { await source.ready() } catch (error) {
-    if (!warm && onlyBundled(sequence, false, true)) {
+    if (!warm && onlyBundled(sequence, false, true, fontStyle)) {
       source = unicodeSource()
       if (tangut) source = tangutSource({ fallback: source })
       if (bopomofo) source = bopomofoSource({ fallback: source })
       if (seal) source = smallSealSource({ fallback: source })
+      if (palette) source = paletteSource({ fallback: source })
       await source.ready()
     } else {
     self.postMessage(warm ? { id, warm: true, error: String(error?.message ?? error) } : { id, error: String(error?.message ?? error), unavailable: true })

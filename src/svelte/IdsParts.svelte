@@ -2,13 +2,14 @@
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
   // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, plus frequent components and compound IDS,
-  // most used first; Tangut
+  // most used families first, with related forms adjacent; Tangut
   // the Tangut components in code point order; Stroke count holds all common and hard-to-type
   // parts, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
+  import { adjacentVariants } from '../core/palette.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -26,14 +27,26 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
   /** @param {string} key @param {unknown} value */
   const remember = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* Kept for this page only. */ } }
 
+  const range = (/** @type {number} */ first, /** @type {number} */ last) =>
+    Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
+  const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf)]
+  const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
+  // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
+  const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
+  const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
+  const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
+    .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
+  const hangul = [...substitutes, ...hangulLetters]
+  /** @param {string[]} chars @returns {PalettePart[]} */
+  const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
   let tab = $state(/** @type {(typeof TABS)[number]} */ ('common')), filter = $state('')
@@ -46,7 +59,7 @@
     recent = Array.isArray(kept) ? [...new Set(kept.filter(part => typeof part === 'string'))].slice(0, RECENT_MAX) : []
     const read = adapter.parts
     if (!read) { failed = true; return }
-    read().then(found => { parts = found; failed = false }, () => { failed = true })
+    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
 
   const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
@@ -57,7 +70,7 @@
   const shownCount = $derived(count !== undefined && counts.includes(count) ? count : counts[0])
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
-    .map(cls => ({ cls, parts: list.filter(part => (part.first ?? null) === cls) }))
+    .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
     .filter(group => group.parts.length)
 
   const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
@@ -68,16 +81,20 @@
   const query = $derived(filter.trim())
   const filtered = $derived.by(() => {
     if (!query || !parts) return null
+    if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
-    if (/^\d+$/.test(query)) return parts.filter(part => part.strokes === Number(query))
+    if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
-    return parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query)))
+    return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
   const shown = $derived.by(() => {
     if (!parts) return []
-    if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
+    if (tab === 'bopomofo') return [{ cls: undefined, parts: bopomofo.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(strokeParts.filter(part => (part.strokes ?? null) === shownCount))
@@ -174,6 +191,7 @@
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
+    tab === 'hangul' ? substituteNames[part.part] : null,
     ...(part.aliases ?? []),
     ...(part.modern ?? []),
     part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
@@ -200,7 +218,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>

@@ -6,7 +6,9 @@
   // (IdsSequence, IdsOperators, IdsTree, IdsPartTools, IdsPicker, IdsPreview) over its own editor.
   import { untrack } from 'svelte'
   import { isSequence, parse } from '../core/ids.js'
+  import { replacementQuery } from '../core/replacement.js'
   import { createEditor } from './editor.svelte.js'
+  import IdsCharacterInfo from './IdsCharacterInfo.svelte'
   import IdsOperators from './IdsOperators.svelte'
   import IdsPartTools from './IdsPartTools.svelte'
   import IdsPicker from './IdsPicker.svelte'
@@ -16,9 +18,9 @@
   import { shortcut } from './shortcut.js'
 
   /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, value?: string, char?: string, disabled?: boolean, messages?: Record<string, string>, locale?: string,
-   *   pickers?: ('find' | 'characters' | 'parts' | 'from')[], recentKey?: string | null, keyHints?: boolean, tintMode?: import('./editor.svelte.js').TintMode, onuse?: (sequence: string) => void,
+   *   pickers?: ('find' | 'characters' | 'parts' | 'from' | 'templates')[], recentKey?: string | null, keyHints?: boolean, tintMode?: import('./editor.svelte.js').TintMode, onuse?: (sequence: string) => void,
    *   onchange?: (text: string, whole: boolean) => void, preview?: import('svelte').Snippet<[string, boolean]> }} */
-  let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'characters', 'parts', 'from'],
+  let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'characters', 'parts', 'from', 'templates'],
     recentKey = 'ids-input.recentParts', keyHints = true, tintMode = 'hover', onuse, onchange, preview } = $props()
 
   const editor = createEditor(() => ({ adapter, messages, locale, disabled, tintMode }))
@@ -33,7 +35,7 @@
   $effect(() => {
     const of = char
     untrack(() => {
-      const typed = isSequence(value) ? value : ''
+      const typed = isSequence(value) || replacementQuery(value) ? value : ''
       editor.reset(typed)
       if (!typed && of) editor.lookup.read(of).then(found => {
         if (char !== of) return
@@ -44,7 +46,7 @@
   })
   $effect(() => {
     const given = value
-    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) ? given : '') })
+    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) || replacementQuery(given) ? given : '') })
   })
   function use() { if (editor.usable && !disabled) onuse?.(editor.whole) }
 </script>
@@ -71,6 +73,8 @@
     {#if onuse}<button type="button" class="ids-use" disabled={disabled || !editor.usable} onclick={use}>{t('ids.use')}{#if keyHints}<kbd aria-hidden="true">{shortcut('enter', undefined, { compact: true })}</kbd>{/if}</button>{/if}
   </div>
 </div>
+
+<IdsCharacterInfo {root} {adapter} {messages} {locale} />
 
 <style>
   .ids-input{
