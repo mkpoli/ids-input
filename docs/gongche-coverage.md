@@ -77,8 +77,9 @@ This is an IDS/component input panel. It does not arrange scores, assign pitches
 interpret rhythm, or encode every manuscript's ornament and calligraphic form.
 In particular:
 
-- The Kunqu proposal calls the double-hook forms uncommon/theoretical. They are
-  not silently replaced with single-hook notes.
+- The proposal treats the seven characters written with two downward slashes
+  (合 四 一 上 尺 工 凡) as uncommon and theoretical; they remain unencoded and
+  outside this catalogue.
 - Cursive 四 is not Japanese の. Hooked 一 is not 乛 or ㇖. These lookalikes are
   excluded as substitutes.
 - Repeated ellipses and longer held-note lines are built from the available marks;
