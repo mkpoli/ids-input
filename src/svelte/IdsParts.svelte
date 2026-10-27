@@ -8,6 +8,7 @@
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
+  import { onMount } from 'svelte'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -90,6 +91,78 @@
     if (recentKey) remember(recentKey, recent)
     onpick?.(part)
   }
+  // Give a double-click time to select text without inserting its first click.
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let pickTimer
+  /** @type {string | undefined} */
+  let pendingPart
+  /** @type {EventTarget | null} */
+  let pendingTarget = null
+  function flushPick() {
+    clearTimeout(pickTimer)
+    const part = pendingPart
+    pendingPart = undefined
+    pendingTarget = null
+    if (part !== undefined) pick(part)
+  }
+  onMount(() => {
+    /** @param {PointerEvent} event */
+    const pointer = event => { if (pendingTarget && !event.composedPath().includes(pendingTarget)) flushPick() }
+    /** @param {KeyboardEvent} event */
+    const keyboard = event => {
+      if (pendingPart === undefined) return
+      if (['Control', 'Meta', 'Alt', 'Shift'].includes(event.key)) return
+      if ((event.ctrlKey || event.metaKey) && ['a', 'c'].includes(event.key.toLowerCase()) && event.target === pendingTarget) {
+        clearTimeout(pickTimer); pendingPart = undefined; pendingTarget = null
+      } else flushPick()
+    }
+    window.addEventListener('pointerdown', pointer, true)
+    window.addEventListener('keydown', keyboard, true)
+    return () => {
+      clearTimeout(pickTimer)
+      window.removeEventListener('pointerdown', pointer, true)
+      window.removeEventListener('keydown', keyboard, true)
+    }
+  })
+  /** @param {MouseEvent} event @param {string} part */
+  function clickPart(event, part) {
+    if (pendingPart !== undefined && pendingPart !== part) flushPick()
+    clearTimeout(pickTimer)
+    pendingPart = undefined
+    pendingTarget = null
+    if (event.detail === 0) { pick(part); return }
+    if (event.detail > 1 || !window.getSelection()?.isCollapsed) return
+    if ('pointerType' in event && event.pointerType === 'touch') { pick(part); return }
+    pendingPart = part
+    pendingTarget = event.currentTarget
+    pickTimer = setTimeout(flushPick, 500)
+  }
+  /** @param {MouseEvent} event */
+  function selectPart(event) {
+    clearTimeout(pickTimer)
+    pendingPart = undefined
+    pendingTarget = null
+    const text = /** @type {HTMLElement} */ (event.currentTarget).querySelector('.part-text')
+    if (!text) return
+    const range = document.createRange(), selection = window.getSelection()
+    range.selectNodeContents(text)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+  /** @param {KeyboardEvent} event */
+  function selectionKey(event) {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+    const button = /** @type {HTMLElement} */ (event.currentTarget)
+    const key = event.key.toLowerCase()
+    const target = key === 'a' ? button.closest('.parts-panel')
+      : key === 'c' && window.getSelection()?.isCollapsed ? button.querySelector('.part-text') : null
+    if (!target) return
+    if (key === 'a') event.preventDefault()
+    const range = document.createRange(), selection = window.getSelection()
+    range.selectNodeContents(target)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
@@ -120,12 +193,14 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
-        draggable={!disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => pick(part.part)}>
+        onpointerdown={event => { event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
+        ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
+        onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
         {#if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />
-          <span class="compound-mark" aria-hidden="true">IDS</span>
+          <span class="part-text compound-text">{part.part}</span>
         {:else}
-          {part.part}
+          <span class="part-text">{part.part}</span>
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
@@ -201,25 +276,26 @@
   .parts-tabs button,.parts-counts button{border:0;background:transparent;font-size:12px;padding:6px 10px;border-radius:5px;color:var(--_muted)}
   .parts-tabs button.active,.parts-counts button.active{background:var(--_surface-selected);color:var(--_ink)}
   .parts-filter{flex:1 1 100%;min-width:0;padding:6px 8px;font-size:13px}
-  .parts-counts{display:flex;flex-wrap:wrap;gap:2px}
+  .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
   .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
-  .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
+  .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
-  .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;
+  .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
   .part.compound{position:relative;padding:5px}
-  .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
-    font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}
+  .part :global(.part-icon){user-select:none}
+  .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
+    font:8px/1 var(--ids-font,sans-serif);color:var(--_ink);background:var(--_surface)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .seal-groups{display:flex;flex-wrap:wrap;gap:4px}
   .seal-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
   .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
-  .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted)}
+  .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>
