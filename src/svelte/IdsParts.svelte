@@ -48,7 +48,9 @@
   const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
   const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
     .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
-  const hangul = [...substitutes, ...hangulLetters]
+  // Hangul tone marks and enclosed forms also have bundled Unicode outlines.
+  const hangul = [...substitutes, ...hangulLetters, ...range(0x3200, 0x321e), ...range(0x3260, 0x327e), '〮', '〯']
+  const hangulSyllables = range(0xac00, 0xd7a3)
   /** @param {string[]} chars @returns {PalettePart[]} */
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
@@ -67,6 +69,30 @@
   })
 
   const PAGE_SIZE = 120
+  let hangulGroup = $state('letters'), hangulPage = $state(0)
+  $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
+  const hangulKeys = $derived.by(() => {
+    const base = hangulGroup === 'syllables' ? hangulSyllables : hangul
+    const extra = (partsByScript.get('hangul') ?? []).map(part => part.part).filter(part => {
+      const point = part.codePointAt(0) ?? 0
+      return (point >= 0xac00 && point <= 0xd7a3) === (hangulGroup === 'syllables')
+    })
+    return [...new Set([...base, ...extra])]
+  })
+  const hangulMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return hangulKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    const matches = matchScriptParts(hangulKeys, text, Boolean(code))
+    const available = new Set(hangulKeys)
+    const metadata = (partsByScript.get('hangul') ?? []).filter(part => available.has(part.part) &&
+      (/^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term))))
+    return [...new Set([...matches, ...metadata.map(part => part.part)])]
+  })
+  const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
+  const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -285,6 +311,14 @@
           onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{name === 'other' ? t('parts.script.choose') : t(`parts.tab.${name}`)}</button>
       {/each}
     </div>
+    {#if tab === 'hangul'}
+      <label class="script-select">{t('parts.hangul.group')}
+        <select value={hangulGroup} onchange={event => { hangulGroup = event.currentTarget.value; filter = '' }}>
+          <option value="letters">{t('parts.hangul.letters')}</option>
+          <option value="syllables">{t('parts.hangul.syllables')}</option>
+        </select>
+      </label>
+    {/if}
     {#if tab === 'other'}
       <label class="script-select">{t('parts.script.label')}
         <select value={otherScript} onchange={event => { otherScript = event.currentTarget.value; filter = '' }}>
@@ -324,6 +358,19 @@
       <p class="parts-note" role="status">{t('parts.failed')}</p>
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
+    {:else if tab === 'hangul'}
+      {#if hangulMatches.length}
+        {#if hangulPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={hangulPage === 0} onclick={() => hangulPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={hangulPages} value={hangulPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) hangulPage = Math.max(0, Math.min(hangulPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: hangulPage + 1, pages: hangulPages, count: hangulMatches.length })}</span>
+            <button type="button" disabled={hangulPage + 1 >= hangulPages} onclick={() => hangulPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(hangulShown)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'other'}
       {#if !otherData && !otherFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if otherFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={retryOther}>{t('parts.script.retry')}</button></p>{/if}
