@@ -17,12 +17,18 @@
 // before drawing again).
 import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
-import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
+import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
 
 const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
   [sequence, `⿱${part}${pair}`, `⿱${part}⿰${part}${part}`].map(ids => [ids, char])))
+const yanGlyphs = new Map(['⿳亠㐅厂', '⿱文厂'].flatMap(outer =>
+  [['彡', '彥'], ['生', '產']].map(([inner, char]) => [`⿸${outer}${inner}`, char])))
+const yanSources = new Map([['⿳亠㐅厂', '產'], ['⿱文厂', '產'], ['⿳亠丷厂', '产']])
+// The stacked 日 pair has about this much outline ink in both exports.
+const YAN_STACK_INK = 14000
 
 export class LookupError extends Error { name = 'LookupError' }
 
@@ -133,6 +139,8 @@ export class Composer {
   /** Outline length: a glyph's, or for an excluded or glyphless character its sequence's operands'. */
   ink(node, seen = new Set()) {
     if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).ink
+    if (Array.isArray(node) && node[0] === '⿸' && this.yanStackedDays(node[1], node[2]))
+      return this.ink(node[1], seen) + this.ink('儿', seen) + YAN_STACK_INK
     if (typeof node !== 'string') return node.slice(1).reduce((s, n) => s + this.ink(n, seen), 0)
     const r = this.rec(node)
     if (!this.excluded(node) && r?.G) return r.ink
@@ -323,7 +331,9 @@ export class Composer {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const cells = sixInRows(node, region)
     if (cells) return cells.flatMap(box => this.node(node[1], box))
-    const repeated = !this.separate || isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
+    const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
+    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key))
+      ? componentParts(key, region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
     const hasRepetition = containsComponentForm(keyOf(node))
     const C = this.C
@@ -366,6 +376,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
+    if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
     if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
@@ -376,6 +388,52 @@ export class Composer {
       if (moved) return moved
     }
     return this.shares(op, children, region)
+  }
+
+  /** Place an arbitrary inner operand in the room designed for these native enclosures. */
+  yanStackedDays(outer, contents) {
+    const source = yanSources.get(keyOf(outer))
+    return !this.separate && this.fontStyle !== 'kaisho' && source && !this.excluded(source)
+      && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
+      && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
+      && ['昌', '⿱日日'].includes(keyOf(contents[2]))
+  }
+
+  yanEnclosure(children, region) {
+    if (this.fontStyle === 'kaisho') return null
+    const key = keyOf(children[0])
+    if (!yanSources.has(key) || this.excluded(yanSources.get(key))) return null
+    const outer = componentParts(key, region, this.fontStyle, true)
+    const serif = this.fontStyle === 'serif', traditional = key !== '⿳亠丷厂'
+    const contents = children[1]
+    if (Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿' && !this.excluded('儿') && !this.excluded('元')) {
+      const top = serif ? (traditional ? 461 : 415) : (traditional ? 450 : 390)
+      const baseBottom = traditional ? 210 : 180
+      const stackedDays = this.yanStackedDays(children[0], contents)
+      // A denser lower subtree needs more of the opening than a simple 丅.
+      const ink = stackedDays ? YAN_STACK_INK : isEmpty(contents[2]) ? 0 : this.ink(contents[2])
+      const extra = Math.max(0, Math.min(top - 120 - baseBottom, (Math.sqrt(ink / 3700) - 1) * 150))
+      const bottom = baseBottom + extra
+      const legs = componentPosition('儿:under-bar', mapped([250, bottom, 920, top + 2], componentConstants.face, region), this.fontStyle, top + 2 - bottom)
+      if (legs) {
+        const box = mapped(stackedDays ? [300, -59, 880, bottom - 25] : [240, -59, 940, bottom - 25], componentConstants.face, region)
+        const days = stackedDays && componentPosition('昌:stack', box, this.fontStyle)
+        const lower = days ? [days] : this.node(contents[2], box)
+        // Strong vertical weight expansion closes the counters of compact,
+        // dense lower components. Keep their native light-master detail.
+        if (ink > 7400) for (const part of lower) part.weightLimit = [1, 0]
+        return [...outer, legs, ...lower]
+      }
+    }
+    // The traditional boxes follow 生 in Noto 產. The 产 enclosure's
+    // lower crossbar leaves a shorter opening, so its top is lowered.
+    const box = serif ? [198, -51, 954, traditional ? 445 : 330]
+      : [227, -59, 944, traditional ? 431 : 335]
+    const inner = this.node(children[1], mapped(box, componentConstants.face, region))
+    // Fitting clears collisions, but must not enlarge the already calibrated
+    // inner drawing to fill every available pixel of the opening.
+    this.fit(outer, inner, region, this.stem0[0][0], this.C, { room: union(inner.map(p => p.target)), size: 128 })
+    return [...outer, ...inner]
   }
 
   leafOwners(tree) {
@@ -724,10 +782,15 @@ export class Composer {
     }
     const axis = this.AXIS[op]
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
-    const weights = children.map((c, k) => this.ink(c) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
-    const gap = 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
+    const other = children[1]
+    const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
+      && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
+      && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
+    const weights = children.map((child, k) => this.ink(child) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
+    const gap = compactYan ? 0.01 : 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
     const lo = region[axis], span = region[axis + 2] - region[axis]
     const groups = []
+    let yanBox = null
     let at = 0
     children.forEach((child, i) => {
       let a = at, b = at + weights[i] * fit
@@ -736,11 +799,34 @@ export class Composer {
       const box = region.slice()
       box[axis] = lo + a * span
       box[axis + 2] = lo + b * span
+      // The sloping right edge of 朱 leaves space for the enclosure's curved
+      // left stroke; a gap between their bounding boxes exaggerates it.
+      if (compactYan && i === 1) { box[0] -= span * 0.045; yanBox = box.slice() }
+      // 鴸 supplies a full-height left 朱 even in exports without a usable host cut.
+      if (compactYan && i === 0) {
+        const native = componentPositionBox('朱:L', this.fontStyle)
+        if (native) {
+          const vertical = mapped(native, componentConstants.face, region)
+          groups.push([componentPosition('朱:L', [box[0], vertical[1], box[2], vertical[3]], this.fontStyle)])
+          return
+        }
+      }
       const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
       if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
       else groups.push(this.row(child, box, children.length))
     })
-    this.space(axis, groups)
+    if (compactYan && !this.partial) {
+      // Restore just enough room when a whole-glyph outline protrudes toward 朱.
+      const size = 512, mask = grown(fill(groupRings(groups[0]), size, region), size, 1)
+      const original = groups[1].map(part => part.target.slice())
+      for (let step = 0; step <= 9; step++) {
+        const frame = yanBox.slice()
+        frame[0] += span * 0.005 * step
+        groups[1].forEach((part, i) => { part.target = mapped(original[i], yanBox, frame) })
+        const right = fill(groupRings(groups[1].filter(part => !part.cut)), size, region)
+        if (!right.some((value, i) => value && mask[i])) break
+      }
+    } else if (!compactYan) this.space(axis, groups)
     return groups.flat()
   }
 
@@ -941,7 +1027,7 @@ export class Composer {
   balance(group) {
     const C = this.C, stem = this.stem0
     const curve = (density, axis) => C.STEM_CURVE[axis][0] + C.STEM_CURVE[axis][1] * density / 1000
-    const density = group.reduce((s, p) => { const [sx, sy] = scaleOf(p); return s + partInk(p.part) * (sx + sy) / 2 }, 0)
+    const density = group.reduce((s, p) => { const [sx, sy] = scaleOf(p); return s + (p.inkLength ?? partInk(p.part)) * (sx + sy) / 2 }, 0)
     const ratio = [0, 1].map(axis => stem[axis][1] / stem[axis][0] - 1)
     // The stroke widths the whole drawing is brought to, which a placeholder's outline follows.
     this.stroke = [curve(density, 0), curve(density, 1)]
@@ -959,7 +1045,7 @@ export class Composer {
         }
         const measured = p.part.contours[0]?.width
         const own = measured ? measured[axis] : curve(p.native, axis)
-        weight.push(Math.min(1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
+        weight.push(Math.min(p.weightLimit?.[axis] ?? 1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
       }
       p.target = target
       p.weight = weight

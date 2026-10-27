@@ -351,11 +351,23 @@ because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across 
 This count does not assert that the visible component is absent from 彥 or 產.
 The traditional outline is extracted from Noto 產 with 生 removed; the other
 uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
-with separate Sans/Serif outlines. These are atomic native previews;
+with separate Sans/Serif outlines. The traditional enclosure with 彡 or 生
+uses the complete native 彥 or 產 glyph, respectively. Other enclosed operands
+are placed within a font-specific opening based on the native 產 proportions;
+the 产 opening is shorter to leave space below its lower crossbar. These are atomic native previews;
 adjustment mode uses operand outlines when available. Native compound previews use
 outline-based layout rather than extrapolating the learned glyph layout model;
 Kaisho keeps its export layout. Source aliases remain
 searchable and visible in tooltips, without changing the inserted IDS.
+When 儿 begins the enclosed vertical stack, its native 元-derived legs meet the
+enclosure bar; their stroke weight is adjusted continuously as the available
+height changes. The remaining operand is laid out below. A neighbouring left 朱
+uses its full-height cut from 鴸 in both Sans and Serif, with the spacing of a
+native side-by-side character. For 昌 or ⿱日日 below 儿, the preview uses the
+native 昌 cut from 菖 in either face, keeping their displayed proportions consistent.
+Its counters and gaps are shortened more than its horizontal bars so that the
+strokes remain visible in the compact placement. The 朱 spacing is checked for
+collisions against the actual right-hand outline.
 
 These curated components were suggested by परवद💙💛
 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)). The zi.tools stroke-chain
