@@ -46,7 +46,9 @@ export function groupPaletteParts(parts) {
   return groups
 }
 
-// These groups already have palette views or are not a single script.
-const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes', 'symbols', 'mixed'])
+// These groups already have palette views: Han, Latin and Cyrillic tabs, Hangul, Bopomofo, Tangut,
+// Small Seal and the CJK strokes. Symbols and mixed-script descriptions have none, so the Other
+// scripts selector carries them too.
+const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes'])
 /** @param {string | null | undefined} group */
 export const isOtherScript = group => Boolean(group && !EXISTING_GROUPS.has(group))

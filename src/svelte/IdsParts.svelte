@@ -104,8 +104,11 @@
   let otherFailed = $state(false), otherLoading = false
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
+  // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
+  /** @type {Record<string, string>} */
+  const PSEUDO_SCRIPTS = { symbols: 'parts.script.symbols', mixed: 'parts.script.mixed' }
   /** @param {string} id */
-  const scriptName = id => scriptNames?.of(id) ?? id
+  const scriptName = id => PSEUDO_SCRIPTS[id] ? t(PSEUDO_SCRIPTS[id]) : scriptNames?.of(id) ?? id
   const otherScripts = $derived.by(() => {
     const ids = new Set([...scriptIndex.map(group => group.id), ...partsByScript.keys()])
     return [...ids].filter(isOtherScript).sort((a, b) => scriptName(a).localeCompare(scriptName(b)))
