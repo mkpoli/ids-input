@@ -86,6 +86,8 @@ export class Composer {
     this.face = face ?? c.face
     this.separate = separate
     this.fontStyle = fontStyle
+    // A static brush face keeps its own stroke weights; a variable export weights its parts.
+    this.weighted = m.weighted ?? !(m.style === 'kaisho' && m.heavy === 400)
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -149,14 +151,14 @@ export class Composer {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.parse(sequence))
-    const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standaloneMouthGrid(tree) ?? this.normalizeMouthGrids(tree), this.face.slice(), true)
+    const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
     const ownership = this.separate ? this.leafOwners(tree) : null
     if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
       out.forEach((part, i) => { part.leaf = ownership.owners[i] })
     }
-    if (!this.partial) this.balance(out)
+    if (!this.partial && this.weighted) this.balance(out)
     return out
   }
 
@@ -176,7 +178,7 @@ export class Composer {
         return
       }
       if (!Array.isArray(node)) { out.push({ index: out.length, box: region, empty: node === EMPTY }); return }
-      const grid = this.mouthGrid(node)
+      const grid = this.repeatedGrid(node)
       if (grid) {
         const start = out.length
         walk(grid.tree, region, atRoot)
@@ -193,7 +195,7 @@ export class Composer {
         const inner = leaves.splice(enclosure.innerIndex, leafCount(node[2]))
         if (leafCount(node[1]) === 1) out.push({ index: out.length, box: union(leaves.map(leaf => leaf.box)), empty: false })
         else {
-          const order = this.mouthGrid(node[1])?.order ?? leaves.map((_, i) => i)
+          const order = this.repeatedGrid(node[1])?.order ?? leaves.map((_, i) => i)
           for (const i of order) out.push({ ...leaves[i], index: out.length })
         }
         for (const leaf of inner) out.push({ ...leaf, index: out.length })
@@ -201,7 +203,7 @@ export class Composer {
       }
       const op = node[0], kids = node.slice(1)
       if (kids.length === 2 && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
-        let boxes = this.predict(op, kids.map(kid => this.normalizeMouthGrids(kid)))
+        let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(kid)))
         if (!atRoot) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
         if (boxes.every(b => b[2] > b[0] && b[3] > b[1])) { kids.forEach((kid, i) => walk(kid, boxes[i], false)); return }
       }
@@ -351,7 +353,7 @@ export class Composer {
     let index = 0, split = false, valid = true
     const walk = node => {
       if (!Array.isArray(node)) return [index++]
-      const grid = this.mouthGrid(node)
+      const grid = this.repeatedGrid(node)
       if (grid) {
         split = true
         const owners = node.slice(1).flatMap(walk)
@@ -381,28 +383,42 @@ export class Composer {
     return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
-  /** A complete four-mouth character uses its designed glyph, including separated previews. */
-  standaloneMouthGrid(node) {
-    return ['⿰⿱口口⿱口口', '⿱⿰口口⿰口口'].includes(keyOf(node)) && !this.excluded('㗊') && this.glyph('㗊') ? '㗊' : null
+  /** Whole-character lookup for attested expanded pyramid-glyphs; nested editing keeps its leaves. */
+  standalonePyramid(node) {
+    const equivalents = {"⿱木⿰木木": "森", "⿱日⿰日日": "晶", "⿱金⿰金金": "鑫", "⿱水⿰水水": "淼", "⿱火⿰火火": "焱", "⿱土⿰土土": "垚", "⿱女⿰女女": "姦", "⿱子⿰子子": "孨", "⿱口⿰口口": "品", "⿱吉⿰吉吉": "嚞", "⿱隹⿰隹隹": "雥", "⿱魚⿰魚魚": "鱻", "⿱牛⿰牛牛": "犇", "⿱馬⿰馬馬": "驫", "⿱羊⿰羊羊": "羴", "⿱犬⿰犬犬": "猋", "⿱貝⿰貝貝": "贔", "⿱毛⿰毛毛": "毳", "⿱手⿰手手": "掱", "⿱耳⿰耳耳": "聶", "⿱虫⿰虫虫": "蟲", "⿱車⿰車車": "轟", "⿱力⿰力力": "劦"}
+    const char = equivalents[keyOf(node)]
+    return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
-  /** Canonicalize only the exact grid before glyph/host lookup; keep the editor tree intact. */
-  normalizeMouthGrids(node) {
+  /** A complete attested grid uses its designed glyph, including separated previews. */
+  standaloneRepeatedGrid(node) {
+    for (const [part, char] of Object.entries({ 口: '㗊', 火: '燚', 又: '叕', 水: '㵘', 屮: '茻' })) {
+      if ([`⿰⿱${part}${part}⿱${part}${part}`, `⿱⿰${part}${part}⿰${part}${part}`].includes(keyOf(node))
+        && !this.excluded(char) && this.glyph(char)) return char
+    }
+    return null
+  }
+
+  /** Canonicalize attested grids before lookup; preserve the editor's tree and leaf order. */
+  normalizeRepeatedGrids(node) {
     if (!Array.isArray(node)) return node
-    const grid = this.mouthGrid(node)
-    return grid ? grid.tree : [node[0], ...node.slice(1).map(child => this.normalizeMouthGrids(child))]
+    const grid = this.repeatedGrid(node)
+    return grid ? grid.tree : [node[0], ...node.slice(1).map(child => this.normalizeRepeatedGrids(child))]
   }
 
-  /** The four mouths have the same positions whether entered by column or by row. */
-  mouthGrid(node) {
-    if (keyOf(node) !== '⿰⿱口口⿱口口') return null
-    return { tree: ['⿱', ['⿰', '口', '口'], ['⿰', '口', '口']], order: [0, 2, 1, 3] }
+  repeatedGrid(node) {
+    for (const part of ['口', '火', '又', '水', '屮']) {
+      if (keyOf(node) === `⿰⿱${part}${part}⿱${part}${part}`)
+        return { tree: ['⿱', ['⿰', part, part], ['⿰', part, part]], order: [0, 2, 1, 3] }
+    }
+    return null
   }
 
   /** Layout and first inner leaf for two-part descriptions with a disconnected outer part. */
   splitEnclosure(node) {
     if (!Array.isArray(node) || node.length !== 3) return null
     const [op, outer, inner] = node
+    if (op === '⿴' && (outer === '林' || keyOf(outer) === '⿰木木')) return { tree: ['⿲', '木', inner, '木'], innerIndex: 1 }
     const sides = { 行: ['彳', '亍'], 弜: ['弓', '弓'], 玨: ['𤣩', '王'], 辡: ['辛', '辛'], 雔: ['隹', '隹'] }
     if (op === '⿴' && Object.hasOwn(sides, outer)) return { tree: ['⿲', sides[outer][0], inner, sides[outer][1]], innerIndex: 1 }
     if (op === '⿴' && outer === '衣') return { tree: ['⿳', '亠', inner, '𧘇'], innerIndex: 1 }
@@ -421,7 +437,7 @@ export class Composer {
 
   /** Rendering rewrites for split enclosures and compound corners (原 in 愿). */
   respelled(node) {
-    const grid = this.mouthGrid(node)
+    const grid = this.repeatedGrid(node)
     if (grid) return grid.tree
     const enclosure = this.splitEnclosure(node)
     if (enclosure) return enclosure.tree

@@ -15,6 +15,10 @@
  *
  * @typedef {object} PalettePart A part of the parts palette.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
+ * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
+ * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.
+ * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
+ * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
  * @property {string} part
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
@@ -51,7 +55,7 @@
  * @typedef {Options & { onSketch?: (leaves: SketchLeaf[]) => void }} PreviewOptions
  *
  * @typedef {object} IdsAdapter
- * @property {'sans' | 'serif'} [fontStyle] Style for bundled component outlines.
+ * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.
