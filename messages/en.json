@@ -156,6 +156,8 @@
   "parts.script.unavailable": "Additional script parts could not be loaded.",
   "parts.script.label": "Script",
   "parts.script.choose": "Other scripts",
+  "parts.script.symbols": "Symbols",
+  "parts.script.mixed": "Mixed descriptions",
   "parts.script.pages": "Pages",
   "parts.script.previous": "Previous",
   "parts.script.next": "Next",

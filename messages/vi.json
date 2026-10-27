@@ -152,6 +152,8 @@
   "parts.script.unavailable": "Không thể tải thêm bộ phận chữ viết.",
   "parts.script.label": "Chữ viết",
   "parts.script.choose": "Chữ viết khác",
+  "parts.script.symbols": "Ký hiệu",
+  "parts.script.mixed": "Bộ phận hỗn hợp",
   "parts.script.pages": "Trang",
   "parts.script.previous": "Trước",
   "parts.script.next": "Sau",

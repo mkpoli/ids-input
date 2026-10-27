@@ -153,6 +153,8 @@
   "parts.script.unavailable": "追加の文字部品を読み込めませんでした。",
   "parts.script.label": "文字",
   "parts.script.choose": "その他の文字",
+  "parts.script.symbols": "記号",
+  "parts.script.mixed": "混在部品",
   "parts.script.pages": "ページ",
   "parts.script.previous": "前へ",
   "parts.script.next": "次へ",

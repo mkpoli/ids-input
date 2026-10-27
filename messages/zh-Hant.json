@@ -153,6 +153,8 @@
   "parts.script.unavailable": "無法載入其他文字部件。",
   "parts.script.label": "文字",
   "parts.script.choose": "其他文字",
+  "parts.script.symbols": "符號",
+  "parts.script.mixed": "混合部件",
   "parts.script.pages": "頁碼",
   "parts.script.previous": "上一頁",
   "parts.script.next": "下一頁",
