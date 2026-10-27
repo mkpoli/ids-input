@@ -18,6 +18,8 @@ describe('a query', () => {
     expect(terms[0].tree).toEqual({ op: '⿰', parts: [null, '木'] })
     expect(terms[2].tree).toEqual({ op: '⿰', parts: ['氵', null] })
     expect(parseQuery('  ').problem).toBe('empty')
+    // A stroke chain that names a character reads as that character.
+    expect(parseQuery('⿰#(H)木').terms[0].tree).toEqual({ op: '⿰', parts: ['一', '木'] })
   })
   it('reads a zi.tools entry as its description', () => {
     expect(parseQuery('{士}⿱十一').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿱', parts: ['十', '一'] } })])

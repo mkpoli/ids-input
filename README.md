@@ -178,8 +178,12 @@ and carries no variant data. A modifier after an operator (`⿻[1:]丨日`, `⿴
 `㇯[2]王一`) stays with that operator and is written back with it: overlays, the enclosures and
 subtraction take one, other operators keep a bracket as a component, and its matrix or index
 narrows where a part sits or which occurrence an operator acts on. The layout draws the
-description as it does without one, so previewing such a description is approximate. Stroke
-chains (`#(H)`) are not read yet.
+description as it does without one, so previewing such a description is approximate.
+
+A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
+`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
+stay in the text, to be read as their parts or rejected as usual.
+
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
@@ -658,8 +662,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   its page script (`action_abbr_map`) on 2026-10-24, and ideas for typing sequences.
 - NightFurySL2001 (夜煞之乐), [（白式）IDS 延展语法导论](https://nightfurysl2001.github.io/bai-ids/),
   MIT, updated 2026-09-30: the unique separator and glyph-variant definition `parse` reads, the
-  overlap and index modifiers a description keeps with its operators, and the stroke chains it
-  does not read yet.
+  stroke chains that name a character, and the overlap and index modifiers a description keeps with
+  its operators.
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
