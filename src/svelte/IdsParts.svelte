@@ -59,9 +59,15 @@
     .map(cls => ({ cls, parts: list.filter(part => (part.first ?? null) === cls) }))
     .filter(group => group.parts.length)
 
+  const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
+  let sealGroup = $state(/** @type {(typeof SEAL_GROUPS)[number]} */ ('basic'))
+  const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
+  const sealGroups = $derived(SEAL_GROUPS.map(name => ({ name, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === name) })).filter(group => group.parts.length))
+  const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
   const query = $derived(filter.trim())
   const filtered = $derived.by(() => {
     if (!query || !parts) return null
+    if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
     if (/^\d+$/.test(query)) return parts.filter(part => part.strokes === Number(query))
     const chars = new Set([...query])
     return parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query)))
@@ -71,7 +77,7 @@
   const shown = $derived.by(() => {
     if (!parts) return []
     if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
-    if (tab === 'seal') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'seal') }]
+    if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(difficult.filter(part => (part.strokes ?? null) === shownCount))
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
@@ -88,6 +94,8 @@
   const title = part => [
     part.part,
     ...(part.aliases ?? []),
+    ...(part.modern ?? []),
+    part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
     part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
     part.uses ? t('parts.uses', { count: part.uses }) : null,
   ].filter(Boolean).join(' · ')
@@ -118,6 +126,7 @@
           <span class="compound-mark" aria-hidden="true">IDS</span>
         {:else}
           {part.part}
+          {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
     {/each}
@@ -134,8 +143,19 @@
       {/each}
     </div>
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
-      placeholder={t('parts.filter')} aria-label={t('parts.filter')} />
+      placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
   </div>
+  {#if tab === 'seal' && !query && sealGroups.length}
+    <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
+      {#each sealGroups as group (group.name)}
+        <button type="button" class:active={selectedSealGroup?.name === group.name} aria-pressed={selectedSealGroup?.name === group.name}
+          onclick={() => sealGroup = group.name}>{t(`parts.seal.${group.name}`)} <span>{group.parts.length}</span></button>
+      {/each}
+    </div>
+  {/if}
+  {#if tab === 'seal' && (filtered ?? selectedSealGroup?.parts ?? []).some(part => part.sealBasis === 'cjk-ids')}
+    <p class="parts-note">{t('parts.seal.estimate')}</p>
+  {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
     {#if failed}
       <p class="parts-note" role="status">{t('parts.failed')}</p>
@@ -195,5 +215,11 @@
   .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
     font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .seal-groups{display:flex;flex-wrap:wrap;gap:4px}
+  .seal-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
+  .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
+  .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
+  .part{position:relative}
+  .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted)}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>

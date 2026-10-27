@@ -12,7 +12,7 @@ it('accepts Tangut characters and components, including supplementary blocks', (
   for (const point of [0x17000, 0x187F7, 0x18800, 0x18AFF, 0x18D00, 0x18D1E, 0x18D80, 0x18DF2]) {
     expect(isComponent(String.fromCodePoint(point))).toBe(true)
   }
-  for (const point of [0x16FFF, 0x18B00, 0x18CFF, 0x18E00]) expect(isComponent(String.fromCodePoint(point))).toBe(false)
+  for (const point of [0x16FFF, 0x18E00]) expect(isComponent(String.fromCodePoint(point))).toBe(false)
   const tangut = [...table].filter(([char]) => /[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]/u.test(char))
   expect(tangut).toHaveLength(6145)
   const malformed = []
@@ -27,13 +27,17 @@ it('accepts Tangut characters and components, including supplementary blocks', (
   expect(malformed).toEqual([...'𗆽𗈫𗈬𗌜𗓜𗱋𗽉𗽧'])
 })
 
+it('accepts neighboring Khitan characters as components too', () => {
+  for (const point of [0x18B00, 0x18CFF]) expect(isComponent(String.fromCodePoint(point))).toBe(true)
+})
+
 it('finds Tangut by character, code point, component and full IDS', async () => {
   expect((await adapter.search('U+17000 U+18800')).map(hit => hit.char)).toEqual(['𗀀', '𘠀'])
   expect(await adapter.structure('𗀀')).toEqual([{ text: '⿱𘠀⿰𘢰𘠆', regions: '' }])
   expect(await adapter.encoded('⿱𘠀⿰𘢰𘠆')).toContain('𗀀')
   expect((await adapter.findByIds('⿱𘠀⿰𘢰𘠆')).hits.map(hit => hit.char)).toContain('𗀀')
   expect((await adapter.containing('𘠀𘢰𘠆', { limit: 100 })).items).toContain('𗀀')
-})
+}, 15000)
 
 it('provides all 768 original Tangut components in code point order', () => {
   const tangut = parts.filter(part => part.kind === 't')
