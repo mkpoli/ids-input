@@ -370,6 +370,40 @@ it('keeps the compact 朱 spacing clear of native whole-glyph enclosures', async
   }
 })
 
+it('keeps the compressed 儿 hook visible without weight jumps between sizes', async () => {
+  const { componentPosition, componentPositionBox } = await import('../src/composer/component-forms.js')
+  const { fill, groupRings } = await import('../src/composer/geometry.js')
+  for (const style of ['sans', 'serif']) {
+    const source = componentPositionBox('儿:under-bar', style), height = 120
+    const target = [250, 0, 920, height], size = 1024
+    const part = componentPosition('儿:under-bar', target, style, height)
+    const native = componentPosition('儿:under-bar', target, style)
+    for (let i = 0; i < native.part.contours.length; i++) {
+      const original = native.part.contours[i].light, weighted = part.part.contours[i].light
+      for (let j = 0; j < original.length; j += 2) {
+        if (original[j] < 85) expect(weighted[j + 1]).toBe(original[j + 1])
+      }
+    }
+    const mask = fill(groupRings([part]), size, [0, 0, 1000, height])
+    const nativeMask = fill(groupRings([native]), size, [0, 0, 1000, height])
+    const x = 250 + (760 - source[0]) / (source[2] - source[0]) * 670
+    const column = Math.floor(x / 1000 * size)
+    let ink = 0, nativeInk = 0
+    for (let row = 0; row < size; row++) {
+      ink += mask[row * size + column]
+      nativeInk += nativeMask[row * size + column]
+    }
+    expect(ink * height / size).toBeGreaterThan(style === 'sans' ? 27 : 18)
+    expect(ink).toBeGreaterThan(nativeInk * 1.5)
+    const before = componentPosition('儿:under-bar', [250, 0, 920, 180], style, 179.99)
+    const after = componentPosition('儿:under-bar', [250, 0, 920, 180], style, 180.01)
+    for (let i = 0; i < before.part.contours.length; i++) {
+      const a = before.part.contours[i].light, b = after.part.contours[i].light
+      expect(Math.max(...a.map((value, j) => Math.abs(value - b[j])))).toBeLessThan(1)
+    }
+  }
+})
+
 it('renders requested native components offline, including the three exact subtraction shapes', async () => {
   const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
   for (const fontStyle of ['sans','serif']) {
