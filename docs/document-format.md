@@ -357,6 +357,11 @@ cannot masquerade as a valid document tree. A share link carrying edits includes
 the complete document; use a file when the document exceeds the host's URL or
 QR-code budget. Multiple documents per file are outside version 1.
 
+A tab or draft keeps an `ids-input/session` envelope beside its document: the
+current document, the chosen layer and every ID the session has issued. Undo
+history stays in memory. The envelope is host storage, not a file format; the
+document inside it is the same `.ids.json` document.
+
 ## Implementation boundary and checks
 
 The current editor uses positional core trees, canvas-space drawing pieces,

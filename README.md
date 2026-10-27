@@ -252,6 +252,10 @@ whole documents. `session.document` returns a detached copy; use session edits t
 `listen` tells a host when to redraw; a throwing listener is reported through
 `onListenerError` (or `reportError`) and does not undo the committed edit.
 
+`sessionRecord(session)` and `writeSession(session)` keep the document, chosen layer and every issued
+ID for a tab or draft; `readSession(text)` restores them. The record omits undo history. The document
+itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
+
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
 builds it in one call; the preview must use `separate: true`. When the composer omits leaf ownership,

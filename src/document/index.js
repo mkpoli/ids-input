@@ -26,3 +26,4 @@ export {
 export { renderLayers, renderScopes } from './render.js'
 export { scopesSvg } from './svg.js'
 export { createDocumentSession } from './session.js'
+export { SESSION_FORMAT, SESSION_VERSION, SessionRecordError, readSession, sessionFromRecord, sessionRecord, writeSession } from './store.js'
