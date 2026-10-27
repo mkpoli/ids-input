@@ -126,6 +126,7 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editRow(row); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       const next = neighbor(editor.tree, row.path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
@@ -192,7 +193,14 @@
     if (row && !editor.disabled) { event.preventDefault(); event.stopPropagation(); editRow(row) }
   }
 }} />
-<div class="ids-treelist" bind:this={listEl}>
+<div class="ids-treelist" role="presentation" bind:this={listEl} onpointerdown={event => {
+  const target = /** @type {HTMLElement} */ (event.target)
+  if (!editor.disabled && (target === event.currentTarget || target.matches('ul[role="tree"]'))) {
+    const active = document.activeElement
+    if (editing && active instanceof HTMLElement && listEl?.contains(active)) active.blur()
+    editor.choose(null)
+  }
+}}>
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->

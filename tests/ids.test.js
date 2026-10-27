@@ -159,6 +159,13 @@ describe('an operator put on a draft', () => {
     expect(write(next)).toBe('⿱⿰亻木⬚')
     expect(chosen).toEqual([1])
   })
+  it('puts the whole tree inside a new empty enclosure', () => {
+    for (const op of ['⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿼', '⿽']) {
+      const { tree: next, chosen } = applyOperator(tree('⿰亻⬚'), null, op)
+      expect(write(next)).toBe(`${op}⬚⿰亻⬚`)
+      expect(chosen).toEqual([0])
+    }
+  })
 })
 
 describe('a part placed', () => {
