@@ -70,7 +70,7 @@ try {
   await page.waitForFunction(() => document.querySelector('.ids-field input').value === '⿰木⿰冫⿱丿丶')
   await page.locator('.ids-preview[data-step="composed"]').waitFor()
   await page.locator('.parts-filter').fill('4')
-  assert(await page.locator('.part.compound').count() === 3, 'stroke-count filter')
+  assert(await page.locator('.part.compound').count() === 4, 'stroke-count filter')
   await page.locator('.parts-filter').fill('')
   await page.getByRole('tab', { name: 'Recent', exact: true }).click()
   assert(await page.locator('.part.compound').count() === 1, 'compound in Recent')

@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,693 Han entries (688 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,699 Han entries (694 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -250,10 +250,10 @@ variant glyphs are not merged. The report records malformed sequences under
 
 Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
-Compound IDS use a lower cutoff of 35 distinct characters below the root. The
-current corpus supplies 20 frequent trees: ten remain as compound shortcuts and
-ten normalize to eight encoded characters. The manual four-dot entry brings
-the compound total to eleven. Exact regional spellings remain searchable aliases
+Compound IDS use a lower cutoff of 30 distinct characters below the root. The
+current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
+and twelve normalize to ten encoded characters. The manual four-dot entry
+brings the compound total to seventeen. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -305,6 +305,19 @@ The specialized `⿴𦥑同` outlines preserve 興's native upper component in b
 fonts, omitting 一八 below it. The outer 𦥑 is cropped at y=222 (Sans) or
 y=197 (Serif), with 同's contours unchanged and two editable operands retained.
 The Serif bottom stroke's rising terminal is removed before cropping.
+
+The 30–34 usage band adds `⿰丿丨` (33), `⿱左⺝` (33), `⿸耳又` (33),
+`⿱㇒⿻日丿` (32), `⿰二二` (30), and `⿸⿻口丿乚` (30).
+`⿱⿱㇒⿻日丿十` and `⿻九丶` normalize to existing 卑 and 丸 entries,
+with union counts of 122 and 125.
+The upper-卑 shortcut uses Noto's connected-stroke U+FA35 glyph with 十 removed:
+Sans retains the four counters and reconstructs the outer contour above the
+bottom 十; Serif omits its separate 十 contour. It floats at native em size.
+`⿰二二` places two native 二 columns side by side, contracting horizontal
+length only and translating the bars vertically to retain their stroke thickness.
+Both forms have Sans/Serif outlines. The four-bar form keeps two editable columns;
+the atomic upper-卑 drawing falls back to individual operands in adjustment mode
+when the configured export supplies them.
 
 ## Small Seal
 
