@@ -154,3 +154,13 @@ describe('a preview turn', () => {
     expect(seen).toEqual([])
   })
 })
+
+
+it('places emoji sequences in their slots while retaining real empty slots', async () => {
+  const draw = preview()
+  const result = draw('⿲👩🏽‍💻⬚木')
+  const [worker] = FakeWorker.made
+  expect(worker.posted[0].sequence).toBe('⿲⬚⬚木')
+  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 300, 1000] }, { index: 1, box: [300, 0, 300, 1000] }] } })
+  expect(await result).toMatchObject({ emoji: [{ text: '👩🏽‍💻', box: [0, 0, 300, 1000] }], slots: [{ index: 1, box: [300, 0, 300, 1000] }] })
+})

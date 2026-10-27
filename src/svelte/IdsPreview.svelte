@@ -290,6 +290,10 @@
               {:else}
                 <path class="ink" d={drawn.d} mask={drawn.cut ? `url(#${uid}-${name})` : undefined} />
               {/if}
+              {#each drawn.emoji ?? [] as item}
+                {@const [x, y, width, height] = item.box}
+                <text x={x + width / 2} y={y + height / 2} text-anchor="middle" dominant-baseline="central" font-size={Math.min(width, height) * 0.85} font-family="system-ui, sans-serif">{item.text}</text>
+              {/each}
               {#each drawn.slots ?? [] as s (s.index)}
                 {@render slot(s.box, drawn.stroke?.[0] ?? STROKE, inChosen(slotLeaf(s.index)), false)}
               {/each}

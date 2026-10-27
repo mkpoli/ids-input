@@ -6,7 +6,8 @@
 // shared alike under CC BY-SA 3.0.
 import { createDrawer } from './client.js'
 import { LIMITS, tooLarge } from './loader.js'
-import { parse } from '../core/ids.js'
+import { isNode, parse, write } from '../core/ids.js'
+import { emojiPrefix } from '../core/emoji.js'
 import { onlyBundled } from './local.js'
 
 export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
@@ -24,6 +25,23 @@ export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgB
 export class TooLargeError extends Error { name = 'TooLargeError' }
 /** The export could not be read at all (unreachable, refused by CORS, not there, or `base` is no URL): nothing was tried. */
 export class UnavailableError extends Error { name = 'UnavailableError' }
+
+/** Replace emoji sequences with empty slots while the composer calculates their positions. @param {string} sequence */
+function emojiSlots(sequence) {
+  const parsed = parse(sequence, { open: true })
+  if (parsed.problem || !parsed.tree) return { sequence, slots: [] }
+  /** @type {(string | null)[]} */
+  const slots = []
+  /** @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
+  function convert(part) {
+    if (isNode(part)) return { ...part, parts: part.parts.map(convert) }
+    if (part === null) { slots.push(null); return null }
+    if ([...part].length > 1 && emojiPrefix(part) === part) { slots.push(part); return null }
+    return part
+  }
+  const result = convert(parsed.tree)
+  return { sequence: write(result), slots }
+}
 
 /** How many drawings a preview keeps for a repeated sequence. */
 const CACHE = 32
@@ -79,16 +97,28 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
       return cached.drawn
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
-    const asked = open(sequence), mine = ++asking
+    const prepared = emojiSlots(sequence)
+    const asked = open(prepared.sequence), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
     try {
       let sketch = null
-      const answer = await asked.draw(sequence, leaves => {
+      const answer = await asked.draw(prepared.sequence, leaves => {
         sketch = leaves
         if (!signal?.aborted) onSketch?.(leaves)
       }, { separate, fontStyle })
-      if (answer.status === 'composed') { remember(sequence, answer.drawn, sketch); return answer.drawn }
+      if (answer.status === 'composed') {
+        const drawn = answer.drawn
+        const emoji = (drawn.slots ?? []).flatMap(slot => {
+          const text = prepared.slots[slot.index]
+          return text ? [{ text, box: slot.box }] : []
+        })
+        if (emoji.length) {
+          drawn.emoji = emoji
+          drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index])
+        }
+        remember(sequence, drawn, sketch); return drawn
+      }
       if (answer.status === 'cancelled') throw new DOMException('The drawing was replaced.', 'AbortError')
       throw answer.unavailable ? new UnavailableError(answer.error) : new Error(answer.error)
     } finally { signal?.removeEventListener('abort', stop) }

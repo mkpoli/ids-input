@@ -2,6 +2,7 @@
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
 import { isComponent, isDescription, leaves, parse } from './ids.js'
+import { emojiPrefix } from './emoji.js'
 import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'
 
@@ -31,8 +32,13 @@ export function tokens(text) {
   const out = []
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
-  const pattern = isDescription(text) ? /./gsu : /\{\d+\}|./gsu
-  for (const [token] of (text ?? '').matchAll(pattern)) {
+  const written = text ?? ''
+  const complete = isDescription(text)
+  let at = 0
+  while (at < written.length) {
+    const rest = written.slice(at)
+    const token = emojiPrefix(rest) || (!complete ? /^\{\d+\}/.exec(rest)?.[0] : '') || [...rest][0]
+    at += token.length
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
     else out.push(token)
   }

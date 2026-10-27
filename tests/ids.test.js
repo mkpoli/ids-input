@@ -204,3 +204,15 @@ describe('the operator groups', () => {
     for (const group of OPERATOR_GROUPS) for (const op of group.ops) expect(arity(op)).toBe(group.arity)
   })
 })
+
+
+it('treats emoji sequences as single components', () => {
+  for (const emoji of ['👩🏽‍💻', '👍🏽', '🇯🇵', '1️⃣']) {
+    const sequence = `⿰${emoji}木`
+    const result = parse(sequence)
+    expect(result.problem).toBeUndefined()
+    expect(result.tree.parts).toEqual([emoji, '木'])
+    expect(write(result.tree)).toBe(sequence)
+    expect(descriptionEnd([...sequence])).toBe([...sequence].length)
+  }
+})

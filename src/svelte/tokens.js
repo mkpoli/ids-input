@@ -1,5 +1,6 @@
 // @ts-check
 import { arity, isSelector, parse } from '../core/ids.js'
+import { emojiPrefix } from '../core/emoji.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string}} Token */
 /** UTF-16 offsets match the native input, including supplementary characters and selectors.
@@ -12,7 +13,7 @@ export function tokens(text) {
   /** @param {number[]} path */
   function read(path) {
     const start = at
-    const char = String.fromCodePoint(text.codePointAt(at) ?? 0)
+    const char = emojiPrefix(text.slice(at)) || String.fromCodePoint(text.codePointAt(at) ?? 0)
     if (at < text.length) at += char.length
     const n = arity(char)
     if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length

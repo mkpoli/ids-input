@@ -1,5 +1,6 @@
 // @ts-check
 import { unicodeProperty } from './unicode.js'
+import { emojiPrefix } from './emoji.js'
 export { UNICODE_VERSION } from './unicode.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
@@ -89,17 +90,20 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
 export function parse(text, { open = false } = {}) {
   const chars = [...(text ?? '')]
   if (open && !chars.length) return { tree: null }
-  if (!chars.length || chars.length > LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
+  if (!chars.length || chars.length > LONGEST || (!open && !isSequence(text))) return { problem: 'character' }
   let at = 0
   /** @returns {Part} */
   const read = () => {
-    const char = chars[at++]
+    const emoji = emojiPrefix(chars.slice(at).join(''))
+    const char = emoji || chars[at]
+    at += emoji ? [...emoji].length : 1
     if (char === undefined) { if (open) return null; throw 'missing' }
     const n = arity(char)
     if (!n) {
       if (open && EMPTY_MARKS.includes(char)) return null
+      if (!emoji && /[\p{Cc}\p{Cf}\p{Z}]/u.test(char)) throw 'character'
       if (!isComponent(char)) throw 'component'
-      return isSelector(chars[at]) ? char + chars[at++] : char
+      return !emoji && isSelector(chars[at]) ? char + chars[at++] : char
     }
     return { op: char, parts: Array.from({ length: n }, read) }
   }
@@ -130,7 +134,7 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const n = arity(char)
-  if (!n) return isComponent(char) ? (isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1
+  if (!n) { const emoji = emojiPrefix(chars.slice(at).join('')); return isComponent(char) ? (emoji ? at + [...emoji].length : isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1 }
   let end = at + 1
   for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
   return end
