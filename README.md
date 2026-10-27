@@ -417,8 +417,9 @@ Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude:
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
 
-The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
-`?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
+The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+`VITE_COMPOSER_BASE` points every face at another copy of one export.
 
 ## Keyboard
 
@@ -481,8 +482,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   rows, 831 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB) and
-  Klee One (2.8 MB), SIL Open Font License 1.1.
+- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
+  Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
@@ -523,8 +524,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   1.1.
 - Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
   <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
-- Klee One Regular, Copyright 2020 The Klee Project Authors, SIL OFL 1.1,
-  <https://github.com/google/fonts/tree/main/ofl/kleeone>: the Klee One glyph face.
+- Kureedo v0.4.3, Copyright The Klee Project Authors, SIL OFL 1.1,
+  <https://github.com/mkpoli/kureedo>: the Kaisho glyph face.
+- GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Kaisho fallback.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
   export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
