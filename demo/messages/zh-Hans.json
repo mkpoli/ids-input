@@ -117,6 +117,8 @@
   "app.tabs.duplicate": "复制标签页",
   "app.tabs.edited": "已编辑",
   "app.tabs.menu": "标签页操作",
+  "app.tabs.blank": "空白标签页",
+  "app.tabs.templates": "模板",
   "app.tabs.new": "新建标签页",
   "app.tabs.untitled": "无标题",
   "app.theme.dark": "深色",

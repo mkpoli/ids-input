@@ -117,6 +117,8 @@
   "app.tabs.duplicate": "탭 복제",
   "app.tabs.edited": "편집됨",
   "app.tabs.menu": "탭 작업",
+  "app.tabs.blank": "빈 탭",
+  "app.tabs.templates": "템플릿",
   "app.tabs.new": "새 탭",
   "app.tabs.untitled": "제목 없음",
   "app.theme.dark": "다크",

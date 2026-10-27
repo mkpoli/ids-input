@@ -117,6 +117,8 @@
   "app.tabs.duplicate": "複製分頁",
   "app.tabs.edited": "已編輯",
   "app.tabs.menu": "分頁操作",
+  "app.tabs.blank": "空白分頁",
+  "app.tabs.templates": "範本",
   "app.tabs.new": "新增分頁",
   "app.tabs.untitled": "無標題",
   "app.theme.dark": "深色",

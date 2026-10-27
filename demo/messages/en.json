@@ -118,6 +118,8 @@
   "app.tabs.duplicate": "Duplicate tab",
   "app.tabs.edited": "Edited",
   "app.tabs.menu": "Tab actions",
+  "app.tabs.blank": "Blank tab",
+  "app.tabs.templates": "Templates",
   "app.tabs.new": "New tab",
   "app.tabs.untitled": "Untitled",
   "app.theme.dark": "Dark",

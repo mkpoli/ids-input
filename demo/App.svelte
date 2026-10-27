@@ -5,6 +5,8 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
+  import { STRUCTURE_TEMPLATES } from '../src/core/templates.js'
+  import { templateDiagram } from '../src/svelte/template-diagram.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
@@ -510,6 +512,8 @@
     { heading: t(`app.examples.${group.key}`) },
     ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
   ]))
+  let newTabOpen = $state(false)
+  let newTabView = $state('templates')
   const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
@@ -599,7 +603,6 @@
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
       <div class="font-switch" role="group" aria-label={t('app.font')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
@@ -615,7 +618,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => newTabOpen = true} onduplicate={duplicateTab} />
     </div>
   </div>
 
@@ -741,6 +744,31 @@
     ]} />
   </div>
 </Dialog>
+<Dialog bind:open={newTabOpen} title={t('app.tabs.new')} closeLabel={t('app.close')} wide>
+  <div class="new-tab-choices">
+    <button type="button" class="tool" onclick={() => { newTabOpen = false; addTab() }}><Icon name="plus" />{t('app.tabs.blank')}</button>
+    <button type="button" class="tool" aria-pressed={newTabView === 'templates'} onclick={() => newTabView = 'templates'}>{t('app.tabs.templates')}</button>
+    <button type="button" class="tool" aria-pressed={newTabView === 'examples'} onclick={() => newTabView = 'examples'}>{t('app.examples')}</button>
+  </div>
+  {#if newTabView === 'templates'}
+    {#each [2, 3, 4] as slots}
+      <p class="template-heading">{t(`ids.group.${slots}`)}</p>
+      <div class="template-grid">
+        {#each STRUCTURE_TEMPLATES.filter(item => item.slots === slots) as item (item.id)}
+          <button type="button" title={item.sequence} aria-label={t('ids.templates.insert', { sequence: item.sequence })} onclick={() => { newTabOpen = false; addTab(item.sequence) }}>
+            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+              {#each templateDiagram(item.sequence) as shape}
+                {#if shape.kind === 'slot'}<rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />{:else}<path d={shape.d} />{/if}
+              {/each}
+            </svg>
+          </button>
+        {/each}
+      </div>
+    {/each}
+  {:else}
+    <MenuList label={t('app.examples')} items={exampleItems} view={exampleView} onpick={() => newTabOpen = false} />
+  {/if}
+</Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
@@ -789,7 +817,7 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
+  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:visible;background:var(--surface)}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
@@ -846,6 +874,15 @@
     .foot-short{display:inline}
   }
 
+  .new-tab-choices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+  .new-tab-choices button[aria-pressed="true"]{background:var(--hover);color:var(--ink)}
+  .template-heading{margin:14px 0 6px;color:var(--muted);font-size:12px}
+  .template-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:5px}
+  .template-grid button{display:grid;place-items:center;height:48px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .template-grid button:hover{background:var(--hover)}
+  .template-grid button:focus-visible{outline:2px solid var(--focus)}
+  .template-grid path{fill:none;stroke:currentColor;stroke-width:1.5}
+  .template-grid rect{fill:color-mix(in srgb,currentColor 10%,transparent);stroke:currentColor;stroke-width:1;stroke-dasharray:1.5 1.2}
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}
   .split{display:none}
