@@ -6,6 +6,9 @@ import { bundledSource } from '../src/composer/bundled.js'
 import { onlyBundled } from '../src/composer/local.js'
 import coverage from '../data/bundled-coverage.json' with { type: 'json' }
 import host from '../data/host-glyph-coverage.json' with { type: 'json' }
+import { hasTangut } from '../src/composer/tangut.js'
+import { hasBopomofo } from '../src/composer/bopomofo.js'
+import { hasSmallSeal } from '../src/composer/small-seal.js'
 
 it('indexes the exact scalar outlines in each dedicated bundle', () => {
   for (const name of ['tangut', 'bopomofo', 'small-seal']) {
@@ -55,4 +58,13 @@ it('pins the host outline inventory to the default composer export', () => {
   const base = composer.match(/export const COMPOSER_BASE = '([^']+)'/)?.[1]
   expect(host.base).toBe(base)
   expect(host.ranges.reduce((total, [first, last]) => total + last - first + 1, 0)).toBe(host.count)
+})
+
+it('keeps every indexed bundle glyph inside its bundle matcher', () => {
+  const matchers = { tangut: hasTangut, bopomofo: hasBopomofo, 'small-seal': hasSmallSeal }
+  for (const [name, ranges] of Object.entries(coverage)) {
+    for (const [first, last] of ranges) for (let cp = first; cp <= last; cp++) {
+      expect(matchers[name](String.fromCodePoint(cp))).toBe(true)
+    }
+  }
 })
