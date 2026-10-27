@@ -1,4 +1,6 @@
 {
+  "app.about.acknowledgments": "致谢",
+  "app.about.feedbackThanks": "感谢各位提供意见和建议。",
   "app.about.licenses": "许可",
   "app.about.codeLicense": "代码：MIT",
   "app.about.dataLicense": "数据采用 Creative Commons 许可或遵循原始来源的使用条款，详情见来源署名及数据许可说明。",

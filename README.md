@@ -682,8 +682,15 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 
 ## Acknowledgments
 
-Thanks to Fn ([@integuraru_P](https://x.com/integuraru_P)) for reporting that 〇 was rejected
-as a kanji component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
+Thanks to:
+
+- [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
+  rendering and decompositions, and suggestions for component shortcuts and small-seal decomposition.
+- [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
+  component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
+- [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
+- [馬のゆい (@umanoyui)](https://x.com/umanoyui) for asking about kana support, prompting a review
+  of support for components from other writing systems.
 
 ## Licenses
 
