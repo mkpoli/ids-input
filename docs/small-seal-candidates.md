@@ -32,11 +32,24 @@ candidates; repeated occurrences of one modern component share an assignment.
 Each mapping records its modern component, available alternatives, selected seal
 component, and whether it used a radical-form equivalence.
 
-Unmapped components become `⬚` slots. Self-referencing substitutions are excluded.
+When neither mapping exists, the generator recursively expands the component's
+modern IDS. For example, `𤇾 → ⿱炏冖 → ⿱⿰火火冖` provides smaller components
+with seal mappings. Directly mapped components stay whole. Each candidate's
+`expansions` records the intermediate component, original IDS, and region tags.
+One decomposition choice is reused wherever that component occurs, including
+occurrences introduced by later expansions.
+
+Cycles stop at an unresolved component. Each root description allows at most eight
+component expansions on a path and 512 expansion attempts, with a bounded pending
+queue. Expanded IDS must fit the parser's 64-code-point limit. `truncated` also
+marks expansion limits; candidates retain unresolved slots when a limit prevents
+completion. The generator version is `cjk-to-seal/2`.
+
+Remaining unmapped components become `⬚` slots. Self-referencing substitutions are excluded.
 Generation preserves modern source-region tags and descriptions, including
 unsupported descriptions for inspection. Candidate enumeration is capped at 64 per
-seal form and alternates between modern descriptions before taking further mapping
-combinations. `truncated` identifies a capped result; component option lists retain
+seal form and alternates between root modern descriptions before taking further
+nested alternatives or mapping combinations. `truncated` identifies a capped result; component option lists retain
 the additional choices.
 
 Inference preserves the modern structure. Historical changes can make that structure
