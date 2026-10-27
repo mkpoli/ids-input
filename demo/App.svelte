@@ -93,24 +93,55 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
+  /** The default export's preview: a prepared drawing for the composed view, else the composer. @param {boolean} split */
+  function sansPreviewAt(split) {
+    const composed = previewAt(COMPOSER_BASE, split, 'sans')
+    return /** @type {ReturnType<typeof composerPreview>} */ (Object.assign(async (sequence, options) => {
+      options?.signal?.throwIfAborted()
+      if (!split && exportUrl(COMPOSER_BASE) === preparedBase) {
+        const drawn = prepared.get(sequence)
+        if (drawn) return drawn
+      }
+      return composed(sequence, options)
+    }, {
+      warm: (/** @type {string | undefined} */ sequence) => {
+        if (split || sequence === undefined || !prepared.has(sequence)) composed.warm()
+      },
+    }))
+  }
+  /** A drawing's own error, not one that ends the attempt. @param {unknown} error */
+  const stopping = error => error instanceof Error && ['AbortError', 'TooLargeError'].includes(error.name)
+  /**
+   * A face's preview: its own export, then the encoded character's glyph in that face, then the
+   * default export. A sequence the face cannot compose still draws, and an example that names a
+   * character draws that character when the face has it. @param {string} at @param {boolean} split
+   * @param {'sans' | 'serif' | 'kaisho'} style
+   */
   function previewFor(at, split, style) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    // The compact Serif export covers the BMP; a sequence outside it draws from the sans export.
-    const outsideSerif = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff)
-    const usableAt = outsideSerif ? COMPOSER_BASE : at
-    const usableStyle = outsideSerif ? 'sans' : style
-    const composed = previewAt(usableAt, split, usableStyle)
-    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    const composed = previewAt(at, split, style)
+    const sans = sansPreviewAt(split)
+    const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
-      return prepared.get(sequence) ?? composed(sequence, options)
+      const draw = defaultFace ? sans : composed
+      try { return await draw(sequence, options) } catch (error) {
+        if (options?.signal?.aborted || stopping(error)) throw error
+        // A description of an encoded character draws that character when the face has its glyph.
+        const found = split ? [] : await babel.encoded(sequence).catch(() => [])
+        for (const char of found) {
+          if ([...char].length !== 1 || char === sequence) continue
+          try { return await composed(char) } catch { /* the default export draws the sequence */ }
+        }
+        if (defaultFace) throw error
+        return sans(sequence, options)
+      }
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
-        if (sequence === undefined || !prepared.has(sequence)) composed.warm()
+        if (split || sequence === undefined || !defaultFace || !prepared.has(sequence)) composed.warm()
       },
     })
     previewsWithExamples.set(key, preview)
@@ -119,13 +150,25 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
+  /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  const drawerAt = (at, style) => {
+    const composed = composerPreview({ base: at, fontStyle: style })
+    if (exportUrl(at) === preparedBase && style === 'sans') return composed
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans' })
+    return async (/** @type {string} */ sequence) => {
+      try { return await composed(sequence) } catch (error) {
+        if (stopping(error)) throw error
+        return await sans(sequence)
+      }
+    }
+  }
   /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
-      const composed = composerPreview({ base: at, fontStyle: style })
+      const draw = drawerAt(at, style)
       iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? composed(sequence)))
+        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -137,7 +180,7 @@
   /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   function treeDrawer(at, style) {
     const key = `${at}\0${style}`
-    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(drawerAt(at, style)))
     return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
   }
   const treeDraw = $derived.by(() => {
