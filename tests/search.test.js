@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createSearch, parseQuery, readForms, tokens } from '../src/core/index.js'
+import { createSearch, parseQuery, readForms, similarStructures, tokens } from '../src/core/index.js'
 
 // A few descriptions, as BabelStone writes them (regions dropped).
 const table = new Map(Object.entries({
@@ -31,6 +31,23 @@ describe('a query', () => {
     // A draft with a modifier is tokenised the same way, so its unfinished part stays a wildcard.
     expect(tokens('⿴[1]囗')).toEqual(['⿴', '囗'])
     expect(parseQuery('⿴[1]囗').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿴', parts: ['囗', null] } })])
+  })
+})
+
+describe('similar structures', () => {
+  it('replaces one top-level operand and keeps the others', () => {
+    expect(similarStructures('⿱木口')).toEqual(['⿱？口', '⿱木？'])
+    expect(similarStructures('⿰木木')).toEqual(['⿰？木', '⿰木？'])
+    expect(similarStructures('⿲木口木')).toEqual(['⿲？口木', '⿲木？木', '⿲木口？'])
+    expect(similarStructures('木')).toEqual([])
+    expect(similarStructures('')).toEqual([])
+    expect(similarStructures('⿱木')).toEqual([])
+  })
+  it('finds the characters sharing the shape, without the one the description names', () => {
+    expect(search.similar('⿱木口', { limit: 10 }).hits.map(hit => hit.char)).toEqual(['森'])
+    // 森 is exactly ⿱木林, so it stays out of its own similar list; 杏 shares 木 on top.
+    expect(search.similar('⿱木林', { limit: 10 }).hits.map(hit => hit.char)).toEqual(['杏'])
+    expect(search.similar('木')).toEqual({ hits: [], total: 0 })
   })
 })
 

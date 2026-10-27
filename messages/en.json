@@ -106,6 +106,8 @@
   "ids.replace": "Replace {part} with",
   "ids.search": "Find a component",
   "ids.search.containing": "Characters containing “{sequence}”",
+  "ids.search.similar": "Similar structures",
+  "ids.search.similarTo": "Structures similar to “{sequence}”",
   "ids.search.partsOf": "Parts of “{char}”",
   "ids.search.emptyHint": "Leave this slot empty to search, or fill it to compose.",
   "ids.search.count.one": "{count} found",

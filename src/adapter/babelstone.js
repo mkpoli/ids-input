@@ -141,7 +141,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
@@ -506,6 +506,11 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     },
     async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
       const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
+      signal?.throwIfAborted()
+      return result
+    },
+    async findSimilar(query, { limit = 60, signal } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'similar') : (await localSearch()).similar(query, { limit })
       signal?.throwIfAborted()
       return result
     },

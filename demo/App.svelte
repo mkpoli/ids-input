@@ -730,11 +730,16 @@
             <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
             <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
             <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'similar'} onclick={() => searchMode = 'similar'}>{t('ids.search.similar')}</button>
           </div>
           {#if searchMode === 'component'}
             <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else if searchMode === 'similar'}
+          <h2 class="label">{searchQuery ? t('ids.search.similarTo', { sequence: searchQuery }) : t('ids.search.similar')}</h2>
+          <IdsSearch {adapter} query={searchQuery} mode="similar" {messages} {locale}
+            onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
           <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}

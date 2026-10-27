@@ -350,6 +350,12 @@ The demo offers it beside the existing character search below the editor. Select
 runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
 characters** copies the complete result, including hits beyond the visible page.
 
+**Similar structures** lists the characters whose description has the current description's
+operator and at least one of its operands in the same place, the other operand free:
+`⿱木口` (杏) finds 森 for `⿱木？` and 占 for `⿱？口`. The character the description already
+names stays out. It reads the adapter's `findSimilar`, which asks the same index once for each
+operand; a description without an operator has none.
+
 ```js
 import { createStructuralSearch, readStructuralForms } from 'ids-input'
 const structuralForms = readStructuralForms(formsText)

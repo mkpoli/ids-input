@@ -105,6 +105,8 @@
   "ids.replace": "Thay {part} bằng",
   "ids.search": "Tìm bộ phận",
   "ids.search.containing": "Các chữ chứa “{sequence}”",
+  "ids.search.similar": "Cấu trúc tương tự",
+  "ids.search.similarTo": "Cấu trúc tương tự “{sequence}”",
   "ids.search.partsOf": "Các bộ phận của “{char}”",
   "ids.search.emptyHint": "Để trống ô này để tìm kiếm, hoặc điền bộ phận để ghép chữ.",
   "ids.search.count.other": "Tìm thấy {count} kết quả",

@@ -9,7 +9,7 @@
   import { translator } from './i18n.js'
 
   /** @typedef {import('../adapter/types.js').IdsHit} IdsHit */
-  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure',
+  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure' | 'similar',
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
   let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, mode = 'ids', onopen, ontake } = $props()
   const t = $derived(translator(messages, locale))
@@ -31,13 +31,17 @@
     finally { copying = false }
   }
   $effect(() => {
-    const text = asked, find = mode === 'structure' ? adapter.findByStructure : adapter.findByIds, most = shown
+    const text = asked, find = mode === 'structure' ? adapter.findByStructure : mode === 'similar' ? adapter.findSimilar : adapter.findByIds, most = shown
     const id = ++asks
     if (!text || !find) { found = { status: 'idle', hits: [], total: 0, characters: '' }; return }
     const controller = new AbortController()
     untrack(() => { found = { ...found, status: 'loading' } })
     const timer = setTimeout(() => find(text, { limit: most, signal: controller.signal }).then(
-      result => { if (id === asks) found = { status: result.problem === 'extra' ? 'extra' : result.problem === 'pattern' ? 'pattern' : result.problem ? 'idle' : 'ready', hits: result.hits, total: result.total, characters: 'characters' in result ? result.characters : '' } },
+      result => {
+        if (id !== asks) return
+        const problem = 'problem' in result ? result.problem : undefined
+        found = { status: problem === 'extra' ? 'extra' : problem === 'pattern' ? 'pattern' : problem ? 'idle' : 'ready', hits: result.hits, total: result.total, characters: 'characters' in result && typeof result.characters === 'string' ? result.characters : '' }
+      },
       () => { if (id === asks && !controller.signal.aborted) found = { status: 'failed', hits: [], total: 0, characters: '' } }), delay)
     return () => { clearTimeout(timer); controller.abort() }
   })
