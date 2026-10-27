@@ -1,0 +1,32 @@
+{
+  "format": 1,
+  "entries": [
+    {
+      "char": "𽶯",
+      "modern": [
+        "𠔝",
+        "其",
+        "𢍌",
+        "𠔐"
+      ],
+      "glyph": "u3DDAF.svg",
+      "glyphSha256": "fec3ee29e03eb60b6d11fec4247e41ab594eebff8941a067933d5c1ecefdd283",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DDAF.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "2051D",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR144.el",
+        "record": "SW-JIGUGE-15216",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Curated crosswalk: Unicode maps U+3DDAF to 𠔝; the CHISE record lists 𠔝, 其, 𢍌 and 𠔐 together. This does not resolve the source IDS entities.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    }
+  ]
+}

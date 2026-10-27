@@ -57,3 +57,17 @@ unsuitable for the seal form, so generated descriptions remain estimates.
 Generation writes only the requested audit folder and does not modify the shipped dataset.
 
 When the audit combines modern IDS tables, `modernSource` lists all supplied tables. This is table-level provenance; it does not assign individual descriptions to one source.
+
+## Curated supplementary mappings
+
+`scripts/data/small-seal/supplements.json` records explicit provider crosswalks
+for glyphs outside the bundled app palette. U+3DDAF is mapped to 𠔝 by Unicode
+SealSources; CHISE's `SW-JIGUGE-15216` lists 𠔝, 其, 𢍌 and 𠔐 together. The
+audit includes those aliases and a pinned Chen Changzhi SVG from Kaiyuan.
+The source IDS remains unresolved; this mapping does not promote it into the
+source-backed decomposition table.
+
+Supplementary source and glyph checksums are verified during generation and
+included in the report. The CHISE relationship is checked against the bundled
+archive by `python3 -m unittest discover -s scripts -p test_small_seal.py`.
+Supplementary glyphs are drawn from local SVG files, separately from the app font.
