@@ -89,4 +89,15 @@ describe('editable lower-right enclosure glyphs', () => {
     const drawing = await compose(sourceOf('sans'), '⿰⿽水丶⿽永木', { separate: true })
     expect(drawing.approximate).toEqual(['⿽'])
   })
+  it('combines native enclosure and component-form approximation handling', async () => {
+    for (const style of ['sans', 'serif']) for (const separate of [false, true]) {
+      const source = sourceOf(style)
+      const grouped = await compose(source, '⿱⿰冫⿾冫⿽水丶', { fontStyle: style, separate })
+      expect(grouped.origins).toContain('glyph 氷')
+      expect(grouped.approximate).toEqual([])
+      const mirrored = await compose(source, '⿱⿽水丶⿾木', { fontStyle: style, separate })
+      expect(mirrored.origins).toContain('glyph 氷')
+      expect(mirrored.approximate).toEqual(['⿾'])
+    }
+  })
 })

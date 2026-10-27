@@ -2,6 +2,21 @@
 
 Each file keeps its own licence; the MIT licence of the code does not cover them.
 
+## `yi-bai-ids.tsv.gz`
+
+Unannotated standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
+`da1e9f8a09e2ec8faaf176bac99203f978282041`, <https://github.com/yi-bai/ids>.
+The source file's SHA-256 is `51f78d7d84f52fd73e5bc155c2239b737c58ce627d446894a809f1a36547ae18`.
+The compiled table contains 63,905 entries, in the same format as `babelstone-ids.tsv.gz` but
+without region tags. Rebuild it with `bun scripts/build_yi_bai_ids.mjs`.
+
+Descriptions containing extended syntax or variant annotations are excluded entirely: their
+meaning cannot yet be represented by the editor. Both primary and alternative unannotated
+descriptions are retained. The workshop adds them after BabelStone's descriptions, keeping
+existing descriptions and their region tags when the two sources agree.
+
+Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
@@ -19,14 +34,14 @@ gzipped, 2.2 MB as text.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
-  from CHISE, and on IRG submissions, edited by its maintainer. Only BabelStone's file is read here.
+  from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
 
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,701 Han entries (696 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,713 Han entries (708 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -34,6 +49,13 @@ plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_pa
   decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+
+The displayed Common palette places traditional, simplified and positional forms
+from `component-forms.tsv` next to one another. Each family starts where its
+first member appeared in frequency order; forms remain separate selectable
+entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
+用/甩 and 斗/鬥 remain separate. Stroke-count and first-stroke groups keep their boundaries, and Recent
+keeps selection order. The data file itself remains frequency-sorted.
 
 Sources:
 
@@ -252,8 +274,8 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The three manual entries
-bring the compound total to nineteen. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The fifteen manual entries
+bring the compound total to thirty-one. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -329,11 +351,74 @@ because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across 
 This count does not assert that the visible component is absent from 彥 or 產.
 The traditional outline is extracted from Noto 產 with 生 removed; the other
 uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
-with separate Sans/Serif outlines. These are atomic native previews;
+with separate Sans/Serif outlines. The traditional enclosure with 彡 or 生
+uses the complete native 彥 or 產 glyph, respectively. Other enclosed operands
+are placed within a font-specific opening based on the native 產 proportions;
+the 产 opening is shorter to leave space below its lower crossbar. These are atomic native previews;
 adjustment mode uses operand outlines when available. Native compound previews use
 outline-based layout rather than extrapolating the learned glyph layout model;
 Kaisho keeps its export layout. Source aliases remain
 searchable and visible in tooltips, without changing the inserted IDS.
+When 儿 begins the enclosed vertical stack, its native 元-derived legs meet the
+enclosure bar; their stroke weight is adjusted continuously as the available
+height changes. The remaining operand is laid out below. A neighbouring left 朱
+uses its full-height cut from 鴸 in both Sans and Serif, with the spacing of a
+native side-by-side character. For 昌 or ⿱日日 below 儿, the preview uses the
+native 昌 cut from 菖 in either face, keeping their displayed proportions consistent.
+Its counters and gaps are shortened more than its horizontal bars so that the
+strokes remain visible in the compact placement. The 朱 spacing is checked for
+collisions against the actual right-hand outline.
+
+These curated components were suggested by परवद💙💛
+([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)). The zi.tools stroke-chain
+and overlap notation is recorded as a search alias; selected items insert the
+standard Unicode IDS shown below, without adding a second parser dialect.
+
+| Shortcut | Direct source uses | Estimated strokes | Host examples |
+| --- | ---: | ---: | --- |
+| `⿻𢆶戈` | 9 | 10 | 幾、畿 |
+| `⿸尸彳` | 0 | 6 | 屐、履 |
+| `㇯鹿比` | 27 | 7 | 鹿、慶 |
+| `㇯馬灬` | 13 | 6 | 馬、𩡧 |
+| `㇯鳥灬` | 25 | 7 | 鳥、島 |
+| `⿳亠口冖` | 28 | 7 | 亭、亮 |
+| `⿸尸氺` | 1 | 8 | 犀、𣺳 |
+| `⿳𰀉冖木` | 0 | 11 | 橐、櫜 |
+| `⿳卝罒冖` | 2 | 11 | 夢、𮒽 |
+| `⿱丿乚` | 5 | 2 | 𦨊、𠝉 |
+
+The three zi.tools spellings correspond to the outside of 鹿, 馬 without 灬,
+and 鳥 without 灬, as confirmed by the host entries in
+[Yi Bai's IDS data](https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv0.txt):
+`⿸广⿻[:-1]〢コ`, `⿷#(-一丨b𠃌)𰀁`, and
+`⿱丿⿷⿴#(一-𠃍丨b𠃌)一一`. Their original strings remain searchable.
+BabelStone placeholders `{29}`, `{55}`, `{51}`, `{47}`, and `{87}` supply
+counts for the corresponding native forms. `{29}` names the outside of 幾/畿;
+its approximate replacement uses 弋, while this requested drawing preserves 戈.
+The three reviewed subtractions have explicit stroke estimates. Other
+subtractions still have unknown stroke counts.
+
+Nine previews use pinned Noto native host outlines: 畿 without 田, 屐 without
+支, 鹿 without 比, 馬/鳥 without 灬, 亭 without 丁, 犀 without 牛, 橐 without
+石, and 夢 without 夕. The TC font face supplies 氺 in 犀 and the separated
+four-stroke 卝 in 夢. The Serif 夢 preview combines its crown with the native
+冖 from 亭, translated down 70 font units. Removed connected outlines are
+reconstructed at existing path points; remaining strokes keep native thickness
+and placement. `⿱丿乚` and its source alias `⿱㇒乚` share a dedicated
+Sans/Serif drawing made from 毛's shallow sweep and hooked stem, with the two
+intervening horizontal strokes removed. The retained strokes meet at their
+native junction and remain two editable groups. The five direct source
+occurrences are 𠝉 (T), 𡜞 (G), 𥟯 (G), 𦨊 (GT), and 𩣛 (GT).
+
+Frequency alone cannot select every useful visual part. The raw report counts
+exact written subtrees, not recursive expansions through encoded characters,
+regroupings across node boundaries, or all Unicode-equivalent spellings.
+For example, 履 is recorded as `⿸尸復`; 橐 uses `{38}` above 䂞; and 夢's
+crown is usually split across a ternary root. The current automatic cutoff is
+30 distinct characters below the root. Curated entries and reviewed aliases
+therefore supplement that ranking. The counts above are direct corpus counts,
+not estimates of how often the visible shapes occur after expansion. The raw
+frequency report and automatic cutoff are unchanged.
 
 ## Small Seal
 
@@ -459,3 +544,32 @@ pair. The composer recognizes the source description, its expanded pair, and
 its three equal full components. Missing or excluded glyphs retain component
 composition. This catalog covers the pinned Unicode 16.0 source, rather than
 claiming coverage of unencoded characters or later Unicode additions.
+
+### Gongche notation components
+
+Suggested by परवद💙💛 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)):
+
+| Literal IDS | Strokes | Direct corpus uses |
+|---|---:|---:|
+| `⿰氵氵` | 6 | 0 |
+| `⿱𰀪亻` | 4 | 0 |
+
+Both are curated shortcuts in Common and their stroke-count groups. Counts are
+additive (3 + 3 and 2 + 2). Neither sequence occurs in the pinned BabelStone
+corpus, so these entries retain zero usage counts and their literal IDS.
+The `⿱𰀪亻` preview uses native Noto Sans/Serif 彳 outlines with an extra
+upper sweep; the sweeps retain their original stroke weight. Its two IDS leaves
+remain editable. This supplies the form even when the Serif export lacks 𰀪.
+The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
+so both columns have matching proportions and remain separated in either style.
+
+### Palette fallback outlines
+
+`palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
+pinned default composer export. `palette-fallback-characters.json` lists them.
+`palette-remote-glyphs.json` records the other palette leaves supplied by that export;
+`node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
+come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJK Regular
+(Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
+Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
+CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.

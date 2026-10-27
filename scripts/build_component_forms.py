@@ -49,8 +49,23 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def compress_chang(outlines, style):
+    """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
+    if style == 'sans':
+        source = [-82,-43,16,93,148,222,281,338,390,456,505,570,622]
+        heights = [12,38,26,36,26,38,24,36,26,36,26,38]
+    else:
+        source = [-76,-18,12,115,145,241,271,308,352,381,466,496,578,608,645]
+        heights = [18,22,38,22,38,22,14,24,22,38,22,38,22,24]
+    target = [-59]
+    for height in heights: target.append(target[-1] + height)
+    def ymap(y):
+        i = next((i for i in range(len(source)-1) if y <= source[i+1]), len(source)-2)
+        return round(target[i] + (y-source[i]) * (target[i+1]-target[i]) / (source[i+1]-source[i]), 2)
+    return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
+
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
-result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}}
+result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
 for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     path = Path(filename)
     sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -60,7 +75,31 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     dotted = next(g for t in font['cmap'].tables if t.format == 14 for c,g in t.uvsDict[0xE0101] if c == 0x8005)
     assert dotted == cmap[0xFA5B]
     cs=lambda ch:contours(gs,cmap[ord(ch)])
+    # Native left-side 朱 from 鴸 and the two legs joined to 元's lower bar.
+    # The latter is clipped at the bar's underside for attachment to another bar.
+    result['positions'][style] = {
+        '朱:L': group([cs('鴸')[4]]),
+        '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
+        # Contract the already-shortened native 昌 while retaining its bars.
+        '昌:stack': compress_chang(group(cs('菖')[:6] if style=='sans' else cs('菖')[1:]), style),
+    }
     forms={}
+    # Repeat the same native water radical, avoiding contextual host selection
+    # that gives the two columns different proportions or overlapping strokes.
+    water=group(cs('氵'))
+    dx=450 if style=='sans' else 480
+    water_right=[[ops,[v+dx if i%2==0 else v for i,v in enumerate(points)]] for ops,points in water]
+    forms['⿰氵氵']=[water,water_right]
+    # Gongche's three sweeps above a vertical: extend 彳 with one more
+    # native upper sweep. Translate the sweeps without thinning their strokes;
+    # shorten only the vertical stem to keep the original baseline and em.
+    c=cs('彳')
+    sweep=group([c[0]])
+    step=180 if style=='sans' else 200
+    second=[[ops,[v if i%2==0 else v-step for i,v in enumerate(points)]] for ops,points in sweep]
+    lower=group([c[1]])
+    lower=[[ops,[v if i%2==0 or v<0 else v-step for i,v in enumerate(points)]] for ops,points in lower]
+    forms['⿱𰀪亻']=[sweep+second,lower]
     if style=='sans':
         c=cs('氺'); dots=[group([c[0],c[2]]),group([c[3]]),group([c[1]])]
         c=cs('壱'); crown=[group([c[1]]),group([c[0]])]
@@ -83,6 +122,48 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿱文厂']=[yan]
     # Keep the 立-shaped form as literal IDS even though 产 has a code point.
     forms['⿳亠丷厂']=[group(cs('产'))]
+    # Whole glyphs retain the font designer's placement and stroke weights for
+    # the common enclosed forms, including when nested in a larger IDS.
+    for enclosure, examples in [('⿳亠㐅厂', [('彡','彥'), ('生','產')]),
+                                ('⿱文厂', [('彡','彥'), ('生','產')])]:
+        for inner, ch in examples:
+            forms['⿸'+enclosure+inner]=[group(cs(ch))]
+    # Requested reusable parts, cut from native host glyphs at their original em.
+    c=cs('畿')
+    if style=='sans':
+        # Bypass the connected 田 outline; retain 戈's falling stroke.
+        outside=c[0][:40]+[('lineTo', ((408,-29),))]+c[0][47:]
+        forms['⿻𢆶戈']=[group([outside,c[5]])]
+    else:
+        forms['⿻𢆶戈']=[group(c[5:])]
+    c=cs('屐')
+    forms['⿸尸彳']=[group([c[i] for i in ([0,1] if style=='sans' else [0,1,2,5])])]
+    c=cs('鹿')
+    forms['㇯鹿比']=[group(c[:6] if style=='sans' else c[:4])]
+    # 灬 consists of the first four independent contours in both source fonts.
+    for ch in ['馬','鳥']:
+        forms['㇯'+ch+'灬']=[group(cs(ch)[4:])]
+    c=cs('亭')
+    forms['⿳亠口冖']=[group(c[:4] if style=='sans' else [c[0],c[2],c[3],c[4]])]
+    # TC supplies the 氺 form of 犀 and the four-stroke 卝 in 夢.
+    tc=TTFont(path,fontNumber=3); tcgs=tc.getGlyphSet(); tccmap=tc.getBestCmap()
+    tcs=lambda ch:contours(tcgs,tccmap[ord(ch)])
+    c=tcs('犀')
+    forms['⿸尸氺']=[group(c[:7] if style=='sans' else [c[0],c[1],c[3],c[4]])]
+    c=cs('橐')
+    if style=='sans':
+        wood=c[1][:16]+[('lineTo', ((460,233),))]+c[1][30:]
+        forms['⿳𰀉冖木']=[group([c[2],c[3],c[4],wood])]
+    else:
+        wood=[('moveTo', ((468,237),))]+c[3][13:36]+[('closePath', ())]
+        forms['⿳𰀉冖木']=[group([c[0],c[1],c[2],wood])]
+    c=tcs('夢')
+    if style=='sans':
+        forms['⿳卝罒冖']=[group(c[:7])]
+    else:
+        cover=group([cs('亭')[4]])
+        cover=[[ops,[v if i%2==0 else v-70 for i,v in enumerate(points)]] for ops,points in cover]
+        forms['⿳卝罒冖']=[group([c[0],c[1],c[3],c[4],c[5],c[6]])+cover]
     forms['⿱士冖']=crown
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]
@@ -115,6 +196,19 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             column.append([ops, [round(center+(v-500)*0.32,2) if i%2==0 else round(v+dy,2) for i,v in enumerate(points)]])
         columns.append(column)
     forms['⿰二二']=columns
+    # ⿱丿乚 / ⿱㇒乚: retain 毛's shallow sweep and hooked stem, removing
+    # its two intervening bars. Split at the original junction so both strokes
+    # stay independently editable without a gap or a change in stroke weight.
+    c=cs('毛')[0]
+    if style=='sans':
+        sweep=[('moveTo', ((477,678),))]+c[20:25]+[('closePath', ())]
+        hook=[('moveTo', ((400,663),)),('lineTo', ((400,77),))]+c[4:11]+[('lineTo', ((477,678),)),('closePath', ())]
+    else:
+        sweep=[('moveTo', ((490,687),))]+c[5:11]+[('closePath', ())]
+        hook=[('moveTo', ((422,674),)),('lineTo', ((422,41),))]+c[20:31]+[('lineTo', ((490,687),)),('closePath', ())]
+    forms['⿱丿乚']=[group([sweep]),group([hook])]
+    forms['⿱㇒乚']=forms['⿱丿乚']
+
     forms['⿰冫⿱丿丶']=dots
     forms['⿰冫⿾冫']=[dots[0],dots[1]+dots[2]]
     for sequence,ch in [('⿱宀儿','宂'),('⿻三丨','丰'),('⿻者丶','者')]:
@@ -124,5 +218,6 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     result['forms'][style]=forms
-    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0}
+    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
+        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

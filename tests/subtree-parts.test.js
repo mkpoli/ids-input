@@ -38,7 +38,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => [...row[0]].length > 1)
-  expect(compounds).toHaveLength(19)
+  expect(compounds).toHaveLength(31)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
@@ -112,4 +112,23 @@ it('keeps both yan enclosures as literal six-stroke shortcuts including encoded 
   expect(rows.find(p => p.part === '⿳亠丷厂')).toMatchObject({ strokes: 6, kind: 'c', uses: 29, aliases: ['产'] })
   expect(rows.filter(p => p.part === '产')).toHaveLength(1)
   expect(data.subtrees.encoded['⿳亠丷厂']).toBeUndefined()
+})
+
+it('includes all requested components and translates zi.tools aliases into valid Unicode IDS', async () => {
+  const { paletteRows } = await import('../src/adapter/babelstone.js')
+  const data = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
+  const rows = paletteRows(data)
+  for (const [part, strokes, uses] of [
+    ['⿻𢆶戈',10,9], ['⿸尸彳',6,0], ['㇯鹿比',7,27], ['㇯馬灬',6,13], ['㇯鳥灬',7,25],
+    ['⿰氵氵',6,0], ['⿱𰀪亻',4,0],
+    ['⿳亠口冖',7,28], ['⿸尸氺',8,1], ['⿳𰀉冖木',11,0], ['⿳卝罒冖',11,2], ['⿱丿乚',2,5],
+  ]) {
+    expect(rows.filter(row => row.part === part)).toHaveLength(1)
+    expect(rows.find(row => row.part === part)).toMatchObject({ strokes, uses, kind: 'c' })
+    expect(parse(part).problem).toBeUndefined()
+  }
+  for (const [part, alias] of [
+    ['㇯鹿比','⿸广⿻[:-1]〢コ'], ['㇯馬灬','⿷#(-一丨b𠃌)𰀁'], ['㇯鳥灬','⿱丿⿷⿴#(一-𠃍丨b𠃌)一一'],
+  ]) expect(rows.find(row => row.part === part).aliases).toContain(alias)
+  expect(strokeCounter(new Map(), [])(subtrees('㇯木一').at(-1))).toBeNull()
 })

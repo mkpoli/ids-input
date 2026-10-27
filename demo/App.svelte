@@ -5,12 +5,13 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
   import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
@@ -51,7 +52,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
+  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -215,7 +216,10 @@
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
-  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
+  let structuralSearch = $state(false)
+  const wholeComponentLookup = $derived(componentQuery(editor.whole))
+  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
+  const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   let fromText_ = $state('')
@@ -629,10 +633,10 @@
             <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
           </div>
           {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
-          {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
+          {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">
@@ -663,10 +667,18 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" aria-label={t('ids.search.title')}>
-          <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+        <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
+          <div class="search-modes" aria-label={t('ids.search.title')}>
+            <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+          </div>
+          {#if structuralSearch}
+            <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else}
+          <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {/if}
         </section>
       </div>
       <div class="column-gap output-gap">
@@ -736,6 +748,10 @@
 </Dialog>
 
 <style>
+  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+  .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
+
   .app{display:flex;flex-direction:column;min-height:100dvh}
   .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -826,6 +842,8 @@
   .column-gap{display:none}
   .split{display:none}
   .results{gap:6px}
+  .results.structural{overflow:auto}
+  .results.structural :global(.hits){overflow:visible;flex:none}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
     .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr);column-gap:0;align-items:stretch}

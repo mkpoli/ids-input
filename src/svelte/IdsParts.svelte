@@ -2,12 +2,14 @@
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
   // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, plus frequent components and compound IDS,
-  // most used first; Tangut
+  // most used families first, with related forms adjacent; Tangut
   // the Tangut components in code point order; Stroke count holds all common and hard-to-type
   // parts, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
+  import { onMount } from 'svelte'
+  import { adjacentVariants } from '../core/palette.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -25,14 +27,26 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
   /** @param {string} key @param {unknown} value */
   const remember = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* Kept for this page only. */ } }
 
+  const range = (/** @type {number} */ first, /** @type {number} */ last) =>
+    Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
+  const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf)]
+  const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
+  // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
+  const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
+  const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
+  const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
+    .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
+  const hangul = [...substitutes, ...hangulLetters]
+  /** @param {string[]} chars @returns {PalettePart[]} */
+  const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
   let tab = $state(/** @type {(typeof TABS)[number]} */ ('common')), filter = $state('')
@@ -45,7 +59,7 @@
     recent = Array.isArray(kept) ? [...new Set(kept.filter(part => typeof part === 'string'))].slice(0, RECENT_MAX) : []
     const read = adapter.parts
     if (!read) { failed = true; return }
-    read().then(found => { parts = found; failed = false }, () => { failed = true })
+    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
 
   const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
@@ -56,7 +70,7 @@
   const shownCount = $derived(count !== undefined && counts.includes(count) ? count : counts[0])
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
-    .map(cls => ({ cls, parts: list.filter(part => (part.first ?? null) === cls) }))
+    .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
     .filter(group => group.parts.length)
 
   const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
@@ -67,16 +81,20 @@
   const query = $derived(filter.trim())
   const filtered = $derived.by(() => {
     if (!query || !parts) return null
+    if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
-    if (/^\d+$/.test(query)) return parts.filter(part => part.strokes === Number(query))
+    if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
-    return parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query)))
+    return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
   const shown = $derived.by(() => {
     if (!parts) return []
-    if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
+    if (tab === 'bopomofo') return [{ cls: undefined, parts: bopomofo.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(strokeParts.filter(part => (part.strokes ?? null) === shownCount))
@@ -90,9 +108,90 @@
     if (recentKey) remember(recentKey, recent)
     onpick?.(part)
   }
+  // Give a double-click time to select text without inserting its first click.
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let pickTimer
+  /** @type {string | undefined} */
+  let pendingPart
+  /** @type {EventTarget | null} */
+  let pendingTarget = null
+  let selectionAtDown = ''
+  function flushPick() {
+    clearTimeout(pickTimer)
+    const part = pendingPart
+    pendingPart = undefined
+    pendingTarget = null
+    if (part !== undefined) pick(part)
+  }
+  onMount(() => {
+    /** @param {PointerEvent} event */
+    const pointer = event => {
+      if (pendingTarget && !event.composedPath().includes(pendingTarget) && !(event.target instanceof Element && event.target.closest('.part'))) flushPick()
+    }
+    /** @param {KeyboardEvent} event */
+    const keyboard = event => {
+      if (pendingPart === undefined) return
+      if (['Control', 'Meta', 'Alt', 'Shift'].includes(event.key)) return
+      if ((event.ctrlKey || event.metaKey) && ['a', 'c'].includes(event.key.toLowerCase()) && event.target === pendingTarget) {
+        clearTimeout(pickTimer); pendingPart = undefined; pendingTarget = null
+      } else flushPick()
+    }
+    window.addEventListener('pointerdown', pointer, true)
+    window.addEventListener('keydown', keyboard, true)
+    return () => {
+      clearTimeout(pickTimer)
+      window.removeEventListener('pointerdown', pointer, true)
+      window.removeEventListener('keydown', keyboard, true)
+    }
+  })
+  /** @param {MouseEvent} event @param {string} part */
+  function clickPart(event, part) {
+    if (pendingPart !== undefined && pendingPart !== part) flushPick()
+    clearTimeout(pickTimer)
+    pendingPart = undefined
+    pendingTarget = null
+    if (event.detail === 0) { pick(part); return }
+    if (event.detail > 1) return
+    const selection = window.getSelection()
+    if (selection && !selection.isCollapsed) {
+      if (selection.toString() !== selectionAtDown) return
+      selection.removeAllRanges()
+    }
+    if ('pointerType' in event && event.pointerType === 'touch') { pick(part); return }
+    pendingPart = part
+    pendingTarget = event.currentTarget
+    pickTimer = setTimeout(flushPick, 500)
+  }
+  /** @param {MouseEvent} event */
+  function selectPart(event) {
+    clearTimeout(pickTimer)
+    pendingPart = undefined
+    pendingTarget = null
+    const text = /** @type {HTMLElement} */ (event.currentTarget).querySelector('.part-text')
+    if (!text) return
+    const range = document.createRange(), selection = window.getSelection()
+    range.selectNodeContents(text)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
+  /** @param {KeyboardEvent} event */
+  function selectionKey(event) {
+    if (!(event.ctrlKey || event.metaKey) || event.altKey) return
+    const button = /** @type {HTMLElement} */ (event.currentTarget)
+    const key = event.key.toLowerCase()
+    const target = key === 'a' ? button.closest('.parts-panel')
+      : key === 'c' && window.getSelection()?.isCollapsed ? button.querySelector('.part-text') : null
+    if (!target) return
+    if (key === 'a') event.preventDefault()
+    const range = document.createRange(), selection = window.getSelection()
+    range.selectNodeContents(target)
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
+    tab === 'hangul' ? substituteNames[part.part] : null,
     ...(part.aliases ?? []),
     ...(part.modern ?? []),
     part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
@@ -120,12 +219,14 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
-        draggable={!disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => pick(part.part)}>
+        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
+        ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
+        onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
         {#if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />
-          <span class="compound-mark" aria-hidden="true">IDS</span>
+          <span class="part-text compound-text">{part.part}</span>
         {:else}
-          {part.part}
+          <span class="part-text">{part.part}</span>
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
@@ -201,25 +302,26 @@
   .parts-tabs button,.parts-counts button{border:0;background:transparent;font-size:12px;padding:6px 10px;border-radius:5px;color:var(--_muted)}
   .parts-tabs button.active,.parts-counts button.active{background:var(--_surface-selected);color:var(--_ink)}
   .parts-filter{flex:1 1 100%;min-width:0;padding:6px 8px;font-size:13px}
-  .parts-counts{display:flex;flex-wrap:wrap;gap:2px}
+  .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
   .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
-  .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
+  .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
-  .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;
+  .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
   .part.compound{position:relative;padding:5px}
-  .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
-    font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}
+  .part :global(.part-icon){user-select:none}
+  .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
+    font:8px/1 var(--ids-font,sans-serif);color:var(--_ink);background:var(--_surface)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .seal-groups{display:flex;flex-wrap:wrap;gap:4px}
   .seal-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
   .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
-  .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted)}
+  .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>

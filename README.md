@@ -33,7 +33,8 @@ The package has four layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
+The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
+from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
@@ -86,7 +87,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from']` | the part picker's tabs; a tab the adapter cannot answer is left out |
+| `pickers` | `['find', 'characters', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -126,8 +127,8 @@ clears, removes a level or copies that part's sequence. "Take parts from" reads 
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
-parts, including compound IDS, grouped by stroke count and first stroke. Compound palette cells show an `IDS` marker and expose
-the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
+compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -302,13 +303,55 @@ search builds an index in memory on first use: under Bun, about half a second fo
 components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
 there instead. It has no `variants`, `drawing` or `preview`.
 
+Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
+replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated
+standard IDS subset of Yi Bai's data. Extended expressions and variant annotations are not included.
+
 ## Search
+
+`IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
+four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+The demo offers it beside the existing character search below the editor. Selecting a preset
+runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
+characters** copies the complete result, including hits beyond the visible page.
+
+```js
+import { createStructuralSearch } from 'ids-input'
+const patterns = createStructuralSearch(table, { forms })
+patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
+patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
+patterns.search('⿲ABA')           // matching outer parts, such as 弼
+patterns.search('⿸⬚⬚')           // any upper-left enclosure
+```
+
+A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
+Different letters may match the same part. Positional forms use the supplied forms table.
+`⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
+be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+and opens encoded components up to six levels, considering source alternatives. It does not find
+a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
+remain explicit operators. Coverage depends on the supplied descriptions and forms.
+
+`babelStoneAdapter.findByStructure(query, { limit, signal })` runs this search in the same worker
+as description search. It returns `{ hits, total, characters, problem? }`: `characters` contains
+all matching characters without separators, while `hits` is limited for display. Invalid patterns
+return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
+other characters, with code-point ordering within each group.
 
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
-shows its subsequence in muted text. Selecting an empty slot clears the search.
+shows its subsequence in muted text. Selecting an empty slot clears the search, except when one
+side of a `㇯` expression names a component, in which case the whole expression is searched.
+
+To find characters containing 木, use `㇯⬚木`; to list the components of 森, use `㇯森⬚`.
+The empty slot works as a wildcard in both searches. The zi.tools spellings `㇯？木` and `㇯森？`
+also work, and `SU` can be used in place of `㇯`. These searches use the adapter's own data;
+components hidden inside a subtraction are omitted because the data does not establish which survive.
+For a structural search of a subtraction with a wildcard, use the structural-search mode, or pass
+`{ componentLookup: false }` to `createSearch().search()` or `adapter.findByIds()`; the latter
+also finds matching subtrees inside a character.
 
 IDS queries accept visual substitutes. The kana families follow the encoded
 components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
@@ -531,6 +574,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 `scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
+
+- Yi Bai IDS, <https://github.com/yi-bai/ids>, MIT: additional unannotated Han descriptions.
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data

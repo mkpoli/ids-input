@@ -41,6 +41,24 @@ export function parseIdsTable(text) {
   return table
 }
 
+/** Combine descriptions without changing either source's region tags.
+ * @param {Map<string, Sequence[]>} base @param {Map<string, Sequence[]>} extra */
+export function mergeIdsTables(base, extra) {
+  const merged = new Map(base)
+  for (const [char, descriptions] of extra) {
+    const first = base.get(char) ?? []
+    const seen = new Set(first.map(item => `${item.text}\0${item.regions ?? ''}`))
+    const texts = new Set(first.map(item => item.text))
+    const added = descriptions.filter(item => {
+      const key = `${item.text}\0${item.regions ?? ''}`
+      if (seen.has(key) || (!item.regions && texts.has(item.text))) return false
+      seen.add(key); texts.add(item.text); return true
+    })
+    if (added.length) merged.set(char, [...first, ...added])
+  }
+  return merged
+}
+
 /**
  * The palette file's rows as objects.
  * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
@@ -70,6 +88,9 @@ export async function readText(response) {
 
 /** Components the forms table folds that the names keep apart. */
 const SEPARATE = new Set(['斗', '鬥'])
+// Contextual search substitutions do not make these independent characters
+// palette variants (田/由/甲/申/电, 己/已/巳, 用/甩, 手/才, 刀/刁, 幺/乡).
+const PALETTE_SEPARATE = new Set([...SEPARATE, ...'由甲申电甴己已巳甩才刁乡'])
 
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
@@ -77,6 +98,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
 /**
  * An adapter over BabelStone IDS. `ids` is the URL of `data/babelstone-ids.tsv.gz` (or of the same
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
+ * `additionalIds` is an optional second table in the same format; new descriptions follow the first
+ * table's descriptions. Duplicate untagged descriptions are omitted; distinct region tags are kept.
  * `table` and `palette` hand the data over directly instead. `forms` is the URL of
  * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
  * components by and the component search opens the names of a component's other forms with.
@@ -88,14 +111,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern equivalents supply component-search labels only.
- * @param {{ ids?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
+ * @param {{ ids?: string | URL, additionalIds?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -115,8 +138,8 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
-  function inWorker(query, limit) {
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -139,7 +162,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -162,15 +185,31 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   const read = () => table ??= Promise.all([
     given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
       : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+    additionalIds ? load(additionalIds).then(readText).then(parseIdsTable) : Promise.resolve(new Map()),
     readSeal(),
-  ]).then(([base, doc]) => doc ? new Map([...base, ...sealTable(doc)]) : base)
+  ]).then(([base, extra, doc]) => {
+    const merged = mergeIdsTables(base, extra)
+    return doc ? new Map([...merged, ...sealTable(doc)]) : merged
+  })
     .catch(error => { table = null; throw error })
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
       : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
-  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
+  ]).then(([base, doc, text]) => {
+    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+    // Keep reviewed contextual search substitutions out of palette families.
+    const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
+    const variants = readForms(safe)
+    for (const root of variants.values()) variants.set(root, root)
+    return rows.map(part => {
+      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
+      const variantGroup = variants.get(part.part)
+      return variantGroup ? { ...part, variantGroup } : part
+    })
+  })
     .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into
@@ -351,8 +390,14 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
       }).catch(error => { described = null; throw error })
       return (await described).get(sequence.trim()) ?? []
     },
-    async findByIds(query, { limit = 60, signal } = {}) {
-      const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
+    async findByStructure(query, { limit = 60, signal } = {}) {
+      signal?.throwIfAborted()
+      const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
+      signal?.throwIfAborted()
+      return result
+    },
+    async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },

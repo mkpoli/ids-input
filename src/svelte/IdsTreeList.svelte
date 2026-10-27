@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { SIBLING_DRAG, siblings, neighbor, remapSiblingPath } from './sibling-drag.js'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
   // box. A click on a row chooses that part, a click on its arrow opens or closes its parts, and a
@@ -48,6 +49,10 @@
 
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
+  /** @type {{ path: Path } | null} */ let editing = $state(null)
+  /** @type {{ key: string, x: number, y: number, time: number } | null} */ let firstClick = null
+  /** @param {Row} row */
+  function editRow(row) { if (!editor.disabled) { editor.choose(row.path, { toggle: false }); editing = { path: row.path } } }
 
   /** @type {Row[]} */
   const rows = $derived.by(() => {
@@ -67,6 +72,10 @@
     if (editor.tree) walk(editor.tree, [], 0, null)
     return out
   })
+  $effect(() => {
+    const current = editing
+    if (current && !rows.some(row => row.key === key(current.path))) editing = null
+  })
   const tabStop = $derived(rows.some(row => row.key === focusKey) ? focusKey : rows[0]?.key)
   /** @param {Row} row */
   const selected = row => editor.chosen !== null && key(editor.chosen) === row.key
@@ -79,6 +88,12 @@
   function focusRow(key) {
     focusKey = key
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (listEl?.querySelector(`[data-path="${CSS.escape(key)}"]`))?.focus())
+  }
+  /** Expand the ancestors of the slot selected after editing. @param {Path} path */
+  function reveal(path) {
+    const next = new Set(collapsed)
+    for (let i = 0; i < path.length; i++) next.delete(key(path.slice(0, i)))
+    collapsed = next
   }
   /** @param {Path} from @param {Path} to */
   function move(from, to) {
@@ -111,6 +126,8 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
+    if (event.key === 'F2') { event.preventDefault(); editRow(row); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       const next = neighbor(editor.tree, row.path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
       if (row.path.length && !editor.disabled) { event.preventDefault(); if (next) { move(row.path, next); focusRow(key(next)) } }
@@ -163,18 +180,40 @@
   }
 </script>
 
-<div class="ids-treelist" bind:this={listEl}>
+<svelte:window onclickcapture={event => {
+  const target = /** @type {Element} */ (event.target)
+  if (event.detail === 1) {
+    const row = target.closest('.ids-treelist [data-path]')
+    firstClick = row && listEl?.contains(row) && !target.closest('[data-toggle],.inline-edit')
+      ? { key: row.getAttribute('data-path') ?? '', x: event.clientX, y: event.clientY, time: event.timeStamp } : null
+  } else if (event.detail === 2 && firstClick && event.timeStamp - firstClick.time < 1000
+    && Math.abs(event.clientX - firstClick.x) < 5 && Math.abs(event.clientY - firstClick.y) < 5) {
+    const row = rows.find(row => row.key === firstClick?.key)
+    firstClick = null
+    if (row && !editor.disabled) { event.preventDefault(); event.stopPropagation(); editRow(row) }
+  }
+}} />
+<div class="ids-treelist" role="presentation" bind:this={listEl} onpointerdown={event => {
+  const target = /** @type {HTMLElement} */ (event.target)
+  if (!editor.disabled && (target === event.currentTarget || target.matches('ul[role="tree"]'))) {
+    const active = document.activeElement
+    if (editing && active instanceof HTMLElement && listEl?.contains(active)) active.blur()
+    editor.choose(null)
+  }
+}}>
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" draggable={!editor.disabled && row.path.length > 0} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
         onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
         ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
-        {#if row.node}
+        {#if editing && key(editing.path) === row.key}
+          {#key editing}<IdsInlineEdit {editor} path={row.path} owner={listEl} onreveal={reveal} onclose={() => editing = null} />{/key}
+        {:else if row.node}
           {@const op = row.op ?? ''}
           <OperatorIcon {op} size={16} />
           <span class="name">{row.name}</span>
