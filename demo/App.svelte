@@ -45,6 +45,7 @@
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
+  import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
   /** @type {'sans' | 'serif' | 'klee'} */
@@ -231,7 +232,8 @@
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
-  let structuralSearch = $state(false)
+  /** @type {'current' | 'component' | 'structure'} */
+  let searchMode = $state('current')
   const wholeComponentLookup = $derived(componentQuery(editor.whole))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
@@ -683,12 +685,15 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
+        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')}>
           <div class="search-modes" aria-label={t('ids.search.title')}>
-            <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
-            <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
           </div>
-          {#if structuralSearch}
+          {#if searchMode === 'component'}
+            <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
           <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
@@ -761,7 +766,7 @@
 </Dialog>
 
 <style>
-  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
 
