@@ -550,3 +550,14 @@ upper sweep; the sweeps retain their original stroke weight. Its two IDS leaves
 remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
+
+### Palette fallback outlines
+
+`palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
+pinned default composer export. `palette-fallback-characters.json` lists them.
+`palette-remote-glyphs.json` records the other palette leaves supplied by that export;
+`node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
+come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJK Regular
+(Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
+Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
+CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.
