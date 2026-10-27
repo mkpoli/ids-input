@@ -636,23 +636,39 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       if (!tree || typeof tree === 'string') return []
       // Each subtree can be written out or replaced by any character it describes. Resolve from
       // the leaves upward so nested expansions work without expanding the entire character table.
-      /** @param {import('../core/ids.js').Part} part @returns {string[]} */
-      const descriptions = part => {
-        if (typeof part === 'string') return [part]
-        if (!part) return []
-        let written = [part.op]
-        for (const child of part.parts) {
+      /** @param {import('../core/ids.js').Part} root @returns {string[]} */
+      const resolve = root => {
+        if (!root || typeof root === 'string') return []
+        /** @param {import('../core/ids.js').Part} part @returns {string[]} */
+        const descriptions = part => {
+          if (typeof part === 'string') return [part]
+          if (!part) return []
+          let written = [part.note ? `${part.op}[${part.note}]` : part.op]
+          for (const child of part.parts) {
+            const choices = descriptions(child)
+            written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+          }
+          return [...new Set([write(part), ...written.flatMap(text => by.get(text) ?? [])])]
+        }
+        let written = [root.note ? `${root.op}[${root.note}]` : root.op]
+        for (const child of root.parts) {
           const choices = descriptions(child)
           written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
         }
-        return [...new Set([write(part), ...written.flatMap(text => by.get(text) ?? [])])]
+        return written.flatMap(text => by.get(text) ?? [])
       }
-      let written = [tree.op]
-      for (const child of tree.parts) {
-        const choices = descriptions(child)
-        written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
-      }
-      return [...new Set(written.flatMap(text => by.get(text) ?? []))]
+      // ⿻[1:]丨日 names 甲 where ⿻丨日 names 申: try the modifiers first, then without them.
+      const exact = resolve(tree)
+      /** Whether any node of the tree carries a modifier; a tree without one needs one lookup.
+       * @param {import('../core/ids.js').Part} part @returns {boolean} */
+      const modified = part => typeof part === 'object' && part !== null
+        && (Boolean(part.note) || part.parts.some(modified))
+      if (!modified(tree)) return [...new Set(exact)]
+      /** The tree without the modifiers a description narrows, for the descriptions it names
+       * anyway. @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
+      const plain = part => typeof part !== 'object' || part === null
+        ? part : { op: part.op, parts: part.parts.map(plain) }
+      return [...new Set([...exact, ...resolve(plain(tree))])]
     },
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()

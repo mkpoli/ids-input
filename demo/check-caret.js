@@ -58,6 +58,9 @@ try {
   await field.fill('⿰#(H)木')
   await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰一木')
   assert.equal(await field.getAttribute('aria-invalid'), 'false')
+  // The bundled table names 甲 by its modified description, ahead of 申 by the plain one.
+  await field.fill('⿻[1:]丨日')
+  await page.waitForFunction(() => /U\+7532/.test(document.querySelector('.ids-preview-meta')?.textContent ?? ''))
 
 
   await field.fill('⿰木日')
