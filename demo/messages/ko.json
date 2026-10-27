@@ -156,5 +156,9 @@
   "app.replacement.tooLong": "세 입력의 코드 포인트 합계는 64개 이하여야 합니다.",
   "app.source.tangutGlosses": "문자 정보에 표시하는 서하 문자의 영어 뜻과 용법 제한.",
   "app.source.tangutComponentMeaning": "부품𘥇과 말의 의미 사이의 관련성(2020년4월21일).",
-  "app.replacement.nestedHint": "⿱🔄林木火水처럼 바꾸기가 포함된 식을 순서 입력란에 붙여 넣을 수도 있습니다."
+  "app.replacement.nestedHint": "⿱🔄林木火水처럼 바꾸기가 포함된 식을 순서 입력란에 붙여 넣을 수도 있습니다.",
+  "app.file.saveDocument": "문서 저장…",
+  "app.file.openDocument": "문서 열기…",
+  "app.file.saved": "{name} 저장됨",
+  "app.file.openFailed": "{name}을 열 수 없습니다."
 }
