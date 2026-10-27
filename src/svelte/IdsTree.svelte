@@ -8,16 +8,14 @@
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
+  import { layout, treeSizes } from './tree-layout.js'
 
   /** @typedef {import('../core/ids.js').Part} Part @typedef {import('../core/ids.js').Path} Path */
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean }} */
   let { editor, keyHints = true } = $props()
   const t = $derived(editor.t)
 
-  /** @type {Record<string, string>} */
-  const LAYOUT = { '⿰': 'row', '⿲': 'row', '⿱': 'column', '⿳': 'column', '⿻': 'stack', '㇯': 'stack', '⿾': 'stack', '⿿': 'stack', '〾': 'stack' }
-  /** @param {string} op */
-  const layout = op => LAYOUT[op] ?? 'enclosure'
+  const sizes = $derived(treeSizes(editor.tree))
   /** @param {Path} path */
   const key = path => path.join('.')
 
@@ -109,7 +107,7 @@
       </div>
       <div class="ids-parts">
         {#each part.parts as inner, i (key([...path, i]))}
-          <div class="ids-cell" data-index={i}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
+          <div class="ids-cell" data-index={i} style:flex-grow={sizes.get(inner)?.[layout(part.op) === 'row' ? 'width' : 'height'] ?? 1}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
         {/each}
       </div>
     </div>
@@ -191,11 +189,11 @@
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits
      inside it where the operator puts it, leaving a band of the first open around it. */
-  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:min(44em,15%) minmax(0,1fr) min(44em,15%);grid-template-rows:min(44em,15%) minmax(0,1fr) min(44em,15%)}
+  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:min(28em,12%) minmax(0,1fr) min(28em,12%);grid-template-rows:min(28em,12%) minmax(0,1fr) min(28em,12%)}
   .enclosure > .ids-parts > .ids-cell[data-index="0"]{grid-area:1/1/4/4}
   .enclosure > .ids-parts > .ids-cell[data-index="1"]{z-index:1;margin:min(4em,2cqw,2cqh)}
   .enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part{background:var(--_surface)}
-  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(26px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));padding:min(2px,2cqh) min(8px,2cqw)}
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(22px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));padding:min(2px,2cqh) min(3px,2cqw)}
   [data-op="⿴"] > .ids-parts > [data-index="1"]{grid-area:2/2/3/3}
   [data-op="⿵"] > .ids-parts > [data-index="1"]{grid-area:2/2/4/3}
   [data-op="⿶"] > .ids-parts > [data-index="1"]{grid-area:1/2/3/3}
