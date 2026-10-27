@@ -219,8 +219,9 @@ missing geometry or unsupported transforms.
 `createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
 reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
 `clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
-whole documents. `listen` tells a host when to redraw. Compositing (including ㇯), storage and the
-editor binding are not part of these modules yet.
+whole documents. `listen` tells a host when to redraw; a throwing listener is reported through
+`onListenerError` (or `reportError`) and does not undo the committed edit. Compositing (including ㇯),
+storage and the editor binding are not part of these modules yet.
 
 ## Adapters
 

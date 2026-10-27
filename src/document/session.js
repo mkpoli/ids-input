@@ -19,7 +19,7 @@ import {
 /** @typedef {{ document: Document, chosen: string | null, label: string }} Step */
 /** @typedef {{ done: string[], undone: string[] }} Steps */
 /** @typedef {{ document: Document, chosen: string | null, done: Step[], undone: Step[], ids: string[] }} Snapshot */
-/** @typedef {{ reserved?: Iterable<string>, label?: string }} SessionOptions */
+/** @typedef {{ reserved?: Iterable<string>, label?: string, onListenerError?: (error: unknown, session: DocumentSession) => void }} SessionOptions */
 
 /**
  * @typedef {object} DocumentSession
@@ -54,11 +54,12 @@ import {
 
 /**
  * Create a session over `initial`, a document (an empty slot by default). `reserved` adds IDs that
- * an editor's earlier sessions or retained history must not reuse.
+ * an editor's earlier sessions or retained history must not reuse. A listener exception is reported
+ * to `onListenerError` (or `reportError`) after the edit commits; it does not fail the edit.
  * @param {Document} [initial] @param {SessionOptions} [options]
  * @returns {DocumentSession}
  */
-export function createDocumentSession(initial = emptyDocument(), { reserved = [], label = 'Edit' } = {}) {
+export function createDocumentSession(initial = emptyDocument(), { reserved = [], label = 'Edit', onListenerError } = {}) {
   assertDocument(initial)
   /** @type {Allocator} */
   const allocator = allocatorFor(initial, reserved)
@@ -78,7 +79,19 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
   /** @param {string} fallback */
   const name = fallback => ({ replace: `Replace ${fallback}`, decompose: `Decompose ${fallback}`, wrap: `Wrap ${fallback}`, unwrap: `Unwrap ${fallback}`, operator: `Change ${fallback}`, delete: `Delete ${fallback}`, transform: `Transform ${fallback}`, clear: `Clear ${fallback}` })
 
-  const notify = () => { for (const listener of listeners) listener(session) }
+  /** @param {unknown} error */
+  const reportListenerError = error => {
+    try {
+      if (onListenerError) onListenerError(error, session)
+      else if (typeof globalThis.reportError === 'function') globalThis.reportError(error)
+      else console.error(error)
+    } catch { /* The error path itself must not fail an edit. */ }
+  }
+  const notify = () => {
+    for (const listener of [...listeners]) {
+      try { listener(session) } catch (error) { reportListenerError(error) }
+    }
+  }
   /** @param {Document} next @param {string | null} nextChosen @param {string} action */
   function commit(next, nextChosen, action) {
     assertDocument(next)

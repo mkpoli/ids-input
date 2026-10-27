@@ -113,6 +113,26 @@ describe('a document session', () => {
     expect(session.sequence).toBe('⿰木口')
     expect(snapshot.ids.length).toBeGreaterThan(0)
   })
+  it('iterates a snapshot when a listener unsubscribes another', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    const calls = []
+    let stopSecond = () => {}
+    session.listen(() => { calls.push('first'); stopSecond() })
+    stopSecond = session.listen(() => { calls.push('second') })
+    session.choose(layer(session, 0).id)
+    expect(calls).toEqual(['first', 'second'])
+  })
+  it('reports a listener error without failing the committed edit', () => {
+    const errors = []
+    const session = createDocumentSession(fromSequence('⿰木口'), { onListenerError: error => errors.push(error) })
+    session.listen(() => { throw new Error('listener failed') })
+    session.choose(layer(session, 0).id)
+    expect(() => session.replace('水')).not.toThrow()
+    expect(session.sequence).toBe('⿰水口')
+    expect(session.canUndo).toBe(true)
+    expect(errors).toHaveLength(2)
+    expect((errors[1] instanceof Error ? errors[1].message : '')).toBe('listener failed')
+  })
   it('notifies listeners on choice and edits, and stops on unlisten', () => {
     const session = createDocumentSession(fromSequence('⿰木口'))
     let calls = 0
