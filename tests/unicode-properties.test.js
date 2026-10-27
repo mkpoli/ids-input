@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { execFileSync } from 'node:child_process'
 import { isComponent, isLetter, arity, EMPTY_MARKS, UNICODE_VERSION } from '../src/core/ids.js'
+import { roots, searchParts } from '../src/core/decompose.js'
 import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import properties from '../data/unicode-properties.json'
 
@@ -45,4 +46,8 @@ it('accepts recent scripts and kana in parsing and literal component search', as
   for (const ch of ['\u{18E00}', '\u{1B123}', '\u{1AFF0}']) expect((await adapter.search(ch + '木')).map(h => h.char)).toContain(ch)
   expect(isLetter('\u{1DF1F}')).toBe(true)
   expect(isLetter('\u{18E00}')).toBe(false)
+})
+
+it('uses pinned ideographs in containing-character searches', () => {
+  for (const char of ['\u{18E00}', '\u{191A0}']) expect(searchParts(roots(char + '木'), {})).toBe(char + '木')
 })
