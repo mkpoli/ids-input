@@ -100,11 +100,25 @@
     const usableAt = outsideSerif ? COMPOSER_BASE : at
     const usableStyle = outsideSerif ? 'sans' : style
     const composed = previewAt(usableAt, split, usableStyle)
-    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    /** A description whose operator modifier narrows it to one character is drawn as an
+     * approximation: the modifier names a crossing the layout does not place. When the bundled table
+     * names exactly one character, draw that character instead; every face goes through here.
+     * @type {ReturnType<typeof composerPreview>} */
+    const drawn = Object.assign(async (sequence, options) => {
+      options?.signal?.throwIfAborted()
+      if (sequence.includes('[')) {
+        const chars = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const [char] = chars
+        // The sketch belongs to the description's own parts; the substitute draws a whole glyph.
+        if (chars.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
+      }
+      return composed(sequence, options)
+    }, { warm: (/** @type {string | undefined} */ sequence) => composed.warm(sequence) })
+    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, drawn); return drawn }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
-      return prepared.get(sequence) ?? composed(sequence, options)
+      return prepared.get(sequence) ?? drawn(sequence, options)
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
         if (sequence === undefined || !prepared.has(sequence)) composed.warm()

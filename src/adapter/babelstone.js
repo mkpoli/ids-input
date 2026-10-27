@@ -442,7 +442,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
     },
-    async encoded(sequence) {
+    async encoded(sequence, { exact: onlyTagged = false, signal } = {}) {
       // Built once from the table; a failed load is tried again on the next call.
       described ??= read().then(found => {
         /** @type {Map<string, string[]>} */
@@ -458,6 +458,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
         return { by, prefixes }
       }).catch(error => { described = null; throw error })
       const { by, prefixes } = await described
+      signal?.throwIfAborted()
       const tree = parse(sequence.trim()).tree
       if (!tree || typeof tree === 'string') return []
       // Each subtree can be written out or replaced by any character it describes. Resolve from
@@ -485,6 +486,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       }
       // ⿻[1:]丨日 names 甲 where ⿻丨日 names 申: try the modifiers first, then without them.
       const exact = resolve(tree)
+      if (onlyTagged) return [...new Set(exact)]
       /** Whether any node of the tree carries a modifier; a tree without one needs one lookup.
        * @param {import('../core/ids.js').Part} part @returns {boolean} */
       const modified = part => typeof part === 'object' && part !== null
