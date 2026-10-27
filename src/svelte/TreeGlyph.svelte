@@ -1,43 +1,24 @@
 <script>
-  // Ask for an outline only when the browser renders this character as its missing-glyph box.
-  import { tick } from 'svelte'
+  // Render rare Han from a supplied outline when available.
   /** @type {{ part: string, draw?: ((part: string) => Promise<import('../adapter/types.js').Drawing | null>) | null, fontStyle?: string }} */
   let { part, draw = null, fontStyle = '' } = $props()
-  /** @type {HTMLElement | undefined} */ let element = $state()
   /** @type {import('../adapter/types.js').Drawing | null} */ let drawing = $state(null)
   $effect(() => {
-    const text = part, request = draw, style = fontStyle, host = element
+    const text = part, request = draw, style = fontStyle
     let cancelled = false
     drawing = null
-    if (!host || !request || [...text].length !== 1) return
-    async function check() {
-      await tick()
-      await document.fonts.ready
-      if (cancelled || !host || !request) return
-      const canvas = document.createElement('canvas')
-      canvas.width = 128; canvas.height = 96
-      const ctx = canvas.getContext('2d', { willReadFrequently: true })
-      if (!ctx) return
-      ctx.font = `48px ${getComputedStyle(host).fontFamily}`
-      ctx.textBaseline = 'middle'
-      const pixels = (/** @type {string} */ character) => {
-        ctx.clearRect(0, 0, canvas.width, canvas.height)
-        ctx.fillText(character, 8, 48)
-        return ctx.getImageData(0, 0, canvas.width, canvas.height).data
-      }
-      const actual = pixels(text), missing = pixels('\u{10FFFF}')
-      if (!actual.some((value, i) => value !== missing[i])) {
-        const result = await request(text).catch(() => null)
-        if (!cancelled && result?.d) drawing = result
-      }
+    const cp = text.codePointAt(0) ?? 0
+    // The bundled parts font is a subset; supplementary Han and Extension A may be absent.
+    const rareHan = [...text].length === 1 && ((cp >= 0x3400 && cp <= 0x4dbf) || (cp >= 0x20000 && cp <= 0x323af) || (cp >= 0x323b0 && cp <= 0x33479))
+    if (request && rareHan) {
+      request(text).then(result => { if (!cancelled && result?.d) drawing = result }).catch(() => {})
     }
     void style
-    check().catch(() => {})
     return () => { cancelled = true }
   })
 </script>
 
-<span class="glyph" bind:this={element} aria-hidden="true">
+<span class="glyph" aria-hidden="true">
   {#if drawing}<svg viewBox="0 0 1000 1000" focusable="false"><path d={drawing.d} /></svg>{:else}{part}{/if}
 </span>
 

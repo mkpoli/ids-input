@@ -122,6 +122,18 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const treeDrawers = new Map()
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  function treeDrawer(at, style) {
+    const key = `${at}\0${style}`
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
+  }
+  const treeDraw = $derived.by(() => {
+    const draw = treeDrawer(base, componentStyle)
+    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
+  })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -657,7 +669,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeGlyph} fontStyle={componentStyle} /></div>
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
