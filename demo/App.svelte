@@ -29,6 +29,7 @@
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
@@ -272,7 +273,20 @@
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
+  /** @type {Map<string, ReturnType<typeof openTabSession>>} */
+  const sessions = new Map()
+  /** @param {import('./lib/tabs.js').Tab} tab */
+  function sessionFor(tab) {
+    let session = sessions.get(tab.id)
+    if (!session) { session = openTabSession(tab); sessions.set(tab.id, session) }
+    return session
+  }
+  /** Reconcile the active editor tree into `tab`'s document. @param {import('./lib/tabs.js').Tab} tab */
+  function keepTabSession(tab) {
+    try { tab.document = syncTabSession(sessionFor(tab), editor.tree ?? null) } catch { /* A malformed tree keeps the last document. */ }
+  }
   editor.reset(initial.sequence)
+  keepTabSession(initial)
   const pathKey = (/** @type {number[]} */ path) => path.join('.')
   let knownSequence = editor.whole
   $effect(() => {
@@ -295,7 +309,11 @@
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
     const tab = tabs.find(tab => tab.id === activeId)
-    if (tab) { tab.sequence = text; tab.whole = editor.tree === null ? '' : editor.whole }
+    if (tab) {
+      tab.sequence = text
+      tab.whole = editor.tree === null ? '' : editor.whole
+      keepTabSession(tab)
+    }
     store()
     history.replaceState(null, '', linkTo(text, location))
   }))
@@ -358,6 +376,7 @@
     if (tab) {
       states.set(tab.id, editor.snapshot())
       adjustedStates.set(tab.id, currentAdjustments())
+      keepTabSession(tab)
     }
   }
   /** @param {string} id */
@@ -394,7 +413,7 @@
     const source = tabs.find(tab => tab.id === id)
     if (!source) return
     flush()
-    const tab = makeTab(source.sequence, source.saved)
+    const tab = makeTab(source.sequence, source.saved, source.document ? structuredClone(source.document) : undefined)
     const state = states.get(id)
     if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
     const adjusted = adjustedStates.get(id)
@@ -421,6 +440,13 @@
     }
     addTab(text)
   }
+  /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
+  function openDraft(draft) {
+    flush()
+    const tab = makeTab(draft.sequence, draft.sequence, draft.document)
+    tabs.push(tab)
+    activate(tab.id)
+  }
   /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
@@ -430,6 +456,7 @@
     const adjusted = id === activeId ? currentAdjustments() : adjustedStates.get(id)
     states.delete(id)
     adjustedStates.delete(id)
+    sessions.delete(id)
     tabs.splice(at, 1)
     /** @type {import('./lib/tabs.js').Tab | undefined} */
     let fresh
@@ -489,8 +516,9 @@
   let drafts = $state(storedDrafts())
   function keepDraft() {
     if (editor.tree === null) return
-    drafts = keep(editor.whole)
     const tab = current()
+    if (tab) keepTabSession(tab)
+    drafts = keep(editor.whole, tab?.document)
     // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
     if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
     store()
@@ -504,7 +532,7 @@
     { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
     .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openSequence(d.sequence) })),
+      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
       { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
   ])
