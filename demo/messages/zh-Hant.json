@@ -37,6 +37,7 @@
   "app.examples.cards": "卡片",
   "app.examples.list": "列表",
   "app.examples.tangut": "西夏文",
+  "app.examples.openSelected": "開啟所選範例（{count}）",
   "app.examples.none": "（未編碼）",
   "app.export.background": "背景",
   "app.export.bg.black": "黑色",

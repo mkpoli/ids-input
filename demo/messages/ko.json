@@ -37,6 +37,7 @@
   "app.examples.cards": "카드",
   "app.examples.list": "목록",
   "app.examples.tangut": "서하 문자",
+  "app.examples.openSelected": "선택한 예제 열기 ({count})",
   "app.examples.none": "(미부호화)",
   "app.export.background": "배경",
   "app.export.bg.black": "검은색",

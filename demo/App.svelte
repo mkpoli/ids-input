@@ -193,8 +193,6 @@
   $effect(() => save('keyHints', keyHints ? undefined : false))
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
-  let exampleCards = $state(load('exampleCards', true))
-  $effect(() => save('exampleCards', exampleCards ? undefined : false))
   // The share of the middle column given to the tree; the search takes the rest.
   let split = $state(clampSplit(load('split', 60)))
   /** @type {HTMLElement | null} */ let middleEl = $state(null)
@@ -493,40 +491,27 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example @param {string} lang */
-  function exampleItem(example, lang) {
-    const point = example.char ? cp(example.char) : ''
-    return {
-      leading: example.char || undefined,
-      label: example.sequence,
-      sequence: example.sequence,
-      note: example.char ? point : t('app.examples.none'),
-      unencoded: !example.char,
-      lang,
-      drawing: prepared.get(example.sequence),
-      hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
-      run: () => addTab(canonical(example.sequence)),
-    }
-  }
-  const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
-    { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
-  ]))
   let startingTabs = $state(/** @type {string[]} */ ([]))
   let newTabView = $state('templates')
+  let selectedExamples = $state(/** @type {string[]} */ ([]))
   function startTab() {
     const tab = addTab()
     startingTabs.push(tab.id)
     newTabView = 'templates'
+    selectedExamples = []
   }
   /** @param {string} [sequence] */
   function startEditing(sequence = '') {
     startingTabs = startingTabs.filter(id => id !== activeId)
     editor.reset(sequence)
   }
-  const startingExamples = $derived(exampleItems.map(item => 'sequence' in item && item.sequence
-    ? { ...item, run: () => startEditing(canonical(item.sequence ?? '')) } : item))
-  const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
+  function openExamples() {
+    const sequences = selectedExamples.map(canonical)
+    if (!sequences.length) return
+    startEditing(sequences[0])
+    for (const sequence of sequences.slice(1)) addTab(sequence)
+    selectedExamples = []
+  }
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -631,13 +616,14 @@
     </header>
     <div class="tabs-slot">
       <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={startTab} onduplicate={duplicateTab} />
+      <button type="button" class="tool examples-entry" onclick={() => { if (!startingTabs.includes(activeId)) startTab(); newTabView = 'examples' }}><Icon name="book" />{t('app.examples')}</button>
     </div>
   </div>
 
   <main class="workspace" bind:this={work}>
     {#if startingTabs.includes(activeId)}
 <div class="new-tab-page" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}>
-  <h1>{t('app.tabs.new')}</h1>
+  <div class="new-tab-heading"><h1>{t('app.tabs.new')}</h1><button type="button" class="tool" aria-label={t('app.close')} title={t('app.close')} onclick={() => startEditing()}><Icon name="close" /></button></div>
   <div class="new-tab-choices">
     <button type="button" class="tool" onclick={() => startEditing()}><Icon name="plus" />{t('app.tabs.blank')}</button>
     <button type="button" class="tool" aria-pressed={newTabView === 'templates'} onclick={() => newTabView = 'templates'}>{t('app.tabs.templates')}</button>
@@ -659,7 +645,19 @@
       </div>
     {/each}
   {:else}
-    <MenuList label={t('app.examples')} items={startingExamples} view={exampleView} />
+    <div class="example-actions"><button type="button" class="tool" disabled={!selectedExamples.length} onclick={openExamples}>{t('app.examples.openSelected', { count: selectedExamples.length })}</button></div>
+    {#each EXAMPLE_GROUPS as group (group.key)}
+      <p class="template-heading">{t(`app.examples.${group.key}`)}</p>
+      <div class="example-grid">
+        {#each group.examples as example (example.sequence)}
+          <label class="example-card">
+            <input type="checkbox" value={example.sequence} bind:group={selectedExamples} />
+            <span class="example-char" lang={hasTangut(example.sequence) ? 'txg' : 'ja'}>{example.char || '⬚'}</span>
+            <span class="example-sequence">{example.sequence}</span>
+          </label>
+        {/each}
+      </div>
+    {/each}
   {/if}
 </div>
     {:else}
@@ -779,7 +777,7 @@
     <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
+    <button type="button" class="tool" onclick={() => { moreOpen = false; if (!startingTabs.includes(activeId)) startTab(); newTabView = 'examples' }}><Icon name="book" />{t('app.examples')}</button>
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
@@ -891,7 +889,16 @@
   }
 
   .new-tab-page{width:min(720px,100%);margin:0 auto;padding:24px 16px;box-sizing:border-box}
-  .new-tab-page h1{margin:0 0 18px;font-size:20px}
+  .new-tab-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .new-tab-page h1{margin:0;font-size:20px}
+  .examples-entry{flex:none;align-self:center}
+  .example-actions{position:sticky;top:0;z-index:1;padding:8px 0;background:var(--bg)}
+  .example-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+  .example-card{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+  .example-card:has(input:checked){border-color:var(--accent);background:var(--hover)}
+  .example-card input{accent-color:var(--accent)}
+  .example-char{font-family:var(--cjk);font-size:26px}
+  .example-sequence{min-width:0;overflow-wrap:anywhere;font-family:var(--cjk);font-size:13px}
   .new-tab-choices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .new-tab-choices button[aria-pressed="true"]{background:var(--hover);color:var(--ink)}
   .template-heading{margin:14px 0 6px;color:var(--muted);font-size:12px}

@@ -38,6 +38,7 @@
   "app.examples.cards": "Cards",
   "app.examples.list": "List",
   "app.examples.tangut": "Tangut",
+  "app.examples.openSelected": "Open selected ({count})",
   "app.examples.none": "(unencoded)",
   "app.export.background": "Background",
   "app.export.bg.black": "Black",

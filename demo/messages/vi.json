@@ -30,6 +30,7 @@
   "app.encoded": "Được mã hóa thành",
   "app.examples": "Ví dụ",
   "app.examples.tangut": "Chữ Tây Hạ",
+  "app.examples.openSelected": "Mở mục đã chọn ({count})",
   "app.examples.none": "(chưa được mã hóa)",
   "app.export.background": "Nền",
   "app.export.bg.black": "Đen",

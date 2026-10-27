@@ -37,6 +37,7 @@
   "app.examples.cards": "カード",
   "app.examples.list": "一覧",
   "app.examples.tangut": "西夏文字",
+  "app.examples.openSelected": "選択した例を開く（{count}）",
   "app.examples.none": "（未収録）",
   "app.export.background": "背景",
   "app.export.bg.black": "黒",
