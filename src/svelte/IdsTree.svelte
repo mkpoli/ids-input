@@ -1,5 +1,6 @@
 <script>
   import { tint } from './tokens.js'
+  import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
@@ -21,19 +22,40 @@
 
   // Dropping a part on a box.
   let over = $state(/** @type {string | null} */ (null))
+  /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
+  /** @param {DragEvent} event @param {Path} path */
+  function startDrag(event, path) {
+    if (editor.disabled || !path.length || !event.dataTransfer) return
+    dragging = { path, tree: editor.tree }
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.stopPropagation()
+  }
+  function endDrag() { dragging = null; over = null }
+
   /** @param {DragEvent} event @param {Path} path */
   function dragover(event, path) {
-    if (editor.disabled || !event.dataTransfer?.types.includes('text/plain')) return
-    event.preventDefault()
+    if (editor.disabled || !event.dataTransfer) return
+    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'move'; over = key(path); return
+    }
+    if (!event.dataTransfer.types.includes('text/plain')) return
+    event.preventDefault(); event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
     over = key(path)
   }
   /** @param {DragEvent} event @param {Path} path */
   function drop(event, path) {
     over = null
+    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation(); editor.reorder(dragging.path, path)
+      dragging = null; return
+    }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given) return
-    event.preventDefault()
+    event.preventDefault(); event.stopPropagation()
     editor.take(given, path)
   }
 
@@ -55,6 +77,11 @@
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
+      const next = neighbor(editor.tree, path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
+      if (path.length && !editor.disabled) { event.preventDefault(); if (next) { editor.reorder(path, next); editor.focusChosen(rootEl) } }
+      return
+    }
     if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) {
       event.preventDefault()
       const r = /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect()
@@ -96,10 +123,11 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
       <div class="ids-head">
-        <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
-          aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
+        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
+          aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
         <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
@@ -114,8 +142,8 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
-    <button type="button" class="ids-part" style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
-      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
+    <button type="button" class="ids-part" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
+      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
@@ -176,6 +204,8 @@
   .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
   .ids-node.disabled{cursor:default}
+  :is(.ids-op,.ids-part)[draggable="true"]{cursor:grab}
+  :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
   .ids-head{position:absolute;top:3em;left:4em;right:4em;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
