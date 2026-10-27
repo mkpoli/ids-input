@@ -21,6 +21,7 @@
   "ids.do.split": "{op}(으)로 {part} 나누기",
   "ids.do.swap": "{from}을(를) {op}(으)로 바꾸기",
   "ids.do.type": "{text} 입력",
+  "ids.do.wrap": "{op}(으)로 감싸기",
   "ids.do.unwrap": "{op} 없애기",
   "ids.empty": "빈 자리",
   "ids.find.placeholder": "이름·단어·글자·코드로 찾기…",

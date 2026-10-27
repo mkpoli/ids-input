@@ -239,3 +239,28 @@ it('renders requested native components offline, including the three exact subtr
     expect(nested.origins.some(origin => origin.includes('㇯鳥灬'))).toBe(true)
   }
 })
+
+it('joins the shallow sweep to the hook in both source spellings and preserves two editable strokes', async () => {
+  const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans','serif']) {
+    const parts = componentParts('⿱丿乚', undefined, fontStyle)
+    expect(parts).toHaveLength(2)
+    const [sweep, hook] = parts.map(part => part.source)
+    expect(sweep[2] - sweep[0]).toBeGreaterThan(3 * (sweep[3] - sweep[1]))
+    expect(hook[3]).toBeGreaterThan(sweep[1])
+    expect(hook[3]).toBeLessThan(sweep[3])
+    expect(hook[0]).toBeGreaterThan(sweep[0])
+    expect(hook[0]).toBeLessThan(sweep[2])
+    expect(componentDrawing('⿱丿乚', fontStyle).d).toBe(componentDrawing('⿱㇒乚', fontStyle).d)
+    for (const text of ['⿱丿乚','⿱㇒乚']) {
+      expect(onlyBundled(text)).toBe(true)
+      const drawn = await compose(local(), text, { fontStyle, separate: true })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+      const nested = await compose(remote(), `⿰木${text}`, { fontStyle })
+      expect(nested.origins.filter(origin => origin.includes(text))).toHaveLength(2)
+      expect(nested.d).not.toMatch(/NaN|Infinity/)
+    }
+  }
+  expect(componentDrawing('⿱丿乚','kaisho')).toBeNull()
+})
