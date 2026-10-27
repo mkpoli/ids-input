@@ -304,6 +304,35 @@ there instead. It has no `variants`, `drawing` or `preview`.
 
 ## Search
 
+`IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
+four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+The demo offers it beside the existing character search below the editor. Selecting a preset
+runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
+characters** copies the complete result, including hits beyond the visible page.
+
+```js
+import { createStructuralSearch } from 'ids-input'
+const patterns = createStructuralSearch(table, { forms })
+patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
+patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
+patterns.search('⿲ABA')           // matching outer parts, such as 弼
+patterns.search('⿸⬚⬚')           // any upper-left enclosure
+```
+
+A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
+Different letters may match the same part. Positional forms use the supplied forms table.
+`⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
+be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+and opens encoded components up to six levels, considering source alternatives. It does not find
+a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
+remain explicit operators. Coverage depends on the supplied descriptions and forms.
+
+`babelStoneAdapter.findByStructure(query, { limit, signal })` runs this search in the same worker
+as description search. It returns `{ hits, total, characters, problem? }`: `characters` contains
+all matching characters without separators, while `hits` is limited for display. Invalid patterns
+return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
+other characters, with code-point ordering within each group.
+
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
