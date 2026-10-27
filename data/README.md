@@ -505,13 +505,13 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 40,221 glyph outlines in 196 chunks, each covering at most
-256 code points. The full set is 11,357,016 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 49,483 glyph outlines in 235 chunks, each covering at most
+256 code points. The full set is 16,535,359 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
 
-Sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
+The original sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
 `fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
 The pinned file names, SHA-256s and source URLs are in [`unicode-fonts.json`](unicode-fonts.json).
 Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/OFL-NotoUnicode.txt).
@@ -519,11 +519,12 @@ Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/O
 [Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
 
 Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
-package font directories and Noto CJK font. The builder checks every source digest, selects the first
+package font directories plus every Noto CJK, Jigmo, Noto Emoji and Unifont file listed in
+`unicode-fonts.json`. The builder checks every source digest, selects the first
 available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
 [FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
 curves with a maximum error of 0.5 normalized units; packed coordinates use quarter-unit precision.
-Unicode acceptance uses pinned Bun 1.3.14, matching the editor's rules. The gzip OS header is
+Unicode acceptance uses the bundled Unicode 18.0.0 properties, matching the editor's rules. The gzip OS header is
 normalized so supported Python versions produce the same shard bytes.
 
 These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
@@ -586,3 +587,29 @@ operators and draft markers. The existing Small Seal allocation remains supporte
 Radical properties distinguish ideographs from alphabetic letters. Source: the
 [Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
 [Unicode License v3](licences/Unicode-3.0.txt).
+
+### Extended fallback sources
+
+The fallback order retains existing Noto outlines, then uses Jigmo3 2025-09-12 (CC0-1.0),
+Noto Emoji (SIL OFL 1.1), and GNU Unifont 18.0.01 (under its SIL OFL 1.1 option).
+Jigmo supplies CJK Extension J; Noto Emoji supplies monochrome emoji contours. Unifont fills
+remaining published glyphs, including recent kana, Cyrillic, phonetic letters and ideographic marks.
+Its pixel-based outlines retain their original design. The host export's glyphs take precedence.
+
+- [Jigmo](https://kamichikoichi.github.io/jigmo/): source file and digest in `unicode-fonts.json`;
+  [CC0 text](../fonts/LICENSE-Jigmo.txt).
+- [Noto Emoji](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji):
+  pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
+- [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
+  [upstream license](../fonts/LICENSE-Unifont.txt), including its OFL option.
+- [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
+  `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
+  Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)
+  is preserved from [Mozilla's repository](https://github.com/mozilla/gecko-dev/blob/master/layout/reftests/fonts/glyphwiki-license.txt),
+  because the live license page was unavailable when checked on 2026-10-28.
+
+`unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
+sources, grouped by Unicode block. It excludes ranges handled by the main CJK export and dedicated
+bundles. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
+available source glyphs; the remaining characters need additional source outlines. Private-use
+characters require a host-supplied mapping and never inherit Unifont's private allocations.
