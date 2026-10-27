@@ -60,14 +60,19 @@ When the audit combines modern IDS tables, `modernSource` lists all supplied tab
 
 ## Curated supplementary mappings
 
-`scripts/data/small-seal/supplements.json` records explicit provider crosswalks
-for glyphs outside the bundled app palette. U+3DDAF is mapped to 𠔝 by Unicode
-SealSources; CHISE's `SW-JIGUGE-15216` lists 𠔝, 其, 𢍌 and 𠔐 together. The
-audit includes those aliases and a pinned Chen Changzhi SVG from Kaiyuan.
-The source IDS remains unresolved; this mapping does not promote it into the
-source-backed decomposition table.
+`scripts/data/small-seal/supplements.json` records provider crosswalks for seal
+glyphs outside the bundled app palette. Each entry pairs one Unicode SealSources
+`kSEAL_MCJK` value with a single CHISE ShuoWen record that lists the modern
+characters together. The entry names the record and carries checksums for the
+Unicode table, the CHISE archive and a pinned Kaiyuan SVG.
 
-Supplementary source and glyph checksums are verified during generation and
-included in the report. The CHISE relationship is checked against the bundled
-archive by `python3 -m unittest discover -s scripts -p test_small_seal.py`.
-Supplementary glyphs are drawn from local SVG files, separately from the app font.
+`python3 scripts/build_seal_supplements.py REPORT_JSON` adds a seal form when its
+Unicode mapping reaches a modern component that the report lists as unmapped,
+for example U+3DB6E for 爭 and 争 or U+3DDAF for 其. The audit includes the
+aliases; supplementary mappings stay outside the source-backed decomposition
+table. A source IDS with no resolved seal head remains unresolved.
+
+The checksums are verified during generation and by every entry in
+`python3 -m unittest discover -s scripts -p test_small_seal.py`. Supplementary
+glyphs are reference evidence for the audit and remain separate from the app
+font.

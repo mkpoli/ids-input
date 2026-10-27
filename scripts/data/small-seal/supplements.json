@@ -2,6 +2,490 @@
   "format": 1,
   "entries": [
     {
+      "char": "𽎷",
+      "modern": [
+        "君"
+      ],
+      "glyph": "u3D3B7.svg",
+      "glyphSha256": "11862e3998012ba28d0b49b539dba59ca8a6193747744757dd84e95683c96941",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D3B7.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "541B",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR022.el",
+        "record": "SW-JIGUGE-03913",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D3B7 to 君; CHISE SW-JIGUGE-03913 lists 君 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽒴",
+      "modern": [
+        "帰",
+        "歸"
+      ],
+      "glyph": "u3D4B4.svg",
+      "glyphSha256": "69f7cd009302b417cc2e9f088eebb9812f26861d02136ae6bc54427149d1e4f1",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D4B4.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "6B78",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR027.el",
+        "record": "SW-JIGUGE-04905",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D4B4 to 歸; CHISE SW-JIGUGE-04905 lists 帰、歸 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽒶",
+      "modern": [
+        "疌"
+      ],
+      "glyph": "u3D4B6.svg",
+      "glyphSha256": "58633174c003664420a4180ee8928c86e32ff403b940b043101eb1a1b9ae01bc",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D4B6.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "758C",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR027.el",
+        "record": "SW-JIGUGE-04907",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D4B6 to 疌; CHISE SW-JIGUGE-04907 lists 疌 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽒻",
+      "modern": [
+        "登"
+      ],
+      "glyph": "u3D4BB.svg",
+      "glyphSha256": "77fc58cd750d56b35025b18c53311658b1beb80fcfcad43d6b56c12dbac1afaf",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D4BB.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "767B",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR028.el",
+        "record": "SW-JIGUGE-04912",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D4BB to 登; CHISE SW-JIGUGE-04912 lists 登 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽕔",
+      "modern": [
+        "遠"
+      ],
+      "glyph": "u3D554.svg",
+      "glyphSha256": "1ac7360f777dacbc88b9efc08538f4c3ae514c7d597d25689e5bba87b4f1a83d",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D554.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "9060",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR033.el",
+        "record": "SW-JIGUGE-05505",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D554 to 遠; CHISE SW-JIGUGE-05505 lists 遠 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽖚",
+      "modern": [
+        "御"
+      ],
+      "glyph": "u3D59A.svg",
+      "glyphSha256": "a648c274e78e7a65659d41d4d792886173df2a0984dc6c8f8230a9926d1ac43e",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D59A.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5FA1",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR034.el",
+        "record": "SW-JIGUGE-05718",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D59A to 御; CHISE SW-JIGUGE-05718 lists 御 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽚅",
+      "modern": [
+        "廿"
+      ],
+      "glyph": "u3D685.svg",
+      "glyphSha256": "4251de2cbc5569c00ffe967a44b43c166000af38fdb1d016bd0a1926c15c8868",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D685.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5EFF",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR054.el",
+        "record": "SW-JIGUGE-07001",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D685 to 廿; CHISE SW-JIGUGE-07001 lists 廿 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽢎",
+      "modern": [
+        "父"
+      ],
+      "glyph": "u3D88E.svg",
+      "glyphSha256": "a1538b78b1064455dea13d70f020d3460bc2d8aad00f49ff6a0367a7af3b0cb1",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D88E.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "7236",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR076.el",
+        "record": "SW-JIGUGE-09011",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D88E to 父; CHISE SW-JIGUGE-09011 lists 父 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽢗",
+      "modern": [
+        "尹"
+      ],
+      "glyph": "u3D897.svg",
+      "glyphSha256": "19900fa2568c896d90fba2729c49c46baf0349346757f43efe6796483b595b96",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D897.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5C39",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR076.el",
+        "record": "SW-JIGUGE-09019",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D897 to 尹; CHISE SW-JIGUGE-09019 lists 尹 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽢜",
+      "modern": [
+        "及"
+      ],
+      "glyph": "u3D89C.svg",
+      "glyphSha256": "5bc1c2ed7da22fa908f77657231defdeba864b5bac83d13e14370594284ace92",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D89C.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "53CA",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR076.el",
+        "record": "SW-JIGUGE-09102",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D89C to 及; CHISE SW-JIGUGE-09102 lists 及 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽢭",
+      "modern": [
+        "叚"
+      ],
+      "glyph": "u3D8AD.svg",
+      "glyphSha256": "82cdb97ca9deb518790a0ed5e1b4ad6ed4fef13b72fe19a46e60581ef853f63d",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D8AD.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "53DA",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR076.el",
+        "record": "SW-JIGUGE-09119",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D8AD to 叚; CHISE SW-JIGUGE-09119 lists 叚 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽣻",
+      "modern": [
+        "尋",
+        "𢒫"
+      ],
+      "glyph": "u3D8FB.svg",
+      "glyphSha256": "36c7f374fe24446af4336221a4c305223f055daa0d357cb1768640bdec688a1a",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D8FB.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "224AB",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR089.el",
+        "record": "SW-JIGUGE-09605",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D8FB to 𢒫; CHISE SW-JIGUGE-09605 lists 尋、𢒫 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽥮",
+      "modern": [
+        "兆"
+      ],
+      "glyph": "u3D96E.svg",
+      "glyphSha256": "8b19f394b340c4fa4b915c29a351c4969028dc7e4c707cc19634a3351c19ea73",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D96E.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5146",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR094.el",
+        "record": "SW-JIGUGE-10018",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D96E to 兆; CHISE SW-JIGUGE-10018 lists 兆 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽦪",
+      "modern": [
+        "睘",
+        "瞏"
+      ],
+      "glyph": "u3D9AA.svg",
+      "glyphSha256": "68781ed868a69dd7eea47c82a1950a22ba743de033005ede91a8e7529b7fcb80",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3D9AA.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "778F",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR099.el",
+        "record": "SW-JIGUGE-10921",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3D9AA to 瞏; CHISE SW-JIGUGE-10921 lists 睘、瞏 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽭇",
+      "modern": [
+        "焉"
+      ],
+      "glyph": "u3DB47.svg",
+      "glyphSha256": "9737a69491348a53d8ba8028967d41d8cd8a6d00975385485f494bc30e3b72ef",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DB47.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "7109",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR120.el",
+        "record": "SW-JIGUGE-12705",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DB47 to 焉; CHISE SW-JIGUGE-12705 lists 焉 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽭖",
+      "modern": [
+        "幾"
+      ],
+      "glyph": "u3DB56.svg",
+      "glyphSha256": "4b0d1db57683ee292d72336e2b16ad1f95b0e99c3307aee9828751b9afb7a665",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DB56.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5E7E",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR124.el",
+        "record": "SW-JIGUGE-12910",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DB56 to 幾; CHISE SW-JIGUGE-12910 lists 幾 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽭮",
+      "modern": [
+        "争",
+        "爭"
+      ],
+      "glyph": "u3DB6E.svg",
+      "glyphSha256": "df1f56b033a8c5720dbf9eb3fe2848fde66fd488cbc7b94e29348924f2d2685c",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DB6E.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "722D",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR129.el",
+        "record": "SW-JIGUGE-13108",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DB6E to 爭; CHISE SW-JIGUGE-13108 lists 争、爭 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽭺",
+      "modern": [
+        "睿"
+      ],
+      "glyph": "u3DB7A.svg",
+      "glyphSha256": "e2dd660aca0e7a7d51c21c47ddb11bfc367f44880046ce9ba44198c79f67a3b3",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DB7A.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "777F",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR130.el",
+        "record": "SW-JIGUGE-13120",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DB7A to 睿; CHISE SW-JIGUGE-13120 lists 睿 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽮚",
+      "modern": [
+        "𠂈"
+      ],
+      "glyph": "u3DB9A.svg",
+      "glyphSha256": "de1ce0402d5dc0c4c078c32304a330f03051d902b12ff36291dad1836b6dec25",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DB9A.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "20088",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR131.el",
+        "record": "SW-JIGUGE-13306",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DB9A to 𠂈; CHISE SW-JIGUGE-13306 lists 𠂈 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽶬",
+      "modern": [
+        "𠀠"
+      ],
+      "glyph": "u3DDAC.svg",
+      "glyphSha256": "15f681b243bfeac316122bf48fcc4426a47d79c215b408f028cff3cbe695cb78",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DDAC.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "20020",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR144.el",
+        "record": "SW-JIGUGE-15213",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DDAC to 𠀠; CHISE SW-JIGUGE-15213 lists 𠀠 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
       "char": "𽶯",
       "modern": [
         "𠔝",
@@ -26,6 +510,660 @@
         "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
       },
       "basis": "Curated crosswalk: Unicode maps U+3DDAF to 𠔝; the CHISE record lists 𠔝, 其, 𢍌 and 𠔐 together. This does not resolve the source IDS entities.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽷃",
+      "modern": [
+        "巨"
+      ],
+      "glyph": "u3DDC3.svg",
+      "glyphSha256": "1dd926211454965bf51cbfddc6d76e95131ae561cc3bc9c0785eab350a146ffc",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DDC3.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5DE8",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR147.el",
+        "record": "SW-JIGUGE-15403",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DDC3 to 巨; CHISE SW-JIGUGE-15403 lists 巨 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𽽉",
+      "modern": [
+        "良",
+        "𣌩"
+      ],
+      "glyph": "u3DF49.svg",
+      "glyphSha256": "194d4c8a1808472d48455e07bd2b84b66cb42a232af847a381d53f9d0d593646",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3DF49.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "23329",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR193.el",
+        "record": "SW-JIGUGE-17700",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3DF49 to 𣌩; CHISE SW-JIGUGE-17700 lists 良、𣌩 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾊿",
+      "modern": [
+        "郎"
+      ],
+      "glyph": "u3E2BF.svg",
+      "glyphSha256": "1aa93d50faa28c0088c2c9c7e34d4d4b622a70d4b6423e96d90e06fe303ff349",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E2BF.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "90CE",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR229.el",
+        "record": "SW-JIGUGE-21514",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E2BF to 郎; CHISE SW-JIGUGE-21514 lists 郎 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾎘",
+      "modern": [
+        "夗"
+      ],
+      "glyph": "u3E398.svg",
+      "glyphSha256": "98b495093f3228ca95122c8d70997c9569bec174ac4731266d84e3daf8794e31",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E398.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5917",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR241.el",
+        "record": "SW-JIGUGE-23109",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E398 to 夗; CHISE SW-JIGUGE-23109 lists 夗 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾏪",
+      "modern": [
+        "朮"
+      ],
+      "glyph": "u3E3EA.svg",
+      "glyphSha256": "e9fa329c78771ae047679824b86943827545f179bfd85af0d4de52f70b1933e8",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E3EA.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "672E",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR253.el",
+        "record": "SW-JIGUGE-23619",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E3EA to 朮; CHISE SW-JIGUGE-23619 lists 朮 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾐺",
+      "modern": [
+        "兼"
+      ],
+      "glyph": "u3E43A.svg",
+      "glyphSha256": "58617786732a0b2ced4529e5f93c32eb67740efeb7c28ee4266274a5dd2d4f00",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E43A.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "517C",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR254.el",
+        "record": "SW-JIGUGE-23909",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E43A to 兼; CHISE SW-JIGUGE-23909 lists 兼 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾒳",
+      "modern": [
+        "宛"
+      ],
+      "glyph": "u3E4B3.svg",
+      "glyphSha256": "1dac5f1777fa75615857e5f3cc1c97bf6993b33e8fbb6a10d715ab81b1f5c7b2",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E4B3.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5B9B",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR269.el",
+        "record": "SW-JIGUGE-24613",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E4B3 to 宛; CHISE SW-JIGUGE-24613 lists 宛 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾘷",
+      "modern": [
+        "帚"
+      ],
+      "glyph": "u3E637.svg",
+      "glyphSha256": "ef7da2726882ca8fdb3ef90c6e4d39fb71d3b4fa57263ffccf298ec4f9ed689d",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E637.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5E1A",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR281.el",
+        "record": "SW-JIGUGE-26110",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E637 to 帚; CHISE SW-JIGUGE-26110 lists 帚 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾙳",
+      "modern": [
+        "𡰥"
+      ],
+      "glyph": "u3E673.svg",
+      "glyphSha256": "b9b1b8f377b24f68077f5f24da9a727981b147376d5edf3c424e9779d73eaf2a",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E673.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "21C25",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR287.el",
+        "record": "SW-JIGUGE-26506",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E673 to 𡰥; CHISE SW-JIGUGE-26506 lists 𡰥 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾛹",
+      "modern": [
+        "㑴",
+        "侵"
+      ],
+      "glyph": "u3E6F9.svg",
+      "glyphSha256": "37a1a580a6e3250a02117f42fd8155f9ed9756ad07db69b8832c2c5ce7346aa3",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E6F9.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "3474",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR287.el",
+        "record": "SW-JIGUGE-26919",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E6F9 to 㑴; CHISE SW-JIGUGE-26919 lists 㑴、侵 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾞑",
+      "modern": [
+        "艮",
+        "𥃩"
+      ],
+      "glyph": "u3E791.svg",
+      "glyphSha256": "d443744f6674ee2f0374a5c30cfb54cb7978187f2369041810fc74176dff7de8",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E791.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "250E9",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR289.el",
+        "record": "SW-JIGUGE-27504",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E791 to 𥃩; CHISE SW-JIGUGE-27504 lists 艮、𥃩 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾟺",
+      "modern": [
+        "袁"
+      ],
+      "glyph": "u3E7FA.svg",
+      "glyphSha256": "efea2dc0a8947d765f135f03a9e90eacb17a6a1afd31ca6a42ce07f782e3ed1b",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E7FA.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "8881",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR300.el",
+        "record": "SW-JIGUGE-28022",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E7FA to 袁; CHISE SW-JIGUGE-28022 lists 袁 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾠄",
+      "modern": [
+        "襄",
+        "𧞻"
+      ],
+      "glyph": "u3E804.svg",
+      "glyphSha256": "91f8fbb54f7218a4a9e4814694c6cbf8d89c765bf1c9e623f4fae5cc626805b8",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E804.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "277BB",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR300.el",
+        "record": "SW-JIGUGE-28104",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E804 to 𧞻; CHISE SW-JIGUGE-28104 lists 襄、𧞻 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾠼",
+      "modern": [
+        "求"
+      ],
+      "glyph": "u3E83C.svg",
+      "glyphSha256": "692d2be7482fdab69c1cc15bd3b806438f4fec46eb9230f59df7985461a02bbb",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E83C.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "6C42",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR301.el",
+        "record": "SW-JIGUGE-28301",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E83C to 求; CHISE SW-JIGUGE-28301 lists 求 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾨍",
+      "modern": [
+        "卸"
+      ],
+      "glyph": "u3EA0D.svg",
+      "glyphSha256": "472a63f66a85baca227331256cd93d5865ab3e31a33e9ef409db1e3594a2ca40",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3EA0D.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5378",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR338.el",
+        "record": "SW-JIGUGE-30705",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3EA0D to 卸; CHISE SW-JIGUGE-30705 lists 卸 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾫅",
+      "modern": [
+        "廉"
+      ],
+      "glyph": "u3EAC5.svg",
+      "glyphSha256": "e493ea5de3183ea88585b70548d67d230cffb76d05327e85059287e64871fb5d",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3EAC5.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5EC9",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR353.el",
+        "record": "SW-JIGUGE-31625",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3EAC5 to 廉; CHISE SW-JIGUGE-31625 lists 廉 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𾬃",
+      "modern": [
+        "厃"
+      ],
+      "glyph": "u3EB03.svg",
+      "glyphSha256": "4a87cf8344b4bcc7092bd9fdae4fe13e0726f62c80ea46f5cfb05ebba6da481c",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3EB03.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5383",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR354.el",
+        "record": "SW-JIGUGE-31829",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3EB03 to 厃; CHISE SW-JIGUGE-31829 lists 厃 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿀭",
+      "modern": [
+        "氾"
+      ],
+      "glyph": "u3F02D.svg",
+      "glyphSha256": "eccfdb5331ed092203a09877a73408efd83c15d9ccbe7df60375e51051b3c73e",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F02D.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "6C3E",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR410.el",
+        "record": "SW-JIGUGE-38103",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F02D to 氾; CHISE SW-JIGUGE-38103 lists 氾 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿑙",
+      "modern": [
+        "妻"
+      ],
+      "glyph": "u3F459.svg",
+      "glyphSha256": "b273b1348b69638929b56c0de687b743bf5b366256bd99cc3d5d543f12e9626d",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F459.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "59BB",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR443.el",
+        "record": "SW-JIGUGE-42919",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F459 to 妻; CHISE SW-JIGUGE-42919 lists 妻 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿑥",
+      "modern": [
+        "母"
+      ],
+      "glyph": "u3F465.svg",
+      "glyphSha256": "cb62d93ccba1e0d1c98c7177df59397dfd2e7ed2c1bba12c45023aa4dec4ef6a",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F465.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "6BCD",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR443.el",
+        "record": "SW-JIGUGE-43002",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F465 to 母; CHISE SW-JIGUGE-43002 lists 母 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿕒",
+      "modern": [
+        "乂"
+      ],
+      "glyph": "u3F552.svg",
+      "glyphSha256": "68ef562c4872c720f34ca5cc3a56a0571c4fbb436001dc213ed81f7169877e2b",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F552.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "4E42",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR446.el",
+        "record": "SW-JIGUGE-43804",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F552 to 乂; CHISE SW-JIGUGE-43804 lists 乂 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿕗",
+      "modern": [
+        "弋"
+      ],
+      "glyph": "u3F557.svg",
+      "glyphSha256": "a6c83482c4ba41bda7f665d314c51ade3d0e3d4f879ea8b746b2c59d1dcab33a",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F557.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5F0B",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR447.el",
+        "record": "SW-JIGUGE-43809",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F557 to 弋; CHISE SW-JIGUGE-43809 lists 弋 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿤭",
+      "modern": [
+        "留",
+        "畱"
+      ],
+      "glyph": "u3F92D.svg",
+      "glyphSha256": "4e33947577c896bb59b653bf894a7e5d58d170476fae29921d3c030e001fc978",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3F92D.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "7571",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR484.el",
+        "record": "SW-JIGUGE-47806",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3F92D to 畱; CHISE SW-JIGUGE-47806 lists 留、畱 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿭺",
+      "modern": [
+        "㐅"
+      ],
+      "glyph": "u3FB7A.svg",
+      "glyphSha256": "0adf403203ac21d096b151a3c4c38dfbf349cad3c8046e9c2abedce79025d722",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3FB7A.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "3405",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR507.el",
+        "record": "SW-JIGUGE-50710",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3FB7A to 㐅; CHISE SW-JIGUGE-50710 lists 㐅 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿯛",
+      "modern": [
+        "㠯",
+        "以"
+      ],
+      "glyph": "u3FBDB.svg",
+      "glyphSha256": "ae4e233578f32239f2dbd7c8a03a8fd090359e2c3033ca5dc8b2b1244cef47eb",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3FBDB.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "382F",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR533.el",
+        "record": "SW-JIGUGE-51603",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3FBDB to 㠯; CHISE SW-JIGUGE-51603 lists 㠯、以 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿯧",
+      "modern": [
+        "丣"
+      ],
+      "glyph": "u3FBE7.svg",
+      "glyphSha256": "d5dc0a9c9767f4552cd696f4942f5ae87e27165054c419f73da9e9b4f12b583f",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3FBE7.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "4E23",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR537.el",
+        "record": "SW-JIGUGE-51707",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3FBE7 to 丣; CHISE SW-JIGUGE-51707 lists 丣 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
+      "char": "𿯫",
+      "modern": [
+        "釀"
+      ],
+      "glyph": "u3FBEB.svg",
+      "glyphSha256": "905b40235965b06fee8d25e0874d85147b9e1a470ddd5cd8c9ab90d6c207ea15",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3FBEB.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "91C0",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR537.el",
+        "record": "SW-JIGUGE-51711",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3FBEB to 釀; CHISE SW-JIGUGE-51711 lists 釀 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
     }
   ]
