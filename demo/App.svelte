@@ -491,14 +491,14 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? point : t('app.examples.none'),
+      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
