@@ -208,5 +208,14 @@
   "info.relation.seal": "小篆字形",
   "info.script.han": "汉字",
   "info.script.seal": "小篆",
-  "info.keyboard": "F1进入详情・Esc关闭"
+  "info.keyboard": "F1进入详情・Esc关闭",
+  "parts.tab.gongche": "工尺谱",
+  "parts.gongche.notes": "谱字",
+  "parts.gongche.regional": "其他谱字",
+  "parts.gongche.modifiers": "偏旁",
+  "parts.gongche.guide": "记谱与输入说明",
+  "parts.gongche.conventions": "不同乐种的高低音记法有别，粤曲与传统工尺谱对亻、彳的用法也不同。",
+  "parts.gongche.compose": "组合左偏旁时，先输入 ⿰，再输入偏旁与谱字。音乐用法请依原谱。",
+  "parts.gongche.beiguan": "北管工尺谱 · 台湾文献馆",
+  "parts.gongche.cantonese": "粤曲工尺谱 · 中文界面咨询委员会 2022/03 附件二"
 }
