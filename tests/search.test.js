@@ -85,6 +85,43 @@ describe('the search', () => {
   })
 })
 
+describe('component lookup expressions', () => {
+  it('finds characters containing the right-hand component', () => {
+    expect(search.search('㇯？木')).toEqual(search.search('木'))
+    expect(search.search('su？木', { limit: 2 })).toEqual(search.search('木', { limit: 2 }))
+  })
+
+  it('lists the encoded parts of the left-hand character through its descriptions', () => {
+    const result = search.search('㇯森？')
+    expect(result.hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['木', '林', '十', '一', '丨', '八']))
+    expect(result.hits.map(hit => hit.char)).not.toContain('森')
+    expect(new Set(result.hits.map(hit => hit.char)).size).toBe(result.total)
+    expect(search.search('su森？', { limit: 2 })).toEqual({ hits: result.hits.slice(0, 2), total: result.total })
+    expect(search.search('㇯口？')).toEqual({ hits: [], total: 0 })
+  })
+
+  it('terminates on cycles and does not report subtraction operands as surviving parts', () => {
+    const index = createSearch(new Map([['甲', ['⿰乙口']], ['乙', ['⿱甲木']], ['丙', ['㇯甲口']]]))
+    expect(index.search('㇯甲？').hits.map(hit => hit.char)).toEqual(['乙', '口', '木'])
+    expect(index.search('㇯丙？').hits).toEqual([])
+  })
+
+  it('opens selected variants by their base character and follows long chains', () => {
+    const index = createSearch(new Map([
+      ['甲', ['⿰乙︀口']], ['乙', ['⿰丙口']], ['丙', ['⿰丁口']], ['丁', ['⿰戊口']],
+      ['戊', ['⿰己口']], ['己', ['⿰庚口']], ['庚', ['⿰辛口']], ['辛', ['⿰木口']],
+    ]))
+    const parts = index.search('㇯甲︀？').hits
+    expect(parts.map(hit => hit.char)).toEqual(expect.arrayContaining(['乙︀', '辛', '木']))
+    expect(parts.find(hit => hit.char === '乙︀').sequence).toBe('⿰丙口')
+  })
+
+  it('does not turn incomplete subtractions into component lookups', () => {
+    expect(search.search('㇯木⬚')).toEqual(search.search('㇯木＋'))
+    expect(search.search('㇯木⬚')).not.toEqual(search.search('㇯木？'))
+  })
+})
+
 
 describe('visual substitutes in IDS queries', () => {
   const shapes = createSearch(new Map(Object.entries({

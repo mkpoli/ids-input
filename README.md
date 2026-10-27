@@ -310,6 +310,11 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
+As in zi.tools, `㇯？木` finds characters containing 木, and `㇯森？` lists the components of 森
+through the available descriptions. `SU` can be used in place of `㇯`. These searches use the
+adapter's own data; components hidden inside a subtraction are omitted because the data does not
+establish which of them survive. An empty draft slot is distinct from the explicit `？` wildcard.
+
 IDS queries accept visual substitutes. The kana families follow the encoded
 components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
 and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).

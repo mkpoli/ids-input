@@ -104,6 +104,7 @@
   "ids.replace": "{part}を置き換える",
   "ids.search": "部品を探す",
   "ids.search.containing": "「{sequence}」を含む字",
+  "ids.search.partsOf": "「{char}」の部品",
   "ids.search.count.other": "{count}件",
   "ids.search.failed": "検索に失敗しました。",
   "ids.search.open": "{sequence}を開く",

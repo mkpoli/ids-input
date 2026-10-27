@@ -104,6 +104,7 @@
   "ids.replace": "Thay {part} bằng",
   "ids.search": "Tìm bộ phận",
   "ids.search.containing": "Các chữ chứa “{sequence}”",
+  "ids.search.partsOf": "Các bộ phận của “{char}”",
   "ids.search.count.other": "Tìm thấy {count} kết quả",
   "ids.search.failed": "Không thể tìm kiếm.",
   "ids.search.open": "Mở {sequence}",

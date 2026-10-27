@@ -9,7 +9,7 @@
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
@@ -216,6 +216,7 @@
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
+  const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   let fromText_ = $state('')
@@ -664,7 +665,7 @@
           <span class="grip" aria-hidden="true"></span>
         </div>
         <section class="pane results" aria-label={t('ids.search.title')}>
-          <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
+          <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
         </section>

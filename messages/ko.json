@@ -104,6 +104,7 @@
   "ids.replace": "{part}을(를) 바꾸기",
   "ids.search": "구성 요소 찾기",
   "ids.search.containing": "‘{sequence}’을 포함하는 글자",
+  "ids.search.partsOf": "‘{char}’의 부품",
   "ids.search.count.other": "{count}개",
   "ids.search.failed": "검색에 실패했습니다.",
   "ids.search.open": "{sequence} 열기",

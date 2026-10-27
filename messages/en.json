@@ -105,6 +105,7 @@
   "ids.replace": "Replace {part} with",
   "ids.search": "Find a component",
   "ids.search.containing": "Characters containing “{sequence}”",
+  "ids.search.partsOf": "Parts of “{char}”",
   "ids.search.count.one": "{count} found",
   "ids.search.count.other": "{count} found",
   "ids.search.failed": "The search failed.",

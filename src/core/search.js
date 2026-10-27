@@ -16,7 +16,7 @@
 // spans of it the terms matched, for highlighting.
 import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
-import { tokens, unencoded } from './decompose.js'
+import { lookupChar, tokens, unencoded } from './decompose.js'
 import { searchShape, SHAPE_COMPONENTS } from './search-shapes.js'
 
 /**
@@ -34,6 +34,17 @@ const tier = char => { const cp = /** @type {number} */ (char.codePointAt(0)); r
 export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
+
+/** zi.tools' two explicit wildcard expressions for looking up components.
+ * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
+export function componentQuery(text) {
+  const special = tokens(unalias((text ?? '').trim()))
+  if (special.length !== 3 || special[0] !== '㇯') return null
+  const [, left, right] = special
+  if (left === UNKNOWN && right !== UNKNOWN && !EMPTY_MARKS.includes(right) && isComponent(right)) return { kind: 'containing', char: right }
+  if (right === UNKNOWN && left !== UNKNOWN && !EMPTY_MARKS.includes(left) && isComponent(left)) return { kind: 'parts', char: left }
+  return null
+}
 
 /** A description's tokens as a tree; a token short of its operands reads as ？. @param {string[]} list @param {{ at: number }} cursor @returns {Tree} */
 function readTree(list, cursor) {
@@ -510,6 +521,40 @@ export function createSearch(table, { forms = new Map() } = {}) {
     return { text: out.join(''), spans }
   }
 
+  /** The encoded parts named in a character's descriptions, including parts of those parts.
+   * @param {string} char @param {number} limit @returns {{ hits: Hit[], total: number }} */
+  function partsOf(char, limit) {
+    /** @type {Map<string, number>} */
+    const depths = new Map()
+    const root = lookupChar(char)
+    /** @type {[string, number][]} */
+    const queue = [[root, 0]]
+    const visited = new Set([root])
+    for (let i = 0; i < queue.length; i++) {
+      const [current, depth] = queue[i]
+      /** @param {Tree} tree */
+      const visit = tree => {
+        if (typeof tree !== 'string') {
+          // A subtraction's operands do not necessarily survive in the resulting character.
+          if (tree.op !== '㇯') tree.parts.forEach(visit)
+          return
+        }
+        const base = lookupChar(tree)
+        if (base === root || base === current || tree === UNKNOWN || unencoded(tree) !== null || !isComponent(tree)) return
+        if (!depths.has(tree)) depths.set(tree, depth + 1)
+        if (!visited.has(base)) { visited.add(base); queue.push([base, depth + 1]) }
+      }
+      for (const tree of treesOf(current)) visit(tree)
+    }
+    const sorted = [...depths].sort((a, b) => a[1] - b[1] || tier(a[0]) - tier(b[0])
+      || /** @type {number} */ (a[0].codePointAt(0)) - /** @type {number} */ (b[0].codePointAt(0)))
+    const hits = sorted.slice(0, limit).map(([part, depth]) => {
+      const description = treesOf(lookupChar(part))[0]
+      return { char: part, sequence: description ? written(description, []).text : part, spans: [], score: depth }
+    })
+    return { hits, total: sorted.length }
+  }
+
   /**
    * The characters `query` finds, closest first, at most `limit`, and how many there are.
    * @param {string} query
@@ -517,6 +562,11 @@ export function createSearch(table, { forms = new Map() } = {}) {
    * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'extra' | 'terms' }}
    */
   function search(query, { limit = 60 } = {}) {
+    // zi.tools uses these two complete expressions for component lookup. Keep empty draft slots
+    // distinct from the explicit wildcard so an unfinished subtraction remains a normal query.
+    const special = componentQuery(query)
+    if (special?.kind === 'containing') return search(special.char, { limit })
+    if (special?.kind === 'parts') return partsOf(special.char, limit)
     const { terms, problem } = parseQuery(query)
     if (problem) return { hits: [], total: 0, problem }
     const by = index()
