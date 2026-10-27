@@ -578,6 +578,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   of all 17 IDCs; the approximation marker `〾` is represented separately.
   [IRG N2572, p.2](https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2) also illustrates
   the descriptions of 㕚, 氷 and 𧰧.
+- Further BabelStone descriptions: 𣥄 (`⿾正`), 𠄔 (`⿿予`), 𠕄 (`⿿凹`),
+  𦣩 (`⿰臣⿾臣`), 𣥒 (`⿱⿿止止`) and 𧹂 (`⿱⿰虎⿿虎貝`). The descriptions of 𣥄 and 𠄔
+  also appear in IRG N2572, p.2. Jyutnet records JYN00003 and JYN00025 supply the historical
+  寫 and 龍 variants `⿳宀⿰丨⿴⿻冂一一⿹𠃌灬` and `⿰𦚏⿷己三`, citing 道漢字音
+  (1939), pp.72 and 4 respectively.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
