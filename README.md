@@ -256,6 +256,11 @@ whole documents. `session.document` returns a detached copy; use session edits t
 ID for a tab or draft; `readSession(text)` restores them. The record omits undo history. The document
 itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
 
+`syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
+document at the same paths, keeping each layer's ID, name and transform through replacements and
+structural edits. Pass the long-lived session allocator so removed IDs do not return.
+`treeFromDocument` and `documentFromTree` convert between the two projections.
+
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
 builds it in one call; the preview must use `separate: true`. When the composer omits leaf ownership,
