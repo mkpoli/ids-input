@@ -41,7 +41,7 @@
 
   const range = (/** @type {number} */ first, /** @type {number} */ last) =>
     Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
-  const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf)]
+  const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf), ...'ˉˊˇˋ˙˪˫']
   const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
   // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
   const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
