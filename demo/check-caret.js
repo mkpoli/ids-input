@@ -44,6 +44,9 @@ try {
   await field.press('End')
   await page.keyboard.insertText('一')
   assert.equal((await field.inputValue()).startsWith('⿴[1]'), true)
+  // The bundled table names 甲 by its modified description, ahead of 申 by the plain one.
+  await field.fill('⿻[1:]丨日')
+  await page.waitForFunction(() => /U\+7532/.test(document.querySelector('.ids-preview-meta')?.textContent ?? ''))
   await field.fill('⿰木日')
   await select(2, 2)
   const cdp = await page.context().newCDPSession(page)

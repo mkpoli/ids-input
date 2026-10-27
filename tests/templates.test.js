@@ -9,7 +9,7 @@ const grid = STRUCTURE_TEMPLATES.find(item => item.id === 'grid').sequence
 
 describe('structure templates', () => {
   it('offer distinct two- to four-slot layouts with no fixed components', () => {
-    expect(new Set(STRUCTURE_TEMPLATES.map(item => item.id)).size).toBe(55)
+    expect(new Set(STRUCTURE_TEMPLATES.map(item => item.id)).size).toBe(56)
     const layouts = STRUCTURE_TEMPLATES.map(item => {
       const parsed = parse(item.sequence, { open: true })
       expect(parsed.problem).toBeUndefined()
@@ -28,7 +28,7 @@ describe('structure templates', () => {
       if (before.slots === after.slots) expect(before.count >= after.count).toBe(true)
     }
     expect(STRUCTURE_TEMPLATE_METADATA.threshold).toBe(50)
-    expect(STRUCTURE_TEMPLATE_METADATA.statistics.coveredCharacters).toBe(98556)
+    expect(STRUCTURE_TEMPLATE_METADATA.statistics.coveredCharacters).toBe(98605)
     expect(STRUCTURE_TEMPLATES.every(item => item.examples.every(char => typeof char === 'string' && [...char].length === 1))).toBe(true)
   })
   it('fills all four grid slots independently while preserving the adjacent component', () => {

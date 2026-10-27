@@ -21,29 +21,29 @@
       "path": "data/yi-bai-ids.tsv.gz",
       "url": "https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv1.txt",
       "version": "da1e9f8a09e2ec8faaf176bac99203f978282041",
-      "compressedSha256": "09ee7e157e44413c9ac954c66aff06aaaef99214ccef944b6b21b5aeff251c3a",
-      "textSha256": "9e1746d60a719c489a5172ce3d3083838551ddcfa83d1b7bc576acf4d887773e",
+      "compressedSha256": "24459e9b574d5a274a7d2b8ffb403f73c6f795fd780ac1b9dc0197e1081f2613",
+      "textSha256": "a4221e114587b1be3e69ffd9afed04a92e85a093261834d343fc8b1d1ffd66a2",
       "header": [
-        "# Yi Bai IDS level 1, da1e9f8a09e2ec8faaf176bac99203f978282041; MIT; unannotated standard IDS only."
+        "# Yi Bai IDS level 1, da1e9f8a09e2ec8faaf176bac99203f978282041; MIT; standard IDS, operator modifiers included."
       ]
     }
   ],
   "statistics": {
-    "mergedCharacters": 108109,
-    "hanCharacters": 101954,
-    "descriptions": 126247,
-    "validDescriptions": 123576,
+    "mergedCharacters": 108115,
+    "hanCharacters": 101960,
+    "descriptions": 126454,
+    "validDescriptions": 123783,
     "invalidDescriptions": 2671,
     "unknownDescriptions": 104,
-    "eligibleDescriptions": 120968,
-    "eligibleCharacters": 100120,
+    "eligibleDescriptions": 121105,
+    "eligibleCharacters": 100172,
     "previousTemplates": 17,
     "previousCoveredCharacters": 88719,
     "curatedTemplates": 1,
-    "frequencyAdditions": 37,
-    "templates": 55,
-    "addedTemplates": 38,
-    "coveredCharacters": 98556
+    "frequencyAdditions": 38,
+    "templates": 56,
+    "addedTemplates": 39,
+    "coveredCharacters": 98605
   },
   "templates": [
     {
@@ -117,6 +117,20 @@
       ]
     },
     {
+      "id": "layout-fb5d2c0a76bc",
+      "sequence": "⿻⬚⬚",
+      "curated": false,
+      "slots": 2,
+      "count": 503,
+      "examples": [
+        "丈",
+        "不",
+        "世",
+        "丗",
+        "丙"
+      ]
+    },
+    {
       "id": "layout-be29a63ff796",
       "sequence": "⿴⬚⬚",
       "curated": false,
@@ -128,20 +142,6 @@
         "亵",
         "卪",
         "叉"
-      ]
-    },
-    {
-      "id": "layout-fb5d2c0a76bc",
-      "sequence": "⿻⬚⬚",
-      "curated": false,
-      "slots": 2,
-      "count": 496,
-      "examples": [
-        "丈",
-        "不",
-        "世",
-        "丗",
-        "丙"
       ]
     },
     {
@@ -317,7 +317,7 @@
       "sequence": "⿰⬚⿻⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 224,
+      "count": 228,
       "examples": [
         "偖",
         "冸",
@@ -331,7 +331,7 @@
       "sequence": "⿱⬚⿻⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 184,
+      "count": 191,
       "examples": [
         "两",
         "乇",
@@ -359,7 +359,7 @@
       "sequence": "⿱⿻⬚⬚⬚",
       "curated": false,
       "slots": 3,
-      "count": 114,
+      "count": 118,
       "examples": [
         "专",
         "丗",
@@ -523,6 +523,20 @@
       ]
     },
     {
+      "id": "layout-ca463fb12832",
+      "sequence": "⿻⬚⿱⬚⬚",
+      "curated": false,
+      "slots": 3,
+      "count": 50,
+      "examples": [
+        "乗",
+        "亊",
+        "事",
+        "傘",
+        "失"
+      ]
+    },
+    {
       "id": "hangulFinal",
       "sequence": "⿱⿽⬚⬚⬚",
       "curated": true,
@@ -601,6 +615,20 @@
       ]
     },
     {
+      "id": "layout-a9de750153fa",
+      "sequence": "⿰⬚⿱⬚⿻⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 101,
+      "examples": [
+        "墸",
+        "隹",
+        "㵮",
+        "𠈷",
+        "𠋾"
+      ]
+    },
+    {
       "id": "grid",
       "sequence": "⿱⿰⬚⬚⿰⬚⬚",
       "curated": false,
@@ -612,20 +640,6 @@
         "祘",
         "竹",
         "㠭"
-      ]
-    },
-    {
-      "id": "layout-a9de750153fa",
-      "sequence": "⿰⬚⿱⬚⿻⬚⬚",
-      "curated": false,
-      "slots": 4,
-      "count": 97,
-      "examples": [
-        "墸",
-        "隹",
-        "㵮",
-        "𠈷",
-        "𠋾"
       ]
     },
     {
@@ -643,6 +657,20 @@
       ]
     },
     {
+      "id": "layout-db582f14be0f",
+      "sequence": "⿰⬚⿱⿻⬚⬚⬚",
+      "curated": false,
+      "slots": 4,
+      "count": 82,
+      "examples": [
+        "傁",
+        "嗖",
+        "嫂",
+        "搜",
+        "溲"
+      ]
+    },
+    {
       "id": "layout-b78dd6ff9519",
       "sequence": "⿳⬚⬚⿰⬚⬚",
       "curated": false,
@@ -654,20 +682,6 @@
         "竀",
         "鬰",
         "㒪"
-      ]
-    },
-    {
-      "id": "layout-db582f14be0f",
-      "sequence": "⿰⬚⿱⿻⬚⬚⬚",
-      "curated": false,
-      "slots": 4,
-      "count": 77,
-      "examples": [
-        "傁",
-        "嗖",
-        "嫂",
-        "搜",
-        "溲"
       ]
     },
     {
