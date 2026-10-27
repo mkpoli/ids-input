@@ -1,0 +1,560 @@
+{
+  "description": "Editorial Chinese translations and emoji mnemonics for the listed English senses. They do not assert historical or glyph equivalence. A match requires a complete English sense; Han mnemonics additionally require an explicit Han character.",
+  "meanings": [
+    {
+      "en": [
+        "horse"
+      ],
+      "han": [
+        "馬",
+        "马"
+      ],
+      "emoji": "🐎"
+    },
+    {
+      "en": [
+        "water"
+      ],
+      "han": [
+        "水"
+      ],
+      "emoji": "💧"
+    },
+    {
+      "en": [
+        "fire"
+      ],
+      "han": [
+        "火"
+      ],
+      "emoji": "🔥"
+    },
+    {
+      "en": [
+        "sun"
+      ],
+      "han": [
+        "日"
+      ],
+      "emoji": "☀️"
+    },
+    {
+      "en": [
+        "moon"
+      ],
+      "han": [
+        "月"
+      ],
+      "emoji": "🌙"
+    },
+    {
+      "en": [
+        "mountain"
+      ],
+      "han": [
+        "山"
+      ],
+      "emoji": "⛰️"
+    },
+    {
+      "en": [
+        "tree"
+      ],
+      "han": [
+        "木",
+        "樹",
+        "树"
+      ],
+      "emoji": "🌳"
+    },
+    {
+      "en": [
+        "wood"
+      ],
+      "han": [
+        "木"
+      ],
+      "emoji": "🪵"
+    },
+    {
+      "en": [
+        "stone"
+      ],
+      "han": [
+        "石"
+      ],
+      "emoji": "🪨"
+    },
+    {
+      "en": [
+        "earth"
+      ],
+      "han": [
+        "土"
+      ],
+      "emoji": "🌍"
+    },
+    {
+      "en": [
+        "gold"
+      ],
+      "han": [
+        "金"
+      ],
+      "emoji": "🪙"
+    },
+    {
+      "en": [
+        "heart"
+      ],
+      "han": [
+        "心"
+      ],
+      "emoji": "🫀"
+    },
+    {
+      "en": [
+        "person"
+      ],
+      "han": [
+        "人"
+      ],
+      "emoji": "🧑"
+    },
+    {
+      "en": [
+        "human"
+      ],
+      "han": [
+        "人"
+      ],
+      "emoji": "🧑"
+    },
+    {
+      "en": [
+        "mouth"
+      ],
+      "han": [
+        "口"
+      ],
+      "emoji": "👄"
+    },
+    {
+      "en": [
+        "eye"
+      ],
+      "han": [
+        "目",
+        "眼"
+      ],
+      "emoji": "👁️"
+    },
+    {
+      "en": [
+        "ear"
+      ],
+      "han": [
+        "耳"
+      ],
+      "emoji": "👂"
+    },
+    {
+      "en": [
+        "hand"
+      ],
+      "han": [
+        "手"
+      ],
+      "emoji": "✋"
+    },
+    {
+      "en": [
+        "foot"
+      ],
+      "han": [
+        "足",
+        "脚",
+        "腳"
+      ],
+      "emoji": "🦶"
+    },
+    {
+      "en": [
+        "head"
+      ],
+      "han": [
+        "頭",
+        "头",
+        "首"
+      ],
+      "emoji": "👤"
+    },
+    {
+      "en": [
+        "dog"
+      ],
+      "han": [
+        "犬",
+        "狗"
+      ],
+      "emoji": "🐕"
+    },
+    {
+      "en": [
+        "cat"
+      ],
+      "han": [
+        "猫",
+        "貓"
+      ],
+      "emoji": "🐈"
+    },
+    {
+      "en": [
+        "bird"
+      ],
+      "han": [
+        "鳥",
+        "鸟"
+      ],
+      "emoji": "🐦"
+    },
+    {
+      "en": [
+        "fish"
+      ],
+      "han": [
+        "魚",
+        "鱼"
+      ],
+      "emoji": "🐟"
+    },
+    {
+      "en": [
+        "snake"
+      ],
+      "han": [
+        "蛇"
+      ],
+      "emoji": "🐍"
+    },
+    {
+      "en": [
+        "dragon"
+      ],
+      "han": [
+        "龍",
+        "龙"
+      ],
+      "emoji": "🐉"
+    },
+    {
+      "en": [
+        "tiger"
+      ],
+      "han": [
+        "虎"
+      ],
+      "emoji": "🐅"
+    },
+    {
+      "en": [
+        "sheep"
+      ],
+      "han": [
+        "羊"
+      ],
+      "emoji": "🐑"
+    },
+    {
+      "en": [
+        "ox"
+      ],
+      "han": [
+        "牛"
+      ],
+      "emoji": "🐂"
+    },
+    {
+      "en": [
+        "deer"
+      ],
+      "han": [
+        "鹿"
+      ],
+      "emoji": "🦌"
+    },
+    {
+      "en": [
+        "rabbit"
+      ],
+      "han": [
+        "兔"
+      ],
+      "emoji": "🐇"
+    },
+    {
+      "en": [
+        "pig"
+      ],
+      "han": [
+        "豬",
+        "猪"
+      ],
+      "emoji": "🐖"
+    },
+    {
+      "en": [
+        "rain"
+      ],
+      "han": [
+        "雨"
+      ],
+      "emoji": "🌧️"
+    },
+    {
+      "en": [
+        "snow"
+      ],
+      "han": [
+        "雪"
+      ],
+      "emoji": "❄️"
+    },
+    {
+      "en": [
+        "wind"
+      ],
+      "han": [
+        "風",
+        "风"
+      ],
+      "emoji": "🌬️"
+    },
+    {
+      "en": [
+        "cloud"
+      ],
+      "han": [
+        "雲",
+        "云"
+      ],
+      "emoji": "☁️"
+    },
+    {
+      "en": [
+        "flower"
+      ],
+      "han": [
+        "花"
+      ],
+      "emoji": "🌸"
+    },
+    {
+      "en": [
+        "grass"
+      ],
+      "han": [
+        "草"
+      ],
+      "emoji": "🌿"
+    },
+    {
+      "en": [
+        "leaf"
+      ],
+      "han": [
+        "葉",
+        "叶"
+      ],
+      "emoji": "🍃"
+    },
+    {
+      "en": [
+        "rice"
+      ],
+      "han": [
+        "米",
+        "稻"
+      ],
+      "emoji": "🌾"
+    },
+    {
+      "en": [
+        "bamboo"
+      ],
+      "han": [
+        "竹"
+      ],
+      "emoji": "🎋"
+    },
+    {
+      "en": [
+        "fruit"
+      ],
+      "han": [
+        "果"
+      ],
+      "emoji": "🍎"
+    },
+    {
+      "en": [
+        "salt"
+      ],
+      "han": [
+        "鹽",
+        "盐"
+      ],
+      "emoji": "🧂"
+    },
+    {
+      "en": [
+        "poison"
+      ],
+      "han": [
+        "毒"
+      ],
+      "emoji": "☠️"
+    },
+    {
+      "en": [
+        "king"
+      ],
+      "han": [
+        "王"
+      ],
+      "emoji": "👑"
+    },
+    {
+      "en": [
+        "door"
+      ],
+      "han": [
+        "門",
+        "门"
+      ],
+      "emoji": "🚪"
+    },
+    {
+      "en": [
+        "boat"
+      ],
+      "han": [
+        "舟",
+        "船"
+      ],
+      "emoji": "⛵"
+    },
+    {
+      "en": [
+        "book"
+      ],
+      "han": [
+        "書",
+        "书"
+      ],
+      "emoji": "📖"
+    },
+    {
+      "en": [
+        "silk"
+      ],
+      "han": [
+        "絲",
+        "丝"
+      ],
+      "emoji": "🧵"
+    },
+    {
+      "en": [
+        "thread"
+      ],
+      "han": [
+        "絲",
+        "丝",
+        "糸"
+      ],
+      "emoji": "🧵"
+    },
+    {
+      "en": [
+        "clothing"
+      ],
+      "han": [
+        "衣"
+      ],
+      "emoji": "👕"
+    },
+    {
+      "en": [
+        "knife"
+      ],
+      "han": [
+        "刀"
+      ],
+      "emoji": "🔪"
+    },
+    {
+      "en": [
+        "bow"
+      ],
+      "han": [
+        "弓"
+      ],
+      "emoji": "🏹"
+    },
+    {
+      "en": [
+        "arrow"
+      ],
+      "han": [
+        "矢",
+        "箭"
+      ],
+      "emoji": "🏹"
+    },
+    {
+      "en": [
+        "star"
+      ],
+      "han": [
+        "星"
+      ],
+      "emoji": "⭐"
+    },
+    {
+      "en": [
+        "ice"
+      ],
+      "han": [
+        "冰"
+      ],
+      "emoji": "🧊"
+    },
+    {
+      "en": [
+        "mountain peak"
+      ],
+      "han": [
+        "峰"
+      ],
+      "emoji": "⛰️"
+    }
+  ],
+  "components": {
+    "𘥇": {
+      "en": "associated with horses",
+      "sense": "horse",
+      "han": [
+        "馬",
+        "马"
+      ],
+      "emoji": "🐎",
+      "source": {
+        "label": "Andrew West · @TangutSea · 2020-04-21",
+        "url": "https://www.babelstone.co.uk/TangutSea/1252582046343536641.html#Status_1252590258019094528"
+      },
+      "note": "Component association, paraphrased from the cited observation; not an independent word gloss."
+    }
+  }
+}

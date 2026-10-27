@@ -1,11 +1,14 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
-import { sealTable, sealNames, sealForms } from './seal-data.js'
+import { createRelationSearch } from './character-relations.js'
+import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
+import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
-import { isComponent, isSequence } from '../core/ids.js'
+import { unicodeProperty } from '../core/unicode.js'
+import { isComponent, isSequence, parse, write } from '../core/ids.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -16,9 +19,9 @@ import { isComponent, isSequence } from '../core/ids.js'
 const REGIONS = /\(([^)]*)\)$/
 /** A CJK or Tangut character, the characters a mixed query may name as components. */
 const IDEOGRAPH = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
-const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}]/u
+const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}]/u
 /** The scripts a mixed query may name as components: ideographs, kana and Bopomofo. */
-const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}\u{20000}-\u{3FFFD}]/u
+const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}\u{20000}-\u{3FFFD}]/u
 
 /**
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
@@ -88,6 +91,9 @@ export async function readText(response) {
 
 /** Components the forms table folds that the names keep apart. */
 const SEPARATE = new Set(['斗', '鬥'])
+// Contextual search substitutions do not make these independent characters
+// palette variants (田/由/甲/申/电, 己/已/巳, 用/甩, 手/才, 刀/刁, 幺/乡).
+const PALETTE_SEPARATE = new Set([...SEPARATE, ...'由甲申电甴己已巳甩才刁乡'])
 
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
@@ -107,15 +113,15 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * component forms together before a name is compared. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
- * same table and palette; its modern equivalents supply component-search labels only.
+ * same table and palette; its modern correspondences supply search labels and character information.
  * @param {{ ids?: string | URL, additionalIds?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string, characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -123,7 +129,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
-  /** @type {Promise<Map<string, string[]>> | null} */
+  /** @type {Promise<{by: Map<string, string[]>, prefixes: Set<string>}> | null} */
   let described = null
   /** @type {Promise<ReturnType<typeof createSearch>> | null} */
   let local = null
@@ -135,8 +141,8 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] */
-  function inWorker(query, limit, mode = 'ids') {
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -159,7 +165,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -194,7 +200,19 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
       : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
-  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
+  ]).then(([base, doc, text]) => {
+    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+    // Keep reviewed contextual search substitutions out of palette families.
+    const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
+    const variants = readForms(safe)
+    for (const root of variants.values()) variants.set(root, root)
+    return rows.map(part => {
+      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
+      const variantGroup = variants.get(part.part)
+      return variantGroup ? { ...part, variantGroup } : part
+    })
+  })
     .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into
@@ -302,14 +320,79 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       if (!isComponent(char)) continue
       // A Latin letter or Hangul syllable in a longer query is part of a word; scripts that
       // components use (ideographs, kana, Bopomofo) still count.
-      if (rest.length > 1 && !SCRIPT.test(char)) continue
+      if (rest.length > 1 && !(SCRIPT.test(char) || unicodeProperty('ideographic', char))) continue
       chars.push(char)
     }
     return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
   }
 
+  /** @type {Promise<{ doc: import('./character-info.js').CharacterInfoData, seal: import('./seal-data.js').SmallSealData | null, lookup: ReturnType<typeof createCharacterInfo> }> | null} */
+  let information = null
+  const readInformation = () => information ??= Promise.all([
+    typeof characterInfo === 'string' || characterInfo instanceof URL
+      ? load(characterInfo).then(readText).then(JSON.parse) : characterInfo,
+    readSeal(),
+  ]).then(([doc, seal]) => ({ doc, seal, lookup: createCharacterInfo(doc, seal) }))
+    .catch(error => { information = null; throw error })
+
+  /** Existing form and lookup mappings, retained as labelled search links.
+   * @param {string} text @param {{char: string, label: string}[]} direct */
+  async function relatedSeeds(text, direct) {
+    const hits = [...direct]
+    if (formsText !== undefined || forms) {
+      try {
+        const index = await nameIndex()
+        for (const hit of direct) for (const char of formsOf(hit.char, null, index)) {
+          if (char !== hit.char) hits.push({ char, label: `form of ${hit.char}` })
+        }
+      } catch { /* Literal characters and meaning data remain searchable. */ }
+    }
+    const doc = await readSeal()
+    if (doc) {
+      const drawable = new Set([...Object.keys(doc.table), ...doc.parts.map(p => p.part)])
+      const query = direct.length === 1 ? direct[0].char : text
+      for (const hit of sealNames(doc, query)) {
+        if (isSmallSeal(hit.char) && !drawable.has(hit.char)) continue
+        const old = isSmallSeal(query) ? query : hit.char
+        const modern = isSmallSeal(query) ? hit.char : query
+        const alias = modern === '口' && doc.modern[old]?.includes('𠙵')
+        hits.push({ ...hit, label: alias ? `lookup · ${hit.label}` : hit.label })
+      }
+    }
+    return hits
+  }
+
+  /** @param {{ char: string, label: string }[]} hits @param {number} limit */
+  function uniqueHits(hits, limit) {
+    const seen = new Set(), result = []
+    for (const hit of hits) {
+      if (seen.has(hit.char)) continue
+      seen.add(hit.char); result.push(hit)
+      if (result.length >= limit) break
+    }
+    return result
+  }
+
+  /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
+  let relations = null
+  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal ? read() : new Map()])
+    .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
+    .catch(error => { relations = null; throw error })
+
   return {
     table: read,
+    ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
+      signal?.throwIfAborted()
+      const { doc, lookup } = await readInformation()
+      const info = lookup(char)
+      if (info?.script === 'component' && (given || ids || smallSeal)) {
+        info.relations.push(...componentExamples(char, doc, await read()))
+        for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
+        if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
+      }
+      signal?.throwIfAborted()
+      return info
+    } } : {}),
     async structure(char, { signal } = {}) {
       const found = (await read()).get(char) ?? []
       signal?.throwIfAborted()
@@ -318,12 +401,14 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     },
     async search(query, { limit = 24, signal } = {}) {
       if (limit <= 0) return []
+      signal?.throwIfAborted()
       const text = query.trim()
+      if (!text) return []
       const direct = typed(text)
       // One ideograph typed on its own is that component; names are for what is longer than one.
       // A lone letter or syllable (수, の) also searches names, so Korean and kana readings work.
       const single = [...text].length === 1 && isComponent(text)
-      const singleIdeograph = single && (IDEOGRAPH.test(text) || KANA.test(text))
+      const singleIdeograph = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text) || KANA.test(text))
       /** @type {{ char: string, label: string }[]} */
       let hits = direct
       if (!singleIdeograph && (namesText !== undefined || names)) {
@@ -345,35 +430,55 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
           }
         } catch { /* The names are a convenience; the characters typed still stand. */ }
       }
-      if (smallSeal) {
+      if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
+      else if (smallSeal) {
         const doc = await readSeal()
         if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
-      signal?.throwIfAborted()
-      const seen = new Set()
-      /** @type {{ char: string, label: string }[]} */
-      const result = []
-      for (const hit of hits) {
-        if (seen.has(hit.char)) continue
-        seen.add(hit.char)
-        result.push(hit)
-        if (result.length >= limit) break
+      if (characterInfo) {
+        try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
+        catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
       }
-      return result
+      signal?.throwIfAborted()
+      return uniqueHits(hits, limit)
     },
     async encoded(sequence) {
       // Built once from the table; a failed load is tried again on the next call.
       described ??= read().then(found => {
         /** @type {Map<string, string[]>} */
         const by = new Map()
+        const prefixes = new Set()
         for (const [char, sequences] of found) for (const { text } of sequences) {
           if (!isSequence(text)) continue
+          let prefix = ''
+          for (const point of text) { prefix += point; prefixes.add(prefix) }
           const chars = by.get(text)
           if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
         }
-        return by
+        return { by, prefixes }
       }).catch(error => { described = null; throw error })
-      return (await described).get(sequence.trim()) ?? []
+      const { by, prefixes } = await described
+      const tree = parse(sequence.trim()).tree
+      if (!tree || typeof tree === 'string') return []
+      // Each subtree can be written out or replaced by any character it describes. Resolve from
+      // the leaves upward so nested expansions work without expanding the entire character table.
+      /** @param {import('../core/ids.js').Part} part @returns {string[]} */
+      const descriptions = part => {
+        if (typeof part === 'string') return [part]
+        if (!part) return []
+        let written = [part.op]
+        for (const child of part.parts) {
+          const choices = descriptions(child)
+          written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+        }
+        return [...new Set([write(part), ...written.flatMap(text => by.get(text) ?? [])])]
+      }
+      let written = [tree.op]
+      for (const child of tree.parts) {
+        const choices = descriptions(child)
+        written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+      }
+      return [...new Set(written.flatMap(text => by.get(text) ?? []))]
     },
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
@@ -381,20 +486,28 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       return result
     },
-    async findByIds(query, { limit = 60, signal } = {}) {
-      const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
+    async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },
-    ...(characters !== undefined || charactersText !== undefined ? {
+    ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
       /** @param {string} query @param {import('./types.js').Options} [options] */
       async searchCharacters(query, { limit = 24, signal } = {}) {
         if (limit <= 0) return []
         const text = query.trim()
         if (!text) return []
-        const search = await characterIndex()
         signal?.throwIfAborted()
-        return search.search(text, { limit }).map(({ char, label }) => ({ char, label }))
+        /** @type {{ char: string, label: string }[]} */ let hits = []
+        try { hits = (await characterIndex()).search(text, { limit }).map(({ char, label }) => ({ char, label })) }
+        catch (error) { if (!characterInfo) throw error }
+        if (characterInfo) {
+          hits = [...await relatedSeeds(text, typed(text)), ...hits]
+          try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
+          catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
+        }
+        signal?.throwIfAborted()
+        return uniqueHits(hits, limit)
       },
     } : {}),
     async containing(asked, { limit = 24 } = {}) {

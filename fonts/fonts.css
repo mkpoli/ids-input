@@ -13,3 +13,7 @@
 
 @font-face{font-family:"IDS Seal";src:url("./IDSSeal-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+3D000-3FC3F}
+
+/* Encoded Gongche forms absent from the general parts subset. */
+@font-face{font-family:"IDS Parts";src:url("./Plangothic-gongche.woff2") format("woff2");font-display:swap;
+  unicode-range:U+224BC,U+2A6D7-2A6DD}

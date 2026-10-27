@@ -2,6 +2,7 @@
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
 import { isComponent, isDescription, leaves, parse } from './ids.js'
+import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'
 
 /**
@@ -106,7 +107,7 @@ export function searchParts(found, known) {
     const tree = variants(known[lookupChar(found[0].char)]).find(v => v.tree)?.tree
     parts = tree ? leaves(tree).map(leaf => leaf.char) : []
   } else parts = found.map(root => root.kind === 'char' ? root.char : null)
-  const asked = parts.filter(part => typeof part === 'string' && PART.test(lookupChar(part).normalize('NFKC'))).map(lookupChar)
+  const asked = parts.filter(part => typeof part === 'string' && (unicodeProperty('ideographic', lookupChar(part)) || PART.test(lookupChar(part).normalize('NFKC')))).map(lookupChar)
   return asked.length >= 2 ? asked.slice(0, SEARCH_PARTS).join('') : ''
 }
 

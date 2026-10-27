@@ -14,6 +14,7 @@
  * @property {string} [label] What to show beside it (a reading, a name, a code point).
  *
  * @typedef {object} PalettePart A part of the parts palette.
+ * @property {string} [variantGroup] Shared identity for adjacent palette variants; selection keeps the literal form.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
  * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.
@@ -24,7 +25,7 @@
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
  * @property {'横' | '豎' | '撇' | '點' | '折' | null} [first] The class of its first stroke.
- * @property {'c' | 't' | 'seal' | 'd' | 's'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
+ * @property {'c' | 't' | 'seal' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  *
@@ -55,13 +56,14 @@
  * @typedef {Options & { onSketch?: (leaves: SketchLeaf[]) => void }} PreviewOptions
  *
  * @typedef {object} IdsAdapter
+ * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
  * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [searchCharacters] Characters whose readings or meanings match what is typed.
  * @property {(sequence: string, options?: Options) => Promise<string[]>} [encoded] The encoded characters a whole description describes exactly.
- * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'extra' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core).
+ * @property {(query: string, options?: Options & { componentLookup?: boolean }) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'extra' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core); `componentLookup: false` searches a wildcard subtraction structurally.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.

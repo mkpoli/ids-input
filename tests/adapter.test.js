@@ -166,9 +166,26 @@ describe('an encoded character', () => {
     const [a, b] = await Promise.all([adapter.encoded('⿰木木'), adapter.encoded('⿰木木')])
     expect([a, b]).toEqual([['林'], ['林']])
   })
+  it('finds characters whose descriptions use a component written out in the query', async () => {
+    const adapter = babelStoneAdapter({ table })
+    expect(await adapter.encoded('⿱木⿰木木')).toContain('森')
+    const shipped = parseIdsTable(require('node:zlib').gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
+    expect(await babelStoneAdapter({ table: shipped }).encoded('⿱月⿰月月')).toContain('𦜳')
+    expect(await adapter.encoded('⿱木⿰木？')).toEqual([])
+  })
+  it('resolves nested and alternative component descriptions throughout the tree', async () => {
+    const adapter = babelStoneAdapter({ table: parseIdsTable('林\t⿰木木\n森\t⿱木林\n𦜳\t⿱月朋\n朋\t⿰月月\n甲\t⿰森𦜳\n乙\t⿰森𦜳\n') })
+    expect(await adapter.encoded('⿰⿱木⿰木木⿱月⿰月月')).toEqual(['甲', '乙'])
+    expect(await adapter.encoded('⿰⿱木⿰木木⿱月⿰月日')).toEqual([])
+  })
 })
 
 describe('the description search', () => {
+  it('preserves wildcard subtraction searches when component lookup is disabled', async () => {
+    const adapter = babelStoneAdapter({ table: parseIdsTable('甲\t㇯木口 ⿰木水\n乙\t⿱甲水\n') })
+    const found = await adapter.findByIds('㇯木⬚', { componentLookup: false })
+    expect(found.hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['甲', '乙']))
+  })
   it('finds characters by a structure with empty slots, folding forms, on the caller\'s thread without a worker', async () => {
     const adapter = babelStoneAdapter({ table, formsText: 'form\tchar\tsource\tdetail\n⺡\t氵\tunicode-ucd\tx\n' })
     const { hits, total } = await adapter.findByIds('⿰？木')

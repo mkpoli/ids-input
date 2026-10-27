@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { EXAMPLES } from '../demo/lib/examples.js'
+import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 const data = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
@@ -27,6 +27,12 @@ describe('the prepared example drawings', () => {
     expect(data.drawings['⿰亻A'].drawn.origins).toContain('glyph A')
     expect(data.drawings['⿰木⿳ㄙㄨㄥ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ', 'glyph ㄥ']))
     expect(data.drawings['⿰木⿱ㄅㄞ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄅ', 'glyph ㄞ']))
+  })
+  it('prepares the proposed unencoded Hangul with a diamond initial', () => {
+    const drawing = data.drawings['⿱⿰◇ㅏㄴ']?.drawn
+    expect(drawing.origins).toEqual(['glyph ◇', 'glyph ㅏ', 'glyph ㄴ'])
+    expect(drawing.parts).toHaveLength(3)
+    expect(drawing.d.length).toBeGreaterThan(100)
   })
   it('holds exactly the current examples', () => {
     const held = [...Object.keys(data.drawings), ...data.failed.map(entry => entry.sequence)]
@@ -65,5 +71,14 @@ it('prepares the examples of reflection, rotation and subtraction', () => {
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
     // These attested forms have matching glyphs; cards need no subtractive mask.
     expect(drawn.cut).toBe('')
+  }
+})
+
+it('prepares the Small Seal examples with bundled outlines', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'seal').examples
+  for (const { sequence } of examples) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
   }
 })

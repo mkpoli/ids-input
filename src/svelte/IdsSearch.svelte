@@ -71,7 +71,7 @@
     <ol class="hits" class:stale={found.status === 'loading'}>
       {#each found.hits as hit (hit.char)}
         <li class="hit">
-          <button type="button" class="open" title={`${t('ids.search.open', { sequence: hit.sequence })} · ${cp(hit.char)}`} draggable="true"
+          <button type="button" class="open" data-character={hit.char} title={`${t('ids.search.open', { sequence: hit.sequence })} · ${cp(hit.char)}`} draggable="true"
             ondragstart={event => event.dataTransfer?.setData('text/plain', hit.char)} onclick={() => onopen?.(hit)}>
             <span class="char" lang="ja">{hit.char}</span>
             <span class="seq" lang="ja">{#each pieces(hit) as piece, i (i)}{#if piece.marked}<mark>{piece.text}</mark>{:else}{piece.text}{/if}{/each}</span>

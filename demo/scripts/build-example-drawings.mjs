@@ -8,6 +8,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
 import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
+import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
 import { onlyBundled } from '../../src/composer/local.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
 import { EXAMPLES } from '../lib/examples.js'
@@ -30,6 +31,7 @@ for (const example of EXAMPLES) {
       if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
       selected = bopomofoSources.get(selected)
     }
+    if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
     const drawn = await compose(selected, example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
