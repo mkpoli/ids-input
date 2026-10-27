@@ -109,6 +109,7 @@
   "ids.search.open": "{sequence}を開く",
   "ids.search.take": "{char}から部品を取る",
   "ids.search.title": "この構成を持つ字",
+  "ids.inline.label": "部品を編集",
   "ids.slot": "選んだ部品",
   "ids.slotHint": "部品を入力",
   "ids.apply": "適用",

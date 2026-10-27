@@ -109,6 +109,7 @@
   "ids.search.open": "Mở {sequence}",
   "ids.search.take": "Lấy bộ phận từ {char}",
   "ids.search.title": "Các chữ có cấu trúc này",
+  "ids.inline.label": "Sửa bộ phận",
   "ids.slot": "Bộ phận đã chọn",
   "ids.slotHint": "Nhập bộ phận",
   "ids.apply": "Áp dụng",
