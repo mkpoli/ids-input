@@ -706,6 +706,30 @@
       "license": "fonts/LICENSE-IDSSeal.txt"
     },
     {
+      "char": "𾙂",
+      "modern": [
+        "布"
+      ],
+      "glyph": "u3E642.svg",
+      "glyphSha256": "17c6c6873c23938ba2a6f653eba09a965c18996097cf706563881e3a3cf76b7f",
+      "glyphSource": "https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/glyphs/u3E642.svg",
+      "unicodeEvidence": {
+        "file": "data/seal-sources.txt.gz",
+        "field": "kSEAL_MCJK",
+        "value": "5E03",
+        "sha256": "521da4f9c55dee3059d75c961172b15ae2ea7f514874d55ca97dacfad779e3c5"
+      },
+      "chiseEvidence": {
+        "file": "ShuoWen-SR281.el",
+        "record": "SW-JIGUGE-26120",
+        "relation": "<-Small-Seal@shuowen",
+        "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
+        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+      },
+      "basis": "Unicode SealSources maps U+3E642 to 布; CHISE SW-JIGUGE-26120 lists 布 in one record.",
+      "license": "fonts/LICENSE-IDSSeal.txt"
+    },
+    {
       "char": "𾙳",
       "modern": [
         "𡰥"

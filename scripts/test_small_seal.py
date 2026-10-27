@@ -66,11 +66,13 @@ class SealSupplementEvidence(unittest.TestCase):
         archive = root / 'data/small-seal-sources.tar.gz'
         archiveSha = hashlib.sha256(archive.read_bytes()).hexdigest()
         sources = gzip.decompress((root / 'data/seal-sources.txt.gz').read_bytes()).decode().splitlines()
+        unicodeSha = hashlib.sha256((root / 'data/seal-sources.txt.gz').read_bytes()).hexdigest()
         with tarfile.open(archive) as tar:
             texts = {m.name: tar.extractfile(m).read().decode() for m in tar.getmembers() if m.name.endswith('.el')}
         for entry in entries:
             self.assertTrue(0x3D000 <= ord(entry['char']) <= 0x3FC3F, entry['char'])
             unicodeEvidence, chiseEvidence = entry['unicodeEvidence'], entry['chiseEvidence']
+            self.assertEqual(unicodeEvidence['sha256'], unicodeSha)
             self.assertIn(f"U+{ord(entry['char']):X}\tkSEAL_MCJK\t{unicodeEvidence['value']}", sources)
             self.assertIn(chr(int(unicodeEvidence['value'].split()[0], 16)), entry['modern'])
             self.assertEqual(chiseEvidence['archiveSha256'], archiveSha)

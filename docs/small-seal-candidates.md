@@ -67,8 +67,9 @@ characters together. The entry names the record and carries checksums for the
 Unicode table, the CHISE archive and a pinned Kaiyuan SVG.
 
 `python3 scripts/build_seal_supplements.py REPORT_JSON` adds a seal form when its
-Unicode mapping reaches a modern component that the report lists as unmapped,
-for example U+3DB6E for 爭 and 争 or U+3DDAF for 其. The audit includes the
+Unicode mapping reaches a modern component that the report leaves unmapped,
+either directly or inside a nested expansion, for example U+3DB6E for 爭 and 争
+or U+3DDAF for 其. The audit includes the
 aliases; supplementary mappings stay outside the source-backed decomposition
 table. They do not resolve an IDS row whose entity lacks a unique seal
 character.

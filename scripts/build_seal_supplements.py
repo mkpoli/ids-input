@@ -59,14 +59,16 @@ def evidence():
 def unresolved(report, doc):
     """Modern components that the current data cannot map to any seal form.
 
-    Only original dataset heads count. Supplementary reference glyphs add audit
-    rows whose modern descriptions would otherwise pull in more entries.
+    Unmapped components count whether they appear directly or inside a nested
+    expansion. Rows with a recorded IDS and no complete candidate count too.
+    Only original dataset heads contribute; supplementary reference glyphs add
+    audit rows whose modern descriptions would otherwise pull in more entries.
     """
     known = {name for names in doc['modern'].values() for name in names}
     needed = set()
     for row in report['rows']:
         if row['char'] not in doc['modern']: continue
-        if row['status'] not in ('incomplete', 'no-candidate'): continue
+        if row['status'] not in ('source-only', 'incomplete', 'no-candidate'): continue
         for candidate in row['candidates']:
             needed.update(candidate['unmapped'])
             needed.update(expansion['component'] for expansion in candidate['expansions'])
@@ -93,7 +95,10 @@ def main():
     parser.add_argument('report', type=Path)
     args = parser.parse_args()
     report = json.loads(args.report.read_text())
-    doc = json.loads(gzip.decompress((ROOT / 'data/small-seal.json.gz').read_bytes()))
+    dataset = (ROOT / 'data/small-seal.json.gz').read_bytes()
+    if report.get('inputs', {}).get('data/small-seal.json.gz') != digest(dataset):
+        raise ValueError('Report inputs do not match the current seal dataset; rerun check_small_seal.mjs')
+    doc = json.loads(gzip.decompress(dataset))
     manifest = json.loads((DIRECTORY / 'supplements.json').read_text())
     if manifest['format'] != 1: raise ValueError('Unsupported seal supplement format')
     existing = {entry['char']: entry for entry in manifest['entries']}
