@@ -697,10 +697,11 @@ Its pixel-based outlines retain their original design. The host export's glyphs 
   because the live license page was unavailable when checked on 2026-10-28.
 
 `unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
-sources, grouped by Unicode block. It excludes exact dedicated-bundle outlines and CJK outlines
-in the pinned default export (`host-glyph-coverage.json`). It includes holes within those ranges;
-the previous range-based report omitted them. This is an outline-source inventory. The worker
-audit described below measures rendering, including composition from other records. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
+sources, grouped by Unicode block. These are missing glyphs, not parser restrictions. It excludes
+exact dedicated-bundle outlines and CJK outlines in the pinned default export
+(`host-glyph-coverage.json`), but includes holes within those ranges that the previous range-based
+report omitted. This is an outline-source inventory; the worker audit described below measures
+rendering, including composition from other records. Jurchen coverage is limited to the four
 available source glyphs; the remaining characters need additional source outlines. Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
 
@@ -724,10 +725,11 @@ catalog cannot be loaded. A configured composer export or font can have differen
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]` renders every
-accepted non-private Unicode scalar through the actual preview worker. It fetches the selected
-pinned export with at most four requests in flight, caches bytes and missing-shard responses,
-and stops on transport errors instead of treating them as glyph gaps. Run it under the project's
-batch resource limits. A warm cache avoids repeating the download.
+accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
+export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
+shard requests to the worker's loader. It stops on transport errors instead of treating them as
+glyph gaps. Run it under the project's batch resource limits. A warm cache avoids repeating the
+download.
 
 The reports in `docs/coverage/` include exact missing ranges by block, downloaded-file hashes,
 local bundle hashes and implementation hashes. They cover individual components, finite paths
