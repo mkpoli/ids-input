@@ -2,7 +2,7 @@
 
 Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
 Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). Klee One supplies an optional handwritten glyph face.
+the editor's empty-slot mark ⬚ (U+2B1A). Kureedo and GenZui Sans supply the optional Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
@@ -22,7 +22,9 @@ Plane, Extension A included, comes from the reader's own CJK font.
   Source SHA-256s: P1 `550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6`, P2
   `681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f`.
 
-`KleeOne-Regular.woff2` (2.8 MB) supplies the optional `Klee One` face. Klee One Regular, Copyright 2020 The Klee Project Authors (Fontworks), SIL Open Font License 1.1 (`OFL-KleeOne.txt`), from [google/fonts](https://github.com/google/fonts/tree/main/ofl/kleeone). Source TTF SHA-256 `bf4063f030cc2ae6adf0a11424a1888e5c0eb4438f1f6d02f52294af868e9b3a`; this woff2 SHA-256 `396db4748a1e8a3f8c5604893368e6cdd27bc19c802bff859bc23d1c7e9ac8a8`.
+`Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
+
+`GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google
@@ -35,16 +37,16 @@ and SVG/PNG export, under the same font licence.
 
 ## IDS Seal
 
-`IDSSeal-Regular.woff2` is a 76-glyph derivative of
+`IDSSeal-Regular.woff2` is a 1,334-glyph derivative of
 [Kaiyuan Small Seal](https://github.com/frankslin/kaiyuan-small-seal-font) at revision
 `97433695858330ec9fdb7de9c4604da2f635eba6`, by Kaiyuan Small Seal Font Contributors.
-It covers the head characters and seal components used by the bundled CHISE subset.
+It covers the expanded palette and the heads of the bundled CHISE descriptions.
 Other Small Seal code points need another installed font.
 
 The SVGs are traced from the Chen Changzhi edition of 說文解字. Upstream describes the
 font as under review; these outlines have not received a separate glyph-by-glyph
-review here. They can differ from the Jiguge shapes described by CHISE. Upstream marks 74 of the
-76 selected glyphs `approved`; U+3D320 and U+3D32F are only `aligned`. The outline
+review here. They can differ from the Jiguge shapes described by CHISE. Upstream
+marks 807 selected glyphs `approved`, 8 `manual`, and 519 `aligned`. The outline
 metadata retains each glyph's full review record.
 `IDSSeal-sources.tar.gz` includes the original SVGs with crop references, upstream
 provenance and approval tables, and the original license. File digests and the pinned
@@ -60,3 +62,10 @@ Build the webfont and `data/small-seal-outlines.json.gz` with
 their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
 and writes deterministic font and outline files. Exact-description mappings in the
 outline data come from CHISE and retain its GPL-2.0-or-later license.
+
+## Unicode fallback outlines
+
+The composer uses Noto outlines for 40,221 additional components when the selected export lacks
+a glyph. These are stored as sharded geometry rather than a webfont. Sources, rebuild instructions
+and coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
+[OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the source copyright notices and SIL OFL 1.1.

@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,686 Han entries (681 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,699 Han entries (694 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -250,13 +250,15 @@ variant glyphs are not merged. The report records malformed sequences under
 
 Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
-It includes compound IDS occurring below the root in at least 50
-characters, matching the existing component frequency cutoff. The current
-corpus supplies seven frequent trees. Two use encoded palette entries instead:
-`⿱宀儿 → 宂` and `⿻三丨 → 丰`. Their palette frequencies count each character
-once across either spelling (533 and 167, respectively); the raw report retains
-exact IDS counts. Their IDS remain searchable aliases and appear in hover text.
-The five remaining trees stay as compound shortcuts. The manual shortcut `⿰冫⿱丿丶` is included with
+Compound IDS use a lower cutoff of 30 distinct characters below the root. The
+current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
+and twelve normalize to ten encoded characters. The manual four-dot entry
+brings the compound total to seventeen. Exact regional spellings remain searchable aliases
+and appear in hover text. An encoded entry counts each source character once
+across its literal spelling and all selected IDS aliases; the raw report retains
+separate exact counts. Single-character promotion keeps its existing cutoff of 50.
+
+The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
 `{11}` (bottom of 軣, `⿰⿱丶㇀⿱㇒丶`) supplies those uses; its exact source
 spelling remains in the raw report. The shortcut count deduplicates characters
@@ -296,6 +298,27 @@ Bundled styles affect only these selected forms; other composed outlines still
 come from the configured Han export. Whole glyphs fall back to their operands
 in adjustment mode when the export supplies them.
 
+The 35–49 usage band adds `⿻日丿` (49), `⿴𦥑同` (41), `⿱丶丶` (39),
+`⿱甶儿` (37), and `⿻口丿` (35). New aliases normalize to 𦭝, 犮, 敖, 蒦,
+丰, 辱 and 包; both 艹/卝 spellings of 𦭝 contribute to one union count.
+The specialized `⿴𦥑同` outlines preserve 興's native upper component in both
+fonts, omitting 一八 below it. The outer 𦥑 is cropped at y=222 (Sans) or
+y=197 (Serif), with 同's contours unchanged and two editable operands retained.
+The Serif bottom stroke's rising terminal is removed before cropping.
+
+The 30–34 usage band adds `⿰丿丨` (33), `⿱左⺝` (33), `⿸耳又` (33),
+`⿱㇒⿻日丿` (32), `⿰二二` (30), and `⿸⿻口丿乚` (30).
+`⿱⿱㇒⿻日丿十` and `⿻九丶` normalize to existing 卑 and 丸 entries,
+with union counts of 122 and 125.
+The upper-卑 shortcut uses Noto's connected-stroke U+FA35 glyph with 十 removed:
+Sans retains the four counters and reconstructs the outer contour above the
+bottom 十; Serif omits its separate 十 contour. It floats at native em size.
+`⿰二二` places two native 二 columns side by side, contracting horizontal
+length only and translating the bars vertically to retain their stroke thickness.
+Both forms have Sans/Serif outlines. The four-bar form keeps two editable columns;
+the atomic upper-卑 drawing falls back to individual operands in adjustment mode
+when the configured export supplies them.
+
 ## Small Seal
 
 `small-seal.json.gz` contains the Jiguge (汲古閣) edition's IDS from
@@ -309,6 +332,10 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
+| Drawable palette forms | 1,334 |
+| Selected basic parts | 138 |
+| Compound forms | 1,172 |
+| Other / unclassified forms | 24 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -331,6 +358,32 @@ named edition identifier). Nested properties, glyph inheritance, modern Han equi
 and ambiguous mappings cannot establish identity. Unresolved references remain literal
 `&…;` strings. Only complete, supported Unicode IDS enters `table`.
 
+The palette is independent of the 49 complete descriptions. It includes mapped
+CHISE heads and the Unicode Shuowen radical heads for which a pinned SVG exists.
+`seal-sources.txt.gz` preserves the pinned Unicode mapping from the Kaiyuan source
+archive; its license is in `COPYING-seal-sources.txt`. `paletteSources` records the
+Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lookup alias.
+
+`parts` entries carry `modern` lookup names, `sealGroup`, and `sealBasis`:
+
+- `basic` / `selected`: an editorial starter selection of familiar radical heads.
+  Membership does not establish historical indivisibility.
+- `compound` / `seal-ids`: the source has a structural or apparent IDS, including
+  unresolved operands and extended operators.
+- `compound` / `cjk-ids`: a modern equivalent has a compound IDS. Its `modernIds`
+  are retained for inspection and the UI marks the grouping with `≈`.
+- `other` / `unknown`: no classification is established. An empty source field
+  never establishes that a character is atomic.
+
+Modern IDS inference affects palette grouping only. It never supplies a seal
+`table` entry or changes exact encoding lookup. Palette usage counts include mapped
+components in unresolved source descriptions, counted once per source head.
+
+Rebuild the palette offline with `python3 scripts/build_small_seal_palette.py`.
+To refresh the bundled SVG subset from the same pinned Kaiyuan revision, pass
+`--upstream path/to/kaiyuan.tar.gz`; its SHA-256 is checked before extraction.
+Rebuild the font and outlines afterward with `uv run scripts/build_small_seal_font.py`.
+
 JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
 labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
 character or null, original structural description, and a `descriptions` list. Each
@@ -348,3 +401,30 @@ archive is written beside the output. Test mapping safeguards with
 mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
 for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
 quality, licensing and rebuilding.
+
+## Unicode fallback outlines
+
+`unicode-outlines/*.json.gz` contains 40,221 glyph outlines in 196 chunks, each covering at most
+256 code points. The full set is 11,357,016 compressed bytes; the composer fetches only chunks
+needed for glyphs missing from the selected export. An export's own glyphs retain priority.
+`unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
+counts, source fonts, source digests and copyright notices.
+
+Sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
+`fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
+The pinned file names, SHA-256s and source URLs are in [`unicode-fonts.json`](unicode-fonts.json).
+Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/OFL-NotoUnicode.txt).
+[Noto](https://github.com/notofonts/noto-fonts) supplies the script-specific designs;
+[Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
+
+Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
+package font directories and Noto CJK font. The builder checks every source digest, selects the first
+available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
+[FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
+curves with a maximum error of 0.5 normalized units; packed coordinates use quarter-unit precision.
+Unicode acceptance uses pinned Bun 1.3.14, matching the editor's rules. The gzip OS header is
+normalized so supported Python versions produce the same shard bytes.
+
+These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
+A variation selector needs an explicit glyph in the selected export; it is not silently dropped.
+Unassigned and private-use characters without a source outline remain unavailable.

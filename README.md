@@ -145,21 +145,33 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
-`？` for a part no character names, with an optional variation selector. The letters and digits are
-those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
-shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
-preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
-written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
+private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
+letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
+controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
+allocation U+3D000–U+3FC3F.
+Combining marks are individual components; only a variation selector attaches to the preceding
+component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
+preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
+still have no preview; private-use characters need an outline supplied by the host.
+`isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
+The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
+supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
-Its current Unicode mapping supports **49 character descriptions and 31 seal components**.
+Its current Unicode mapping supports **49 character descriptions and 1,334 drawable palette forms**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
 finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
 `𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
-uses all 816 mapped seal forms; some have no resolved decomposition or bundled glyph.
+uses 1,353 mapped seal forms; some have no resolved decomposition or bundled glyph.
+
+The Small Seal palette opens on 138 selected basic parts. Compound parts and
+unclassified forms have separate groups. Type a modern character such as 木 or 口
+to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
+these estimates do not enter the seal decomposition table.
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -214,14 +226,15 @@ transform engine evaluates affine, projective and Möbius chains on paths: affin
 a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
 hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
 local geometry and each operator child's placement, applies the nested layer transforms, and reports
-missing geometry or unsupported transforms.
+missing geometry or unsupported transforms. `renderScopes` keeps component cuts and operator children
+apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction.
 
 `createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
 reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
 `clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
 whole documents. `session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
-`onListenerError` (or `reportError`) and does not undo the committed edit. Compositing (including ㇯),
+`onListenerError` (or `reportError`) and does not undo the committed edit. A composer-backed source,
 storage and the editor binding are not part of these modules yet.
 
 ## Adapters
@@ -285,28 +298,53 @@ hits as square character cards, the code point shown on hover; the workshop puts
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
 shows its subsequence in muted text. Selecting an empty slot clears the search.
 
-IDS queries accept these visual substitutes, including halfwidth forms where available:
+IDS queries accept visual substitutes. The kana families follow the encoded
+components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
+and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).
+All 46 basic kana are covered; the table below lists their search alternatives.
 
-| Shapes typed | Component searched |
-|---|---|
-| `ㅅ` | `人` |
-| `ㅆ` | `从` |
-| `스` | `亼` |
-| `ㅁ`, `ロ` | `口` |
-| `ㅇ` | `〇` |
-| `ㅣ`, `ㅡ` | `丨`, `一` respectively |
-| `ㄱ`, `ㄴ`, `ㄷ` | `𠃍`, `𠃊`, `匚` respectively |
-| `エ`, `カ`, `タ`, `ト` | `工`, `力`, `夕`, `卜` respectively |
-| `ニ`, `ハ`, `ヌ`, `ノ` | `二`, `八`, `又`, `丿` respectively |
-| `ム`, `ヒ`, `ヨ` | `厶`, `匕`, `彐` respectively |
+| Kana | Components | Kana | Components |
+|---|---|---|---|
+| ア | 了 ㇌ 卩 刀 丫 | イ | 亻 𠂆 人 入 㐄 井 |
+| ウ | 宀 | エ | 工 |
+| オ | 才 扌 | カ | 力 尸 |
+| キ | 十 弋 | ク | 𠂊 勹 |
+| ケ | 亼 个 | コ | 凵 囗 〇 |
+| サ | 卄 廾 艹 䒑 | シ | 氵 辶 辶 丨 |
+| ス | 大 丌 | セ | 七 土 士 廿 |
+| ソ | 丷 | タ | 夕 月 |
+| チ | 千 干 | ツ | 灬 小 川 巛 𫶧 |
+| テ | 亍 于 | ト | 卜 ⺊ 𠂉 |
+| ナ | 𠂇 | ニ | 二 |
+| ヌ | 又 | ネ | 礻 |
+| ノ | 丿 ㇢ 亅 | ハ | 八 |
+| ヒ | 匕 匚 匸 | フ | 乛 丆 厂 |
+| ヘ | 乀 乁 一 ㇀ | ホ | 木 朩 𣎳 |
+| マ | 龴 丅 丁 | ミ | 三 彡 |
+| ム | 厶 | メ | 乂 |
+| モ | 乇 王 壬 | ヤ | 巾 㔾 |
+| ユ | 丄 亠 | ヨ | 彐 ⺕ 日 |
+| ラ | 广 | リ | 刂 |
+| ル | 儿 几 𠘧 | レ | 𠄌 ㇗ ㇄ 乚 𡿨 乙 |
+| ロ | 口 | ワ | 冖 冂 |
+| ヲ | 丩 丬 山 屮 | ン | 冫 丶 |
 
-The corresponding conjoining Hangul jamo also work. Decomposed `스` searches
-like `스`; other complete syllables keep their identity. Attached variation
-selectors are preserved. For example, `⿰ㅅ木` finds `休` through the existing
-`人`/`亻` component forms, and `⿰カロ` finds `加`.
-These are approximate visual aliases for IDS search. Entered text, stored
-descriptions, rendering, exact `encoded` lookup, and Korean or Japanese name
-searches retain their spelling.
+`ヰ` also searches for `井`. Hangul aliases remain available:
+`ㅅ → 人`, `ㅆ → 从`, `스 → 亼`, `ㅁ → 口`, `ㅇ → 〇`,
+`ㅣ → 丨`, `ㅡ → 一`, `ㄱ → 𠃍`, `ㄴ → 𠃊`, and `ㄷ → 匚`.
+Conjoining jamo and corresponding halfwidth forms work too; decomposed `스`
+searches like `스`. Attached variation selectors are preserved. Kana followed
+by a voicing mark keep their literal search behavior.
+
+Each shape requests one of its alternatives. For example, `⿰イ木` can match
+`⿰亻木` or `⿰井木`; `イイ` needs two matching components, and `イ人` cannot
+reuse one `人` for both requests. Literal Han queries retain their distinctions.
+The original IDS and result descriptions remain unchanged.
+
+This is component and structural search using Ashide's shape families. Its
+five-keystroke selection rules and unencoded stroke fragments are outside this
+search table. Direct insertion, name lookup, rendering, and exact `encoded`
+lookup retain their existing behavior.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/search-dark.png">
@@ -372,8 +410,8 @@ frequency or Unihan's school grade. Without `characters` the tab is not shown.
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
-Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut, Bopomofo, Small Seal and Unicode fallback outlines are
+bundled and loaded on demand. Han and mixed descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -387,15 +425,24 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
-use the bundled outlines. When the export loads but a part has no drawing, its badge reads
+origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
+can still render. Other previews keep their placeholders. When the export loads but a part has
+no outline in either source, its badge reads
 "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
 
-The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
-`?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
+`fromUrl(base)` uses a selected export's own glyphs first, then loads bundled fallback glyphs for
+missing components. `unicodeSource()` supplies only bundled Unicode glyphs with geometric layout.
+For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
+from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
+`hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
+with the source Noto font's design; they do not imitate a selected serif or handwritten face.
+
+The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+`VITE_COMPOSER_BASE` points every face at another copy of one export.
 
 ## Keyboard
 
@@ -432,6 +479,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Code: MIT (`LICENSE`).
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
   (`data/COPYING-small-seal.txt`).
+- `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
+  (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
@@ -456,8 +505,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   rows, 831 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB) and
-  Klee One (2.8 MB), SIL Open Font License 1.1.
+- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
+  Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
@@ -498,8 +547,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   1.1.
 - Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
   <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
-- Klee One Regular, Copyright 2020 The Klee Project Authors, SIL OFL 1.1,
-  <https://github.com/google/fonts/tree/main/ofl/kleeone>: the Klee One glyph face.
+- Kureedo v0.4.3, Copyright The Klee Project Authors, SIL OFL 1.1,
+  <https://github.com/mkpoli/kureedo>: the Kaisho glyph face.
+- GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Kaisho fallback.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
   export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
@@ -516,8 +566,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
-- SCRIPT-HYBRID (BiangBiangCon v19), slides dated 2026-10-16 (JST), supplied 2026-10-26, for the
-  hybrid examples. ⿴口도 is the slide's proposed 図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+- Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
+- Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
+- Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
+  2026-10-16, for the hybrid examples (slides: SCRIPT-HYBRID v19). ⿴口도 is the slide's proposed
+  図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
   CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
   L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
@@ -531,6 +584,33 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The example `⿰亻A` uses ASCII A.
 - mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
+- mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
+  `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.
+  The musical form is an approximate Jianzipu-style transcription. 謝俊仁's
+  [音樂展覽 – 古琴篇](https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html),
+  Hong Kong Music Office, explains a related 減字譜 symbol with 大七六 above 勹四;
+  the example here uses 五. The `〾` marker is preserved in the IDS and marks approximate rendering.
+- [Bangumi discussion, 2017-02-17](https://chii.in/group/topic/342213): `⿱成龙` (duang).
+- [Adobe-KR](https://github.com/adobe-type-tools/Adobe-KR#special-notes): `⿰氵恩`, now
+  encoded as 𰜩 (U+30729). The documentation's pending-encoding note is historical.
+- [CNS11643 character record](https://www.cns11643.gov.tw/wordView.jsp?ID=149313):
+  覅, `⿰要勿`.
+- [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
+  `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
+  `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
+- [BabelStone Erjian](https://www.babelstone.co.uk/Fonts/Erjian.html), entries 2.2:007 and
+  2.2:003: `⿺辶比` (避) and `⿱艹半` (瓣). Jyutnet records JYN00013 and JYN00017 supply
+  `⿵門覃` and `⿰舟邊`. 嫑 (`⿱不要`) follows BabelStone IDS.
+- BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
+  臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
+  of all 17 IDCs; the approximation marker `〾` is represented separately.
+  [IRG N2572, p.2](https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2) also illustrates
+  the descriptions of 㕚, 氷 and 𧰧.
+- Further BabelStone descriptions: 𣥄 (`⿾正`), 𠄔 (`⿿予`), 𠕄 (`⿿凹`),
+  𦣩 (`⿰臣⿾臣`), 𣥒 (`⿱⿿止止`) and 𧹂 (`⿱⿰虎⿿虎貝`). The descriptions of 𣥄 and 𠄔
+  also appear in IRG N2572, p.2. Jyutnet records JYN00003 and JYN00025 supply the historical
+  寫 and 龍 variants `⿳宀⿰丨⿴⿻冂一一⿹𠃌灬` and `⿰𦚏⿷己三`, citing 道漢字音
+  (1939), pp.72 and 4 respectively.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
@@ -617,6 +697,18 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
 
+## Acknowledgments
+
+Thanks to:
+
+- [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
+  rendering and decompositions, and suggestions for component shortcuts and small-seal decomposition.
+- [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
+  component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
+- [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
+- [馬のゆい (@umanoyui)](https://x.com/umanoyui) for asking about kana support, prompting a review
+  of support for components from other writing systems.
+
 ## Licenses
 
 The code is licensed under [MIT](LICENSE). Data is provided under Creative Commons
@@ -637,7 +729,6 @@ bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
-bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at

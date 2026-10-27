@@ -75,7 +75,13 @@ export function strokeCounter(table, rows) {
 // Useful unencoded components absent from the corpus remain explicit manual shortcuts.
 export const MANUAL_PARTS = ['⿰冫⿱丿丶']
 // IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
-export const ENCODED_PARTS = { '⿱宀儿': '宂', '⿻三丨': '丰' }
+// Exact root descriptions in the bundled corpus. Preserve regional spellings as aliases.
+export const ENCODED_PARTS = {
+  '⿱宀儿': '宂', '⿻三丨': '丰', '⿻㇒𰀁': '丰',
+  '⿱艹罒': '𦭝', '⿱卝罒': '𦭝', '⿺友丶': '犮', '⿰𫠤攵': '敖',
+  '⿱卝隻': '蒦', '⿸辰寸': '辱', '⿹勹巳': '包',
+  '⿱⿱㇒⿻日丿十': '卑', '⿻九丶': '丸',
+}
 export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'] }
 
 export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
@@ -100,7 +106,7 @@ export function build(root = new URL('../', import.meta.url)) {
   const entries = frequencies(table, rejected)
   const usage = new Map(entries.map(entry => [entry.text, entry.uses]))
   for (const row of rows) row[1] = usage.get(row[0]) ?? 0
-  const threshold = 50
+  const threshold = 30
   const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem).map(entry => ({ ...entry }))
   for (const text of MANUAL_PARTS) {
     const existing = selected.find(entry => entry.text === text)
@@ -112,9 +118,17 @@ export function build(root = new URL('../', import.meta.url)) {
     const encoded = ENCODED_PARTS[entry.text]
     if (!encoded) { rows.push([entry.text, entry.uses, count(entry), 1, null, 'c']); continue }
     let row = rows.find(row => row[0] === encoded)
-    if (!row) { row = [encoded, 0, count(entry), 1, '點', 'c']; rows.push(row) }
-    row[1] = manualUses(table, encoded, [entry.text])
-    row[5] = 'c'
+    if (!row) {
+      const first = subtrees(entry.text).filter(node => !node.op)
+        .map(node => rows.find(row => row[0] === node.text)?.[4]).find(Boolean) ?? null
+      row = [encoded, 0, count(entry), 1, first, 'c']; rows.push(row)
+    }
+  }
+  // Several regional IDS can normalize to the same character. Count their union once,
+  // instead of letting the last alias overwrite an earlier alias's usage count.
+  for (const encoded of new Set(selected.map(entry => ENCODED_PARTS[entry.text]).filter(Boolean))) {
+    const aliases = selected.filter(entry => ENCODED_PARTS[entry.text] === encoded).map(entry => entry.text)
+    rows.find(row => row[0] === encoded)[1] = manualUses(table, encoded, aliases)
   }
   rows.sort((a, b) => (a[5] === 't') - (b[5] === 't') || (a[5] === 't' ? a[0].codePointAt(0) - b[0].codePointAt(0) : b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)))
   palette.parts = rows

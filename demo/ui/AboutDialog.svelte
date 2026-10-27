@@ -29,6 +29,9 @@
     {@render list(SOURCES, 'app.source')}
     <h3>{t('app.about.inspired')}</h3>
     {@render list(INSPIRED, 'app.inspired')}
+    <h3>{t('app.about.acknowledgments')}</h3>
+    <p>{t('app.about.feedbackThanks')}</p>
+    <p class="feedback-names"><a href="https://x.com/zoenshiueh_lieu" target="_blank" rel="noreferrer">परवद💙💛</a> · <a href="https://x.com/integuraru_P" target="_blank" rel="noreferrer">Fn</a> · <a href="https://x.com/nakiha_kanji" target="_blank" rel="noreferrer">なきは</a> · <a href="https://x.com/umanoyui" target="_blank" rel="noreferrer">馬のゆい</a></p>
   </div>
 </Dialog>
 

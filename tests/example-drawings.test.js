@@ -47,3 +47,24 @@ describe('the prepared example drawings', () => {
     }
   })
 })
+
+it('prepares the additional enclosure, kana and musical forms', () => {
+  for (const sequence of ['⿺辶說', '⿱龹幸', '⿶む子', '〾⿱⿰大⿱七六⿵勹五', '⿰⿱興興⿱興興', '⿱七⿰七七', '⿺克千']) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+  expect(data.drawings['⿶む子'].drawn.origins).toEqual(expect.arrayContaining(['glyph む', 'glyph 子']))
+  expect(data.drawings['〾⿱⿰大⿱七六⿵勹五'].drawn.approximate).toContain('〾')
+})
+
+
+it('prepares the examples of reflection, rotation and subtraction', () => {
+  for (const sequence of ['⿰⿾臣臣', '⿱或⿿或', '㇯豕㇒']) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    // These attested forms have matching glyphs; cards need no subtractive mask.
+    expect(drawn.cut).toBe('')
+  }
+})
