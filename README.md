@@ -227,8 +227,15 @@ a nonlinear chain is flattened within a tolerance and its pole is checked agains
 hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
 local geometry and each operator child's placement, applies the nested layer transforms, and reports
 missing geometry or unsupported transforms. `renderScopes` keeps component cuts and operator children
-apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction. A composer-backed
-source, storage and the editor binding are not part of these modules yet.
+apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction.
+
+`createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
+reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
+`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+whole documents. `session.document` returns a detached copy; use session edits to change it.
+`listen` tells a host when to redraw; a throwing listener is reported through
+`onListenerError` (or `reportError`) and does not undo the committed edit. A composer-backed source,
+storage and the editor binding are not part of these modules yet.
 
 ## Adapters
 

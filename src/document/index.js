@@ -25,3 +25,4 @@ export {
 } from './transform.js'
 export { renderLayers, renderScopes } from './render.js'
 export { scopesSvg } from './svg.js'
+export { createDocumentSession } from './session.js'
