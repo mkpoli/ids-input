@@ -89,3 +89,20 @@ describe('Unicode fallback outlines', () => {
     expect(count).toBe(metadata.count)
   })
 })
+
+it('renders the audited Unicode gaps as real outlines', async () => {
+  const local = source()
+  for (const cp of [0x16FE2, 0x16FE3, 0x16FF0, 0x18B00, 0x1AFF0, 0x1B123,
+    0x1C89, 0x1E030, 0x1F600, 0x1FAE0, 0x332C, 0x323B0, 0x18E00, 0x1DF00]) {
+    const char = String.fromCodePoint(cp)
+    expect(hasUnicodeGlyph(char)).toBe(true)
+    const drawn = await compose(local, `⿰${char}〇`, { separate: true })
+    expect(drawn.origins).toContain(`glyph ${char}`)
+    expect(drawn.parts).toHaveLength(2)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+})
+
+it('does not assign arbitrary Unifont private-use glyphs to users', () => {
+  for (const cp of [0xE000, 0xF0000, 0xFE400, 0x100000]) expect(hasUnicodeGlyph(String.fromCodePoint(cp))).toBe(false)
+})

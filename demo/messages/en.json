@@ -44,8 +44,8 @@
   "app.export.bg.custom": "Colour",
   "app.export.bg.none": "Transparent",
   "app.export.bg.white": "White",
-  "app.export.copied": "SVG copied",
-  "app.export.copy": "Copy SVG",
+  "app.export.copied": "{format} copied",
+  "app.export.copy": "Copy {format}",
   "app.export.failed": "Could not save the file",
   "app.export.format": "Format",
   "app.export.ink": "Ink",
@@ -124,5 +124,14 @@
   "app.theme.light": "Light",
   "app.theme.system": "System theme",
   "app.title": "IDS Workshop",
-  "app.toolbar": "Tools"
+  "app.toolbar": "Tools",
+  "app.replacement.title": "Replace a component",
+  "app.replacement.help": "Start with a character, then replace one of its components. The result opens in the workspace, keeping your current work.",
+  "app.replacement.source": "Character",
+  "app.replacement.target": "Replace",
+  "app.replacement.replacement": "With",
+  "app.replacement.submit": "Open result",
+  "app.replacement.loading": "Looking up components…",
+  "app.replacement.notFound": "Could not find that component in the character.",
+  "app.replacement.failed": "Could not look up the character. Please try again."
 }

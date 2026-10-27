@@ -187,5 +187,7 @@
   "ids.structural.overlap": "重疊",
   "ids.pick.templates": "構字式",
   "ids.group.4": "4個部件",
-  "ids.templates.insert": "插入構字式：{sequence}"
+  "ids.templates.insert": "插入構字式：{sequence}",
+  "ids.templates.usage": "用於{count}字",
+  "ids.templates.hangul": "諺文音節結構"
 }

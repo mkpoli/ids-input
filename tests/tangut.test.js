@@ -12,7 +12,7 @@ it('accepts Tangut characters and components, including supplementary blocks', (
   for (const point of [0x17000, 0x187F7, 0x18800, 0x18AFF, 0x18D00, 0x18D1E, 0x18D80, 0x18DF2]) {
     expect(isComponent(String.fromCodePoint(point))).toBe(true)
   }
-  for (const point of [0x16FFF, 0x18E00]) expect(isComponent(String.fromCodePoint(point))).toBe(false)
+  for (const point of [0x16FFF]) expect(isComponent(String.fromCodePoint(point))).toBe(false)
   const tangut = [...table].filter(([char]) => /[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]/u.test(char))
   expect(tangut).toHaveLength(6145)
   const malformed = []
@@ -52,4 +52,8 @@ it('searches from Tangut parts, an IDS, or a character decomposition', () => {
   expect(searchParts(roots('𗀀'), {
     '𗀀': { status: 'ready', sequences: table.get('𗀀') },
   })).toBe('𘠀𘢰𘠆')
+})
+
+it('accepts Jurchen immediately after the Tangut supplement', () => {
+  expect(isComponent('\u{18E00}')).toBe(true)
 })

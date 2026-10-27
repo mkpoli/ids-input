@@ -39,6 +39,7 @@
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
+  import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
@@ -520,7 +521,7 @@
     ]
   })
 
-  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -632,6 +633,7 @@
             <IdsSequence {editor} label={false} />
             <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
           </div>
+          <button type="button" class="replacement-link" onclick={() => replacementOpen = true}>{t('app.replacement.title')}</button>
           {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
           {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
@@ -739,6 +741,7 @@
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
@@ -819,6 +822,9 @@
   .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .adjust-hint{font-size:11px;color:var(--muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:12px;cursor:pointer}
+  .replacement-link:hover{text-decoration:underline}
+  .replacement-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
   .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
   .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}

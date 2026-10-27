@@ -1,14 +1,13 @@
 <script>
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
-  import { parse } from '../core/ids.js'
-  import { roughLayout } from '../core/preview.js'
+  import { templateDiagram } from './template-diagram.js'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor }} */
   let { editor } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
   const groups = [2, 3, 4].map(slots => ({ slots, templates: STRUCTURE_TEMPLATES.filter(item => item.slots === slots)
-    .map(item => ({ ...item, leaves: roughLayout(parse(item.sequence, { open: true }).tree) })) }))
+    .map(item => ({ ...item, shapes: templateDiagram(item.sequence) })) }))
 </script>
 
 <div class="ids-templates">
@@ -18,14 +17,14 @@
       <div class="ids-template-grid">
         {#each group.templates as template (template.id)}
           <button type="button" disabled={editor.disabled} data-template={template.id}
-            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={template.sequence}
+            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${template.curated ? t('ids.templates.hangul') : t('ids.templates.usage', { count: template.count })}`}
             draggable={!editor.disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', template.sequence)}
             onclick={() => editor.take(template.sequence)}>
             <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
-              {#each template.leaves as leaf, i (i)}
-                {@const [x0, y0, x1, y1] = leaf.box}
-                <rect x={2 + x0 * 20 + .7} y={2 + y0 * 20 + .7} width={(x1 - x0) * 20 - 1.4}
-                  height={(y1 - y0) * 20 - 1.4} rx=".7" />
+              {#each template.shapes as shape, i (i)}
+                {#if shape.kind === 'slot'}
+                  <rect class:accent={shape.accent} x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
+                {:else}<path class:accent={shape.accent} d={shape.d} />{/if}
               {/each}
             </svg>
           </button>
@@ -45,5 +44,7 @@
   button:not(:disabled):hover{border-color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));background:var(--ids-accent-light,light-dark(#e7edfc,#24304f))}
   button:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:2px}
   button:disabled{opacity:.55;cursor:default}
+  path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+  .accent{color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
   rect{fill:color-mix(in srgb,currentColor 10%,transparent);stroke:currentColor;stroke-width:1;stroke-dasharray:1.5 1.2}
 </style>

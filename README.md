@@ -96,6 +96,8 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
 
+The Templates picker groups layouts by component count and orders each group by the number of characters using it in the bundled BabelStone and Yi Bai IDS datasets. `scripts/build_structure_templates.mjs` adds layouts found in at least 50 distinct characters, preserving the original shortcuts. The Hangul layout `⿱⿽⬚⬚⬚` is included separately as a curated template; its tooltip identifies the layout rather than showing a Han-corpus count. Counts use supplied whole-character descriptions with two to four components, merge equivalent axis arrangements, and count each character once per layout. Source versions, counts and examples are recorded in `src/core/structure-templates.json`; these are dictionary coverage counts, not usage frequencies.
+
 A host laying the editor out itself makes one editor and places its parts where it wants them; the
 workshop in `demo/` does so:
 
@@ -125,6 +127,13 @@ dragged from the palette, the decomposition tree, a search or the swaps is put w
 and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
+
+The sequence field accepts zi.tools replacement expressions with three single components, such as
+`🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
+to an editable IDS (`⿰木火`). The lookup opens as few components as possible, then replaces the
+shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
+remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
 parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
@@ -154,8 +163,8 @@ letters from every block, and scripts beyond CJK. Operators, empty-slot markers,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
-component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
-preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
+preview font coverage. The composer supplements missing export glyphs with 49,483 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
@@ -493,7 +502,7 @@ missing components. `unicodeSource()` supplies only bundled Unicode glyphs with 
 For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
 from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
 `hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
-with the source Noto font's design; they do not imitate a selected serif or handwritten face.
+with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or

@@ -43,8 +43,8 @@
   "app.export.bg.custom": "色を選ぶ",
   "app.export.bg.none": "透明",
   "app.export.bg.white": "白",
-  "app.export.copied": "SVGをコピーしました",
-  "app.export.copy": "SVGをコピー",
+  "app.export.copied": "{format}をコピーしました",
+  "app.export.copy": "{format}をコピー",
   "app.export.failed": "ファイルを保存できませんでした",
   "app.export.format": "形式",
   "app.export.ink": "字の色",
@@ -123,5 +123,14 @@
   "app.theme.light": "ライト",
   "app.theme.system": "システムに合わせる",
   "app.title": "IDS工房",
-  "app.toolbar": "ツール"
+  "app.toolbar": "ツール",
+  "app.replacement.title": "部品を置き換える",
+  "app.replacement.help": "文字を指定し、その部品を一つ置き換えます。作業中の内容を残して、結果を開きます。",
+  "app.replacement.source": "文字",
+  "app.replacement.target": "置き換える部品",
+  "app.replacement.replacement": "置き換え先",
+  "app.replacement.submit": "結果を開く",
+  "app.replacement.loading": "部品を検索中…",
+  "app.replacement.notFound": "文字の中にその部品が見つかりませんでした。",
+  "app.replacement.failed": "文字を検索できませんでした。もう一度お試しください。"
 }
