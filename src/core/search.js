@@ -58,16 +58,17 @@ function readTree(list, cursor) {
  * A query read into its terms, or a problem: `empty` (nothing to find), `extra` (a structure with more
  * than its operators take) or `terms` (more than TERMS).
  * @param {string} text
+ * @param {{ literal?: boolean }} [options]
  * @returns {{ terms: Term[], problem?: 'empty' | 'extra' | 'terms' }}
  */
-export function parseQuery(text) {
+export function parseQuery(text, { literal = false } = {}) {
   const written = (text ?? '').split(/[\s　]+/).map(t => unalias(t)).filter(Boolean)
   /** @type {Term[]} */
   const terms = []
   for (const term of written) {
     // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
     const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
-    const typed = tokens(matching), list = typed.map((token, i) => searchShape(token, typed[i + 1]))
+    const typed = tokens(matching), list = literal ? typed : typed.map((token, i) => searchShape(token, typed[i + 1]))
     if (isSequence(term)) {
       const cursor = { at: 0 }
       /** @returns {Pattern} */
@@ -564,6 +565,8 @@ export function createSearch(table, { forms = new Map() } = {}) {
   /** The containing lookup, including single-component alias descriptions.
    * @param {string} part @param {number} limit @returns {{ hits: Hit[], total: number }} */
   function containingPart(part, limit) {
+    const firstLeaf = parseQuery(part).terms[0]?.leaves[0]
+    const excludeSelf = !firstLeaf || choices(firstLeaf).includes(fold(part))
     /** @type {Map<string, string[]>} */
     const aliases = new Map()
     for (const [char, descriptions] of table) for (const text of descriptions) {
@@ -579,16 +582,19 @@ export function createSearch(table, { forms = new Map() } = {}) {
     /** @param {string} key */
     const addAliases = key => {
       for (const char of aliases.get(key) ?? []) {
-        if (char !== part && !found.has(char)) found.set(char, { char, sequence: char, spans: [], score: 0 })
+        if ((char !== part || !excludeSelf) && !found.has(char)) found.set(char, { char, sequence: char, spans: [], score: 0 })
         const folded = fold(char)
         if (!seen.has(folded)) { seen.add(folded); queue.push(char) }
       }
     }
+    if (firstLeaf) for (const key of choices(firstLeaf)) addAliases(key)
     for (let i = 0; i < queue.length; i++) {
       const current = queue[i]
-      for (const hit of search(current, { limit: Infinity }).hits) {
+      // An alias is a literal component in the source data, even when it looks like kana
+      // that the ordinary query parser treats as a visual substitute.
+      for (const hit of search(current, { limit: Infinity, literal: i > 0 }).hits) {
         const old = found.get(hit.char)
-        if (!old || hit.score < old.score) found.set(hit.char, hit)
+        if ((i === 0 || hit.char !== part || !excludeSelf) && (!old || hit.score < old.score)) found.set(hit.char, hit)
         addAliases(fold(hit.char))
       }
       addAliases(fold(current))
@@ -601,16 +607,16 @@ export function createSearch(table, { forms = new Map() } = {}) {
   /**
    * The characters `query` finds, closest first, at most `limit`, and how many there are.
    * @param {string} query
-   * @param {{ limit?: number }} [options]
+   * @param {{ limit?: number, literal?: boolean }} [options]
    * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'extra' | 'terms' }}
    */
-  function search(query, { limit = 60 } = {}) {
+  function search(query, { limit = 60, literal = false } = {}) {
     // zi.tools uses these two complete expressions for component lookup. Keep empty draft slots
     // distinct from the explicit wildcard so an unfinished subtraction remains a normal query.
     const special = componentQuery(query)
     if (special?.kind === 'containing') return containingPart(special.char, limit)
     if (special?.kind === 'parts') return partsOf(special.char, limit)
-    const { terms, problem } = parseQuery(query)
+    const { terms, problem } = parseQuery(query, { literal })
     if (problem) return { hits: [], total: 0, problem }
     const by = index()
     // Each leaf needs one of its alternatives. Keep the descriptions' keys separate: an イ

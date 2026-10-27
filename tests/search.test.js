@@ -126,6 +126,26 @@ describe('component lookup expressions', () => {
     expect(folded.search('㇯？言').hits.map(hit => hit.char)).toContain('訁')
   })
 
+  it('finds holders through chains of aliases without looping on cycles', () => {
+    const index = createSearch(new Map([['甲', ['乙']], ['乙', ['丙']], ['丙', ['甲']], ['丁', ['⿰甲木']]]))
+    expect(index.search('㇯？丙').hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['甲', '乙', '丁']))
+    const cycle = createSearch(new Map([['甲', ['⿰乙口']], ['乙', ['甲']]]))
+    expect(cycle.search('㇯？甲').hits.map(hit => hit.char)).toEqual(['乙'])
+  })
+
+  it('keeps an alias literal even when the same kana is a visual search substitute', () => {
+    const index = createSearch(new Map([['イ', ['木']], ['甲', ['⿰人口']], ['乙', ['⿰イ口']]]))
+    const hits = index.search('㇯？木').hits.map(hit => hit.char)
+    expect(hits).toEqual(expect.arrayContaining(['イ', '乙']))
+    expect(hits).not.toContain('甲')
+    const direct = createSearch(new Map([['イ', ['⿰人口']], ['甲', ['⿰人口']]]))
+    expect(direct.search('㇯？イ').hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['イ', '甲']))
+    const indirect = createSearch(new Map([['イ', ['⿰乙口']], ['乙', ['甲']], ['甲', ['⿰人口']]]))
+    expect(indirect.search('㇯？イ').hits.map(hit => hit.char)).toContain('イ')
+    const alias = createSearch(new Map([['イ', ['人']]]))
+    expect(alias.search('㇯？イ').hits.map(hit => hit.char)).toContain('イ')
+  })
+
   it('opens a readable description or the component when the source contains placeholders', () => {
     const index = createSearch(new Map([['體', ['⿰骨豊']], ['骨', ['⿳{108}冖⺝', '⿱冖月']], ['豊', ['⿱{123}豆']]]))
     const hits = index.search('㇯體？').hits
