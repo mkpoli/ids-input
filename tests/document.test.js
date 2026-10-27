@@ -18,6 +18,18 @@ describe('a document from IDS', () => {
     expect(emptyDocument().root).toEqual({ id: 'root', kind: 'slot' })
     expect(toSequence(emptyDocument().root)).toBe('⬚')
   })
+  it('drops a modifier when the operator changes, and keeps it for the same one', () => {
+    const document = fromSequence('⿴[1]囗人')
+    const id = document.root.id
+    expect(toSequence(changeOperator(document, id, '⿴').root)).toBe('⿴[1]囗人')
+    expect(toSequence(changeOperator(document, id, '⿵').root)).toBe('⿵囗人')
+  })
+  it('carries a zi.tools modifier with its operator', () => {
+    const document = fromSequence('⿴[1]囗人')
+    expect(document.root).toMatchObject({ kind: 'operator', op: '⿴', note: '1' })
+    expect(toSequence(document.root)).toBe('⿴[1]囗人')
+    expect(() => fromSequence('⿰[]木')).toThrow(DocumentError)
+  })
   it('gives repeated characters separate IDs', () => {
     const document = fromSequence('⿰木木')
     const [left, right] = document.root.children

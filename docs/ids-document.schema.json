@@ -332,6 +332,12 @@
               },
               "minItems": 1,
               "maxItems": 3
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 65,
+              "pattern": "^[0-9:,._xabcdlr|-]+$",
+              "description": "The zi.tools modifier written after the operator, without its brackets."
             }
           },
           "allOf": [

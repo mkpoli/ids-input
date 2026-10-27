@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createSearch, parseQuery, readForms } from '../src/core/index.js'
+import { createSearch, parseQuery, readForms, tokens } from '../src/core/index.js'
 
 // A few descriptions, as BabelStone writes them (regions dropped).
 const table = new Map(Object.entries({
@@ -18,6 +18,13 @@ describe('a query', () => {
     expect(terms[0].tree).toEqual({ op: '⿰', parts: [null, '木'] })
     expect(terms[2].tree).toEqual({ op: '⿰', parts: ['氵', null] })
     expect(parseQuery('  ').problem).toBe('empty')
+  })
+  it('reads a zi.tools modifier without it changing the shape', () => {
+    expect(parseQuery('⿴[1]囗人').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿴', parts: ['囗', '人'] } })])
+    expect(chars('⿴[1]囗木')).toContain('困')
+    // A draft with a modifier is tokenised the same way, so its unfinished part stays a wildcard.
+    expect(tokens('⿴[1]囗')).toEqual(['⿴', '囗'])
+    expect(parseQuery('⿴[1]囗').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿴', parts: ['囗', null] } })])
   })
 })
 

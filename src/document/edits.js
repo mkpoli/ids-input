@@ -57,7 +57,9 @@ function contentNode(content, allocator, id) {
   }
   if (content.kind === 'operator') {
     if (typeof content.op !== 'string' || !Array.isArray(content.children)) throw new DocumentError([{ path: '', message: 'operator content needs op and children' }])
-    return { id, kind: 'operator', op: content.op, children: content.children.map(child => contentNode(child, allocator, allocator.next())) }
+    /** @type {import('./model.js').OperatorNode} */
+    const node = { id, kind: 'operator', op: content.op, children: content.children.map(child => contentNode(child, allocator, allocator.next())) }
+    return content.note ? { ...node, note: content.note } : node
   }
   throw new DocumentError([{ path: '', message: 'unknown layer kind' }])
 }
@@ -156,6 +158,8 @@ export function changeOperator(document, id, op, { allocator = allocatorFor(docu
     throw new DocumentError([{ path: '', message: 'the new operator would discard a filled operand' }])
   }
   const children = Array.from({ length: count }, (_, i) => node.children[i] ?? { id: allocator.next(), kind: 'slot' })
+  // A modifier belongs to the operator it follows; a different operator starts without one.
+  if (op !== node.op) delete node.note
   node.op = op
   node.children = children
   return assertDocument(copy)

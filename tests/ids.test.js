@@ -21,6 +21,25 @@ describe('a whole description', () => {
     expect(problemOf('⿰亻木')).toBeNull()
     expect(problemOf('⿰亻')).toBe('missing')
   })
+  it('keeps a zi.tools modifier with its operator', () => {
+    expect(parse('⿴[1]囗人').tree).toEqual({ op: '⿴', parts: ['囗', '人'], note: '1' })
+    expect(write(parse('⿻[1:]丨日').tree)).toBe('⿻[1:]丨日')
+    expect(write(parse('⿻[.,x]〢日').tree)).toBe('⿻[.,x]〢日')
+    expect(write(parse('㇯[2]王一').tree)).toBe('㇯[2]王一')
+    expect(descriptionEnd([...'⿻[1:]丨日木'])).toBe(7)
+    // Brackets outside the modifier grammar still stand as components.
+    expect(write(parse('⿰[木').tree)).toBe('⿰[木')
+    expect(parse('⿰[]木').problem).toBe('extra')
+    // Editing below the operator keeps the modifier with it.
+    expect(write(place(parse('⿴[1]囗水').tree, [1], { op: '⿰', parts: ['水', '一'] }).tree)).toBe('⿴[1]囗⿰水一')
+    // A different operator starts without one.
+    expect(write(swapOp(parse('⿴[1]囗人').tree, [], '⿵').tree)).toBe('⿵囗人')
+    // Only operators zi.tools gives modifiers to read one; elsewhere the brackets stay components.
+    expect(parse('⿲[1]').tree).toEqual({ op: '⿲', parts: ['[', '1', ']'] })
+    expect(parse('⿸[1]厂人').problem).toBe('extra')
+    // A note that is not a modifier is not written back.
+    expect(write({ op: '⿴', note: 'x]y', parts: ['囗', '人'] })).toBe('⿴囗人')
+  })
   it('keeps a variation selector with its component', () => {
     expect(parse('⿱艹曷\u{E0100}').tree.parts[1]).toBe('曷\u{E0100}')
     expect(leaves(parse('⿱艹曷\u{E0100}').tree).map(leaf => leaf.char)).toEqual(['艹', '曷\u{E0100}'])
