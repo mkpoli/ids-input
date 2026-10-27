@@ -13,6 +13,7 @@
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
@@ -22,6 +23,7 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
@@ -44,6 +46,7 @@
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
+  import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
   /** @type {'sans' | 'serif' | 'klee'} */
@@ -54,7 +57,12 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const babel = { ...sealAdapter, parts: async () => {
+    const curated = await sealAdapter.parts()
+    const seen = new Set(curated.map(part => part.part))
+    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
+  } }
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -121,6 +129,18 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const treeDrawers = new Map()
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  function treeDrawer(at, style) {
+    const key = `${at}\0${style}`
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
+  }
+  const treeDraw = $derived.by(() => {
+    const draw = treeDrawer(base, componentStyle)
+    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
+  })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -218,7 +238,8 @@
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
-  let structuralSearch = $state(false)
+  /** @type {'current' | 'component' | 'structure'} */
+  let searchMode = $state('current')
   const wholeComponentLookup = $derived(componentQuery(editor.whole))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
@@ -640,104 +661,107 @@
   </div>
 
   <main class="workspace" bind:this={work}>
-  <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
-    bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-    <section class="pane input" id="input-panel" aria-label={t('app.input')}>
-      <div class="block">
-        <div class="label-row">
-          <h2 class="label">{t('ids.label')}</h2>
-          {#if points.length}
-            <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
-          {/if}
+    <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
+      bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
+      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
+        <div class="block">
+          <div class="label-row">
+            <h2 class="label">{t('ids.label')}</h2>
+            {#if points.length}
+              <button type="button" class="points-btn" aria-haspopup="dialog" title={t('app.codePoints', { count: points.length })} onclick={() => pointsOpen = true}>{t('app.codePoints', { count: points.length })}</button>
+            {/if}
+          </div>
+          <div class="seq-line">
+            <IdsSequence {editor} label={false} />
+            <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+          </div>
+          <button type="button" class="replacement-link" onclick={() => replacementOpen = true}>{t('app.replacement.title')}</button>
+          {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
+          {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
-        <div class="seq-line">
-          <IdsSequence {editor} label={false} />
-          <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
-        </div>
-        <button type="button" class="replacement-link" onclick={() => replacementOpen = true}>{t('app.replacement.title')}</button>
-        {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
-        {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
+        <div class="block"><IdsOperators {editor} {keyHints} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
+      </section>
+
+      <div class="column-gap input-gap">
+        <ColumnSplitter value={columns.input} min={MIN_INPUT} max={columns.inputMax} label={t('app.panels.resizeWidth', { panel: t('app.input') })}
+          controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
-      <div class="block"><IdsOperators {editor} {keyHints} /></div>
-      <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
-    </section>
 
-    <div class="column-gap input-gap">
-      <ColumnSplitter value={columns.input} min={MIN_INPUT} max={columns.inputMax} label={t('app.panels.resizeWidth', { panel: t('app.input') })}
-        controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
-    </div>
-
-    <div class="middle" bind:this={middleEl} style:--upper="{split}%">
-      <section class="pane tree" aria-label={t('ids.structure')}>
-        <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
-          <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
-            onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
-          <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
-            onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
+      <div class="middle" bind:this={middleEl} style:--upper="{split}%">
+        <section class="pane tree" aria-label={t('ids.structure')}>
+          <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
+            <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
+              onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
+            <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
+              onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
+          </div>
+          {#if view === 'shape'}
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
+          {:else}
+            {#key activeId}
+              <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+            {/key}
+          {/if}
+          <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
+        </section>
+        <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
+          aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
+          onpointerdown={splitStart} onpointermove={splitMove} onpointerup={splitEnd} onpointercancel={splitEnd}
+          onkeydown={splitKey} ondblclick={splitReset}>
+          <span class="grip" aria-hidden="true"></span>
         </div>
-        {#if view === 'shape'}
-          <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
-        {:else}
+        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')}>
+          <div class="search-modes" aria-label={t('ids.search.title')}>
+            <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
+          </div>
+          {#if searchMode === 'component'}
+            <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else if searchMode === 'structure'}
+            <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else}
+          <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
+          <IdsSearch {adapter} query={searchQuery} {messages} {locale}
+            onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {/if}
+        </section>
+      </div>
+      <div class="column-gap output-gap">
+        <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
+          controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
+      </div>
+      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
+        <div class="preview">
           {#key activeId}
-            <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
+              {#snippet detailContent()}
+                {#each encoded as ch (ch)}
+                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                {/each}
+              {/snippet}
+            </IdsPreview>
           {/key}
-        {/if}
-        <div class="block tools-row"><IdsPartTools {editor} {keyHints} bind:slot status={false} /></div>
-      </section>
-      <div class="split" role="separator" aria-orientation="horizontal" aria-label={t('app.panels.resize')} title={`${t('app.panels.resize')} (${Math.round(split)}%)`}
-        aria-valuemin="35" aria-valuemax="78" aria-valuenow={Math.round(split)} tabindex="0"
-        onpointerdown={splitStart} onpointermove={splitMove} onpointerup={splitEnd} onpointercancel={splitEnd}
-        onkeydown={splitKey} ondblclick={splitReset}>
-        <span class="grip" aria-hidden="true"></span>
-      </div>
-      <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
-        <div class="search-modes" aria-label={t('ids.search.title')}>
-          <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
-          <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+          <div class="adjust">
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
+              title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
+              onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+            {#if adjusting}
+              <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
+              <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
+              <span class="adjust-hint">{t('ids.adjust.hint')}</span>
+            {/if}
+          </div>
         </div>
-        {#if structuralSearch}
-          <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
-        {:else}
-        <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
-        <IdsSearch {adapter} query={searchQuery} {messages} {locale}
-          onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
-        {/if}
+        <div class="details">
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} sequence={editor.whole} {t} onnote={note} /></div>
+        </div>
       </section>
     </div>
-    <div class="column-gap output-gap">
-      <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
-        controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
-    </div>
-    <section class="pane output" id="output-panel" aria-label={t('app.output')}>
-      <div class="preview">
-        {#key activeId}
-          <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-            editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
-            {#snippet detailContent()}
-              {#each encoded as ch (ch)}
-                <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
-              {/each}
-            {/snippet}
-          </IdsPreview>
-        {/key}
-        <div class="adjust">
-          <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
-            title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
-            onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
-          {#if adjusting}
-            <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
-            <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
-            <span class="adjust-hint">{t('ids.adjust.hint')}</span>
-          {/if}
-        </div>
-      </div>
-      <div class="details">
-        <div class="block"><ExportPanel bind:this={exportPanel} {drawing} sequence={editor.whole} {t} onnote={note} /></div>
-      </div>
-    </section>
-  </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
 </div>
 
@@ -768,7 +792,7 @@
 </Dialog>
 
 <style>
-  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
 

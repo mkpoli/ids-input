@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { replacementPrefix, replacementQuery, resolveReplacement, write } from '../src/core/index.js'
+import { replacementExpression, replacementInput, replacementPrefix, replacementQuery, resolveReplacement, resolveReplacementExpression, unaliasReplacementInput, write } from '../src/core/index.js'
 
 const table = new Map(Object.entries({
   林: ['⿰木木'], 森: ['⿱木林'], 赢: ['⿱吂⿲月贝凡'],
@@ -30,6 +30,24 @@ describe('zi.tools replacement expressions', () => {
     expect(await resolve('🔄森木火')).toBe('⿱火林')
     expect(await resolve('🔄赢贝女')).toBe('⿱吂⿲月女凡')
   })
+  it('accepts complete IDS operands and rejects incomplete or unknown operands', () => {
+    expect(replacementQuery('🔄⿰木木木火')).toEqual({ source: '⿰木木', target: '木', replacement: '火' })
+    expect(replacementQuery('RP林木⿱日月')).toEqual({ source: '林', target: '木', replacement: '⿱日月' })
+    expect(replacementQuery('🔄⿰林林⿰木木火')).toEqual({ source: '⿰林林', target: '⿰木木', replacement: '火' })
+    expect(replacementQuery('🔄⿰木木木⿱日')).toBeNull()
+    expect(replacementQuery('🔄⿰木？木火')).toBeNull()
+    expect(replacementQuery('🔄林木？︀')).toBeNull()
+    expect(replacementQuery('🔄⿰木？︀木火')).toBeNull()
+    expect(replacementQuery('🔄⿰木⬚木火')).toBeNull()
+    expect(replacementQuery('🔄' + '⿾'.repeat(65) + '木木火')).toBeNull()
+  })
+  it('replaces a component or subtree with an IDS, including within opened descriptions', async () => {
+    expect(await resolve('🔄⿰木木木火')).toBe('⿰火木')
+    expect(await resolve('🔄林木⿱日月')).toBe('⿰木⿱日月')
+    expect(await resolve('🔄⿰⿰木木日⿰木木火')).toBe('⿰火日')
+    expect(await resolve('🔄⿰林林⿰木木火')).toBe('⿰林火')
+    expect(await resolve('🔄⿰木日⿱木日火')).toBeNull()
+  })
   it('opens nested components and terminates when descriptions are cyclic', async () => {
     expect(await resolve('🔄甲木火')).toBe('⿰⿱甲火口')
     expect(await resolve('🔄甲水火')).toBeNull()
@@ -51,7 +69,80 @@ describe('zi.tools replacement expressions', () => {
     await expect(request).rejects.toThrow()
     expect(calls).toBe(1)
   })
+  it('does not return a result too long for the editor', async () => {
+    const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
+    const result = await resolveReplacement(query, async () => [{ text: `⿰${'⿾'.repeat(58)}木日` }])
+    expect(result).toBeNull()
+  })
+  it('tries another match if the preferred result would be too long', async () => {
+    const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
+    const result = await resolveReplacement(query, async char => char === '甲'
+      ? [{ text: `⿰${'⿾'.repeat(58)}日木` }, { text: '⿰木口' }] : [])
+    expect(write(result)).toBe(`⿰${'⿾'.repeat(10)}火口`)
+  })
+  it('can replace a subtree after an expansion temporarily exceeds the editor length', async () => {
+    const target = `${'⿾'.repeat(59)}木`
+    const query = replacementQuery(`🔄⿰甲日${target}火`)
+    const result = await resolveReplacement(query, async char => char === '甲'
+      ? [{ text: `⿲${target}乙丙` }] : [])
+    expect(write(result)).toBe('⿰⿲火乙丙日')
+  })
   it('preserves component variation selectors in the output', async () => {
     expect(await resolve('🔄林木火︀')).toBe('⿰木火︀')
   })
+  it('reads replacements inside an IDS or another replacement', async () => {
+    const ask = async text => {
+      const expression = replacementExpression(text)
+      if (!expression) throw Error('Invalid test expression')
+      const tree = await resolveReplacementExpression(expression, structure)
+      return tree === null ? null : write(tree)
+    }
+    expect(await ask('⿰氵🔄林木火')).toBe('⿰氵⿰木火')
+    expect(await ask('⿱🔄林木火水')).toBe('⿱⿰木火水')
+    expect(await ask('⿰？🔄林木火')).toBe('⿰？⿰木火')
+    expect(await ask('⿱🔄林木火⬚')).toBe('⿱⿰木火⬚')
+    expect(await ask('⿱🔄林木火＋')).toBe('⿱⿰木火⬚')
+    expect(await ask('🔄🔄林木火木水')).toBe('⿰水火')
+    expect(await ask('⿱RP林木火水')).toBe('⿱⿰木火水')
+    expect(await ask('⿱🔄⿰RPRX水')).toBe('⿱⿰XP水')
+    expect(await ask('🔄林木🔄森林火')).toBe('⿰木⿱木火')
+    expect(await ask('⿱🔄林水火水')).toBeNull()
+    expect(replacementExpression('⿱🔄林木水')).toBeNull()
+    expect(replacementExpression('⿰🔄林木？日')).toBeNull()
+    expect(replacementExpression('⿲RP林')).toBeNull()
+    expect(replacementExpression('⿱🔄RP火水')).not.toBeNull()
+    expect(replacementInput('⿱RP林LR')).toBe(true)
+    expect(replacementInput('⿱人LR')).toBe(false)
+    expect(replacementInput('⿰🔄木')).toBe(false)
+    expect(replacementInput('⿰🔄LR')).toBe(true)
+    expect(unaliasReplacementInput('⿰🔄LR')).toBe('⿰🔄LR')
+    expect(replacementInput('⿱🔄林木火水')).toBe(true)
+    expect(replacementInput('LR🔄林LR水')).toBe(true)
+    expect(unaliasReplacementInput('LR🔄林LR水')).toBe('⿰🔄林LR水')
+    expect(unaliasReplacementInput('⿱RP林木火LR木水')).toBe('⿱RP林木火⿰木水')
+    expect(unaliasReplacementInput('⿲RPLR木水')).toBe('⿲RP⿰木水')
+    expect(unaliasReplacementInput('⿱RP林LR')).toBe('⿱RP林LR')
+    expect(unaliasReplacementInput('LR🔄林木火水')).toBe('⿰🔄林木火水')
+    expect(unaliasReplacementInput('⿱🔄林木火RP森林火')).toBe('⿱🔄林木火RP森林火')
+    expect(replacementExpression('⿰木日')).toBeNull()
+    const deeplyNested = '🔄'.repeat(22) + '木'.repeat(45)
+    expect(await ask(deeplyNested)).toBe('木')
+    expect(replacementExpression('⿾'.repeat(257) + '🔄林木火')).toBeNull()
+  })
+  it('aborts an in-flight nested replacement without opening further components', async () => {
+    const controller = new AbortController()
+    let finish, calls = 0
+    const expression = replacementExpression('⿱🔄林木火水')
+    const result = resolveReplacementExpression(expression, () => {
+      calls++
+      return new Promise(resolve => { finish = resolve })
+    }, { signal: controller.signal })
+    await Promise.resolve()
+    await Promise.resolve()
+    controller.abort()
+    if (finish) finish([{ text: '⿰木木' }])
+    await expect(result).rejects.toThrow()
+    expect(calls).toBeLessThanOrEqual(1)
+  })
+
 })

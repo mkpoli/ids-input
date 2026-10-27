@@ -13,8 +13,8 @@ const chars = query => byName.search(query).map(hit => hit.char)
 
 describe('the character vocabulary', () => {
   it('holds the common character set and its readings', () => {
-    expect(names.length).toBeGreaterThan(90_000)
-    expect(new Set(names.map(name => name.char)).size).toBeGreaterThan(9_000)
+    expect(names.length).toBeGreaterThan(150_000)
+    expect(new Set(names.map(name => name.char)).size).toBeGreaterThan(15_000)
   })
   it('finds a character by an English meaning, pinyin, kana, romaji, Korean or Vietnamese reading', () => {
     expect(chars('water')[0]).toBe('水')
@@ -26,6 +26,7 @@ describe('the character vocabulary', () => {
     expect(chars('person')[0]).toBe('人')
     expect(chars('silk')[0]).toBe('糸')
     expect(chars('gold')[0]).toBe('金')
+    expect(chars('appearance')).toContain('㒵')
   })
 })
 

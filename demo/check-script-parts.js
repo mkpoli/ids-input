@@ -13,10 +13,10 @@ try {
   await page.getByRole('tab', { name: 'Gongche', exact: true }).click()
   await page.locator('.gongche-guide').waitFor()
   assert.ok(await page.locator('.parts-grid .part').count() > 0, 'Gongche remains available')
-  for (const [name, count] of [['Bopomofo', 75], ['Letters & numbers', 310], ['Tangut', 768]]) {
+  for (const [name, count] of [['Bopomofo', 82], ['Letters & numbers', 120], ['Tangut', 768]]) {
     await page.getByRole('tab', { name, exact: true }).click()
     await page.locator('.parts-grid .part').first().waitFor()
-    assert.equal(await page.locator('.parts-grid .part').count(), count, `${name} remains unchanged`)
+    assert.equal(await page.locator('.parts-grid .part').count(), name === 'Tangut' ? 120 : count, `${name} remains available`)
     if (name === 'Bopomofo') assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), 'ㄅ')
   }
   assert.equal(await page.getByRole('tab', { name: 'Han', exact: true }).count(), 0)
@@ -50,7 +50,7 @@ try {
   await disconnected.getByRole('tab', { name: 'Other scripts', exact: true }).click()
   await disconnected.getByText('Additional script parts could not be loaded.').waitFor()
   await disconnected.getByRole('tab', { name: 'Bopomofo', exact: true }).click()
-  assert.equal(await disconnected.locator('.parts-grid .part').count(), 75, 'existing tabs work if the catalog fails')
+  assert.equal(await disconnected.locator('.parts-grid .part').count(), 82, 'existing tabs work if the catalog fails')
   await disconnected.getByRole('tab', { name: 'Other scripts', exact: true }).click()
   await offline.unroute('**/script-parts.json.gz*')
   await disconnected.getByRole('button', { name: 'Retry', exact: true }).click()

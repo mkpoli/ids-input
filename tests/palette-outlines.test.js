@@ -1,3 +1,4 @@
+import { GONGCHE_PARTS } from '../src/core/gongche.js'
 import { expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
@@ -27,7 +28,7 @@ it('accounts for the leaves of every shipped palette entry', async () => {
   const { COMPOSER_BASE } = await import('../demo/lib/composer.js')
   const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
   const gz = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}`, import.meta.url))))
-  const rows = [...paletteRows(read('ids-parts.json')), ...gz('small-seal.json.gz').parts]
+  const rows = [...GONGCHE_PARTS, ...paletteRows(read('ids-parts.json')), ...gz('small-seal.json.gz').parts]
   const remote = read('palette-remote-glyphs.json')
   expect(remote.base).toBe(COMPOSER_BASE)
   const remoteKeys = new Set(remote.keys)

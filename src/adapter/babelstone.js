@@ -1,10 +1,11 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
+import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
-import { sealTable, sealNames, sealForms } from './seal-data.js'
+import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { componentIndex } from './containing.js'
-import { createSearch, readForms } from '../core/search.js'
+import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
@@ -139,7 +140,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
-    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
+    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
@@ -325,14 +326,58 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
   }
 
-  /** @type {Promise<{ doc: import('./character-info.js').CharacterInfoData, lookup: ReturnType<typeof createCharacterInfo> }> | null} */
+  /** @type {Promise<{ doc: import('./character-info.js').CharacterInfoData, seal: import('./seal-data.js').SmallSealData | null, lookup: ReturnType<typeof createCharacterInfo> }> | null} */
   let information = null
   const readInformation = () => information ??= Promise.all([
     typeof characterInfo === 'string' || characterInfo instanceof URL
       ? load(characterInfo).then(readText).then(JSON.parse) : characterInfo,
     readSeal(),
-  ]).then(([doc, seal]) => ({ doc, lookup: createCharacterInfo(doc, seal) }))
+  ]).then(([doc, seal]) => ({ doc, seal, lookup: createCharacterInfo(doc, seal) }))
     .catch(error => { information = null; throw error })
+
+  /** Existing form and lookup mappings, retained as labelled search links.
+   * @param {string} text @param {{char: string, label: string}[]} direct */
+  async function relatedSeeds(text, direct) {
+    const hits = [...direct]
+    if (formsText !== undefined || forms) {
+      try {
+        const index = await nameIndex()
+        for (const hit of direct) for (const char of formsOf(hit.char, null, index)) {
+          if (char !== hit.char) hits.push({ char, label: `form of ${hit.char}` })
+        }
+      } catch { /* Literal characters and meaning data remain searchable. */ }
+    }
+    const doc = await readSeal()
+    if (doc) {
+      const drawable = new Set([...Object.keys(doc.table), ...doc.parts.map(p => p.part)])
+      const query = direct.length === 1 ? direct[0].char : text
+      for (const hit of sealNames(doc, query)) {
+        if (isSmallSeal(hit.char) && !drawable.has(hit.char)) continue
+        const old = isSmallSeal(query) ? query : hit.char
+        const modern = isSmallSeal(query) ? hit.char : query
+        const alias = modern === '口' && doc.modern[old]?.includes('𠙵')
+        hits.push({ ...hit, label: alias ? `lookup · ${hit.label}` : hit.label })
+      }
+    }
+    return hits
+  }
+
+  /** @param {{ char: string, label: string }[]} hits @param {number} limit */
+  function uniqueHits(hits, limit) {
+    const seen = new Set(), result = []
+    for (const hit of hits) {
+      if (seen.has(hit.char)) continue
+      seen.add(hit.char); result.push(hit)
+      if (result.length >= limit) break
+    }
+    return result
+  }
+
+  /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
+  let relations = null
+  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal ? read() : new Map()])
+    .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
+    .catch(error => { relations = null; throw error })
 
   return {
     table: read,
@@ -340,7 +385,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
-      if (info?.script === 'component') {
+      if (info?.script === 'component' && (given || ids || smallSeal)) {
         info.relations.push(...componentExamples(char, doc, await read()))
         for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
         if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
@@ -356,7 +401,9 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     },
     async search(query, { limit = 24, signal } = {}) {
       if (limit <= 0) return []
+      signal?.throwIfAborted()
       const text = query.trim()
+      if (!text) return []
       const direct = typed(text)
       // One ideograph typed on its own is that component; names are for what is longer than one.
       // A lone letter or syllable (수, の) also searches names, so Korean and kana readings work.
@@ -383,21 +430,17 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
           }
         } catch { /* The names are a convenience; the characters typed still stand. */ }
       }
-      if (smallSeal) {
+      if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
+      else if (smallSeal) {
         const doc = await readSeal()
         if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
-      signal?.throwIfAborted()
-      const seen = new Set()
-      /** @type {{ char: string, label: string }[]} */
-      const result = []
-      for (const hit of hits) {
-        if (seen.has(hit.char)) continue
-        seen.add(hit.char)
-        result.push(hit)
-        if (result.length >= limit) break
+      if (characterInfo) {
+        try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
+        catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
       }
-      return result
+      signal?.throwIfAborted()
+      return uniqueHits(hits, limit)
     },
     async encoded(sequence) {
       // Built once from the table; a failed load is tried again on the next call.
@@ -448,15 +491,23 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       return result
     },
-    ...(characters !== undefined || charactersText !== undefined ? {
+    ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
       /** @param {string} query @param {import('./types.js').Options} [options] */
       async searchCharacters(query, { limit = 24, signal } = {}) {
         if (limit <= 0) return []
         const text = query.trim()
         if (!text) return []
-        const search = await characterIndex()
         signal?.throwIfAborted()
-        return search.search(text, { limit }).map(({ char, label }) => ({ char, label }))
+        /** @type {{ char: string, label: string }[]} */ let hits = []
+        try { hits = (await characterIndex()).search(text, { limit }).map(({ char, label }) => ({ char, label })) }
+        catch (error) { if (!characterInfo) throw error }
+        if (characterInfo) {
+          hits = [...await relatedSeeds(text, typed(text)), ...hits]
+          try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
+          catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
+        }
+        signal?.throwIfAborted()
+        return uniqueHits(hits, limit)
       },
     } : {}),
     async containing(asked, { limit = 24 } = {}) {

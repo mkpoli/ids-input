@@ -3,8 +3,8 @@
   import { characterScript } from '../adapter/character-info.js'
   import { translator } from './i18n.js'
 
-  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string }} */
-  let { root, adapter, messages, locale = 'en' } = $props()
+  /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
+  let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
   const t = $derived(translator(messages, locale))
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let panel = $state(null)
@@ -119,6 +119,17 @@
     control?.focus()
     restoringFocus = false
   }
+  /** @param {string} part */
+  async function pick(part) {
+    if (disabled || !onpick) return
+    const element = anchor?.closest('.sequence-wrap')?.querySelector('input') ?? anchor
+    const writtenPath = anchor?.getAttribute('data-path')
+    const path = writtenPath == null ? undefined : writtenPath === '' ? [] : writtenPath.split('.').map(Number)
+    close()
+    onpick(part, path)
+    await tick()
+    restoreFocus(element?.isConnected ? element : root?.querySelector('input') ?? null)
+  }
   /** @param {Event} event */
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
@@ -172,26 +183,24 @@
     {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
     {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
     {:else if info}
-      {#if info.association}<p class="label">{t('info.association')}</p><p lang="en">{info.association}</p>{/if}
-      {#if info.glosses.length}<p class="label">{t('info.english')}</p><ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul>
+      {#if info.association}<p lang="en">{info.association}</p>{/if}
+      {#if info.glosses.length}<ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul>
       {:else if !info.association}<p class="muted">{t('info.missing')}</p>{/if}
-      {#if info.emoji.length}<div class="mnemonics"><span class="label">{t('info.mnemonic')}</span>{#each info.emoji as emoji}<span title={emoji.meaning} aria-label={emoji.meaning}>{emoji.text}</span>{/each}</div>{/if}
+      {#if info.emoji.length}<div class="mnemonics">{#each info.emoji as emoji}<button type="button" class="relation emoji" disabled={disabled || !onpick} title={emoji.meaning} aria-label={`${t('info.insert', { part: emoji.text })} · ${emoji.meaning}`} onclick={() => pick(emoji.text)}>{emoji.text}</button>{/each}</div>{/if}
       {#each kinds as kind}
         {@const related = info.relations.filter(r => r.kind === kind)}
         {#if related.length}<section><p class="label">{t(`info.relation.${kind}`)}</p><div class:examples={kind === 'usage'} class="relations">
-          {#each related as row}<span class="relation"><span class="related-glyph" lang={kind === 'tangut' || kind === 'usage' ? 'txg' : 'zh'}>{row.char}</span>{#if row.meaning && kind !== 'han'}<span class="meaning" lang="en">{row.meaning}</span>{/if}</span>{/each}
+          {#each related as row}<button type="button" class="relation" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: row.char })}${row.meaning ? ` · ${row.meaning}` : ''}`} onclick={() => pick(row.char)}><span class="related-glyph" lang={kind === 'tangut' || kind === 'usage' ? 'txg' : 'zh'}>{row.char}</span>{#if row.meaning && kind !== 'han'}<span class="meaning" lang="en">{row.meaning}</span>{/if}</button>{/each}
         </div></section>{/if}
       {/each}
-      {#if info.sources.length}<details><summary>{t('info.sources')}</summary><ul class="sources">{#each info.sources as source}<li><a href={source.url} target="_blank" rel="noreferrer">{source.label}</a>{#if source.license}<small>{source.license}</small>{/if}</li>{/each}</ul></details>{/if}
     {/if}
-    <footer>{t('info.keyboard')}</footer>
   {/if}
 </div>
 
 <style>
   .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#d8d8de,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#696973,#b4b4c0));--info-font:"IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP",sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
-  .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}.close:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
-  p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics>span:not(.label){font-size:23px}.mnemonics>.label{margin:0}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
-  details{margin-top:14px;padding-top:10px;border-top:1px solid var(--ids-line,light-dark(#e4e4e8,#484850));font-size:11px}summary{cursor:pointer;color:var(--info-muted)}.sources{padding-left:16px;margin:8px 0}.sources li{margin:6px 0}.sources a{color:var(--ids-accent,light-dark(#2f5fd0,#a5c2ff));overflow-wrap:anywhere}.sources small{display:block;color:var(--info-muted)}footer{font-size:10px;color:var(--info-muted);margin-top:12px}
+  .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
+  p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
+  .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
 </style>
