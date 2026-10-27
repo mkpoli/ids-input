@@ -54,6 +54,10 @@ try {
   await field.press('End')
   await page.keyboard.insertText('一')
   assert.equal((await field.inputValue()).startsWith('⿴[1]'), true)
+  // A stroke chain that names a character reads as that character.
+  await field.fill('⿰#(H)木')
+  await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰一木')
+  assert.equal(await field.getAttribute('aria-invalid'), 'false')
 
   await field.fill('⿰木日')
   await select(2, 2)

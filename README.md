@@ -174,14 +174,18 @@ supplies the ideographic operands; the other graphic categories are this editor'
 A zi.tools entry reads as its description: the unique separator before it (`{士}⿱十一`) and the
 glyph-variant definition after it (`⿻乚一(.,T)`) say which glyph the entry is for, so `parse`
 leaves them out and `write` does not put them back. This package draws one glyph per description
-and carries no variant data; stroke chains (`#(H)`)
-are not read yet.
+and carries no variant data.
 
 A zi.tools modifier after an operator (`⿻[1:]丨日`, `⿴[1]囗人`, `㇯[2]王一`) stays with that
 operator and is written back with it. Overlays, the enclosures and subtraction take one; other
 operators keep a bracket as a component. Its matrix or index narrows where a part sits or which
 occurrence an operator acts on; this package's layout draws the description as it does without one,
 so previewing such a description is approximate.
+
+A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
+`#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
+stay in the text, to be read as their parts or rejected as usual.
+
 
 ### Small Seal (小篆)
 
@@ -662,8 +666,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - NightFurySL2001 (夜煞之乐), [（白式）IDS 延展语法导论](https://nightfurysl2001.github.io/bai-ids/),
 - NightFurySL2001 (夜煞之乐), [（白式）IDS 延展语法导论](https://nightfurysl2001.github.io/bai-ids/),
   MIT, updated 2026-09-30: the unique separator and glyph-variant definition `parse` reads, the
-  overlap and index modifiers a description keeps with its operators, and the stroke chains it does
-  not read yet.
+  overlap and index modifiers a description keeps with its operators, and the stroke chains that
+  name a character.
 
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
