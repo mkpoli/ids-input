@@ -615,6 +615,12 @@ remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
 
+The 工尺譜 tab in `IdsParts` collects ten base note characters, three regional
+forms and five left-side components. `src/core/gongche.js` defines this small
+catalogue independently of palette loading. A collapsible guide explains
+left-side composition and regional notation differences. The panel links to Taiwan
+Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
+
 ### Palette fallback outlines
 
 `palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the

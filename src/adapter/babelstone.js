@@ -7,7 +7,7 @@ import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
-import { isComponent, isSequence } from '../core/ids.js'
+import { isComponent, isSequence, parse, write } from '../core/ids.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -128,7 +128,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
-  /** @type {Promise<Map<string, string[]>> | null} */
+  /** @type {Promise<{by: Map<string, string[]>, prefixes: Set<string>}> | null} */
   let described = null
   /** @type {Promise<ReturnType<typeof createSearch>> | null} */
   let local = null
@@ -404,14 +404,38 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       described ??= read().then(found => {
         /** @type {Map<string, string[]>} */
         const by = new Map()
+        const prefixes = new Set()
         for (const [char, sequences] of found) for (const { text } of sequences) {
           if (!isSequence(text)) continue
+          let prefix = ''
+          for (const point of text) { prefix += point; prefixes.add(prefix) }
           const chars = by.get(text)
           if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
         }
-        return by
+        return { by, prefixes }
       }).catch(error => { described = null; throw error })
-      return (await described).get(sequence.trim()) ?? []
+      const { by, prefixes } = await described
+      const tree = parse(sequence.trim()).tree
+      if (!tree || typeof tree === 'string') return []
+      // Each subtree can be written out or replaced by any character it describes. Resolve from
+      // the leaves upward so nested expansions work without expanding the entire character table.
+      /** @param {import('../core/ids.js').Part} part @returns {string[]} */
+      const descriptions = part => {
+        if (typeof part === 'string') return [part]
+        if (!part) return []
+        let written = [part.op]
+        for (const child of part.parts) {
+          const choices = descriptions(child)
+          written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+        }
+        return [...new Set([write(part), ...written.flatMap(text => by.get(text) ?? [])])]
+      }
+      let written = [tree.op]
+      for (const child of tree.parts) {
+        const choices = descriptions(child)
+        written = written.flatMap(prefix => choices.map(choice => prefix + choice).filter(text => prefixes.has(text)))
+      }
+      return [...new Set(written.flatMap(text => by.get(text) ?? []))]
     },
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()

@@ -36,6 +36,7 @@
   "app.examples.mixed": "混合文字",
   "app.examples.cards": "卡片",
   "app.examples.list": "列表",
+  "app.examples.seal": "小篆",
   "app.examples.tangut": "西夏文",
   "app.examples.openSelected": "打开所选示例（{count}）",
   "app.examples.none": "（未编码）",

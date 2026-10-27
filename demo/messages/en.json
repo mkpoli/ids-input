@@ -37,6 +37,7 @@
   "app.examples.mixed": "Mixed scripts",
   "app.examples.cards": "Cards",
   "app.examples.list": "List",
+  "app.examples.seal": "Small Seal",
   "app.examples.tangut": "Tangut",
   "app.examples.openSelected": "Open selected ({count})",
   "app.examples.none": "(unencoded)",
