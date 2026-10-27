@@ -2,6 +2,21 @@
 
 Each file keeps its own licence; the MIT licence of the code does not cover them.
 
+## `yi-bai-ids.tsv.gz`
+
+Unannotated standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
+`da1e9f8a09e2ec8faaf176bac99203f978282041`, <https://github.com/yi-bai/ids>.
+The source file's SHA-256 is `51f78d7d84f52fd73e5bc155c2239b737c58ce627d446894a809f1a36547ae18`.
+The compiled table contains 63,905 entries, in the same format as `babelstone-ids.tsv.gz` but
+without region tags. Rebuild it with `bun scripts/build_yi_bai_ids.mjs`.
+
+Descriptions containing extended syntax or variant annotations are excluded entirely: their
+meaning cannot yet be represented by the editor. Both primary and alternative unannotated
+descriptions are retained. The workshop adds them after BabelStone's descriptions, keeping
+existing descriptions and their region tags when the two sources agree.
+
+Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
@@ -19,7 +34,7 @@ gzipped, 2.2 MB as text.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
-  from CHISE, and on IRG submissions, edited by its maintainer. Only BabelStone's file is read here.
+  from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
 
 ## `ids-parts.json`
@@ -378,7 +393,11 @@ Nine previews use pinned Noto native host outlines: 畿 without 田, 屐 without
 four-stroke 卝 in 夢. The Serif 夢 preview combines its crown with the native
 冖 from 亭, translated down 70 font units. Removed connected outlines are
 reconstructed at existing path points; remaining strokes keep native thickness
-and placement. `⿱丿乚` uses ordinary composition.
+and placement. `⿱丿乚` and its source alias `⿱㇒乚` share a dedicated
+Sans/Serif drawing made from 毛's shallow sweep and hooked stem, with the two
+intervening horizontal strokes removed. The retained strokes meet at their
+native junction and remain two editable groups. The five direct source
+occurrences are 𠝉 (T), 𡜞 (G), 𥟯 (G), 𦨊 (GT), and 𩣛 (GT).
 
 Frequency alone cannot select every useful visual part. The raw report counts
 exact written subtrees, not recursive expansions through encoded characters,

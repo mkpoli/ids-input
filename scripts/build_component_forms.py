@@ -164,6 +164,19 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             column.append([ops, [round(center+(v-500)*0.32,2) if i%2==0 else round(v+dy,2) for i,v in enumerate(points)]])
         columns.append(column)
     forms['⿰二二']=columns
+    # ⿱丿乚 / ⿱㇒乚: retain 毛's shallow sweep and hooked stem, removing
+    # its two intervening bars. Split at the original junction so both strokes
+    # stay independently editable without a gap or a change in stroke weight.
+    c=cs('毛')[0]
+    if style=='sans':
+        sweep=[('moveTo', ((477,678),))]+c[20:25]+[('closePath', ())]
+        hook=[('moveTo', ((400,663),)),('lineTo', ((400,77),))]+c[4:11]+[('lineTo', ((477,678),)),('closePath', ())]
+    else:
+        sweep=[('moveTo', ((490,687),))]+c[5:11]+[('closePath', ())]
+        hook=[('moveTo', ((422,674),)),('lineTo', ((422,41),))]+c[20:31]+[('lineTo', ((490,687),)),('closePath', ())]
+    forms['⿱丿乚']=[group([sweep]),group([hook])]
+    forms['⿱㇒乚']=forms['⿱丿乚']
+
     forms['⿰冫⿱丿丶']=dots
     forms['⿰冫⿾冫']=[dots[0],dots[1]+dots[2]]
     for sequence,ch in [('⿱宀儿','宂'),('⿻三丨','丰'),('⿻者丶','者')]:
