@@ -11,7 +11,8 @@
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
-  import { groupPaletteParts, isOtherScript } from '../core/scripts.js'
+  import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
+  import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
   import { unpack } from '../composer/loader.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -42,7 +43,11 @@
   const range = (/** @type {number} */ first, /** @type {number} */ last) =>
     Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
   const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf), ...'ˉˊˇˋ˙˪˫']
-  const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
+  const alphabet = [...new Set([
+    ...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a),
+    ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char)),
+    ...coverage.flatMap(([first, last]) => range(first, last).filter(char => ['latin', 'cyrillic'].includes(characterScript(char) ?? ''))),
+  ])]
   // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
   const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
   const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
@@ -100,6 +105,20 @@
   const otherPages = $derived(Math.max(1, Math.ceil(otherMatches.length / PAGE_SIZE)))
   /** @type {PalettePart[]} */
   const otherShown = $derived(otherMatches.slice(otherPage * PAGE_SIZE, (otherPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
+
+  let alphabetPage = $state(0)
+  $effect(() => { tab; filter; alphabetPage = 0 })
+  const alphabetKeys = $derived.by(() => [...new Set([...alphabet, ...(partsByScript.get('latin') ?? []).map(part => part.part), ...(partsByScript.get('cyrillic') ?? []).map(part => part.part)])])
+  const alphabetMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return alphabetKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    return matchScriptParts(alphabetKeys, text, Boolean(code))
+  })
+  const alphabetPages = $derived(Math.max(1, Math.ceil(alphabetMatches.length / PAGE_SIZE)))
+  const alphabetShown = $derived(alphabetMatches.slice(alphabetPage * PAGE_SIZE, (alphabetPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
@@ -339,6 +358,19 @@
         {/if}
         {@render grid(otherShown)}
       {:else if otherData && !otherFailed}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'alphabet'}
+      {#if alphabetMatches.length}
+        {#if alphabetPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={alphabetPage === 0} onclick={() => alphabetPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={alphabetPages} value={alphabetPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) alphabetPage = Math.max(0, Math.min(alphabetPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: alphabetPage + 1, pages: alphabetPages, count: alphabetMatches.length })}</span>
+            <button type="button" disabled={alphabetPage + 1 >= alphabetPages} onclick={() => alphabetPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(alphabetShown)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}
