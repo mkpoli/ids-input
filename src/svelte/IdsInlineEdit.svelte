@@ -53,7 +53,8 @@
   <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
     lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oninput={() => error = ''} onblur={() => apply(false)} oncompositionstart={() => composing = true}
     oncompositionend={() => { composing = false; if (document.activeElement !== input) apply(false) }}
-    onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()} />
+    onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()}
+    ondragstart={event => event.stopPropagation()} ondragover={event => event.stopPropagation()} ondrop={event => event.stopPropagation()} />
   {#if error}<span id={`${uid}-error`} class="error" role="status">{error}</span>{/if}
 </span>
 
