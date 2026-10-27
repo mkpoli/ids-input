@@ -54,6 +54,7 @@ export function createEditor(options) {
   let tree = $state.raw(/** @type {Part} */ (null))
   let caret = $state(/** @type {number | null} */ (null))
   let selectionVersion = $state(0)
+  let revision = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   let draft = $state(''), piece = $state(''), note = $state('')
@@ -63,7 +64,6 @@ export function createEditor(options) {
   const history = createHistory(100)
   let steps = $state.raw(/** @type {{ done: string[], undone: string[] }} */ ({ done: [], undone: [] }))
   let typing = false, run = false, changes = 0
-  let revision = 0
   /** @type {AbortController | null} */ let resolution = null
   const lookup = createLookup(() => options().adapter)
   /** @type {((text: string, whole: boolean) => void)[]} */
@@ -268,7 +268,6 @@ export function createEditor(options) {
 
   /** The field, read as it is typed: ASCII operator names become operators where the caret is. @param {HTMLInputElement} field */
   function edit(field) {
-    invalidateResolution()
     const typedText = field.value, caret = field.selectionStart ?? typedText.length
     // RP's operands may themselves be Latin letters; do not turn an operand into an IDC alias.
     const written = replacementPrefix(typedText) ? typedText : unalias(typedText)
@@ -278,6 +277,7 @@ export function createEditor(options) {
       const offset = [...written].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
     }
+    if (draft !== written) invalidateResolution()
     draft = written
     const found = parse(written, { open: true })
     if (found.problem) { sync(); return }
@@ -315,7 +315,7 @@ export function createEditor(options) {
   function keydown(event, { root = null, slot = null } = {}) {
     if (disabled()) return
     const el = /** @type {HTMLElement} */ (event.target)
-    if (el.closest?.('input, textarea, select, [contenteditable="true"], dialog, [role="menu"]')) return
+    if (el.closest?.('input, textarea, select, [contenteditable="true"], dialog, [role="menu"], .inline-edit')) return
     const command = commandFor(event)
     if (!command) return
     const inPicker = Boolean(el.closest?.('.ids-pick-tabs, .ids-pick-panel'))
@@ -356,6 +356,7 @@ export function createEditor(options) {
     },
     /** @param {Path} path */
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
+    get revision() { return revision },
     get selectionVersion() { return selectionVersion },
     get selectionRange() { return caret !== null ? { start: caret, end: caret } : chosen === null ? null : tokens(draft).find(token => samePath(token.path, chosen)) ?? null },
     /** @param {number} start @param {number} end */

@@ -109,6 +109,7 @@
   "ids.search.open": "開啟{sequence}",
   "ids.search.take": "從{char}取部件",
   "ids.search.title": "含此結構的字",
+  "ids.inline.label": "編輯部件",
   "ids.slot": "所選部件",
   "ids.slotHint": "輸入部件",
   "ids.apply": "套用",

@@ -109,6 +109,7 @@
   "ids.search.open": "{sequence} 열기",
   "ids.search.take": "{char}에서 부품 가져오기",
   "ids.search.title": "이 구성을 가진 글자",
+  "ids.inline.label": "구성 요소 편집",
   "ids.slot": "고른 구성 요소",
   "ids.slotHint": "구성 요소 입력",
   "ids.apply": "적용",

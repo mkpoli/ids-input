@@ -109,6 +109,7 @@
   "ids.search.open": "打开{sequence}",
   "ids.search.take": "从{char}取部件",
   "ids.search.title": "含此结构的字",
+  "ids.inline.label": "编辑部件",
   "ids.slot": "所选部件",
   "ids.slotHint": "输入部件",
   "ids.apply": "应用",
