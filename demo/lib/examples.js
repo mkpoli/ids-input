@@ -37,8 +37,16 @@
 // 匜, 爽, 㕚, 氷, 臦, 𢨋 and 𧰧: BabelStone IDS.
 // 㕚 (⿼叉丶) and 氷 (⿽水丶) also appear in IRG N2572, p.2:
 // https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
+// 𣥄 (⿾正), 𠄔 (⿿予), 𠕄 (⿿凹), 𦣩 (⿰臣⿾臣), 𣥒 (⿱⿿止止),
+// and 𧹂 (⿱⿰虎⿿虎貝): BabelStone IDS. The first two also appear in IRG N2572, p.2.
+// https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
+// Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
+// https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
+    { sequence: '⿾正', char: '𣥄' },
+    { sequence: '⿿予', char: '𠄔' },
+    { sequence: '⿿凹', char: '𠕄' },
     { sequence: '⿱不要', char: '嫑' },
     { sequence: '⿱艹半', char: '' },
     { sequence: '⿰舟邊', char: '' },
@@ -56,6 +64,9 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰忄実', char: '' },
   ] },
   { key: 'complex', examples: [
+    { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
+    { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
+    { sequence: '⿰𦚏⿷己三', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
@@ -66,6 +77,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰氵鬱', char: '灪' },
   ] },
   { key: 'repeated', examples: [
+    { sequence: '⿰臣⿾臣', char: '𦣩' },
+    { sequence: '⿱⿿止止', char: '𣥒' },
     { sequence: '⿰⿾臣臣', char: '臦' },
     { sequence: '⿱或⿿或', char: '𢨋' },
     { sequence: '⿰⿱興興⿱興興', char: '𠔻' },
