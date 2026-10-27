@@ -18,6 +18,7 @@ import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
 import { lookupChar } from '../core/decompose.js'
 import { replacementPrefix, replacementQuery, resolveReplacement } from '../core/replacement.js'
+import { replacementExpression, replacementInput, resolveReplacementExpression, unaliasReplacementInput } from '../core/replacement-expression.js'
 import { createLookup } from './lookup.svelte.js'
 import { translator } from './i18n.js'
 
@@ -100,12 +101,16 @@ export function createEditor(options) {
    * @param {string} input */
   function resolveInput(input) {
     const query = replacementQuery(input)
-    if (!query || disabled()) return
+    const expression = query ? null : replacementExpression(input)
+    if ((!query && !expression) || disabled()) return
     cancelResolution()
     const controller = new AbortController()
     resolution = controller
     const ticket = revision, adapter = options().adapter
-    resolveReplacement(query, char => adapter.structure(char, { signal: controller.signal }), { signal: controller.signal }).then(result => {
+    const structure = (/** @type {string} */ char) => adapter.structure(char, { signal: controller.signal })
+    const request = query ? resolveReplacement(query, structure, { signal: controller.signal })
+      : resolveReplacementExpression(/** @type {import('../core/replacement-expression.js').Expression} */ (expression), structure, { signal: controller.signal })
+    request.then(result => {
       if (result === null || revision !== ticket || draft !== input || disabled() || options().adapter !== adapter) return
       apply(result, null, t('ids.do.type', { text: write(result) }))
     }).catch(() => { /* Leave the original input in place if the data cannot be read. */ })
@@ -271,9 +276,9 @@ export function createEditor(options) {
   function edit(field) {
     const typedText = field.value, caret = field.selectionStart ?? typedText.length
     // RP's operands may themselves be Latin letters; do not turn an operand into an IDC alias.
-    const written = replacementPrefix(typedText) ? typedText : unalias(typedText)
+    const written = replacementInput(typedText) ? unaliasReplacementInput(typedText) : unalias(typedText)
     if (written !== typedText) {
-      const at = [...unalias(typedText.slice(0, caret))].length
+      const at = [...(replacementInput(typedText) ? unaliasReplacementInput(typedText.slice(0, caret)) : unalias(typedText.slice(0, caret)))].length
       field.value = written
       const offset = [...written].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
@@ -300,11 +305,11 @@ export function createEditor(options) {
 
   /** @param {Path} path */
   const pathKey = path => path.join('.')
-  /** Move the focus to the chosen part's button within `root`. @param {HTMLElement | null | undefined} root */
+  /** Move the focus to the chosen part's focusable control within `root`. @param {HTMLElement | null | undefined} root */
   async function focusChosen(root) {
     await tick()
     const at = chosen
-    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]`))?.focus()
+    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]:is(button,[tabindex])`))?.focus()
   }
 
   /**

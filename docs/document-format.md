@@ -357,12 +357,18 @@ cannot masquerade as a valid document tree. A share link carrying edits includes
 the complete document; use a file when the document exceeds the host's URL or
 QR-code budget. Multiple documents per file are outside version 1.
 
+A tab or draft keeps an `ids-input/session` envelope beside its document: the
+current document, the chosen layer and every ID the session has issued. Undo
+history stays in memory. The envelope is host storage, not a file format; the
+document inside it is the same `.ids.json` document.
+
 ## Implementation boundary and checks
 
-The current editor uses positional core trees, canvas-space drawing pieces,
-flat affine adjustments and sequence-based draft storage. This draft requires
-an identified document model and a document-aware renderer; it does not change
-those APIs by declaration. The core IDS parser and writer remain the projection
+The current editor still uses positional core trees, canvas-space drawing
+pieces, flat affine adjustments and sequence-based draft storage. The
+identified document model can be reconciled from those trees with
+`syncDocument`, preserving layer identity and transforms at the same paths;
+the editor, renderer and storage bindings have not switched to it yet. The core IDS parser and writer remain the projection
 boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports

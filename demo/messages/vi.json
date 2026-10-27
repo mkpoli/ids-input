@@ -125,6 +125,12 @@
   "app.examples.repeated": "Bộ phận lặp lại",
   "app.examples.enclosures": "Kết cấu bao quanh",
   "app.examples.mixed": "Hệ chữ hỗn hợp",
+  "app.componentLookup.title": "Tra bộ phận",
+  "app.componentLookup.containing": "Tìm chữ chứa bộ phận",
+  "app.componentLookup.parts": "Tìm bộ phận của chữ",
+  "app.componentLookup.input": "Chữ hoặc bộ phận",
+  "app.componentLookup.invalid": "Nhập một chữ hoặc bộ phận.",
+  "app.componentLookup.help": "Ví dụ, tìm chữ chứa 木 hoặc xem các bộ phận của 森.",
   "app.replacement.title": "Thay bộ phận",
   "app.replacement.help": "Thay một bộ phận trong chữ hoặc IDS. Mỗi ô nhận một chữ hoặc IDS hoàn chỉnh, ví dụ ⿰木木. Kết quả mở trong vùng làm việc và giữ nguyên nội dung hiện tại.",
   "app.replacement.source": "Chữ hoặc IDS",
@@ -136,5 +142,6 @@
   "app.replacement.failed": "Không thể tra chữ này. Vui lòng thử lại.",
   "app.replacement.tooLong": "Tổng ba ô không được vượt quá 64 điểm mã.",
   "app.source.tangutGlosses": "Nghĩa tiếng Anh của chữ Tây Hạ, kèm giới hạn cách dùng, trong bảng thông tin chữ.",
-  "app.source.tangutComponentMeaning": "Mối liên hệ về nghĩa giữa thành phần𘥇 và ngựa (21-04-2020)."
+  "app.source.tangutComponentMeaning": "Mối liên hệ về nghĩa giữa thành phần𘥇 và ngựa (21-04-2020).",
+  "app.replacement.nestedHint": "Bạn cũng có thể dán biểu thức thay thế lồng nhau vào ô chuỗi, ví dụ ⿱🔄林木火水."
 }

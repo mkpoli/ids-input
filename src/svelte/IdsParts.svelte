@@ -11,7 +11,8 @@
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
-  import { groupPaletteParts, isOtherScript } from '../core/scripts.js'
+  import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
+  import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
   import { unpack } from '../composer/loader.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
@@ -42,13 +43,19 @@
   const range = (/** @type {number} */ first, /** @type {number} */ last) =>
     Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
   const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf), ...'ˉˊˇˋ˙˪˫']
-  const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
+  const alphabet = [...new Set([
+    ...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a),
+    ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char)),
+    ...coverage.flatMap(([first, last]) => range(first, last).filter(char => ['latin', 'cyrillic'].includes(characterScript(char) ?? ''))),
+  ])]
   // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
   const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
   const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
   const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
     .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
-  const hangul = [...substitutes, ...hangulLetters]
+  // Hangul tone marks and enclosed forms also have bundled Unicode outlines.
+  const hangul = [...substitutes, ...hangulLetters, ...range(0x3200, 0x321e), ...range(0x3260, 0x327e), '〮', '〯']
+  const hangulSyllables = range(0xac00, 0xd7a3)
   /** @param {string[]} chars @returns {PalettePart[]} */
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
@@ -67,6 +74,30 @@
   })
 
   const PAGE_SIZE = 120
+  let hangulGroup = $state('parts'), hangulPage = $state(0)
+  $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
+  const hangulKeys = $derived.by(() => {
+    const base = hangulGroup === 'syllables' ? hangulSyllables : hangul
+    const extra = (partsByScript.get('hangul') ?? []).map(part => part.part).filter(part => {
+      const point = part.codePointAt(0) ?? 0
+      return (point >= 0xac00 && point <= 0xd7a3) === (hangulGroup === 'syllables')
+    })
+    return [...new Set([...base, ...extra])]
+  })
+  const hangulMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return hangulKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    const matches = matchScriptParts(hangulKeys, text, Boolean(code))
+    const available = new Set(hangulKeys)
+    const metadata = (partsByScript.get('hangul') ?? []).filter(part => available.has(part.part) &&
+      (/^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term))))
+    return [...new Set([...matches, ...metadata.map(part => part.part)])]
+  })
+  const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
+  const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -102,6 +133,20 @@
   const otherShown = $derived(otherMatches.slice(otherPage * PAGE_SIZE, (otherPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
+  let alphabetPage = $state(0)
+  $effect(() => { tab; filter; alphabetPage = 0 })
+  const alphabetKeys = $derived.by(() => [...new Set([...alphabet, ...(partsByScript.get('latin') ?? []).map(part => part.part), ...(partsByScript.get('cyrillic') ?? []).map(part => part.part)])])
+  const alphabetMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return alphabetKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    return matchScriptParts(alphabetKeys, text, Boolean(code))
+  })
+  const alphabetPages = $derived(Math.max(1, Math.ceil(alphabetMatches.length / PAGE_SIZE)))
+  const alphabetShown = $derived(alphabetMatches.slice(alphabetPage * PAGE_SIZE, (alphabetPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
+
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
   // Stroke counts available in the Stroke count panel, in order, null (not recorded) last; `count` is the one
@@ -113,6 +158,35 @@
     .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
     .filter(group => group.parts.length)
 
+  // The full outline index is loaded only when the Tangut tab is opened.
+  /** @type {string[] | null} */
+  let tangutData = $state.raw(null)
+  let tangutFailed = $state(false), tangutLoading = false, tangutPage = $state(0)
+  $effect(() => {
+    if (tab !== 'tangut' || !parts || tangutData || tangutLoading || tangutFailed) return
+    tangutLoading = true
+    fetch(new URL('../../data/tangut-parts.json.gz', import.meta.url))
+      .then(response => { if (!response.ok) throw new Error('Tangut parts'); return response.arrayBuffer() })
+      .then(unpack).then(JSON.parse).then(data => { tangutData = data })
+      .catch(() => { tangutLoading = false; tangutFailed = true })
+  })
+  function retryTangut() { tangutLoading = false; tangutFailed = false }
+  $effect(() => { tab; filter; tangutPage = 0 })
+  const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
+  const tangutMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return tangutKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    const matches = matchScriptParts(tangutKeys, text, Boolean(code))
+    const metadata = (partsByScript.get('tangut') ?? []).filter(part =>
+      /^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term)))
+    return [...new Set([...matches, ...metadata.map(part => part.part)])]
+  })
+  const tangutPages = $derived(Math.max(1, Math.ceil(tangutMatches.length / PAGE_SIZE)))
+  const tangutShown = $derived(tangutMatches.slice(tangutPage * PAGE_SIZE, (tangutPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('t') }))
+
   const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
   let sealGroup = $state(/** @type {(typeof SEAL_GROUPS)[number]} */ ('basic'))
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
@@ -123,7 +197,7 @@
   const filtered = $derived.by(() => {
     if (!query || !parts || tab === 'other') return null
     if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
-    if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
+    if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
     if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
     return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
@@ -285,6 +359,14 @@
           onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{name === 'other' ? t('parts.script.choose') : t(`parts.tab.${name}`)}</button>
       {/each}
     </div>
+    {#if tab === 'hangul'}
+      <label class="script-select">{t('parts.hangul.group')}
+        <select value={hangulGroup} onchange={event => { hangulGroup = event.currentTarget.value; filter = '' }}>
+          <option value="parts">{t('parts.hangul.parts')}</option>
+          <option value="syllables">{t('parts.hangul.syllables')}</option>
+        </select>
+      </label>
+    {/if}
     {#if tab === 'other'}
       <label class="script-select">{t('parts.script.label')}
         <select value={otherScript} onchange={event => { otherScript = event.currentTarget.value; filter = '' }}>
@@ -307,7 +389,22 @@
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
-    {#if tab === 'gongche'}
+    {#if tab === 'tangut' && parts}
+      {#if !tangutData && !tangutFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
+      {#if tangutFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={retryTangut}>{t('parts.script.retry')}</button></p>{/if}
+      {#if tangutMatches.length}
+        {#if tangutPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={tangutPage === 0} onclick={() => tangutPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={tangutPages} value={tangutPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) tangutPage = Math.max(0, Math.min(tangutPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: tangutPage + 1, pages: tangutPages, count: tangutMatches.length })}</span>
+            <button type="button" disabled={tangutPage + 1 >= tangutPages} onclick={() => tangutPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(tangutShown)}
+      {:else if tangutData}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'gongche'}
       {#each gongcheShown as group (group.key)}
         <h4 class="parts-class">{t(`parts.gongche.${group.key}`)}</h4>
         {@render grid(group.parts)}
@@ -326,6 +423,19 @@
       <p class="parts-note" role="status">{t('parts.failed')}</p>
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
+    {:else if tab === 'hangul'}
+      {#if hangulMatches.length}
+        {#if hangulPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={hangulPage === 0} onclick={() => hangulPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={hangulPages} value={hangulPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) hangulPage = Math.max(0, Math.min(hangulPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: hangulPage + 1, pages: hangulPages, count: hangulMatches.length })}</span>
+            <button type="button" disabled={hangulPage + 1 >= hangulPages} onclick={() => hangulPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(hangulShown)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'other'}
       {#if !otherData && !otherFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
       {#if otherFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={retryOther}>{t('parts.script.retry')}</button></p>{/if}
@@ -341,6 +451,19 @@
         {/if}
         {@render grid(otherShown)}
       {:else if otherData && !otherFailed}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'alphabet'}
+      {#if alphabetMatches.length}
+        {#if alphabetPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={alphabetPage === 0} onclick={() => alphabetPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={alphabetPages} value={alphabetPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) alphabetPage = Math.max(0, Math.min(alphabetPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: alphabetPage + 1, pages: alphabetPages, count: alphabetMatches.length })}</span>
+            <button type="button" disabled={alphabetPage + 1 >= alphabetPages} onclick={() => alphabetPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(alphabetShown)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}

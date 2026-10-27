@@ -153,13 +153,24 @@ function allocate(needs, capacity, partial = false) {
   return assigned
 }
 
+/** Structural equality accepts encoded equivalents and explicitly positional forms.
+ * Broad radical variants can change orientation or multiplicity (𡿨/巜/巛, 丿/乀).
+ * @param {string} text @returns {Map<string, string>} */
+export function readStructuralForms(text) {
+  return readForms(text.split(/\r?\n/).filter(line => {
+    const [, , source, detail = ''] = line.split('\t')
+    return source === 'unicode-ucd' && detail === 'EquivalentUnifiedIdeograph'
+      || /^radical-variant (left|right|top|bottom)$/.test(detail)
+  }).join('\n'))
+}
+
 /**
  * A search over `table` (char → its descriptions, region tags dropped) folding components by `forms`
  * (from `readForms`). The index of what each character holds is built on the first query.
  * @param {Map<string, string[]>} table
- * @param {{ forms?: Map<string, string> }} [options]
+ * @param {{ forms?: Map<string, string>, structuralForms?: Map<string, string> }} [options]
  */
-export function createSearch(table, { forms = new Map() } = {}) {
+export function createSearch(table, { forms = new Map(), structuralForms = new Map() } = {}) {
   /** @param {string} c */
   const fold = c => forms.get(c) ?? forms.get([...c][0]) ?? c
   /** @param {QueryLeaf} leaf */
@@ -721,6 +732,6 @@ export function createSearch(table, { forms = new Map() } = {}) {
     })
     return { hits, total: found.length }
   }
-  const structural = createStructuralSearch(table, { forms })
+  const structural = createStructuralSearch(table, { forms: structuralForms })
   return { search, structure: structural.search, index: () => { index() }, fold }
 }
