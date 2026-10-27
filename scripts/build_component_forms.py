@@ -49,6 +49,21 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def compress_chang(outlines, style):
+    """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
+    if style == 'sans':
+        source = [-82,-43,16,93,148,222,281,338,390,456,505,570,622]
+        heights = [12,38,26,36,26,38,24,36,26,36,26,38]
+    else:
+        source = [-76,-18,12,115,145,241,271,308,352,381,466,496,578,608,645]
+        heights = [18,22,38,22,38,22,14,24,22,38,22,38,22,24]
+    target = [-59]
+    for height in heights: target.append(target[-1] + height)
+    def ymap(y):
+        i = next((i for i in range(len(source)-1) if y <= source[i+1]), len(source)-2)
+        return round(target[i] + (y-source[i]) * (target[i+1]-target[i]) / (source[i+1]-source[i]), 2)
+    return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
+
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
 result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
 for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
@@ -65,7 +80,8 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     result['positions'][style] = {
         '朱:L': group([cs('鴸')[4]]),
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
-        '昌:stack': group(cs('昌')),
+        # Contract the already-shortened native 昌 while retaining its bars.
+        '昌:stack': compress_chang(group(cs('菖')[:6] if style=='sans' else cs('菖')[1:]), style),
     }
     forms={}
     if style=='sans':

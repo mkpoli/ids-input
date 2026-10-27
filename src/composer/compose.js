@@ -370,7 +370,7 @@ export class Composer {
   yanStackedDays(outer, contents) {
     const source = yanSources.get(keyOf(outer))
     return !this.separate && this.fontStyle !== 'kaisho' && source && !this.excluded(source)
-      && !this.excluded('昌') && !this.excluded('儿') && !this.excluded('元')
+      && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
   }
@@ -763,6 +763,7 @@ export class Composer {
     const gap = compactYan ? 0.01 : 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
     const lo = region[axis], span = region[axis + 2] - region[axis]
     const groups = []
+    let yanBox = null
     let at = 0
     children.forEach((child, i) => {
       let a = at, b = at + weights[i] * fit
@@ -771,6 +772,9 @@ export class Composer {
       const box = region.slice()
       box[axis] = lo + a * span
       box[axis + 2] = lo + b * span
+      // The sloping right edge of 朱 leaves space for the enclosure's curved
+      // left stroke; a gap between their bounding boxes exaggerates it.
+      if (compactYan && i === 1) { box[0] -= span * 0.045; yanBox = box.slice() }
       // 鴸 supplies a full-height left 朱 even in exports without a usable host cut.
       if (compactYan && i === 0) {
         const native = componentPositionBox('朱:L', this.fontStyle)
@@ -784,7 +788,18 @@ export class Composer {
       if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
       else groups.push(this.row(child, box, children.length))
     })
-    if (!compactYan) this.space(axis, groups)
+    if (compactYan && !this.partial) {
+      // Restore just enough room when a whole-glyph outline protrudes toward 朱.
+      const size = 512, mask = grown(fill(groupRings(groups[0]), size, region), size, 1)
+      const original = groups[1].map(part => part.target.slice())
+      for (let step = 0; step <= 9; step++) {
+        const frame = yanBox.slice()
+        frame[0] += span * 0.005 * step
+        groups[1].forEach((part, i) => { part.target = mapped(original[i], yanBox, frame) })
+        const right = fill(groupRings(groups[1].filter(part => !part.cut)), size, region)
+        if (!right.some((value, i) => value && mask[i])) break
+      }
+    } else if (!compactYan) this.space(axis, groups)
     return groups.flat()
   }
 

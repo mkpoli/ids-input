@@ -293,8 +293,7 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(legs.origin).toBe(`Noto ${fontStyle} 儿:under-bar`)
     expect(zhu.target[3] - zhu.target[1]).toBeGreaterThan((enclosure.target[3] - enclosure.target[1]) * 0.95)
     const gap = enclosure.target[0] - zhu.target[2]
-    expect(gap).toBeGreaterThan(0)
-    expect(gap).toBeLessThan((constants.face[2] - constants.face[0]) * 0.02)
+    expect(gap).toBeLessThan(0)
     expect(collision([zhu], [enclosure], constants.face, 1024)).toBe(0)
     expect(collision([enclosure], [legs], constants.face, 1024)).toBeGreaterThan(0)
     expect(legs.target[1]).toBeGreaterThan(lower.target[3])
@@ -304,11 +303,14 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     const complexLegs = complexParts.find(part => part.origin === `Noto ${fontStyle} 儿:under-bar`)
     expect(complexLegs.target[1]).toBeGreaterThan(legs.target[1])
     expect(collision([complexParts[1]], [complexLegs], constants.face, 1024)).toBeGreaterThan(0)
+    expect(collision([complexParts[0]], complexParts.slice(1), constants.face, 1024)).toBe(0)
     expect(complexParts.slice(3).every(part => part.weight[1] <= 0)).toBe(true)
   }
 })
 
 it('uses matching native stacked 日 proportions for 昌 and ⿱日日 below 儿', async () => {
+  const { Composer } = await import('../src/composer/compose.js')
+  const { fill, groupRings } = await import('../src/composer/geometry.js')
   for (const fontStyle of ['sans', 'serif']) for (const outer of ['⿳亠㐅厂', '⿳亠丷厂']) {
     const source = remote()
     const a = await compose(source, `⿸${outer}⿱儿昌`, { fontStyle })
@@ -318,6 +320,22 @@ it('uses matching native stacked 日 proportions for 昌 and ⿱日日 below 儿
     expect(stack).toBeDefined()
     expect(stack.box[2]).toBeGreaterThan(500)
     expect(stack.box[3]).toBeGreaterThan(300)
+    const placed = new Composer(source.store(), { fontStyle }).compose(`⿸${outer}⿱儿⿱日日`)
+      .find(part => part.origin === `Noto ${fontStyle} 昌:stack`)
+    // 菖's shorter native 昌 needs substantially less vertical compression
+    // than a full-size 昌, keeping its horizontal strokes visible.
+    expect((placed.target[3] - placed.target[1]) / (placed.source[3] - placed.source[1])).toBeGreaterThan(0.45)
+    const size = 512, mask = fill(groupRings([placed]), size, placed.target)
+    const column = Math.floor(size / 2), runs = []
+    let start = 0, value = mask[column]
+    for (let row = 1; row <= size; row++) {
+      const next = row < size ? mask[row * size + column] : 1 - value
+      if (next !== value) { runs.push([value, row - start]); start = row; value = next }
+    }
+    const bars = runs.filter(([ink]) => ink).map(([, height]) => height * (placed.target[3] - placed.target[1]) / size)
+    expect(bars).toHaveLength(6)
+    expect(runs.filter(([ink]) => !ink).length).toBeGreaterThanOrEqual(5)
+    expect(Math.min(...bars)).toBeGreaterThan(fontStyle === 'sans' ? 26 : 15)
     for (const wrap of [text => `⿰朱${text}`, text => `⿰木${text}`, text => `⿱木⿰朱${text}`]) {
       const nestedA = await compose(source, wrap(`⿸${outer}⿱儿昌`), { fontStyle })
       const nestedB = await compose(source, wrap(`⿸${outer}⿱儿⿱日日`), { fontStyle })
@@ -334,10 +352,21 @@ it('falls back to 日 operands when the source 昌 is excluded', async () => {
     const data = store(), rec = data.rec
     return { ...data, rec: key => rec(key === '日' ? '木' : key) }
   }
-  for (const fontStyle of ['sans', 'serif']) {
-    const result = await compose(source, '⿸⿳亠㐅厂⿱儿⿱日日', { fontStyle, exclude: ['昌'] })
+  for (const fontStyle of ['sans', 'serif']) for (const exclude of ['昌', '菖']) {
+    const result = await compose(source, '⿸⿳亠㐅厂⿱儿⿱日日', { fontStyle, exclude: [exclude] })
     expect(result.origins).not.toContain(`Noto ${fontStyle} 昌:stack`)
     expect(result.parts.length).toBeGreaterThan(3)
+  }
+})
+
+it('keeps the compact 朱 spacing clear of native whole-glyph enclosures', async () => {
+  const { Composer, collision } = await import('../src/composer/compose.js')
+  const { constants } = await import('./fixtures/composer-export.js')
+  for (const fontStyle of ['sans', 'serif']) for (const inner of ['彡', '生']) {
+    const source = remote(), text = `⿰朱⿸⿳亠㐅厂${inner}`
+    await compose(source, text, { fontStyle })
+    const parts = new Composer(source.store(), { fontStyle }).compose(text)
+    expect(collision([parts[0]], parts.slice(1), constants.face, 1024)).toBe(0)
   }
 })
 

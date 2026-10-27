@@ -356,7 +356,10 @@ When 儿 begins the enclosed vertical stack, its native 元-derived legs meet th
 enclosure bar; the remaining operand is laid out below. A neighbouring left 朱
 uses its full-height cut from 鴸 in both Sans and Serif, with the spacing of a
 native side-by-side character. For 昌 or ⿱日日 below 儿, the preview uses the
-native 昌 outline in either face, keeping their displayed proportions consistent.
+native 昌 cut from 菖 in either face, keeping their displayed proportions consistent.
+Its counters and gaps are shortened more than its horizontal bars so that the
+strokes remain visible in the compact placement. The 朱 spacing is checked for
+collisions against the actual right-hand outline.
 
 These curated components were suggested by परवद💙💛
 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)). The zi.tools stroke-chain
