@@ -168,6 +168,7 @@ it('places emoji sequences in their slots while retaining real empty slots', asy
 it('rejects emoji transformations without rejecting unrelated transformed components', async () => {
   const draw = preview()
   await expect(draw('⿾👩🏽‍💻')).rejects.toThrow('Emoji cannot yet be mirrored')
+  await expect(draw('⿻😀㇯木一')).rejects.toThrow('Emoji cannot yet be mirrored')
   const result = draw('⿰⿾木👩🏽‍💻')
   const [worker] = FakeWorker.made
   worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
