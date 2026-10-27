@@ -80,6 +80,7 @@ export const ENCODED_PARTS = {
   '⿱宀儿': '宂', '⿻三丨': '丰', '⿻㇒𰀁': '丰',
   '⿱艹罒': '𦭝', '⿱卝罒': '𦭝', '⿺友丶': '犮', '⿰𫠤攵': '敖',
   '⿱卝隻': '蒦', '⿸辰寸': '辱', '⿹勹巳': '包',
+  '⿱⿱㇒⿻日丿十': '卑', '⿻九丶': '丸',
 }
 export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'] }
 
@@ -105,7 +106,7 @@ export function build(root = new URL('../', import.meta.url)) {
   const entries = frequencies(table, rejected)
   const usage = new Map(entries.map(entry => [entry.text, entry.uses]))
   for (const row of rows) row[1] = usage.get(row[0]) ?? 0
-  const threshold = 35
+  const threshold = 30
   const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem).map(entry => ({ ...entry }))
   for (const text of MANUAL_PARTS) {
     const existing = selected.find(entry => entry.text === text)

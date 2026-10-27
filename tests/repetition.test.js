@@ -151,3 +151,32 @@ it('draws the upper component of 興 locally with two editable operands in both 
     expect(nested.origins.some(origin => origin.includes('⿴𦥑同'))).toBe(true)
   }
 })
+
+it('keeps the four-bar component separated into two adjustable columns', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const parts = componentParts('⿰二二', undefined, fontStyle)
+    expect(parts[1].target[0] - parts[0].target[2]).toBeGreaterThan(100)
+    const source = local()
+    const drawn = await compose(source, '⿰二二', { fontStyle, separate: true })
+    expect(drawn.d.match(/M/g)).toHaveLength(4)
+    expect(groupParts(drawn.parts, await sketch(source, '⿰二二', { fontStyle }))).toHaveLength(2)
+  }
+})
+
+it('renders the connected-stroke upper part of 卑 without its bottom 十', async () => {
+  const { componentParts, componentDrawing } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const source = local(), text = '⿱㇒⿻日丿'
+    expect(onlyBundled(text)).toBe(true)
+    const parts = componentParts(text, undefined, fontStyle)
+    expect(parts).toHaveLength(1)
+    expect(parts[0].source[1]).toBeGreaterThanOrEqual(170)
+    expect(parts[0].source[0]).toBeGreaterThan(100)
+    expect(parts[0].target).toEqual(parts[0].source)
+    const drawn = await compose(source, text, { fontStyle, separate: true })
+    expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(groupParts(drawn.parts, await sketch(source, text, { fontStyle }))).toBeNull()
+  }
+})

@@ -87,6 +87,26 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         # Drop the bottom 一's terminal before clipping: its tip rises above y=197.
         outer=[('moveTo', ((854,197),))]+c[3][7:]
         forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880)),group([c[0],c[4],c[5],c[6]])]
+    # The connected-stroke regional 卑 (also U+FA35), without its bottom 十.
+    # Keep its native em, including the downward stroke emerging from 日.
+    c=cs('卑')
+    if style=='sans':
+        upper=[('moveTo', ((250,179),))]+c[4][13:]
+        forms['⿱㇒⿻日丿']=[group(c[:4]+[upper])]
+    else:
+        forms['⿱㇒⿻日丿']=[group(c[1:])]
+    # Two short 二 columns: contract horizontal length only, preserving native
+    # stroke thickness. Translate each bar to its row instead of stretching it.
+    bars=group(cs('二'))
+    bars.sort(key=lambda c: max(c[1][1::2]), reverse=True)
+    columns=[]
+    for center in [300,700]:
+        column=[]
+        for row,(ops,points) in enumerate(bars):
+            ys=points[1::2]; dy=(550 if row==0 else 330)-(min(ys)+max(ys))/2
+            column.append([ops, [round(center+(v-500)*0.32,2) if i%2==0 else round(v+dy,2) for i,v in enumerate(points)]])
+        columns.append(column)
+    forms['⿰二二']=columns
     forms['⿰冫⿱丿丶']=dots
     forms['⿰冫⿾冫']=[dots[0],dots[1]+dots[2]]
     for sequence,ch in [('⿱宀儿','宂'),('⿻三丨','丰'),('⿻者丶','者')]:
