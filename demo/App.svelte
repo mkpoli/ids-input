@@ -708,6 +708,8 @@
   </main>
 
   <footer class="foot">
+    <a href="./gongche/" lang="zh-Hant">工尺譜</a>
+    <span class="foot-separator" aria-hidden="true">·</span>
     <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
     <span class="foot-separator" aria-hidden="true">·</span>
     <button type="button" class="link" aria-label={t('app.footer.about')} onclick={() => aboutOpen = true}><Icon name="book" size={14} /><span class="foot-full">{t('app.footer.about')}</span><span class="foot-short" aria-hidden="true">{t('app.footer.sources')}</span></button>

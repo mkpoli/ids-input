@@ -795,3 +795,12 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+### Gongche character composer
+
+The demo includes `/gongche/`, a Traditional Chinese page for choosing a Gongche
+note shape and a left-side component. It offers Sans/Serif previews, character
+or IDS copying, SVG export, shareable selections, and links to the full editor.
+Encoded matches show their codepoints; they follow exact BabelStone root
+decompositions and do not establish musical usage. References cover regional
+notation conventions.

@@ -7,6 +7,6 @@ export default defineConfig({
   base: '/',
   plugins: [svelte()],
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, embed: `${import.meta.dirname}/embed.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, embed: `${import.meta.dirname}/embed.html`, gongche: `${import.meta.dirname}/gongche/index.html` } } },
   server: { fs: { allow: ['..'] } },
 })
