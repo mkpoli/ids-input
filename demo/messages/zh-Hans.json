@@ -136,5 +136,6 @@
   "app.replacement.failed": "无法查询该字，请重试。",
   "app.replacement.tooLong": "三个输入合计不能超过 64 个码位。",
   "app.source.tangutGlosses": "文字信息面板中的西夏字英语释义，保留用法限定。",
-  "app.source.tangutComponentMeaning": "部件𘥇与马相关的语义关联（2020年4月21日）。"
+  "app.source.tangutComponentMeaning": "部件𘥇与马相关的语义关联（2020年4月21日）。",
+  "app.replacement.nestedHint": "也可以把含替换的表达式粘贴到序列输入框，例如 ⿱🔄林木火水。"
 }

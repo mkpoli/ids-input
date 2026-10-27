@@ -136,5 +136,6 @@
   "app.replacement.failed": "Không thể tra chữ này. Vui lòng thử lại.",
   "app.replacement.tooLong": "Tổng ba ô không được vượt quá 64 điểm mã.",
   "app.source.tangutGlosses": "Nghĩa tiếng Anh của chữ Tây Hạ, kèm giới hạn cách dùng, trong bảng thông tin chữ.",
-  "app.source.tangutComponentMeaning": "Mối liên hệ về nghĩa giữa thành phần𘥇 và ngựa (21-04-2020)."
+  "app.source.tangutComponentMeaning": "Mối liên hệ về nghĩa giữa thành phần𘥇 và ngựa (21-04-2020).",
+  "app.replacement.nestedHint": "Bạn cũng có thể dán biểu thức thay thế lồng nhau vào ô chuỗi, ví dụ ⿱🔄林木火水."
 }
