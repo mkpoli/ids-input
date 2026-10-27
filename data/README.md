@@ -41,7 +41,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,711 Han entries (706 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,713 Han entries (708 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -267,8 +267,8 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The thirteen manual entries
-bring the compound total to twenty-nine. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The fifteen manual entries
+bring the compound total to thirty-one. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -525,3 +525,21 @@ pair. The composer recognizes the source description, its expanded pair, and
 its three equal full components. Missing or excluded glyphs retain component
 composition. This catalog covers the pinned Unicode 16.0 source, rather than
 claiming coverage of unencoded characters or later Unicode additions.
+
+### Gongche notation components
+
+Suggested by परवद💙💛 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)):
+
+| Literal IDS | Strokes | Direct corpus uses |
+|---|---:|---:|
+| `⿰氵氵` | 6 | 0 |
+| `⿱𰀪亻` | 4 | 0 |
+
+Both are curated shortcuts in Common and their stroke-count groups. Counts are
+additive (3 + 3 and 2 + 2). Neither sequence occurs in the pinned BabelStone
+corpus, so these entries retain zero usage counts and their literal IDS.
+The `⿱𰀪亻` preview uses native Noto Sans/Serif 彳 outlines with an extra
+upper sweep; the sweeps retain their original stroke weight. Its two IDS leaves
+remain editable. This supplies the form even when the Serif export lacks 𰀪.
+The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
+so both columns have matching proportions and remain separated in either style.
