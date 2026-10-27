@@ -179,7 +179,7 @@ export class Composer {
     this.approximate.clear()
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
-    const tree = number(this.cancelTransforms(this.parse(sequence)))
+    const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
     const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
@@ -263,7 +263,7 @@ export class Composer {
         }
       } else kids.forEach(kid => walk(kid, region, false))
     }
-    walk(this.cancelTransforms(this.parse(sequence)), this.face.slice(), true)
+    walk(this.normalizeYan(this.cancelTransforms(this.parse(sequence))), this.face.slice(), true)
     return out
   }
 
@@ -469,6 +469,20 @@ export class Composer {
     const kids = node.slice(1).map(child => this.cancelTransforms(child))
     if ((node[0] === MIRROR || node[0] === ROTATE) && Array.isArray(kids[0]) && kids[0][0] === node[0]) return kids[0][1]
     return [node[0], ...kids]
+  }
+
+  /** The same yan enclosure can put its contents inside 厂 before grouping the upper strokes. */
+  normalizeYan(node) {
+    if (!Array.isArray(node)) return node
+    const op = node[0], kids = node.slice(1).map(child => this.normalizeYan(child))
+    const tail = kids.at(-1)
+    if (Array.isArray(tail) && tail.length === 3 && tail[0] === '⿸' && tail[1] === '厂') {
+      if (op === '⿳' && kids.length === 3 && kids[0] === '亠' && (kids[1] === '㐅' || kids[1] === '丷'))
+        return ['⿸', ['⿳', kids[0], kids[1], '厂'], tail[2]]
+      if (op === '⿱' && kids.length === 2 && kids[0] === '文')
+        return ['⿸', ['⿱', '文', '厂'], tail[2]]
+    }
+    return [op, ...kids]
   }
 
   /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
