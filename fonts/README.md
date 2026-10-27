@@ -76,7 +76,7 @@ are preserved in the outline metadata.
 
 `Plangothic-gongche.woff2` adds eight encoded forms missing from the general
 parts subset: U+224BC and U+2A6D7–U+2A6DD. It uses the same `IDS Parts` family
-with disjoint code-point coverage. Rebuild with
+with disjoint glyph coverage. Rebuild with
 `uv run scripts/build_gongche_font.py`; the builder verifies the Plangothic P1
 V2.9.5795 digest listed above and preserves its SIL OFL name records. Matching
 composer outlines are included in `data/palette-outlines.json.gz`, together
