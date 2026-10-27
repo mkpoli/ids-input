@@ -126,7 +126,7 @@ Sources:
 - anzumura/kanji-tools `data/radicals.txt` at c3e52cb (`https://github.com/anzumura/kanji-tools`),
   MIT, Copyright (c) 2022 Dan H: the Japanese names and readings of the 214 radicals (のぎ, のぶん,
   うかんむり).
-- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+- KANJIDIC2, file version 4, database version 2026-300, created 2026-10-27
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: further Japanese radical names (`rad_name`), and the English meanings,
   Japanese, Korean and Vietnamese readings and pinyin of the radicals (みず, 수, thủy).
