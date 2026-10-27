@@ -1,0 +1,750 @@
+{
+  "version": 1,
+  "threshold": 50,
+  "method": "Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Counts describe corpus decompositions, not language-use frequency.",
+  "sources": [
+    {
+      "id": "babelstone",
+      "path": "data/babelstone-ids.tsv.gz",
+      "url": "https://www.babelstone.co.uk/CJK/IDS.TXT",
+      "version": "2025-06-27",
+      "compressedSha256": "563f8da2b3e43d21dfb271fa3331dd0f3df96eb2518dc8d8c0cbf309d119be6a",
+      "textSha256": "bb6b52bbf6ac94b04fe8cc9731e8c9fb9aad9c00beb01313487481d7777c8915",
+      "header": [
+        "# BabelStone IDS, https://www.babelstone.co.uk/CJK/IDS.TXT, Andrew West (魏安); File Date 2025-06-27, sha256:cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1",
+        "# Public domain facts (IDS.TXT header, note 2). char<TAB>sequences, each with its source regions.",
+        "# BabelStone Tangut IDS, Andrew West, https://www.babelstone.co.uk/Tangut/TangutIDS.txt, sha256:6d3e24241ce608590b1bce249a8367e8371a34b61e59b150e50c51b639eabd44"
+      ]
+    },
+    {
+      "id": "yi-bai",
+      "path": "data/yi-bai-ids.tsv.gz",
+      "url": "https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv1.txt",
+      "version": "da1e9f8a09e2ec8faaf176bac99203f978282041",
+      "compressedSha256": "09ee7e157e44413c9ac954c66aff06aaaef99214ccef944b6b21b5aeff251c3a",
+      "textSha256": "9e1746d60a719c489a5172ce3d3083838551ddcfa83d1b7bc576acf4d887773e",
+      "header": [
+        "# Yi Bai IDS level 1, da1e9f8a09e2ec8faaf176bac99203f978282041; MIT; unannotated standard IDS only."
+      ]
+    }
+  ],
+  "statistics": {
+    "mergedCharacters": 108109,
+    "hanCharacters": 101954,
+    "descriptions": 126247,
+    "validDescriptions": 123576,
+    "invalidDescriptions": 2671,
+    "unknownDescriptions": 104,
+    "eligibleDescriptions": 120968,
+    "eligibleCharacters": 100120,
+    "previousTemplates": 17,
+    "previousCoveredCharacters": 88719,
+    "templates": 54,
+    "addedTemplates": 37,
+    "coveredCharacters": 98556
+  },
+  "templates": [
+    {
+      "id": "pairRow",
+      "sequence": "⿰⬚⬚",
+      "slots": 2,
+      "count": 61042,
+      "examples": [
+        "丩",
+        "丬",
+        "丷",
+        "乢",
+        "乣"
+      ]
+    },
+    {
+      "id": "pairColumn",
+      "sequence": "⿱⬚⬚",
+      "slots": 2,
+      "count": 20417,
+      "examples": [
+        "丁",
+        "丂",
+        "丄",
+        "丅",
+        "丆"
+      ]
+    },
+    {
+      "id": "layout-eee2efdaf747",
+      "sequence": "⿺⬚⬚",
+      "slots": 2,
+      "count": 3630,
+      "examples": [
+        "上",
+        "乪",
+        "乸",
+        "亾",
+        "伏"
+      ]
+    },
+    {
+      "id": "layout-48338450d2ef",
+      "sequence": "⿸⬚⬚",
+      "slots": 2,
+      "count": 3388,
+      "examples": [
+        "万",
+        "下",
+        "不",
+        "久",
+        "乆"
+      ]
+    },
+    {
+      "id": "layout-681e65104606",
+      "sequence": "⿵⬚⬚",
+      "slots": 2,
+      "count": 998,
+      "examples": [
+        "両",
+        "丸",
+        "冃",
+        "円",
+        "冈"
+      ]
+    },
+    {
+      "id": "layout-be29a63ff796",
+      "sequence": "⿴⬚⬚",
+      "slots": 2,
+      "count": 498,
+      "examples": [
+        "且",
+        "丼",
+        "亵",
+        "卪",
+        "叉"
+      ]
+    },
+    {
+      "id": "layout-fb5d2c0a76bc",
+      "sequence": "⿻⬚⬚",
+      "slots": 2,
+      "count": 496,
+      "examples": [
+        "丈",
+        "不",
+        "世",
+        "丗",
+        "丙"
+      ]
+    },
+    {
+      "id": "layout-1f6b65a0b456",
+      "sequence": "⿹⬚⬚",
+      "slots": 2,
+      "count": 466,
+      "examples": [
+        "丌",
+        "丮",
+        "乃",
+        "习",
+        "亓"
+      ]
+    },
+    {
+      "id": "layout-f4b03475f3c3",
+      "sequence": "⿷⬚⬚",
+      "slots": 2,
+      "count": 251,
+      "examples": [
+        "丘",
+        "佂",
+        "兔",
+        "匛",
+        "匜"
+      ]
+    },
+    {
+      "id": "layout-7c9ade3da468",
+      "sequence": "⿶⬚⬚",
+      "slots": 2,
+      "count": 63,
+      "examples": [
+        "义",
+        "凶",
+        "凷",
+        "凼",
+        "凿"
+      ]
+    },
+    {
+      "id": "rightPair",
+      "sequence": "⿰⬚⿱⬚⬚",
+      "slots": 3,
+      "count": 3211,
+      "examples": [
+        "伔",
+        "侃",
+        "俢",
+        "倦",
+        "偂"
+      ]
+    },
+    {
+      "id": "tripleColumn",
+      "sequence": "⿳⬚⬚⬚",
+      "slots": 3,
+      "count": 1917,
+      "examples": [
+        "产",
+        "亨",
+        "享",
+        "亵",
+        "余"
+      ]
+    },
+    {
+      "id": "leftPair",
+      "sequence": "⿰⿱⬚⬚⬚",
+      "slots": 3,
+      "count": 895,
+      "examples": [
+        "乿",
+        "亁",
+        "劐",
+        "劓",
+        "勖"
+      ]
+    },
+    {
+      "id": "invertedPyramid",
+      "sequence": "⿱⿰⬚⬚⬚",
+      "slots": 3,
+      "count": 772,
+      "examples": [
+        "亇",
+        "华",
+        "唘",
+        "啓",
+        "啔"
+      ]
+    },
+    {
+      "id": "pyramid",
+      "sequence": "⿱⬚⿰⬚⬚",
+      "slots": 3,
+      "count": 689,
+      "examples": [
+        "丌",
+        "丏",
+        "乍",
+        "乑",
+        "乔"
+      ]
+    },
+    {
+      "id": "tripleRow",
+      "sequence": "⿲⬚⬚⬚",
+      "slots": 3,
+      "count": 680,
+      "examples": [
+        "丱",
+        "修",
+        "偹",
+        "傲",
+        "吪"
+      ]
+    },
+    {
+      "id": "layout-72c0eca31ee4",
+      "sequence": "⿰⬚⿸⬚⬚",
+      "slots": 3,
+      "count": 298,
+      "examples": [
+        "傉",
+        "嗕",
+        "嘛",
+        "娵",
+        "媷"
+      ]
+    },
+    {
+      "id": "layout-77fc60b089a8",
+      "sequence": "⿸⬚⿱⬚⬚",
+      "slots": 3,
+      "count": 285,
+      "examples": [
+        "原",
+        "唐",
+        "噟",
+        "垕",
+        "展"
+      ]
+    },
+    {
+      "id": "layout-45dad8437d98",
+      "sequence": "⿺⬚⿱⬚⬚",
+      "slots": 3,
+      "count": 231,
+      "examples": [
+        "暹",
+        "趝",
+        "逞",
+        "遀",
+        "遂"
+      ]
+    },
+    {
+      "id": "layout-954d25fa1faf",
+      "sequence": "⿰⬚⿻⬚⬚",
+      "slots": 3,
+      "count": 224,
+      "examples": [
+        "偖",
+        "冸",
+        "坢",
+        "堵",
+        "帾"
+      ]
+    },
+    {
+      "id": "layout-e439bd2fa39e",
+      "sequence": "⿱⬚⿻⬚⬚",
+      "slots": 3,
+      "count": 184,
+      "examples": [
+        "两",
+        "乇",
+        "乎",
+        "伞",
+        "傘"
+      ]
+    },
+    {
+      "id": "layout-45e4b087b29c",
+      "sequence": "⿰⬚⿹⬚⬚",
+      "slots": 3,
+      "count": 173,
+      "examples": [
+        "匏",
+        "咆",
+        "圴",
+        "垉",
+        "扚"
+      ]
+    },
+    {
+      "id": "layout-cf096394b1aa",
+      "sequence": "⿱⿻⬚⬚⬚",
+      "slots": 3,
+      "count": 114,
+      "examples": [
+        "专",
+        "丗",
+        "丧",
+        "亟",
+        "典"
+      ]
+    },
+    {
+      "id": "layout-39d7d9718a26",
+      "sequence": "⿰⬚⿺⬚⬚",
+      "slots": 3,
+      "count": 108,
+      "examples": [
+        "値",
+        "嬎",
+        "嬔",
+        "帗",
+        "柭"
+      ]
+    },
+    {
+      "id": "layout-86cf0532388e",
+      "sequence": "⿱⬚⿸⬚⬚",
+      "slots": 3,
+      "count": 93,
+      "examples": [
+        "叢",
+        "最",
+        "朂",
+        "樷",
+        "罽"
+      ]
+    },
+    {
+      "id": "layout-4e1de049340e",
+      "sequence": "⿺⬚⿰⬚⬚",
+      "slots": 3,
+      "count": 86,
+      "examples": [
+        "遨",
+        "𢌦",
+        "𣤎",
+        "𧢠",
+        "𨑝"
+      ]
+    },
+    {
+      "id": "layout-9e7414dcb26d",
+      "sequence": "⿸⬚⿰⬚⬚",
+      "slots": 3,
+      "count": 82,
+      "examples": [
+        "不",
+        "在",
+        "存",
+        "屜",
+        "屦"
+      ]
+    },
+    {
+      "id": "layout-651fd2acb29a",
+      "sequence": "⿱⬚⿺⬚⬚",
+      "slots": 3,
+      "count": 76,
+      "examples": [
+        "丘",
+        "冦",
+        "宼",
+        "寇",
+        "窛"
+      ]
+    },
+    {
+      "id": "layout-6c95e7154dd2",
+      "sequence": "⿱⿴⬚⬚⬚",
+      "slots": 3,
+      "count": 67,
+      "examples": [
+        "兠",
+        "叟",
+        "夓",
+        "盥",
+        "羋"
+      ]
+    },
+    {
+      "id": "layout-ecba79d15718",
+      "sequence": "⿰⿸⬚⬚⬚",
+      "slots": 3,
+      "count": 67,
+      "examples": [
+        "既",
+        "郰",
+        "鄏",
+        "㓹",
+        "㦺"
+      ]
+    },
+    {
+      "id": "layout-85cbb44095f4",
+      "sequence": "⿰⬚⿵⬚⬚",
+      "slots": 3,
+      "count": 63,
+      "examples": [
+        "𠆰",
+        "𠑆",
+        "𠑡",
+        "𠗱",
+        "𠯷"
+      ]
+    },
+    {
+      "id": "layout-649276b1dfec",
+      "sequence": "⿱⬚⿵⬚⬚",
+      "slots": 3,
+      "count": 55,
+      "examples": [
+        "南",
+        "嵗",
+        "歲",
+        "歳",
+        "甮"
+      ]
+    },
+    {
+      "id": "layout-a596d57ce302",
+      "sequence": "⿱⬚⿹⬚⬚",
+      "slots": 3,
+      "count": 54,
+      "examples": [
+        "煢",
+        "笣",
+        "簚",
+        "舄",
+        "苞"
+      ]
+    },
+    {
+      "id": "layout-89cc6b533429",
+      "sequence": "⿴⬚⿱⬚⬚",
+      "slots": 3,
+      "count": 53,
+      "examples": [
+        "図",
+        "圖",
+        "圗",
+        "圙",
+        "䘗"
+      ]
+    },
+    {
+      "id": "rightTriple",
+      "sequence": "⿰⬚⿳⬚⬚⬚",
+      "slots": 4,
+      "count": 679,
+      "examples": [
+        "临",
+        "侫",
+        "侵",
+        "俗",
+        "倶"
+      ]
+    },
+    {
+      "id": "fourColumn",
+      "sequence": "⿱⿱⬚⬚⿱⬚⬚",
+      "slots": 4,
+      "count": 329,
+      "examples": [
+        "呉",
+        "嚢",
+        "壳",
+        "壸",
+        "夢"
+      ]
+    },
+    {
+      "id": "leftTriple",
+      "sequence": "⿰⿳⬚⬚⬚⬚",
+      "slots": 4,
+      "count": 221,
+      "examples": [
+        "割",
+        "毂",
+        "穀",
+        "虩",
+        "鷇"
+      ]
+    },
+    {
+      "id": "topTriple",
+      "sequence": "⿱⿲⬚⬚⬚⬚",
+      "slots": 4,
+      "count": 122,
+      "examples": [
+        "凞",
+        "夑",
+        "樂",
+        "燮",
+        "爕"
+      ]
+    },
+    {
+      "id": "middleColumn",
+      "sequence": "⿲⬚⿱⬚⬚⬚",
+      "slots": 4,
+      "count": 106,
+      "examples": [
+        "幑",
+        "徴",
+        "必",
+        "榝",
+        "櫾"
+      ]
+    },
+    {
+      "id": "grid",
+      "sequence": "⿱⿰⬚⬚⿰⬚⬚",
+      "slots": 4,
+      "count": 99,
+      "examples": [
+        "囍",
+        "幷",
+        "祘",
+        "竹",
+        "㠭"
+      ]
+    },
+    {
+      "id": "layout-a9de750153fa",
+      "sequence": "⿰⬚⿱⬚⿻⬚⬚",
+      "slots": 4,
+      "count": 97,
+      "examples": [
+        "墸",
+        "隹",
+        "㵮",
+        "𠈷",
+        "𠋾"
+      ]
+    },
+    {
+      "id": "bottomTriple",
+      "sequence": "⿱⬚⿲⬚⬚⬚",
+      "slots": 4,
+      "count": 96,
+      "examples": [
+        "嬴",
+        "彘",
+        "斉",
+        "曏",
+        "爫"
+      ]
+    },
+    {
+      "id": "layout-b78dd6ff9519",
+      "sequence": "⿳⬚⬚⿰⬚⬚",
+      "slots": 4,
+      "count": 80,
+      "examples": [
+        "养",
+        "眾",
+        "竀",
+        "鬰",
+        "㒪"
+      ]
+    },
+    {
+      "id": "layout-db582f14be0f",
+      "sequence": "⿰⬚⿱⿻⬚⬚⬚",
+      "slots": 4,
+      "count": 77,
+      "examples": [
+        "傁",
+        "嗖",
+        "嫂",
+        "搜",
+        "溲"
+      ]
+    },
+    {
+      "id": "layout-57e9e5e41a62",
+      "sequence": "⿲⬚⬚⿱⬚⬚",
+      "slots": 4,
+      "count": 74,
+      "examples": [
+        "修",
+        "倏",
+        "倐",
+        "儵",
+        "囀"
+      ]
+    },
+    {
+      "id": "layout-d15fdf1e79d8",
+      "sequence": "⿰⬚⿸⬚⿱⬚⬚",
+      "slots": 4,
+      "count": 74,
+      "examples": [
+        "壥",
+        "擄",
+        "纒",
+        "艣",
+        "䧪"
+      ]
+    },
+    {
+      "id": "middleRow",
+      "sequence": "⿳⬚⿰⬚⬚⬚",
+      "slots": 4,
+      "count": 74,
+      "examples": [
+        "尋",
+        "彝",
+        "築",
+        "𠂜",
+        "𠆖"
+      ]
+    },
+    {
+      "id": "layout-29785c69bcb8",
+      "sequence": "⿰⬚⿱⿰⬚⬚⬚",
+      "slots": 4,
+      "count": 67,
+      "examples": [
+        "嘒",
+        "曜",
+        "灊",
+        "鐕",
+        "㺆"
+      ]
+    },
+    {
+      "id": "layout-8adbc5645ca0",
+      "sequence": "⿳⿴⬚⬚⬚⬚",
+      "slots": 4,
+      "count": 64,
+      "examples": [
+        "夓",
+        "爂",
+        "爨",
+        "璺",
+        "舆"
+      ]
+    },
+    {
+      "id": "layout-31cc4c810758",
+      "sequence": "⿱⬚⿰⬚⿱⬚⬚",
+      "slots": 4,
+      "count": 63,
+      "examples": [
+        "薓",
+        "虄",
+        "軣",
+        "霿",
+        "𡪗"
+      ]
+    },
+    {
+      "id": "layout-e0d18fe73de8",
+      "sequence": "⿰⬚⿱⬚⿰⬚⬚",
+      "slots": 4,
+      "count": 62,
+      "examples": [
+        "婲",
+        "椛",
+        "榋",
+        "橻",
+        "糀"
+      ]
+    },
+    {
+      "id": "layout-ca8e29808b79",
+      "sequence": "⿱⿰⬚⿱⬚⬚⬚",
+      "slots": 4,
+      "count": 53,
+      "examples": [
+        "監",
+        "盬",
+        "覧",
+        "鍳",
+        "鹽"
+      ]
+    },
+    {
+      "id": "layout-60d4c994d535",
+      "sequence": "⿺⬚⿳⬚⬚⬚",
+      "slots": 4,
+      "count": 50,
+      "examples": [
+        "遥",
+        "邃",
+        "邉",
+        "㡭",
+        "䬒"
+      ]
+    },
+    {
+      "id": "fourRow",
+      "sequence": "⿰⿰⬚⬚⿰⬚⬚",
+      "slots": 4,
+      "count": 20,
+      "examples": [
+        "丱",
+        "灬",
+        "班",
+        "疈",
+        "辨"
+      ]
+    }
+  ]
+}
