@@ -139,7 +139,12 @@ def merge_supplements(doc, manifest):
         if entry['unicodeEvidence']['sha256'] != unicodeSha or entry['chiseEvidence']['archiveSha256'] != archiveSha:
             raise ValueError('Seal supplement source checksum mismatch')
         doc['modern'][entry['char']] = list(dict.fromkeys([*doc['modern'].get(entry['char'], []), *entry['modern']]))
-        if entry['char'] not in known:
+        if entry['char'] in known:
+            # An upstream refresh can add the glyph with its own CHISE classification.
+            # Keep that stronger basis and merge the crosswalk aliases into the part.
+            part = next(part for part in parts if part['part'] == entry['char'])
+            part['modern'] = list(dict.fromkeys([*(part.get('modern') or []), *entry['modern']]))
+        else:
             parts.append({'part': entry['char'], 'uses': 0, 'strokes': None, 'first': None, 'kind': 'seal',
                           'sealGroup': 'other', 'sealBasis': 'crosswalk', 'modern': entry['modern']})
             known.add(entry['char'])
