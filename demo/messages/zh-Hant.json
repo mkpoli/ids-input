@@ -103,7 +103,7 @@
   "app.source.hfhchan": "部件表中不再拆分的部件。",
   "app.source.kanjivg": "組字器的部分切分；含此切分的字形須以相同方式共享。",
   "app.source.smallSeal": "汲古閣本《說文解字》構形資料：49個已映射字及31個部件，其餘原始記錄尚未完成映射。",
-  "app.source.sealFont": "取自陳昌治本的76個字形，來源專案尚未完成審校。",
+  "app.source.sealFont": "取自陳昌治本的1,334個字形，來源專案尚未完成審校。",
   "app.source.tangut": "西夏文顯示與組字所用的字形。",
   "app.source.noto": "han-compose所用的字形輪廓及部件字型。",
   "app.source.plangothic": "Noto Sans CJK所缺部件的字形。",
@@ -122,5 +122,7 @@
   "app.theme.light": "淺色",
   "app.theme.system": "跟隨系統",
   "app.title": "IDS工坊",
-  "app.toolbar": "工具"
+  "app.toolbar": "工具",
+  "app.source.tangutGlosses": "文字資訊面板中的西夏字英語釋義，保留用法限定。",
+  "app.source.tangutComponentMeaning": "部件𘥇與馬相關的語義關聯（2020年4月21日）。"
 }

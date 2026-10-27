@@ -5,6 +5,8 @@
 
 /** @type {Credit[]} Data, fonts and code the workshop runs on. */
 export const SOURCES = [
+  { name: 'Wiktionary / Wiktextract', by: 'Wiktionary contributors, Tatu Ylonen', licence: 'CC BY-SA 4.0', url: 'https://kaikki.org/dictionary/Tangut/index.html', key: 'tangutGlosses' },
+  { name: 'Sea of Tangut Characters', by: 'Andrew West (@TangutSea)', url: 'https://www.babelstone.co.uk/TangutSea/1252582046343536641.html#Status_1252590258019094528', key: 'tangutComponentMeaning' },
   { name: 'Script-Hybrid CJK Ideographs', by: 'Gen Kojitani (小路谷源)', url: 'https://sites.google.com/dhii.asia/biangbiangcon/program', key: 'scriptHybrid' },
   { name: 'Brief introduction of IDS system in zi.tools', by: 'Bai Yi (白易)', url: 'https://sites.google.com/dhii.asia/biangbiangcon/program', key: 'ziToolsPresentation' },
   { name: 'An Invitation to Hacking Character Data / 文字情報ハックのすすめ', by: 'Ryusei Yamaguchi', url: 'https://biangbiangcon.ryusei.dev/', key: 'characterDataPresentation' },

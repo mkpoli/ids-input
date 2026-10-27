@@ -55,6 +55,7 @@
  * @typedef {Options & { onSketch?: (leaves: SketchLeaf[]) => void }} PreviewOptions
  *
  * @typedef {object} IdsAdapter
+ * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
  * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.

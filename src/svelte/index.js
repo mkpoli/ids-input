@@ -17,3 +17,4 @@ export { shortcut, isApple } from './shortcut.js'
 export { translator, en } from './i18n.js'
 
 export { default as IdsStructuralSearch } from './IdsStructuralSearch.svelte'
+export { default as IdsCharacterInfo } from './IdsCharacterInfo.svelte'
