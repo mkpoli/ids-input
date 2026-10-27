@@ -16,8 +16,12 @@
   const t = $derived(editor.t)
   $effect(() => {
     const input = editor.draft, adapter = editor.adapter, disabled = editor.disabled
-    if (!adapter || disabled || !replacementQuery(input) && !replacementExpression(input)) return
-    untrack(() => editor.resolveInput(input))
+    if (!adapter || disabled) return
+    const replacement = Boolean(replacementQuery(input) || replacementExpression(input))
+    // A description with a stroke chain the parser cannot read may still name its character.
+    const chain = !replacement && input.includes('#(') && Boolean(parse(input, { open: true }).problem)
+    if (!replacement && !chain) return
+    untrack(() => { if (replacement) editor.resolveInput(input); else editor.resolveChain(input) })
     return () => editor.cancelResolution()
   })
   /** @type {HTMLInputElement | null} */ let field = $state(null)
