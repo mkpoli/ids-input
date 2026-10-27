@@ -171,7 +171,7 @@
   const filtered = $derived.by(() => {
     if (!query || !parts || tab === 'other') return null
     if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
-    if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
+    if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
     if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
     return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))

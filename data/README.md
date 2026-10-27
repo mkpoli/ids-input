@@ -715,3 +715,7 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 `script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
+
+## `seal-extra-parts.json`
+
+Keys from the bundled Small Seal outlines absent from its curated palette. Regenerate with `node scripts/build_seal_extra_parts.mjs` when the source data changes.
