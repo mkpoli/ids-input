@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,693 Han entries (688 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,699 Han entries (694 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -250,10 +250,10 @@ variant glyphs are not merged. The report records malformed sequences under
 
 Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
-Compound IDS use a lower cutoff of 35 distinct characters below the root. The
-current corpus supplies 20 frequent trees: ten remain as compound shortcuts and
-ten normalize to eight encoded characters. The manual four-dot entry brings
-the compound total to eleven. Exact regional spellings remain searchable aliases
+Compound IDS use a lower cutoff of 30 distinct characters below the root. The
+current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
+and twelve normalize to ten encoded characters. The manual four-dot entry
+brings the compound total to seventeen. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -305,6 +305,19 @@ The specialized `⿴𦥑同` outlines preserve 興's native upper component in b
 fonts, omitting 一八 below it. The outer 𦥑 is cropped at y=222 (Sans) or
 y=197 (Serif), with 同's contours unchanged and two editable operands retained.
 The Serif bottom stroke's rising terminal is removed before cropping.
+
+The 30–34 usage band adds `⿰丿丨` (33), `⿱左⺝` (33), `⿸耳又` (33),
+`⿱㇒⿻日丿` (32), `⿰二二` (30), and `⿸⿻口丿乚` (30).
+`⿱⿱㇒⿻日丿十` and `⿻九丶` normalize to existing 卑 and 丸 entries,
+with union counts of 122 and 125.
+The upper-卑 shortcut uses Noto's connected-stroke U+FA35 glyph with 十 removed:
+Sans retains the four counters and reconstructs the outer contour above the
+bottom 十; Serif omits its separate 十 contour. It floats at native em size.
+`⿰二二` places two native 二 columns side by side, contracting horizontal
+length only and translating the bars vertically to retain their stroke thickness.
+Both forms have Sans/Serif outlines. The four-bar form keeps two editable columns;
+the atomic upper-卑 drawing falls back to individual operands in adjustment mode
+when the configured export supplies them.
 
 ## Small Seal
 
@@ -388,3 +401,30 @@ archive is written beside the output. Test mapping safeguards with
 mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
 for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
 quality, licensing and rebuilding.
+
+## Unicode fallback outlines
+
+`unicode-outlines/*.json.gz` contains 40,221 glyph outlines in 196 chunks, each covering at most
+256 code points. The full set is 11,357,016 compressed bytes; the composer fetches only chunks
+needed for glyphs missing from the selected export. An export's own glyphs retain priority.
+`unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
+counts, source fonts, source digests and copyright notices.
+
+Sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
+`fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
+The pinned file names, SHA-256s and source URLs are in [`unicode-fonts.json`](unicode-fonts.json).
+Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/OFL-NotoUnicode.txt).
+[Noto](https://github.com/notofonts/noto-fonts) supplies the script-specific designs;
+[Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
+
+Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
+package font directories and Noto CJK font. The builder checks every source digest, selects the first
+available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
+[FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
+curves with a maximum error of 0.5 normalized units; packed coordinates use quarter-unit precision.
+Unicode acceptance uses pinned Bun 1.3.14, matching the editor's rules. The gzip OS header is
+normalized so supported Python versions produce the same shard bytes.
+
+These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
+A variation selector needs an explicit glyph in the selected export; it is not silently dropped.
+Unassigned and private-use characters without a source outline remain unavailable.
