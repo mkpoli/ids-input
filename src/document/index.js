@@ -23,4 +23,5 @@ export {
   transformPieces,
   transformPath,
 } from './transform.js'
-export { renderLayers } from './render.js'
+export { renderLayers, renderScopes } from './render.js'
+export { scopesSvg } from './svg.js'

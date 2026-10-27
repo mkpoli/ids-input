@@ -92,7 +92,7 @@
   "ids.preview.tooLarge": "Too large",
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",
   "ids.problem.character": "Start with an operator such as ⿰ or ⿱.",
-  "ids.problem.component": "A part must be an ideograph, a radical, a stroke, a letter or a digit.",
+  "ids.problem.component": "This character cannot be used as a component.",
   "ids.problem.drop": "{name} takes fewer parts. Empty the ones it would drop first.",
   "ids.problem.empty": "Part {n} of {name} is empty. Fill it, or type ？ for a part no character names.",
   "ids.problem.extra": "There are more parts than the operators take.",
@@ -149,5 +149,12 @@
   "parts.uses.other": "used in {count} characters",
   "ids.characters.none": "No characters match.",
   "ids.characters.placeholder": "Reading, pinyin or meaning…",
-  "ids.pick.characters": "Characters"
+  "ids.pick.characters": "Characters",
+  "parts.seal.basic": "Basic",
+  "parts.seal.compound": "Compound",
+  "parts.seal.other": "Other",
+  "parts.seal.groups": "Small Seal groups",
+  "parts.seal.filter": "Filter by seal or CJK character",
+  "parts.seal.estimate": "≈ Group inferred from modern CJK",
+  "parts.seal.inferred": "Grouping inferred from modern IDS: {ids}"
 }

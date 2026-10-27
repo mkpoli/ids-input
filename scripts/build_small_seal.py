@@ -135,6 +135,8 @@ def main():
     args.out.with_name('small-seal-sources.tar.gz').write_bytes(gzip.compress(buffer.getvalue(), mtime=0))
     mapping, modern = mappings(sources)
     doc = compile_data(ids, mapping, modern)
+    from build_small_seal_palette import augment_palette
+    augment_palette(doc)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False, separators=(',', ':')).encode(), mtime=0))
     print(json.dumps({'mappedEntities': len(mapping), 'characters': len(doc['table']), 'parts': len(doc['parts']),

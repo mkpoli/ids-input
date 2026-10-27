@@ -11,7 +11,8 @@ test('tokens map nested subtrees with UTF-16 ranges', () => {
 })
 test('unfinished slots have zero width; invalid drafts are unmapped', () => {
   expect(tokens('⿰木').at(-1)).toMatchObject({path: [1], start: 2, end: 2, text: ''})
-  expect(tokens('⿰木!')).toEqual([])
+  expect(tokens('⿰木木木')).toEqual([])
+  expect(tokens('⿰木!').map(token => token.text)).toEqual(['⿰', '木', '!'])
   expect(tokens('')).toEqual([])
 })
 test('branch tints are stable and distinct', () => {
