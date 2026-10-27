@@ -368,9 +368,10 @@ boundary.
 The model layer lives in [`src/document`](../src/document/index.js): it imports
 and projects IDS, checks the document structure and transforms, reads and writes
 the JSON, and implements the identity-preserving edits above. The module also
-evaluates affine, projective and Möbius transform chains and traverses a document
-with host-supplied local geometry and placements. Compositing, a composer-backed
-provider, storage and the editor binding are not part of that module yet.
+evaluates affine, projective and Möbius transform chains, traverses a document
+with host-supplied local geometry and placements, and writes a scoped tree whose
+component cuts and ㇯ subtraction become SVG masks. A composer-backed provider,
+storage and the editor binding are not part of that module yet.
 
 Before implementing import/export, the conformance cases must cover identity
 through replace/decompose/wrap/unwrap/move/duplicate; duplicate IDs; empty roots;
