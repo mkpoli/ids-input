@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { bopomofoSource } from '../src/composer/bopomofo.js'
 import { tangutSource } from '../src/composer/tangut.js'
+import { unicodeSource } from '../src/composer/unicode.js'
 import { onlyBundled } from '../src/composer/local.js'
 import { compose, createSource, sketch } from '../src/composer/loader.js'
 import { drawingSvg, isLetter, parse, write } from '../src/core/index.js'
@@ -52,4 +53,17 @@ it('draws open slots and retries a failed Bopomofo load', async () => {
   await expect(local.ready()).rejects.toThrow('offline')
   expect((await compose(local, '⿱ㄅ⬚')).slots).toHaveLength(1)
   expect((await sketch(local, '⿱ㄅ⬚')).map(leaf => leaf.empty)).toEqual([false, true])
+})
+
+// Unicode's Bopomofo tone marks live in the Spacing Modifier Letters block.
+it('draws Mandarin and extended Bopomofo tone marks', async () => {
+  const local = unicodeSource({ load: async name => {
+    const shard = name.slice('unicode/'.length)
+    return JSON.parse(gunzipSync(readFileSync(new URL(`../data/unicode-outlines/${shard}.json.gz`, import.meta.url))))
+  } })
+  for (const char of 'ˉˊˇˋ˙˪˫') {
+    const drawn = await compose(local, `⿰${char}⬚`, { separate: true })
+    expect(drawn.origins).toContain(`glyph ${char}`)
+    expect(drawn.parts[0].d.length).toBeGreaterThan(0)
+  }
 })
