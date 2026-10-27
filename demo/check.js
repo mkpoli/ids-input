@@ -8,6 +8,7 @@
 import { EXAMPLES } from './lib/examples.js'
 import { COMPOSER_BASE } from './lib/composer.js'
 import { checkPanelWidths } from './check-panels.js'
+import { checkSealReview } from './check-seal-review.js'
 import { checkSmallSeal } from './check-small-seal.js'
 import { checkTabDuplication } from './check-tab-duplication.js'
 import { chromium } from 'playwright-core'
@@ -62,6 +63,7 @@ async function choose(page, n) {
 
 try {
   await checkSmallSeal({ open, shots, assert, pass })
+  await checkSealReview({ open, shots, assert, pass })
   for (const base of [COMPOSER_BASE, COMPOSER_BASE.replace(/\/$/, '')]) {
     const prepared = await open(`?composer=${encodeURIComponent(base)}`)
     await prepared.locator('.ids-preview[data-step="composed"]').waitFor()

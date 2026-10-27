@@ -56,6 +56,7 @@
  *
  * @typedef {object} IdsAdapter
  * @property {'sans' | 'serif'} [fontStyle] Style for bundled component outlines.
+ * @property {(query: string, options?: Options) => Promise<{items: import('./seal-candidates.js').SealComparison[], total: number}>} [sealReview] Source comparisons and inferred seal candidates, separate from attested structures.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.

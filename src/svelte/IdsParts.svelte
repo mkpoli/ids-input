@@ -16,8 +16,8 @@
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').PalettePart} PalettePart
    */
-  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => void }} */
-  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
+  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onreviewSeal?: () => void, onpick?: (part: string) => void }} */
+  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick, onreviewSeal } = $props()
   const t = $derived(translator(messages, locale))
   const uid = $props.id()
 
@@ -145,6 +145,9 @@
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
       placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
   </div>
+  {#if tab === 'seal' && onreviewSeal}
+    <button type="button" class="seal-review-link" onclick={onreviewSeal}>{t('parts.seal.review')}</button>
+  {/if}
   {#if tab === 'seal' && !query && sealGroups.length}
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
       {#each sealGroups as group (group.name)}
@@ -215,6 +218,7 @@
   .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
     font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .seal-review-link{align-self:start;padding:5px 8px;font-size:12px}
   .seal-groups{display:flex;flex-wrap:wrap;gap:4px}
   .seal-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
   .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}

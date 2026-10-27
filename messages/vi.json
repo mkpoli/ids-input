@@ -152,5 +152,6 @@
   "parts.seal.groups": "Nhóm tiểu triện",
   "parts.seal.filter": "Lọc theo tiểu triện hoặc chữ Hán",
   "parts.seal.estimate": "≈ Phân nhóm suy từ chữ Hán hiện đại",
-  "parts.seal.inferred": "Phân nhóm suy từ IDS chữ Hán hiện đại: {ids}"
+  "parts.seal.inferred": "Phân nhóm suy từ IDS chữ Hán hiện đại: {ids}",
+  "parts.seal.review": "Duyệt IDS tiểu triện"
 }

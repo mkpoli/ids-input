@@ -152,5 +152,6 @@
   "parts.seal.groups": "小篆分类",
   "parts.seal.filter": "按小篆或汉字筛选",
   "parts.seal.estimate": "≈ 根据现代汉字推定的分类",
-  "parts.seal.inferred": "根据现代汉字IDS推定分类：{ids}"
+  "parts.seal.inferred": "根据现代汉字IDS推定分类：{ids}",
+  "parts.seal.review": "核对小篆IDS"
 }

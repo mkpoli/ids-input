@@ -1,6 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
+import { createSealCandidates } from './seal-candidates.js'
 import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
@@ -112,6 +113,11 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
+  /** @type {Promise<ReturnType<typeof createSealCandidates> | null> | null} */
+  let candidates = null
+  const readCandidates = () => candidates ??= Promise.all([readSeal(), read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : ''])
+    .then(([doc, found, text]) => doc ? createSealCandidates(doc, found, readForms(text), ids ? String(ids) : 'provided table') : null)
+    .catch(error => { candidates = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
   function inWorker(query, limit) {
     if (!searcher && worker) {
@@ -283,6 +289,21 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
 
   return {
     table: read,
+    async sealReview(query, { signal, limit = 24 } = {}) {
+      signal?.throwIfAborted()
+      const doc = await readSeal()
+      if (!doc) return { items: [], total: 0 }
+      const text = query.trim().replace(/^U\+([0-9a-f]{4,6})$/i, (_, hex) => {
+        const cp = Number.parseInt(hex, 16)
+        return cp <= 0x10FFFF ? String.fromCodePoint(cp) : ''
+      })
+      const heads = Object.keys(doc.modern).filter(char => char === text || doc.modern[char].includes(text))
+      const count = Number.isFinite(limit) ? Math.max(0, Math.min(24, Math.floor(limit))) : 24
+      if (!count || !heads.length) { signal?.throwIfAborted(); return { items: [], total: heads.length } }
+      const engine = await readCandidates()
+      signal?.throwIfAborted()
+      return { items: heads.slice(0, count).map(char => /** @type {NonNullable<typeof engine>} */ (engine).compare(char)), total: heads.length }
+    },
     async structure(char, { signal } = {}) {
       const found = (await read()).get(char) ?? []
       signal?.throwIfAborted()
