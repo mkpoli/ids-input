@@ -611,7 +611,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const char = (await overwrites()).get(sequence.trim())
       return char ? [char] : []
     },
-    async encoded(sequence) {
+    async encoded(sequence, { exact: onlyTagged = false, signal } = {}) {
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
       // again on the next call, and the source index serves until then.
       if (!described || describedGeneration !== searchGeneration) {
@@ -631,7 +631,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
           return { by, prefixes }
         }).catch(error => { described = null; throw error })
       }
+
       const { by, prefixes } = await described
+      signal?.throwIfAborted()
       const tree = parse(sequence.trim()).tree
       if (!tree || typeof tree === 'string') return []
       // Each subtree can be written out or replaced by any character it describes. Resolve from
@@ -659,6 +661,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       }
       // ⿻[1:]丨日 names 甲 where ⿻丨日 names 申: try the modifiers first, then without them.
       const exact = resolve(tree)
+      if (onlyTagged) return [...new Set(exact)]
       /** Whether any node of the tree carries a modifier; a tree without one needs one lookup.
        * @param {import('../core/ids.js').Part} part @returns {boolean} */
       const modified = part => typeof part === 'object' && part !== null
