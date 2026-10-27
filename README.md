@@ -183,6 +183,9 @@ description as it does without one, so previewing such a description is approxim
 A zi.tools stroke chain that names a stroke or a character reads as that character: `#(H)` is 一,
 `#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
 stay in the text, to be read as their parts or rejected as usual.
+A zi.tools description that carries a stroke chain this package cannot draw resolves to the
+character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
+table as `chains` (the workshop's `data/zi-tools-chains.tsv.gz`); without it the text stays.
 
 ### Small Seal (小篆)
 

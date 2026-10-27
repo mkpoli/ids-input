@@ -17,6 +17,7 @@
   "ids.do.put": "{part}を入れる",
   "ids.dragSibling": "ドラッグまたはAlt+矢印キーで同じ階層の順序を変更",
   "ids.do.reorder": "部品の順序を入れ替え",
+  "ids.do.resolve": "「{char}」に解決",
   "ids.do.replace": "{from}を{part}に替える",
   "ids.do.split": "{part}を{op}で分ける",
   "ids.do.swap": "{from}を{op}に変える",

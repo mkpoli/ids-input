@@ -20,6 +20,17 @@ their region tags when the two sources agree.
 
 Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
 
+## `zi-tools-chains.tsv.gz`
+
+zi.tools descriptions that carry a stroke chain this package cannot draw, and the character each
+names, one per line: `description<TAB>character` (乌 for `⿱丿⿹#(-𠃌㇉)一`). 839 descriptions from
+Yi Bai's level-1 dataset at commit `da1e9f8a09e2ec8faaf176bac99203f978282041`, the same source as
+`yi-bai-ids.tsv.gz`, both with and without their trailing glyph-variant note. The workshop passes it
+as `chains`; a pasted description that fails to parse and matches resolves to its character. Rebuild
+it with `bun scripts/build_zi_tools_chains.mjs`.
+
+Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
