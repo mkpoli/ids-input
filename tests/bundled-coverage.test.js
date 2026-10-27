@@ -5,6 +5,7 @@ import { hasBundledGlyph } from '../src/composer/bundled-coverage.js'
 import { bundledSource } from '../src/composer/bundled.js'
 import { onlyBundled } from '../src/composer/local.js'
 import coverage from '../data/bundled-coverage.json' with { type: 'json' }
+import host from '../data/host-glyph-coverage.json' with { type: 'json' }
 
 it('indexes the exact scalar outlines in each dedicated bundle', () => {
   for (const name of ['tangut', 'bopomofo', 'small-seal']) {
@@ -47,4 +48,11 @@ it('lets absent bundled keys reach the fallback with their host metadata', async
   expect(store.rec('𘶀')).toBe(fallbackRecord)
   expect(store.hosts('𘶀', 'L')).toEqual(['host'])
   expect(store.places('𘶀')).toEqual(['L'])
+})
+
+it('pins the host outline inventory to the default composer export', () => {
+  const composer = readFileSync(new URL('../demo/lib/composer.js', import.meta.url), 'utf8')
+  const base = composer.match(/export const COMPOSER_BASE = '([^']+)'/)?.[1]
+  expect(host.base).toBe(base)
+  expect(host.ranges.reduce((total, [first, last]) => total + last - first + 1, 0)).toBe(host.count)
 })
