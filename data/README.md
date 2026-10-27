@@ -378,3 +378,30 @@ archive is written beside the output. Test mapping safeguards with
 mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
 for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
 quality, licensing and rebuilding.
+
+## Unicode fallback outlines
+
+`unicode-outlines/*.json.gz` contains 40,221 glyph outlines in 196 chunks, each covering at most
+256 code points. The full set is 11,357,016 compressed bytes; the composer fetches only chunks
+needed for glyphs missing from the selected export. An export's own glyphs retain priority.
+`unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
+counts, source fonts, source digests and copyright notices.
+
+Sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
+`fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
+The pinned file names, SHA-256s and source URLs are in [`unicode-fonts.json`](unicode-fonts.json).
+Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/OFL-NotoUnicode.txt).
+[Noto](https://github.com/notofonts/noto-fonts) supplies the script-specific designs;
+[Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
+
+Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
+package font directories and Noto CJK font. The builder checks every source digest, selects the first
+available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
+[FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
+curves with a maximum error of 0.5 normalized units; packed coordinates use quarter-unit precision.
+Unicode acceptance uses pinned Bun 1.3.14, matching the editor's rules. The gzip OS header is
+normalized so supported Python versions produce the same shard bytes.
+
+These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
+A variation selector needs an explicit glyph in the selected export; it is not silently dropped.
+Unassigned and private-use characters without a source outline remain unavailable.

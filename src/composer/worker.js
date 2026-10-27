@@ -13,6 +13,7 @@ import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
 import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
+import { unicodeSource } from './unicode.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
@@ -30,8 +31,8 @@ self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm 
   }
   let source = sources.get(key)
   try { await source.ready() } catch (error) {
-    if (!warm && onlyBundled(sequence)) {
-      source = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
+    if (!warm && onlyBundled(sequence, false, true)) {
+      source = unicodeSource()
       if (tangut) source = tangutSource({ fallback: source })
       if (bopomofo) source = bopomofoSource({ fallback: source })
       if (seal) source = smallSealSource({ fallback: source })

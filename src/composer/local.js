@@ -4,9 +4,10 @@ import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hasTangut } from './tangut.js'
 import { hasSmallSeal } from './small-seal.js'
 import { hasBopomofo } from './bopomofo.js'
+import { hasUnicodeGlyph } from './unicode.js'
 
-/** Whether every filled leaf has bundled outlines. @param {string} sequence @param {boolean} [separate] */
-export function onlyBundled(sequence, separate = false) {
+/** Whether every filled leaf has bundled outlines. @param {string} sequence @param {boolean} [separate] @param {boolean} [unicode] */
+export function onlyBundled(sequence, separate = false, unicode = false) {
   const result = parse(sequence, { open: true })
   if (result.problem || result.tree === null) return false
   let filled = false
@@ -16,7 +17,7 @@ export function onlyBundled(sequence, separate = false) {
     if ((separate ? isGroupedForm : isComponentForm)(write(node))) { filled = true; return true }
     if (isNode(node)) return node.parts.every(local)
     filled = true
-    return hasTangut(node) || hasBopomofo(node) || hasSmallSeal(node)
+    return (unicode && hasUnicodeGlyph(node)) || hasTangut(node) || hasBopomofo(node) || hasSmallSeal(node)
   }
   return local(result.tree) && filled
 }
