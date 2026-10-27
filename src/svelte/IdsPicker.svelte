@@ -89,7 +89,7 @@
               {:else if found.items.length}
                 <div class="ids-found">
                   {#each found.items as item (item.char)}
-                    <button type="button" class="ids-hit" disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
+                    <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
                       draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                       onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
                   {/each}
@@ -106,7 +106,7 @@
               {:else if characters.items.length}
                 <div class="ids-found">
                   {#each characters.items as item (item.char)}
-                    <button type="button" class="ids-hit" disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
+                    <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
                       draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                       onclick={() => { characterQuery = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
                   {/each}

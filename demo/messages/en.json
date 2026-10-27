@@ -37,6 +37,7 @@
   "app.examples.mixed": "Mixed scripts",
   "app.examples.cards": "Cards",
   "app.examples.list": "List",
+  "app.examples.seal": "Small Seal",
   "app.examples.tangut": "Tangut",
   "app.examples.none": "(unencoded)",
   "app.export.background": "Background",
@@ -105,7 +106,7 @@
   "app.source.hfhchan": "Which components the palette leaves whole.",
   "app.source.kanjivg": "Some component cuts used by the composer; drawings with those cuts are shared alike.",
   "app.source.smallSeal": "Jiguge Shuowen decompositions: 49 mapped characters and 31 components. Other source records remain unresolved.",
-  "app.source.sealFont": "76 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
+  "app.source.sealFont": "1,334 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
   "app.source.tangut": "Tangut text and composition outlines.",
   "app.source.noto": "The outlines han-compose moves, and the parts font.",
   "app.source.plangothic": "Outlines for parts Noto Sans CJK lacks.",
@@ -134,5 +135,7 @@
   "app.replacement.loading": "Looking up components…",
   "app.replacement.notFound": "Could not find that component in the character.",
   "app.replacement.failed": "Could not look up the character. Please try again.",
-  "app.replacement.tooLong": "The three inputs together must be at most 64 code points."
+  "app.replacement.tooLong": "The three inputs together must be at most 64 code points.",
+  "app.source.tangutGlosses": "English Tangut glosses, with source qualifiers, for character information panels.",
+  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21)."
 }

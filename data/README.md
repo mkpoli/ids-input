@@ -215,6 +215,51 @@ close names in the character search.
 - Licence: **CC BY-SA 4.0** for the file as a whole, because its KANJIDIC2 rows are
   (<https://creativecommons.org/licenses/by-sa/4.0/>); the Unihan rows keep Unicode License v3.
 
+## Character information panels
+
+`character-info.json.gz` contains full English definitions for 23,310 Han characters
+and 457 single Tangut characters. `scripts/build_character_info.py` builds it from:
+
+- **Unihan 18.0.0**, `kDefinition`, Copyright Unicode, Inc., Unicode License v3.
+  [Source archive](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip), SHA-256
+  `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`.
+- **English Wiktionary contributors**, extracted by Tatu Ylonen's Wiktextract and
+  distributed through [Kaikki's Tangut dictionary](https://kaikki.org/dictionary/Tangut/index.html),
+  under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+  The [JSONL source](https://kaikki.org/dictionary/Tangut/kaikki.org-dictionary-Tangut.jsonl)
+  was retrieved on 2026-10-27. Kaikki identifies this edition as extracted on 2026-09-09
+  from the 2026-09-02 English Wiktionary dump. The unmodified snapshot is retained as
+  `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
+  `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
+  Only single-character Tangut entries with glosses enter the panel data; duplicate
+  glosses are combined, with source qualifiers preserved. Each panel links to the
+  original entry, whose history records its contributors. The adapted Tangut gloss data remains
+  CC BY-SA 4.0; the Unihan records retain Unicode License v3.
+
+`character-meaning-aids.json` contains 57 editorial translations of selected English
+senses into Han characters, with emoji mnemonics. Tangut matches require a complete
+recorded English sense; no links are inferred from glyph shape or a shared component.
+The reverse Han-to-Tangut links retain the matched sense. These translations describe
+one meaning, not interchangeability in every context or historical descent. Han emoji
+use explicitly selected characters, independently of the wording of their definitions.
+
+The horse association for component 𘥇 is paraphrased from
+[Andrew West, @TangutSea, 2020-04-21](https://www.babelstone.co.uk/TangutSea/1252582046343536641.html#Status_1252590258019094528).
+This is a semantic association observed in horse-related characters, not a standalone
+word definition. Other Tangut components can show glossed characters whose recorded
+[BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt) explicitly
+contain them. These are usage examples, not inferred component meanings.
+
+Small Seal links use the direct modern correspondences in `small-seal.json.gz`,
+from the CHISE and Unicode sources described above. The MOE-derived 𠙵→口 search alias
+is omitted from historical-form links. Only forms in the bundled font's
+`table ∪ parts` coverage are displayed. A Tangut translation does not imply a Small
+Seal ancestor. Missing meanings stay unspecified.
+
+Rebuild with `python3 scripts/build_character_info.py`. The builder verifies both
+source digests. The character-information file is fetched only when a panel is used;
+hovering does not send the character to a dictionary service.
+
 ## Tangut
 
 The same IDS table also includes 6,145 records from Andrew West's
@@ -274,11 +319,17 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The fifteen manual entries
-bring the compound total to thirty-one. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The sixteen manual entries
+bring the compound total to thirty-two. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
+
+The requested compound `⿲彳⿱山一攵` is available as a single palette candidate,
+with an estimated eleven strokes. Its exact sequence has no uses in the bundled
+corpus, so it is retained as a manual entry. As an enclosure host,
+`⿵⿲彳⿱山一攵⬚` places the slot below 一, between 彳 and 攵; the composer
+renders it as `⿲彳⿱⿱山一⬚攵` while preserving the source leaves for editing.
 
 The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
@@ -505,13 +556,13 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 40,221 glyph outlines in 196 chunks, each covering at most
-256 code points. The full set is 11,357,016 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 49,483 glyph outlines in 235 chunks, each covering at most
+256 code points. The full set is 16,535,359 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
 
-Sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
+The original sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
 `fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
 The pinned file names, SHA-256s and source URLs are in [`unicode-fonts.json`](unicode-fonts.json).
 Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/OFL-NotoUnicode.txt).
@@ -519,11 +570,12 @@ Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/O
 [Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
 
 Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
-package font directories and Noto CJK font. The builder checks every source digest, selects the first
+package font directories plus every Noto CJK, Jigmo, Noto Emoji and Unifont file listed in
+`unicode-fonts.json`. The builder checks every source digest, selects the first
 available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
 [FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
 curves with a maximum error of 0.5 normalized units; packed coordinates use quarter-unit precision.
-Unicode acceptance uses pinned Bun 1.3.14, matching the editor's rules. The gzip OS header is
+Unicode acceptance uses the bundled Unicode 18.0.0 properties, matching the editor's rules. The gzip OS header is
 normalized so supported Python versions produce the same shard bytes.
 
 These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
@@ -563,6 +615,12 @@ remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
 
+The 工尺譜 tab in `IdsParts` collects ten base note characters, three regional
+forms and five left-side components. `src/core/gongche.js` defines this small
+catalogue independently of palette loading. A collapsible guide explains
+left-side composition and regional notation differences. The panel links to Taiwan
+Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
+
 ### Palette fallback outlines
 
 `palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
@@ -573,3 +631,42 @@ come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJ
 (Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
 Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
 CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.
+
+## Unicode character properties
+
+`unicode-properties.json` pins component acceptance and letter classification to Unicode 18.0.0,
+independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
+snapshots and a source manifest with original URLs and SHA-256s. Rebuild with
+`python3 scripts/build_unicode_properties.py`; the builder verifies those digests.
+
+Graphic categories L, M, N, P, S and Co are eligible, except default-ignorable characters, IDS
+operators and draft markers. The existing Small Seal allocation remains supported. Ideographic and
+Radical properties distinguish ideographs from alphabetic letters. Source: the
+[Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
+[Unicode License v3](licences/Unicode-3.0.txt).
+
+### Extended fallback sources
+
+The fallback order retains existing Noto outlines, then uses Jigmo3 2025-09-12 (CC0-1.0),
+Noto Emoji (SIL OFL 1.1), and GNU Unifont 18.0.01 (under its SIL OFL 1.1 option).
+Jigmo supplies CJK Extension J; Noto Emoji supplies monochrome emoji contours. Unifont fills
+remaining published glyphs, including recent kana, Cyrillic, phonetic letters and ideographic marks.
+Its pixel-based outlines retain their original design. The host export's glyphs take precedence.
+
+- [Jigmo](https://kamichikoichi.github.io/jigmo/): source file and digest in `unicode-fonts.json`;
+  [CC0 text](../fonts/LICENSE-Jigmo.txt).
+- [Noto Emoji](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji):
+  pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
+- [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
+  [upstream license](../fonts/LICENSE-Unifont.txt), including its OFL option.
+- [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
+  `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
+  Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)
+  is preserved from [Mozilla's repository](https://github.com/mozilla/gecko-dev/blob/master/layout/reftests/fonts/glyphwiki-license.txt),
+  because the live license page was unavailable when checked on 2026-10-28.
+
+`unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
+sources, grouped by Unicode block. It excludes ranges handled by the main CJK export and dedicated
+bundles. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
+available source glyphs; the remaining characters need additional source outlines. Private-use
+characters require a host-supplied mapping and never inherit Unifont's private allocations.

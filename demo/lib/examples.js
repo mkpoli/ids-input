@@ -130,6 +130,17 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
+  // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
+  { key: 'seal', examples: [
+    {"sequence": "⿰𽁭𽁭", "char": "𽄌", "modern": "玨", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿰𽄝𽄝", "char": "𽄨", "modern": "艸", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽄨", "char": "𽌜", "modern": "茻", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿰𽀒𽀒", "char": "𽁞", "modern": "祘", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽌤", "char": "𽄤", "modern": "芬", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽁞", "char": "𽋒", "modern": "蒜", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
+  ] },
   { key: 'tangut', examples: [
     { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
     { sequence: '⿰𘫿𘫿', char: '𘴅' },

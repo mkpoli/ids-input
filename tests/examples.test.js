@@ -28,7 +28,11 @@ describe('the demo examples', () => {
       const found = described.get(sequence) ?? []
       if (char) {
         expect([...char]).toHaveLength(1)
-        if ('source' in example) {
+        if ('source' in example && example.source === 'data/small-seal.json.gz') {
+          const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))
+          expect(seal.table[char]).toContain(sequence)
+          expect(seal.modern[char]).toContain(example.modern)
+        } else if ('source' in example) {
           expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
           expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
         } else expect(found).toContain(char)
@@ -43,7 +47,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

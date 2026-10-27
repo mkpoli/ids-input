@@ -1,4 +1,6 @@
 // @ts-check
+import { unicodeProperty } from './unicode.js'
+export { UNICODE_VERSION } from './unicode.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
@@ -36,11 +38,8 @@ export const OPERATOR_GROUPS = [
 /** The longest description, in code points. */
 export const LONGEST = 64
 // Component acceptance follows Unicode categories, independently of preview font coverage.
-// Unicode IDS operands: https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/
+// Unicode IDS operands: https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-18/
 // Letters, numbers, marks, punctuation and symbols extend those operands for mixed-script work.
-const GRAPHIC = /^[\p{L}\p{M}\p{N}\p{P}\p{S}\p{Co}]$/u
-const INVISIBLE = /\p{Default_Ignorable_Code_Point}/u
-const IDEOGRAPH = /[\p{Ideographic}\p{Radical}]/u
 /** The part no character names. */
 export const UNKNOWN = '？'
 /** A slot still to fill, as the editor writes it (U+2B1A DOTTED SQUARE). It is never a component, so a draft holding one never passes as whole. */
@@ -55,14 +54,14 @@ export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E
 export const isComponent = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
   // The bundled CHISE/Kaiyuan Small Seal allocation predates runtime Unicode support.
-  return Boolean(first && (GRAPHIC.test(first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first)) && !INVISIBLE.test(first)
+  return Boolean(first && (unicodeProperty('graphic', first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first))
     && !ARITY.has(first) && !EMPTY_MARKS.includes(first))
 }
 
 /** Whether `char` is an alphabetic/syllabic letter or decimal digit. @param {string | undefined | null} char */
 export const isLetter = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
-  return Boolean(first && isComponent(first) && /[\p{L}\p{Nd}]/u.test(first) && !IDEOGRAPH.test(first))
+  return Boolean(first && isComponent(first) && unicodeProperty('letters', first))
 }
 
 /** How many descriptions an operator takes; 0 for anything else. @param {string | undefined} char */
