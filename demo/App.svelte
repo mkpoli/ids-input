@@ -849,7 +849,7 @@
           {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
-          <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
+          <h2 class="label" class:label-glyph={componentLookup?.kind === 'parts' || Boolean(searchQuery)}>{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {/if}
@@ -963,6 +963,7 @@
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
   .block{display:flex;flex-direction:column;gap:6px;min-width:0}
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
+  .label-glyph{font-family:var(--ids-font)}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
