@@ -512,8 +512,20 @@
     { heading: t(`app.examples.${group.key}`) },
     ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
   ]))
-  let newTabOpen = $state(false)
+  let startingTabs = $state(/** @type {string[]} */ ([]))
   let newTabView = $state('templates')
+  function startTab() {
+    const tab = addTab()
+    startingTabs.push(tab.id)
+    newTabView = 'templates'
+  }
+  /** @param {string} [sequence] */
+  function startEditing(sequence = '') {
+    startingTabs = startingTabs.filter(id => id !== activeId)
+    editor.reset(sequence)
+  }
+  const startingExamples = $derived(exampleItems.map(item => 'sequence' in item && item.sequence
+    ? { ...item, run: () => startEditing(canonical(item.sequence ?? '')) } : item))
   const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
@@ -618,11 +630,39 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => newTabOpen = true} onduplicate={duplicateTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={startTab} onduplicate={duplicateTab} />
     </div>
   </div>
 
   <main class="workspace" bind:this={work}>
+    {#if startingTabs.includes(activeId)}
+<div class="new-tab-page" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}>
+  <h1>{t('app.tabs.new')}</h1>
+  <div class="new-tab-choices">
+    <button type="button" class="tool" onclick={() => startEditing()}><Icon name="plus" />{t('app.tabs.blank')}</button>
+    <button type="button" class="tool" aria-pressed={newTabView === 'templates'} onclick={() => newTabView = 'templates'}>{t('app.tabs.templates')}</button>
+    <button type="button" class="tool" aria-pressed={newTabView === 'examples'} onclick={() => newTabView = 'examples'}>{t('app.examples')}</button>
+  </div>
+  {#if newTabView === 'templates'}
+    {#each [2, 3, 4] as slots}
+      <p class="template-heading">{t(`ids.group.${slots}`)}</p>
+      <div class="template-grid">
+        {#each STRUCTURE_TEMPLATES.filter(item => item.slots === slots) as item (item.id)}
+          <button type="button" title={item.sequence} aria-label={t('ids.templates.insert', { sequence: item.sequence })} onclick={() => startEditing(item.sequence)}>
+            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+              {#each templateDiagram(item.sequence) as shape}
+                {#if shape.kind === 'slot'}<rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />{:else}<path d={shape.d} />{/if}
+              {/each}
+            </svg>
+          </button>
+        {/each}
+      </div>
+    {/each}
+  {:else}
+    <MenuList label={t('app.examples')} items={startingExamples} view={exampleView} />
+  {/if}
+</div>
+    {:else}
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
       <section class="pane input" id="input-panel" aria-label={t('app.input')}>
@@ -713,6 +753,7 @@
         </div>
       </section>
     </div>
+    {/if}
   </main>
   <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
 
@@ -743,31 +784,6 @@
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
   </div>
-</Dialog>
-<Dialog bind:open={newTabOpen} title={t('app.tabs.new')} closeLabel={t('app.close')} wide>
-  <div class="new-tab-choices">
-    <button type="button" class="tool" onclick={() => { newTabOpen = false; addTab() }}><Icon name="plus" />{t('app.tabs.blank')}</button>
-    <button type="button" class="tool" aria-pressed={newTabView === 'templates'} onclick={() => newTabView = 'templates'}>{t('app.tabs.templates')}</button>
-    <button type="button" class="tool" aria-pressed={newTabView === 'examples'} onclick={() => newTabView = 'examples'}>{t('app.examples')}</button>
-  </div>
-  {#if newTabView === 'templates'}
-    {#each [2, 3, 4] as slots}
-      <p class="template-heading">{t(`ids.group.${slots}`)}</p>
-      <div class="template-grid">
-        {#each STRUCTURE_TEMPLATES.filter(item => item.slots === slots) as item (item.id)}
-          <button type="button" title={item.sequence} aria-label={t('ids.templates.insert', { sequence: item.sequence })} onclick={() => { newTabOpen = false; addTab(item.sequence) }}>
-            <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
-              {#each templateDiagram(item.sequence) as shape}
-                {#if shape.kind === 'slot'}<rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />{:else}<path d={shape.d} />{/if}
-              {/each}
-            </svg>
-          </button>
-        {/each}
-      </div>
-    {/each}
-  {:else}
-    <MenuList label={t('app.examples')} items={exampleItems} view={exampleView} onpick={() => newTabOpen = false} />
-  {/if}
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
@@ -874,6 +890,8 @@
     .foot-short{display:inline}
   }
 
+  .new-tab-page{width:min(720px,100%);margin:0 auto;padding:24px 16px;box-sizing:border-box}
+  .new-tab-page h1{margin:0 0 18px;font-size:20px}
   .new-tab-choices{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
   .new-tab-choices button[aria-pressed="true"]{background:var(--hover);color:var(--ink)}
   .template-heading{margin:14px 0 6px;color:var(--muted);font-size:12px}
