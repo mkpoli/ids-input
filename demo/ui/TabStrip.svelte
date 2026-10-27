@@ -108,8 +108,7 @@
   async function close(id) {
     onclose(id)
     await tick()
-    if (tabs.length) focus(activeId)
-    else /** @type {HTMLElement | null} */ (document.querySelector('.tab-new'))?.focus()
+    focus(activeId)
   }
   /**
    * @param {KeyboardEvent} event
