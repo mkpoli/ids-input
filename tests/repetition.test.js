@@ -292,6 +292,10 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(zhu.origin).toBe(`Noto ${fontStyle} 朱:L`)
     expect(legs.origin).toBe(`Noto ${fontStyle} 儿:under-bar`)
     expect(zhu.target[3] - zhu.target[1]).toBeGreaterThan((enclosure.target[3] - enclosure.target[1]) * 0.95)
+    const gap = enclosure.target[0] - zhu.target[2]
+    expect(gap).toBeGreaterThan(0)
+    expect(gap).toBeLessThan((constants.face[2] - constants.face[0]) * 0.02)
+    expect(collision([zhu], [enclosure], constants.face, 1024)).toBe(0)
     expect(collision([enclosure], [legs], constants.face, 1024)).toBeGreaterThan(0)
     expect(legs.target[1]).toBeGreaterThan(lower.target[3])
     const complex = `⿰朱⿸${outer}⿱儿⿱木木`
@@ -301,6 +305,39 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(complexLegs.target[1]).toBeGreaterThan(legs.target[1])
     expect(collision([complexParts[1]], [complexLegs], constants.face, 1024)).toBeGreaterThan(0)
     expect(complexParts.slice(3).every(part => part.weight[1] <= 0)).toBe(true)
+  }
+})
+
+it('uses matching native stacked 日 proportions for 昌 and ⿱日日 below 儿', async () => {
+  for (const fontStyle of ['sans', 'serif']) for (const outer of ['⿳亠㐅厂', '⿳亠丷厂']) {
+    const source = remote()
+    const a = await compose(source, `⿸${outer}⿱儿昌`, { fontStyle })
+    const b = await compose(source, `⿸${outer}⿱儿⿱日日`, { fontStyle })
+    expect(a.d).toBe(b.d)
+    const stack = a.parts.find(part => part.origin === `Noto ${fontStyle} 昌:stack`)
+    expect(stack).toBeDefined()
+    expect(stack.box[2]).toBeGreaterThan(500)
+    expect(stack.box[3]).toBeGreaterThan(300)
+    for (const wrap of [text => `⿰朱${text}`, text => `⿰木${text}`, text => `⿱木⿰朱${text}`]) {
+      const nestedA = await compose(source, wrap(`⿸${outer}⿱儿昌`), { fontStyle })
+      const nestedB = await compose(source, wrap(`⿸${outer}⿱儿⿱日日`), { fontStyle })
+      expect(nestedA.d).toBe(nestedB.d)
+    }
+  }
+})
+
+it('falls back to 日 operands when the source 昌 is excluded', async () => {
+  const source = remote()
+  await compose(source, '木')
+  const store = source.store
+  source.store = () => {
+    const data = store(), rec = data.rec
+    return { ...data, rec: key => rec(key === '日' ? '木' : key) }
+  }
+  for (const fontStyle of ['sans', 'serif']) {
+    const result = await compose(source, '⿸⿳亠㐅厂⿱儿⿱日日', { fontStyle, exclude: ['昌'] })
+    expect(result.origins).not.toContain(`Noto ${fontStyle} 昌:stack`)
+    expect(result.parts.length).toBeGreaterThan(3)
   }
 })
 

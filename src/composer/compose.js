@@ -27,6 +27,8 @@ const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequ
 const yanGlyphs = new Map(['⿳亠㐅厂', '⿱文厂'].flatMap(outer =>
   [['彡', '彥'], ['生', '產']].map(([inner, char]) => [`⿸${outer}${inner}`, char])))
 const yanSources = new Map([['⿳亠㐅厂', '產'], ['⿱文厂', '產'], ['⿳亠丷厂', '产']])
+// The stacked 日 pair has about this much outline ink in both exports.
+const YAN_STACK_INK = 14000
 
 export class LookupError extends Error { name = 'LookupError' }
 
@@ -120,6 +122,8 @@ export class Composer {
   /** Outline length: a glyph's, or for an excluded or glyphless character its sequence's operands'. */
   ink(node, seen = new Set()) {
     if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).ink
+    if (Array.isArray(node) && node[0] === '⿸' && this.yanStackedDays(node[1], node[2]))
+      return this.ink(node[1], seen) + this.ink('儿', seen) + YAN_STACK_INK
     if (typeof node !== 'string') return node.slice(1).reduce((s, n) => s + this.ink(n, seen), 0)
     const r = this.rec(node)
     if (!this.excluded(node) && r?.G) return r.ink
@@ -363,6 +367,14 @@ export class Composer {
   }
 
   /** Place an arbitrary inner operand in the room designed for these native enclosures. */
+  yanStackedDays(outer, contents) {
+    const source = yanSources.get(keyOf(outer))
+    return !this.separate && this.fontStyle !== 'kaisho' && source && !this.excluded(source)
+      && !this.excluded('昌') && !this.excluded('儿') && !this.excluded('元')
+      && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
+      && ['昌', '⿱日日'].includes(keyOf(contents[2]))
+  }
+
   yanEnclosure(children, region) {
     if (this.fontStyle === 'kaisho') return null
     const key = keyOf(children[0])
@@ -373,13 +385,16 @@ export class Composer {
     if (Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿' && !this.excluded('儿') && !this.excluded('元')) {
       const top = serif ? (traditional ? 461 : 415) : (traditional ? 450 : 390)
       const baseBottom = traditional ? 210 : 180
+      const stackedDays = this.yanStackedDays(children[0], contents)
       // A denser lower subtree needs more of the opening than a simple 丅.
-      const ink = isEmpty(contents[2]) ? 0 : this.ink(contents[2])
+      const ink = stackedDays ? YAN_STACK_INK : isEmpty(contents[2]) ? 0 : this.ink(contents[2])
       const extra = Math.max(0, Math.min(top - 120 - baseBottom, (Math.sqrt(ink / 3700) - 1) * 150))
       const bottom = baseBottom + extra
       const legs = componentPosition('儿:under-bar', mapped([250, bottom, 920, top + 2], componentConstants.face, region), this.fontStyle)
       if (legs) {
-        const lower = this.node(contents[2], mapped([240, -59, 940, bottom - 25], componentConstants.face, region))
+        const box = mapped(stackedDays ? [300, -59, 880, bottom - 25] : [240, -59, 940, bottom - 25], componentConstants.face, region)
+        const days = stackedDays && componentPosition('昌:stack', box, this.fontStyle)
+        const lower = days ? [days] : this.node(contents[2], box)
         // Strong vertical weight expansion closes the counters of compact,
         // dense lower components. Keep their native light-master detail.
         if (ink > 7400) for (const part of lower) part.weightLimit = [1, 0]
@@ -740,8 +755,12 @@ export class Composer {
     }
     const axis = this.AXIS[op]
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
-    const weights = children.map((c, k) => this.ink(c) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
-    const gap = 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
+    const other = children[1]
+    const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
+      && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
+      && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
+    const weights = children.map((child, k) => this.ink(child) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
+    const gap = compactYan ? 0.01 : 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
     const lo = region[axis], span = region[axis + 2] - region[axis]
     const groups = []
     let at = 0
@@ -753,10 +772,7 @@ export class Composer {
       box[axis] = lo + a * span
       box[axis + 2] = lo + b * span
       // 鴸 supplies a full-height left 朱 even in exports without a usable host cut.
-      const other = children[1]
-      const yanSibling = op === '⿰' && i === 0 && child === '朱' && Array.isArray(other)
-        && other[0] === '⿸' && yanSources.has(keyOf(other[1]))
-      if (yanSibling && !this.separate && !this.excluded('朱') && !this.excluded('鴸')) {
+      if (compactYan && i === 0) {
         const native = componentPositionBox('朱:L', this.fontStyle)
         if (native) {
           const vertical = mapped(native, componentConstants.face, region)
@@ -768,7 +784,7 @@ export class Composer {
       if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
       else groups.push(this.row(child, box, children.length))
     })
-    this.space(axis, groups)
+    if (!compactYan) this.space(axis, groups)
     return groups.flat()
   }
 

@@ -65,6 +65,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     result['positions'][style] = {
         '朱:L': group([cs('鴸')[4]]),
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
+        '昌:stack': group(cs('昌')),
     }
     forms={}
     if style=='sans':
