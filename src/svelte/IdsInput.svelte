@@ -17,9 +17,9 @@
   import { shortcut } from './shortcut.js'
 
   /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, value?: string, char?: string, disabled?: boolean, messages?: Record<string, string>, locale?: string,
-   *   pickers?: ('find' | 'characters' | 'parts' | 'from')[], recentKey?: string | null, keyHints?: boolean, tintMode?: import('./editor.svelte.js').TintMode, onuse?: (sequence: string) => void,
+   *   pickers?: ('find' | 'characters' | 'parts' | 'from' | 'templates')[], recentKey?: string | null, keyHints?: boolean, tintMode?: import('./editor.svelte.js').TintMode, onuse?: (sequence: string) => void,
    *   onchange?: (text: string, whole: boolean) => void, preview?: import('svelte').Snippet<[string, boolean]> }} */
-  let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'characters', 'parts', 'from'],
+  let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'characters', 'parts', 'from', 'templates'],
     recentKey = 'ids-input.recentParts', keyHints = true, tintMode = 'hover', onuse, onchange, preview } = $props()
 
   const editor = createEditor(() => ({ adapter, messages, locale, disabled, tintMode }))

@@ -89,6 +89,9 @@ export async function readText(response) {
 
 /** Components the forms table folds that the names keep apart. */
 const SEPARATE = new Set(['斗', '鬥'])
+// Contextual search substitutions do not make these independent characters
+// palette variants (田/由/甲/申/电, 己/已/巳, 用/甩, 手/才, 刀/刁, 幺/乡).
+const PALETTE_SEPARATE = new Set([...SEPARATE, ...'由甲申电甴己已巳甩才刁乡'])
 
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
@@ -195,7 +198,19 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
       : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
-  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
+  ]).then(([base, doc, text]) => {
+    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+    // Keep reviewed contextual search substitutions out of palette families.
+    const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
+    const variants = readForms(safe)
+    for (const root of variants.values()) variants.set(root, root)
+    return rows.map(part => {
+      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
+      const variantGroup = variants.get(part.part)
+      return variantGroup ? { ...part, variantGroup } : part
+    })
+  })
     .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into

@@ -14,6 +14,7 @@
  * @property {string} [label] What to show beside it (a reading, a name, a code point).
  *
  * @typedef {object} PalettePart A part of the parts palette.
+ * @property {string} [variantGroup] Shared identity for adjacent palette variants; selection keeps the literal form.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
  * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.
@@ -24,7 +25,7 @@
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
  * @property {'横' | '豎' | '撇' | '點' | '折' | null} [first] The class of its first stroke.
- * @property {'c' | 't' | 'seal' | 'd' | 's'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
+ * @property {'c' | 't' | 'seal' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  *

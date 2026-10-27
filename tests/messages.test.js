@@ -16,7 +16,7 @@ describe('the message catalogues', () => {
     const has = key => key in en || `${key}.other` in en
     expect([...used].filter(key => !has(key))).toEqual([])
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
-    for (const tab of ['find', 'characters', 'parts', 'from']) expect(`ids.pick.${tab}` in en).toBe(true)
+    for (const tab of ['find', 'characters', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
   })
   it('hold the same keys in every language, plurals aside', () => {
     const keys = Object.keys(en).filter(key => !key.endsWith('.one'))
