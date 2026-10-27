@@ -55,4 +55,24 @@ class PaletteTests(unittest.TestCase):
         self.assertNotIn(absent, parts)
         self.assertEqual(doc['table'], {})
 
+class SealSupplementEvidence(unittest.TestCase):
+    def test_qi_crosswalk_matches_pinned_chise_record(self):
+        import gzip, hashlib, json, tarfile
+        from pathlib import Path
+        from build_small_seal import sexps, properties
+        root = Path(__file__).resolve().parents[1]
+        entry = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text())['entries'][0]
+        archive = root / 'data/small-seal-sources.tar.gz'
+        self.assertEqual(hashlib.sha256(archive.read_bytes()).hexdigest(), entry['chiseEvidence']['archiveSha256'])
+        with tarfile.open(archive) as tar:
+            text = tar.extractfile(entry['chiseEvidence']['file']).read().decode()
+        record = next(form[1][1] for form in sexps(text) if isinstance(form, list) and form[0] == 'define-char'
+                      and properties(form[1][1]).get('=shuowen-jiguge') == '15216')
+        relation = next(p for p in record if isinstance(p, list) and p[0] == '<-Small-Seal@shuowen')
+        modern = {chr(int(properties(p)['=ucs'][2:], 16)) for p in relation[1:]}
+        self.assertEqual(set(entry['modern']), modern)
+        sources = gzip.decompress((root / 'data/seal-sources.txt.gz').read_bytes()).decode()
+        self.assertIn('U+3DDAF\tkSEAL_MCJK\t2051D', sources)
+
+
 if __name__ == '__main__': unittest.main()

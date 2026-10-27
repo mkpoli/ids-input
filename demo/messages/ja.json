@@ -125,6 +125,12 @@
   "app.theme.system": "システムに合わせる",
   "app.title": "IDS工房",
   "app.toolbar": "ツール",
+  "app.componentLookup.title": "部品を調べる",
+  "app.componentLookup.containing": "部品を含む文字を探す",
+  "app.componentLookup.parts": "文字の部品を調べる",
+  "app.componentLookup.input": "文字または部品",
+  "app.componentLookup.invalid": "文字または部品を一つ入力してください。",
+  "app.componentLookup.help": "例えば「木」を含む文字を探したり、「森」の部品を調べたりできます。",
   "app.replacement.title": "部品を置き換える",
   "app.replacement.help": "文字や IDS の部品を置き換えます。各欄に文字または ⿰木木 のような完全な IDS を入力できます。作業中の内容を残して結果を開きます。",
   "app.replacement.source": "文字または IDS",
@@ -136,5 +142,6 @@
   "app.replacement.failed": "文字を検索できませんでした。もう一度お試しください。",
   "app.replacement.tooLong": "3 つの入力を合わせて 64 コードポイント以内にしてください。",
   "app.source.tangutGlosses": "文字情報パネルに表示する西夏文字の英語の語釈。用法を限定する注記も表示します。",
-  "app.source.tangutComponentMeaning": "部件𘥇と馬に関する意味との関連（2020年4月21日）。"
+  "app.source.tangutComponentMeaning": "部件𘥇と馬に関する意味との関連（2020年4月21日）。",
+  "app.replacement.nestedHint": "⿱🔄林木火水 のように、置き換えを含む式を序列の欄に貼り付けることもできます。"
 }

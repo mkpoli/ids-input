@@ -13,6 +13,7 @@
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
@@ -45,6 +46,7 @@
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
+  import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
   /** @type {'sans' | 'serif' | 'klee'} */
@@ -55,7 +57,12 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const babel = { ...sealAdapter, parts: async () => {
+    const curated = await sealAdapter.parts()
+    const seen = new Set(curated.map(part => part.part))
+    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
+  } }
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -231,7 +238,8 @@
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
-  let structuralSearch = $state(false)
+  /** @type {'current' | 'component' | 'structure'} */
+  let searchMode = $state('current')
   const wholeComponentLookup = $derived(componentQuery(editor.whole))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
@@ -327,8 +335,9 @@
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
   }
 
-  // The tabs: choose one, open a new one, open a sequence in one, and close one. A tab closed by
-  // mistake comes back from the note, with its tree and history.
+  // The tabs: choose one, open a new one, open a sequence in one, and close one. One tab always stays
+  // open, so the last one closes into a fresh tab. A tab closed by mistake comes back from the note,
+  // with its tree and history.
   const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
   /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
   /** @type {Map<string, AdjustState>} */
@@ -412,9 +421,8 @@
     }
     addTab(text)
   }
-  /** Close a tab, showing its neighbour; the note brings it back. @param {string} id */
+  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
   function closeTab(id) {
-    if (tabs.length < 2) return
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
     const tab = tabs[at]
@@ -423,28 +431,48 @@
     states.delete(id)
     adjustedStates.delete(id)
     tabs.splice(at, 1)
+    /** @type {import('./lib/tabs.js').Tab | undefined} */
+    let fresh
     if (id === activeId) {
       const next = tabs[at] ?? tabs[at - 1]
-      activeId = next.id
-      const saved = states.get(next.id)
-      states.delete(next.id)
-      if (saved) editor.restore(saved)
-      else editor.reset(next.sequence)
-      restoreAdjustments(next.id)
+      if (next) {
+        activeId = next.id
+        const saved = states.get(next.id)
+        states.delete(next.id)
+        if (saved) editor.restore(saved)
+        else editor.reset(next.sequence)
+        restoreAdjustments(next.id)
+      } else {
+        // One tab always stays open: closing the last one leaves a new empty tab in its place.
+        fresh = makeTab()
+        tabs.push(fresh)
+        activeId = fresh.id
+        editor.reset('')
+        adjustments = {}
+        adjusting = false
+        knownSequence = editor.whole
+      }
     }
     toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
-      run: () => reopen(tab, state, adjusted, at) }
+      run: () => reopen(tab, state, adjusted, at, fresh?.id) }
     store()
   }
   /**
-   * Put a closed tab back where it was.
+   * Put a closed tab back where it was, taking back the empty tab that replaced it.
    * @param {import('./lib/tabs.js').Tab} tab
    * @param {ReturnType<typeof editor.snapshot> | undefined} state
    * @param {AdjustState | undefined} adjusted
    * @param {number} at
+   * @param {string} [replacement]
    */
-  function reopen(tab, state, adjusted, at) {
+  function reopen(tab, state, adjusted, at, replacement) {
     if (tabs.some(kept => kept.id === tab.id)) return
+    const fresh = tabs.find(kept => kept.id === replacement)
+    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      adjustedStates.delete(fresh.id)
+    }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
     if (adjusted) adjustedStates.set(tab.id, adjusted)
@@ -683,12 +711,15 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
+        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')}>
           <div class="search-modes" aria-label={t('ids.search.title')}>
-            <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
-            <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
           </div>
-          {#if structuralSearch}
+          {#if searchMode === 'component'}
+            <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
           <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
@@ -730,7 +761,7 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
 </div>
 
@@ -761,7 +792,7 @@
 </Dialog>
 
 <style>
-  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
 

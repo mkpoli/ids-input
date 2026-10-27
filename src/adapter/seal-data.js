@@ -3,7 +3,7 @@ import { readForms } from '../core/search.js'
 /** @param {string} text */
 export const isSmallSeal = text => /^[\u{3D000}-\u{3FC3F}]$/u.test(text)
 /**
- * @typedef {{ format: number, table: Record<string, string[]>, modern: Record<string, string[]>, parts: import('./types.js').PalettePart[] }} SmallSealData
+ * @typedef {{ format: number, table: Record<string, string[]>, modern: Record<string, string[]>, parts: import('./types.js').PalettePart[], records?: {char: string | null, [key: string]: unknown}[], sources?: unknown[], paletteSources?: unknown[] }} SmallSealData
  */
 /** @param {SmallSealData} doc */
 export function sealTable(doc) {

@@ -7,6 +7,11 @@ const LAYOUT = { '⿰': 'row', '⿲': 'row', '⿱': 'column', '⿳': 'column', '
 /** @param {string} op */
 export const layout = op => LAYOUT[op] ?? 'enclosure'
 
+/** A compound host needs its own panel so the contents cannot cover editable descendants.
+ * @param {import('../core/ids.js').Node} part
+ */
+export const nodeLayout = part => layout(part.op) === 'enclosure' && isNode(part.parts[0]) ? 'column' : layout(part.op)
+
 /**
  * Preferred sizes in leaf-sized units. Account for the axis of each split and for frame
  * space, so a nested group receives room for its contents rather than one equal share.
@@ -22,7 +27,7 @@ export function treeSizes(tree) {
     if (isNode(part)) {
       const children = part.parts.map(measure)
       const gap = .15 * (children.length - 1)
-      const mode = layout(part.op)
+      const mode = nodeLayout(part)
       if (mode === 'enclosure') {
         // The host overlaps the inset contents; reserve only a narrow surrounding band.
         size = { width: Math.max(children[0].width, children[1].width + .6), height: Math.max(children[0].height, children[1].height + .6) }

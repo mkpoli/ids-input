@@ -126,6 +126,12 @@
   "app.theme.system": "System theme",
   "app.title": "IDS Workshop",
   "app.toolbar": "Tools",
+  "app.componentLookup.title": "Component lookup",
+  "app.componentLookup.containing": "Find characters containing a component",
+  "app.componentLookup.parts": "Find the components of a character",
+  "app.componentLookup.input": "Character or component",
+  "app.componentLookup.invalid": "Enter one character or component.",
+  "app.componentLookup.help": "For example, 木 finds characters containing 木; 森 shows its components.",
   "app.replacement.title": "Replace a component",
   "app.replacement.help": "Replace a part of a character or IDS. Each field accepts a character or complete IDS, such as ⿰木木. The result opens in the workspace, keeping your current work.",
   "app.replacement.source": "Character or IDS",
@@ -137,5 +143,6 @@
   "app.replacement.failed": "Could not look up the character. Please try again.",
   "app.replacement.tooLong": "The three inputs together must be at most 64 code points.",
   "app.source.tangutGlosses": "English Tangut glosses, with source qualifiers, for character information panels.",
-  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21)."
+  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21).",
+  "app.replacement.nestedHint": "You can also paste a nested expression into the sequence field, for example ⿱🔄林木火水."
 }

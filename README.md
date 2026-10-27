@@ -185,6 +185,10 @@ unclassified forms have separate groups. Type a modern character such as 木 or 
 to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
 these estimates do not enter the seal decomposition table.
 
+Dataset maintainers can generate an offline comparison gallery and validation
+report with `node scripts/check_small_seal.mjs OUTPUT_DIRECTORY`. See the
+[provider audit guide](docs/small-seal-candidates.md).
+
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
 import sealData from 'ids-input/data/small-seal.json.gz?url'
@@ -247,6 +251,15 @@ reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperat
 whole documents. `session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
 `onListenerError` (or `reportError`) and does not undo the committed edit.
+
+`sessionRecord(session)` and `writeSession(session)` keep the document, chosen layer and every issued
+ID for a tab or draft; `readSession(text)` restores them. The record omits undo history. The document
+itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
+
+`syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
+document at the same paths, keeping each layer's ID, name and transform through replacements and
+structural edits. Pass the long-lived session allocator so removed IDs do not return.
+`treeFromDocument` and `documentFromTree` convert between the two projections.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
@@ -325,8 +338,9 @@ runs the search; the pattern can then be edited. Results open in the editor, and
 characters** copies the complete result, including hits beyond the visible page.
 
 ```js
-import { createStructuralSearch } from 'ids-input'
-const patterns = createStructuralSearch(table, { forms })
+import { createStructuralSearch, readStructuralForms } from 'ids-input'
+const structuralForms = readStructuralForms(formsText)
+const patterns = createStructuralSearch(table, { forms: structuralForms })
 patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
 patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
 patterns.search('⿲ABA')           // matching outer parts, such as 弼
@@ -334,7 +348,11 @@ patterns.search('⿸⬚⬚')           // any upper-left enclosure
 ```
 
 A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
-Different letters may match the same part. Positional forms use the supplied forms table.
+Different letters may match the same part. Structural forms accept Unicode equivalent ideographs and explicitly positional forms.
+Broad radical variants stay distinct: 𡿨, 巜 and 巛 have different multiplicities,
+and 丿/乀 and 𠄌/亅 differ in direction. `createSearch` accepts a separate
+`structuralForms` map (strict equality by default); ordinary component search
+continues to use its broader `forms` map.
 `⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
 be a complete IDS of at most 64 code points. Matching starts at the character's whole description
 and opens encoded components up to six levels, considering source alternatives. It does not find
@@ -465,10 +483,11 @@ characters and code points only.
 ### Characters
 
 The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: the common
-characters Unicode marks with `kIICore` (9,810, all with an IDS description), with 102,456 readings,
-pinyin, romanizations, Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and
-thủy find 水; person finds 人; silk finds 糸. Results are characters, not the forms the Find tab
-opens; among equally close names the more common character comes first, by KANJIDIC2's newspaper
+characters Unicode marks with `kIICore` plus every KANJIDIC2 character with an IDS description
+(15,062), with 152,982 readings, pinyin, romanizations, Korean, Vietnamese and English meanings.
+water, shui, mizu, みず, 수 and thủy find 水; person finds 人; silk finds 糸. Results are characters,
+not the forms the Find tab opens; among equally close names the more common character comes first,
+by KANJIDIC2's newspaper
 frequency or Unihan's school grade. Without `characters` the tab is not shown.
 
 ## Preview
@@ -565,8 +584,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
 - `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
-  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 102,456
-  rows, 831 KB gzipped.
+  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 152,982
+  rows, 1.2 MB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
@@ -823,9 +842,20 @@ associations, editorial Han translations and emoji mnemonics, and direct Small S
 correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
 describe the limits of each relationship.
 
+With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
+directions, alongside existing names, readings, and component forms. Results keep
+dictionary qualifiers; component occurrences and lookup aliases have separate labels.
+Meaning paths retain their matched sense and follow at most two links. Component
+usage is a terminal link, so shared components do not connect unrelated words.
+
 `IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
-the floating panel and Esc to dismiss it. Clicks retain their editing action. Custom
-layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} />` beside
+the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+chosen slot, or replace the inspected character in the tree or sequence field. Custom
+layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
 tree components expose `data-character` targets; custom character controls can use
-the same attribute. Hosts without `characterInfo` retain their existing titles.
+the same attribute. Optional `data-path` identifies a tree position; without it, the
+host chooses the insertion target. `disabled` prevents insertion. Sources remain in
+the adapter records and the data documentation. Hosts without `characterInfo` retain
+their existing titles.
