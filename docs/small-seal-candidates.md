@@ -70,7 +70,8 @@ Unicode table, the CHISE archive and a pinned Kaiyuan SVG.
 Unicode mapping reaches a modern component that the report lists as unmapped,
 for example U+3DB6E for 爭 and 争 or U+3DDAF for 其. The audit includes the
 aliases; supplementary mappings stay outside the source-backed decomposition
-table. A source IDS with no resolved seal head remains unresolved.
+table. They do not resolve an IDS row whose entity lacks a unique seal
+character.
 
 The checksums are verified during generation and by every entry in
 `python3 -m unittest discover -s scripts -p test_small_seal.py`. Supplementary
