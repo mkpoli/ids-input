@@ -1,4 +1,5 @@
 // @ts-check
+import { hangulClusterAt } from '../core/hangul.js'
 import { arity, isSelector, parse } from '../core/ids.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string}} Token */
@@ -13,9 +14,13 @@ export function tokens(text) {
   function read(path) {
     const start = at
     const char = String.fromCodePoint(text.codePointAt(at) ?? 0)
-    if (at < text.length) at += char.length
     const n = arity(char)
-    if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+    const cluster = hangulClusterAt([...text.slice(at)], 0)
+    if (cluster) at += cluster.text.length
+    else {
+      if (at < text.length) at += char.length
+      if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+    }
     const token = { path, start, tokenEnd: at, end: at, text: text.slice(start, at) }
     out.push(token)
     for (let i = 0; i < n; i++) read([...path, i])
