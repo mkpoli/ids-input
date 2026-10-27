@@ -12,9 +12,11 @@ without region tags. Rebuild it with `bun scripts/build_yi_bai_ids.mjs`.
 
 Descriptions carrying an operator modifier are kept: `⿻[1:]丨日` for 甲 reads and writes back with
 its modifier, so the description keeps the meaning the modifier gives it. Descriptions carrying
-glyph-variant notes or stroke chains are excluded until those can be represented. Both primary and
-alternative descriptions are retained. The workshop adds them after BabelStone's descriptions,
-keeping existing descriptions and their region tags when the two sources agree.
+glyph-variant notes or stroke chains are excluded until those can be represented; what the parser
+reads of that notation is measured by `bun scripts/audit_zi_ids.mjs` and recorded in
+[the coverage note](../docs/zi-tools-coverage.md). Both primary and alternative descriptions are
+retained. The workshop adds them after BabelStone's descriptions, keeping existing descriptions and
+their region tags when the two sources agree.
 
 Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
 
