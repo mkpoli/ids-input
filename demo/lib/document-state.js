@@ -5,11 +5,15 @@ import { DocumentError, createDocumentSession, emptyDocument, fromSequence, sess
 /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
 /** @typedef {import('./tabs.js').Tab} Tab */
 
+/** A plain copy of a record held in Svelte state; the proxy itself is not structured-cloneable.
+ *  @param {Tab['document']} [record] @returns {Tab['document']} */
+export const plain = record => record ? JSON.parse(JSON.stringify(record)) : undefined
+
 /** Open the session kept with `tab`, or start one from its sequence. A malformed record or draft
  *  falls back to an empty document instead of losing the tab. @param {Tab} tab @returns {DocumentSession} */
 export function openTabSession(tab) {
   if (tab.document) {
-    try { return sessionFromRecord(tab.document) } catch { /* A stale record is replaced below. */ }
+    try { return sessionFromRecord(plain(tab.document)) } catch { /* A stale record is replaced below. */ }
   }
   try { return createDocumentSession(fromSequence(tab.sequence)) } catch (error) {
     if (!(error instanceof DocumentError)) throw error

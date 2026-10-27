@@ -413,7 +413,7 @@
     const source = tabs.find(tab => tab.id === id)
     if (!source) return
     flush()
-    const tab = makeTab(source.sequence, source.saved, source.document ? structuredClone(source.document) : undefined)
+    const tab = makeTab(source.sequence, source.saved, source.document ? JSON.parse(JSON.stringify(source.document)) : undefined)
     const state = states.get(id)
     if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
     const adjusted = adjustedStates.get(id)
