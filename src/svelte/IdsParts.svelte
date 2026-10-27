@@ -132,6 +132,35 @@
     .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
     .filter(group => group.parts.length)
 
+  // The full outline index is loaded only when the Tangut tab is opened.
+  /** @type {string[] | null} */
+  let tangutData = $state.raw(null)
+  let tangutFailed = $state(false), tangutLoading = false, tangutPage = $state(0)
+  $effect(() => {
+    if (tab !== 'tangut' || !parts || tangutData || tangutLoading || tangutFailed) return
+    tangutLoading = true
+    fetch(new URL('../../data/tangut-parts.json.gz', import.meta.url))
+      .then(response => { if (!response.ok) throw new Error('Tangut parts'); return response.arrayBuffer() })
+      .then(unpack).then(JSON.parse).then(data => { tangutData = data })
+      .catch(() => { tangutLoading = false; tangutFailed = true })
+  })
+  function retryTangut() { tangutLoading = false; tangutFailed = false }
+  $effect(() => { tab; filter; tangutPage = 0 })
+  const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
+  const tangutMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return tangutKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    const matches = matchScriptParts(tangutKeys, text, Boolean(code))
+    const metadata = (partsByScript.get('tangut') ?? []).filter(part =>
+      /^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term)))
+    return [...new Set([...matches, ...metadata.map(part => part.part)])]
+  })
+  const tangutPages = $derived(Math.max(1, Math.ceil(tangutMatches.length / PAGE_SIZE)))
+  const tangutShown = $derived(tangutMatches.slice(tangutPage * PAGE_SIZE, (tangutPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('t') }))
+
   const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
   let sealGroup = $state(/** @type {(typeof SEAL_GROUPS)[number]} */ ('basic'))
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
@@ -326,7 +355,22 @@
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
-    {#if tab === 'gongche'}
+    {#if tab === 'tangut' && parts}
+      {#if !tangutData && !tangutFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
+      {#if tangutFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={retryTangut}>{t('parts.script.retry')}</button></p>{/if}
+      {#if tangutMatches.length}
+        {#if tangutPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={tangutPage === 0} onclick={() => tangutPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={tangutPages} value={tangutPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) tangutPage = Math.max(0, Math.min(tangutPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: tangutPage + 1, pages: tangutPages, count: tangutMatches.length })}</span>
+            <button type="button" disabled={tangutPage + 1 >= tangutPages} onclick={() => tangutPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(tangutShown)}
+      {:else if tangutData}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'gongche'}
       {#each gongcheShown as group (group.key)}
         <h4 class="parts-class">{t(`parts.gongche.${group.key}`)}</h4>
         {@render grid(group.parts)}

@@ -1,0 +1,40 @@
+// Run against a devrun server: IDS_URL=http://localhost:5173 bun demo/check-tangut-parts.js
+import { chromium } from 'playwright-core'
+import { strict as assert } from 'node:assert'
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
+try {
+  const page = await browser.newPage()
+  await page.goto(process.env.IDS_URL ?? 'http://localhost:5173')
+  await page.getByRole('tab', { name: 'Parts', exact: true }).click()
+  await page.getByRole('tab', { name: 'Tangut', exact: true }).click()
+  await page.getByText(/13,020 parts/).waitFor()
+  assert.equal(await page.locator('.parts-grid .part').count(), 120)
+  const filter = page.locator('.parts-filter')
+  await filter.fill('U+17000')
+  assert.equal(await page.locator('.parts-grid .part').count(), 1)
+  assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), '𗀀')
+  await filter.fill('⿰𘪡𘤊')
+  assert.ok(await page.locator('.parts-grid .part').count() > 0)
+  const context = await browser.newContext()
+  await context.route('**/tangut-parts.json.gz*', route => route.abort())
+  const offline = await context.newPage()
+  await offline.goto(process.env.IDS_URL ?? 'http://localhost:5173')
+  await offline.getByRole('tab', { name: 'Parts', exact: true }).click()
+  await offline.getByRole('tab', { name: 'Tangut', exact: true }).click()
+  await offline.getByText('Additional script parts could not be loaded.').waitFor()
+  assert.equal(await offline.locator('.parts-grid .part').count(), 120)
+  await context.unroute('**/tangut-parts.json.gz*')
+  await offline.getByRole('button', { name: 'Retry', exact: true }).click()
+  await offline.getByText(/13,020 parts/).waitFor()
+  await context.close()
+  const fixture = await browser.newPage()
+  await fixture.goto(new URL('/fixtures/tangut-parts.html', process.env.IDS_URL ?? 'http://localhost:5173').href)
+  await fixture.getByRole('tab', { name: 'Tangut', exact: true }).click()
+  for (const query of ['42', 'tangut-alias']) {
+    await fixture.locator('.parts-filter').fill(query)
+    assert.equal(await fixture.locator('.parts-grid .part').count(), 1)
+    assert.equal(await fixture.locator('.parts-grid .part').first().getAttribute('data-character'), '𘠁')
+  }
+  await fixture.close()
+  console.log('PASS Tangut outline index, search and retry')
+} finally { await browser.close() }
