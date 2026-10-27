@@ -182,5 +182,8 @@
   "ids.structural.betweenColumn": "上下が同じ",
   "ids.structural.enclosed": "全囲み",
   "ids.structural.corner": "左上から囲む",
-  "ids.structural.overlap": "重なり"
+  "ids.structural.overlap": "重なり",
+  "ids.pick.templates": "構造",
+  "ids.group.4": "4部品",
+  "ids.templates.insert": "構造を挿入：{sequence}"
 }

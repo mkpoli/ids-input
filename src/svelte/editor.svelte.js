@@ -171,8 +171,9 @@ export function createEditor(options) {
     const valid = parse(write(next.tree), {open:true})
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
     const label = op ? t('ids.do.split', { part: '⬚', op }) : t('ids.do.put', { part: text(part) })
-    apply(next.tree, next.operator ? next.path : null, label)
-    if (!next.operator) {
+    const gap = !op && isNode(part) ? nextEmpty(part) : null
+    apply(next.tree, next.operator ? next.path : gap ? [...next.path, ...gap] : null, label)
+    if (!next.operator && !gap) {
       const token = tokens(draft).find(token => samePath(token.path, next.path))
       caret = token?.end ?? draft.length
     }

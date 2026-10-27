@@ -182,5 +182,8 @@
   "ids.structural.betweenColumn": "上下相同",
   "ids.structural.enclosed": "全包圍",
   "ids.structural.corner": "左上包圍",
-  "ids.structural.overlap": "重疊"
+  "ids.structural.overlap": "重疊",
+  "ids.pick.templates": "構字式",
+  "ids.group.4": "4個部件",
+  "ids.templates.insert": "插入構字式：{sequence}"
 }

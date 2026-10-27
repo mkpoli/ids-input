@@ -182,5 +182,8 @@
   "ids.structural.betweenColumn": "Trên dưới giống nhau",
   "ids.structural.enclosed": "Bao quanh",
   "ids.structural.corner": "Bao góc trên trái",
-  "ids.structural.overlap": "Chồng lên nhau"
+  "ids.structural.overlap": "Chồng lên nhau",
+  "ids.pick.templates": "Bố cục",
+  "ids.group.4": "4 bộ phận",
+  "ids.templates.insert": "Chèn bố cục {sequence}"
 }
