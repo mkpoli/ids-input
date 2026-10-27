@@ -573,3 +573,16 @@ come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJ
 (Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
 Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
 CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.
+
+## Unicode character properties
+
+`unicode-properties.json` pins component acceptance and letter classification to Unicode 18.0.0,
+independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
+snapshots and a source manifest with original URLs and SHA-256s. Rebuild with
+`python3 scripts/build_unicode_properties.py`; the builder verifies those digests.
+
+Graphic categories L, M, N, P, S and Co are eligible, except default-ignorable characters, IDS
+operators and draft markers. The existing Small Seal allocation remains supported. Ideographic and
+Radical properties distinguish ideographs from alphabetic letters. Source: the
+[Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
+[Unicode License v3](licences/Unicode-3.0.txt).
