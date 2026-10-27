@@ -1,14 +1,16 @@
 // @ts-check
+import { hangulClusterAt } from './hangul.js'
 import { unicodeProperty } from './unicode.js'
 export { UNICODE_VERSION } from './unicode.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
-// point or a private-use character, with an optional variation selector. ？ names an unknown part.
+// point or a private-use character, with an optional variation selector; a run of conjoining
+// Hangul jamo that forms one syllable is also one component. ？ names an unknown part.
 // Operators, draft slots and invisible characters cannot be components.
 
 /**
- * @typedef {string} Component A component's text, with its variation selector if it has one.
+ * @typedef {string} Component A component's text, with its variation selector, or its Hangul jamo run.
  * @typedef {{ op: string, parts: Part[] }} Node An operator with its parts.
  * @typedef {Component | Node | null} Part A part of a tree; null is a slot still to fill.
  * @typedef {number[]} Path The part indices from the root down to a part.
@@ -99,6 +101,8 @@ export function parse(text, { open = false } = {}) {
     if (!n) {
       if (open && EMPTY_MARKS.includes(char)) return null
       if (!isComponent(char)) throw 'component'
+      const cluster = hangulClusterAt(chars, at - 1)
+      if (cluster) { at = cluster.end; return cluster.text }
       return isSelector(chars[at]) ? char + chars[at++] : char
     }
     return { op: char, parts: Array.from({ length: n }, read) }
@@ -130,7 +134,12 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const n = arity(char)
-  if (!n) return isComponent(char) ? (isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1
+  if (!n) {
+    if (!isComponent(char)) return -1
+    const cluster = hangulClusterAt(chars, at)
+    if (cluster) return cluster.end
+    return isSelector(chars[at + 1]) ? at + 2 : at + 1
+  }
   let end = at + 1
   for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
   return end

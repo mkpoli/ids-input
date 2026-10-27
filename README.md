@@ -37,6 +37,9 @@ The bundled data holds BabelStone's Han and Tangut decompositions and unannotate
 from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
+The Hangul tab composes a syllable from initial, medial and final jamo, modern or historical, and
+inserts the precomposed syllable or the Old Hangul jamo run. Its filter searches the 11,172 modern
+syllables by character or code point.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -158,7 +161,9 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
-private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
+private-use character, with an optional variation selector. A run of conjoining Hangul jamo that
+forms one syllable is one component; modern jamo compose to a precomposed syllable, while Old Hangul
+stays a jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F.
@@ -607,6 +612,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
+- Unicode 18.0.0, Chapter 3, Conjoining Jamo Behavior,
+  <https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-3/>: Hangul syllable composition
+  and the modern and historical jamo classes.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
   definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component and character

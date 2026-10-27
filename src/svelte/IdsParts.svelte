@@ -10,6 +10,7 @@
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo } from '../core/hangul.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
@@ -74,21 +75,23 @@
   })
 
   const PAGE_SIZE = 120
-  let hangulGroup = $state('parts'), hangulPage = $state(0)
+  let hangulGroup = $state(/** @type {'parts' | 'compose'} */ ('parts')), hangulPage = $state(0)
   $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
-    const base = hangulGroup === 'syllables' ? hangulSyllables : hangul
+    const syllables = hangulGroup === 'compose'
+    const base = syllables ? hangulSyllables : hangul
     const extra = (partsByScript.get('hangul') ?? []).map(part => part.part).filter(part => {
       const point = part.codePointAt(0) ?? 0
-      return (point >= 0xac00 && point <= 0xd7a3) === (hangulGroup === 'syllables')
+      return (point >= 0xac00 && point <= 0xd7a3) === syllables
     })
     return [...new Set([...base, ...extra])]
   })
   const hangulMatches = $derived.by(() => {
     const term = filter.trim()
-    if (!term) return hangulKeys
+    if (!term) return hangulGroup === 'compose' ? [] : hangulKeys
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
-    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point)
+      : hangulGroup === 'compose' ? composeJamo(term) ?? term : term
     const matches = matchScriptParts(hangulKeys, text, Boolean(code))
     const available = new Set(hangulKeys)
     const metadata = (partsByScript.get('hangul') ?? []).filter(part => available.has(part.part) &&
@@ -98,6 +101,12 @@
   const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
   const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
+  let initial = $state(HANGUL_INITIALS.modern[0]), medial = $state(HANGUL_MEDIALS.modern[0]), final = $state('')
+  const composed = $derived(composeHangul(initial, medial, final))
+  /** @param {string | undefined} text */
+  const codePoints = text => text ? [...text].map(char => `U+${(char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ') : ''
+  function pickComposed() { if (composed && !disabled) pick(composed.text) }
+  const filterLabel = $derived(t(tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'compose' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -350,6 +359,42 @@
   </div>
 {/snippet}
 
+{#snippet jamoOptions(/** @type {{ modern: string[], historical: string[] }} */ groups)}
+  {#each /** @type {const} */ ([['modern', groups.modern], ['historical', groups.historical]]) as [name, chars] (name)}
+    <optgroup label={t(`parts.hangul.${name}`)}>
+      {#each chars as char (char)}<option value={char}>{char}</option>{/each}
+    </optgroup>
+  {/each}
+{/snippet}
+
+{#snippet hangulCompose()}
+  <div class="hangul-compose" role="group" aria-label={t('parts.hangul.compose')}>
+    <label class="compose-field">{t('parts.hangul.initial')}
+      <select bind:value={initial}>{@render jamoOptions(HANGUL_INITIALS)}</select>
+    </label>
+    <label class="compose-field">{t('parts.hangul.medial')}
+      <select bind:value={medial}>{@render jamoOptions(HANGUL_MEDIALS)}</select>
+    </label>
+    <label class="compose-field">{t('parts.hangul.final')}
+      <select bind:value={final}>
+        <option value="">{t('parts.hangul.noFinal')}</option>
+        {@render jamoOptions(HANGUL_FINALS)}
+      </select>
+    </label>
+    <button type="button" class="compose-result" data-character={composed?.text} disabled={disabled || !composed}
+      title={composed ? `${composed.text} · ${codePoints(composed.text)}` : undefined}
+      aria-label={composed ? `${t('parts.hangul.insert')} ${composed.text}` : t('parts.hangul.compose')}
+      onclick={pickComposed}>
+      <span class="compose-glyph">{composed?.text ?? ''}</span>
+      <span class="compose-detail">
+        <span class="compose-code">{codePoints(composed?.text)}</span>
+        <span class="compose-action">{t('parts.hangul.insert')}</span>
+      </span>
+    </button>
+    {#if composed && !composed.precomposed}<p class="parts-note">{t('parts.hangul.oldCluster')}</p>{/if}
+  </div>
+{/snippet}
+
 <div class="ids-parts" role="group" aria-label={t('parts.label')}>
   <div class="parts-top">
     <div class="parts-tabs" role="tablist" aria-label={t('parts.label')}>
@@ -361,9 +406,9 @@
     </div>
     {#if tab === 'hangul'}
       <label class="script-select">{t('parts.hangul.group')}
-        <select value={hangulGroup} onchange={event => { hangulGroup = event.currentTarget.value; filter = '' }}>
+        <select value={hangulGroup} onchange={event => { hangulGroup = /** @type {'parts' | 'compose'} */ (event.currentTarget.value); filter = '' }}>
           <option value="parts">{t('parts.hangul.parts')}</option>
-          <option value="syllables">{t('parts.hangul.syllables')}</option>
+          <option value="compose">{t('parts.hangul.compose')}</option>
         </select>
       </label>
     {/if}
@@ -375,7 +420,7 @@
       </label>
     {/if}
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
-      placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
+      placeholder={filterLabel} aria-label={filterLabel} />
   </div>
   {#if tab === 'seal' && !query && sealGroups.length}
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
@@ -422,7 +467,9 @@
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
     {:else if tab === 'hangul'}
-      {#if hangulMatches.length}
+      {#if hangulGroup === 'compose' && !query}
+        {@render hangulCompose()}
+      {:else if hangulMatches.length}
         {#if hangulPages > 1}
           <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
             <button type="button" disabled={hangulPage === 0} onclick={() => hangulPage--}>{t('parts.script.previous')}</button>
@@ -507,6 +554,16 @@
   .script-pages{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
   .script-pages button,.script-pages input{padding:4px 6px}
   .script-pages input{width:6em}
+  .hangul-compose{display:flex;flex-direction:column;gap:8px}
+  .compose-field{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
+  .compose-field select{flex:1;min-width:0;padding:4px 6px;font-size:13px;color:var(--_ink)}
+  .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;min-height:96px;padding:10px;border-color:var(--_line);
+    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
+  .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,sans-serif)}
+  .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
+  .compose-code{font:11px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow-wrap:anywhere}
+  .compose-action{font-size:12px;color:var(--_accent)}
   .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
