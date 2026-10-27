@@ -196,19 +196,19 @@ other tables leave apart. 593 folds, 15 KB, built by `scripts/build_component_na
 ## character-vocabulary.tsv.gz
 
 The readings and meanings of the common characters, for the Characters tab: water, shui, mizu, みず,
-수 and thủy for 水; person for 人; silk for 糸. 102,456 rows, 831 KB gzipped. Format: `name`, `char`,
+수 and thủy for 水; person for 人; silk for 糸. 152,982 rows, 1.2 MB gzipped. Format: `name`, `char`,
 `source`, `detail`, `rank`, one name for one character per row; comments start with `#`.
 
-The characters are the 9,810 Unihan `kIICore` characters that also have an IDS description, so a
-result can be opened in the workshop. `rank` is lower for more common characters: KANJIDIC2's
-newspaper frequency where it has one, otherwise 3000 plus Unihan's `kGradeLevel`. It orders equally
-close names in the character search.
+The characters are the 9,810 Unihan `kIICore` characters plus every KANJIDIC2 character with an IDS
+description, 15,062 in all, so a result can be opened in the workshop. `rank` is lower for more
+common characters: KANJIDIC2's newspaper frequency where it has one, otherwise 3000 plus Unihan's
+`kGradeLevel`. It orders equally close names in the character search.
 
 - Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
   Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
   kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese, and kIICore for the
   character set.
-- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+- KANJIDIC2, file version 4, database version 2026-300, created 2026-10-27
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: English meanings, Japanese kana readings, pinyin, Korean and Vietnamese
   readings, nanori and frequency.

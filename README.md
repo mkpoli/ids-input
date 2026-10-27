@@ -469,10 +469,11 @@ characters and code points only.
 ### Characters
 
 The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: the common
-characters Unicode marks with `kIICore` (9,810, all with an IDS description), with 102,456 readings,
-pinyin, romanizations, Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and
-thủy find 水; person finds 人; silk finds 糸. Results are characters, not the forms the Find tab
-opens; among equally close names the more common character comes first, by KANJIDIC2's newspaper
+characters Unicode marks with `kIICore` plus every KANJIDIC2 character with an IDS description
+(15,062), with 152,982 readings, pinyin, romanizations, Korean, Vietnamese and English meanings.
+water, shui, mizu, みず, 수 and thủy find 水; person finds 人; silk finds 糸. Results are characters,
+not the forms the Find tab opens; among equally close names the more common character comes first,
+by KANJIDIC2's newspaper
 frequency or Unihan's school grade. Without `characters` the tab is not shown.
 
 ## Preview
@@ -569,8 +570,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
 - `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
-  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 102,456
-  rows, 831 KB gzipped.
+  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 152,982
+  rows, 1.2 MB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
