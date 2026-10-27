@@ -56,17 +56,19 @@ def evidence():
     return unicode, by_modern
 
 
-def unresolved(report, doc):
+def unresolved(report, doc, curated=()):
     """Modern components that the current data cannot map to any seal form.
 
     Unmapped components count whether they appear directly or inside a nested
     expansion. Rows with a recorded IDS and no complete candidate count too.
-    Only original dataset heads contribute; supplementary reference glyphs add
-    audit rows whose modern descriptions would otherwise pull in more entries.
+    Only original dataset heads contribute. Curated crosswalk rows stay out even
+    after the palette build adds them, so a rebuild keeps the same scope.
     """
     known = {name for names in doc['modern'].values() for name in names}
+    skip = set(curated)
     needed = set()
     for row in report['rows']:
+        if row['char'] in skip: continue
         if row['char'] not in doc['modern']: continue
         if row['status'] not in ('source-only', 'incomplete', 'no-candidate'): continue
         for candidate in row['candidates']:
@@ -103,7 +105,7 @@ def main():
     manifest = json.loads((DIRECTORY / 'supplements.json').read_text(encoding='utf-8'))
     if manifest['format'] != 1: raise ValueError('Unsupported seal supplement format')
     existing = {entry['char']: entry for entry in manifest['entries']}
-    needed = unresolved(report, doc)
+    needed = unresolved(report, doc, existing)
     unicode, by_modern = evidence()
     unicodeSha, archiveSha = digest((ROOT / UNICODE_FILE).read_bytes()), digest((ROOT / CHISE_FILE).read_bytes())
 
