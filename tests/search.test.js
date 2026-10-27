@@ -116,6 +116,11 @@ describe('component lookup expressions', () => {
     expect(parts.find(hit => hit.char === '乙︀').sequence).toBe('⿰丙口')
   })
 
+  it('follows descriptions that are single-component aliases', () => {
+    const index = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']]]))
+    expect(index.search('㇯訁？').hits.map(hit => hit.char)).toEqual(['言', '亠', '口'])
+  })
+
   it('does not turn incomplete subtractions into component lookups', () => {
     expect(search.search('㇯木⬚')).toEqual(search.search('㇯木＋'))
     expect(search.search('㇯木⬚')).not.toEqual(search.search('㇯木？'))

@@ -545,6 +545,11 @@ export function createSearch(table, { forms = new Map() } = {}) {
         if (!visited.has(base)) { visited.add(base); queue.push([base, depth + 1]) }
       }
       for (const tree of treesOf(current)) visit(tree)
+      // Some entries are aliases expressed as a single component rather than an IDS.
+      for (const text of table.get(current) ?? []) {
+        const list = tokens(text)
+        if (list.length === 1 && !isSequence(text)) visit(list[0])
+      }
     }
     const sorted = [...depths].sort((a, b) => a[1] - b[1] || tier(a[0]) - tier(b[0])
       || /** @type {number} */ (a[0].codePointAt(0)) - /** @type {number} */ (b[0].codePointAt(0)))
