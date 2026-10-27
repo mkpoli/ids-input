@@ -41,38 +41,33 @@ export function componentDrawing(text, style = 'sans') {
 /** A native contextual cut fitted to a caller's placement, with its own stroke weights. */
 export function componentPosition(name, target, style = 'sans', designHeight = null) {
   let part = positions[style]?.get(name)
-  if (part && name === '儿:under-bar' && designHeight !== null) part = weightedLegs(part, target, style, designHeight)
-  return part ? { ...placed(part, part.box, target, partInk(part), `Noto ${style} ${name}`), fixed: true } : null
+  const originalInk = part && partInk(part)
+  if (part && name === '儿:under-bar' && designHeight !== null) part = weightedLegs(part, style, designHeight)
+  return part ? { ...placed(part, part.box, target, originalInk, `Noto ${style} ${name}`), fixed: true, inkLength: originalInk } : null
 }
 
-/** Restore vertical stroke weight after compressing 元's legs, preserving the sweep's tapered tip. */
-function weightedLegs(part, target, style, height) {
+/** Add weight above the original strokes, retaining the native outer edges and tapered sweep. */
+function weightedLegs(part, style, height) {
   const sourceHeight = part.box[3] - part.box[1]
   const [native, desired] = style === 'serif' ? [62, 42] : [71, 60]
-  const amount = Math.max(0, desired - native * height / sourceHeight) * sourceHeight / height / 2
+  const amount = Math.max(0, desired - native * height / sourceHeight) * sourceHeight / height
   if (!amount) return part
-  const sx = (target[2] - target[0]) / (part.box[2] - part.box[0])
-  const sy = (target[3] - target[1]) / sourceHeight
-  const contours = part.contours.map(contour => {
+  // Keep the original contour intact; overlapping copies add weight on its inner side.
+  const contours = [...part.contours]
+  for (const contour of part.contours) {
     const pts = contour.light, n = pts.length / 2
-    let signed = 0
-    for (let i = 0; i < n; i++) { const j = (i + 1) % n; signed += pts[i*2] * pts[j*2+1] - pts[j*2] * pts[i*2+1] }
-    const left = Math.max(...Array.from({ length: n }, (_, i) => pts[i*2])) < 500
-    const points = Array.from(pts)
-    for (let i = 0; i < n; i++) {
-      const prev = (i + n - 1) % n, next = (i + 1) % n
-      const dx = (pts[next*2] - pts[prev*2]) * sx, dy = (pts[next*2+1] - pts[prev*2+1]) * sy
-      const normal = -Math.sign(signed) * dx / (Math.hypot(dx, dy) || 1)
-      const taper = left ? Math.max(0, Math.min(1, (pts[i*2] - 85) / 170)) : 1
-      let y = pts[i*2+1] + amount * normal * taper
-      // Do not push the hook's inner edge above its upright-to-foot bend.
-      const bend = style === 'serif' ? 37 : 51
-      if (!left && pts[i*2+1] < bend && y > pts[i*2+1])
-        y = Math.min(y, Math.max(pts[i*2+1], bend - 12))
-      points[i*2+1] = Math.max(part.box[1], Math.min(part.box[3], y))
+    const left = Math.max(...Array.from({ length: n }, (_, i) => pts[i * 2])) < 500
+    for (let step = 1; step <= 8; step++) {
+      const points = Array.from(pts)
+      for (let i = 0; i < n; i++) {
+        const x = pts[i * 2], y = pts[i * 2 + 1], room = Math.max(0, part.box[3] - y)
+        const taper = left ? Math.max(0, Math.min(1, (x - 85) / 170)) : 1
+        const shift = amount * taper * step / 8
+        points[i * 2 + 1] = y + (room ? room * shift / (room + shift) : 0)
+      }
+      contours.push({ ...contour, light: points, heavy: points })
     }
-    return { ...contour, light: points, heavy: points }
-  })
+  }
   return makePart(contours, part.box.slice())
 }
 

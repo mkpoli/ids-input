@@ -1027,7 +1027,7 @@ export class Composer {
   balance(group) {
     const C = this.C, stem = this.stem0
     const curve = (density, axis) => C.STEM_CURVE[axis][0] + C.STEM_CURVE[axis][1] * density / 1000
-    const density = group.reduce((s, p) => { const [sx, sy] = scaleOf(p); return s + partInk(p.part) * (sx + sy) / 2 }, 0)
+    const density = group.reduce((s, p) => { const [sx, sy] = scaleOf(p); return s + (p.inkLength ?? partInk(p.part)) * (sx + sy) / 2 }, 0)
     const ratio = [0, 1].map(axis => stem[axis][1] / stem[axis][0] - 1)
     // The stroke widths the whole drawing is brought to, which a placeholder's outline follows.
     this.stroke = [curve(density, 0), curve(density, 1)]

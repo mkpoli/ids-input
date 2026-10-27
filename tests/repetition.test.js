@@ -378,14 +378,13 @@ it('keeps the compressed 儿 hook visible without weight jumps between sizes', a
     const target = [250, 0, 920, height], size = 1024
     const part = componentPosition('儿:under-bar', target, style, height)
     const native = componentPosition('儿:under-bar', target, style)
-    for (let i = 0; i < native.part.contours.length; i++) {
-      const original = native.part.contours[i].light, weighted = part.part.contours[i].light
-      for (let j = 0; j < original.length; j += 2) {
-        if (original[j] < 85) expect(weighted[j + 1]).toBe(original[j + 1])
-      }
-    }
+    for (let i = 0; i < native.part.contours.length; i++)
+      expect(part.part.contours[i].light).toEqual(native.part.contours[i].light)
     const mask = fill(groupRings([part]), size, [0, 0, 1000, height])
     const nativeMask = fill(groupRings([native]), size, [0, 0, 1000, height])
+    let removed = 0
+    for (let i = 0; i < mask.length; i++) removed += nativeMask[i] && !mask[i] ? 1 : 0
+    expect(removed).toBe(0)
     const x = 250 + (760 - source[0]) / (source[2] - source[0]) * 670
     const column = Math.floor(x / 1000 * size)
     let ink = 0, nativeInk = 0
