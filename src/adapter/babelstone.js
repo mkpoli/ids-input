@@ -316,7 +316,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
 
   return {
     table: read,
-    async sealReview(query, { signal, limit = 24 } = {}) {
+    async sealCandidates(query, { signal, limit = 24 } = {}) {
       signal?.throwIfAborted()
       const doc = await readSeal()
       if (!doc) return { items: [], total: 0 }

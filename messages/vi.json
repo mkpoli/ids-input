@@ -179,6 +179,5 @@
   "ids.structural.betweenColumn": "Trên dưới giống nhau",
   "ids.structural.enclosed": "Bao quanh",
   "ids.structural.corner": "Bao góc trên trái",
-  "ids.structural.overlap": "Chồng lên nhau",
-  "parts.seal.review": "Duyệt IDS tiểu triện"
+  "ids.structural.overlap": "Chồng lên nhau"
 }

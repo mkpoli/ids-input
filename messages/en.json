@@ -183,6 +183,5 @@
   "ids.structural.betweenColumn": "Matching top/bottom",
   "ids.structural.enclosed": "Enclosed",
   "ids.structural.corner": "Upper-left enclosure",
-  "ids.structural.overlap": "Overlapping",
-  "parts.seal.review": "Review Small Seal IDS"
+  "ids.structural.overlap": "Overlapping"
 }

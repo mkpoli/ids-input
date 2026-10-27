@@ -179,6 +179,5 @@
   "ids.structural.betweenColumn": "上下相同",
   "ids.structural.enclosed": "全包围",
   "ids.structural.corner": "左上包围",
-  "ids.structural.overlap": "重叠",
-  "parts.seal.review": "核对小篆IDS"
+  "ids.structural.overlap": "重叠"
 }

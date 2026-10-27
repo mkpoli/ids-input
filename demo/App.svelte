@@ -29,7 +29,6 @@
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
-  import SealReviewDialog from './ui/SealReviewDialog.svelte'
   import AboutDialog from './ui/AboutDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
@@ -519,7 +518,6 @@
     ]
   })
 
-  let sealReviewOpen = $state(false)
   let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
@@ -636,7 +634,7 @@
           {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} onreviewSeal={() => sealReviewOpen = true} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">
@@ -883,5 +881,3 @@
     .pane{padding:14px}
   }
 </style>
-
-<SealReviewDialog bind:open={sealReviewOpen} adapter={babel} {t} onuse={openSequence} />

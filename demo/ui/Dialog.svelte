@@ -1,8 +1,8 @@
 <script>
   // Dialogs are modal by default. Settings sit beside their trigger on desktop; mobile uses a drawer.
   import Icon from './Icon.svelte'
-  /** @type {{ open: boolean, title: string, closeLabel: string, wide?: boolean, width?: number, popover?: boolean, anchor?: HTMLElement | null, children: import('svelte').Snippet }} */
-  let { open = $bindable(false), title, closeLabel, wide = false, width = 680, popover = false, anchor = null, children } = $props()
+  /** @type {{ open: boolean, title: string, closeLabel: string, wide?: boolean, popover?: boolean, anchor?: HTMLElement | null, children: import('svelte').Snippet }} */
+  let { open = $bindable(false), title, closeLabel, wide = false, popover = false, anchor = null, children } = $props()
   /** @type {HTMLDialogElement | null} */ let dialog = $state(null)
   /** @type {HTMLElement | null} */ let returnFocus = null
   let mobile = $state(matchMedia('(max-width: 640px)').matches)
@@ -61,7 +61,7 @@
   onfocusin={event => { if (open && popover && !mobile && !dialog?.contains(/** @type {Node} */ (event.target)) && event.target !== anchor) { restoreFocus = false; open = false } }} />
 
 <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-<dialog bind:this={dialog} style:--dialog-width={`${width}px`} class:wide class:drawer={popover} class:popover style:--top="{top}px" style:--right="{right}px"
+<dialog bind:this={dialog} class:wide class:drawer={popover} class:popover style:--top="{top}px" style:--right="{right}px"
   aria-labelledby="{uid}-title" aria-modal={!popover || mobile ? 'true' : undefined}
   onclose={() => { if (!dialog?.open) open = false }} oncancel={event => { event.preventDefault(); open = false }}
   onkeydown={key}
@@ -75,7 +75,7 @@
 
 <style>
   dialog{width:min(480px,calc(100vw - 32px));max-height:min(86vh,760px);padding:0;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pop)}
-  dialog.wide{width:min(var(--dialog-width),calc(100vw - 32px))}
+  dialog.wide{width:min(680px,calc(100vw - 32px))}
   dialog.popover{position:fixed;inset:var(--top) var(--right) auto auto;margin:0;width:min(380px,calc(100vw - 16px));max-height:calc(100dvh - var(--top) - 12px);z-index:60;border-radius:12px}
   dialog::backdrop{background:rgb(10 10 20 / .35);backdrop-filter:blur(2px)}
   header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}

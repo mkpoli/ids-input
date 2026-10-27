@@ -176,11 +176,9 @@ unclassified forms have separate groups. Type a modern character such as 木 or 
 to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
 these estimates do not enter the seal decomposition table.
 
-**Review Small Seal IDS** opens a comparison of the seal glyph, source records,
-modern CJK IDS, and inferred candidates. Corrections and accept/reject decisions
-can be saved locally and exported with their provenance. Inferred candidates and
-local decisions stay separate from the attested decomposition table. See the
-[candidate review guide](docs/small-seal-reviews.md).
+`adapter.sealCandidates(query)` generates inferred seal IDS from modern CJK
+descriptions with component alternatives and source metadata. See the
+[candidate inference API](docs/small-seal-candidates.md).
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'

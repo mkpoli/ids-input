@@ -179,6 +179,5 @@
   "ids.structural.betweenColumn": "上下が同じ",
   "ids.structural.enclosed": "全囲み",
   "ids.structural.corner": "左上から囲む",
-  "ids.structural.overlap": "重なり",
-  "parts.seal.review": "小篆IDSの確認"
+  "ids.structural.overlap": "重なり"
 }

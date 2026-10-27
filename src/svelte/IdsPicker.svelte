@@ -8,8 +8,8 @@
   import IdsParts from './IdsParts.svelte'
 
   /** @typedef {'find' | 'characters' | 'parts' | 'from'} Tab */
-  /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean, onreviewSeal?: () => void }} */
-  let { editor, pickers = ['find', 'characters', 'parts', 'from'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true, onreviewSeal } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
+  let { editor, pickers = ['find', 'characters', 'parts', 'from'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true } = $props()
   const t = $derived(editor.t)
   const adapter = $derived(editor.adapter)
   const uid = $props.id()
@@ -112,7 +112,7 @@
                 </div>
               {/if}
             </div>
-          {:else if name === 'parts'}<IdsParts {adapter} {onreviewSeal} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part)} />
+          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part)} />
           {:else}<IdsFrom {adapter} lookup={editor.lookup} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} bind:text={fromText} ontake={part => editor.take(part)} />{/if}
         </div>
       {/if}
