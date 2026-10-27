@@ -48,6 +48,7 @@ export function createEditor(options) {
   const text = part => part === null || part === undefined ? '' : write(part)
 
   let tree = $state.raw(/** @type {Part} */ (null))
+  let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   let draft = $state(''), piece = $state(''), note = $state('')
   /** The last change, for a host to answer (an undo toast after one that throws something away). */
@@ -89,7 +90,7 @@ export function createEditor(options) {
   }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
-    history.clear(); note = ''; change = null; typing = false; run = false
+    history.clear(); hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -98,6 +99,7 @@ export function createEditor(options) {
   }
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
+    hovered = null
     tree = next; chosen = select; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     if (!typing) draft = next === null ? '' : write(next)
@@ -141,6 +143,7 @@ export function createEditor(options) {
   }
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
+    hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
     note = ''; typing = false; run = false; change = null
@@ -285,6 +288,10 @@ export function createEditor(options) {
   }
 
   return {
+    /** @param {Path | null} path */
+    hover(path) { hovered = disabled() ? null : path },
+    /** @param {Path} path */
+    isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
     get tree() { return tree },
     get chosen() { return chosen },
     get draft() { return draft },

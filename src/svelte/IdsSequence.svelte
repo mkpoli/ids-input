@@ -22,6 +22,16 @@
     measure()
     return () => observer.disconnect()
   })
+  /** @type {HTMLDivElement | null} */ let paint = $state(null)
+  /** @param {PointerEvent} event */
+  function hover(event) {
+    const elements = paint?.querySelectorAll('span') ?? []
+    const index = [...elements].findIndex(element => {
+      const box = element.getBoundingClientRect()
+      return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom
+    })
+    editor.hover(spans[index]?.path ?? null)
+  }
   /** @param {Event} [event] */
   const edit = event => { if (!/** @type {InputEvent | undefined} */ (event)?.isComposing && field) editor.edit(field) }
 </script>
@@ -29,10 +39,10 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing>
-    <div class="sequence-paint" style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:hovered={editor.isHovered(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
-    onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => composing = true} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
+    onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={() => composing = true} oncompositionend={() => { composing = false; edit() }} onblur={() => editor.settle()}
     onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); onenter?.() } }} />
   </div>
 </label>
@@ -60,4 +70,5 @@
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
+  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 40%,transparent);box-shadow:inset 0 -3px var(--_accent)}
 </style>

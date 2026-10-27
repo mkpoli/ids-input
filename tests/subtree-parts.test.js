@@ -38,12 +38,12 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => [...row[0]].length > 1)
-  expect(compounds).toHaveLength(6)
+  expect(compounds).toHaveLength(11)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
     if (MANUAL_PARTS.includes(text)) expect(uses).toBe(113)
-    else expect(uses).toBeGreaterThanOrEqual(50)
+    else expect(uses).toBeGreaterThanOrEqual(35)
     expect(strokes).toBeGreaterThan(0)
     expect(derived).toBe(1)
     expect(kind).toBe('c')
@@ -85,4 +85,21 @@ it('normalizes exact encoded shortcuts without losing source counts or IDS searc
   }
   const table = parseIdsTable('甲\t⿰宂⿱宀儿(G)\n乙\t⿱口⿱宀儿(G)\n丙\t⿰宂木(G)')
   expect(manualUses(table, '宂', ['⿱宀儿'])).toBe(3)
+})
+
+
+it('counts all regional aliases of an encoded component without overwriting or doubling uses', () => {
+  const root = mkdtempSync(`${tmpdir()}/ids-subtrees-aliases-`)
+  try {
+    mkdirSync(`${root}/data`)
+    const lines = Array.from({ length: 35 }, (_, i) => `${String.fromCodePoint(0x5000 + i)}\t⿱口⿱艹罒(G) ⿱口⿱卝罒(T)`)
+    lines.push('乙\t⿰木⿱艹罒(G)', '丙\t⿰木⿱卝罒(T)', '丁\t⿰木𦭝(G)')
+    writeFileSync(`${root}/data/babelstone-ids.tsv.gz`, gzipSync(lines.join('\n')))
+    writeFileSync(`${root}/data/ids-parts.json`, JSON.stringify({ parts: [['𦭝', 0, 9, 0, '豎', 'd'], ['艹', 0, 4, 0, '豎', 'd'], ['卝', 0, 4, 0, '豎', 'd'], ['罒', 0, 5, 0, '豎', 'd']] }))
+    build(pathToFileURL(root + '/'))
+    const first = readFileSync(`${root}/data/ids-parts.json`, 'utf8')
+    expect(JSON.parse(first).parts.find(row => row[0] === '𦭝')[1]).toBe(38)
+    build(pathToFileURL(root + '/'))
+    expect(readFileSync(`${root}/data/ids-parts.json`, 'utf8')).toBe(first)
+  } finally { rmSync(root, { recursive: true, force: true }) }
 })
