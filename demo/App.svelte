@@ -32,7 +32,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { linkTo, sequenceFrom } from './lib/share.js'
+  import { documentFrom, linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -316,17 +316,20 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = readTabs(), linked = canonical(sequenceFrom(location))
+  const stored = readTabs(), linkedDocument = documentFrom(location)
+  const linked = linkedDocument ? canonical(toSequence(linkedDocument.root)) : canonical(sequenceFrom(location))
   // Bring the old single-document autosave into the first tab on upgrade.
   if (!stored.length) {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
-  const linkedTab = linked ? stored.find(tab => tab.sequence === linked) : undefined
+  const linkedTab = linked ? stored.find(tab => tab.sequence === linked
+    && (!linkedDocument || JSON.stringify(tab.document?.document) === JSON.stringify(linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
-  const fromLink = linked && !linkedTab ? makeTab(linked) : undefined
+  const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
+  const fromLink = linked && !linkedTab ? makeTab(linked, linked, linkedRecord) : undefined
   const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
@@ -438,6 +441,11 @@
     editor.open(toSequence(session.document.root))
     tab.document = sessionRecord(session)
     store()
+  }
+  /** The active tab's complete document, for sharing. */
+  function currentDocument() {
+    const tab = current()
+    return tab ? sessionFor(tab).document : null
   }
   /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
   /** @type {Map<string, AdjustState>} */
@@ -649,7 +657,7 @@
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
-    { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
+    { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
     .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
@@ -797,7 +805,7 @@
       </div>
       </nav>
       <div class="end">
-        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
         <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
         <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
         <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
@@ -936,7 +944,7 @@
 <PyramidDialog bind:open={pyramidOpen} {t} oncreate={sequence => addTab(sequence)} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
-<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
+<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   structure={char => adapter.structure(char)} onchange={layerChanged} onstructure={layerStructureChanged} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
