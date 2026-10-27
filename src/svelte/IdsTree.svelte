@@ -1,4 +1,5 @@
 <script>
+  import { tint } from './tokens.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
@@ -96,7 +97,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
@@ -114,7 +115,7 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
-    <button type="button" class="ids-part" class:empty={part === null} class:chosen={selected} class:over={over === key(path)} aria-pressed={selected}
+    <button type="button" class="ids-part" style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:over={over === key(path)} aria-pressed={selected}
       data-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
@@ -225,4 +226,5 @@
   .ids-menu-item:not(:disabled):hover,.ids-menu-item:focus-visible{background:var(--_surface-selected) !important}
   .ids-menu-item kbd,.ids-menu-seq{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .ids-menu-seq{font-family:var(--_font);font-size:14px}
+  .ids-node,.ids-part{background:color-mix(in oklab,var(--tint) 10%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
 </style>
