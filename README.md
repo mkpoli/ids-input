@@ -827,6 +827,13 @@ associations, editorial Han translations and emoji mnemonics, and direct Small S
 correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
 describe the limits of each relationship.
 
+With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
+directions, alongside existing names, readings, and component forms. Results keep
+dictionary qualifiers; component occurrences and lookup aliases have separate labels.
+Meaning paths retain their matched sense and follow at most two links. Component
+usage is a terminal link, so shared components do not connect unrelated words.
+
 `IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
 the floating panel and Esc to dismiss it. Related characters and emoji insert into the
 chosen slot, or replace the inspected character in the tree or sequence field. Custom
