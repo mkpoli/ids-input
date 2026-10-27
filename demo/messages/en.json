@@ -126,12 +126,13 @@
   "app.title": "IDS Workshop",
   "app.toolbar": "Tools",
   "app.replacement.title": "Replace a component",
-  "app.replacement.help": "Start with a character, then replace one of its components. The result opens in the workspace, keeping your current work.",
-  "app.replacement.source": "Character",
+  "app.replacement.help": "Replace a part of a character or IDS. Each field accepts a character or complete IDS, such as ⿰木木. The result opens in the workspace, keeping your current work.",
+  "app.replacement.source": "Character or IDS",
   "app.replacement.target": "Replace",
   "app.replacement.replacement": "With",
   "app.replacement.submit": "Open result",
   "app.replacement.loading": "Looking up components…",
   "app.replacement.notFound": "Could not find that component in the character.",
-  "app.replacement.failed": "Could not look up the character. Please try again."
+  "app.replacement.failed": "Could not look up the character. Please try again.",
+  "app.replacement.tooLong": "The three inputs together must be at most 64 code points."
 }
