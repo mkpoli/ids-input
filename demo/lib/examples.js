@@ -7,9 +7,9 @@
 // of 園), ⿱一心 (@jianhuazi_bot2, the 二簡字 of 德) and ⿰忄実 (@Umihotarus, 舘暲's character for
 // ヴァーチャル).
 //
-// Hybrid examples from SCRIPT-HYBRID (BiangBiangCon v19, slide dated 2026-10-16; supplied
-// 2026-10-26). The encoded forms use BabelStone IDS. The forms with no code point: ⿴口도 is the
-// slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
+// Hybrid examples from Gen Kojitani’s “Script-Hybrid CJK Ideographs” (BiangBiangCon,
+// 2026-10-16; SCRIPT-HYBRID slides v19). The encoded forms use BabelStone IDS. For the forms
+// with no code point, ⿴口도 is the slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
 // Japanese Military and Technical Terms (1945-07-30) p.217, L2/24-201 Fig.44, with images from
 // @xWcvlUaljn96009; ⿰门T is after N2744 Fig.8 and N2741 p.10 (唐蘭『古文字学導論』p.134).
 // ⿰𛂦方 describes 𭤪 (U+2D92A): Gen Kojitani, Reply to N2741, IRG N2744 (2024-10-20), p.7.
