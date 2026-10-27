@@ -25,9 +25,10 @@ export function tokens(text) {
   return out
 }
 
-/** Related branches share a hue; nested siblings shift gently within it.
+/** Related branches share a pastel hue; nested siblings shift gently within it.
+ * Light and dark palettes follow the component’s inherited color-scheme.
  * @param {number[]} path */
 export function tint(path) {
-  const hue = path.length ? [205, 145, 35][path[0] % 3] + path.slice(1).reduce((sum, n, i) => sum + (n - .5) * 24 / (i + 1), 0) : 265
-  return `oklch(65% 0.12 ${hue})`
+  const hue = path.length ? [350, 210, 75][path[0] % 3] + path.slice(1).reduce((sum, n, i) => sum + (n - .5) * 24 / (i + 1), 0) : 305
+  return `light-dark(oklch(72% 0.13 ${hue}), oklch(82% 0.11 ${hue}))`
 }
