@@ -15,6 +15,7 @@
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let hideTimer
   /** @type {AbortController | null} */ let controller = null
   let restoringFocus = false
+  let pointerX = NaN, pointerY = NaN
   let generation = 0
   /** @type {string | null} */ let savedTitle = null
   /** @type {string | null} */ let savedDetails = null
@@ -33,6 +34,7 @@
     panel?.hidePopover()
   }
   function leave() {
+    if (anchor === document.activeElement || panel?.contains(document.activeElement)) { keep(); return }
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer)
     hideTimer = setTimeout(() => {
       if (panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
@@ -78,6 +80,7 @@
   /** @param {PointerEvent} event */
   function pointer(event) {
     if (event.pointerType === 'touch') return
+    pointerX = event.clientX; pointerY = event.clientY
     let element = target(event)
     // The input's transparent text sits over individually measured paint spans.
     if (!element && event.target instanceof HTMLInputElement) {
@@ -119,7 +122,9 @@
   /** @param {Event} event */
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
-    if (anchor === document.activeElement) position()
+    // A queued scroll can follow pointermove after a palette tile scrolls into view.
+    const hit = Number.isFinite(pointerX) ? document.elementFromPoint(pointerX, pointerY) : null
+    if (anchor === document.activeElement || anchor?.matches(':hover') && hit && anchor.contains(hit)) position()
     else close()
   }
   /** @param {PointerEvent} event */
