@@ -50,7 +50,7 @@ function emojiSlots(sequence) {
     return part
   }
   const result = convert(parsed.tree)
-  return { sequence: write(result), slots, slotLeaves, unsupported }
+  return { sequence: write(result), slots, slotLeaves, unsupported: unsupported || (sequence.includes('㇯') && slots.some(Boolean)) }
 }
 
 /** How many drawings a preview keeps for a repeated sequence. */

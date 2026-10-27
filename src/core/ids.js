@@ -94,7 +94,7 @@ export function parse(text, { open = false } = {}) {
   let at = 0
   /** @returns {Part} */
   const read = () => {
-    const emoji = emojiPrefix(chars.slice(at).join(''))
+    const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(chars[at] ?? '') ? emojiPrefix(chars.slice(at).join('')) : ''
     const char = emoji || chars[at]
     at += emoji ? [...emoji].length : 1
     if (char === undefined) { if (open) return null; throw 'missing' }
@@ -134,7 +134,7 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const n = arity(char)
-  if (!n) { const emoji = emojiPrefix(chars.slice(at).join('')); return isComponent(char) ? (emoji ? at + [...emoji].length : isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1 }
+  if (!n) { const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(char) ? emojiPrefix(chars.slice(at).join('')) : ''; return isComponent(char) ? (emoji ? at + [...emoji].length : isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1 }
   let end = at + 1
   for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
   return end
