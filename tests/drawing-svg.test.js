@@ -37,3 +37,9 @@ describe('a drawing as an SVG file', () => {
     expect(injected.match(/<path [^>]*>/g)).toEqual(['<path d="M0 0sctZ" fill="#000000"/>'])
   })
 })
+
+it('includes emoji in SVG output and escapes text', () => {
+  const svg = drawingSvg({ d: '', emoji: [{ text: '👩🏽‍💻', box: [0, 0, 500, 1000] }, { text: '<&', box: [500, 0, 500, 1000] }] })
+  expect(svg).toContain('>👩🏽‍💻</text>')
+  expect(svg).toContain('>&lt;&amp;</text>')
+})

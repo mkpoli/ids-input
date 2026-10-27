@@ -162,5 +162,14 @@ it('places emoji sequences in their slots while retaining real empty slots', asy
   const [worker] = FakeWorker.made
   expect(worker.posted[0].sequence).toBe('⿲⬚⬚木')
   worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 300, 1000] }, { index: 1, box: [300, 0, 300, 1000] }] } })
-  expect(await result).toMatchObject({ emoji: [{ text: '👩🏽‍💻', box: [0, 0, 300, 1000] }], slots: [{ index: 1, box: [300, 0, 300, 1000] }] })
+  expect(await result).toMatchObject({ emoji: [{ text: '👩🏽‍💻', box: [0, 0, 300, 1000] }], slots: [{ index: 0, box: [300, 0, 300, 1000] }] })
+})
+
+it('rejects emoji transformations without rejecting unrelated transformed components', async () => {
+  const draw = preview()
+  await expect(draw('⿾👩🏽‍💻')).rejects.toThrow('Emoji cannot yet be mirrored')
+  const result = draw('⿰⿾木👩🏽‍💻')
+  const [worker] = FakeWorker.made
+  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
+  expect((await result).emoji[0].text).toBe('👩🏽‍💻')
 })

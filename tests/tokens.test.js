@@ -28,3 +28,9 @@ test('ranges select the smallest enclosing subtree without splitting selectors',
   expect(rangeToken(spans, 2, 8)?.path).toEqual([])
   expect(rangeToken(spans, 2, 2)).toBeNull()
 })
+
+test('treats an emoji sequence as one selectable token', () => {
+  const spans = tokens('⿰👩🏽‍💻木')
+  expect(spans.map(token => token.text)).toEqual(['⿰', '👩🏽‍💻', '木'])
+  expect(rangeToken(spans, 3, 4)?.text).toBe('👩🏽‍💻')
+})

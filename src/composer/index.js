@@ -32,15 +32,21 @@ function emojiSlots(sequence) {
   if (parsed.problem || !parsed.tree) return { sequence, slots: [] }
   /** @type {(string | null)[]} */
   const slots = []
+  let unsupported = false
   /** @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
   function convert(part) {
-    if (isNode(part)) return { ...part, parts: part.parts.map(convert) }
+    if (isNode(part)) {
+      const start = slots.length
+      const parts = part.parts.map(convert)
+      if (['⿾', '⿿', '㇯'].includes(part.op) && slots.slice(start).some(Boolean)) unsupported = true
+      return { ...part, parts }
+    }
     if (part === null) { slots.push(null); return null }
-    if ([...part].length > 1 && emojiPrefix(part) === part) { slots.push(part); return null }
+    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); return null }
     return part
   }
   const result = convert(parsed.tree)
-  return { sequence: write(result), slots }
+  return { sequence: write(result), slots, unsupported }
 }
 
 /** How many drawings a preview keeps for a repeated sequence. */
@@ -98,6 +104,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
     const prepared = emojiSlots(sequence)
+    if (prepared.unsupported) throw new Error('Emoji cannot yet be mirrored, rotated or subtracted in the preview.')
     const asked = open(prepared.sequence), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
@@ -115,7 +122,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
         })
         if (emoji.length) {
           drawn.emoji = emoji
-          drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index])
+          drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index]).map((slot, index) => ({ ...slot, index }))
         }
         remember(sequence, drawn, sketch); return drawn
       }
