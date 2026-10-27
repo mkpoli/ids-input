@@ -155,7 +155,7 @@ controls, default-ignorable characters, surrogates and unassigned code points ar
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
 component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
-preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+preview font coverage. The composer supplements missing export glyphs with 49,483 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
@@ -493,7 +493,7 @@ missing components. `unicodeSource()` supplies only bundled Unicode glyphs with 
 For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
 from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
 `hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
-with the source Noto font's design; they do not imitate a selected serif or handwritten face.
+with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or

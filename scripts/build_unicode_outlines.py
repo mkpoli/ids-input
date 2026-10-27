@@ -5,17 +5,19 @@
 """Build sharded fallback outlines from the pinned fonts in data/unicode-fonts.json.
 
 uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]
-Source directories may be extracted Ubuntu Noto packages and the Noto CJK cache.
+Source directories contain the pinned Noto, Jigmo and Unifont files.
 """
 import gzip
 import hashlib
 import json
-import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
 from fontTools.pens.boundsPen import BoundsPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.svgLib.path import parse_path
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
@@ -28,18 +30,17 @@ def main():
     directories = [Path(arg) for arg in sys.argv[1:]]
     lock = json.loads((ROOT / 'data/unicode-fonts.json').read_text())
     sources = lock['fonts']
-    bun = subprocess.check_output(['bun', '--version'], text=True).strip()
-    if bun != lock['bun']:
-        raise ValueError(f"Bun {lock['bun']} is required for reproducible Unicode coverage (found {bun})")
-    # Share the runtime's Unicode version and the editor's exclusions. Existing ideograph,
-    # radical, stroke, Tangut, Bopomofo and Small Seal sources already cover their ranges.
-    allowed = set(json.loads(subprocess.check_output(['bun', '-e', '''
-import { isComponent } from './src/core/ids.js';
-const existing = /[\\u2E80-\\u2FDF\\u3105-\\u312F\\u31A0-\\u31EF\\u3400-\\u4DBF\\u4E00-\\u9FFF\\uF900-\\uFAFF\\u{17000}-\\u{18AFF}\\u{18D00}-\\u{18DFF}\\u{20000}-\\u{3FFFD}]/u;
-const points=[];
-for(let cp=0;cp<=0x10FFFF;cp++){const ch=String.fromCodePoint(cp);if(isComponent(ch)&&!existing.test(ch))points.push(cp)}
-console.log(JSON.stringify(points));
-'''], cwd=ROOT, text=True)))
+    # Eligibility is the same pinned Unicode table used by the parser.
+    properties = json.loads((ROOT / 'data/unicode-properties.json').read_text())
+    allowed = {cp for lo, hi in properties['graphic'] for cp in range(lo, hi + 1)}
+    # Existing bundles/host exports cover these ranges. Extension J needs a fallback.
+    covered = [(0x2E80, 0x2FDF), (0x3105, 0x312F), (0x31A0, 0x31EF),
+               (0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xF900, 0xFAFF),
+               (0x17000, 0x18AFF), (0x18D00, 0x18DFF), (0x20000, 0x323AF),
+               (0x33480, 0x3FFFD), (0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)]
+    for lo, hi in covered:
+        allowed.difference_update(range(lo, hi + 1))
+    allowed.difference_update([0x2B1A, 0xFF0B, 0x303E, *range(0x2FF0, 0x3000)])
     records, provenance = {}, []
     for source in sources:
         path = next((directory / source['file'] for directory in directories if (directory / source['file']).is_file()), None)
@@ -73,6 +74,34 @@ console.log(JSON.stringify(points));
                 count += 1
             if count:
                 provenance.append({**source, 'count': count, 'copyright': font['name'].getDebugName(0)})
+    for source in lock.get('svgSources', []):
+        raw = (ROOT / 'data' / source['file']).read_bytes()
+        if hashlib.sha256(raw).hexdigest() != source['sha256']:
+            raise ValueError(f"Checksum mismatch: {source['file']}")
+        rows = json.loads(gzip.decompress(raw))
+        count = 0
+        for char, row in rows.items():
+            point = ord(char)
+            if point not in allowed or point in records:
+                continue
+            if hashlib.sha256(row['svg'].encode()).hexdigest() != row['sha256']:
+                raise ValueError(f'SVG checksum mismatch: U+{point:04X}')
+            svg = ET.fromstring(row['svg'])
+            if svg.attrib.get('viewBox') != '0 0 200 200':
+                raise ValueError('Unexpected GlyphWiki viewBox')
+            pen, bounds, perimeter = Contours(None, 1), BoundsPen(None), PerimeterPen(None)
+            paths = list(svg.iter('{http://www.w3.org/2000/svg}path'))
+            if any('transform' in element.attrib for element in svg.iter()):
+                raise ValueError('SVG transform needs explicit handling')
+            for path in paths:
+                for target in [Cu2QuPen(pen, max_err=0.5), bounds, perimeter]:
+                    parse_path(path.attrib['d'], TransformPen(target, (5, 0, 0, -5, 0, 880)))
+            if not pen.contours or not bounds.bounds:
+                raise ValueError(f'Empty SVG: U+{point:04X}')
+            records[point] = {'k': char, 'G': {'v': 0, 'b': list(bounds.bounds), 'p': pen.contours},
+                              'ink': round(perimeter.value, 4), 'o': len(pen.contours)}
+            count += 1
+        provenance.append({**source, 'count': count})
     shards, ranges = {}, []
     for point, record in sorted(records.items()):
         shards.setdefault(f'{point >> 8:03x}', {})[chr(point)] = record
@@ -93,8 +122,24 @@ console.log(JSON.stringify(points));
         (OUT / f'{name}.json.gz').write_bytes(data)
         metadata[name] = {'count': len(rows), 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
     (ROOT / 'data/unicode-coverage.json').write_text(json.dumps(ranges, separators=(',', ':')) + '\n')
-    (ROOT / 'data/unicode-outlines.json').write_text(json.dumps({'build': {'bun': bun, 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
+    (ROOT / 'data/unicode-outlines.json').write_text(json.dumps({'build': {'unicode': properties['version'], 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
         'shards': metadata, 'sources': provenance}, ensure_ascii=False, separators=(',', ':')) + '\n')
+    # Report every remaining assigned candidate, rather than hiding holes behind block ranges.
+    missing = allowed.difference(records)
+    blocks = []
+    from build_unicode_properties import text as unicode_text, ranges as compact_ranges
+    for line in unicode_text('Blocks.txt').splitlines():
+        content = line.split('#')[0].strip()
+        if not content:
+            continue
+        span, name = content.split(';')
+        lo, hi = (int(value, 16) for value in span.strip().split('..'))
+        points = missing.intersection(range(lo, hi + 1))
+        if points:
+            blocks.append({'block': name.strip(), 'count': len(points), 'ranges': compact_ranges(points)})
+    (ROOT / 'data/unicode-outline-gaps.json').write_text(json.dumps({
+        'unicode': properties['version'], 'scope': 'Assigned fallback candidates outside dedicated bundles and host-handled CJK ranges; private use excluded',
+        'count': len(missing), 'blocks': blocks}, ensure_ascii=False, indent=2) + '\n')
     print(f'{len(records)} outlines, {len(shards)} shards, {sum(x["bytes"] for x in metadata.values())} compressed bytes', flush=True)
 
 
