@@ -165,14 +165,30 @@ it('places emoji sequences in their slots while retaining real empty slots', asy
   expect(await result).toMatchObject({ emoji: [{ text: '👩🏽‍💻', box: [0, 0, 300, 1000] }], slots: [{ index: 0, box: [300, 0, 300, 1000] }] })
 })
 
-it('rejects emoji transformations without rejecting unrelated transformed components', async () => {
+it('retains emoji subtraction operands as mask metadata', async () => {
   const draw = preview()
-  await expect(draw('⿾👩🏽‍💻')).rejects.toThrow('Emoji cannot yet be mirrored')
-  await expect(draw('⿻😀㇯木一')).rejects.toThrow('Emoji cannot yet be mirrored')
-  const result = draw('⿰⿾木👩🏽‍💻')
+  const result = draw('㇯😀👩🏽‍💻')
   const [worker] = FakeWorker.made
-  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
-  expect((await result).emoji[0].text).toBe('👩🏽‍💻')
+  expect(worker.posted[0].sequence).toBe('㇯⬚⬚')
+  worker.answer({ id: worker.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }, { index: 1, box: [0, 0, 500, 1000] }] } })
+  expect((await result).emoji.map(item => Boolean(item.cut))).toEqual([false, true])
+})
+
+it('toggles the cut flag through nested subtraction', async () => {
+  const cutter = preview()
+  const cutDrawing = cutter('㇯口㇯😀木')
+  const [first] = FakeWorker.made
+  expect(first.posted[0].sequence).toBe('㇯口㇯⬚木')
+  first.answer({ id: first.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }] } })
+  expect((await cutDrawing).emoji[0].cut).toBe(true)
+
+  const ink = preview()
+  const inkDrawing = ink('㇯口㇯木😀')
+  const [second] = FakeWorker.made
+  expect(second.posted[0].sequence).toBe('㇯口㇯木⬚')
+  second.answer({ id: second.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }] } })
+  expect((await inkDrawing).emoji[0].cut).toBeUndefined()
+  expect((await inkDrawing).emoji[0].restored).toBe(true)
 })
 
 it('assigns emoji a selectable piece alongside drawn components', async () => {
@@ -185,4 +201,23 @@ it('assigns emoji a selectable piece alongside drawn components', async () => {
   expect(sketches[0][0].empty).toBe(false)
   expect(found.emoji[0]).toMatchObject({ leaf: 0, part: 1 })
   expect(found.parts.map(part => part.leaf)).toEqual([1, 0])
+})
+
+it('retains nested mirror and rotation flags for emoji', async () => {
+  const draw = preview()
+  const result = draw('⿾⿿👩🏽‍💻')
+  const [worker] = FakeWorker.made
+  expect(worker.posted[0].sequence).toBe('⿾⿿⬚')
+  worker.answer({ id: worker.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }] } })
+  expect((await result).emoji[0].flip).toEqual([false, true])
+})
+
+it('rejects an overlay with emoji it cannot order, subtraction or not', async () => {
+  const draw = preview()
+  const result = draw('⿻😀㇯木口')
+  const [worker] = FakeWorker.made
+  const id = worker.posted[0].id
+  worker.answer({ id, sketch: [{ index: 0, box: [0, 0, 1000, 1000], empty: false }, { index: 1, box: [0, 0, 1000, 1000], empty: false }] })
+  worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 1000, 1000] }], parts: [{ box: [0, 0, 1000, 1000], d: 'M0 0Z', leaf: 0 }, { box: [0, 0, 1000, 1000], d: 'M1 1Z', leaf: 1 }] } })
+  await expect(result).rejects.toThrow('Cannot determine emoji stacking order')
 })

@@ -30,27 +30,36 @@ export class UnavailableError extends Error { name = 'UnavailableError' }
 /** Replace emoji sequences with empty slots while the composer calculates their positions. @param {string} sequence */
 function emojiSlots(sequence) {
   const parsed = parse(sequence, { open: true })
-  if (parsed.problem || !parsed.tree) return { sequence, slots: [], slotLeaves: [], unsupported: false }
+  if (parsed.problem || !parsed.tree) return { sequence, slots: [], slotLeaves: [], flips: [], cuts: [], overlays: [], restorations: [] }
   /** @type {(string | null)[]} */
   const slots = []
   /** @type {number[]} */
   const slotLeaves = []
-  let leaf = 0, unsupported = false
-  /** @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
-  function convert(part) {
+  /** @type {[boolean, boolean][]} */
+  const flips = []
+  /** @type {boolean[]} */
+  const cuts = []
+  /** @type {boolean[]} */
+  const overlays = []
+  /** @type {boolean[]} */
+  const restorations = []
+  let leaf = 0
+  /** @param {import('../core/ids.js').Part} part @param {boolean} flipX @param {boolean} flipY @param {boolean} cut @param {boolean} overlay @param {boolean} restored @returns {import('../core/ids.js').Part} */
+  function convert(part, flipX = false, flipY = false, cut = false, overlay = false, restored = false) {
     if (isNode(part)) {
-      const start = slots.length
-      const parts = part.parts.map(convert)
-      if (['⿾', '⿿', '㇯'].includes(part.op) && slots.slice(start).some(Boolean)) unsupported = true
+      const x = flipX !== (part.op === '⿾' || part.op === '⿿')
+      const y = flipY !== (part.op === '⿿')
+      // ㇯ masks its second operand; a subtraction inside that operand puts its own second operand back into the ink.
+      const parts = part.parts.map((child, index) => convert(child, x, y, cut !== (part.op === '㇯' && index === 1), overlay || part.op === '⿻', restored || (part.op === '㇯' && index === 1)))
       return { ...part, parts }
     }
     const index = leaf++
-    if (part === null) { slots.push(null); slotLeaves.push(index); return null }
-    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); slotLeaves.push(index); return null }
+    if (part === null) { slots.push(null); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
+    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
     return part
   }
   const result = convert(parsed.tree)
-  return { sequence: write(result), slots, slotLeaves, unsupported: unsupported || (sequence.includes('㇯') && slots.some(Boolean)) }
+  return { sequence: write(result), slots, slotLeaves, flips, cuts, overlays, restorations }
 }
 
 /** How many drawings a preview keeps for a repeated sequence. */
@@ -108,7 +117,6 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
     const prepared = emojiSlots(sequence)
-    if (prepared.unsupported) throw new Error('Emoji cannot yet be mirrored, rotated or subtracted in the preview.')
     const asked = open(prepared.sequence), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
@@ -122,14 +130,22 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
         const drawn = answer.drawn
         const emoji = (drawn.slots ?? []).flatMap(slot => {
           const text = prepared.slots[slot.index]
-          return text ? [{ text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }] : []
+          if (!text) return []
+          /** @type {{ text: string, box: number[], leaf: number, part: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} */
+          const item = { text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }
+          const flip = prepared.flips[slot.index]
+          if (flip?.[0] || flip?.[1]) item.flip = flip
+          if (prepared.cuts[slot.index]) item.cut = true
+          else if (prepared.restorations[slot.index]) item.restored = true
+          return [item]
         })
         if (emoji.length) {
           const existing = drawn.parts ?? []
           const originalSketch = /** @type {import('../adapter/types.js').SketchLeaf[] | null} */ (sketch)
           const oldSketch = originalSketch?.map(leaf => ({ ...leaf, empty: emoji.some(item => item.leaf === leaf.index) || leaf.empty })) ?? []
           const groups = existing.length ? groupParts(existing, oldSketch) : []
-          if (!groups && sequence.includes('⿻')) throw new Error('Cannot determine emoji stacking order for this overlay.')
+          const overlaid = (drawn.slots ?? []).some(slot => prepared.slots[slot.index] && prepared.overlays[slot.index])
+          if (!groups && overlaid) throw new Error('Cannot determine emoji stacking order for this overlay.')
           if (groups) {
             const pieces = existing.map(part => ({ ...part }))
             for (const group of groups) for (const index of group.parts) pieces[index].leaf = group.index

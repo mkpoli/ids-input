@@ -4,6 +4,19 @@ import { isDescription as isWhole } from './ids.js'
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
 // part not drawn yet) becomes, in the drawing's 1000-unit box.
 
+/** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
+export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
+
+/** Reflect an emoji around the centre of its layout box; a box that is not four finite numbers has no reflection. */
+export function emojiTransform(item) {
+  const [flipX, flipY] = item.flip ?? []
+  if (!flipX && !flipY) return ''
+  const box = Array.isArray(item.box) ? item.box.slice(0, 4) : []
+  if (box.length < 4 || !box.every(value => Number.isFinite(Number(value)))) return ''
+  const [x, y, width, height] = box.map(value => Math.round(Number(value) * 1000) / 1000)
+  return `translate(${flipX ? 2 * x + width : 0} ${flipY ? 2 * y + height : 0}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
+}
+
 /**
  * The badge of a preview: `{ label, params }`, `label` a key under `ids.preview.`. `step` is
  * `loading`, `composed`, `final`, `failed` or `capped` (too large to draw); `drawn` is the composer's
@@ -138,7 +151,7 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
  * draws each as the editor does, in the ink at half strength.
  * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
- *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number }[] }} drawing
+ *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} drawing
  * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
  * @returns {string}
  */
@@ -152,23 +165,31 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   const back = background === null ? null : colour(background, null)
   if (back) out.push(`<rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="${back}"/>`)
   const d = pathData(drawing.d), cut = pathData(drawing.cut)
-  if (cut) out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/><path d="${cut}" fill="#000"/></mask>`)
   // A view may hand over one transform per drawn part, to move, scale or turn a component. A cut
   // drawing stays merged: its mask is taken across parts.
   const transforms = Array.isArray(drawing.transforms) ? drawing.transforms : null
   const pieces = Array.isArray(drawing.parts) ? drawing.parts : null
   const emoji = drawing.emoji ?? []
-  const groupedEmoji = !cut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
+  const hasCut = Boolean(cut || emoji.some(item => item.cut))
+  const groupedEmoji = !hasCut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
     && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
-  const split = !cut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
+  const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
-  /** @param {{ text: string, box: number[], part?: number }} item */
-  const textOf = item => {
+  /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
+  const textOf = (item, attribute = '') => {
     const box = (item.box ?? []).slice(0, 4).map(v => num(v, 0))
     if (box.length < 4 || typeof item.text !== 'string') return ''
     const [x, y, width, height] = box
     const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    return `<text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+    const reflect = emojiTransform(item)
+    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+  }
+  if (hasCut) {
+    if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
+    out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/>`)
+    if (cut) out.push(`<path d="${cut}" fill="#000"/>`)
+    for (const item of emoji.filter(item => item.cut)) out.push(textOf(item, ' filter="url(#emoji-cut-ink)"'))
+    out.push('</mask>')
   }
   if (split) {
     const order = pieces.map((piece, index) => ({ piece, index }))
@@ -181,9 +202,10 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
       const transform = transformData(transforms?.[index])
       out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
     }
-  } else if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
+  } else if (d) out.push(`<path d="${d}" fill="${fill}"${hasCut ? ' mask="url(#cut)"' : ''}/>`)
   if (!groupedEmoji) for (const item of emoji) {
-    const content = textOf(item)
+    if (item.cut) continue
+    const content = textOf(item, hasCut && !item.restored ? ' mask="url(#cut)"' : '')
     if (!content) continue
     const transform = Number.isInteger(item.part) && transforms ? transformData(transforms[item.part]) : ''
     out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
