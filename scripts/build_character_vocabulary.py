@@ -38,7 +38,7 @@ IDS = ROOT / "data" / "babelstone-ids.tsv.gz"
 TARGET = ROOT / "data" / "character-vocabulary.tsv.gz"
 
 KANJIDIC2_URL = "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz"
-KANJIDIC2_SHA256 = "bdf75923744b355dfb678da8c7ae558342e06d5958998fcdde07c7a281a5fdd6"
+KANJIDIC2_SHA256 = "3617aa8a34015d4283f9ac22e00d2b80448f882cbc5a8e588b5f7ceae6493589"
 UNIHAN_URL = "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip"
 UNIHAN_SHA256 = "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
 
@@ -145,7 +145,7 @@ def fold_name(text: str) -> str:
 
 
 def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], ids: set[str]) -> list[tuple[str, str, str, str, str]]:
-    common = {char for char in ids if char in unihan["kIICore"]}
+    common = {char for char in ids if char in unihan["kIICore"] or char in kanjidic}
     # Newspaper frequency for the kanji KANJIDIC2 ranks, the school grade for the others; a lower
     # number comes first among equally close names.
     ranks: dict[str, int] = {}
@@ -231,16 +231,16 @@ def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], id
 
 
 def header(rows: list[tuple[str, str, str, str, str]]) -> str:
-    return f"""# The readings and meanings of common characters, for the character search (src/core/names.js).
+    return f"""# The readings and meanings of common characters and KANJIDIC2 kanji, for the character search (src/core/names.js).
 # columns: name, char, source, detail, rank
 # rows: {len(rows)}
 # rank: lower is more common; KANJIDIC2 newspaper frequency, or 3000 plus Unihan's kGradeLevel
 # Built by scripts/build_character_vocabulary.py.
 # source unihan: Unihan 18.0.0 (Unicode Character Database), Unicode License v3, Copyright Unicode, Inc.; kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul, kVietnamese and kIICore; SHA-256 {UNIHAN_SHA256}
 #   https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip
-# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-299, created 2026-10-26), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
+# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-300, created 2026-10-27), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
 #   meanings, Japanese, Korean and Vietnamese readings, pinyin and nanori; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
-# The characters are Unihan's kIICore set, all with an IDS description: 9,810 characters.
+# The characters are Unihan's kIICore set plus every KANJIDIC2 character, all with an IDS description.
 # The file as a whole is shared alike under CC BY-SA 4.0, because the KANJIDIC2 rows are:
 # https://creativecommons.org/licenses/by-sa/4.0/
 """
