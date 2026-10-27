@@ -91,7 +91,7 @@
   "ids.preview.tooLarge": "過大",
   "ids.preview.tooLargeNote": "過大，未組字，框線顯示佈局。",
   "ids.problem.character": "請以⿰、⿱等結構符開頭。",
-  "ids.problem.component": "部件須為漢字、西夏文、部首、筆畫、字母或數字。",
+  "ids.problem.component": "此字元不能用作部件。",
   "ids.problem.drop": "{name}需要的部件較少，請先清空多出的部件。",
   "ids.problem.empty": "{name}的第{n}部分還空著。請填入部件；無字可表的部件請輸入？。",
   "ids.problem.extra": "部件多於結構符所需。",
@@ -145,5 +145,12 @@
   "parts.uses.other": "用於{count}個字",
   "ids.characters.none": "沒有匹配的字。",
   "ids.characters.placeholder": "讀音、拼音或意義…",
-  "ids.pick.characters": "字"
+  "ids.pick.characters": "字",
+  "parts.seal.basic": "基礎",
+  "parts.seal.compound": "複合",
+  "parts.seal.other": "其他",
+  "parts.seal.groups": "小篆分類",
+  "parts.seal.filter": "依小篆或漢字篩選",
+  "parts.seal.estimate": "≈ 根據現代漢字推定的分類",
+  "parts.seal.inferred": "根據現代漢字IDS推定分類：{ids}"
 }

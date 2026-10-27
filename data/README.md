@@ -319,6 +319,10 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
+| Drawable palette forms | 1,334 |
+| Selected basic parts | 138 |
+| Compound forms | 1,172 |
+| Other / unclassified forms | 24 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -340,6 +344,32 @@ property on the same record as the exact `=shuowen-jiguge` identifier (or an exp
 named edition identifier). Nested properties, glyph inheritance, modern Han equivalents,
 and ambiguous mappings cannot establish identity. Unresolved references remain literal
 `&…;` strings. Only complete, supported Unicode IDS enters `table`.
+
+The palette is independent of the 49 complete descriptions. It includes mapped
+CHISE heads and the Unicode Shuowen radical heads for which a pinned SVG exists.
+`seal-sources.txt.gz` preserves the pinned Unicode mapping from the Kaiyuan source
+archive; its license is in `COPYING-seal-sources.txt`. `paletteSources` records the
+Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lookup alias.
+
+`parts` entries carry `modern` lookup names, `sealGroup`, and `sealBasis`:
+
+- `basic` / `selected`: an editorial starter selection of familiar radical heads.
+  Membership does not establish historical indivisibility.
+- `compound` / `seal-ids`: the source has a structural or apparent IDS, including
+  unresolved operands and extended operators.
+- `compound` / `cjk-ids`: a modern equivalent has a compound IDS. Its `modernIds`
+  are retained for inspection and the UI marks the grouping with `≈`.
+- `other` / `unknown`: no classification is established. An empty source field
+  never establishes that a character is atomic.
+
+Modern IDS inference affects palette grouping only. It never supplies a seal
+`table` entry or changes exact encoding lookup. Palette usage counts include mapped
+components in unresolved source descriptions, counted once per source head.
+
+Rebuild the palette offline with `python3 scripts/build_small_seal_palette.py`.
+To refresh the bundled SVG subset from the same pinned Kaiyuan revision, pass
+`--upstream path/to/kaiyuan.tar.gz`; its SHA-256 is checked before extraction.
+Rebuild the font and outlines afterward with `uv run scripts/build_small_seal_font.py`.
 
 JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
 labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
