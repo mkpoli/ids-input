@@ -335,8 +335,9 @@
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
   }
 
-  // The tabs: choose one, open a new one, open a sequence in one, and close one. A tab closed by
-  // mistake comes back from the note, with its tree and history.
+  // The tabs: choose one, open a new one, open a sequence in one, and close one. One tab always stays
+  // open, so the last one closes into a fresh tab. A tab closed by mistake comes back from the note,
+  // with its tree and history.
   const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
   /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
   /** @type {Map<string, AdjustState>} */
@@ -420,9 +421,8 @@
     }
     addTab(text)
   }
-  /** Close a tab, showing its neighbour; the note brings it back. @param {string} id */
+  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
   function closeTab(id) {
-    if (tabs.length < 2) return
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
     const tab = tabs[at]
@@ -431,28 +431,48 @@
     states.delete(id)
     adjustedStates.delete(id)
     tabs.splice(at, 1)
+    /** @type {import('./lib/tabs.js').Tab | undefined} */
+    let fresh
     if (id === activeId) {
       const next = tabs[at] ?? tabs[at - 1]
-      activeId = next.id
-      const saved = states.get(next.id)
-      states.delete(next.id)
-      if (saved) editor.restore(saved)
-      else editor.reset(next.sequence)
-      restoreAdjustments(next.id)
+      if (next) {
+        activeId = next.id
+        const saved = states.get(next.id)
+        states.delete(next.id)
+        if (saved) editor.restore(saved)
+        else editor.reset(next.sequence)
+        restoreAdjustments(next.id)
+      } else {
+        // One tab always stays open: closing the last one leaves a new empty tab in its place.
+        fresh = makeTab()
+        tabs.push(fresh)
+        activeId = fresh.id
+        editor.reset('')
+        adjustments = {}
+        adjusting = false
+        knownSequence = editor.whole
+      }
     }
     toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
-      run: () => reopen(tab, state, adjusted, at) }
+      run: () => reopen(tab, state, adjusted, at, fresh?.id) }
     store()
   }
   /**
-   * Put a closed tab back where it was.
+   * Put a closed tab back where it was, taking back the empty tab that replaced it.
    * @param {import('./lib/tabs.js').Tab} tab
    * @param {ReturnType<typeof editor.snapshot> | undefined} state
    * @param {AdjustState | undefined} adjusted
    * @param {number} at
+   * @param {string} [replacement]
    */
-  function reopen(tab, state, adjusted, at) {
+  function reopen(tab, state, adjusted, at, replacement) {
     if (tabs.some(kept => kept.id === tab.id)) return
+    const fresh = tabs.find(kept => kept.id === replacement)
+    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      adjustedStates.delete(fresh.id)
+    }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
     if (adjusted) adjustedStates.set(tab.id, adjusted)
