@@ -41,7 +41,11 @@ const upTo = (list, n) => list.filter(h => h.r < n)
 
 const isSelector = ch => ch !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(ch)
 
-/** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. */
+const MODIFIER = /^[0-9:,._xabcdlr|-]+$/u
+const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
+
+/** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
+ * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
 export function parseTree(sequence, arity) {
   const chars = [...sequence]
   let at = 0
@@ -52,6 +56,10 @@ export function parseTree(sequence, arity) {
     if (!n) {
       if (isSelector(chars[at])) ch += chars[at++]
       return ch
+    }
+    if (MODIFIABLE.has(ch) && chars[at] === '[') {
+      const close = chars.indexOf(']', at + 1)
+      if (close > at && close - at <= 65 && MODIFIER.test(chars.slice(at + 1, close).join(''))) at = close + 1
     }
     return [ch, ...Array.from({ length: n }, node)]
   }

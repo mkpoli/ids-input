@@ -41,3 +41,12 @@ test('treats an emoji sequence as one selectable token', () => {
   expect(spans.map(token => token.text)).toEqual(['⿰', '👩🏽‍💻', '木'])
   expect(rangeToken(spans, 3, 4)?.text).toBe('👩🏽‍💻')
 })
+
+test('a modifier stays with its operator, and a range inside it names no part', () => {
+  const text = '⿴[1]囗水'
+  const spans = tokens(text)
+  expect(spans.map(t => t.text)).toEqual(['⿴[1]', '囗', '水'])
+  expect(spans[0]).toMatchObject({ path: [], start: 0, text: '⿴[1]' })
+  expect(rangeToken(spans, 1, 4)).toBeNull()
+  expect(rangeToken(spans, 0, 4)?.path).toEqual([])
+})
