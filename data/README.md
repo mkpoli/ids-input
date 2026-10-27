@@ -351,11 +351,23 @@ because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across 
 This count does not assert that the visible component is absent from 彥 or 產.
 The traditional outline is extracted from Noto 產 with 生 removed; the other
 uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
-with separate Sans/Serif outlines. These are atomic native previews;
+with separate Sans/Serif outlines. The traditional enclosure with 彡 or 生
+uses the complete native 彥 or 產 glyph, respectively. Other enclosed operands
+are placed within a font-specific opening based on the native 產 proportions;
+the 产 opening is shorter to leave space below its lower crossbar. These are atomic native previews;
 adjustment mode uses operand outlines when available. Native compound previews use
 outline-based layout rather than extrapolating the learned glyph layout model;
 Kaisho keeps its export layout. Source aliases remain
 searchable and visible in tooltips, without changing the inserted IDS.
+When 儿 begins the enclosed vertical stack, its native 元-derived legs meet the
+enclosure bar; their stroke weight is adjusted continuously as the available
+height changes. The remaining operand is laid out below. A neighbouring left 朱
+uses its full-height cut from 鴸 in both Sans and Serif, with the spacing of a
+native side-by-side character. For 昌 or ⿱日日 below 儿, the preview uses the
+native 昌 cut from 菖 in either face, keeping their displayed proportions consistent.
+Its counters and gaps are shortened more than its horizontal bars so that the
+strokes remain visible in the compact placement. The 朱 spacing is checked for
+collisions against the actual right-hand outline.
 
 These curated components were suggested by परवद💙💛
 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)). The zi.tools stroke-chain
@@ -557,3 +569,14 @@ catalogue independently of palette loading. Item details show stroke counts,
 codepoints or literal IDS, and composition examples. These examples describe
 structure; musical use depends on the source score. The panel links to Taiwan
 Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
+
+### Palette fallback outlines
+
+`palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
+pinned default composer export. `palette-fallback-characters.json` lists them.
+`palette-remote-glyphs.json` records the other palette leaves supplied by that export;
+`node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
+come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJK Regular
+(Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
+Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
+CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.

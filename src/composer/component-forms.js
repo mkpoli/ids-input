@@ -9,6 +9,9 @@ const styles = Object.fromEntries(Object.entries(data.forms).map(([style, forms]
     const parts = groups.map(group => makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points }))))
     return [text, { parts, frame: union(parts.map(p => p.box)), ink: parts.reduce((n, p) => n + partInk(p), 0) }]
   }))]))
+const positions = Object.fromEntries(Object.entries(data.positions ?? {}).map(([style, entries]) => [style,
+  new Map(Object.entries(entries).map(([name, group]) => [name,
+    makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points })))]))]))
 // Kureedo's brush forms are the export's own; the bundled Sans forms must not replace them.
 const forms = style => style === 'kaisho' ? null : (styles[style] ?? styles.sans)
 export const containsComponentForm = text => [...styles.sans.keys()].some(key => text.includes(key))
@@ -34,3 +37,38 @@ export function componentDrawing(text, style = 'sans') {
   const parts = componentParts(text, constants.face, style)
   return parts ? { d: svgPath(parts), approximate: [] } : null
 }
+
+/** A native contextual cut fitted to a caller's placement, with its own stroke weights. */
+export function componentPosition(name, target, style = 'sans', designHeight = null) {
+  let part = positions[style]?.get(name)
+  const originalInk = part && partInk(part)
+  if (part && name === '儿:under-bar' && designHeight !== null) part = weightedLegs(part, style, designHeight)
+  return part ? { ...placed(part, part.box, target, originalInk, `Noto ${style} ${name}`), fixed: true, inkLength: originalInk } : null
+}
+
+/** Add weight above the original strokes, retaining the native outer edges and tapered sweep. */
+function weightedLegs(part, style, height) {
+  const sourceHeight = part.box[3] - part.box[1]
+  const [native, desired] = style === 'serif' ? [62, 42] : [71, 60]
+  const amount = Math.max(0, desired - native * height / sourceHeight) * sourceHeight / height
+  if (!amount) return part
+  // Keep the original contour intact; overlapping copies add weight on its inner side.
+  const contours = [...part.contours]
+  for (const contour of part.contours) {
+    const pts = contour.light, n = pts.length / 2
+    const left = Math.max(...Array.from({ length: n }, (_, i) => pts[i * 2])) < 500
+    for (let step = 1; step <= 8; step++) {
+      const points = Array.from(pts)
+      for (let i = 0; i < n; i++) {
+        const x = pts[i * 2], y = pts[i * 2 + 1], room = Math.max(0, part.box[3] - y)
+        const taper = left ? Math.max(0, Math.min(1, (x - 85) / 170)) : 1
+        const shift = amount * taper * step / 8
+        points[i * 2 + 1] = y + (room ? room * shift / (room + shift) : 0)
+      }
+      contours.push({ ...contour, light: points, heavy: points })
+    }
+  }
+  return makePart(contours, part.box.slice())
+}
+
+export const componentPositionBox = (name, style = 'sans') => positions[style]?.get(name)?.box ?? null

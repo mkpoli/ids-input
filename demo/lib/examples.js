@@ -7,6 +7,8 @@
 // of 園), ⿱一心 (@jianhuazi_bot2, the 二簡字 of 德) and ⿰忄実 (@Umihotarus, 舘暲's character for
 // ヴァーチャル).
 //
+// ⿱⿰◇ㅏㄴ: proposed by @zoenshiueh_lieu, using ◇ for an unencoded initial.
+//
 // Hybrid examples from Gen Kojitani’s “Script-Hybrid CJK Ideographs” (BiangBiangCon,
 // 2026-10-16; SCRIPT-HYBRID slides v19). The encoded forms use BabelStone IDS. For the forms
 // with no code point, ⿴口도 is the slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
@@ -106,6 +108,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿴囗書', char: '圕' },
   ] },
   { key: 'mixed', examples: [
+    { sequence: '⿱⿰◇ㅏㄴ', char: '' },
     { sequence: '⿶む子', char: '' },
     { sequence: '⿱⿰力田𠂇', char: '𫦫' },
     { sequence: '⿳宀𭕄木', char: '𫳍' },

@@ -61,7 +61,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
   function open(sequence = '') {
     let root
     try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch {
-      if (!onlyBundled(sequence, false, true)) throw new UnavailableError(`${base} is not a URL.`)
+      if (!onlyBundled(sequence, false, true, fontStyle)) throw new UnavailableError(`${base} is not a URL.`)
       root = base
     }
     if (!drawer) drawer = createDrawer(worker, root)
