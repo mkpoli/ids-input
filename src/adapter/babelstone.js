@@ -115,8 +115,8 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit */
-  function inWorker(query, limit) {
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] */
+  function inWorker(query, limit, mode = 'ids') {
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -139,7 +139,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, ids: new URL(String(ids), base).href, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -350,6 +350,12 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
         return by
       }).catch(error => { described = null; throw error })
       return (await described).get(sequence.trim()) ?? []
+    },
+    async findByStructure(query, { limit = 60, signal } = {}) {
+      signal?.throwIfAborted()
+      const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
+      signal?.throwIfAborted()
+      return result
     },
     async findByIds(query, { limit = 60, signal } = {}) {
       const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
