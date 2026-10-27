@@ -98,6 +98,7 @@
   let pendingPart
   /** @type {EventTarget | null} */
   let pendingTarget = null
+  let selectionAtDown = ''
   function flushPick() {
     clearTimeout(pickTimer)
     const part = pendingPart
@@ -107,7 +108,9 @@
   }
   onMount(() => {
     /** @param {PointerEvent} event */
-    const pointer = event => { if (pendingTarget && !event.composedPath().includes(pendingTarget)) flushPick() }
+    const pointer = event => {
+      if (pendingTarget && !event.composedPath().includes(pendingTarget) && !(event.target instanceof Element && event.target.closest('.part'))) flushPick()
+    }
     /** @param {KeyboardEvent} event */
     const keyboard = event => {
       if (pendingPart === undefined) return
@@ -131,7 +134,12 @@
     pendingPart = undefined
     pendingTarget = null
     if (event.detail === 0) { pick(part); return }
-    if (event.detail > 1 || !window.getSelection()?.isCollapsed) return
+    if (event.detail > 1) return
+    const selection = window.getSelection()
+    if (selection && !selection.isCollapsed) {
+      if (selection.toString() !== selectionAtDown) return
+      selection.removeAllRanges()
+    }
     if ('pointerType' in event && event.pointerType === 'touch') { pick(part); return }
     pendingPart = part
     pendingTarget = event.currentTarget
@@ -193,7 +201,7 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
-        onpointerdown={event => { event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
+        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
         {#if isSequence(part.part)}

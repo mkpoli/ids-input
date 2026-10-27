@@ -126,8 +126,8 @@ clears, removes a level or copies that part's sequence. "Take parts from" reads 
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
-parts, including compound IDS, grouped by stroke count and first stroke. Compound palette cells show an `IDS` marker and expose
-the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
+compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
