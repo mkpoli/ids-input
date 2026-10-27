@@ -68,8 +68,9 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import names from 'ids-input/data/component-names.tsv?url'
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
+  import charactersRare from 'ids-input/data/character-vocabulary-rare.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters })
+  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters, charactersRare })
   let value = $state('')
 </script>
 
@@ -314,10 +315,11 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
-(a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん
-when `names` is given), `searchCharacters` (a character by a reading or meaning when `characters` is
-given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+`babelStoneAdapter({ ids, parts, forms, names, folds, characters, charactersRare })` answers
+`structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
+such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
+meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
+from the files in `data/`. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -488,7 +490,9 @@ characters Unicode marks with `kIICore` plus every KANJIDIC2 character with an I
 water, shui, mizu, みず, 수 and thủy find 水; person finds 人; silk finds 糸. Results are characters,
 not the forms the Find tab opens; among equally close names the more common character comes first,
 by KANJIDIC2's newspaper
-frequency or Unihan's school grade. Without `characters` the tab is not shown.
+frequency or Unihan's school grade. A second table, `character-vocabulary-rare.tsv.gz`, holds the
+remaining 33,904 named characters; the tab's “Include rare characters” toggle loads it only when
+asked. Without `characters` the tab is not shown.
 
 ## Preview
 
@@ -586,6 +590,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
   4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 152,982
   rows, 1.2 MB gzipped.
+- `data/character-vocabulary-rare.tsv.gz`: the remaining named characters for the optional rare
+  search, same sources and licence; 61,551 rows, 515 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
