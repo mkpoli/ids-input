@@ -3,7 +3,7 @@
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
 import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
-import { createSearch, readForms } from '../core/search.js'
+import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { isComponent, isSequence } from '../core/ids.js'
 
@@ -114,7 +114,7 @@ export function babelStoneAdapter({ ids, parts, forms, formsText, names, namesTe
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
-    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
+    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] */
   function inWorker(query, limit, mode = 'ids') {
     if (!searcher && worker) {

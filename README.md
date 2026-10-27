@@ -311,8 +311,9 @@ runs the search; the pattern can then be edited. Results open in the editor, and
 characters** copies the complete result, including hits beyond the visible page.
 
 ```js
-import { createStructuralSearch } from 'ids-input'
-const patterns = createStructuralSearch(table, { forms })
+import { createStructuralSearch, readStructuralForms } from 'ids-input'
+const structuralForms = readStructuralForms(formsText)
+const patterns = createStructuralSearch(table, { forms: structuralForms })
 patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
 patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
 patterns.search('⿲ABA')           // matching outer parts, such as 弼
@@ -320,7 +321,11 @@ patterns.search('⿸⬚⬚')           // any upper-left enclosure
 ```
 
 A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
-Different letters may match the same part. Positional forms use the supplied forms table.
+Different letters may match the same part. Structural forms accept Unicode equivalent ideographs and explicitly positional forms.
+Broad radical variants stay distinct: 𡿨, 巜 and 巛 have different multiplicities,
+and 丿/乀 and 𠄌/亅 differ in direction. `createSearch` accepts a separate
+`structuralForms` map (strict equality by default); ordinary component search
+continues to use its broader `forms` map.
 `⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
 be a complete IDS of at most 64 code points. Matching starts at the character's whole description
 and opens encoded components up to six levels, considering source alternatives. It does not find
