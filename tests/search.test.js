@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createSearch, parseQuery, readForms } from '../src/core/index.js'
+import { createSearch, parseQuery, readForms, similarStructures } from '../src/core/index.js'
 
 // A few descriptions, as BabelStone writes them (regions dropped).
 const table = new Map(Object.entries({
@@ -18,6 +18,23 @@ describe('a query', () => {
     expect(terms[0].tree).toEqual({ op: '⿰', parts: [null, '木'] })
     expect(terms[2].tree).toEqual({ op: '⿰', parts: ['氵', null] })
     expect(parseQuery('  ').problem).toBe('empty')
+  })
+})
+
+describe('similar structures', () => {
+  it('replaces one top-level operand and keeps the others', () => {
+    expect(similarStructures('⿱木口')).toEqual(['⿱？口', '⿱木？'])
+    expect(similarStructures('⿰木木')).toEqual(['⿰？木', '⿰木？'])
+    expect(similarStructures('⿲木口木')).toEqual(['⿲？口木', '⿲木？木', '⿲木口？'])
+    expect(similarStructures('木')).toEqual([])
+    expect(similarStructures('')).toEqual([])
+    expect(similarStructures('⿱木')).toEqual([])
+  })
+  it('finds the characters sharing the shape, without the one the description names', () => {
+    expect(search.similar('⿱木口', { limit: 10 }).hits.map(hit => hit.char)).toEqual(['森'])
+    // 森 is exactly ⿱木林, so it stays out of its own similar list; 杏 shares 木 on top.
+    expect(search.similar('⿱木林', { limit: 10 }).hits.map(hit => hit.char)).toEqual(['杏'])
+    expect(search.similar('木')).toEqual({ hits: [], total: 0 })
   })
 })
 

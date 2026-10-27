@@ -105,6 +105,8 @@
   "ids.replace": "{part}을(를) 바꾸기",
   "ids.search": "구성 요소 찾기",
   "ids.search.containing": "‘{sequence}’을 포함하는 글자",
+  "ids.search.similar": "비슷한 구조",
+  "ids.search.similarTo": "“{sequence}”와 일부가 같은 구조",
   "ids.search.partsOf": "‘{char}’의 부품",
   "ids.search.emptyHint": "검색하려면 이 칸을 비워 두고, 글자를 조합하려면 채우세요.",
   "ids.search.count.other": "{count}개",

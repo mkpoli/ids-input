@@ -105,6 +105,8 @@
   "ids.replace": "將{part}換成",
   "ids.search": "查找部件",
   "ids.search.containing": "含「{sequence}」的字",
+  "ids.search.similar": "相似結構",
+  "ids.search.similarTo": "與「{sequence}」部分相同的結構",
   "ids.search.partsOf": "「{char}」的部件",
   "ids.search.emptyHint": "留空可搜尋，填入部件可組字。",
   "ids.search.count.other": "{count}個",
