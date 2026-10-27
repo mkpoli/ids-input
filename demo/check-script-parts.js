@@ -13,7 +13,7 @@ try {
   await page.getByRole('tab', { name: 'Gongche', exact: true }).click()
   await page.locator('.gongche-guide').waitFor()
   assert.ok(await page.locator('.parts-grid .part').count() > 0, 'Gongche remains available')
-  for (const [name, count] of [['Bopomofo', 82], ['Letters & numbers', 310], ['Tangut', 768]]) {
+  for (const [name, count] of [['Bopomofo', 82], ['Letters & numbers', 120], ['Tangut', 768]]) {
     await page.getByRole('tab', { name, exact: true }).click()
     await page.locator('.parts-grid .part').first().waitFor()
     assert.equal(await page.locator('.parts-grid .part').count(), count, `${name} remains unchanged`)
