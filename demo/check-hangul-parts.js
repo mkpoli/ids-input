@@ -8,8 +8,10 @@ try {
   await page.goto(process.env.IDS_URL ?? 'http://localhost:5173')
   await page.getByRole('tab', { name: 'Parts', exact: true }).click()
   await page.getByRole('tab', { name: 'Hangul', exact: true }).click()
-  const select = page.getByRole('combobox', { name: 'Hangul parts' })
+  const select = page.getByRole('combobox', { name: 'Show', exact: true })
   await page.locator('.parts-grid .part').first().waitFor()
+  assert.equal(await select.inputValue(), 'parts')
+  assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), '◇')
   const filter = page.locator('.parts-filter')
   for (const part of ['◇', 'ᄓ', '㉠', '〮']) {
     await filter.fill(part)
@@ -34,5 +36,5 @@ try {
     assert.equal(await fixture.locator('.parts-grid .part').first().getAttribute('data-character'), 'ㅏ')
   }
   await fixture.close()
-  console.log('PASS Hangul letters, historical marks, syllables, paging and search')
+  console.log('PASS Hangul parts by default, historical marks, syllables, paging and search')
 } finally { await browser.close() }

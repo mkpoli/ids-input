@@ -69,7 +69,7 @@
   })
 
   const PAGE_SIZE = 120
-  let hangulGroup = $state('letters'), hangulPage = $state(0)
+  let hangulGroup = $state('parts'), hangulPage = $state(0)
   $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
     const base = hangulGroup === 'syllables' ? hangulSyllables : hangul
@@ -314,7 +314,7 @@
     {#if tab === 'hangul'}
       <label class="script-select">{t('parts.hangul.group')}
         <select value={hangulGroup} onchange={event => { hangulGroup = event.currentTarget.value; filter = '' }}>
-          <option value="letters">{t('parts.hangul.letters')}</option>
+          <option value="parts">{t('parts.hangul.parts')}</option>
           <option value="syllables">{t('parts.hangul.syllables')}</option>
         </select>
       </label>
