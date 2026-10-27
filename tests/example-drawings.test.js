@@ -28,6 +28,12 @@ describe('the prepared example drawings', () => {
     expect(data.drawings['⿰木⿳ㄙㄨㄥ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ', 'glyph ㄥ']))
     expect(data.drawings['⿰木⿱ㄅㄞ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄅ', 'glyph ㄞ']))
   })
+  it('prepares the proposed unencoded Hangul with a diamond initial', () => {
+    const drawing = data.drawings['⿱⿰◇ㅏㄴ']?.drawn
+    expect(drawing.origins).toEqual(['glyph ◇', 'glyph ㅏ', 'glyph ㄴ'])
+    expect(drawing.parts).toHaveLength(3)
+    expect(drawing.d.length).toBeGreaterThan(100)
+  })
   it('holds exactly the current examples', () => {
     const held = [...Object.keys(data.drawings), ...data.failed.map(entry => entry.sequence)]
     expect(held.sort()).toEqual(EXAMPLES.map(example => example.sequence).sort())

@@ -27,8 +27,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -39,6 +39,12 @@
     Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
   const bopomofo = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf)]
   const alphabet = [...range(0x30, 0x39), ...range(0x41, 0x5a), ...range(0x61, 0x7a), ...range(0x400, 0x4ff).filter(char => /\p{Letter}/u.test(char))]
+  // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
+  const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
+  const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
+  const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
+    .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
+  const hangul = [...substitutes, ...hangulLetters]
   /** @param {string[]} chars @returns {PalettePart[]} */
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
@@ -53,7 +59,7 @@
     recent = Array.isArray(kept) ? [...new Set(kept.filter(part => typeof part === 'string'))].slice(0, RECENT_MAX) : []
     const read = adapter.parts
     if (!read) { failed = true; return }
-    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
+    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
 
   const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
@@ -87,6 +93,7 @@
     if (!parts) return []
     if (tab === 'bopomofo') return [{ cls: undefined, parts: bopomofo.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
@@ -184,6 +191,7 @@
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
+    tab === 'hangul' ? substituteNames[part.part] : null,
     ...(part.aliases ?? []),
     ...(part.modern ?? []),
     part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
