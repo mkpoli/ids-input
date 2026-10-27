@@ -264,3 +264,34 @@ it('joins the shallow sweep to the hook in both source spellings and preserves t
   }
   expect(componentDrawing('⿱丿乚','kaisho')).toBeNull()
 })
+
+it('draws the Gongche three-sweep component locally in both styles with two editable leaves', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const text = '⿱𰀪亻'
+    expect(onlyBundled(text, true)).toBe(true)
+    const drawn = await compose(local(), text, { fontStyle, separate: true })
+    expect(drawn.d.match(/M/g)).toHaveLength(3)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(drawn.approximate).toEqual([])
+    expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+    const nested = await compose(remote(), `⿰${text}木`, { fontStyle })
+    expect(nested.origins.filter(origin => origin.includes(text))).toHaveLength(2)
+  }
+})
+
+it('repeats identical water-radical outlines without overlap in both styles', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const text = '⿰氵氵'
+    const parts = componentParts(text, undefined, fontStyle)
+    expect(parts).toHaveLength(2)
+    const [a, b] = parts.map(part => part.target)
+    expect(a[2]).toBeLessThan(b[0])
+    expect(a[2] - a[0]).toBeCloseTo(b[2] - b[0])
+    expect(a[1]).toBe(b[1])
+    expect(a[3]).toBe(b[3])
+    const drawn = await compose(local(), text, { fontStyle, separate: true })
+    expect(drawn.approximate).toEqual([])
+    expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+  }
+})

@@ -38,7 +38,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => [...row[0]].length > 1)
-  expect(compounds).toHaveLength(29)
+  expect(compounds).toHaveLength(31)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
@@ -120,6 +120,7 @@ it('includes all requested components and translates zi.tools aliases into valid
   const rows = paletteRows(data)
   for (const [part, strokes, uses] of [
     ['⿻𢆶戈',10,9], ['⿸尸彳',6,0], ['㇯鹿比',7,27], ['㇯馬灬',6,13], ['㇯鳥灬',7,25],
+    ['⿰氵氵',6,0], ['⿱𰀪亻',4,0],
     ['⿳亠口冖',7,28], ['⿸尸氺',8,1], ['⿳𰀉冖木',11,0], ['⿳卝罒冖',11,2], ['⿱丿乚',2,5],
   ]) {
     expect(rows.filter(row => row.part === part)).toHaveLength(1)

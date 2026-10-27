@@ -61,6 +61,22 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     assert dotted == cmap[0xFA5B]
     cs=lambda ch:contours(gs,cmap[ord(ch)])
     forms={}
+    # Repeat the same native water radical, avoiding contextual host selection
+    # that gives the two columns different proportions or overlapping strokes.
+    water=group(cs('氵'))
+    dx=450 if style=='sans' else 480
+    water_right=[[ops,[v+dx if i%2==0 else v for i,v in enumerate(points)]] for ops,points in water]
+    forms['⿰氵氵']=[water,water_right]
+    # Gongche's three sweeps above a vertical: extend 彳 with one more
+    # native upper sweep. Translate the sweeps without thinning their strokes;
+    # shorten only the vertical stem to keep the original baseline and em.
+    c=cs('彳')
+    sweep=group([c[0]])
+    step=180 if style=='sans' else 200
+    second=[[ops,[v if i%2==0 else v-step for i,v in enumerate(points)]] for ops,points in sweep]
+    lower=group([c[1]])
+    lower=[[ops,[v if i%2==0 or v<0 else v-step for i,v in enumerate(points)]] for ops,points in lower]
+    forms['⿱𰀪亻']=[sweep+second,lower]
     if style=='sans':
         c=cs('氺'); dots=[group([c[0],c[2]]),group([c[3]]),group([c[1]])]
         c=cs('壱'); crown=[group([c[1]]),group([c[0]])]
