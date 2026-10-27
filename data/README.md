@@ -275,6 +275,10 @@ classes are unknown. Components Supplement is accepted by the parser but is abse
 from this source edition and the palette. Both data builders include Tangut through
 `scripts/tangut.py`; the Han totals above describe the Han portion only.
 
+## `tangut-parts.json.gz`
+
+The keys of the bundled Tangut outline records, used to browse the full Tangut palette without loading the outlines. Regenerate with `node scripts/build_tangut_parts.mjs` after updating the outline source.
+
 ## `tangut-outlines.json.gz`
 
 Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
