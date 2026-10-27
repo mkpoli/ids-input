@@ -270,3 +270,36 @@ it('maps the opening and native outline from the same frame with a custom export
   const drawn = new Composer(data, { fontStyle: 'sans' }).compose('⿸⿳亠丷厂⬚')
   expect(drawn[1].target).toEqual(mapped([227, -59, 944, 335], bundledConstants.face, face))
 })
+
+it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', async () => {
+  const { Composer, collision } = await import('../src/composer/compose.js')
+  const { constants } = await import('./fixtures/composer-export.js')
+  for (const fontStyle of ['sans', 'serif']) for (const outer of ['⿳亠㐅厂', '⿳亠丷厂']) {
+    const source = remote()
+    await compose(source, '木')
+    const store = source.store
+    source.store = () => {
+      const data = store(), rec = data.rec
+      return { ...data, rec: key => {
+        const record = rec(['朱', '丅'].includes(key) ? '木' : key)
+        return key === '木' && record ? { ...record, ink: 8000 } : record
+      } }
+    }
+    const text = `⿰朱⿸${outer}⿱儿丅`
+    await compose(source, text, { fontStyle })
+    const parts = new Composer(source.store(), { fontStyle }).compose(text)
+    const [zhu, enclosure, legs, lower] = parts
+    expect(zhu.origin).toBe(`Noto ${fontStyle} 朱:L`)
+    expect(legs.origin).toBe(`Noto ${fontStyle} 儿:under-bar`)
+    expect(zhu.target[3] - zhu.target[1]).toBeGreaterThan((enclosure.target[3] - enclosure.target[1]) * 0.95)
+    expect(collision([enclosure], [legs], constants.face, 1024)).toBeGreaterThan(0)
+    expect(legs.target[1]).toBeGreaterThan(lower.target[3])
+    const complex = `⿰朱⿸${outer}⿱儿⿱木木`
+    await compose(source, complex, { fontStyle })
+    const complexParts = new Composer(source.store(), { fontStyle }).compose(complex)
+    const complexLegs = complexParts.find(part => part.origin === `Noto ${fontStyle} 儿:under-bar`)
+    expect(complexLegs.target[1]).toBeGreaterThan(legs.target[1])
+    expect(collision([complexParts[1]], [complexLegs], constants.face, 1024)).toBeGreaterThan(0)
+    expect(complexParts.slice(3).every(part => part.weight[1] <= 0)).toBe(true)
+  }
+})

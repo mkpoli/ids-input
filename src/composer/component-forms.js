@@ -9,6 +9,9 @@ const styles = Object.fromEntries(Object.entries(data.forms).map(([style, forms]
     const parts = groups.map(group => makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points }))))
     return [text, { parts, frame: union(parts.map(p => p.box)), ink: parts.reduce((n, p) => n + partInk(p), 0) }]
   }))]))
+const positions = Object.fromEntries(Object.entries(data.positions ?? {}).map(([style, entries]) => [style,
+  new Map(Object.entries(entries).map(([name, group]) => [name,
+    makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points })))]))]))
 // Kureedo's brush forms are the export's own; the bundled Sans forms must not replace them.
 const forms = style => style === 'kaisho' ? null : (styles[style] ?? styles.sans)
 export const containsComponentForm = text => [...styles.sans.keys()].some(key => text.includes(key))
@@ -34,3 +37,11 @@ export function componentDrawing(text, style = 'sans') {
   const parts = componentParts(text, constants.face, style)
   return parts ? { d: svgPath(parts), approximate: [] } : null
 }
+
+/** A native contextual cut fitted to a caller's placement, with its own stroke weights. */
+export function componentPosition(name, target, style = 'sans') {
+  const part = positions[style]?.get(name)
+  return part ? { ...placed(part, part.box, target, partInk(part), `Noto ${style} ${name}`), fixed: true } : null
+}
+
+export const componentPositionBox = (name, style = 'sans') => positions[style]?.get(name)?.box ?? null

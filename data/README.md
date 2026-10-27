@@ -337,6 +337,9 @@ adjustment mode uses operand outlines when available. Native compound previews u
 outline-based layout rather than extrapolating the learned glyph layout model;
 Kaisho keeps its export layout. Source aliases remain
 searchable and visible in tooltips, without changing the inserted IDS.
+When 儿 begins the enclosed vertical stack, its native 元-derived legs meet the
+enclosure bar; the remaining operand is laid out below. A neighbouring left 朱
+uses its full-height cut from 鴸 in both Sans and Serif.
 
 ## Small Seal
 

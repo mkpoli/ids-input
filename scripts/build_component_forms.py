@@ -50,7 +50,7 @@ def group(cs):
     return pen.result
 
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
-result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}}
+result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
 for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     path = Path(filename)
     sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -60,6 +60,12 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     dotted = next(g for t in font['cmap'].tables if t.format == 14 for c,g in t.uvsDict[0xE0101] if c == 0x8005)
     assert dotted == cmap[0xFA5B]
     cs=lambda ch:contours(gs,cmap[ord(ch)])
+    # Native left-side 朱 from 鴸 and the two legs joined to 元's lower bar.
+    # The latter is clipped at the bar's underside for attachment to another bar.
+    result['positions'][style] = {
+        '朱:L': group([cs('鴸')[4]]),
+        '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
+    }
     forms={}
     if style=='sans':
         c=cs('氺'); dots=[group([c[0],c[2]]),group([c[3]]),group([c[1]])]

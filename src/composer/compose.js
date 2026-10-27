@@ -17,7 +17,7 @@
 // before drawing again).
 import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
-import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
+import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
@@ -369,6 +369,23 @@ export class Composer {
     if (!yanSources.has(key) || this.excluded(yanSources.get(key))) return null
     const outer = componentParts(key, region, this.fontStyle, true)
     const serif = this.fontStyle === 'serif', traditional = key !== '⿳亠丷厂'
+    const contents = children[1]
+    if (Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿' && !this.excluded('儿') && !this.excluded('元')) {
+      const top = serif ? (traditional ? 461 : 415) : (traditional ? 450 : 390)
+      const baseBottom = traditional ? 210 : 180
+      // A denser lower subtree needs more of the opening than a simple 丅.
+      const ink = isEmpty(contents[2]) ? 0 : this.ink(contents[2])
+      const extra = Math.max(0, Math.min(top - 120 - baseBottom, (Math.sqrt(ink / 3700) - 1) * 150))
+      const bottom = baseBottom + extra
+      const legs = componentPosition('儿:under-bar', mapped([250, bottom, 920, top + 2], componentConstants.face, region), this.fontStyle)
+      if (legs) {
+        const lower = this.node(contents[2], mapped([240, -59, 940, bottom - 25], componentConstants.face, region))
+        // Strong vertical weight expansion closes the counters of compact,
+        // dense lower components. Keep their native light-master detail.
+        if (ink > 7400) for (const part of lower) part.weightLimit = [1, 0]
+        return [...outer, legs, ...lower]
+      }
+    }
     // The traditional boxes follow 生 in Noto 產. The 产 enclosure's
     // lower crossbar leaves a shorter opening, so its top is lowered.
     const box = serif ? [198, -51, 954, traditional ? 445 : 330]
@@ -735,6 +752,18 @@ export class Composer {
       const box = region.slice()
       box[axis] = lo + a * span
       box[axis + 2] = lo + b * span
+      // 鴸 supplies a full-height left 朱 even in exports without a usable host cut.
+      const other = children[1]
+      const yanSibling = op === '⿰' && i === 0 && child === '朱' && Array.isArray(other)
+        && other[0] === '⿸' && yanSources.has(keyOf(other[1]))
+      if (yanSibling && !this.separate && !this.excluded('朱') && !this.excluded('鴸')) {
+        const native = componentPositionBox('朱:L', this.fontStyle)
+        if (native) {
+          const vertical = mapped(native, componentConstants.face, region)
+          groups.push([componentPosition('朱:L', [box[0], vertical[1], box[2], vertical[3]], this.fontStyle)])
+          return
+        }
+      }
       const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
       if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
       else groups.push(this.row(child, box, children.length))
@@ -958,7 +987,7 @@ export class Composer {
         }
         const measured = p.part.contours[0]?.width
         const own = measured ? measured[axis] : curve(p.native, axis)
-        weight.push(Math.min(1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
+        weight.push(Math.min(p.weightLimit?.[axis] ?? 1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
       }
       p.target = target
       p.weight = weight
