@@ -1,6 +1,6 @@
 // @ts-check
-import { isNode, parse, write } from '../core/ids.js'
-import { isSmallSeal } from './seal-data.js'
+import { isNode, parse, write } from '../../src/core/ids.js'
+import { isSmallSeal } from '../../src/adapter/seal-data.js'
 
 /**
  * @typedef {{ component: string, options: string[], selected: string | null, via: 'exact' | 'radical-form' | 'unmapped' }} SealMapping
@@ -13,8 +13,8 @@ export const SEAL_GENERATOR = 'cjk-to-seal/1'
 /**
  * Candidate generation never changes the source table. The Cartesian product is
  * bounded, and one assignment is reused for every occurrence of the same component.
- * @param {import('./seal-data.js').SmallSealData} doc
- * @param {Map<string, import('../core/decompose.js').Sequence[]>} table
+ * @param {import('../../src/adapter/seal-data.js').SmallSealData} doc
+ * @param {Map<string, import('../../src/core/decompose.js').Sequence[]>} table
  * @param {Map<string, string>} forms Radical/positional folds only, not seal equivalence groups.
  * @param {string} [modernSource]
  */
@@ -54,7 +54,7 @@ export function createSealCandidates(doc, table, forms = new Map(), modernSource
       if (!supported) continue
       /** @type {string[]} */
       const leaves = []
-      /** @param {import('../core/ids.js').Part} part */
+      /** @param {import('../../src/core/ids.js').Part} part */
       const collect = part => { if (isNode(part)) part.parts.forEach(collect); else if (part && !leaves.includes(part)) leaves.push(part) }
       const tree = parsed.tree ?? null
       collect(tree)
@@ -76,7 +76,7 @@ export function createSealCandidates(doc, table, forms = new Map(), modernSource
           return
         }
         const replacement = new Map(mappings.map((m, i) => [m.component, chosen[i]]))
-        /** @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
+        /** @param {import('../../src/core/ids.js').Part} part @returns {import('../../src/core/ids.js').Part} */
         const replace = part => isNode(part) ? { op: part.op, parts: part.parts.map(replace) } : part ? replacement.get(part) ?? null : null
         list.push({ text: write(replace(tree)), modernChar: name, modernIds: sequence.text, regions: sequence.regions ?? '',
           mappings: mappings.map((m, i) => ({ ...m, selected: chosen[i] })), unmapped: mappings.filter(m => !m.options.length).map(m => m.component), missingGlyphs: [...new Set(chosen.filter(c => c !== null).filter(c => !glyphs.has(c)))] })

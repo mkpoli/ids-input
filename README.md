@@ -176,9 +176,9 @@ unclassified forms have separate groups. Type a modern character such as 木 or 
 to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
 these estimates do not enter the seal decomposition table.
 
-`adapter.sealCandidates(query)` generates inferred seal IDS from modern CJK
-descriptions with component alternatives and source metadata. See the
-[candidate inference API](docs/small-seal-candidates.md).
+Dataset maintainers can generate an offline comparison gallery and validation
+report with `node scripts/check_small_seal.mjs OUTPUT_DIRECTORY`. See the
+[provider audit guide](docs/small-seal-candidates.md).
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
