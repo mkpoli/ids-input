@@ -25,7 +25,7 @@ try {
     await panel.evaluate(el=>{el.scrollTop=100;el.dispatchEvent(new Event('scroll'))})
     assert.ok(await panel.isVisible())
     await panel.locator('summary').click()
-    if(process.env.IDS_INFO_SHOTS){mkdirSync(process.env.IDS_INFO_SHOTS,{recursive:true});await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-tangut-${scheme}.png`,clip:{x:0,y:0,width:1100,height:800}})}
+    if(process.env.IDS_INFO_SHOTS){mkdirSync(process.env.IDS_INFO_SHOTS,{recursive:true});await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-tangut-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})}
     await page.keyboard.press('Escape'); await page.waitForTimeout(400);assert.ok(await panel.isHidden())
     // Focus opens details without changing the editor; F1 enters, Escape restores focus.
     await horse.focus(); await panel.waitFor({state:'visible'}); await panel.getByText('Small Seal forms',{exact:true}).waitFor()
@@ -39,7 +39,7 @@ try {
     await panel.getByText('Small Seal forms',{exact:true}).waitFor()
     await page.evaluate(()=>document.fonts.ready); await page.waitForTimeout(100)
     assert.ok(await panel.evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight+1))
-    if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-han-${scheme}.png`,clip:{x:0,y:0,width:1100,height:800}})
+    if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-han-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})
     // A changed/detached editor leaf invalidates the old lookup.
     await field.fill('⿰水火'); await panel.waitFor({state:'hidden'})
     // Quick exit and return before opening must restart the delay.
