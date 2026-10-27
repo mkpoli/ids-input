@@ -36,14 +36,15 @@ export const OPEN_DEPTH = 6
 /** The most terms a query takes. */
 export const TERMS = 8
 
-/** zi.tools' two explicit wildcard expressions for looking up components.
+/** zi.tools' two wildcard expressions for looking up components.
  * @param {string} text @returns {{ kind: 'parts' | 'containing', char: string } | null} */
 export function componentQuery(text) {
   const special = tokens(unalias((text ?? '').trim()))
   if (special.length !== 3 || special[0] !== '㇯') return null
   const [, left, right] = special
-  if (left === UNKNOWN && right !== UNKNOWN && !EMPTY_MARKS.includes(right) && isComponent(right)) return { kind: 'containing', char: right }
-  if (right === UNKNOWN && left !== UNKNOWN && !EMPTY_MARKS.includes(left) && isComponent(left)) return { kind: 'parts', char: left }
+  const wildcard = (/** @type {string} */ part) => part === UNKNOWN || EMPTY_MARKS.includes(part)
+  if (wildcard(left) && !wildcard(right) && isComponent(right)) return { kind: 'containing', char: right }
+  if (wildcard(right) && !wildcard(left) && isComponent(left)) return { kind: 'parts', char: left }
   return null
 }
 
@@ -607,13 +608,13 @@ export function createSearch(table, { forms = new Map() } = {}) {
   /**
    * The characters `query` finds, closest first, at most `limit`, and how many there are.
    * @param {string} query
-   * @param {{ limit?: number, literal?: boolean }} [options]
+   * @param {{ limit?: number, literal?: boolean, componentLookup?: boolean }} [options]
    * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'extra' | 'terms' }}
    */
-  function search(query, { limit = 60, literal = false } = {}) {
-    // zi.tools uses these two complete expressions for component lookup. Keep empty draft slots
-    // distinct from the explicit wildcard so an unfinished subtraction remains a normal query.
-    const special = componentQuery(query)
+  function search(query, { limit = 60, literal = false, componentLookup = true } = {}) {
+    // zi.tools uses a wildcard on one side of ㇯ for component lookup. An empty editor slot
+    // means the same thing for search, while ？ remains accepted in imported expressions.
+    const special = componentLookup ? componentQuery(query) : null
     if (special?.kind === 'containing') return containingPart(special.char, limit)
     if (special?.kind === 'parts') return partsOf(special.char, limit)
     const { terms, problem } = parseQuery(query, { literal })

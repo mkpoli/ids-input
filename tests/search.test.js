@@ -153,9 +153,17 @@ describe('component lookup expressions', () => {
     expect(hits.find(hit => hit.char === '豊').sequence).toBe('豊')
   })
 
-  it('does not turn incomplete subtractions into component lookups', () => {
-    expect(search.search('㇯木⬚')).toEqual(search.search('㇯木＋'))
-    expect(search.search('㇯木⬚')).not.toEqual(search.search('㇯木？'))
+  it('treats an empty slot as the same wildcard for both lookup directions', () => {
+    for (const empty of ['⬚', '＋']) {
+      expect(search.search(`㇯木${empty}`)).toEqual(search.search('㇯木？'))
+      expect(search.search(`㇯${empty}木`)).toEqual(search.search('㇯？木'))
+    }
+    expect(search.search('㇯⬚⬚')).toEqual(search.search('㇯？？'))
+  })
+
+  it('still permits a structural search for a subtraction with a wildcard', () => {
+    const index = createSearch(new Map([['甲', ['㇯木口', '⿰木水']]]))
+    expect(index.search('㇯木⬚', { componentLookup: false }).hits.map(hit => hit.char)).toContain('甲')
   })
 })
 

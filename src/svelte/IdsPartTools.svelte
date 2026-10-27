@@ -18,7 +18,6 @@
       aria-label={t('ids.slot')} placeholder={t('ids.slotHint')}
       onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); apply() } }} />
     <button type="button" class="ids-apply" disabled={editor.disabled || !editor.piece.trim()} onclick={apply}>{t('ids.apply')}</button>
-    <button type="button" class="ids-unknown" disabled={editor.disabled} title={t('ids.unknown')} aria-label={t('ids.unknown')} onclick={() => editor.take('？')}>？</button>
     <button type="button" class="ids-empty" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
       title={`${t('ids.empty')} (${shortcut('backspace')})`} aria-label={t('ids.empty')} onclick={() => editor.empty(editor.chosen)}>⬚</button>
     <button type="button" class="ids-clear" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
@@ -64,7 +63,7 @@
   .ids-slot{flex:1 1 140px;min-width:0;min-height:36px;padding:4px 10px;font-size:14px}
   .ids-slot:not(:placeholder-shown){font-size:20px;font-family:var(--_font);padding:2px 10px}
   .ids-tools > button{position:relative;display:inline-flex;align-items:center;gap:8px;padding:0 14px 0 12px;min-height:36px;font-size:13px}
-  .ids-tools > :is(.ids-empty,.ids-unknown){justify-content:center;min-width:38px;padding:0 8px;font-family:var(--_font);font-size:22px;line-height:1}
+  .ids-tools > .ids-empty{justify-content:center;min-width:38px;padding:0 8px;font-family:var(--_font);font-size:22px;line-height:1}
   .ids-tools > button:not(:disabled):hover{border-color:var(--_line-strong);background:var(--_surface-subtle)}
   kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
   .ids-title{font-size:11px;color:var(--_muted)}

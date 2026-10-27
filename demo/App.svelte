@@ -217,7 +217,8 @@
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
   let structuralSearch = $state(false)
-  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
+  const wholeComponentLookup = $derived(componentQuery(editor.whole))
+  const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
@@ -632,7 +633,7 @@
             <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
           </div>
           {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
-          {:else if editor.pending}<p class="status" role="status">{editor.pending}</p>{/if}
+          {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
         <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
