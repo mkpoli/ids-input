@@ -33,7 +33,8 @@ The package has four layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
+The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
+from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
@@ -309,6 +310,10 @@ search builds an index in memory on first use: under Bun, about half a second fo
 components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
 there instead. It has no `variants`, `drawing` or `preview`.
 
+Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
+replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated
+standard IDS subset of Yi Bai's data. Extended expressions and variant annotations are not included.
+
 ## Search
 
 `IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
@@ -567,6 +572,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 `scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
+
+- Yi Bai IDS, <https://github.com/yi-bai/ids>, MIT: additional unannotated Han descriptions.
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data

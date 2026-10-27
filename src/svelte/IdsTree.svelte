@@ -81,6 +81,7 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       const next = neighbor(editor.tree, path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
@@ -168,7 +169,14 @@
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)} onclickcapture={event => {
+  }} onpointerleave={() => editor.hover(null)} onpointerdown={event => {
+    const target = /** @type {HTMLElement} */ (event.target)
+    if (!editor.disabled && (target === event.currentTarget || target.classList.contains('ids-tree-root'))) {
+      const active = document.activeElement
+      if (editing && active instanceof HTMLElement && rootEl?.contains(active)) active.blur()
+      editor.choose(null)
+    }
+  }} onclickcapture={event => {
     if (event.detail !== 1) return
     const target = /** @type {HTMLElement} */ (event.target)
     clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null

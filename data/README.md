@@ -2,6 +2,21 @@
 
 Each file keeps its own licence; the MIT licence of the code does not cover them.
 
+## `yi-bai-ids.tsv.gz`
+
+Unannotated standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit
+`da1e9f8a09e2ec8faaf176bac99203f978282041`, <https://github.com/yi-bai/ids>.
+The source file's SHA-256 is `51f78d7d84f52fd73e5bc155c2239b737c58ce627d446894a809f1a36547ae18`.
+The compiled table contains 63,905 entries, in the same format as `babelstone-ids.tsv.gz` but
+without region tags. Rebuild it with `bun scripts/build_yi_bai_ids.mjs`.
+
+Descriptions containing extended syntax or variant annotations are excluded entirely: their
+meaning cannot yet be represented by the editor. Both primary and alternative unannotated
+descriptions are retained. The workshop adds them after BabelStone's descriptions, keeping
+existing descriptions and their region tags when the two sources agree.
+
+Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
+
 ## `babelstone-ids.tsv.gz`
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
@@ -19,7 +34,7 @@ gzipped, 2.2 MB as text.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
-  from CHISE, and on IRG submissions, edited by its maintainer. Only BabelStone's file is read here.
+  from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
 
 ## `ids-parts.json`
