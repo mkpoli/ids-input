@@ -4,15 +4,25 @@ import { gunzipSync } from 'node:zlib'
 import { hasBundledGlyph } from '../src/composer/bundled-coverage.js'
 import { bundledSource } from '../src/composer/bundled.js'
 import { onlyBundled } from '../src/composer/local.js'
+import coverage from '../data/bundled-coverage.json' with { type: 'json' }
 
 it('indexes the exact scalar outlines in each dedicated bundle', () => {
   for (const name of ['tangut', 'bopomofo', 'small-seal']) {
     const { records } = JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}-outlines.json.gz`, import.meta.url))))
-    const expected = new Set(Object.entries(records).filter(([key, rec]) => [...key].length === 1 && rec.G?.p?.length).map(([key]) => key))
-    for (let cp = 0; cp <= 0x10FFFF; cp++) {
-      const char = String.fromCodePoint(cp)
-      if (hasBundledGlyph(name, char) !== expected.has(char)) throw Error(`${name}: wrong coverage at ${cp.toString(16)}`)
+    const points = Object.entries(records).filter(([key, rec]) => [...key].length === 1 && rec.G?.p?.length).map(([key]) => key.codePointAt(0)).sort((a, b) => a - b)
+    const ranges = []
+    for (const cp of points) {
+      const last = ranges.at(-1)
+      if (last && cp === last[1] + 1) last[1] = cp
+      else ranges.push([cp, cp])
     }
+    expect(coverage[name]).toEqual(ranges)
+    for (const [first, last] of ranges) {
+      expect(hasBundledGlyph(name, String.fromCodePoint(first))).toBe(true)
+      expect(hasBundledGlyph(name, String.fromCodePoint(last))).toBe(true)
+    }
+    expect(points.flatMap(cp => [cp - 1, cp + 1]).filter(cp => cp >= 0 && cp <= 0x10FFFF && !ranges.some(([a, b]) => cp >= a && cp <= b)).every(cp => !hasBundledGlyph(name, String.fromCodePoint(cp)))).toBe(true)
+    expect(hasBundledGlyph(name, '⿰')).toBe(false)
   }
 })
 
