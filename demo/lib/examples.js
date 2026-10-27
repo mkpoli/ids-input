@@ -130,6 +130,11 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
+  { key: 'seal', examples: [
+    { sequence: '⿰𽁭𽁭', char: '𽄌' },
+    { sequence: '⿱𽄨𽄨', char: '𽌜' },
+    { sequence: '⿴𽌣𽄘', char: '𽌠' },
+  ] },
   { key: 'tangut', examples: [
     { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
     { sequence: '⿰𘫿𘫿', char: '𘴅' },

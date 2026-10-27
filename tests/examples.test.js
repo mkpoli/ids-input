@@ -7,6 +7,7 @@ import { onlyTangut } from '../src/composer/tangut.js'
 import { size } from '../src/composer/loader.js'
 import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 
+const sealTable = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))).toString('utf8')).table
 const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 /** The characters BabelStone describes with each sequence. */
 const described = new Map()
@@ -31,7 +32,8 @@ describe('the demo examples', () => {
         if ('source' in example) {
           expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
           expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
-        } else expect(found).toContain(char)
+        } else if (sealTable[char]) expect(sealTable[char]).toContain(sequence)
+        else expect(found).toContain(char)
       } else {
         expect(found).toEqual([])
       }
@@ -43,7 +45,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

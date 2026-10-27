@@ -73,3 +73,9 @@ it('prepares the examples of reflection, rotation and subtraction', () => {
     expect(drawn.cut).toBe('')
   }
 })
+
+it('prepares the Small Seal examples with bundled outlines', () => {
+  for (const sequence of ['⿰𽁭𽁭', '⿱𽄨𽄨', '⿴𽌣𽄘']) {
+    expect(data.drawings[sequence]?.drawn.d.length).toBeGreaterThan(100)
+  }
+})

@@ -7,6 +7,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
+import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
 import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
 import { onlyBundled } from '../../src/composer/local.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
@@ -18,6 +19,8 @@ const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../..
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
 const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
+const loadSeal = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url))))
+const sealSources = new Map()
 const bopomofoSources = new Map()
 await source.ready()
 const drawings = {}
@@ -26,6 +29,10 @@ for (const example of EXAMPLES) {
   try {
     const local = onlyBundled(example.sequence)
     let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? null : source)
+    if (hasSmallSeal(example.sequence)) {
+      if (!sealSources.has(selected)) sealSources.set(selected, smallSealSource({ load: loadSeal, fallback: selected }))
+      selected = sealSources.get(selected)
+    }
     if (hasBopomofo(example.sequence)) {
       if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
       selected = bopomofoSources.get(selected)
