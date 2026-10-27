@@ -4,14 +4,15 @@
   import TreeGlyph from './TreeGlyph.svelte'
   import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
-  // column, the second part inside the first, or one over the other. A click chooses a part; a part
+  // column, the second part inside a single host, or one over the other. Compound enclosure hosts
+  // get separate panels so their descendants stay visible. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
   // click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a level or
   // copies that part's sequence. An empty slot shows as ⬚.
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
-  import { layout, treeSizes } from './tree-layout.js'
+  import { nodeLayout, treeSizes } from './tree-layout.js'
 
   /** @typedef {import('../core/ids.js').Part} Part @typedef {import('../core/ids.js').Path} Path */
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, draw?: ((part: string) => Promise<import('../adapter/types.js').Drawing | null>) | null, fontStyle?: string }} */
@@ -130,7 +131,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
@@ -147,7 +148,7 @@
       </div>
       <div class="ids-parts">
         {#each part.parts as inner, i (key([...path, i]))}
-          <div class="ids-cell" data-index={i} style:flex-grow={sizes.get(inner)?.[layout(part.op) === 'row' ? 'width' : 'height'] ?? 1}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
+          <div class="ids-cell" data-index={i} style:flex-grow={sizes.get(inner)?.[nodeLayout(part) === 'row' ? 'width' : 'height'] ?? 1}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
         {/each}
       </div>
     </div>
