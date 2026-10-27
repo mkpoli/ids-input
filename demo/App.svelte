@@ -41,6 +41,7 @@
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
+  import PyramidDialog from './ui/PyramidDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
@@ -498,6 +499,7 @@
   }
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.pyramid.title'), icon: 'pyramid', run: () => pyramidOpen = true },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
@@ -563,7 +565,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), pyramidOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -781,6 +783,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<PyramidDialog bind:open={pyramidOpen} {t} oncreate={sequence => addTab(sequence)} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
