@@ -6,6 +6,7 @@
   // (IdsSequence, IdsOperators, IdsTree, IdsPartTools, IdsPicker, IdsPreview) over its own editor.
   import { untrack } from 'svelte'
   import { isSequence, parse } from '../core/ids.js'
+  import { replacementQuery } from '../core/replacement.js'
   import { createEditor } from './editor.svelte.js'
   import IdsCharacterInfo from './IdsCharacterInfo.svelte'
   import IdsOperators from './IdsOperators.svelte'
@@ -34,7 +35,7 @@
   $effect(() => {
     const of = char
     untrack(() => {
-      const typed = isSequence(value) ? value : ''
+      const typed = isSequence(value) || replacementQuery(value) ? value : ''
       editor.reset(typed)
       if (!typed && of) editor.lookup.read(of).then(found => {
         if (char !== of) return
@@ -45,7 +46,7 @@
   })
   $effect(() => {
     const given = value
-    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) ? given : '') })
+    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) || replacementQuery(given) ? given : '') })
   })
   function use() { if (editor.usable && !disabled) onuse?.(editor.whole) }
 </script>

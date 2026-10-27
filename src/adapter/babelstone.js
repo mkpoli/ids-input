@@ -6,6 +6,7 @@ import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
+import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence } from '../core/ids.js'
 
 /**
@@ -17,9 +18,9 @@ import { isComponent, isSequence } from '../core/ids.js'
 const REGIONS = /\(([^)]*)\)$/
 /** A CJK or Tangut character, the characters a mixed query may name as components. */
 const IDEOGRAPH = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
-const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}]/u
+const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}]/u
 /** The scripts a mixed query may name as components: ideographs, kana and Bopomofo. */
-const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}\u{20000}-\u{3FFFD}]/u
+const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}\u{20000}-\u{3FFFD}]/u
 
 /**
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
@@ -318,7 +319,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       if (!isComponent(char)) continue
       // A Latin letter or Hangul syllable in a longer query is part of a word; scripts that
       // components use (ideographs, kana, Bopomofo) still count.
-      if (rest.length > 1 && !SCRIPT.test(char)) continue
+      if (rest.length > 1 && !(SCRIPT.test(char) || unicodeProperty('ideographic', char))) continue
       chars.push(char)
     }
     return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
@@ -360,7 +361,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       // One ideograph typed on its own is that component; names are for what is longer than one.
       // A lone letter or syllable (수, の) also searches names, so Korean and kana readings work.
       const single = [...text].length === 1 && isComponent(text)
-      const singleIdeograph = single && (IDEOGRAPH.test(text) || KANA.test(text))
+      const singleIdeograph = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text) || KANA.test(text))
       /** @type {{ char: string, label: string }[]} */
       let hits = direct
       if (!singleIdeograph && (namesText !== undefined || names)) {

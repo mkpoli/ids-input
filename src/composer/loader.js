@@ -145,9 +145,12 @@ function keysOf(tree, out = [], separate = false) {
 }
 
 // A dedicated form consumes its internal operators, including the mirrored spelling.
-function extraOperators(tree) {
-  if (typeof tree === 'string' || isComponentForm(keyOf(tree))) return []
-  return [tree[0], ...tree.slice(1).flatMap(extraOperators)].filter(op => APPROXIMATE.includes(op))
+function extraOperators(tree, { fontStyle, separate, nativeEnclosures }) {
+  if (typeof tree === 'string') return []
+  const key = keyOf(tree)
+  if (fontStyle !== 'kaisho' && (separate ? isGroupedForm(key) : isComponentForm(key))) return []
+  const op = nativeEnclosures.has(key) ? [] : [tree[0]]
+  return [...op, ...tree.slice(1).flatMap(child => extraOperators(child, { fontStyle, separate, nativeEnclosures }))].filter(op => APPROXIMATE.includes(op))
 }
 
 /** A box in font units (y up) as the drawing's SVG box has it: [x, y, width, height], y down. */
@@ -171,8 +174,8 @@ export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
  * whether it is a cut, `origins` where each part came from, `kanjivg` whether a part was cut along
  * KanjiVG's groups or a hand form read from it, and `approximate` the operators it uses that the
  * composer itself does not draw. `exclude` lists characters nothing is taken from, `face` the box a
- * whole character fills without them, and `separate` draws every operand of a description instead of a glyph
- * that spells it (falling back to that glyph when the operands cannot be drawn).
+ * whole character fills without them, and `separate` draws operands as individual pieces where possible,
+ * including cuts from a matching whole glyph (falling back to the whole glyph when the operands cannot be drawn).
  * Throws LookupError when a part can be drawn no way or the sequence is larger than `LIMITS`.
  */
 export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
@@ -203,7 +206,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree)), ...composer.approximate])] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

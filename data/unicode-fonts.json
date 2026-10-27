@@ -1,5 +1,5 @@
 {
-  "license": "SIL OFL 1.1",
+  "license": "See individual font records; Noto fonts use SIL OFL 1.1",
   "fonts": [
     {
       "file": "NotoSans-Regular.ttf",
@@ -755,7 +755,39 @@
       "file": "NotoMusic-Regular.ttf",
       "sha256": "fdf04893f04fabd36261bc5fb4fb2b0ae4da268286318ab8919f34b3e3458397",
       "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb"
+    },
+    {
+      "file": "Jigmo-20250912-Jigmo3.ttf",
+      "sha256": "815b18c1c670103723fe743090559208fdea47dc587ecb057a5a4721ee8dfeff",
+      "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "NotoEmoji.ttf",
+      "sha256": "de6c18832938afc99caf132b39d6a30a19bac7f2e812e28db2535b4608d27551",
+      "url": "https://raw.githubusercontent.com/google/fonts/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji/NotoEmoji%5Bwght%5D.ttf",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "unifont-18.0.01.otf",
+      "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
+      "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "unifont_upper-18.0.01.otf",
+      "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
+      "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
+      "license": "SIL OFL 1.1"
     }
   ],
-  "bun": "1.3.14"
+  "svgSources": [
+    {
+      "file": "glyphwiki-jurchen.svg.json.gz",
+      "sha256": "c2616958073b60e6e371e95d3bf455e425e0cedf625dbfe2e8fece14abd04ca4",
+      "url": "https://glyphwiki.org/glyph/",
+      "license": "GlyphWiki data terms",
+      "copyright": "GlyphWiki contributors"
+    }
+  ]
 }

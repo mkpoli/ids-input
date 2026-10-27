@@ -1,6 +1,7 @@
 <script>
   import { parse, arity } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
+  import { replacementPrefix, replacementQuery } from '../core/replacement.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
   let scroll = $state(0)
@@ -12,6 +13,12 @@
   let { editor, label = true, placeholder = '⿰⿱匕失⿱コ疋', onenter } = $props()
   const spans = $derived(tokens(editor.draft))
   const t = $derived(editor.t)
+  $effect(() => {
+    const input = editor.draft, adapter = editor.adapter, disabled = editor.disabled
+    if (!adapter || disabled || !replacementQuery(input)) return
+    untrack(() => editor.resolveInput(input))
+    return () => editor.cancelResolution()
+  })
   /** @type {HTMLInputElement | null} */ let field = $state(null)
   $effect(() => {
     if (!field) return
@@ -44,6 +51,7 @@
   }
   /** @param {string} text */
   function replaceText(text) {
+    if (field && replacementPrefix(field.value)) return false
     if (!field || !text || parse(unalias(text), { open: true }).problem) return false
     if (field.selectionStart === field.selectionEnd) {
       const offset = field.selectionStart ?? 0
@@ -98,6 +106,9 @@
       return
     }
     if (event.isComposing) return
+    // Replacement expressions are entered as ordinary text until all three operands are present.
+    if (field && (replacementPrefix(field.value)
+      || (/^\s*r$/i.test(field.value) && /^p$/i.test(event.data ?? '')))) return
     if (event.data && event.inputType.startsWith('insert') && replaceText(event.data)) { event.preventDefault(); return }
     expandSelection()
     if (!event.isComposing && event.inputType.startsWith('delete') && field && field.selectionStart !== field.selectionEnd && editor.chosen !== null) {
