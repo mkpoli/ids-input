@@ -15,6 +15,12 @@ import { TransformError, chainIsAffine, affineForChain, transformPieces } from '
 /** @typedef {{ geometry: (node: Node) => Geometry | null, placement: (parent: OperatorNode, child: Node, index: number) => number[] | null }} LayerSource */
 /** @typedef {{ node: string, reason: 'geometry' | 'placement' | 'transform', message: string }} LayerIssue */
 /** @typedef {{ pieces: (Piece & { node: string, approximate: boolean })[], complete: boolean, issues: LayerIssue[] }} LayerDrawing */
+/** @typedef {{ kind: 'component', node: string, positive: Piece[], negative: Piece[] }} ComponentScope */
+/** @typedef {{ kind: 'operator', node: string, op: string, children: Scope[] }} OperatorScope */
+/** @typedef {{ kind: 'group', node: string, child: Scope }} GroupScope */
+/** @typedef {{ kind: 'slot', node: string }} SlotScope */
+/** @typedef {ComponentScope | OperatorScope | GroupScope | SlotScope} Scope */
+/** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[] }} ScopeTree */
 
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
@@ -77,6 +83,67 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
   }
   visit(document.root, [])
   return { pieces, complete: issues.length === 0, issues }
+}
+
+/**
+ * Build the scoped drawing for compositing: each component keeps its positive and cut pieces apart,
+ * and each operator keeps its children. Pieces are already transformed. `source` is the same one
+ * `renderLayers` takes. A missing piece or unsupported transform makes the tree incomplete.
+ * @param {Document} document @param {LayerSource} source @param {{ tolerance?: number }} [options] @returns {ScopeTree}
+ */
+export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
+  /** @type {LayerIssue[]} */
+  const issues = []
+  /** @param {Node} node @param {Chain} parentChain @returns {Scope | null} */
+  const visit = (node, parentChain) => {
+    const chain = [...(node.transform ?? []), ...parentChain]
+    if (node.kind === 'slot') return { kind: 'slot', node: node.id }
+    if (node.kind === 'component') {
+      let geometry
+      try { geometry = source.geometry(node) } catch (error) {
+        issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
+        return null
+      }
+      if (!geometry || !Array.isArray(geometry.pieces)) {
+        issues.push({ node: node.id, reason: 'geometry', message: `no geometry for ${node.id}` })
+        return null
+      }
+      try {
+        const transformed = transformPieces(geometry.pieces, chain, { tolerance })
+        /** @type {ComponentScope} */
+        const scope = { kind: 'component', node: node.id, positive: [], negative: [] }
+        for (const piece of transformed) (piece.cut ? scope.negative : scope.positive).push(piece)
+        return scope
+      } catch (error) {
+        issues.push({ node: node.id, reason: 'transform', message: error instanceof TransformError ? error.message : String(error) })
+        return null
+      }
+    }
+    if (node.kind === 'group') {
+      const child = visit(node.child, chain)
+      return child ? { kind: 'group', node: node.id, child } : null
+    }
+    /** @type {Scope[]} */
+    const children = []
+    node.children.forEach((child, index) => {
+      let placement
+      try { placement = source.placement(node, child, index) } catch (error) {
+        issues.push({ node: child.id, reason: 'placement', message: error instanceof Error ? error.message : String(error) })
+        children.push({ kind: 'slot', node: child.id })
+        return
+      }
+      if (!matrix(placement)) {
+        issues.push({ node: child.id, reason: 'placement', message: `no placement for ${child.id}` })
+        children.push({ kind: 'slot', node: child.id })
+        return
+      }
+      const childScope = visit(child, [{ type: 'affine', matrix: placement }, ...chain])
+      children.push(childScope ?? { kind: 'slot', node: child.id })
+    })
+    return { kind: 'operator', node: node.id, op: node.op, children }
+  }
+  const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
+  return { root, complete: issues.length === 0, issues }
 }
 
 export { chainIsAffine, affineForChain }

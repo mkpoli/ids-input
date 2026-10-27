@@ -15,10 +15,10 @@ import { isComponent, isSequence } from '../core/ids.js'
 
 const REGIONS = /\(([^)]*)\)$/
 /** A CJK or Tangut character, the characters a mixed query may name as components. */
-const IDEOGRAPH = /[\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
+const IDEOGRAPH = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
 const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}]/u
 /** The scripts a mixed query may name as components: ideographs, kana and Bopomofo. */
-const SCRIPT = /[\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}\u{20000}-\u{3FFFD}]/u
+const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1B000}-\u{1B122}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B167}\u{20000}-\u{3FFFD}]/u
 
 /**
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
@@ -43,10 +43,15 @@ export function parseIdsTable(text) {
 
 /**
  * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][] }} document
+ * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string> } }} document
  * @returns {PalettePart[]}
  */
-export const paletteRows = ({ columns, parts }) => parts.map(row => /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]]))))
+export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
+  const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
+  const aliases = Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids)
+  if (aliases.length) part.aliases = aliases
+  return part
+})
 
 /**
  * A response's text, gunzipped when it is a gzip file served as it is (as GitHub Pages serves a

@@ -1,12 +1,22 @@
 // @ts-check
-import { leaves, parse } from '../core/ids.js'
+import { isNode, parse, write } from '../core/ids.js'
+import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hasTangut } from './tangut.js'
 import { hasSmallSeal } from './small-seal.js'
 import { hasBopomofo } from './bopomofo.js'
 
-/** Whether every filled leaf has bundled outlines. @param {string} sequence */
-export function onlyBundled(sequence) {
+/** Whether every filled leaf has bundled outlines. @param {string} sequence @param {boolean} [separate] */
+export function onlyBundled(sequence, separate = false) {
   const result = parse(sequence, { open: true })
-  return !result.problem && (hasTangut(sequence) || hasBopomofo(sequence) || hasSmallSeal(sequence)) &&
-    leaves(result.tree).every(({ char }) => char === null || hasTangut(char) || hasBopomofo(char) || hasSmallSeal(char))
+  if (result.problem || result.tree === null) return false
+  let filled = false
+  /** @param {import('../core/ids.js').Part} node */
+  const local = node => {
+    if (node === null) return true
+    if ((separate ? isGroupedForm : isComponentForm)(write(node))) { filled = true; return true }
+    if (isNode(node)) return node.parts.every(local)
+    filled = true
+    return hasTangut(node) || hasBopomofo(node) || hasSmallSeal(node)
+  }
+  return local(result.tree) && filled
 }

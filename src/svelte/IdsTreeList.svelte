@@ -155,5 +155,5 @@
   .part.empty{font-size:15px;color:var(--_muted)}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
   li{background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
-  li.hovered{box-shadow:inset 0 0 0 2px color-mix(in oklab,var(--_accent) 65%,transparent)}
+  li.hovered{background:color-mix(in oklab,var(--tint) 28%,var(--_surface));box-shadow:inset 0 0 0 2px var(--_accent)}
 </style>

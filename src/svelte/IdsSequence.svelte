@@ -139,6 +139,6 @@
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
-  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 30%,transparent);box-shadow:inset 0 -2px var(--_accent)}
+  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 40%,transparent);box-shadow:inset 0 -3px var(--_accent)}
   .sequence-paint span.selected{background:color-mix(in oklab,var(--_accent) 22%,var(--tint) 12%);box-shadow:inset 0 -2px var(--_accent)}
 </style>

@@ -37,10 +37,10 @@ const CACHE = 32
  * spells it, so every leaf has a piece of its own. A sequence drawn once is answered from memory
  * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
  * `worker` makes the Web Worker; the default is the module worker beside this file.
- * @param {{ base: string, separate?: boolean, worker?: () => WorkerLike }} options
+ * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif' | 'kaisho', worker?: () => WorkerLike }} options
  * @returns {ComposerPreview}
  */
-export function composerPreview({ base, separate = false, worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
+export function composerPreview({ base, separate = false, fontStyle = 'sans', worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
   /** @type {ReturnType<typeof createDrawer> | null} */
   let drawer = null
   let asking = 0
@@ -86,7 +86,7 @@ export function composerPreview({ base, separate = false, worker = () => new Wor
       const answer = await asked.draw(sequence, leaves => {
         sketch = leaves
         if (!signal?.aborted) onSketch?.(leaves)
-      }, { separate })
+      }, { separate, fontStyle })
       if (answer.status === 'composed') { remember(sequence, answer.drawn, sketch); return answer.drawn }
       if (answer.status === 'cancelled') throw new DOMException('The drawing was replaced.', 'AbortError')
       throw answer.unavailable ? new UnavailableError(answer.error) : new Error(answer.error)

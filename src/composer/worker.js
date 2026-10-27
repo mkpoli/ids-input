@@ -11,11 +11,12 @@ import { hasTangut, tangutSource } from './tangut.js'
 
 import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
+import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
 
 const sources = new Map()
-self.onmessage = async ({ data: { id, sequence, base, separate, warm } }) => {
-  const local = !warm && onlyBundled(sequence)
+self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
+  const local = !warm && onlyBundled(sequence, separate)
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
   const seal = !warm && hasSmallSeal(sequence)
   const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}`
@@ -24,16 +25,25 @@ self.onmessage = async ({ data: { id, sequence, base, separate, warm } }) => {
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
     if (seal) source = smallSealSource({ fallback: source })
+    source ??= bundledSource({ load: async () => ({ records: {} }), matches: () => false })
     sources.set(key, source)
   }
-  const source = sources.get(key)
+  let source = sources.get(key)
   try { await source.ready() } catch (error) {
+    if (!warm && onlyBundled(sequence)) {
+      source = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
+      if (tangut) source = tangutSource({ fallback: source })
+      if (bopomofo) source = bopomofoSource({ fallback: source })
+      if (seal) source = smallSealSource({ fallback: source })
+      await source.ready()
+    } else {
     self.postMessage(warm ? { id, warm: true, error: String(error?.message ?? error) } : { id, error: String(error?.message ?? error), unavailable: true })
     return
+    }
   }
   if (warm) { self.postMessage({ id, warm: true }); return }
   try {
-    self.postMessage({ id, sketch: await sketch(source, sequence) })
-    self.postMessage({ id, drawn: await compose(source, sequence, { separate }) })
+    self.postMessage({ id, sketch: await sketch(source, sequence, { fontStyle }) })
+    self.postMessage({ id, drawn: await compose(source, sequence, { separate, fontStyle }) })
   } catch (error) { self.postMessage({ id, error: String(error?.message ?? error) }) }
 }
