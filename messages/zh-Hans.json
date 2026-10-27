@@ -105,6 +105,8 @@
   "ids.replace": "将{part}换成",
   "ids.search": "查找部件",
   "ids.search.containing": "含“{sequence}”的字",
+  "ids.search.partsOf": "“{char}”的部件",
+  "ids.search.emptyHint": "留空可搜索，填入部件可组字。",
   "ids.search.count.other": "{count}个",
   "ids.search.failed": "检索失败。",
   "ids.search.open": "打开{sequence}",

@@ -1,6 +1,6 @@
 // @ts-check
 // The description search in a Web Worker, so its index is built once off the page's thread. It
-// receives `{ id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode }`: the first
+// receives `{ id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode, componentLookup }`: the first
 // message loads the IDS tables and forms; each search builds its index when needed. A failed load is tried again
 // on the next message. Each answers `{ id, result }` or `{ id, error }`.
 import { sealTable, sealForms } from './seal-data.js'
@@ -20,10 +20,10 @@ async function load(ids, additionalIds, forms, given, smallSeal) {
   const search = createSearch(table, { forms: sealForms(formsText, doc) })
   return search
 }
-self.onmessage = async ({ data: { id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode } }) => {
+self.onmessage = async ({ data: { id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode, componentLookup } }) => {
   try {
     ready ??= load(ids, additionalIds, forms, formsText, smallSeal).catch(error => { ready = null; throw error })
     const search = await ready
-    self.postMessage({ id, result: (mode === 'structure' ? search.structure : search.search)(query, { limit }) })
+    self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit }) : search.search(query, { limit, componentLookup }) })
   } catch (error) { self.postMessage({ id, error: String(/** @type {Error} */ (error)?.message ?? error) }) }
 }
