@@ -386,15 +386,15 @@ export class Composer {
   /** Preserve the font's designed shape while retaining one adjustable piece per leaf. */
   enclosureParts(node, region) {
     const entry = ENCLOSURE_CUTS[keyOf(node)]
-    if (!entry || this.excluded(entry[0])) return null
+    // Expansion adapts a squeezed character to its region; do not replace it with that same glyph.
+    if (!entry || this.expanding.size || this.excluded(entry[0])) return null
     const [char, cuts] = entry, record = this.glyphRecord(char)
     if (!record) return null
     const indices = cuts[hexOf(JSON.stringify(record.p))]
     if (!indices) return null
     this.nativeEnclosures.add(keyOf(node))
     const glyph = partOf(record), target = fitted(glyph.box, region, this.C.STRETCH)
-    // An expanded character is still one editor leaf; keep its cuts together.
-    if (!this.separate || this.expanding.size) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
+    if (!this.separate) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
     return indices.map(group => {
       const part = makePart(group.map(i => glyph.contours[i]))
       return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }

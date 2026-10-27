@@ -55,6 +55,13 @@ describe('editable lower-right enclosure glyphs', () => {
     expect(drawing.origins).toEqual(['glyph 木', 'glyph 㦰'])
     expect(groupParts(drawing.parts, await sketch(source, text))?.map(group => group.parts)).toEqual([[0], [1]])
   })
+  it('allows a squeezed character to expand through its components', async () => {
+    const records = { ...fontRecords.sans, 戈: { ...fontRecords.sans['氷'], s: null }, 从: { ...fontRecords.sans['斗'], s: null } }
+    const input = { ...files, ...shards('g', Object.entries(records)) }
+    const source = createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+    const drawing = await compose(source, '㦰', { face: [0, 0, 100, 900] })
+    expect(drawing.origins).toEqual(['glyph 戈', 'glyph 从'])
+  })
   for (const text of ['⿲木⿽水丶木', '⿳木⿽水丶木']) it(`keeps the native shape in ${text}`, async () => {
     const source = sourceOf('sans', true)
     const normal = await compose(source, text)
