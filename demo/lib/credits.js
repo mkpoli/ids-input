@@ -1,13 +1,16 @@
-// What the workshop is built from (data and code, with their licences) and what shaped it (tools
-// whose ideas it takes), each with a link. Seen on 2026-10-25 unless noted.
+// Sources, references and related projects, followed by tools whose ideas shaped the workshop.
+// Seen on 2026-10-25 unless noted.
 
 /** @typedef {{ name: string, url: string, by?: string, licence?: string, key: string }} Credit */
 
-/** @type {Credit[]} Data, fonts and code the workshop runs on. */
+/** @type {Credit[]} Sources and related projects. */
 export const SOURCES = [
+  { name: 'Wiktionary / Wiktextract', by: 'Wiktionary contributors, Tatu Ylonen', licence: 'CC BY-SA 4.0', url: 'https://kaikki.org/dictionary/Tangut/index.html', key: 'tangutGlosses' },
+  { name: 'Sea of Tangut Characters', by: 'Andrew West (@TangutSea)', url: 'https://www.babelstone.co.uk/TangutSea/1252582046343536641.html#Status_1252590258019094528', key: 'tangutComponentMeaning' },
   { name: 'Script-Hybrid CJK Ideographs', by: 'Gen Kojitani (小路谷源)', url: 'https://sites.google.com/dhii.asia/biangbiangcon/program', key: 'scriptHybrid' },
   { name: 'Brief introduction of IDS system in zi.tools', by: 'Bai Yi (白易)', url: 'https://sites.google.com/dhii.asia/biangbiangcon/program', key: 'ziToolsPresentation' },
   { name: 'An Invitation to Hacking Character Data / 文字情報ハックのすすめ', by: 'Ryusei Yamaguchi', url: 'https://biangbiangcon.ryusei.dev/', key: 'characterDataPresentation' },
+  { name: '漢字組直しクイズ', by: 'mkpoli', url: 'https://han-reasm.mkpo.li/', key: 'hanReassemble' },
   { name: 'CHISE Small Seal IDS', by: 'MORIOKA Tomohiko, CHISE contributors', licence: 'GPL-2.0-or-later', url: 'https://gitlab.chise.org/CHISE/ids', key: 'smallSeal' },
   { name: 'IDS Seal / Kaiyuan Small Seal', by: 'Kaiyuan Small Seal Font Contributors', licence: 'Kaiyuan font license', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/OFL.txt', key: 'sealFont' },
   { name: 'BabelStone IDS', by: 'Andrew West', licence: 'Public domain', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', key: 'babelstone' },

@@ -34,8 +34,8 @@ const CACHE = 32
  * export, and mixed descriptions combine both sources. It answers the drawing, or rejects: with a `TooLargeError` for a
  * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
- * it has no drawing for). `separate` draws every operand of a description instead of a glyph that
- * spells it, so every leaf has a piece of its own. A sequence drawn once is answered from memory
+ * it has no drawing for). `separate` draws operands as individual pieces where possible, including
+ * cuts from a matching whole glyph. A sequence drawn once is answered from memory
  * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
  * `worker` makes the Web Worker; the default is the module worker beside this file.
  * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif' | 'kaisho', worker?: () => WorkerLike }} options

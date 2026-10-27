@@ -155,7 +155,7 @@
     {#if editing && samePath(editing.path, path)}
       {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
     {:else}
-    <button type="button" class="ids-part" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
+    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}

@@ -25,7 +25,7 @@
     <p><a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license">{t('app.about.codeLicense')}</a></p>
     <p>{t('app.about.dataLicense')} <a href="https://github.com/mkpoli/ids-input/blob/main/data/README.md">{t('app.about.sources')}</a></p>
     <p>{t('app.about.outputLicense')}</p>
-    <h3>{t('app.about.sources')}</h3>
+    <h3>{t('app.footer.sources')}</h3>
     {@render list(SOURCES, 'app.source')}
     <h3>{t('app.about.inspired')}</h3>
     {@render list(INSPIRED, 'app.inspired')}

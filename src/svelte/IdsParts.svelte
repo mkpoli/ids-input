@@ -220,7 +220,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
