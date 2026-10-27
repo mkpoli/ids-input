@@ -42,6 +42,13 @@ try {
     if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-han-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})
     // A changed/detached editor leaf invalidates the old lookup.
     await field.fill('⿰水火'); await panel.waitFor({state:'hidden'})
+    // F1 from a painted input character must return focus to the real input.
+    const textBox=await page.locator('.sequence-paint [data-character="水"]').boundingBox()
+    await page.mouse.move(textBox.x+textBox.width/2,textBox.y+textBox.height/2)
+    await panel.waitFor({state:'visible'});await field.press('F1')
+    assert.ok(await panel.evaluate(el=>el.contains(document.activeElement)))
+    await page.keyboard.press('Escape')
+    assert.ok(await field.evaluate(el=>el===document.activeElement));assert.ok(await panel.isHidden())
     // Quick exit and return before opening must restart the delay.
     await page.locator('.ids-tree [data-character="水"]').hover(); await page.waitForTimeout(50)
     await page.mouse.move(0,0); await page.waitForTimeout(50)

@@ -109,7 +109,13 @@
     }
   }
   /** @param {HTMLElement | null} element */
-  function restoreFocus(element) { restoringFocus = true; element?.focus(); restoringFocus = false }
+  function restoreFocus(element) {
+    restoringFocus = true
+    // Paint spans describe input text but cannot receive focus themselves.
+    const control = element?.closest('.sequence-wrap')?.querySelector('input') ?? element
+    control?.focus()
+    restoringFocus = false
+  }
   /** @param {Event} event */
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
