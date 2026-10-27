@@ -556,8 +556,8 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 53,478 glyph outlines in 250 chunks, each covering at most
-256 code points. The full set is 24,224,164 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 56,651 glyph outlines in 590 chunks, each covering at most
+256 code points. The full set is 26,503,554 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
@@ -570,7 +570,7 @@ Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/O
 [Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
 
 Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
-package font directories plus every Noto CJK, Jigmo, Noto Emoji, Unifont and UniHieroglyphica file listed in
+package font directories plus every Noto CJK, Jigmo, Noto Emoji, Unifont, UniHieroglyphica and Iosevka file listed in
 `unicode-fonts.json`. The builder checks every source digest, selects the first
 available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
 [FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
@@ -678,6 +678,8 @@ Its pixel-based outlines retain their original design. The host export's glyphs 
   pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
 - [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
   [upstream license](../fonts/LICENSE-Unifont.txt), including its OFL option.
+- [Iosevka 34.9.1](https://github.com/be5invis/Iosevka/releases/tag/v34.9.1):
+  48 Latin modifier letters, [SIL OFL 1.1](../fonts/OFL-Iosevka.md).
 - [UniHieroglyphica](https://github.com/thesaurus-linguae-aegyptiae/unihieroglyphica/tree/9375eba4e2b626658e57e3a526118b8225c0581e):
   3,995 Egyptian Hieroglyphs Extended-A outlines, designed by Michel Suignard;
   copyright Regents of the University of California, [SIL OFL 1.1](../fonts/OFL-UniHieroglyphica.txt).
@@ -688,8 +690,10 @@ Its pixel-based outlines retain their original design. The host export's glyphs 
   because the live license page was unavailable when checked on 2026-10-28.
 
 `unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
-sources, grouped by Unicode block. It excludes ranges handled by the main CJK export and dedicated
-bundles. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
+sources, grouped by Unicode block. It excludes exact dedicated-bundle outlines and CJK outlines
+in the pinned default export (`host-glyph-coverage.json`). It includes holes within those ranges;
+the previous range-based report omitted them. This is an outline-source inventory. The worker
+audit described below measures rendering, including composition from other records. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
 available source glyphs; the remaining characters need additional source outlines. Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
 
@@ -708,3 +712,23 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 `script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
+
+
+## Preview coverage audit
+
+`bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]` renders every
+accepted non-private Unicode scalar through the actual preview worker. It fetches the selected
+pinned export with at most four requests in flight, caches bytes and missing-shard responses,
+and stops on transport errors instead of treating them as glyph gaps. Run it under the project's
+batch resource limits. A warm cache avoids repeating the download.
+
+The reports in `docs/coverage/` include exact missing ranges by block, downloaded-file hashes,
+local bundle hashes and implementation hashes. They cover individual components, finite paths
+and source routing. They do not establish visual fidelity, variation-sequence support or successful
+layout of every possible IDS tree. Private-use characters need an explicit host mapping.
+
+`python3 scripts/build_host_glyph_coverage.py CACHE_DIR` rebuilds the default export's exact
+direct-outline inventory from that cache. The fallback builder uses it to retain missing CJK
+outlines. `python3 scripts/build_bundled_coverage.py` rebuilds the dedicated bundles' scalar index;
+run it after changing any dedicated outlines. Offline routing uses this index, while a bundle's
+missing records can fall through to other sources.

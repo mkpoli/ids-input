@@ -65,11 +65,11 @@ outline data come from CHISE and retain its GPL-2.0-or-later license.
 
 ## Unicode fallback outlines
 
-The composer uses font-derived outlines for 53,478 additional components when the selected export lacks
+The composer uses font-derived outlines for 56,651 additional components when the selected export lacks
 a glyph. These are stored as sharded geometry rather than a webfont. Sources, rebuild instructions
 and coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
 [OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL 1.1. Extended sources use
-`LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`, `OFL-UniHieroglyphica.txt` and `LICENSE-GlyphWiki.txt`; per-source copyright notices
+`LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`, `OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright notices
 are preserved in the outline metadata.
 
 ## Gongche supplement

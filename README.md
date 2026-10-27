@@ -164,7 +164,7 @@ controls, default-ignorable characters, surrogates and unassigned code points ar
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
 component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
-preview font coverage. The composer supplements missing export glyphs with 53,478 bundled font
+preview font coverage. The composer supplements missing export glyphs with 56,651 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
