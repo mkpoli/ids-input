@@ -1,4 +1,4 @@
-const CHARS = "山攵木口永人大小工土火又水屮㗊燚叕㵘茻林矛彳亍弓𤣩王辛隹亠𧘇方𠂉匕頁𠦝𠆢鬲士冖一殳木日金水火土女子口吉隹魚牛馬羊犬貝毛手耳虫車力森晶鑫淼焱垚姦孨品嚞雥鱻犇驫羴猋贔毳掱聶蟲轟劦夾巫坐"
+const CHARS = "須攸𪧇朕彡頁亻丨攵宀爿月关氺此丙羽山攵木口永人大小工土火又水屮㗊燚叕㵘茻林矛彳亍弓𤣩王辛隹亠𧘇方𠂉匕頁𠦝𠆢鬲士冖一殳木日金水火土女子口吉隹魚牛馬羊犬貝毛手耳虫車力森晶鑫淼焱垚姦孨品嚞雥鱻犇驫羴猋贔毳掱聶蟲轟劦夾巫坐"
 import { expect, it } from 'bun:test'
 import { Composer } from '../src/composer/compose.js'
 import { compose, createSource, sketch } from '../src/composer/loader.js'
@@ -64,4 +64,41 @@ it('places the mountain host slot below 一 while retaining source leaf indices'
   }
   for (const text of ['⿴⿲彳⿱山一攵水', '⿸⿲彳⿱山一攵水', '⿵⿲彳⿱山二攵水', '⿵⿲彳⿱山一文水'])
     expect(c.splitEnclosure(c.parse(text))).toBeNull()
+})
+
+const requestedHosts = [
+  ['⿹', '須', '⿰彡頁', '⿰⿱彡{inner}頁', '此', 1, 2],
+  ['⿸', '攸', '⿲亻丨攵', '⿲亻丨⿱攵{inner}', '羽', 3, 3],
+  ['⿸', '𪧇', '⿱宀爿', '⿱宀⿰爿{inner}', '丙', 2, 2],
+  ['⿸', '朕', '⿰月关', '⿰月⿱关{inner}', '氺', 2, 2],
+]
+
+it('opens all four requested hosts without changing encoded-host editor ownership', async () => {
+  const source = fixture()
+  for (const [op, host, spelling, layout, sample, start, outerLeaves] of requestedHosts) {
+    for (const inner of [sample, '⬚', '⿱木⬚', '⿴行⬚']) {
+      const expanded = layout.replace('{inner}', inner)
+      for (const outer of [host, spelling]) {
+        const text = op + outer + inner
+        for (const separate of [false, true])
+          expect(inkOnly(await compose(source, text, { separate }))).toEqual(inkOnly(await compose(source, expanded, { separate })))
+        const leaves = await sketch(source, text)
+        const renderedLeaves = await sketch(source, expanded)
+        const count = renderedLeaves.length - outerLeaves
+        const inside = renderedLeaves.slice(start, start + count)
+        const first = outer === host ? 1 : outerLeaves
+        expect(leaves).toHaveLength(first + count)
+        expect(leaves.slice(first)).toEqual(inside.map((leaf, i) => ({ ...leaf, index: first + i })))
+        const drawing = await compose(source, text, { separate: true })
+        const groups = groupParts(drawing.parts, leaves)
+        expect(groups).not.toBeNull()
+        expect(groups.length).toBe(leaves.filter(leaf => !leaf.empty).length)
+        if (outer === host) expect(drawing.parts.filter(part => part.leaf === 0)).toHaveLength(outerLeaves)
+      }
+    }
+    const c = new Composer(source.store())
+    for (const wrong of [op === '⿹' ? '⿸' : '⿹', '⿴', '⿵', '⿱'])
+      for (const outer of [host, spelling]) expect(c.splitEnclosure(c.parse(wrong + outer + sample))).toBeNull()
+    expect(c.splitEnclosure(c.parse(op + '木' + sample))).toBeNull()
+  }
 })

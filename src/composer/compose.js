@@ -574,6 +574,10 @@ export class Composer {
     if (!Array.isArray(node) || node.length !== 3) return null
     const [op, outer, inner] = node
     // Match explicit hosts without merging the original editable leaves.
+    if (op === '⿹' && (outer === '須' || keyOf(outer) === '⿰彡頁')) return { tree: ['⿰', ['⿱', '彡', inner], '頁'], innerIndex: 1 }
+    if (op === '⿸' && (outer === '攸' || keyOf(outer) === '⿲亻丨攵')) return { tree: ['⿲', '亻', '丨', ['⿱', '攵', inner]], innerIndex: 3 }
+    if (op === '⿸' && (outer === '𪧇' || keyOf(outer) === '⿱宀爿')) return { tree: ['⿱', '宀', ['⿰', '爿', inner]], innerIndex: 2 }
+    if (op === '⿸' && (outer === '朕' || keyOf(outer) === '⿰月关')) return { tree: ['⿰', '月', ['⿱', '关', inner]], innerIndex: 2 }
     if (op === '⿵' && keyOf(outer) === '⿲彳⿱山一攵') return { tree: ['⿲', '彳', ['⿱', ['⿱', '山', '一'], inner], '攵'], innerIndex: 3 }
     if (op === '⿴' && keyOf(outer) === '⿰彳亍') return { tree: ['⿲', '彳', inner, '亍'], innerIndex: 1 }
     if (op === '⿴' && keyOf(outer) === '⿰弓弓') return { tree: ['⿲', '弓', inner, '弓'], innerIndex: 1 }
