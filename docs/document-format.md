@@ -34,11 +34,13 @@ reactivate an old geometry edit by reusing its removed target ID. Labels use an 
 | `kind` | required content | IDS projection |
 | --- | --- | --- |
 | `component` | `char`: one core component, optionally followed by one variation selector | `char` |
-| `operator` | `op`, `children` in operand order | `op` followed by each child's projection |
+| `operator` | `op`, `children` in operand order, optional `note` | `op`, its `note` in brackets if it has one, then each child's projection |
 | `slot` | none | `⬚` |
 | `group` | one `child` | child's projection |
 
-An operator has exactly the arity defined by `src/core/ids.js`. A group has an
+An operator has exactly the arity defined by `src/core/ids.js`. A `note` holds a zi.tools modifier
+(`1`, `1:`, `.,x`) written after it; the projection prints it in brackets, and the composer draws
+the description's parts as it does without one. A group has an
 identity layout and carries an authored transform independently of an IDS
 operator. Groups can be nested and remain in the document even when their
 transforms are identity. Their IDs can be selected and named in a layer view.

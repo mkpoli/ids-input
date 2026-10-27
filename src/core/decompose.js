@@ -1,7 +1,7 @@
 // @ts-check
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
-import { isComponent, isDescription, leaves, parse } from './ids.js'
+import { arity, isComponent, isDescription, isSequence, leaves, modifierAt, parse, takesModifier } from './ids.js'
 import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'
 
@@ -27,15 +27,39 @@ const SELECTOR = /^[︀-️\u{E0100}-\u{E01EF}]$/u
  * @returns {string[]}
  */
 export function tokens(text) {
-  /** @type {string[]} */
-  const out = []
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
-  const pattern = isDescription(text) ? /./gsu : /\{\d+\}|./gsu
-  for (const [token] of (text ?? '').matchAll(pattern)) {
+  if (isSequence(text) && !parse(text, { open: true }).problem) return descriptionTokens(text ?? '')
+  /** @type {string[]} */
+  const out = []
+  for (const [token] of (text ?? '').matchAll(/\{\d+\}|./gsu)) {
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
     else out.push(token)
   }
+  return out
+}
+
+/** A description's tokens in reading order, each operator's zi.tools modifier left out.
+ * @param {string} text @returns {string[]} */
+function descriptionTokens(text) {
+  const chars = [...text]
+  /** @type {string[]} */
+  const out = []
+  let at = 0
+  const read = () => {
+    const char = chars[at++]
+    if (char === undefined) return
+    const n = arity(char)
+    if (!n) {
+      out.push(SELECTOR.test(chars[at]) ? char + chars[at++] : char)
+      return
+    }
+    out.push(char)
+    const note = takesModifier(char) ? modifierAt(chars, at) : ''
+    if (note) at += [...note].length + 2
+    for (let i = 0; i < n; i++) read()
+  }
+  read()
   return out
 }
 
