@@ -207,7 +207,8 @@ export class Composer {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
-    const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
+    const rendered = this.normalizeRequestedEnclosures(tree)
+    const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
     const ownership = this.separate ? this.leafOwners(tree) : null
@@ -264,7 +265,7 @@ export class Composer {
       }
       const op = node[0], kids = node.slice(1)
       if (kids.length === 2 && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
-        let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(kid)))
+        let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(this.normalizeRequestedEnclosures(kid))))
         if (!atRoot) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
         if (boxes.every(b => b[2] > b[0] && b[3] > b[1])) { kids.forEach((kid, i) => walk(kid, boxes[i], false)); return }
       }
@@ -569,15 +570,32 @@ export class Composer {
     return null
   }
 
+  /** These host aliases use their expanded form for glyph lookup and parent layout features. */
+  requestedEnclosure(node) {
+    if (!Array.isArray(node) || node.length !== 3) return null
+    const [op, outer, inner] = node
+    if (op === '⿹' && (outer === '須' || keyOf(outer) === '⿰彡頁')) return { tree: ['⿰', ['⿱', '彡', inner], '頁'], innerIndex: 1 }
+    if (op === '⿸' && (outer === '攸' || keyOf(outer) === '⿲亻丨攵')) return { tree: ['⿲', '亻', '丨', ['⿱', '攵', inner]], innerIndex: 3 }
+    if (op === '⿸' && (outer === '𪧇' || keyOf(outer) === '⿱宀爿')) return { tree: ['⿱', '宀', ['⿰', '爿', inner]], innerIndex: 2 }
+    if (op === '⿸' && (outer === '朕' || keyOf(outer) === '⿰月关')) return { tree: ['⿰', '月', ['⿱', '关', inner]], innerIndex: 2 }
+    return null
+  }
+
+  /** Normalize the rendering tree only; the source tree still owns editable leaf indices. */
+  normalizeRequestedEnclosures(node) {
+    if (!Array.isArray(node)) return node
+    const rewritten = this.requestedEnclosure(node)
+    const tree = rewritten?.tree ?? node
+    return [tree[0], ...tree.slice(1).map(child => this.normalizeRequestedEnclosures(child))]
+  }
+
   /** Layout and first inner leaf for two-part descriptions with a disconnected outer part. */
   splitEnclosure(node) {
     if (!Array.isArray(node) || node.length !== 3) return null
     const [op, outer, inner] = node
     // Match explicit hosts without merging the original editable leaves.
-    if (op === '⿹' && (outer === '須' || keyOf(outer) === '⿰彡頁')) return { tree: ['⿰', ['⿱', '彡', inner], '頁'], innerIndex: 1 }
-    if (op === '⿸' && (outer === '攸' || keyOf(outer) === '⿲亻丨攵')) return { tree: ['⿲', '亻', '丨', ['⿱', '攵', inner]], innerIndex: 3 }
-    if (op === '⿸' && (outer === '𪧇' || keyOf(outer) === '⿱宀爿')) return { tree: ['⿱', '宀', ['⿰', '爿', inner]], innerIndex: 2 }
-    if (op === '⿸' && (outer === '朕' || keyOf(outer) === '⿰月关')) return { tree: ['⿰', '月', ['⿱', '关', inner]], innerIndex: 2 }
+    const requested = this.requestedEnclosure(node)
+    if (requested) return requested
     if (op === '⿵' && keyOf(outer) === '⿲彳⿱山一攵') return { tree: ['⿲', '彳', ['⿱', ['⿱', '山', '一'], inner], '攵'], innerIndex: 3 }
     if (op === '⿴' && keyOf(outer) === '⿰彳亍') return { tree: ['⿲', '彳', inner, '亍'], innerIndex: 1 }
     if (op === '⿴' && keyOf(outer) === '⿰弓弓') return { tree: ['⿲', '弓', inner, '弓'], innerIndex: 1 }

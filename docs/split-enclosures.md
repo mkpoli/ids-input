@@ -32,7 +32,10 @@ The bundled BabelStone IDS snapshot supplies the outer decompositions and the ex
 
 The four hosts 須, 攸, 𪧇 and 朕 also accept their exact expanded spellings:
 `⿰彡頁`, `⿲亻丨攵`, `⿱宀爿` and `⿰月关`. These rules preserve the entered
-leaves and do not replace 关 with 龹 or identify `⿸朕氺` with 滕. The bundled
+leaves. Their rendering trees are expanded before glyph lookup and parent layout
+features are computed, so `⿸攸羽` uses the same native 翛 glyph as its expanded
+form when that glyph is available. Separated editing retains source leaf ownership.
+These rules do not replace 关 with 龹 or identify `⿸朕氺` with 滕. The bundled
 snapshot describes 滕 as `⿰月𣳾`; the requested 朕 rule is a layout convention.
 
 `⿶𤕰X` (鼎) remains a candidate requiring further geometry checks. Ordinary connected enclosures such as 門, 疒 and 戊 are not rewritten simply because they have decompositions.

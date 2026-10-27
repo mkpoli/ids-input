@@ -5,12 +5,12 @@ import { compose, createSource, sketch } from '../src/composer/loader.js'
 import { groupParts } from '../src/core/preview.js'
 import { files, shards } from './fixtures/composer-export.js'
 
-const fixture = (missing = '') => {
+const fixture = (missing = '', records = []) => {
   const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
   const extra = shards('g', [...new Set(CHARS)].filter(ch => !missing.includes(ch)).map((ch, i) => [ch, {
     k: ch, G: { v: 1, b: [100, 0, 300 + i, 800], p: [['MLLL', int16([400, 0, 1200 + 4 * i, 0, 1200 + 4 * i, 3200, 400, 3200]), int16(Array(8).fill(0))]] },
     ink: 2000, nl: 1, o: 1,
-  }]))
+  }]).concat(records))
   return createSource(async name => {
     const body = extra[name] ?? files[name]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
@@ -101,4 +101,53 @@ it('opens all four requested hosts without changing encoded-host editor ownershi
       for (const outer of [host, spelling]) expect(c.splitEnclosure(c.parse(wrong + outer + sample))).toBeNull()
     expect(c.splitEnclosure(c.parse(op + '木' + sample))).toBeNull()
   }
+})
+
+
+it('resolves the expanded native glyph before drawing requested enclosure aliases', async () => {
+  const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
+  const glyph = (char, width) => [char, { k: char, G: { v: 1, b: [0, 0, width, 800],
+    p: [['MLLL', int16([0, 0, width * 4, 0, width * 4, 3200, 0, 3200]), int16(Array(8).fill(0))]] }, ink: 3000, nl: 1, o: 1 }]
+  const expanded = '⿲亻丨⿱攵羽'
+  const source = fixture('', [glyph('翛', 750), [expanded, { k: expanded, e: '翛' }],
+    glyph('甲', 900), ['⿰木' + expanded, { k: '⿰木' + expanded, e: '甲' }]])
+  for (const [prefix, native] of [['', '翛'], ['⿰木', '甲']]) {
+    const alias = prefix + '⿸攸羽', explicit = prefix + expanded
+    const drawing = await compose(source, alias)
+    expect(drawing.origins).toEqual(['glyph ' + native])
+    expect(drawing).toEqual(await compose(source, explicit))
+    const excluded = await compose(source, alias, { exclude: ['翛', '甲'] })
+    expect(excluded.origins.some(origin => /glyph (翛|甲)/.test(origin))).toBe(false)
+    expect(inkOnly(excluded)).toEqual(inkOnly(await compose(source, explicit, { exclude: ['翛', '甲'] })))
+    const separated = await compose(source, alias, { separate: true })
+    expect(separated.origins.some(origin => /glyph (翛|甲)/.test(origin))).toBe(false)
+    expect(inkOnly(separated)).toEqual(inkOnly(await compose(source, explicit, { separate: true })))
+    expect(groupParts(separated.parts, await sketch(source, alias))).not.toBeNull()
+  }
+  for (const separate of [false, true]) {
+    const a = await compose(source, '⿰木⿸攸⿱水⬚', { separate })
+    const b = await compose(source, '⿰木⿲亻丨⿱攵⿱水⬚', { separate })
+    expect(inkOnly(a)).toEqual(inkOnly(b))
+    expect(a.slots).toHaveLength(1)
+    expect(a.slots[0].index).toBe(0)
+  }
+  const c = new Composer(source.store())
+  const original = c.parse('⿰木⿸攸羽')
+  expect(c.normalizeRequestedEnclosures(original)).toEqual(c.parse('⿰木' + expanded))
+  expect(original).toEqual(['⿰', '木', ['⿸', '攸', '羽']])
+})
+
+it('uses expanded child features for nested sketches without changing source leaf indices', async () => {
+  const source = fixture()
+  await source.ready()
+  const c = new Composer(source.store())
+  c.predict = (op, kids) => {
+    const canonical = JSON.stringify(kids[1]) === JSON.stringify(c.parse('⿲亻丨⿱攵羽'))
+    const edge = canonical ? 300 : 700
+    return [[0, 0, edge, 1000], [edge, 0, 1000, 1000]]
+  }
+  const alias = c.sketch('⿰木⿸攸羽'), explicit = c.sketch('⿰木⿲亻丨⿱攵羽')
+  expect(alias[0]).toEqual(explicit[0])
+  expect(alias[2]).toEqual({ ...explicit[4], index: 2 })
+  expect(alias.map(leaf => leaf.index)).toEqual([0, 1, 2])
 })
