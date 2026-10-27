@@ -223,12 +223,17 @@
   "parts.gongche.modifiers": "부수",
   "parts.gongche.guide": "기보 및 입력 안내",
   "parts.gongche.conventions": "높고 낮은 음의 표시는 전통에 따라 다릅니다. 광둥 음악과 전통 공척보는 亻와 彳의 용법도 다릅니다.",
-  "parts.gongche.compose": "왼쪽 부수를 붙이려면 ⿰, 부수, 음표 글자 순서로 입력하세요. 음악적 용법은 원래 악보를 확인하세요.",
-  "parts.gongche.beiguan": "북관 공척보 · 대만문헌관",
+  "parts.gongche.compose": "亻과 彳이 나타내는 음역은 전통마다 다르므로 원래 악보를 확인하세요. 왼쪽에 부품을 붙일 때는 ⿰, 음표 위에 艹를 붙일 때는 ⿱을 씁니다.",
+  "parts.gongche.beiguan": "공척보 · 대만문헌관",
   "parts.gongche.cantonese": "광둥 공척보 · CCLI 2022/03 부록 II",
   "parts.gongche.kunqu": "곤곡의 갈고리 음표",
-  "parts.gongche.encoded": "인코딩된 합성 음표",
   "parts.gongche.marks": "기보 기호",
   "parts.gongche.kunquSource": "곤곡 기보법 · Unicode 제안서",
-  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures"
+  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures",
+  "parts.gongche.single": "亻이 붙은 음표",
+  "parts.gongche.double": "彳이 붙은 음표",
+  "parts.gongche.staccato": "광둥극 스타카토",
+  "parts.gongche.rhythm": "박자 기호",
+  "parts.gongche.beiguanSource": "북관 음표 · 추훠룽",
+  "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루"
 }

@@ -74,11 +74,13 @@ are preserved in the outline metadata.
 
 ## Gongche supplement
 
-`Plangothic-gongche.woff2` adds eight encoded forms missing from the general
-parts subset: U+224BC and U+2A6D7–U+2A6DD. It uses the same `IDS Parts` family
-with disjoint glyph coverage. Rebuild with
-`uv run scripts/build_gongche_font.py`; the builder verifies the Plangothic P1
-V2.9.5795 digest listed above and preserves its SIL OFL name records. Matching
-composer outlines are included in `data/palette-outlines.json.gz`, together
-with Noto's U+3CB8 glyph. U+3CB8 in text uses the reader's normal CJK font, like
-other Extension A characters.
+`Plangothic-gongche.woff2` covers all 17 supplementary encoded characters in
+`data/gongche-parts.json`. Rebuild it and its exact `unicode-range` rules with
+`uv run scripts/build_gongche_font.py`. The builder reads the catalogue, verifies
+the Plangothic P1/P2 V2.9.5795 digests listed above, and uses the same subset/merge
+procedure as the general parts font. `fonts.css` imports the generated
+`gongche.css`; the supplementary characters use the existing `IDS Parts` family.
+
+Matching composer outlines are included in `data/palette-outlines.json.gz`.
+BMP text uses the reader's CJK font, as in the rest of the panel. The outlined
+fallback for missing BMP components uses the pinned Noto Sans CJK font.

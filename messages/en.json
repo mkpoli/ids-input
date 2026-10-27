@@ -227,12 +227,17 @@
   "parts.gongche.modifiers": "Components",
   "parts.gongche.guide": "Notation and input guide",
   "parts.gongche.conventions": "Register marks differ between traditions. Cantonese and traditional Gongche notation use 亻 and 彳 differently.",
-  "parts.gongche.compose": "For a left-side component, insert ⿰, then the component and the note. Follow the source score for musical usage.",
-  "parts.gongche.beiguan": "Beiguan notation · Taiwan Historica",
+  "parts.gongche.compose": "Register labels follow the source score: the same 亻 or 彳 form can mean different registers in different traditions. Use ⿰ for left-side components and ⿱ for 艹 above a note.",
+  "parts.gongche.beiguan": "Gongche notation · Taiwan Historica",
   "parts.gongche.cantonese": "Cantonese notation · CCLI 2022/03, Annex II",
   "parts.gongche.kunqu": "Kunqu hooked notes",
-  "parts.gongche.encoded": "Encoded compound notes",
   "parts.gongche.marks": "Notation marks",
   "parts.gongche.kunquSource": "Kunqu notation · Unicode proposal",
-  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures"
+  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures",
+  "parts.gongche.single": "Single-person forms",
+  "parts.gongche.double": "Double-person forms",
+  "parts.gongche.staccato": "Cantonese staccato",
+  "parts.gongche.rhythm": "Rhythm marks",
+  "parts.gongche.beiguanSource": "Beiguan note forms · Chiu Huo-Jung",
+  "parts.gongche.seirakuSource": "Seiraku rhythm marks · Toru Kato"
 }

@@ -223,12 +223,17 @@
   "parts.gongche.modifiers": "偏旁",
   "parts.gongche.guide": "記譜與輸入說明",
   "parts.gongche.conventions": "不同樂種的高低音記法有別，粵曲與傳統工尺譜對亻、彳的用法也不同。",
-  "parts.gongche.compose": "組合左偏旁時，先輸入 ⿰，再輸入偏旁與譜字。音樂用法請依原譜。",
-  "parts.gongche.beiguan": "北管工尺譜 · 臺灣文獻館",
+  "parts.gongche.compose": "音域須依原譜判讀：亻、彳在各地譜式中含義不同。左旁用⿰組合，譜字上方加艹則用⿱。",
+  "parts.gongche.beiguan": "工尺譜 · 國史館臺灣文獻館",
   "parts.gongche.cantonese": "粵曲工尺譜 · 中文界面諮詢委員會 2022/03 附件二",
   "parts.gongche.kunqu": "崑曲帶鉤譜字",
-  "parts.gongche.encoded": "已編碼的合成譜字",
   "parts.gongche.marks": "記譜符號",
   "parts.gongche.kunquSource": "崑曲記譜 · Unicode 提案",
-  "parts.gongche.marksSource": "記譜符號 · 香港微音樂"
+  "parts.gongche.marksSource": "記譜符號 · 香港微音樂",
+  "parts.gongche.single": "單人旁譜字",
+  "parts.gongche.double": "雙人旁譜字",
+  "parts.gongche.staccato": "粵曲頓音",
+  "parts.gongche.rhythm": "板眼符號",
+  "parts.gongche.beiguanSource": "北管譜字 · 邱火榮",
+  "parts.gongche.seirakuSource": "清樂板眼符號 · 加藤徹"
 }

@@ -1,0 +1,3 @@
+/* Rebuild with uv run scripts/build_gongche_font.py. */
+@font-face{font-family:"IDS Parts";src:url("./Plangothic-gongche.woff2") format("woff2");font-display:swap;
+  unicode-range:U+201A9,U+201BE,U+224BC,U+224C1,U+224C9,U+224CC,U+2A6D7,U+2A6D8,U+2A6D9,U+2A6DA,U+2A6DB,U+2A6DC,U+2A6DD,U+2A727,U+306C8,U+3176B,U+3176C}

@@ -615,34 +615,29 @@ remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
 
-The 工尺譜 tab in `IdsParts` collects 31 entries: ten base note characters, four regional
-forms, seven hooked Kunqu notes, two encoded compound notes, five left-side
-components and three notation marks. `src/core/gongche.js` defines this small
-catalogue independently of palette loading. A collapsible guide explains
-left-side composition and regional notation differences. The panel links to Taiwan
-Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
+The 工尺譜 tab in `IdsParts` reads its 72 entries from `gongche-parts.json`.
+The catalogue records source URLs and locations for each group. It includes
+complete single-person and double-person register rows from the Kunqu proposal,
+the additional Cantonese and Beiguan forms, all eight staccato forms illustrated
+in CCLI 2022/03, regional note variants, components and notation marks.
 
-The additional entries are source-specific shortcuts, not a complete inventory
-of every regional score convention:
+Encoded compound notes have searchable IDS aliases and insert their code point.
+For example, `⿰亻凡` selects 𠆩, `⿰彳上` selects 𱝫, and `⿰氵上` selects 𰛈.
+The source's `⿰氵士` and `⿰氵六` remain editable IDS: 汢 contains 土 and must
+not replace the 士 form. Stroke counts follow Unihan 17.0, except the palette's
+existing four-stroke 艹 convention and additive counts marked as derived.
+Notation punctuation has no stroke count.
 
-| Entries | Unicode | Source |
-|---|---|---|
-| 生 | U+751F | [Hong Kong Music Miniatures, Gongche notation](https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/) |
-| 𢒼 | U+224BC | Same source, note character |
-| 㲸 | U+3CB8 | [CCLI 2022/03, Annex II](https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf), staccato 乙 |
-| 𪛗 𪛘 𪛙 𪛚 𪛛 𪛜 𪛝 | U+2A6D7–U+2A6DD | [Chan et al., 2018 Kunqu proposal](https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf); final allocation in [Unicode §18](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/) |
-| ｜ 『 』 | U+FF5C, U+300E, U+300F | Hong Kong Music Miniatures, long-note and loop marks |
-
-Stroke counts follow [Unihan 17.0 kTotalStrokes](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip),
-including its base-character counts for the seven hooked notes. Punctuation has
-no stroke count. Each button inserts its literal Unicode character; repeat
-brackets are separate components. Unencoded double-hook Kunqu forms mentioned
-in the proposal remain outside this catalogue. The input guide links to the
-sources without assigning one tradition's pitches or register meanings to all.
+The panel retains compact buttons and a collapsed input guide. Group names use
+component shapes rather than universal register labels, because Cantonese and
+Kunqu conventions differ. The catalogue is independent of remote palette loading;
+its supplementary text font and composer fallback audits read the same inventory.
+See [the coverage audit](../docs/gongche-coverage.md) for the source tables,
+code points, transcriptions and limits.
 
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 54 glyphs whose palette entries are missing from the
+`palette-outlines.json.gz` contains 77 glyphs whose palette entries are missing from the
 pinned default composer export. `palette-fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines

@@ -223,12 +223,17 @@
   "parts.gongche.modifiers": "偏旁",
   "parts.gongche.guide": "記譜と入力について",
   "parts.gongche.conventions": "高低音の記号は伝統によって異なります。粤曲と伝統的な工尺譜では亻・彳の使い方も異なります。",
-  "parts.gongche.compose": "左側に偏旁を付けるには、⿰、偏旁、譜字の順に入力します。音楽上の用法は原譜を確認してください。",
-  "parts.gongche.beiguan": "北管の工尺譜 · 台湾文献館",
+  "parts.gongche.compose": "亻・彳が示す音域は地域や譜式によって異なります。原譜を確認してください。左側の部品には⿰、譜字の上に艹を付ける場合は⿱を使います。",
+  "parts.gongche.beiguan": "工尺譜 · 国史館台湾文献館",
   "parts.gongche.cantonese": "粤曲の工尺譜 · 中文界面諮詢委員会 2022/03 附件二",
   "parts.gongche.kunqu": "崑曲の鉤付き譜字",
-  "parts.gongche.encoded": "符号化済みの合成譜字",
   "parts.gongche.marks": "記譜記号",
   "parts.gongche.kunquSource": "崑曲の記譜法 · Unicode 提案書",
-  "parts.gongche.marksSource": "記譜記号 · 香港微音樂"
+  "parts.gongche.marksSource": "記譜記号 · 香港微音樂",
+  "parts.gongche.single": "にんべんの譜字",
+  "parts.gongche.double": "ぎょうにんべんの譜字",
+  "parts.gongche.staccato": "粤曲のスタッカート",
+  "parts.gongche.rhythm": "拍節記号",
+  "parts.gongche.beiguanSource": "北管の譜字 · 邱火榮",
+  "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹"
 }
