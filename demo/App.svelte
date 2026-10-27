@@ -22,6 +22,7 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
@@ -121,6 +122,18 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const treeDrawers = new Map()
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  function treeDrawer(at, style) {
+    const key = `${at}\0${style}`
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
+  }
+  const treeDraw = $derived.by(() => {
+    const draw = treeDrawer(base, componentStyle)
+    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
+  })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -656,7 +669,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
@@ -717,7 +730,7 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
 </div>
 

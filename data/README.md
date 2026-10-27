@@ -232,7 +232,7 @@ and 457 single Tangut characters. `scripts/build_character_info.py` builds it fr
   `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
   `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
   Only single-character Tangut entries with glosses enter the panel data; duplicate
-  glosses are combined, with source qualifiers preserved. Each panel links to the
+  glosses are combined, with source qualifiers preserved. Each adapter record links to the
   original entry, whose history records its contributors. The adapted Tangut gloss data remains
   CC BY-SA 4.0; the Unihan records retain Unicode License v3.
 
@@ -249,6 +249,9 @@ This is a semantic association observed in horse-related characters, not a stand
 word definition. Other Tangut components can show glossed characters whose recorded
 [BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt) explicitly
 contain them. These are usage examples, not inferred component meanings.
+
+The association's explicit `sense` field scopes its search links to the horse meaning;
+the displayed label retains the source's qualification.
 
 Small Seal links use the direct modern correspondences in `small-seal.json.gz`,
 from the CHISE and Unicode sources described above. The MOE-derived 𠙵→口 search alias
@@ -615,19 +618,38 @@ remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
 
-The 工尺譜 tab in `IdsParts` collects ten base note characters, three regional
-forms and five left-side components. `src/core/gongche.js` defines this small
+The 工尺譜 tab in `IdsParts` collects 31 entries: ten base note characters, four regional
+forms, seven hooked Kunqu notes, two encoded compound notes, five left-side
+components and three notation marks. `src/core/gongche.js` defines this small
 catalogue independently of palette loading. A collapsible guide explains
 left-side composition and regional notation differences. The panel links to Taiwan
 Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
 
+The additional entries are source-specific shortcuts, not a complete inventory
+of every regional score convention:
+
+| Entries | Unicode | Source |
+|---|---|---|
+| 生 | U+751F | [Hong Kong Music Miniatures, Gongche notation](https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/) |
+| 𢒼 | U+224BC | Same source, note character |
+| 㲸 | U+3CB8 | [CCLI 2022/03, Annex II](https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf), staccato 乙 |
+| 𪛗 𪛘 𪛙 𪛚 𪛛 𪛜 𪛝 | U+2A6D7–U+2A6DD | [Chan et al., 2018 Kunqu proposal](https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf); final allocation in [Unicode §18](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/) |
+| ｜ 『 』 | U+FF5C, U+300E, U+300F | Hong Kong Music Miniatures, long-note and loop marks |
+
+Stroke counts follow [Unihan 17.0 kTotalStrokes](https://www.unicode.org/Public/17.0.0/ucd/Unihan.zip),
+including its base-character counts for the seven hooked notes. Punctuation has
+no stroke count. Each button inserts its literal Unicode character; repeat
+brackets are separate components. Unencoded double-hook Kunqu forms mentioned
+in the proposal remain outside this catalogue. The input guide links to the
+sources without assigning one tradition's pitches or register meanings to all.
+
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
+`palette-outlines.json.gz` contains 54 glyphs whose palette entries are missing from the
 pinned default composer export. `palette-fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
-come from the included Plangothic and Noto CJK stroke subsets, plus Noto Sans CJK Regular
+come from the included Plangothic parts/Gongche and Noto CJK stroke subsets, plus Noto Sans CJK Regular
 (Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
 Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
 CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.

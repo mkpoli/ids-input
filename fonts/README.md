@@ -71,3 +71,14 @@ and coverage limits are in the [data notices](../data/README.md#unicode-fallback
 [OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL 1.1. Extended sources use
 `LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt` and `LICENSE-GlyphWiki.txt`; per-source copyright notices
 are preserved in the outline metadata.
+
+## Gongche supplement
+
+`Plangothic-gongche.woff2` adds eight encoded forms missing from the general
+parts subset: U+224BC and U+2A6D7–U+2A6DD. It uses the same `IDS Parts` family
+with disjoint glyph coverage. Rebuild with
+`uv run scripts/build_gongche_font.py`; the builder verifies the Plangothic P1
+V2.9.5795 digest listed above and preserves its SIL OFL name records. Matching
+composer outlines are included in `data/palette-outlines.json.gz`, together
+with Noto's U+3CB8 glyph. U+3CB8 in text uses the reader's normal CJK font, like
+other Extension A characters.

@@ -305,11 +305,11 @@ export function createEditor(options) {
 
   /** @param {Path} path */
   const pathKey = path => path.join('.')
-  /** Move the focus to the chosen part's button within `root`. @param {HTMLElement | null | undefined} root */
+  /** Move the focus to the chosen part's focusable control within `root`. @param {HTMLElement | null | undefined} root */
   async function focusChosen(root) {
     await tick()
     const at = chosen
-    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]`))?.focus()
+    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]:is(button,[tabindex])`))?.focus()
   }
 
   /**

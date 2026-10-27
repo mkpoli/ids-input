@@ -4,7 +4,7 @@ import { isSmallSeal } from './seal-data.js'
 /** @typedef {{ label: string, url: string, license?: string }} InfoSource */
 /** @typedef {{ en: string[], han: string[], emoji: string }} MeaningAid */
 /** @typedef {{ en: string[], source: 'unihan' | 'wiktionary', aids?: number[] }} GlossEntry */
-/** @typedef {{ format: string, entries: Record<string, GlossEntry>, aids: MeaningAid[], components: Record<string, { en: string, han: string[], emoji: string, source: InfoSource }> }} CharacterInfoData */
+/** @typedef {{ format: string, entries: Record<string, GlossEntry>, aids: MeaningAid[], components: Record<string, { en: string, sense?: string, han: string[], emoji: string, source: InfoSource }> }} CharacterInfoData */
 /** @typedef {{ char: string, kind: 'han' | 'tangut' | 'seal' | 'modern' | 'usage', meaning?: string }} CharacterRelation */
 /** @typedef {{ char: string, script: 'han' | 'tangut' | 'component' | 'seal', glosses: string[], association?: string, emoji: { text: string, meaning: string }[], relations: CharacterRelation[], sources: InfoSource[] }} CharacterInfo */
 

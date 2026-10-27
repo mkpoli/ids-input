@@ -185,6 +185,10 @@ unclassified forms have separate groups. Type a modern character such as 木 or 
 to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
 these estimates do not enter the seal decomposition table.
 
+Dataset maintainers can generate an offline comparison gallery and validation
+report with `node scripts/check_small_seal.mjs OUTPUT_DIRECTORY`. See the
+[provider audit guide](docs/small-seal-candidates.md).
+
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
 import sealData from 'ids-input/data/small-seal.json.gz?url'
@@ -823,9 +827,20 @@ associations, editorial Han translations and emoji mnemonics, and direct Small S
 correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
 describe the limits of each relationship.
 
+With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
+directions, alongside existing names, readings, and component forms. Results keep
+dictionary qualifiers; component occurrences and lookup aliases have separate labels.
+Meaning paths retain their matched sense and follow at most two links. Component
+usage is a terminal link, so shared components do not connect unrelated words.
+
 `IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
-the floating panel and Esc to dismiss it. Clicks retain their editing action. Custom
-layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} />` beside
+the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+chosen slot, or replace the inspected character in the tree or sequence field. Custom
+layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
 tree components expose `data-character` targets; custom character controls can use
-the same attribute. Hosts without `characterInfo` retain their existing titles.
+the same attribute. Optional `data-path` identifies a tree position; without it, the
+host chooses the insertion target. `disabled` prevents insertion. Sources remain in
+the adapter records and the data documentation. Hosts without `characterInfo` retain
+their existing titles.

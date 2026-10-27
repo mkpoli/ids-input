@@ -232,11 +232,12 @@
   /** @param {PalettePart} part */
   const title = part => [
     part.part,
+    tab === 'gongche' && !isSequence(part.part) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
     tab === 'hangul' ? substituteNames[part.part] : null,
     ...(part.aliases ?? []),
     ...(part.modern ?? []),
     part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
-    part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
+    tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
     part.uses ? t('parts.uses', { count: part.uses }) : null,
   ].filter(Boolean).join(' · ')
   // Arrow keys, Home and End move between the tabs and choose the one reached.
@@ -316,6 +317,8 @@
         <p>{t('parts.gongche.compose')}</p>
         <a href="https://www.th.gov.tw/Epaper_Content/237/8985/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguan')} ↗</a>
         <a href="https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.cantonese')} ↗</a>
+        <a href="https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.kunquSource')} ↗</a>
+        <a href="https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.marksSource')} ↗</a>
       </details>
     {:else if failed}
       <p class="parts-note" role="status">{t('parts.failed')}</p>

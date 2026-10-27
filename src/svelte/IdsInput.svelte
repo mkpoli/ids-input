@@ -75,7 +75,7 @@
   </div>
 </div>
 
-<IdsCharacterInfo {root} {adapter} {messages} {locale} />
+<IdsCharacterInfo {root} {adapter} {messages} {locale} {disabled} onpick={(part, path) => editor.take(part, path)} />
 
 <style>
   .ids-input{
