@@ -19,6 +19,7 @@ import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, ma
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import { hexOf } from './sha256.js'
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
 
 const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
@@ -68,13 +69,37 @@ const MIRROR = '⿾', ROTATE = '⿿', VARIANT = '〾', SUBTRACT = '㇯'
 const EXTRA_ENCLOSE = { '⿼': 'RBT', '⿽': 'RB' }
 const EXTRA_INSIDE = { '⿼': [0, 0.15, 0.8, 0.85], '⿽': [0, 0.25, 0.7, 1] }
 
+// Contour partitions of the exact font-export glyphs. The digest ties each cut to its
+// outlines: other fonts and later exports keep the usual geometric composition.
+const ENCLOSURE_CUTS = {
+  '⿽水丶': ['氷', {
+    '28ff54a66b480707055ab6088d46e79d134020f143adc6403a6e2f8e66928327': [[0,1,3,4,5],[2]],
+    '745eac7b7fecf77b76d949e954c3b6d315141be8297d65e19079f0467f332312': [[0,1,2,3,4],[5]],
+    '5268c2cbbac2aa9fdb586cd7b478c95bede10b46379f4afd24ce42ec7ede5495': [[0,2],[1]],
+  }],
+  '⿽十⺀': ['斗', {
+    '752e2007a0eb368d6c6133ea1179c9ca52de9606f0b798081cff58d47ca0b053': [[0,1],[2,3]],
+    'eb98857e9d6fbd093e1ff8e2a5fb182c920483376a4e8c36f5fbd0da43f66372': [[2,3],[0,1]],
+    'f53105473310a9f7cc54485ebadaf9828670deef3707ef2c095a5e97d24994f3': [[0],[1,2]],
+  }],
+  '⿽人⿰𠄌丶': ['以', {
+    'd862658851387f879787ed51aab13b42825e0d1ae1295b2bea798b143d05cc72': [[2,3],[1,4],[0]],
+    '00d8ce03d34eae498f722d8bad84bcf5d77a807654560eb8ba440d2d6dc7dd52': [[2,4],[0,3],[1]],
+    '1ef49823562accfb65a808cce67594327e1bd9eceabeaff1683826af671c9209': [[0],[1],[2]],
+  }],
+  '⿽戈从': ['㦰', {
+    'b7d2cd4473cf5cda692771db18ae491dd302efd7e0fdafe3582ee0dd909117de': [[4,5,6,7],[0,1,2,3]],
+    'e0606c7982bcb036d9ec1a866509fcbe1f079a387534c36a78e4c7041dc2fdbd': [[0,1,2,3],[4,5,6,7]],
+  }],
+}
+
 export class Composer {
   /**
    * `data`: `{ manifest, layout, rec(key), hosts(key, place), places(key) }`; `exclude`: characters nothing is taken from (a
    * character redrawn to test, with its twins); `face`: the box a whole character fills, when those
    * characters change it (the manifest's is the median of `FULL` with none excluded); `separate`:
-   * draw every operand of a description instead of a glyph or instance that spells it, so a view
-   * that changes one part gets a piece for each leaf rather than a drawing merged into one glyph.
+   * draw operands as individual pieces where possible, including cuts from a matching whole glyph,
+   * so a view that changes one part can address its leaf.
    */
   constructor(data, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
     this.data = data
@@ -96,6 +121,7 @@ export class Composer {
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
     this.approximate = new Set()
+    this.nativeEnclosures = new Set()
   }
 
   arity = ch => this.arities.get(ch) ?? 0
@@ -152,6 +178,7 @@ export class Composer {
   /** The parts drawing `sequence`, weighted. */
   compose(sequence) {
     this.approximate.clear()
+    this.nativeEnclosures.clear()
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.cancelTransforms(this.parse(sequence)))
@@ -299,6 +326,8 @@ export class Composer {
 
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
+    const native = this.enclosureParts(node, region)
+    if (native) return native
     const repeated = !this.separate || isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
     const hasRepetition = containsComponentForm(keyOf(node))
@@ -352,6 +381,24 @@ export class Composer {
       if (moved) return moved
     }
     return this.shares(op, children, region)
+  }
+
+  /** Preserve the font's designed shape while retaining one adjustable piece per leaf. */
+  enclosureParts(node, region) {
+    const entry = ENCLOSURE_CUTS[keyOf(node)]
+    if (!entry || this.excluded(entry[0])) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record) return null
+    const indices = cuts[hexOf(JSON.stringify(record.p))]
+    if (!indices) return null
+    this.nativeEnclosures.add(keyOf(node))
+    const glyph = partOf(record), target = fitted(glyph.box, region, this.C.STRETCH)
+    // An expanded character is still one editor leaf; keep its cuts together.
+    if (!this.separate || this.expanding.size) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
+    return indices.map(group => {
+      const part = makePart(group.map(i => glyph.contours[i]))
+      return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
+    })
   }
 
   leafOwners(tree) {
@@ -724,6 +771,10 @@ export class Composer {
   row(child, box, n) {
     const group = this.node(child, box)
     if (n === 3 && group.length === 1 && group[0].origin.startsWith('glyph ')) group[0].target = fitted(group[0].source, box, this.C.ROW_STRETCH)
+    else if (n === 3 && group.length > 1 && group[0].balanceBox && group.every(p => p.balanceBox === group[0].balanceBox)) {
+      const frame = group[0].balanceBox, target = fitted(frame, box, this.C.ROW_STRETCH)
+      for (const part of group) part.target = mapped(part.source, frame, target)
+    }
     return group
   }
 
@@ -924,7 +975,8 @@ export class Composer {
       if (p.empty !== undefined || p.fixed) continue
       const weight = [], target = p.target.slice(), scale = scaleOf(p)
       for (const axis of [0, 1]) {
-        const extent = p.source[axis + 2] - p.source[axis]
+        const box = p.balanceBox ?? p.source
+        const extent = box[axis + 2] - box[axis]
         if (extent <= 2 * stem[axis][0]) {
           const width = extent * curve(density, axis) / curve(p.native, axis), middle = (target[axis] + target[axis + 2]) / 2
           target[axis] = middle - width / 2
