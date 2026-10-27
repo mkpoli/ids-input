@@ -151,7 +151,7 @@ export class Composer {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = number(this.parse(sequence))
-    const out = this.node(this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
+    const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
     const ownership = this.separate ? this.leafOwners(tree) : null
@@ -374,6 +374,13 @@ export class Composer {
     }
     const owners = walk(tree)
     return valid ? { owners, split } : null
+  }
+
+  /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
+  standaloneExpandedOverlay(node) {
+    const equivalents = {"⿻大⿰人人": "夾", "⿻工⿰人人": "巫", "⿻⿰人人土": "坐"}
+    const char = equivalents[keyOf(node)]
+    return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
   /** Whole-character lookup for attested expanded pyramid-glyphs; nested editing keeps its leaves. */
