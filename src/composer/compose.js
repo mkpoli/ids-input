@@ -687,12 +687,14 @@ export class Composer {
     if (op in this.ENCLOSE) {
       const outer = this.node(children[0], region)
       let room = this.room(op, outer, region)
+      const fallback = !room
       if (!room) {
         const [x0, y0, x1, y1] = this.INSIDE[op], w = region[2] - region[0], h = region[3] - region[1]
         room = [region[0] + x0 * w, region[1] + y0 * h, region[0] + x1 * w, region[1] + y1 * h]
       }
       const inner = this.node(children[1], room)
-      this.fit(outer, inner, region, this.stem0[0][0], C)
+      this.fit(outer, inner, region, this.stem0[0][0], C,
+        fallback && op === '⿽' ? { room, bounds: room } : undefined)
       return [...outer, ...inner]
     }
     const axis = this.AXIS[op]
@@ -1006,7 +1008,7 @@ function facing(a, b, axis, size = 250) {
  * enclosing part's opening, clear of its ink by `ROOM_MARGIN` stems, nearest where they stand
  * (`_fit_inside`). Answers whether a placement was found.
  */
-export function fitInside(outer, inner, region, stem, C, { size = 64, room = null, anchor = null } = {}) {
+export function fitInside(outer, inner, region, stem, C, { size = 64, room = null, anchor = null, bounds = null } = {}) {
   const w = (region[2] - region[0]) / size, h = (region[3] - region[1]) / size
   const margin = Math.max(1, pyRound(C.ROOM_MARGIN * stem / Math.max(w, h) / 2))
   const ink = grown(fill(groupRings(outer), size, region), size, margin)
@@ -1046,6 +1048,8 @@ export function fitInside(outer, inner, region, stem, C, { size = 64, room = nul
       shifted.push(bits)
     }
     const free = (R, C0) => {
+      if (bounds && (region[0] + C0 * w < bounds[0] || region[0] + (C0 + mw) * w > bounds[2] ||
+        region[3] - (R + mh) * h < bounds[1] || region[3] - R * h > bounds[3])) return false
       const bits = shifted[C0]
       for (let i = 0; i < mh; i++) for (let k = 0; k < words; k++) if (bits[i * words + k] & inkBits[(R + i) * words + k]) return false
       return true

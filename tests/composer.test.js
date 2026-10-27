@@ -8,7 +8,8 @@ import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
 import { Composer } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
-import { files, layout, ops } from './fixtures/composer-export.js'
+import { files, layout, ops, shards } from './fixtures/composer-export.js'
+import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
@@ -63,6 +64,24 @@ describe('the composer', () => {
     const [outer, inner] = composer.compose('⿽永木')
     expect(composer.room('⿽', [outer], composer.face)).toBeNull()
     expect((inner.target[1] + inner.target[3]) / 2).toBeGreaterThan((composer.face[1] + composer.face[3]) / 2)
+  })
+
+  it('keeps the ink of an enclosed part in the upper-left fallback after fitting', async () => {
+    // Noto Sans CJK JP outlines, SIL OFL 1.1 (fonts/OFL-NotoSansCJK.txt), as exported by han-compose.
+    const input = { ...files, ...shards('g', Object.entries(notoRightEnclosure)) }
+    const source = createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+    const originalRoom = Composer.prototype.room
+    Composer.prototype.room = function (op, ...args) { return op === '⿽' ? null : originalRoom.call(this, op, ...args) }
+    try {
+      const drawing = await compose(source, '⿽十⺀', { separate: true })
+      expect(drawing.parts.map(part => part.origin)).toEqual(['glyph 十', 'glyph ⺀'])
+      const [, inner] = drawing.parts
+      // SVG coordinates have y down: both dots must stay above and left of the centre.
+      expect(inner.box[0] + inner.box[2]).toBeLessThan(500)
+      expect(inner.box[1] + inner.box[3]).toBeLessThan(500)
+    } finally {
+      Composer.prototype.room = originalRoom
+    }
   })
 
   it('renders the four-mouth grid by row while keeping the original leaf order', async () => {
