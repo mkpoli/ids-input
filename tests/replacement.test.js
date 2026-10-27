@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { replacementPrefix, replacementQuery, resolveReplacement, write } from '../src/core/index.js'
+import { replacementExpression, replacementInput, replacementPrefix, replacementQuery, resolveReplacement, resolveReplacementExpression, unaliasReplacementInput, write } from '../src/core/index.js'
 
 const table = new Map(Object.entries({
   林: ['⿰木木'], 森: ['⿱木林'], 赢: ['⿱吂⿲月贝凡'],
@@ -90,4 +90,59 @@ describe('zi.tools replacement expressions', () => {
   it('preserves component variation selectors in the output', async () => {
     expect(await resolve('🔄林木火︀')).toBe('⿰木火︀')
   })
+  it('reads replacements inside an IDS or another replacement', async () => {
+    const ask = async text => {
+      const expression = replacementExpression(text)
+      if (!expression) throw Error('Invalid test expression')
+      const tree = await resolveReplacementExpression(expression, structure)
+      return tree === null ? null : write(tree)
+    }
+    expect(await ask('⿰氵🔄林木火')).toBe('⿰氵⿰木火')
+    expect(await ask('⿱🔄林木火水')).toBe('⿱⿰木火水')
+    expect(await ask('⿰？🔄林木火')).toBe('⿰？⿰木火')
+    expect(await ask('⿱🔄林木火⬚')).toBe('⿱⿰木火⬚')
+    expect(await ask('⿱🔄林木火＋')).toBe('⿱⿰木火⬚')
+    expect(await ask('🔄🔄林木火木水')).toBe('⿰水火')
+    expect(await ask('⿱RP林木火水')).toBe('⿱⿰木火水')
+    expect(await ask('⿱🔄⿰RPRX水')).toBe('⿱⿰XP水')
+    expect(await ask('🔄林木🔄森林火')).toBe('⿰木⿱木火')
+    expect(await ask('⿱🔄林水火水')).toBeNull()
+    expect(replacementExpression('⿱🔄林木水')).toBeNull()
+    expect(replacementExpression('⿰🔄林木？日')).toBeNull()
+    expect(replacementExpression('⿲RP林')).toBeNull()
+    expect(replacementExpression('⿱🔄RP火水')).not.toBeNull()
+    expect(replacementInput('⿱RP林LR')).toBe(true)
+    expect(replacementInput('⿱人LR')).toBe(false)
+    expect(replacementInput('⿰🔄木')).toBe(false)
+    expect(replacementInput('⿰🔄LR')).toBe(true)
+    expect(unaliasReplacementInput('⿰🔄LR')).toBe('⿰🔄LR')
+    expect(replacementInput('⿱🔄林木火水')).toBe(true)
+    expect(replacementInput('LR🔄林LR水')).toBe(true)
+    expect(unaliasReplacementInput('LR🔄林LR水')).toBe('⿰🔄林LR水')
+    expect(unaliasReplacementInput('⿱RP林木火LR木水')).toBe('⿱RP林木火⿰木水')
+    expect(unaliasReplacementInput('⿲RPLR木水')).toBe('⿲RP⿰木水')
+    expect(unaliasReplacementInput('⿱RP林LR')).toBe('⿱RP林LR')
+    expect(unaliasReplacementInput('LR🔄林木火水')).toBe('⿰🔄林木火水')
+    expect(unaliasReplacementInput('⿱🔄林木火RP森林火')).toBe('⿱🔄林木火RP森林火')
+    expect(replacementExpression('⿰木日')).toBeNull()
+    const deeplyNested = '🔄'.repeat(22) + '木'.repeat(45)
+    expect(await ask(deeplyNested)).toBe('木')
+    expect(replacementExpression('⿾'.repeat(257) + '🔄林木火')).toBeNull()
+  })
+  it('aborts an in-flight nested replacement without opening further components', async () => {
+    const controller = new AbortController()
+    let finish, calls = 0
+    const expression = replacementExpression('⿱🔄林木火水')
+    const result = resolveReplacementExpression(expression, () => {
+      calls++
+      return new Promise(resolve => { finish = resolve })
+    }, { signal: controller.signal })
+    await Promise.resolve()
+    await Promise.resolve()
+    controller.abort()
+    if (finish) finish([{ text: '⿰木木' }])
+    await expect(result).rejects.toThrow()
+    expect(calls).toBeLessThanOrEqual(1)
+  })
+
 })

@@ -137,5 +137,6 @@
   "app.replacement.failed": "Could not look up the character. Please try again.",
   "app.replacement.tooLong": "The three inputs together must be at most 64 code points.",
   "app.source.tangutGlosses": "English Tangut glosses, with source qualifiers, for character information panels.",
-  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21)."
+  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21).",
+  "app.replacement.nestedHint": "You can also paste a nested expression into the sequence field, for example ⿱🔄林木火水."
 }

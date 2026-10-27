@@ -136,5 +136,6 @@
   "app.replacement.failed": "文字を検索できませんでした。もう一度お試しください。",
   "app.replacement.tooLong": "3 つの入力を合わせて 64 コードポイント以内にしてください。",
   "app.source.tangutGlosses": "文字情報パネルに表示する西夏文字の英語の語釈。用法を限定する注記も表示します。",
-  "app.source.tangutComponentMeaning": "部件𘥇と馬に関する意味との関連（2020年4月21日）。"
+  "app.source.tangutComponentMeaning": "部件𘥇と馬に関する意味との関連（2020年4月21日）。",
+  "app.replacement.nestedHint": "⿱🔄林木火水 のように、置き換えを含む式を序列の欄に貼り付けることもできます。"
 }
