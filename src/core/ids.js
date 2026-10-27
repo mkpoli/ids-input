@@ -91,8 +91,57 @@ export const isLetter = char => {
 /** How many descriptions an operator takes; 0 for anything else. @param {string | undefined} char */
 export const arity = char => (char === undefined ? 0 : ARITY.get(char) ?? 0)
 
-/** Whether `text` starts with an operator. @param {string | null | undefined} text */
-export const isSequence = text => arity([...(text ?? '')][0]) > 0
+/** A zi.tools entry's unique separator, {曰} or {?0丗}: the abstract shape its description draws,
+ * with a question mark and digit where the source variant differs, and a source letter after the
+ * character. @type {RegExp} */
+const SEPARATOR = /^\{(?:\?[0-9]?)?([^}]+)\}/u
+/** A zi.tools entry's glyph-variant definition, (.,T) or (d), after its description. @type {RegExp} */
+const DEFINITION = /\([0-9A-Za-z.,]+\)$/u
+/** Whether `note` names variants, as a glyph-variant definition does: letters, digits, dots, commas.
+ * @param {string} note */
+const isVariantList = note => /^[0-9A-Za-z.,]*$/u.test(note)
+/** Whether `char` may name a shape in a unique separator: an ideograph, a CJK stroke or a curve,
+ * as the zi.tools grammar has it. @param {string | undefined} char */
+const isIdeograph = char => typeof char === 'string' && (unicodeProperty('ideographic', char) || /^[\u31C0-\u31E3◝◞◟◜ユス]$/u.test(char))
+
+/**
+ * The description a zi.tools entry carries, and where it starts in the entry. Its unique separator
+ * {士} and its glyph-variant definition (.,T) note which glyph the description is for, not how it
+ * is built; this package draws one glyph per description and keeps no variant data, so the
+ * description is what remains. Anything else stays in the text, to be read or rejected as usual.
+ * @param {string | null | undefined} text @returns {{ text: string, start: number }}
+ */
+export function entryBody(text) {
+  let body = text ?? '', start = 0
+  if (body.startsWith('{')) {
+    const separator = SEPARATOR.exec(body)
+    const name = separator ? [...separator[1]] : []
+    const rest = separator ? body.slice(separator[0].length) : ''
+    // {?0丗} names a character, with its variant and source after it; nothing else follows a brace.
+    // The name is an ideograph: {22} counts the strokes of a part in other IDS tables, and a letter
+    // or digit names no shape. A separator alone names nothing to read.
+    if (separator && rest && isIdeograph(name[0]) && isVariantList(name.slice(1).join(''))) {
+      start = separator[0].length
+      body = rest
+    }
+  }
+  if (body.endsWith(')')) {
+    const definition = DEFINITION.exec(body)
+    const prefix = definition ? body.slice(0, -definition[0].length) : ''
+    const chars = [...prefix]
+    // Only a complete description takes a definition: (d) after ⿲ is its third component, not a note.
+    if (definition && prefix && arity(chars[0]) > 0 && descriptionEnd(chars) === chars.length) body = prefix
+  }
+  return { text: body, start }
+}
+
+/** The description a zi.tools entry carries, without its notes; see `entryBody`.
+ * @param {string | null | undefined} text @returns {string} */
+export const entryDescription = text => entryBody(text).text
+
+/** Whether `text` starts with an operator, where a zi.tools entry starts after its separator.
+ * @param {string | null | undefined} text */
+export const isSequence = text => arity([...(entryDescription(text))][0]) > 0
 
 /**
  * A description as a tree. Answers `{ tree }`, or `{ problem }` naming what is wrong: `component`
@@ -107,12 +156,16 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
  * of three or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
  *
+ * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
+ * definition after it are left out (see `entryDescription`).
+ *
  * @param {string | null | undefined} text
  * @param {{ open?: boolean }} [options]
  * @returns {{ tree: Part, problem?: undefined } | { problem: Problem, tree?: undefined }}
  */
 export function parse(text, { open = false } = {}) {
-  const chars = [...(text ?? '')]
+  const body = entryDescription(text)
+  const chars = [...body]
   if (open && !chars.length) return { tree: null }
   const long = chars.length > LONGEST
   if (!chars.length || chars.length > PYRAMID_LONGEST || (!open && !isSequence(text))) return { problem: 'character' }

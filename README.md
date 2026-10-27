@@ -249,6 +249,13 @@ The preview draws marks into the same 1000-unit box:
 Marks are separate parts of the drawing (`origins` holds `mark ˊ`), so they export with the SVG and
 PNG. The test suite draws them from the bundled Bopomofo and Unicode outlines.
 
+A zi.tools entry reads as its description: the unique separator before it (`{士}⿱十一`) and the
+glyph-variant definition after it (`⿻乚一(.,T)`) say which glyph the entry is for, so `parse`
+leaves them out and `write` does not put them back. This package draws one glyph per description
+and carries no variant data; stroke chains (`#(H)`) and the bracket modifiers (`⿻[1:]`, `⿴[1]`)
+are not read yet.
+
+
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
@@ -769,6 +776,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   the workshop's QR codes (a development dependency, bundled into the demo only).
 - 字統网 (zi.tools), IDS search, <https://zi.tools/?secondary=ids>: the ASCII operator names, read from
   its page script (`action_abbr_map`) on 2026-10-24, and ideas for typing sequences.
+- NightFurySL2001 (夜煞之乐), [（白式）IDS 延展语法导论](https://nightfurysl2001.github.io/bai-ids/),
+  MIT, updated 2026-09-30: the unique separator and glyph-variant definition `parse` reads, and the
+  stroke chains, overlap matrices and index modifiers it does not yet read.
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie

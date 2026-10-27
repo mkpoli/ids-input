@@ -145,6 +145,13 @@ describe('a preview turn', () => {
     expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'TooLargeError' })) })).toEqual([{ step: 'capped' }])
     expect(await run('⿰木口', { preview: () => Promise.reject(Object.assign(new Error('x'), { name: 'UnavailableError' })) })).toEqual([{ step: 'unavailable' }])
   })
+  it('asks for the description a zi.tools entry carries', async () => {
+    const asked = []
+    const preview = text => { asked.push(text); return later({ d: 'M0 0Z' }) }
+    await run('{士}⿱十一', { preview })
+    await run('⿻乚一(.,T)', { preview })
+    expect(asked).toEqual(['⿱十一', '⿻乚一'])
+  })
   it('hands nothing over once aborted', async () => {
     const controller = new AbortController(), seen = []
     runPreview('⿰木口', { signal: controller.signal, preview: () => later({ d: 'M0 0Z' }) }, patch => seen.push(patch))

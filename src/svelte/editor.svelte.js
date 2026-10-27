@@ -11,7 +11,7 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+import { applyOperator, clear, entryBody, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
   samePath, sameTree, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
@@ -296,12 +296,22 @@ export function createEditor(options) {
   function edit(field) {
     const typedText = field.value, caret = field.selectionStart ?? typedText.length
     // RP's operands may themselves be Latin letters; do not turn an operand into an IDC alias.
-    const written = replacementInput(typedText) ? unaliasReplacementInput(typedText) : unalias(typedText)
-    if (written !== typedText) {
+    const aliased = replacementInput(typedText) ? unaliasReplacementInput(typedText) : unalias(typedText)
+    if (aliased !== typedText) {
       const at = [...(replacementInput(typedText) ? unaliasReplacementInput(typedText.slice(0, caret)) : unalias(typedText.slice(0, caret)))].length
-      field.value = written
-      const offset = [...written].slice(0, at).join('').length
+      field.value = aliased
+      const offset = [...aliased].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
+    }
+    // A zi.tools entry's notes say which glyph its description is for; the field keeps the description,
+    // so the tokens a caret names stay the ones the tree has.
+    const entry = entryBody(aliased)
+    const written = entry.text && entry.text !== aliased && !parse(entry.text, { open: true }).problem ? entry.text : aliased
+    if (written !== aliased) {
+      const map = (/** @type {number} */ at) => Math.max(0, Math.min(written.length, at - entry.start))
+      const from = field.selectionStart ?? aliased.length
+      field.value = written
+      field.setSelectionRange(map(from), map(field.selectionEnd ?? from))
     }
     if (draft !== written) invalidateResolution()
     draft = written
