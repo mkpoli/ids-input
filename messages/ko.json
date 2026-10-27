@@ -15,6 +15,8 @@
   "ids.do.clearAll": "모두 지우기",
   "ids.do.open": "{sequence} 열기",
   "ids.do.put": "{part} 넣기",
+  "ids.dragSibling": "드래그 또는 Alt+방향키로 같은 단계의 순서 변경",
+  "ids.do.reorder": "구성 요소 순서 변경",
   "ids.do.replace": "{from}을(를) {part}(으)로 바꾸기",
   "ids.do.split": "{op}(으)로 {part} 나누기",
   "ids.do.swap": "{from}을(를) {op}(으)로 바꾸기",
