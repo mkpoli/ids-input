@@ -18,7 +18,7 @@ const adapter = smallSealAdapter({ data, table, palette: [] })
 it('preserves every Jiguge source record and excludes unresolved data from the editor', () => {
   expect(data.records).toHaveLength(11114)
   expect(Object.keys(data.table)).toHaveLength(49)
-  expect(data.parts).toHaveLength(31)
+  expect(data.parts).toHaveLength(1334)
   const statuses = {}
   for (const record of data.records) for (const d of record.descriptions) {
     statuses[d.status] = (statuses[d.status] ?? 0) + 1
@@ -162,4 +162,21 @@ it('looks up mappings even when the seal has no resolved decomposition', async (
   expect((await adapter.search(unmappedStructure)).map(h => h.char)).toContain('弌')
   expect((await adapter.search('弌')).map(h => h.char)).toContain(unmappedStructure)
   expect(await adapter.structure(unmappedStructure)).toEqual([])
+})
+
+it('offers basic seal parts beyond the resolved IDS subset with explicit grouping evidence', () => {
+  for (const char of ['木', '水', '口', '人']) {
+    const part = data.parts.find(p => p.modern.includes(char))
+    expect(part).toBeDefined()
+    expect(part.sealGroup).toBe('basic')
+    expect(part.sealBasis).toBe('selected')
+  }
+  for (const char of ['祖', '祭', '皇', '莠', '英', '番']) {
+    expect(data.parts.find(p => p.modern.includes(char)).sealGroup).toBe('compound')
+  }
+  const inferred = data.parts.filter(p => p.sealBasis === 'cjk-ids')
+  expect(inferred.length).toBeGreaterThan(300)
+  expect(inferred.every(p => p.modernIds.length && p.sealGroup === 'compound')).toBe(true)
+  expect(inferred.every(p => !data.table[p.part])).toBe(true)
+  expect(data.parts.filter(p => p.sealBasis === 'unknown').every(p => p.sealGroup === 'other')).toBe(true)
 })

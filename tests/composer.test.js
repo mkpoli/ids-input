@@ -66,7 +66,7 @@ describe('the composer', () => {
       .toEqual([[0], [3], [1], [4], [2]])
     const composer = new Composer(source.store())
     expect(composer.parse(columns)).toEqual(['⿰', ['⿱', '口', '口'], ['⿱', '口', '口']])
-    expect(composer.mouthGrid(composer.parse('⿰⿱木口⿱口口'))).toBeNull()
+    expect(composer.repeatedGrid(composer.parse('⿰⿱木口⿱口口'))).toBeNull()
     composer.predict = (op, kids) => {
       const split = JSON.stringify(kids[1]) === JSON.stringify(composer.parse(columns)) ? 800 : 600
       return [[0, split, 1000, 1000], [0, 0, 1000, split]]

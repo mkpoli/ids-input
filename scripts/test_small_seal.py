@@ -33,4 +33,26 @@ class ImportTests(unittest.TestCase):
         with self.assertRaises(ValueError): sexps('(foo')
         with self.assertRaises(ValueError): sexps(')')
 
+class PaletteTests(unittest.TestCase):
+    def test_grouping_keeps_source_and_inference_separate(self):
+        from build_small_seal_palette import compile_palette
+        basic, source, inferred, unknown, absent = map(chr, range(0x3D000, 0x3D005))
+        records = {basic: {'kSEAL_MCJK': '6728', 'kSEAL_Rad': '1.3D000'}}
+        doc = {'records': [
+            {'char': basic, 'descriptions': []},
+            {'char': source, 'descriptions': [{'original': '&U-i001+2FF1;&UNKNOWN;木', 'text': '&U-i001+2FF1;&UNKNOWN;木'}]},
+            {'char': inferred, 'descriptions': []},
+            {'char': unknown, 'descriptions': []},
+            {'char': absent, 'descriptions': []}],
+            'modern': {source: ['林'], inferred: ['森'], unknown: ['？']}, 'table': {}}
+        compile_palette(doc, records, {basic, source, inferred, unknown}, {'森': ['⿱木林']})
+        parts = {p['part']: p for p in doc['parts']}
+        self.assertEqual(parts[basic]['sealGroup'], 'basic')
+        self.assertEqual(parts[source]['sealBasis'], 'seal-ids')
+        self.assertEqual(parts[inferred]['sealBasis'], 'cjk-ids')
+        self.assertEqual(parts[inferred]['modernIds'], ['⿱木林'])
+        self.assertEqual(parts[unknown]['sealGroup'], 'other')
+        self.assertNotIn(absent, parts)
+        self.assertEqual(doc['table'], {})
+
 if __name__ == '__main__': unittest.main()
