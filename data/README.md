@@ -274,11 +274,15 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The fifteen manual entries
-bring the compound total to thirty-one. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The sixteen manual entries
+bring the compound total to thirty-two. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
+
+The requested compound `⿲彳⿱山一攵` is available as a single palette candidate,
+with an estimated eleven strokes. Its exact sequence has no uses in the bundled
+corpus, so it is retained as a manual entry.
 
 The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
