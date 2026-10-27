@@ -225,5 +225,10 @@
   "parts.gongche.conventions": "Dấu chỉ âm vực khác nhau giữa các truyền thống. Nhạc Quảng Đông và công xích phổ truyền thống dùng 亻 và 彳 theo cách khác nhau.",
   "parts.gongche.compose": "Để ghép bộ phận bên trái, nhập ⿰, bộ phận rồi chữ nhạc. Xem bản nhạc gốc để biết cách dùng trong âm nhạc.",
   "parts.gongche.beiguan": "Công xích phổ Bắc quản · Taiwan Historica",
-  "parts.gongche.cantonese": "Công xích phổ Quảng Đông · CCLI 2022/03, Phụ lục II"
+  "parts.gongche.cantonese": "Công xích phổ Quảng Đông · CCLI 2022/03, Phụ lục II",
+  "parts.gongche.kunqu": "Chữ nhạc Côn khúc có móc",
+  "parts.gongche.encoded": "Chữ nhạc ghép đã mã hóa",
+  "parts.gongche.marks": "Ký hiệu ghi nhạc",
+  "parts.gongche.kunquSource": "Ký âm Côn khúc · Đề xuất Unicode",
+  "parts.gongche.marksSource": "Ký hiệu ghi nhạc · Hong Kong Music Miniatures"
 }
