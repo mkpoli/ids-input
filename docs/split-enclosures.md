@@ -37,7 +37,7 @@ snapshot describes 滕 as `⿰月𣳾`; the requested 朕 rule is a layout conve
 
 `⿶𤕰X` (鼎) remains a candidate requiring further geometry checks. Ordinary connected enclosures such as 門, 疒 and 戊 are not rewritten simply because they have decompositions.
 
-The fully expanded four-mouth grid is normalized before glyph/host lookup so both spellings choose the same rendering: `⿰⿱口口⿱口口` is laid out as `⿱⿰口口⿰口口`. Either spelling can be the outer operand of `⿴`; its middle operand is placed between the two rows. An editor retains the original leaf order, including column-first selection for the column-first input. Other grids are unchanged.
+Fully expanded 2×2 grids of 口, 火, 又, 水 and 屮 are normalized before glyph/host lookup so both spellings choose the same rendering. For example, `⿰⿱口口⿱口口` is laid out as `⿱⿰口口⿰口口`. Either spelling can be the outer operand of `⿴`; its middle operand is placed between the two rows. An editor retains the original leaf order, including column-first selection for the column-first input. Other repeated components are unchanged.
 
 The literal host `⿲彳⿱山一攵` supports the requested bottom opening:
 `⿵⿲彳⿱山一攵X` renders as `⿲彳⿱⿱山一X攵`. The inserted operand sits
