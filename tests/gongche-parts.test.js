@@ -10,7 +10,6 @@ it('offers complete selectable Gongche components with accurate stroke metadata'
   for (const item of GONGCHE_PARTS) {
     expect(parse(item.part, { open: true }).problem).toBeUndefined()
     expect(item.strokes).toBe(data.parts.find(row => row[0] === item.part)[2])
-    if (item.example) expect(parse(item.example).problem).toBeUndefined()
   }
   expect(GONGCHE_GROUPS.at(-1).parts.map(p => p.part)).toEqual(['亻', '彳', '⿱𰀪亻', '氵', '⿰氵氵'])
 })
@@ -25,11 +24,11 @@ it('filters only the Gongche catalogue and retains notation order', () => {
 })
 
 it('provides every Gongche label and description in all supported locales', () => {
-  const common = ['hint','details','example','guide','conventions','compose','beiguan','cantonese']
+  const common = ['guide','conventions','compose','beiguan','cantonese']
   for (const lang of ['en','ja','zh-Hans','zh-Hant','ko','vi']) {
     const messages = JSON.parse(readFileSync(new URL(`../messages/${lang}.json`, import.meta.url)))
     expect(messages['parts.tab.gongche']).toBeTruthy()
-    for (const key of [...common, ...GONGCHE_GROUPS.map(g => g.key), ...GONGCHE_PARTS.map(p => p.detail)]) {
+    for (const key of [...common, ...GONGCHE_GROUPS.map(g => g.key)]) {
       expect(messages[`parts.gongche.${key}`]).toBeTruthy()
     }
   }

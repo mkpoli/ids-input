@@ -79,8 +79,6 @@
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
   const sealGroups = $derived(SEAL_GROUPS.map(name => ({ name, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
-  let gongchePart = $state('⿰氵氵')
-  const gongcheDetail = $derived(GONGCHE_PARTS.find(part => part.part === gongchePart) ?? GONGCHE_PARTS[0])
   const query = $derived(filter.trim())
   const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
@@ -108,7 +106,6 @@
 
   /** @param {string} part */
   function pick(part) {
-    if (tab === 'gongche') gongchePart = part
     recent = [part, ...recent.filter(other => other !== part)].slice(0, RECENT_MAX)
     if (recentKey) remember(recentKey, recent)
     onpick?.(part)
@@ -224,9 +221,6 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
-        onfocus={() => { if (tab === 'gongche') gongchePart = part.part }}
-        onpointerenter={() => { if (tab === 'gongche') gongchePart = part.part }}
-        aria-describedby={tab === 'gongche' ? `${uid}-gongche-detail` : undefined}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -267,19 +261,10 @@
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
     {#if tab === 'gongche'}
-      <p class="parts-note">{t('parts.gongche.hint')}</p>
       {#each gongcheShown as group (group.key)}
         <h4 class="parts-class">{t(`parts.gongche.${group.key}`)}</h4>
         {@render grid(group.parts)}
       {:else}<p class="parts-note">{t('parts.none')}</p>{/each}
-      <section class="gongche-detail" id={`${uid}-gongche-detail`} aria-label={t('parts.gongche.details')}>
-        <div class="gongche-summary">
-          <span class="gongche-glyph">{#if isSequence(gongcheDetail.part)}<IdsPartIcon sequence={gongcheDetail.part} {adapter} />{:else}{gongcheDetail.part}{/if}</span>
-          <div><strong>{gongcheDetail.part}</strong><div class="parts-note">{isSequence(gongcheDetail.part) ? 'IDS' : `U+${gongcheDetail.part.codePointAt(0)?.toString(16).toUpperCase()}`} · {gongcheDetail.derived ? '≈ ' : ''}{t('parts.strokeCount', { count: gongcheDetail.strokes ?? 0 })}</div></div>
-        </div>
-        <p>{t(`parts.gongche.${gongcheDetail.detail}`)}</p>
-        {#if gongcheDetail.example}<div class="gongche-example"><span>{t('parts.gongche.example')}</span><code>{gongcheDetail.example}</code></div>{/if}
-      </section>
       <details class="gongche-guide"><summary>{t('parts.gongche.guide')}</summary>
         <p>{t('parts.gongche.conventions')}</p>
         <p>{t('parts.gongche.compose')}</p>
@@ -351,11 +336,7 @@
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
-  .gongche-detail{padding:10px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
-  .gongche-summary{display:flex;align-items:center;gap:10px}.gongche-summary strong,.gongche-example code{font-family:var(--ids-font,sans-serif);font-weight:400;overflow-wrap:anywhere}
-  .gongche-glyph{display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex:none;font:30px var(--ids-font,sans-serif)}
-  .gongche-detail p,.gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
-  .gongche-example{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--_muted)}
+  .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>

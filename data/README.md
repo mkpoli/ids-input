@@ -565,9 +565,8 @@ so both columns have matching proportions and remain separated in either style.
 
 The 工尺譜 tab in `IdsParts` collects ten base note characters, three regional
 forms and five left-side components. `src/core/gongche.js` defines this small
-catalogue independently of palette loading. Item details show stroke counts,
-codepoints or literal IDS, and composition examples. These examples describe
-structure; musical use depends on the source score. The panel links to Taiwan
+catalogue independently of palette loading. A collapsible guide explains
+left-side composition and regional notation differences. The panel links to Taiwan
 Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
 
 ### Palette fallback outlines
