@@ -60,7 +60,10 @@
   .ids-title{font-size:11px;color:var(--_muted)}
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
-  .sequence-paint span{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent);border-radius:3px}
+  .sequence-paint span{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
+  .sequence-paint span:first-child{border-radius:3px 0 0 3px}
+  .sequence-paint span:last-child{border-radius:0 3px 3px 0}
+  .sequence-paint span:only-child{border-radius:3px}
   input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;padding:6px 10px;font-family:var(--_font);color:inherit;
     border:1px solid var(--_line);border-radius:8px;background:transparent}
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
@@ -70,5 +73,7 @@
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
-  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 40%,transparent);box-shadow:inset 0 -3px var(--_accent)}
+  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 40%,transparent);box-shadow:inset 0 -3px var(--_accent);border-radius:3px}
+  .sequence-paint span.hovered + span.hovered{border-start-start-radius:0;border-end-start-radius:0}
+  .sequence-paint span.hovered:has(+ span.hovered){border-start-end-radius:0;border-end-end-radius:0}
 </style>
