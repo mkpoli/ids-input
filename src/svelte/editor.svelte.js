@@ -11,7 +11,7 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, samePath, unwrap,
+import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, reorderSiblings, samePath, unwrap,
   write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
@@ -26,7 +26,7 @@ import { translator } from './i18n.js'
  * @typedef {import('../core/ids.js').Path} Path
  * @typedef {'hover' | 'on' | 'off'} TintMode
  * @typedef {{ tintMode?: TintMode, adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
- * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean }} Change
+ * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean, reorder?: { from: Path, to: Path } }} Change
  */
 
 /** The message key of each operator's name. */
@@ -117,14 +117,14 @@ export function createEditor(options) {
   }
   /**
    * A change to the tree, named for the history; a run of typing in the field is one step.
-   * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean }} [how]
+   * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path } }} [how]
    */
-  function apply(next, select, label, { destructive = false } = {}) {
+  function apply(next, select, label, { destructive = false, reorder } = {}) {
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
-    change = { id: ++changes, label, destructive }
+    change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}) }
     commit(next, select)
   }
   function undo() {
@@ -206,6 +206,12 @@ export function createEditor(options) {
     if (found.tree === null) return false
     put(found.tree, at)
     return true
+  }
+  /** Move one sibling to another sibling's position. @param {Path} from @param {Path} to */
+  function reorder(from, to) {
+    if (disabled()) return
+    const next = reorderSiblings(tree, from, to)
+    if (next !== tree) apply(next, to, t('ids.do.reorder'), { reorder: { from, to } })
   }
   /** Empty the part at `path`. @param {Path | null} path */
   function empty(path) {
@@ -363,7 +369,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, take, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    reset, operator, put, take, reorder, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
     /** Hear every change: the text and whether it is a whole description. @param {(text: string, whole: boolean) => void} listen */

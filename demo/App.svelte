@@ -188,8 +188,8 @@
   $effect(() => save('keyHints', keyHints ? undefined : false))
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
-  let exampleCards = $state(load('exampleCards', false))
-  $effect(() => save('exampleCards', exampleCards ? true : undefined))
+  let exampleCards = $state(load('exampleCards', true))
+  $effect(() => save('exampleCards', exampleCards ? undefined : false))
   // The share of the middle column given to the tree; the search takes the rest.
   let split = $state(clampSplit(load('split', 60)))
   /** @type {HTMLElement | null} */ let middleEl = $state(null)

@@ -676,6 +676,19 @@ The data the editor runs on is listed under [Sources](#sources) with its licence
 
 ## Prior art
 
+### KAGE and GlyphWiki
+
+[KAGE](https://github.com/kamichikoichi/kage-engine), created by Koichi Kamichi, and the
+[GlyphWiki](https://glyphwiki.org/) contributors have developed a shared system for describing and
+drawing characters from reusable parts. Their work is an important predecessor to this project's
+character composition. The [KAGE engine](https://github.com/kurgm/kage-engine) renders descriptions
+of strokes and component references; han-compose assembles existing font outlines from an IDS,
+using placement learned from the font. Its serif export can include outlines from
+[Jigmo](https://kamichikoichi.github.io/jigmo/), generated with KAGE from glyphs contributed to
+GlyphWiki and released under CC0 1.0.
+
+### Mojidata
+
 Mojidata is "an open-source collection of Chinese character information databases", and the
 Mojidata Web App searches and displays them (<https://mojidata.ryusei.dev/about>). Its code is at
 <https://github.com/mandel59/mojidata>, <https://github.com/mandel59/mojidata-api> and
