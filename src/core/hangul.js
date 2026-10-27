@@ -74,6 +74,7 @@ export function hangulClusterAt(chars, at) {
  * syllable; any other valid combination becomes its conjoining jamo run.
  * @param {string} initial @param {string} medial @param {string} [final] @returns {Composed | null} */
 export function composeHangul(initial, medial, final = '') {
+  if ([...initial].length !== 1 || [...medial].length !== 1 || [...final].length > 1) return null
   const l = toConjoiningJamo(initial, 'L'), v = toConjoiningJamo(medial, 'V')
   const t = final ? toConjoiningJamo(final, 'T') : ''
   if (!l || !v || final && !t) return null
@@ -98,6 +99,6 @@ export function composeJamo(text) {
   const initial = toConjoiningJamo(chars[0], 'L'), medial = toConjoiningJamo(chars[1], 'V')
   if (!initial || !medial) return null
   const finals = chars.slice(2).map(char => toConjoiningJamo(char, 'T'))
-  if (finals.some(char => char === null)) return null
+  if (finals.length > 1 || finals.some(char => char === null)) return null
   return composeHangul(initial, medial, finals.join(''))?.text ?? null
 }

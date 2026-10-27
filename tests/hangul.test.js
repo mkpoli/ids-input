@@ -46,6 +46,7 @@ describe('composing Hangul', () => {
     expect(composeHangul(g, k)).toBeNull()
     expect(composeHangul(a, a)).toBeNull()
     expect(composeHangul('木', a)).toBeNull()
+    expect(composeHangul('ㄱ', 'ㅏ', 'ㄴㅎ')).toBeNull()
   })
   it('composes jamo a filter receives', () => {
     expect(composeJamo('ㄱㅏ')).toBe('가')
@@ -53,6 +54,7 @@ describe('composing Hangul', () => {
     expect(composeJamo(g + a)).toBe('가')
     expect(composeJamo(g + a + oldFinal)).toBe(g + a + oldFinal)
     expect(composeJamo('가')).toBeNull()
+    expect(composeJamo('ㄱㅏㄴㅎ')).toBeNull()
   })
 })
 
