@@ -124,5 +124,11 @@
   "app.examples.complex": "Cấu trúc phức tạp",
   "app.examples.repeated": "Bộ phận lặp lại",
   "app.examples.enclosures": "Kết cấu bao quanh",
-  "app.examples.mixed": "Hệ chữ hỗn hợp"
+  "app.examples.mixed": "Hệ chữ hỗn hợp",
+  "app.componentLookup.title": "Tra bộ phận",
+  "app.componentLookup.containing": "Tìm chữ chứa bộ phận",
+  "app.componentLookup.parts": "Tìm bộ phận của chữ",
+  "app.componentLookup.input": "Chữ hoặc bộ phận",
+  "app.componentLookup.invalid": "Nhập một chữ hoặc bộ phận.",
+  "app.componentLookup.help": "Ví dụ, tìm chữ chứa 木 hoặc xem các bộ phận của 森."
 }

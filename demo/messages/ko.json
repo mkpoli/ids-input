@@ -122,5 +122,11 @@
   "app.theme.light": "라이트",
   "app.theme.system": "시스템 설정",
   "app.title": "IDS 공방",
-  "app.toolbar": "도구"
+  "app.toolbar": "도구",
+  "app.componentLookup.title": "부품 검색",
+  "app.componentLookup.containing": "부품이 포함된 글자 찾기",
+  "app.componentLookup.parts": "글자의 부품 찾기",
+  "app.componentLookup.input": "글자 또는 부품",
+  "app.componentLookup.invalid": "글자나 부품을 하나 입력하세요.",
+  "app.componentLookup.help": "예를 들어 木이 포함된 글자를 찾거나 森의 부품을 볼 수 있습니다."
 }

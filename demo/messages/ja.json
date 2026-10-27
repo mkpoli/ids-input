@@ -122,5 +122,11 @@
   "app.theme.light": "ライト",
   "app.theme.system": "システムに合わせる",
   "app.title": "IDS工房",
-  "app.toolbar": "ツール"
+  "app.toolbar": "ツール",
+  "app.componentLookup.title": "部品を調べる",
+  "app.componentLookup.containing": "部品を含む文字を探す",
+  "app.componentLookup.parts": "文字の部品を調べる",
+  "app.componentLookup.input": "文字または部品",
+  "app.componentLookup.invalid": "文字または部品を一つ入力してください。",
+  "app.componentLookup.help": "例えば「木」を含む文字を探したり、「森」の部品を調べたりできます。"
 }

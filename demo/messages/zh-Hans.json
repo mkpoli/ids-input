@@ -122,5 +122,11 @@
   "app.theme.light": "浅色",
   "app.theme.system": "跟随系统",
   "app.title": "IDS工坊",
-  "app.toolbar": "工具"
+  "app.toolbar": "工具",
+  "app.componentLookup.title": "部件查询",
+  "app.componentLookup.containing": "查找包含该部件的字",
+  "app.componentLookup.parts": "查找该字的部件",
+  "app.componentLookup.input": "汉字或部件",
+  "app.componentLookup.invalid": "请输入一个字或部件。",
+  "app.componentLookup.help": "例如，查找包含「木」的字，或查看「森」的部件。"
 }
