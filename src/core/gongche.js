@@ -6,7 +6,10 @@ const notes = (text, strokes) => [...text].map((part, i) => ({ part, strokes: st
 /** @type {{ key: string, parts: GongchePart[] }[]} */
 export const GONGCHE_GROUPS = [
   { key: 'notes', parts: notes('合四一上尺工凡六五乙', [6,5,1,3,4,3,3,4,4,1]) },
-  { key: 'regional', parts: notes('士反乂', [3,4,2]) },
+  { key: 'regional', parts: notes('士反乂生', [3,4,2,5]) },
+  // Unihan kTotalStrokes retains the base count for these hooked forms.
+  { key: 'kunqu', parts: notes('𪛗𪛘𪛙𪛚𪛛𪛜𪛝', [6,5,1,3,4,3,3]) },
+  { key: 'encoded', parts: notes('𢒼㲸', [4,4]) },
   { key: 'modifiers', parts: [
     { part: '亻', strokes: 2, kind: 'c' },
     { part: '彳', strokes: 3, kind: 'c' },
@@ -14,6 +17,7 @@ export const GONGCHE_GROUPS = [
     { part: '氵', strokes: 3, kind: 'c' },
     { part: '⿰氵氵', strokes: 6, derived: 1, kind: 'c' },
   ] },
+  { key: 'marks', parts: [...'｜『』'].map(part => ({ part, kind: 'c' })) },
 ]
 export const GONGCHE_PARTS = GONGCHE_GROUPS.flatMap(group => group.parts)
 /** Filter inside the notation catalogue, preserving group order.

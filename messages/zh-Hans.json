@@ -217,5 +217,10 @@
   "parts.gongche.conventions": "不同乐种的高低音记法有别，粤曲与传统工尺谱对亻、彳的用法也不同。",
   "parts.gongche.compose": "组合左偏旁时，先输入 ⿰，再输入偏旁与谱字。音乐用法请依原谱。",
   "parts.gongche.beiguan": "北管工尺谱 · 台湾文献馆",
-  "parts.gongche.cantonese": "粤曲工尺谱 · 中文界面咨询委员会 2022/03 附件二"
+  "parts.gongche.cantonese": "粤曲工尺谱 · 中文界面咨询委员会 2022/03 附件二",
+  "parts.gongche.kunqu": "昆曲带钩谱字",
+  "parts.gongche.encoded": "已编码的合成谱字",
+  "parts.gongche.marks": "记谱符号",
+  "parts.gongche.kunquSource": "昆曲记谱 · Unicode 提案",
+  "parts.gongche.marksSource": "记谱符号 · 香港微音乐"
 }
