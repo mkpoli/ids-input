@@ -28,7 +28,7 @@ try {
       assert.equal(await field.inputValue(), `⿰${char}工`)
     }
     await panel.getByRole('tab', { name: 'Recent', exact: true }).click()
-    assert.ok(await panel.locator('button.part[data-character="*"]').count())
+    assert.ok(await panel.locator(`button.part[data-character="${GONGCHE_PARTS.at(-1).part}"]`).count())
     await panel.getByRole('tab', { name: 'Gongche', exact: true }).click()
     const filter = panel.locator('input')
     await filter.fill('𪛙')

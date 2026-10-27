@@ -143,6 +143,7 @@
       "sources": [
         "ccli",
         "kunqu",
+        "hk",
         "taiwan",
         "gou"
       ]
@@ -358,7 +359,8 @@
       ],
       "sources": [
         "kunqu",
-        "ccli"
+        "ccli",
+        "hk"
       ]
     },
     {
@@ -476,11 +478,13 @@
       "parts": [
         {
           "part": "㐅",
-          "kind": "c"
+          "kind": "c",
+          "strokes": 2
         },
         {
           "part": "丶",
-          "kind": "c"
+          "kind": "c",
+          "strokes": 1
         },
         {
           "part": "‧",

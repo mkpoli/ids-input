@@ -1,7 +1,9 @@
 @import "./gongche.css";
 /* The parts few installed fonts draw: CJK strokes and the empty-slot mark ⬚ (IDS Strokes), CJK
-   Radicals Supplement and the supplementary planes (IDS Parts). Their ranges do not overlap, and the rest of the text falls
-   through to the page's own fonts. See fonts/README.md for their sources and licences. */
+   Radicals Supplement and the supplementary planes (IDS Parts). gongche.css repeats 17 Gongche code
+   points inside the supplementary range and is imported first; it is the face that carries those
+   glyphs, since the general subset omits them. The rest of the text falls through to the page's own
+   fonts. See fonts/README.md for their sources and licences. */
 @font-face{font-family:"IDS Parts";src:url("./Plangothic-ids-parts.woff2") format("woff2");font-display:swap;
   unicode-range:U+2E80-2EFF,U+31E4-31EF,U+20000-3FFFF}
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;

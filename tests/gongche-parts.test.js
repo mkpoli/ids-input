@@ -10,7 +10,7 @@ it('offers selectable Gongche components with accurate stroke metadata', () => {
   for (const item of GONGCHE_PARTS) {
     expect(parse(item.part, { open: true }).problem).toBeUndefined()
     const row = data.parts.find(row => row[0] === item.part)
-    if (row && item.strokes != null) expect(item.strokes).toBe(row[2])
+    if (row) expect(item.strokes).toBe(row[2])
   }
   expect(GONGCHE_GROUPS.find(g => g.key === 'modifiers').parts.map(p => p.part)).toEqual(['亻', '彳', '⿱𰀪亻', '氵', '⿰氵氵', '艹'])
 })
@@ -42,7 +42,10 @@ it('preserves encoded notes and literal punctuation without invented stroke coun
     expect(gongcheGroups(char).flatMap(g => g.parts.map(p => p.part))).toEqual([char])
     expect(parse(`⿰${char}工`).tree.parts[0]).toBe(char)
   }
-  expect(GONGCHE_GROUPS.filter(g => g.key === 'marks' || g.key === 'rhythm').flatMap(g => g.parts).filter(p => p.part !== '勺').every(p => p.strokes == null)).toBe(true)
+  for (const mark of '‧○×、。｜『』，…*') expect(GONGCHE_PARTS.find(p => p.part === mark).strokes).toBeUndefined()
+  // 㐅 and 丶 are ideographs, so they keep the palette's stroke counts.
+  expect(GONGCHE_PARTS.find(p => p.part === '㐅').strokes).toBe(2)
+  expect(GONGCHE_PARTS.find(p => p.part === '丶').strokes).toBe(1)
 })
 
 it('covers every encoded register and staccato form in the audited source tables', () => {

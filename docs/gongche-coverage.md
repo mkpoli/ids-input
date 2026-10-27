@@ -11,8 +11,8 @@ insert editable IDS. Hover labels show code points or the literal IDS.
 |---|---|
 | [Chan et al., Kunqu proposal, Table 1](https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf#page=3) | All ten base notes, seven hooked notes, seven single-person forms and seven double-person forms |
 | [CCLI 2022/03, Annex II, Figure 1](https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf#page=8) | Cantonese base/register forms and all eight illustrated staccato forms |
-| [Chiu Huo-Jung / Chiu Chao-Wen, Beiguan tutorial (2000)](https://tcmb.culture.tw/zh-tw/detail?id=245144&indexCode=Culture_Media) | 乂 and its single-person form 𪜧, alongside 仩 and 仜 |
-| [Taiwan Historica, entry 2045](https://dict.th.gov.tw/detailPage.aspx?Ca=163&ID=2045) | Nanguan base forms, 甲/下 and the grass-head component 艹 for composition |
+| [Chiu Huo-Jung / Chiu Chao-Wen, Beiguan tutorial (2000)](https://tcmb.culture.tw/zh-tw/detail?id=245144&indexCode=Culture_Media) | 𪜧, the 亻 form of 乂 |
+| [Taiwan Historica, entry 2045](https://dict.th.gov.tw/detailPage.aspx?Ca=163&ID=2045) | Nanguan notes 乂/工/六/士/一, the 甲 and 下 forms, and the grass-head component 艹 for composition |
 | [Hong Kong Music Miniatures](https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/) | Note characters, long-note/repeat signs, shared rhythm marks and breath/connection/prolongation punctuation |
 | [Toru Kato, Seiraku notation (2012)](https://www.isc.meiji.ac.jp/~katotoru/singaku-20.html) | ○, ×, 、 and 。; their musical use depends on the score |
 | [Shi De-Yu, 論說崑曲工尺譜, printed p. 269](https://lib.ntua.edu.tw/wSite/public/Data/f1717039599418.pdf#page=273) | 勺, the rest sign in the 夕陽簫鼓 example; the scanned page was checked because searchable OCR misidentifies it |
