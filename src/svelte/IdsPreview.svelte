@@ -104,7 +104,7 @@
     return groupParts(drawn.parts, sketched.leaves)
   })
   // Parts are drawn one by one while a host edits them, or while an adjustment needs applying.
-  const useParts = $derived(Boolean(groups?.length && (editable || hasAdjustments)))
+  const useParts = $derived(Boolean(groups?.length && (editable || hasAdjustments || shown?.drawn?.emoji?.length)))
   const adjustable = $derived(Boolean(editable && groups?.length))
   const chosenIndex = $derived(chosen ? parts.findIndex(leaf => samePath(leaf.path, chosen)) : -1)
   const selection = $derived(chosenIndex >= 0 && groups ? groups.find(group => group.index === chosenIndex) ?? null : null)

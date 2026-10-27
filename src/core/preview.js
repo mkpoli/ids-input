@@ -138,7 +138,7 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
  * draws each as the editor does, in the ink at half strength.
  * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
- *   parts?: { d: string, cut?: boolean }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number }[] }} drawing
+ *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number }[] }} drawing
  * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
  * @returns {string}
  */
@@ -157,25 +157,36 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   // drawing stays merged: its mask is taken across parts.
   const transforms = Array.isArray(drawing.transforms) ? drawing.transforms : null
   const pieces = Array.isArray(drawing.parts) ? drawing.parts : null
-  const split = !cut && transforms?.some(transform => typeof transform === 'string' && transform)
+  const emoji = drawing.emoji ?? []
+  const groupedEmoji = !cut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
+    && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
+  const split = !cut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
+  /** @param {{ text: string, box: number[], part?: number }} item */
+  const textOf = item => {
+    const box = (item.box ?? []).slice(0, 4).map(v => num(v, 0))
+    if (box.length < 4 || typeof item.text !== 'string') return ''
+    const [x, y, width, height] = box
+    const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return `<text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+  }
   if (split) {
-    for (let i = 0; i < pieces.length; i++) {
-      const piece = pathData(pieces[i].d)
-      if (!piece) continue
-      const transform = transformData(transforms[i])
-      out.push(transform ? `<g transform="${transform}"><path d="${piece}" fill="${fill}"/></g>` : `<path d="${piece}" fill="${fill}"/>`)
+    const order = pieces.map((piece, index) => ({ piece, index }))
+    if (groupedEmoji) order.sort((a, b) => a.piece.leaf - b.piece.leaf || a.index - b.index)
+    for (const { piece, index } of order) {
+      const item = emoji.find(item => item.part === index)
+      const path = pathData(piece.d)
+      const content = item ? textOf(item) : path ? `<path d="${path}" fill="${fill}"/>` : ''
+      if (!content) continue
+      const transform = transformData(transforms?.[index])
+      out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
     }
   } else if (d) out.push(`<path d="${d}" fill="${fill}"${cut ? ' mask="url(#cut)"' : ''}/>`)
-  for (const emoji of drawing.emoji ?? []) {
-    const box = (emoji.box ?? []).slice(0, 4).map(v => num(v, 0))
-    if (box.length < 4 || typeof emoji.text !== 'string') continue
-    const [x, y, width, height] = box
-    const text = emoji.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const transform = Number.isInteger(emoji.part) && transforms ? transformData(transforms[emoji.part]) : ''
-    if (transform) out.push(`<g transform="${transform}">`)
-    out.push(`<text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`)
-    if (transform) out.push('</g>')
+  if (!groupedEmoji) for (const item of emoji) {
+    const content = textOf(item)
+    if (!content) continue
+    const transform = Number.isInteger(item.part) && transforms ? transformData(transforms[item.part]) : ''
+    out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
   }
   if (placeholders) for (const slot of drawing.slots ?? []) {
     const box = (slot.box ?? []).slice(0, 4).map(v => num(v, 0))

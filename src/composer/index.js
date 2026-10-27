@@ -129,6 +129,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
           const originalSketch = /** @type {import('../adapter/types.js').SketchLeaf[] | null} */ (sketch)
           const oldSketch = originalSketch?.map(leaf => ({ ...leaf, empty: emoji.some(item => item.leaf === leaf.index) || leaf.empty })) ?? []
           const groups = existing.length ? groupParts(existing, oldSketch) : []
+          if (!groups && sequence.includes('⿻')) throw new Error('Cannot determine emoji stacking order for this overlay.')
           if (groups) {
             const pieces = existing.map(part => ({ ...part }))
             for (const group of groups) for (const index of group.parts) pieces[index].leaf = group.index
