@@ -112,8 +112,6 @@
   "ids.search.take": "Take parts from {char}",
   "ids.search.title": "Characters with this structure",
   "ids.inline.label": "Edit part",
-  "ids.inline.apply": "Apply",
-  "ids.inline.cancel": "Cancel",
   "ids.slot": "Chosen part",
   "ids.slotHint": "Type a part",
   "ids.apply": "Apply",

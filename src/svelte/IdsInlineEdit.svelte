@@ -1,74 +1,67 @@
 <script>
-  // A small editor beside the part, shared by the shape and tree views.
+  // Edit the selected part in place in either structure view.
   import { tick, untrack } from 'svelte'
   import { parse, place, samePath, write } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
-  /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, anchor: HTMLElement, onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
-  let { editor, path, anchor, onclose, onreveal } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, owner: HTMLElement | null, variant?: 'label' | 'leaf', onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
+  let { editor, path, owner, variant = 'label', onclose, onreveal } = $props()
   const targetPath = untrack(() => path)
-  const targetAnchor = untrack(() => anchor)
   const initialValue = untrack(() => editor.sequenceAt(targetPath))
-  let value = $state(initialValue)
-  let error = $state('')
-  let composing = $state(false)
   const revision = untrack(() => editor.revision)
+  const uid = $props.id()
+  let value = $state(initialValue), error = $state(''), composing = $state(false)
+  let closing = false
   /** @type {HTMLInputElement | null} */ let input = $state(null)
-  const owner = targetAnchor.closest('.ids-tree,.ids-treelist')
-  let left = $state(8), top = $state(8)
-  function position() {
-    const rect = targetAnchor.getBoundingClientRect()
-    left = Math.max(8, Math.min(rect.left, window.innerWidth - 288))
-    const preferred = rect.bottom + 104 <= window.innerHeight ? rect.bottom + 4 : rect.top - 104
-    top = Math.max(8, Math.min(preferred, window.innerHeight - 104))
-  }
-  $effect(() => {
-    position()
-    window.addEventListener('scroll', position, true)
-    window.addEventListener('resize', position)
-    const observer = new ResizeObserver(position)
-    observer.observe(targetAnchor)
-    return () => { window.removeEventListener('scroll', position, true); window.removeEventListener('resize', position); observer.disconnect() }
-  })
   $effect(() => { if (input) tick().then(() => { input?.focus(); input?.select() }) })
-  $effect(() => { if (editor.revision !== revision || !samePath(editor.chosen, targetPath)) onclose() })
-  /** @param {boolean} [followSelection] */
-  function close(followSelection = false) {
+  $effect(() => { if (editor.revision !== revision || !samePath(editor.chosen, targetPath)) { closing = true; onclose() } })
+  /** @param {boolean} [followSelection] @param {boolean} [refocus] */
+  function close(followSelection = false, refocus = true) {
+    if (closing) return
+    closing = true
     const focusPath = followSelection ? editor.chosen ?? targetPath : targetPath
     if (followSelection) onreveal?.(focusPath)
     onclose()
-    tick().then(() => requestAnimationFrame(() => {
-      const target = samePath(focusPath, targetPath) && targetAnchor.isConnected && targetAnchor.matches('button,[tabindex]')
-        ? targetAnchor : owner?.querySelector(`[data-path="${CSS.escape(focusPath.join('.'))}"]`)
+    if (refocus) tick().then(() => requestAnimationFrame(() => {
+      const target = owner?.querySelector(`[data-path="${CSS.escape(focusPath.join('.'))}"]`)
       if (target instanceof HTMLElement) target.focus()
     }))
   }
   /** @param {KeyboardEvent} event */
-  function key(event) { if (event.isComposing) return; if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); close() } else if (event.key === 'Enter' && event.target === input) { event.preventDefault(); apply() } }
-  function apply() {
+  function key(event) {
+    event.stopPropagation()
+    if (event.isComposing || composing) return
+    if (event.key === 'Escape') { event.preventDefault(); close() }
+    else if (event.key === 'Enter') { event.preventDefault(); apply() }
+  }
+  /** @param {boolean} [refocus] */
+  function apply(refocus = true) {
+    if (closing || composing) return
     const text = value.trim()
-    if (text === initialValue) { close(); return }
-    if (!text || text === '⬚' || text === '＋') { editor.empty(targetPath); close(true); return }
+    if (text === initialValue) { close(false, refocus); return }
+    if (!text || text === '⬚' || text === '＋') { editor.empty(targetPath); close(true, refocus); return }
     const literal = parse(text, { open: true })
     const found = literal.problem ? parse(unalias(text), { open: true }) : literal
     if (found.problem) { error = editor.t(`ids.problem.${found.problem}`); return }
-    if (found.tree === null) { editor.empty(targetPath); close(true); return }
+    if (found.tree === null) { editor.empty(targetPath); close(true, refocus); return }
     const problem = parse(write(place(editor.tree, targetPath, found.tree).tree), { open: true }).problem
     if (problem) { error = editor.t(`ids.problem.${problem}`); return }
-    editor.put(found.tree, targetPath); close(true)
+    editor.put(found.tree, targetPath); close(true, refocus)
   }
 </script>
 
-<div class="inline-edit" role="group" aria-label={editor.t('ids.inline.label')} style:left="{left}px" style:top="{top}px">
-  <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oncompositionstart={() => composing = true} oncompositionend={() => composing = false} />
-  <button type="button" onkeydown={key} onclick={() => { if (!composing) apply() }} disabled={editor.disabled}>{editor.t('ids.inline.apply')}</button>
-  <button type="button" onkeydown={key} onclick={() => close()}>{editor.t('ids.inline.cancel')}</button>
-  {#if error}<span class="error" role="status">{error}</span>{/if}
-</div>
+<span class="inline-edit" class:leaf={variant === 'leaf'}>
+  <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
+    lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oninput={() => error = ''} onblur={() => apply(false)} oncompositionstart={() => composing = true}
+    oncompositionend={() => { composing = false; if (document.activeElement !== input) apply(false) }}
+    onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()} />
+  {#if error}<span id={`${uid}-error`} class="error" role="status">{error}</span>{/if}
+</span>
 
 <style>
-  .inline-edit{position:fixed;z-index:60;display:flex;flex-wrap:wrap;gap:4px;width:280px;max-width:calc(100vw - 16px);box-sizing:border-box;padding:6px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:9px;background:var(--ids-surface,light-dark(#fff,#202026));box-shadow:0 6px 22px rgb(0 0 0 / .22);color:var(--ids-ink,light-dark(#1d1d21,#ececf1));font:14px system-ui,sans-serif}
-  input{flex:1 1 100%;min-width:0;box-sizing:border-box;padding:6px 8px;border:1px solid var(--ids-line-strong,light-dark(#b0b0ba,#5c5c67));border-radius:5px;background:transparent;color:inherit;font:18px var(--_font,var(--ids-font,sans-serif))}
-  button{padding:4px 10px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:5px;background:transparent;color:inherit;font:inherit;cursor:pointer}
-  :is(input,button):focus-visible{outline:2px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));outline-offset:1px}
-  .error{flex-basis:100%;color:var(--ids-fault,light-dark(#b42318,#ff8a80));font-size:12px}
+  .inline-edit{display:inline-flex;position:relative;flex:1;min-width:0;pointer-events:auto}
+  .inline-edit.leaf{width:100%;height:100%}
+  input{width:100%;min-width:0;box-sizing:border-box;padding:3px 5px;border:1px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));border-radius:5px;background:var(--ids-surface,light-dark(#fff,#202026));color:var(--ids-ink,light-dark(#1d1d21,#ececf1));font:16px var(--_font,var(--ids-font,sans-serif))}
+  .leaf input{text-align:center;font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
+  input:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));outline-offset:0}
+  .error{position:absolute;z-index:2;top:100%;left:0;min-width:max-content;max-width:240px;padding:3px 5px;border-radius:4px;background:var(--ids-surface,light-dark(#fff,#202026));color:var(--ids-fault,light-dark(#b42318,#ff8a80));font:12px system-ui,sans-serif;white-space:normal}
 </style>
