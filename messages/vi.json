@@ -187,5 +187,7 @@
   "ids.structural.overlap": "Chồng lên nhau",
   "ids.pick.templates": "Bố cục",
   "ids.group.4": "4 bộ phận",
-  "ids.templates.insert": "Chèn bố cục {sequence}"
+  "ids.templates.insert": "Chèn bố cục {sequence}",
+  "ids.templates.usage": "Dùng trong {count} chữ",
+  "ids.templates.hangul": "Cấu trúc âm tiết Hangul"
 }

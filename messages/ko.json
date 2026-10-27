@@ -187,5 +187,7 @@
   "ids.structural.overlap": "겹침",
   "ids.pick.templates": "구조",
   "ids.group.4": "4개 부품",
-  "ids.templates.insert": "구조 삽입: {sequence}"
+  "ids.templates.insert": "구조 삽입: {sequence}",
+  "ids.templates.usage": "{count}자에 사용",
+  "ids.templates.hangul": "한글 음절 구조"
 }
