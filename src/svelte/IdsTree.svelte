@@ -97,7 +97,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
@@ -115,15 +115,20 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
-    <button type="button" class="ids-part" style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:over={over === key(path)} aria-pressed={selected}
-      data-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
+    <button type="button" class="ids-part" style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:over={over === key(path)} aria-pressed={selected}
+      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
   {/if}
 {/snippet}
 
-<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}>
+<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}
+  onpointermove={event => {
+    const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
+    const path = target?.getAttribute('data-hover-path')
+    editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
+  }} onpointerleave={() => editor.hover(null)}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
@@ -239,4 +244,5 @@
   .ids-menu-item kbd,.ids-menu-seq{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .ids-menu-seq{font-family:var(--_font);font-size:14px}
   .ids-node,.ids-part{background:color-mix(in oklab,var(--tint) 10%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  .ids-node.hovered,.ids-part.hovered,.enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part.hovered{background:color-mix(in oklab,var(--tint) 28%,var(--_surface));box-shadow:inset 0 0 0 2px var(--_accent)}
 </style>
