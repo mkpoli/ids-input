@@ -86,8 +86,28 @@ describe('a document session', () => {
     session.choose(layer(session, 0).id)
     const before = session.document
     expect(() => session.setTransform([{ type: 'affine', matrix: [0, 0, 0, 0, 0, 0] }])).toThrow(DocumentError)
-    expect(session.document).toBe(before)
+    expect(session.document).toEqual(before)
     expect(session.canUndo).toBe(false)
+  })
+  it('isolates the current document and undo history from returned documents', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    const before = session.document
+    const target = before.root.children[0].id
+    before.root.children[0].char = '火'
+    expect(session.sequence).toBe('⿰木口')
+    expect(session.canUndo).toBe(false)
+
+    const previous = session.document
+    session.choose(target)
+    session.replace('水')
+    const current = session.document
+    previous.root.children[0].char = '火'
+    current.root.children[0].char = '土'
+    expect(session.sequence).toBe('⿰水口')
+    expect(session.undo()).toBe(true)
+    expect(session.sequence).toBe('⿰木口')
+    expect(session.redo()).toBe(true)
+    expect(session.sequence).toBe('⿰水口')
   })
   it('keeps a removed ID out of the allocator', () => {
     const session = createDocumentSession(fromSequence('⿰木口'))

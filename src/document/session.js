@@ -23,7 +23,7 @@ import {
 
 /**
  * @typedef {object} DocumentSession
- * @property {Document} document
+ * @property {Document} document A detached copy of the current document.
  * @property {string | null} chosen
  * @property {string} sequence
  * @property {string} projection
@@ -115,7 +115,7 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
   const action = fallback => label === 'Edit' ? fallback : `${label}: ${fallback}`
 
   session = {
-    get document() { return document },
+    get document() { return /** @type {Document} */ (structuredClone(document)) },
     get chosen() { return chosen },
     get sequence() { return toSequence(document.root) },
     get projection() { return toSequence(document.root) },
