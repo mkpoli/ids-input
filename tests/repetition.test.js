@@ -218,3 +218,55 @@ it('fits native compound enclosures without extrapolating learned whole-glyph bo
     expect(collision(drawn.slice(0, 1), drawn.slice(1), constants.face, 256)).toBeLessThan(0.005)
   }
 })
+
+it('uses the native traditional whole glyphs, including the 文 alias', async () => {
+  const { componentDrawing } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) for (const inner of ['彡', '生']) {
+    const text = `⿸⿳亠㐅厂${inner}`, alias = `⿸⿱文厂${inner}`
+    expect(onlyBundled(text)).toBe(true)
+    const drawing = await compose(local(), text, { fontStyle })
+    expect(drawing.d).toBe(componentDrawing(text, fontStyle).d)
+    expect(drawing.d).toBe((await compose(local(), alias, { fontStyle })).d)
+    expect(drawing.parts).toHaveLength(1)
+    const nested = await compose(remote(), `⿰木${text}`, { fontStyle })
+    expect(nested.origins.some(origin => origin.includes(text))).toBe(true)
+    const source = remote()
+    await compose(source, '木')
+    const store = source.store
+    source.store = () => {
+      const data = store(), rec = data.rec
+      return { ...data, rec: key => rec([inner, '亠', '㐅', '厂', '文'].includes(key) ? '木' : key) }
+    }
+    const excluded = await compose(source, text, { fontStyle, exclude: [inner === '生' ? '產' : '彥'] })
+    expect(excluded.origins).not.toContain(`Noto ${fontStyle === 'serif' ? 'Serif' : 'Sans'} CJK JP: ${text}`)
+    expect(excluded.parts.length).toBeGreaterThan(1)
+    if (inner === '生') expect(excluded.origins.some(origin => origin.includes('Noto'))).toBe(false)
+    expect(onlyBundled(text, false, false, 'kaisho')).toBe(false)
+    expect(onlyBundled(alias, false, true, 'kaisho')).toBe(false)
+  }
+})
+
+it('keeps a native enclosure at its em placement when filling it with other components', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  const { Composer, collision } = await import('../src/composer/compose.js')
+  const { constants } = await import('./fixtures/composer-export.js')
+  for (const fontStyle of ['sans', 'serif']) for (const outer of ['⿳亠㐅厂', '⿳亠丷厂']) {
+    const source = remote()
+    await compose(source, `⿸${outer}木`, { fontStyle })
+    const drawn = new Composer(source.store(), { fontStyle }).compose(`⿸${outer}木`)
+    expect(drawn[0].target).toEqual(componentParts(outer, constants.face, fontStyle, true)[0].target)
+    expect(collision(drawn.slice(0, 1), drawn.slice(1), constants.face, 256)).toBeLessThan(0.005)
+  }
+})
+
+it('maps the opening and native outline from the same frame with a custom export face', async () => {
+  const { Composer } = await import('../src/composer/compose.js')
+  const { mapped } = await import('../src/composer/geometry.js')
+  const bundledConstants = (await import('../src/composer/constants.json')).default
+  const source = remote()
+  await source.ready()
+  const data = source.store(), face = [0, -120, 1000, 900]
+  data.manifest = { ...data.manifest, constants: { ...data.manifest.constants, face } }
+  const drawn = new Composer(data, { fontStyle: 'sans' }).compose('⿸⿳亠丷厂⬚')
+  expect(drawn[1].target).toEqual(mapped([227, -59, 944, 335], bundledConstants.face, face))
+})

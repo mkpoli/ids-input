@@ -83,6 +83,12 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿱文厂']=[yan]
     # Keep the 立-shaped form as literal IDS even though 产 has a code point.
     forms['⿳亠丷厂']=[group(cs('产'))]
+    # Whole glyphs retain the font designer's placement and stroke weights for
+    # the common enclosed forms, including when nested in a larger IDS.
+    for enclosure, examples in [('⿳亠㐅厂', [('彡','彥'), ('生','產')]),
+                                ('⿱文厂', [('彡','彥'), ('生','產')])]:
+        for inner, ch in examples:
+            forms['⿸'+enclosure+inner]=[group(cs(ch))]
     forms['⿱士冖']=crown
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]

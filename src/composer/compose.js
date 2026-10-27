@@ -19,10 +19,14 @@ import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, ma
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
 
 const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
   [sequence, `⿱${part}${pair}`, `⿱${part}⿰${part}${part}`].map(ids => [ids, char])))
+const yanGlyphs = new Map(['⿳亠㐅厂', '⿱文厂'].flatMap(outer =>
+  [['彡', '彥'], ['生', '產']].map(([inner, char]) => [`⿸${outer}${inner}`, char])))
+const yanSources = new Map([['⿳亠㐅厂', '產'], ['⿱文厂', '產'], ['⿳亠丷厂', '产']])
 
 export class LookupError extends Error { name = 'LookupError' }
 
@@ -299,7 +303,9 @@ export class Composer {
 
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
-    const repeated = !this.separate || isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
+    const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
+    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key))
+      ? componentParts(key, region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
     const hasRepetition = containsComponentForm(keyOf(node))
     const C = this.C
@@ -342,6 +348,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
+    if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
     if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
@@ -352,6 +360,24 @@ export class Composer {
       if (moved) return moved
     }
     return this.shares(op, children, region)
+  }
+
+  /** Place an arbitrary inner operand in the room designed for these native enclosures. */
+  yanEnclosure(children, region) {
+    if (this.fontStyle === 'kaisho') return null
+    const key = keyOf(children[0])
+    if (!yanSources.has(key) || this.excluded(yanSources.get(key))) return null
+    const outer = componentParts(key, region, this.fontStyle, true)
+    const serif = this.fontStyle === 'serif', traditional = key !== '⿳亠丷厂'
+    // The traditional boxes follow 生 in Noto 產. The 产 enclosure's
+    // lower crossbar leaves a shorter opening, so its top is lowered.
+    const box = serif ? [198, -51, 954, traditional ? 445 : 330]
+      : [227, -59, 944, traditional ? 431 : 335]
+    const inner = this.node(children[1], mapped(box, componentConstants.face, region))
+    // Fitting clears collisions, but must not enlarge the already calibrated
+    // inner drawing to fill every available pixel of the opening.
+    this.fit(outer, inner, region, this.stem0[0][0], this.C, { room: union(inner.map(p => p.target)), size: 128 })
+    return [...outer, ...inner]
   }
 
   leafOwners(tree) {

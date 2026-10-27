@@ -329,7 +329,10 @@ because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across 
 This count does not assert that the visible component is absent from 彥 or 產.
 The traditional outline is extracted from Noto 產 with 生 removed; the other
 uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
-with separate Sans/Serif outlines. These are atomic native previews;
+with separate Sans/Serif outlines. The traditional enclosure with 彡 or 生
+uses the complete native 彥 or 產 glyph, respectively. Other enclosed operands
+are placed within a font-specific opening based on the native 產 proportions;
+the 产 opening is shorter to leave space below its lower crossbar. These are atomic native previews;
 adjustment mode uses operand outlines when available. Native compound previews use
 outline-based layout rather than extrapolating the learned glyph layout model;
 Kaisho keeps its export layout. Source aliases remain

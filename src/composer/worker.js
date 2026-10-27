@@ -17,7 +17,7 @@ import { unicodeSource } from './unicode.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
-  const local = !warm && onlyBundled(sequence, separate)
+  const local = !warm && onlyBundled(sequence, separate, false, fontStyle)
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
   const seal = !warm && hasSmallSeal(sequence)
   const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}`
@@ -31,7 +31,7 @@ self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm 
   }
   let source = sources.get(key)
   try { await source.ready() } catch (error) {
-    if (!warm && onlyBundled(sequence, false, true)) {
+    if (!warm && onlyBundled(sequence, false, true, fontStyle)) {
       source = unicodeSource()
       if (tangut) source = tangutSource({ fallback: source })
       if (bopomofo) source = bopomofoSource({ fallback: source })
