@@ -617,7 +617,8 @@ with the source font's design; they do not imitate a selected serif or handwritt
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
-`VITE_COMPOSER_BASE` points every face at another copy of one export.
+`VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
+description draws the encoded character it names in that face, else the Sans export's drawing.
 
 ## Keyboard
 
