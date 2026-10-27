@@ -17,7 +17,7 @@
       <div class="ids-template-grid">
         {#each group.templates as template (template.id)}
           <button type="button" disabled={editor.disabled} data-template={template.id}
-            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${t('ids.templates.usage', { count: template.count })}`}
+            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${template.curated ? t('ids.templates.hangul') : t('ids.templates.usage', { count: template.count })}`}
             draggable={!editor.disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', template.sequence)}
             onclick={() => editor.take(template.sequence)}>
             <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">

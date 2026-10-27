@@ -192,5 +192,6 @@
   "ids.pick.templates": "Templates",
   "ids.group.4": "4 parts",
   "ids.templates.insert": "Insert layout {sequence}",
-  "ids.templates.usage": "{count} characters"
+  "ids.templates.usage": "{count} characters",
+  "ids.templates.hangul": "Hangul syllable layout"
 }

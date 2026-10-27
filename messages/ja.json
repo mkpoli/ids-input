@@ -188,5 +188,6 @@
   "ids.pick.templates": "構造",
   "ids.group.4": "4部品",
   "ids.templates.insert": "構造を挿入：{sequence}",
-  "ids.templates.usage": "{count}字で使用"
+  "ids.templates.usage": "{count}字で使用",
+  "ids.templates.hangul": "ハングルの音節構造"
 }

@@ -40,3 +40,12 @@ test('every catalog template has one visible shape per component', async () => {
     }
   }
 })
+
+test('Hangul template places the enclosure above its final slot', () => {
+  const [frame, initial, final] = templateDiagram('⿱⿽⬚⬚⬚')
+  expect(frame.kind).toBe('frame')
+  expect(initial.kind).toBe('slot')
+  expect(final.kind).toBe('slot')
+  expect(initial.y + initial.height).toBeLessThan(final.y)
+  expect(initial.x + initial.width).toBeLessThan(final.x + final.width)
+})

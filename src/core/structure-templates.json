@@ -1,7 +1,7 @@
 {
   "version": 1,
   "threshold": 50,
-  "method": "Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Counts describe corpus decompositions, not language-use frequency.",
+  "method": "Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Curated layouts are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.",
   "sources": [
     {
       "id": "babelstone",
@@ -39,14 +39,17 @@
     "eligibleCharacters": 100120,
     "previousTemplates": 17,
     "previousCoveredCharacters": 88719,
-    "templates": 54,
-    "addedTemplates": 37,
+    "curatedTemplates": 1,
+    "frequencyAdditions": 37,
+    "templates": 55,
+    "addedTemplates": 38,
     "coveredCharacters": 98556
   },
   "templates": [
     {
       "id": "pairRow",
       "sequence": "⿰⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 61042,
       "examples": [
@@ -60,6 +63,7 @@
     {
       "id": "pairColumn",
       "sequence": "⿱⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 20417,
       "examples": [
@@ -73,6 +77,7 @@
     {
       "id": "layout-eee2efdaf747",
       "sequence": "⿺⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 3630,
       "examples": [
@@ -86,6 +91,7 @@
     {
       "id": "layout-48338450d2ef",
       "sequence": "⿸⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 3388,
       "examples": [
@@ -99,6 +105,7 @@
     {
       "id": "layout-681e65104606",
       "sequence": "⿵⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 998,
       "examples": [
@@ -112,6 +119,7 @@
     {
       "id": "layout-be29a63ff796",
       "sequence": "⿴⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 498,
       "examples": [
@@ -125,6 +133,7 @@
     {
       "id": "layout-fb5d2c0a76bc",
       "sequence": "⿻⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 496,
       "examples": [
@@ -138,6 +147,7 @@
     {
       "id": "layout-1f6b65a0b456",
       "sequence": "⿹⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 466,
       "examples": [
@@ -151,6 +161,7 @@
     {
       "id": "layout-f4b03475f3c3",
       "sequence": "⿷⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 251,
       "examples": [
@@ -164,6 +175,7 @@
     {
       "id": "layout-7c9ade3da468",
       "sequence": "⿶⬚⬚",
+      "curated": false,
       "slots": 2,
       "count": 63,
       "examples": [
@@ -177,6 +189,7 @@
     {
       "id": "rightPair",
       "sequence": "⿰⬚⿱⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 3211,
       "examples": [
@@ -190,6 +203,7 @@
     {
       "id": "tripleColumn",
       "sequence": "⿳⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 1917,
       "examples": [
@@ -203,6 +217,7 @@
     {
       "id": "leftPair",
       "sequence": "⿰⿱⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 895,
       "examples": [
@@ -216,6 +231,7 @@
     {
       "id": "invertedPyramid",
       "sequence": "⿱⿰⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 772,
       "examples": [
@@ -229,6 +245,7 @@
     {
       "id": "pyramid",
       "sequence": "⿱⬚⿰⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 689,
       "examples": [
@@ -242,6 +259,7 @@
     {
       "id": "tripleRow",
       "sequence": "⿲⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 680,
       "examples": [
@@ -255,6 +273,7 @@
     {
       "id": "layout-72c0eca31ee4",
       "sequence": "⿰⬚⿸⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 298,
       "examples": [
@@ -268,6 +287,7 @@
     {
       "id": "layout-77fc60b089a8",
       "sequence": "⿸⬚⿱⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 285,
       "examples": [
@@ -281,6 +301,7 @@
     {
       "id": "layout-45dad8437d98",
       "sequence": "⿺⬚⿱⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 231,
       "examples": [
@@ -294,6 +315,7 @@
     {
       "id": "layout-954d25fa1faf",
       "sequence": "⿰⬚⿻⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 224,
       "examples": [
@@ -307,6 +329,7 @@
     {
       "id": "layout-e439bd2fa39e",
       "sequence": "⿱⬚⿻⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 184,
       "examples": [
@@ -320,6 +343,7 @@
     {
       "id": "layout-45e4b087b29c",
       "sequence": "⿰⬚⿹⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 173,
       "examples": [
@@ -333,6 +357,7 @@
     {
       "id": "layout-cf096394b1aa",
       "sequence": "⿱⿻⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 114,
       "examples": [
@@ -346,6 +371,7 @@
     {
       "id": "layout-39d7d9718a26",
       "sequence": "⿰⬚⿺⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 108,
       "examples": [
@@ -359,6 +385,7 @@
     {
       "id": "layout-86cf0532388e",
       "sequence": "⿱⬚⿸⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 93,
       "examples": [
@@ -372,6 +399,7 @@
     {
       "id": "layout-4e1de049340e",
       "sequence": "⿺⬚⿰⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 86,
       "examples": [
@@ -385,6 +413,7 @@
     {
       "id": "layout-9e7414dcb26d",
       "sequence": "⿸⬚⿰⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 82,
       "examples": [
@@ -398,6 +427,7 @@
     {
       "id": "layout-651fd2acb29a",
       "sequence": "⿱⬚⿺⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 76,
       "examples": [
@@ -411,6 +441,7 @@
     {
       "id": "layout-6c95e7154dd2",
       "sequence": "⿱⿴⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 67,
       "examples": [
@@ -424,6 +455,7 @@
     {
       "id": "layout-ecba79d15718",
       "sequence": "⿰⿸⬚⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 67,
       "examples": [
@@ -437,6 +469,7 @@
     {
       "id": "layout-85cbb44095f4",
       "sequence": "⿰⬚⿵⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 63,
       "examples": [
@@ -450,6 +483,7 @@
     {
       "id": "layout-649276b1dfec",
       "sequence": "⿱⬚⿵⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 55,
       "examples": [
@@ -463,6 +497,7 @@
     {
       "id": "layout-a596d57ce302",
       "sequence": "⿱⬚⿹⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 54,
       "examples": [
@@ -476,6 +511,7 @@
     {
       "id": "layout-89cc6b533429",
       "sequence": "⿴⬚⿱⬚⬚",
+      "curated": false,
       "slots": 3,
       "count": 53,
       "examples": [
@@ -487,8 +523,17 @@
       ]
     },
     {
+      "id": "hangulFinal",
+      "sequence": "⿱⿽⬚⬚⬚",
+      "curated": true,
+      "slots": 3,
+      "count": 0,
+      "examples": []
+    },
+    {
       "id": "rightTriple",
       "sequence": "⿰⬚⿳⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 679,
       "examples": [
@@ -502,6 +547,7 @@
     {
       "id": "fourColumn",
       "sequence": "⿱⿱⬚⬚⿱⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 329,
       "examples": [
@@ -515,6 +561,7 @@
     {
       "id": "leftTriple",
       "sequence": "⿰⿳⬚⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 221,
       "examples": [
@@ -528,6 +575,7 @@
     {
       "id": "topTriple",
       "sequence": "⿱⿲⬚⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 122,
       "examples": [
@@ -541,6 +589,7 @@
     {
       "id": "middleColumn",
       "sequence": "⿲⬚⿱⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 106,
       "examples": [
@@ -554,6 +603,7 @@
     {
       "id": "grid",
       "sequence": "⿱⿰⬚⬚⿰⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 99,
       "examples": [
@@ -567,6 +617,7 @@
     {
       "id": "layout-a9de750153fa",
       "sequence": "⿰⬚⿱⬚⿻⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 97,
       "examples": [
@@ -580,6 +631,7 @@
     {
       "id": "bottomTriple",
       "sequence": "⿱⬚⿲⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 96,
       "examples": [
@@ -593,6 +645,7 @@
     {
       "id": "layout-b78dd6ff9519",
       "sequence": "⿳⬚⬚⿰⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 80,
       "examples": [
@@ -606,6 +659,7 @@
     {
       "id": "layout-db582f14be0f",
       "sequence": "⿰⬚⿱⿻⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 77,
       "examples": [
@@ -619,6 +673,7 @@
     {
       "id": "layout-57e9e5e41a62",
       "sequence": "⿲⬚⬚⿱⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 74,
       "examples": [
@@ -632,6 +687,7 @@
     {
       "id": "layout-d15fdf1e79d8",
       "sequence": "⿰⬚⿸⬚⿱⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 74,
       "examples": [
@@ -645,6 +701,7 @@
     {
       "id": "middleRow",
       "sequence": "⿳⬚⿰⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 74,
       "examples": [
@@ -658,6 +715,7 @@
     {
       "id": "layout-29785c69bcb8",
       "sequence": "⿰⬚⿱⿰⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 67,
       "examples": [
@@ -671,6 +729,7 @@
     {
       "id": "layout-8adbc5645ca0",
       "sequence": "⿳⿴⬚⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 64,
       "examples": [
@@ -684,6 +743,7 @@
     {
       "id": "layout-31cc4c810758",
       "sequence": "⿱⬚⿰⬚⿱⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 63,
       "examples": [
@@ -697,6 +757,7 @@
     {
       "id": "layout-e0d18fe73de8",
       "sequence": "⿰⬚⿱⬚⿰⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 62,
       "examples": [
@@ -710,6 +771,7 @@
     {
       "id": "layout-ca8e29808b79",
       "sequence": "⿱⿰⬚⿱⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 53,
       "examples": [
@@ -723,6 +785,7 @@
     {
       "id": "layout-60d4c994d535",
       "sequence": "⿺⬚⿳⬚⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 50,
       "examples": [
@@ -736,6 +799,7 @@
     {
       "id": "fourRow",
       "sequence": "⿰⿰⬚⬚⿰⬚⬚",
+      "curated": false,
       "slots": 4,
       "count": 20,
       "examples": [

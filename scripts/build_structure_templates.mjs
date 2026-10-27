@@ -14,6 +14,8 @@ const RETAINED = [
   ['topTriple', '⿱⿲⬚⬚⬚⬚'], ['bottomTriple', '⿱⬚⿲⬚⬚⬚'], ['leftTriple', '⿰⿳⬚⬚⬚⬚'], ['rightTriple', '⿰⬚⿳⬚⬚⬚'],
   ['middleColumn', '⿲⬚⿱⬚⬚⬚'], ['middleRow', '⿳⬚⿰⬚⬚⬚'],
 ]
+// Useful Hangul layout requested independently of the Han-only corpus audit.
+const CURATED = [['hangulFinal', '⿱⿽⬚⬚⬚']]
 const EXCLUDED_OPERATORS = new Set(['〾', '⿾', '⿿', '㇯'])
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -74,7 +76,8 @@ export function auditStructures(table) {
 export function buildCatalog(table, sources, threshold = MIN_CHARACTERS) {
   const { patterns, totals } = auditStructures(table)
   const retained = new Map(RETAINED.map(([id, sequence]) => [normalizeStructure(parse(sequence, { open: true }).tree), { id, sequence }]))
-  const selected = new Map(retained), previousCoverage = new Set(), coverage = new Set()
+  const curated = new Map(CURATED.map(([id, sequence]) => [normalizeStructure(parse(sequence, { open: true }).tree), { id, sequence, curated: true }]))
+  const selected = new Map([...retained, ...curated]), previousCoverage = new Set(), coverage = new Set()
   for (const pattern of patterns.values()) {
     if (retained.has(pattern.key)) for (const char of pattern.characters) previousCoverage.add(char)
     if (pattern.characters.size < threshold || pattern.operators.some(op => EXCLUDED_OPERATORS.has(op)) || selected.has(pattern.key)) continue
@@ -85,15 +88,16 @@ export function buildCatalog(table, sources, threshold = MIN_CHARACTERS) {
   const templates = [...selected].map(([key, template]) => {
     const pattern = patterns.get(key)
     for (const char of pattern?.characters ?? []) coverage.add(char)
-    return { ...template, slots: countLeaves(parse(template.sequence, { open: true }).tree), count: pattern?.characters.size ?? 0,
+    return { ...template, curated: template.curated ?? false, slots: countLeaves(parse(template.sequence, { open: true }).tree), count: pattern?.characters.size ?? 0,
       examples: [...pattern?.examples.keys() ?? []].slice(0, 5) }
   }).sort((a, b) => a.slots - b.slots || b.count - a.count || compare(a.id, b.id))
   return {
     version: 1,
     threshold,
-    method: 'Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Counts describe corpus decompositions, not language-use frequency.',
+    method: 'Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Curated layouts are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.',
     sources,
     statistics: { ...totals, previousTemplates: retained.size, previousCoveredCharacters: previousCoverage.size,
+      curatedTemplates: curated.size, frequencyAdditions: templates.length - retained.size - curated.size,
       templates: templates.length, addedTemplates: templates.length - retained.size, coveredCharacters: coverage.size },
     templates,
   }
