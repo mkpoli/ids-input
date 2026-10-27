@@ -1,6 +1,7 @@
 <script>
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
+  import TreeGlyph from './TreeGlyph.svelte'
   import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
@@ -13,8 +14,8 @@
   import { layout, treeSizes } from './tree-layout.js'
 
   /** @typedef {import('../core/ids.js').Part} Part @typedef {import('../core/ids.js').Path} Path */
-  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean }} */
-  let { editor, keyHints = true } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, draw?: ((part: string) => Promise<import('../adapter/types.js').Drawing | null>) | null, fontStyle?: string }} */
+  let { editor, keyHints = true, draw = null, fontStyle = '' } = $props()
   const t = $derived(editor.t)
 
   const sizes = $derived(treeSizes(editor.tree))
@@ -159,7 +160,7 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{#if part}<TreeGlyph {part} {draw} {fontStyle} />{:else}⬚{/if}</button>
     {/if}
   {/if}
 {/snippet}
