@@ -124,6 +124,13 @@ dragged from the palette, the decomposition tree, a search or the swaps is put w
 and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
+
+The sequence field accepts zi.tools replacement expressions with three single components, such as
+`🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
+to an editable IDS (`⿰木火`). The lookup opens as few components as possible, then replaces the
+shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
+remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
 parts, including compound IDS, grouped by stroke count and first stroke. Compound palette cells show an `IDS` marker and expose
