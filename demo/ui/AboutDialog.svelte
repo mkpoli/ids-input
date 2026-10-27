@@ -20,12 +20,12 @@
 <Dialog bind:open title={t('app.about.title')} closeLabel={t('app.close')} wide>
   <div class="about">
     <p class="lead">{t('app.about.lead')}</p>
-    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">github.com/mkpoli/ids-input</a></p>
+    <p class="links"><a href="https://github.com/mkpoli/ids-input" target="_blank" rel="noreferrer">ids-input</a> · <a href="https://github.com/mkpoli/han-compose" target="_blank" rel="noreferrer">han-compose</a> · <a href="https://mkpo.li" rel="me">mkpoli</a></p>
     <h3>{t('app.about.licenses')}</h3>
     <p><a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license">{t('app.about.codeLicense')}</a></p>
     <p>{t('app.about.dataLicense')} <a href="https://github.com/mkpoli/ids-input/blob/main/data/README.md">{t('app.about.sources')}</a></p>
     <p>{t('app.about.outputLicense')}</p>
-    <h3>{t('app.about.sources')}</h3>
+    <h3>{t('app.footer.sources')}</h3>
     {@render list(SOURCES, 'app.source')}
     <h3>{t('app.about.inspired')}</h3>
     {@render list(INSPIRED, 'app.inspired')}

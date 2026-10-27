@@ -87,7 +87,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from']` | the part picker's tabs; a tab the adapter cannot answer is left out |
+| `pickers` | `['find', 'characters', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -95,6 +95,8 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `disabled` | | |
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
+
+The Templates picker groups layouts by component count and orders each group by the number of characters using it in the bundled BabelStone and Yi Bai IDS datasets. `scripts/build_structure_templates.mjs` adds layouts found in at least 50 distinct characters, preserving the original shortcuts. The Hangul layout `⿱⿽⬚⬚⬚` is included separately as a curated template; its tooltip identifies the layout rather than showing a Han-corpus count. Counts use supplied whole-character descriptions with two to four components, merge equivalent axis arrangements, and count each character once per layout. Source versions, counts and examples are recorded in `src/core/structure-templates.json`; these are dictionary coverage counts, not usage frequencies.
 
 A host laying the editor out itself makes one editor and places its parts where it wants them; the
 workshop in `demo/` does so:
@@ -125,6 +127,13 @@ dragged from the palette, the decomposition tree, a search or the swaps is put w
 and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
+
+The sequence field accepts zi.tools replacement expressions with three single components, such as
+`🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
+to an editable IDS (`⿰木火`). The lookup opens as few components as possible, then replaces the
+shallowest occurrence; where several are equally shallow, the last is used. If the target cannot be found in the available descriptions, the entered text
+remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
+
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
 parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
@@ -154,8 +163,8 @@ letters from every block, and scripts beyond CJK. Operators, empty-slot markers,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
-component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
-preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
+preview font coverage. The composer supplements missing export glyphs with 49,483 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
@@ -175,6 +184,10 @@ The Small Seal palette opens on 138 selected basic parts. Compound parts and
 unclassified forms have separate groups. Type a modern character such as 木 or 口
 to filter the seal palette. An `≈` marks grouping inferred from modern CJK IDS;
 these estimates do not enter the seal decomposition table.
+
+Dataset maintainers can generate an offline comparison gallery and validation
+report with `node scripts/check_small_seal.mjs OUTPUT_DIRECTORY`. See the
+[provider audit guide](docs/small-seal-candidates.md).
 
 ```js
 import { smallSealAdapter } from 'ids-input/adapter'
@@ -493,7 +506,7 @@ missing components. `unicodeSource()` supplies only bundled Unicode glyphs with 
 For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
 from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
 `hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
-with the source Noto font's design; they do not imitate a selected serif or handwritten face.
+with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
@@ -804,3 +817,30 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+### Character information
+
+`babelStoneAdapter({ characterInfo: url, ... })` accepts the bundled
+`data/character-info.json.gz`, or its decoded document. The optional
+`adapter.characterInfo(char, { signal })` returns English glosses, cited component
+associations, editorial Han translations and emoji mnemonics, and direct Small Seal
+correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
+describe the limits of each relationship.
+
+With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
+directions, alongside existing names, readings, and component forms. Results keep
+dictionary qualifiers; component occurrences and lookup aliases have separate labels.
+Meaning paths retain their matched sense and follow at most two links. Component
+usage is a terminal link, so shared components do not connect unrelated words.
+
+`IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
+the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+chosen slot, or replace the inspected character in the tree or sequence field. Custom
+layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
+their editor, where `root` is the containing element. The parts, search, sequence and
+tree components expose `data-character` targets; custom character controls can use
+the same attribute. Optional `data-path` identifies a tree position; without it, the
+host chooses the insertion target. `disabled` prevents insertion. Sources remain in
+the adapter records and the data documentation. Hosts without `characterInfo` retain
+their existing titles.

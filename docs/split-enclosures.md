@@ -19,6 +19,10 @@ These rules retain the entered two-part IDS and use the expanded structure only 
 | ⿹頃X | ⿰⿱匕X頁 | 穎: 禾; 潁: 水 |
 | ⿴㗊X | ⿳吅X吅 | 器: 犬; 囂: 頁; 嚚: 臣 |
 | ⿸倝X | ⿰𠦝⿱𠆢X | 翰: 羽; 斡: 斗; 榦: 木 |
+| ⿹須X | ⿰⿱彡X頁 | 頿: 此 |
+| ⿸攸X | ⿲亻丨⿱攵X | 翛: 羽; 絛: 糸 (HTJKP forms) |
+| ⿸𪧇X | ⿱宀⿰爿X | 寎: 丙; 㝥: 米; 寱: 臬 |
+| ⿸朕X | ⿰月⿱关X | Requested layout; 氺 is placed below 关 |
 
 The bundled BabelStone IDS snapshot supplies the outer decompositions and the expanded example structures. The input forms are rendering conventions inferred from those structures, except where the snapshot explicitly records an alternative: for example, 旗 has both `⿰方⿱𠂉其` and `⿸𭤨其`. The snapshot contains 122 descriptions beginning with `⿸𭤨`.
 
@@ -26,9 +30,23 @@ The bundled BabelStone IDS snapshot supplies the outer decompositions and the ex
 
 `⿴⿰𨸏⿾𨸏X` uses the same layout as `⿴𨺅X`; an editor retains the two explicit outer leaves when that form is entered. The mirrored half is drawn by reflecting the glyph's contours. `⿸倝X` uses the 人 component's upper form 𠆢, as the recorded examples do.
 
+The four hosts 須, 攸, 𪧇 and 朕 also accept their exact expanded spellings:
+`⿰彡頁`, `⿲亻丨攵`, `⿱宀爿` and `⿰月关`. These rules preserve the entered
+leaves. Their rendering trees are expanded before glyph lookup and parent layout
+features are computed, so `⿸攸羽` uses the same native 翛 glyph as its expanded
+form when that glyph is available. Separated editing retains source leaf ownership.
+These rules do not replace 关 with 龹 or identify `⿸朕氺` with 滕. The bundled
+snapshot describes 滕 as `⿰月𣳾`; the requested 朕 rule is a layout convention.
+
 `⿶𤕰X` (鼎) remains a candidate requiring further geometry checks. Ordinary connected enclosures such as 門, 疒 and 戊 are not rewritten simply because they have decompositions.
 
-The fully expanded four-mouth grid is normalized before glyph/host lookup so both spellings choose the same rendering: `⿰⿱口口⿱口口` is laid out as `⿱⿰口口⿰口口`. Either spelling can be the outer operand of `⿴`; its middle operand is placed between the two rows. An editor retains the original leaf order, including column-first selection for the column-first input. Other grids are unchanged.
+Fully expanded 2×2 grids of 口, 火, 又, 水 and 屮 are normalized before glyph/host lookup so both spellings choose the same rendering. For example, `⿰⿱口口⿱口口` is laid out as `⿱⿰口口⿰口口`. Either spelling can be the outer operand of `⿴`; its middle operand is placed between the two rows. An editor retains the original leaf order, including column-first selection for the column-first input. Other repeated components are unchanged.
+
+The literal host `⿲彳⿱山一攵` supports the requested bottom opening:
+`⿵⿲彳⿱山一攵X` renders as `⿲彳⿱⿱山一X攵`. The inserted operand sits
+below 一 and between 彳 and 攵. This is a manually specified composition
+convention; the exact host has no occurrences in the bundled corpus. Other
+operators and similar hosts do not use this rule.
 
 ## Sources
 

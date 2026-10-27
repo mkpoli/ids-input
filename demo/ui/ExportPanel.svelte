@@ -24,7 +24,12 @@
   }
   async function copy() {
     if (!drawing) return
-    try { await navigator.clipboard.writeText(svgOf(drawing, s)); onnote(t('app.export.copied')) } catch { onnote(t('app.copyFailed')) }
+    const drawn = drawing, settings = $state.snapshot(s), format = settings.format.toUpperCase()
+    try {
+      if (settings.format === 'svg') await navigator.clipboard.writeText(svgOf(drawn, settings))
+      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngOf(drawn, settings) })])
+      onnote(t('app.export.copied', { format }))
+    } catch { onnote(t('app.copyFailed')) }
   }
   const BACKGROUNDS = /** @type {const} */ (['none', 'white', 'black', 'custom'])
 </script>
@@ -77,7 +82,7 @@
   <div class="actions">
     <span class="thumb" class:none={!backgroundOf(s)} aria-hidden="true">{#if thumb}<img src={thumb} alt="" />{/if}</span>
     <button type="button" class="primary" disabled={!drawing} title={drawing ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
-    <button type="button" disabled={!drawing} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy')}</button>
+    <button type="button" disabled={!drawing} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy', { format: s.format.toUpperCase() })}</button>
   </div>
 </section>
 

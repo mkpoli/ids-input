@@ -294,7 +294,7 @@
       {#each rows as row, index (row.key)}
         {@const current = row.key === focusKey ? swapAt : null}
         <!-- svelte-ignore a11y_click_events_have_key_events -->
-        <li role="treeitem" class="from-row {row.kind}" class:off={!row.take && row.kind !== 'status'} data-key={row.key}
+        <li role="treeitem" data-character={row.kind === 'char' ? row.part : undefined} class="from-row {row.kind}" class:off={!row.take && row.kind !== 'status'} data-key={row.key}
           aria-level={row.level} aria-selected="false" aria-expanded={row.openable ? row.open : undefined}
           aria-disabled={disabled || (!row.take && row.status !== 'failed') ? 'true' : undefined} aria-label={rowLabel(row)}
           tabindex={row.key === tabStop ? 0 : -1} style:--level={row.level - 1}
@@ -332,7 +332,7 @@
         {:else if found.status === 'ready'}
           <div class="from-found">
             {#each found.items as item (item)}
-              <button type="button" class="from-hit" {disabled} lang="ja" title={t('ids.from.expand', { part: item })}
+              <button type="button" class="from-hit" data-character={item} {disabled} lang="ja" title={t('ids.from.expand', { part: item })}
                 onclick={() => browse(item)}>{item}</button>
             {/each}
           </div>

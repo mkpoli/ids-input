@@ -5,7 +5,7 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
@@ -17,10 +17,12 @@
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
+  import characterInfo from '../data/character-info.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
@@ -39,6 +41,7 @@
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
+  import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
@@ -53,7 +56,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters })
+  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -120,6 +123,18 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const treeDrawers = new Map()
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  function treeDrawer(at, style) {
+    const key = `${at}\0${style}`
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
+  }
+  const treeDraw = $derived.by(() => {
+    const draw = treeDrawer(base, componentStyle)
+    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
+  })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -491,14 +506,14 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? point : t('app.examples.none'),
+      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
@@ -522,7 +537,7 @@
     ]
   })
 
-  let aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -634,11 +649,12 @@
             <IdsSequence {editor} label={false} />
             <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
           </div>
+          <button type="button" class="replacement-link" onclick={() => replacementOpen = true}>{t('app.replacement.title')}</button>
           {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
           {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">
@@ -655,7 +671,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
@@ -693,8 +709,14 @@
       <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#key activeId}
-            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
-              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
+              {#snippet detailContent()}
+                {#each encoded as ch (ch)}
+                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                {/each}
+              {/snippet}
+            </IdsPreview>
           {/key}
           <div class="adjust">
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
@@ -713,18 +735,8 @@
       </section>
     </div>
   </main>
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
-  <footer class="foot">
-    <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <button type="button" class="link" aria-label={t('app.footer.about')} onclick={() => aboutOpen = true}><Icon name="book" size={14} /><span class="foot-full">{t('app.footer.about')}</span><span class="foot-short" aria-hidden="true">{t('app.footer.sources')}</span></button>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />{t('app.about.codeLicense')}</a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
-  </footer>
 </div>
 
 <Toast {toast} ondone={() => toast = null} />
@@ -744,6 +756,7 @@
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
@@ -783,7 +796,7 @@
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
   :global(.tool:disabled){color:var(--muted);background:var(--surface-2);cursor:default}
-  :global(.tool:focus-visible),.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  :global(.tool:focus-visible){outline:2px solid var(--focus);outline-offset:1px}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
@@ -814,6 +827,11 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+  .encoded-character code{font:11px ui-monospace,monospace}
+  .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
+  .encoded-character button:hover{color:var(--ink);background:var(--hover)}
+  .encoded-character button:focus-visible{outline:2px solid var(--focus)}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
@@ -824,6 +842,9 @@
   .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .adjust-hint{font-size:11px;color:var(--muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:12px;cursor:pointer}
+  .replacement-link:hover{text-decoration:underline}
+  .replacement-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
   .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
   .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
@@ -832,16 +853,6 @@
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;padding:4px max(16px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-size:12px;line-height:16px;color:var(--muted)}
-  .foot a,.foot .link{display:inline-flex;align-items:center;gap:5px;color:inherit;white-space:nowrap}
-  .foot-short{display:none}
-  @media (max-width:600px){
-    .foot{column-gap:8px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
-    .foot a,.foot .link{gap:4px}
-    .foot-full,.foot-separator,.repository span{display:none}
-    .foot-short{display:inline}
-  }
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}

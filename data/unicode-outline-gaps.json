@@ -1,0 +1,57 @@
+{
+  "unicode": "18.0.0",
+  "scope": "Assigned fallback candidates outside dedicated bundles and host-handled CJK ranges; private use excluded",
+  "count": 5318,
+  "blocks": [
+    {
+      "block": "Archaic Cuneiform Numerals",
+      "count": 311,
+      "ranges": [
+        [
+          75088,
+          75398
+        ]
+      ]
+    },
+    {
+      "block": "Egyptian Hieroglyphs Extended-A",
+      "count": 3995,
+      "ranges": [
+        [
+          78944,
+          82938
+        ]
+      ]
+    },
+    {
+      "block": "Jurchen",
+      "count": 910,
+      "ranges": [
+        [
+          101892,
+          102801
+        ]
+      ]
+    },
+    {
+      "block": "Jurchen Radicals",
+      "count": 51,
+      "ranges": [
+        [
+          102816,
+          102866
+        ]
+      ]
+    },
+    {
+      "block": "Latin Extended-G",
+      "count": 51,
+      "ranges": [
+        [
+          122829,
+          122879
+        ]
+      ]
+    }
+  ]
+}

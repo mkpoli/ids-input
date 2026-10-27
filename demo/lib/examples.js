@@ -7,6 +7,8 @@
 // of 園), ⿱一心 (@jianhuazi_bot2, the 二簡字 of 德) and ⿰忄実 (@Umihotarus, 舘暲's character for
 // ヴァーチャル).
 //
+// ⿱⿰◇ㅏㄴ: proposed by @zoenshiueh_lieu, using ◇ for an unencoded initial.
+//
 // Hybrid examples from Gen Kojitani’s “Script-Hybrid CJK Ideographs” (BiangBiangCon,
 // 2026-10-16; SCRIPT-HYBRID slides v19). The encoded forms use BabelStone IDS. For the forms
 // with no code point, ⿴口도 is the slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
@@ -40,6 +42,7 @@
 // 𣥄 (⿾正), 𠄔 (⿿予), 𠕄 (⿿凹), 𦣩 (⿰臣⿾臣), 𣥒 (⿱⿿止止),
 // and 𧹂 (⿱⿰虎⿿虎貝): BabelStone IDS. The first two also appear in IRG N2572, p.2.
 // https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
+// 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
 // Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
 // https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
@@ -56,6 +59,9 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰氵恩', char: '𰜩' },
     { sequence: '⿰要勿', char: '覅' },
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
+    { sequence: '⿰查皮', char: '皶' },
+    { sequence: '⿰讠射', char: '谢' },
+    { sequence: '⿻⺀大', char: '头' },
     { sequence: '⿱龹幸', char: '' },
     { sequence: '⿱艹堀', char: '' },
     { sequence: '⿱投石', char: '' },
@@ -75,6 +81,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰鼻囊', char: '齉' },
     { sequence: '⿱⿱⿴𦥑同冖𤍾', char: '爨' },
     { sequence: '⿰氵鬱', char: '灪' },
+    { sequence: '⿰鹵僉', char: '鹼' },
   ] },
   { key: 'repeated', examples: [
     { sequence: '⿰臣⿾臣', char: '𦣩' },
@@ -106,6 +113,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿴囗書', char: '圕' },
   ] },
   { key: 'mixed', examples: [
+    { sequence: '⿱⿰◇ㅏㄴ', char: '' },
     { sequence: '⿶む子', char: '' },
     { sequence: '⿱⿰力田𠂇', char: '𫦫' },
     { sequence: '⿳宀𭕄木', char: '𫳍' },
@@ -126,6 +134,17 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
+  ] },
+  // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
+  { key: 'seal', examples: [
+    {"sequence": "⿰𽁭𽁭", "char": "𽄌", "modern": "玨", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿰𽄝𽄝", "char": "𽄨", "modern": "艸", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽄨", "char": "𽌜", "modern": "茻", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿰𽀒𽀒", "char": "𽁞", "modern": "祘", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽌤", "char": "𽄤", "modern": "芬", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿱𽄨𽁞", "char": "𽋒", "modern": "蒜", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
+    {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
   { key: 'tangut', examples: [
     { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
