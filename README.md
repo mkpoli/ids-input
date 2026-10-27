@@ -236,8 +236,13 @@ reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperat
 `clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
 whole documents. `session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
-`onListenerError` (or `reportError`) and does not undo the committed edit. A composer-backed source,
-storage and the editor binding are not part of these modules yet.
+`onListenerError` (or `reportError`) and does not undo the committed edit.
+
+`documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
+placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
+builds it in one call; the preview must use `separate: true`. When the composer omits leaf ownership,
+the source infers it only from one non-cut part per component in reading order; anything else leaves
+the source incomplete. Storage and the editor binding are not part of these modules yet.
 
 ## Adapters
 
@@ -280,6 +285,11 @@ the preview when there is one. While the data is unavailable, the placeholders s
 Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen part. Adjustments are
 keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
 for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
+
+A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
+each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
+source together. The composer's leaf ownership is used when present; without it, one non-cut part per
+component in reading order is inferred. Other drawings report themselves incomplete.
 
 `babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
 (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん

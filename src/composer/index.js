@@ -100,3 +100,5 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
   }
   return preview
 }
+
+export { composeDocumentSource, documentSource } from './document-source.js'
