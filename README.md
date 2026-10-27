@@ -63,6 +63,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import 'ids-input/fonts.css'
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
+  import components from 'ids-input/data/ids-components.tsv?url'
   import parts from 'ids-input/data/ids-parts.json?url'
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
@@ -70,7 +71,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
   import charactersRare from 'ids-input/data/character-vocabulary-rare.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters, charactersRare })
+  const adapter = babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })
   let value = $state('')
 </script>
 
@@ -315,11 +316,13 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, parts, forms, names, folds, characters, charactersRare })` answers
+`babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
 meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
-from the files in `data/`. `forms` folds the description search's
+from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
+right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
+individually. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -573,6 +576,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
+- `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
+  that write them out, `{12}`, the right of 龍, as `⿷己三` (5 KB); the adapter reads descriptions by
+  it.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -613,7 +619,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
-  (<https://github.com/kawabata/ids>) and IRG submissions.
+  (<https://github.com/kawabata/ids>) and IRG submissions. Its note 6 supplies the numbered
+  components and their fragments (`data/ids-components.tsv`); `{12}`, the right of 龍, is written
+  out as ⿷己三 here, where the note gives no fragment.
 - BabelStone Tangut IDS, Andrew West, <https://www.babelstone.co.uk/Tangut/TangutIDS.txt>, pinned
   by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
@@ -701,7 +709,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   𦣩 (`⿰臣⿾臣`), 𣥒 (`⿱⿿止止`) and 𧹂 (`⿱⿰虎⿿虎貝`). The descriptions of 𣥄 and 𠄔
   also appear in IRG N2572, p.2. Jyutnet records JYN00003 and JYN00025 supply the historical
   寫 and 龍 variants `⿳宀⿰丨⿴⿻冂一一⿹𠃌灬` and `⿰𦚏⿷己三`, citing 道漢字音
-  (1939), pp.72 and 4 respectively.
+  (1939), pp.72 and 4 respectively. `⿰𦚏⿷己三` is also BabelStone's 龍, its numbered right
+  component `{12}` written out.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 

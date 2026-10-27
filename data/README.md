@@ -30,12 +30,27 @@ gzipped, 2.2 MB as text.
   credited all the same.
 - Format: one line per ideograph, `char<TAB>sequences`, every alternative the file gives,
   space-separated, each with the source regions it describes (`⿰氵骨(GHTJKPV)`). The maintainer's `*`
-  notes are left out. `{n}` is BabelStone's unencoded component n and `？` an unrepresentable one.
+  notes are left out. `{n}` is BabelStone's numbered component n, kept as the source writes it;
+  `data/ids-components.tsv` gives the fragments that write out the ones note 6 knows, and the adapter
+  applies them. `？` is an unrepresentable one.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
   from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
+
+## `ids-components.tsv`
+
+BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
+the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
+fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+`{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
+names its two halves, 𦚏 and ⿷己三.
+
+The fragments are BabelStone's own (IDS.TXT note 6), public domain. The adapter reads the file with
+`babelStoneAdapter({ components })`; the descriptions it answers and searches name the parts rather
+than BabelStone's numbers. Built by `scripts/build_ids_components.py`, which fetches IDS.TXT and
+leaves the `{12}` entry in its own header note.
 
 ## `ids-parts.json`
 

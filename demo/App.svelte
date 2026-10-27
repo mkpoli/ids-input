@@ -12,6 +12,7 @@
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
@@ -58,7 +59,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, charactersRare, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, components, parts, forms, names, folds, characters, charactersRare, characterInfo })
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))

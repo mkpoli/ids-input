@@ -75,6 +75,16 @@ describe('the BabelStone adapter', () => {
   it('keeps a sequence naming an unencoded component', async () => {
     expect(await babelStoneAdapter({ table }).structure('彡')).toEqual([{ text: '⿹{22}一', regions: 'G' }])
   })
+  it('writes out a numbered component the fragments table names', async () => {
+    const componentsText = '{22}\toutside of 与\t⿺㇉一\n{50}\ttop right of 叚\t\n'
+    expect(await babelStoneAdapter({ table, componentsText }).structure('彡')).toEqual([{ text: '⿹⿺㇉一一', regions: 'G' }])
+  })
+  it("writes out 龍's numbered right part as its IDS", async () => {
+    const componentsText = readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')
+    const adapter = babelStoneAdapter({ table: parseIdsTable('龍\t⿰𦚏{12}(G)\n'), componentsText })
+    expect(await adapter.structure('龍')).toEqual([{ text: '⿰𦚏⿷己三', regions: 'G' }])
+    expect(await adapter.encoded('⿰𦚏⿷己三')).toEqual(['龍'])
+  })
   it('fails, and tries again on the next call, when the table cannot be loaded', async () => {
     const adapter = babelStoneAdapter({ ids: 'missing.tsv', fetch })
     await expect(adapter.structure('木')).rejects.toThrow('404')
