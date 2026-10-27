@@ -1,9 +1,10 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["fonttools==4.63.0"]
+# dependencies = ["fonttools==4.63.0", "skia-pathops==0.9.2"]
 # ///
 """Export selected Noto CJK forms. Run with uv; source TTC paths are arguments."""
 import hashlib, json, sys
+import pathops
 from pathlib import Path
 from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
@@ -33,6 +34,15 @@ def contours(gs, name):
         if command[0] in ('closePath', 'endPath'):
             result.append(current); current = []
     return result
+
+def crop_group(cs, box):
+    shape, rect = pathops.Path(), pathops.Path()
+    for c in cs: replayRecording(c, shape.getPen())
+    x0, y0, x1, y1 = box
+    rect.moveTo(x0, y0); rect.lineTo(x1, y0); rect.lineTo(x1, y1); rect.lineTo(x0, y1); rect.close()
+    pen = RecordingPen()
+    pathops.op(shape, rect, pathops.PathOp.INTERSECTION).draw(pen)
+    return group([pen.value])
 
 def group(cs):
     pen = Contours()
@@ -68,6 +78,15 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿱士冖']=crown
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]
+    # 興's upper component: preserve the open top of 𦥑 and remove 一八 below.
+    # Crop the outer frame at the native baseline; keep 同's counters intact.
+    c=cs('興')
+    if style=='sans':
+        forms['⿴𦥑同']=[crop_group([c[5],c[7]], (0,222,1000,880)),group([c[0],c[1],c[2],c[6]])]
+    else:
+        # Drop the bottom 一's terminal before clipping: its tip rises above y=197.
+        outer=[('moveTo', ((854,197),))]+c[3][7:]
+        forms['⿴𦥑同']=[crop_group([outer,c[7]], (0,197,1000,880)),group([c[0],c[4],c[5],c[6]])]
     forms['⿰冫⿱丿丶']=dots
     forms['⿰冫⿾冫']=[dots[0],dots[1]+dots[2]]
     for sequence,ch in [('⿱宀儿','宂'),('⿻三丨','丰'),('⿻者丶','者')]:

@@ -1,4 +1,5 @@
 <script>
+  import { tint } from './tokens.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
@@ -96,7 +97,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
@@ -114,15 +115,20 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
-    <button type="button" class="ids-part" class:empty={part === null} class:chosen={selected} class:over={over === key(path)} aria-pressed={selected}
-      data-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
+    <button type="button" class="ids-part" style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:over={over === key(path)} aria-pressed={selected}
+      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
   {/if}
 {/snippet}
 
-<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}>
+<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}
+  onpointermove={event => {
+    const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
+    const path = target?.getAttribute('data-hover-path')
+    editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
+  }} onpointerleave={() => editor.hover(null)}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
@@ -163,29 +169,33 @@
   :where(.ids-tree) button{font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);cursor:pointer}
   :where(.ids-tree) button:disabled{cursor:default;opacity:.55}
   :where(.ids-tree) button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;cursor:pointer;
+  /* Each node scales its frame and controls to its containing cell. One em is at most
+     one pixel, shrinking together with the available width and height. */
+  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
   .ids-node.disabled{cursor:default}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
-  .ids-head{position:absolute;top:3px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+  .ids-head{position:absolute;top:3em;left:4em;right:4em;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   .ids-head button{pointer-events:auto;flex-shrink:0}
-  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px/1.4 var(--_font);color:var(--_muted)}
-  .ids-op{display:grid;place-items:center;padding:1px 3px;border-color:transparent;background:none}
+  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 .545em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11em/1.4 var(--_font);color:var(--_muted)}
+  .ids-op{display:grid;place-items:center;padding:1em 3em;border-width:1em;border-radius:6em;border-color:transparent;background:none}
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
-  .ids-unwrap{padding:0 5px;font-size:13px;line-height:1.2;color:var(--_muted);border-color:transparent;background:none}
+  .ids-unwrap{padding:0 .385em;font-size:13em;line-height:1.2;border-width:.077em;border-radius:.46em;color:var(--_muted);border-color:transparent;background:none}
   .ids-unwrap:not(:disabled):hover{color:var(--_fault);border-color:var(--_fault)}
-  .ids-parts{flex:1;display:flex;gap:6px;min-width:0;min-height:0}
+  .ids-op :global(svg){width:16em;height:16em}
+  .ids-op :global(svg *){vector-effect:none}
+  .ids-parts{flex:1;display:flex;gap:6em;min-width:0;min-height:0}
   .ids-cell{flex:1;display:grid;min-width:0;min-height:0;container-type:size}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits
      inside it where the operator puts it, leaving a band of the first open around it. */
-  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:44px minmax(min-content,1fr) 44px;grid-template-rows:44px minmax(min-content,1fr) 44px}
+  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:min(44em,15%) minmax(0,1fr) min(44em,15%);grid-template-rows:min(44em,15%) minmax(0,1fr) min(44em,15%)}
   .enclosure > .ids-parts > .ids-cell[data-index="0"]{grid-area:1/1/4/4}
-  .enclosure > .ids-parts > .ids-cell[data-index="1"]{z-index:1;margin:4px}
+  .enclosure > .ids-parts > .ids-cell[data-index="1"]{z-index:1;margin:min(4em,2cqw,2cqh)}
   .enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part{background:var(--_surface)}
-  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(26px,66cqh,66cqw);padding:2px 8px}
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(26px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));padding:min(2px,2cqh) min(8px,2cqw)}
   [data-op="⿴"] > .ids-parts > [data-index="1"]{grid-area:2/2/3/3}
   [data-op="⿵"] > .ids-parts > [data-index="1"]{grid-area:2/2/4/3}
   [data-op="⿶"] > .ids-parts > [data-index="1"]{grid-area:1/2/3/3}
@@ -204,14 +214,22 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
-  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:2px 4px;font-size:min(var(--ids-part-size,32px),66cqh,66cqw);line-height:1.05;overflow:hidden;
-    font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:1px solid var(--_line);border-radius:8px}
+  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
+    font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
-  .ids-part.empty{font-size:min(20px,66cqh,66cqw);color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
-  .ids-tree-root > .ids-part{font-size:min(140px,66cqh,66cqw)}
-  .ids-tree-root > .ids-part.empty{font-size:min(48px,66cqh,66cqw)}
-  .ids-part.chosen{border:2px solid var(--_accent);padding:1px 5px;background:var(--_accent-light)}
-  .ids-part.over{border:2px solid var(--_accent);border-style:solid}
+  .ids-part.empty{font-size:min(20px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
+  .ids-tree-root > .ids-part{font-size:min(140px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
+  .ids-tree-root > .ids-part.empty{font-size:min(48px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
+  .ids-part.chosen{border:min(2px,2cqw,2cqh) solid var(--_accent);background:var(--_accent-light)}
+  .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
+
+  /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
+     Clip the header visually while keeping its node button available to keyboard navigation. */
+  @container (max-height:12px) or (max-width:12px){
+    .ids-node{border-width:0;padding:0}
+    .ids-head{inset:0;overflow:hidden;clip-path:inset(50%)}
+    .ids-part,.ids-part.chosen,.ids-part.over{border-width:0;padding:0}
+  }
 
   .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
     border:1px solid var(--_line);border-radius:10px;background:var(--_surface);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
@@ -225,4 +243,6 @@
   .ids-menu-item:not(:disabled):hover,.ids-menu-item:focus-visible{background:var(--_surface-selected) !important}
   .ids-menu-item kbd,.ids-menu-seq{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .ids-menu-seq{font-family:var(--_font);font-size:14px}
+  .ids-node,.ids-part{background:color-mix(in oklab,var(--tint) 10%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  .ids-node.hovered,.ids-part.hovered,.enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part.hovered{background:color-mix(in oklab,var(--tint) 28%,var(--_surface));box-shadow:inset 0 0 0 2px var(--_accent)}
 </style>

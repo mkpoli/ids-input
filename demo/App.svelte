@@ -21,7 +21,7 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import exampleDrawings from './lib/example-drawings.json'
-  import { COMPOSER_BASE } from './lib/composer.js'
+  import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
@@ -43,9 +43,13 @@
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
 
   const params = new URLSearchParams(location.search)
+  /** @type {'sans' | 'serif' | 'klee'} */
+  let face = $state(load('font', 'sans'))
+  $effect(() => save('font', face === 'sans' ? undefined : face))
+  $effect(() => { document.documentElement.dataset.font = face })
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
   let composer = $state(params.get('composer') || load('composer', '') || '')
-  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
+  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
   // Manual changes to the preview belong to the active document tab.
@@ -56,7 +60,7 @@
   const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
@@ -75,13 +79,17 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   function previewFor(at, split, style) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split, style)
-    if (split || style !== 'sans' || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    // The compact Serif export covers the BMP; a sequence outside it draws from the sans export.
+    const outsideSerif = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff)
+    const usableAt = outsideSerif ? COMPOSER_BASE : at
+    const usableStyle = outsideSerif ? 'sans' : style
+    const composed = previewAt(usableAt, split, usableStyle)
+    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -97,7 +105,7 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** @param {string} at @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
@@ -107,7 +115,7 @@
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const componentStyle = $derived(face === 'serif' ? 'serif' : 'sans')
+  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
 
@@ -174,10 +182,6 @@
   let theme = $state(storedTheme())
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
-  /** @type {'sans' | 'serif' | 'klee'} */
-  let face = $state(load('font', 'sans'))
-  $effect(() => save('font', face === 'sans' ? undefined : face))
-  $effect(() => { document.documentElement.dataset.font = face })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
   let exampleCards = $state(load('exampleCards', false))
@@ -569,7 +573,7 @@
 <svelte:window onkeydown={keys} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
-<div class="app" lang={locale}>
+<div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
       <a class="brand" href="./" aria-label={t('app.title')}>

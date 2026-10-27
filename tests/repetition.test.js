@@ -134,3 +134,20 @@ it('combines the intact 士冖 crown above 一 in both equivalent descriptions',
     expect(groupParts(b.parts, await sketch(local(), '⿱⿱士冖一', { fontStyle }))).toHaveLength(3)
   }
 })
+
+it('draws the upper component of 興 locally with two editable operands in both styles', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const source = local()
+    expect(onlyBundled('⿴𦥑同')).toBe(true)
+    const { componentParts } = await import('../src/composer/component-forms.js')
+    if (fontStyle === 'serif') expect(componentParts('⿴𦥑同', undefined, fontStyle)[0].source[2]).toBeLessThanOrEqual(900)
+    const drawn = await compose(source, '⿴𦥑同', { fontStyle, separate: true })
+    const leaves = await sketch(source, '⿴𦥑同', { fontStyle })
+    expect(drawn.parts).toHaveLength(2)
+    expect(groupParts(drawn.parts, leaves)).toHaveLength(2)
+    expect(drawn.approximate).toEqual([])
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    const nested = await compose(remote(), '⿱⿴𦥑同木', { fontStyle })
+    expect(nested.origins.some(origin => origin.includes('⿴𦥑同'))).toBe(true)
+  }
+})
