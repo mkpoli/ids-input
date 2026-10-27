@@ -155,8 +155,8 @@
   .part.empty{font-size:15px;color:var(--_muted)}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
   li{background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
-  li.hovered{background:color-mix(in oklab,var(--tint) 28%,var(--_surface));border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);border-radius:0;padding-left:calc(3px + var(--level) * 16px);padding-right:7px}
-  li.hovered + li.hovered{margin-top:-2px}
+  li.hovered{position:relative;background:color-mix(in oklab,var(--tint) 28%,var(--_surface));border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);border-radius:0;padding-left:calc(3px + var(--level) * 16px);padding-right:7px}
+  li.hovered + li.hovered::before{content:"";position:absolute;top:-3px;left:-2px;right:-2px;height:3px;box-sizing:border-box;border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);background:color-mix(in oklab,var(--tint) 28%,var(--_surface));pointer-events:none}
   li.hovered:not(li.hovered + li.hovered){border-radius:8px 8px 0 0;box-shadow:inset 0 2px var(--_accent)}
   li.hovered:not(:has(+ li.hovered)){border-radius:0 0 8px 8px;box-shadow:inset 0 -2px var(--_accent)}
   li.hovered:not(li.hovered + li.hovered):not(:has(+ li.hovered)){border-radius:8px;box-shadow:inset 0 2px var(--_accent),inset 0 -2px var(--_accent)}
