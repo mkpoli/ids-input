@@ -100,6 +100,7 @@
   "app.source.characterDataPresentation": "𰻞𰻞会（2026年10月16日）の発表。文字情報を扱う際に参考にした。",
   "app.source.babelstone": "各字の構成記述。分解・部品一覧・照合に使用。",
   "app.source.hanCompose": "既存の字の部品を使ってプレビューを描く。",
+  "app.source.hanReassemble": "漢字の部品を組み換えて熟語を作るゲーム。",
   "app.source.hfhchan": "部品一覧で分解しない部品の判定。",
   "app.source.kanjivg": "組字器の一部の切り出し。その切り出しを含む字形は同条件で共有。",
   "app.source.smallSeal": "汲古閣本『説文解字』の構字情報。Unicodeに対応付けられた49字と31部件を収録。ほかの原資料の項目は未対応です。",

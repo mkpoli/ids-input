@@ -101,6 +101,7 @@
   "app.source.characterDataPresentation": "BiangBiangCon, 16 October 2026; a reference for working with character data.",
   "app.source.babelstone": "Every character's description, for decomposition, the palette and matching.",
   "app.source.hanCompose": "Draws the preview from parts other characters already have.",
+  "app.source.hanReassemble": "A game about rearranging kanji parts to make words.",
   "app.source.hfhchan": "Which components the palette leaves whole.",
   "app.source.kanjivg": "Some component cuts used by the composer; drawings with those cuts are shared alike.",
   "app.source.smallSeal": "Jiguge Shuowen decompositions: 49 mapped characters and 31 components. Other source records remain unresolved.",
