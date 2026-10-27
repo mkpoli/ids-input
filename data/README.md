@@ -385,7 +385,11 @@ Nine previews use pinned Noto native host outlines: 畿 without 田, 屐 without
 four-stroke 卝 in 夢. The Serif 夢 preview combines its crown with the native
 冖 from 亭, translated down 70 font units. Removed connected outlines are
 reconstructed at existing path points; remaining strokes keep native thickness
-and placement. `⿱丿乚` uses ordinary composition.
+and placement. `⿱丿乚` and its source alias `⿱㇒乚` share a dedicated
+Sans/Serif drawing made from 毛's shallow sweep and hooked stem, with the two
+intervening horizontal strokes removed. The retained strokes meet at their
+native junction and remain two editable groups. The five direct source
+occurrences are 𠝉 (T), 𡜞 (G), 𥟯 (G), 𦨊 (GT), and 𩣛 (GT).
 
 Frequency alone cannot select every useful visual part. The raw report counts
 exact written subtrees, not recursive expansions through encoded characters,
