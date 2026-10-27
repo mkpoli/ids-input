@@ -41,6 +41,30 @@ const encodedSource = () => {
 }
 
 describe('the composer', () => {
+  it('places a lower-right enclosure fallback above and left of its closed sides', async () => {
+    const source = sourceOf()
+    await source.ready()
+    const composer = new Composer(source.store())
+    composer.room = () => null
+    composer.fit = () => false
+    composer.node = (child, target) => [{ target }]
+    for (const region of [[0, 0, 1000, 1000], [100, 200, 600, 700]]) {
+      const [, inner] = composer.shares('⿽', ['木', '口'], region)
+      expect((inner.target[0] + inner.target[2]) / 2).toBeLessThan((region[0] + region[2]) / 2)
+      expect((inner.target[1] + inner.target[3]) / 2).toBeGreaterThan((region[1] + region[3]) / 2)
+    }
+  })
+
+  it('keeps the fallback above the centre when an enclosing glyph leaves no detected room', async () => {
+    const source = sourceOf()
+    await source.ready()
+    await source.load(Object.keys(files).filter(name => name.includes('/')))
+    const composer = new Composer(source.store())
+    const [outer, inner] = composer.compose('⿽永木')
+    expect(composer.room('⿽', [outer], composer.face)).toBeNull()
+    expect((inner.target[1] + inner.target[3]) / 2).toBeGreaterThan((composer.face[1] + composer.face[3]) / 2)
+  })
+
   it('renders the four-mouth grid by row while keeping the original leaf order', async () => {
     const glyph = gzipSync(JSON.stringify({ [hex('㗊')]: { k: '㗊', G: boxGlyph([40, 80, 920, 960]), ink: 3520, nl: 1, o: 1 } }))
     const source = createSource(async name => {

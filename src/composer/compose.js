@@ -62,7 +62,7 @@ export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
 export const APPROXIMATE = ['⿾', '⿿', '〾', '㇯', '⿼', '⿽']
 const MIRROR = '⿾', ROTATE = '⿿', VARIANT = '〾', SUBTRACT = '㇯'
 const EXTRA_ENCLOSE = { '⿼': 'RBT', '⿽': 'RB' }
-const EXTRA_INSIDE = { '⿼': [0, 0.15, 0.8, 0.85], '⿽': [0, 0, 0.7, 0.75] }
+const EXTRA_INSIDE = { '⿼': [0, 0.15, 0.8, 0.85], '⿽': [0, 0.25, 0.7, 1] }
 
 export class Composer {
   /**
