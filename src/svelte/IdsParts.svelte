@@ -9,6 +9,7 @@
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
+  import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { adjacentVariants } from '../core/palette.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
@@ -27,8 +28,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'gongche', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -50,7 +51,7 @@
     read().then(found => { parts = found; failed = false }, () => { failed = true })
   })
 
-  const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
+  const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
   // Stroke counts available in the Stroke count panel, in order, null (not recorded) last; `count` is the one
   // chosen, undefined until one is, so the first count shows.
@@ -66,7 +67,10 @@
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
   const sealGroups = $derived(SEAL_GROUPS.map(name => ({ name, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
+  let gongchePart = $state('⿰氵氵')
+  const gongcheDetail = $derived(GONGCHE_PARTS.find(part => part.part === gongchePart) ?? GONGCHE_PARTS[0])
   const query = $derived(filter.trim())
+  const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
     if (!query || !parts) return null
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
@@ -88,6 +92,7 @@
 
   /** @param {string} part */
   function pick(part) {
+    if (tab === 'gongche') gongchePart = part
     recent = [part, ...recent.filter(other => other !== part)].slice(0, RECENT_MAX)
     if (recentKey) remember(recentKey, recent)
     onpick?.(part)
@@ -202,6 +207,9 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
+        onfocus={() => { if (tab === 'gongche') gongchePart = part.part }}
+        onpointerenter={() => { if (tab === 'gongche') gongchePart = part.part }}
+        aria-describedby={tab === 'gongche' ? `${uid}-gongche-detail` : undefined}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -241,7 +249,27 @@
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
-    {#if failed}
+    {#if tab === 'gongche'}
+      <p class="parts-note">{t('parts.gongche.hint')}</p>
+      {#each gongcheShown as group (group.key)}
+        <h4 class="parts-class">{t(`parts.gongche.${group.key}`)}</h4>
+        {@render grid(group.parts)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/each}
+      <section class="gongche-detail" id={`${uid}-gongche-detail`} aria-label={t('parts.gongche.details')}>
+        <div class="gongche-summary">
+          <span class="gongche-glyph">{#if isSequence(gongcheDetail.part)}<IdsPartIcon sequence={gongcheDetail.part} {adapter} />{:else}{gongcheDetail.part}{/if}</span>
+          <div><strong>{gongcheDetail.part}</strong><div class="parts-note">{isSequence(gongcheDetail.part) ? 'IDS' : `U+${gongcheDetail.part.codePointAt(0)?.toString(16).toUpperCase()}`} · {gongcheDetail.derived ? '≈ ' : ''}{t('parts.strokeCount', { count: gongcheDetail.strokes ?? 0 })}</div></div>
+        </div>
+        <p>{t(`parts.gongche.${gongcheDetail.detail}`)}</p>
+        {#if gongcheDetail.example}<div class="gongche-example"><span>{t('parts.gongche.example')}</span><code>{gongcheDetail.example}</code></div>{/if}
+      </section>
+      <details class="gongche-guide"><summary>{t('parts.gongche.guide')}</summary>
+        <p>{t('parts.gongche.conventions')}</p>
+        <p>{t('parts.gongche.compose')}</p>
+        <a href="https://www.th.gov.tw/Epaper_Content/237/8985/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguan')} ↗</a>
+        <a href="https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.cantonese')} ↗</a>
+      </details>
+    {:else if failed}
       <p class="parts-note" role="status">{t('parts.failed')}</p>
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
@@ -306,5 +334,11 @@
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
+  .gongche-detail{padding:10px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
+  .gongche-summary{display:flex;align-items:center;gap:10px}.gongche-summary strong,.gongche-example code{font-family:var(--ids-font,sans-serif);font-weight:400;overflow-wrap:anywhere}
+  .gongche-glyph{display:flex;align-items:center;justify-content:center;width:42px;height:42px;flex:none;font:30px var(--ids-font,sans-serif)}
+  .gongche-detail p,.gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
+  .gongche-example{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--_muted)}
+  .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>
