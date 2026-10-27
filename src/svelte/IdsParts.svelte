@@ -13,6 +13,8 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
+  import unicodeCoverage from '../../data/unicode-coverage.json' with { type: 'json' }
+  import { unpack } from '../composer/loader.js'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -27,8 +29,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'catalog' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'catalog', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -61,6 +63,34 @@
     if (!read) { failed = true; return }
     read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
+
+  // The catalog is loaded on demand; rendering a single page keeps the panel responsive.
+  const PAGE_SIZE = 120
+  let catalog = $state.raw(/** @type {string[] | null} */ (null))
+  let catalogFailed = $state(false), catalogPage = $state(0)
+  let catalogLoading = false
+  $effect(() => {
+    if (tab !== 'catalog' || !parts || catalog || catalogLoading || catalogFailed) return
+    catalogLoading = true
+    fetch(new URL('../../data/composer-catalog.json.gz', import.meta.url))
+      .then(response => { if (!response.ok) throw new Error('catalog'); return response.arrayBuffer() })
+      .then(unpack).then(JSON.parse).then(data => {
+        const chars = unicodeCoverage.flatMap(([start, end]) => range(start, end))
+        catalog = [...new Set([...data.keys, ...chars, ...(parts ?? []).map(part => part.part)])].sort((a, b) => a.codePointAt(0) - b.codePointAt(0) || a.localeCompare(b, 'en'))
+      }).catch(() => { catalogFailed = true })
+  })
+  const catalogMatches = $derived.by(() => {
+    if (!catalog) return []
+    const term = filter.trim()
+    if (!term) return catalog
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term)
+    if (code) { const point = parseInt(code[1], 16); return point <= 0x10ffff ? catalog.filter(key => key === String.fromCodePoint(point)) : [] }
+    return catalog.filter(key => key.includes(term))
+  })
+  $effect(() => { filter; tab; catalogPage = 0 })
+  const catalogPages = $derived(Math.max(1, Math.ceil(catalogMatches.length / PAGE_SIZE)))
+  const catalogShown = $derived(catalogMatches.slice(catalogPage * PAGE_SIZE, (catalogPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
@@ -244,7 +274,7 @@
       {/each}
     </div>
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
-      placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
+      placeholder={t(tab === 'catalog' ? 'parts.catalog.filter' : tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'catalog' ? 'parts.catalog.filter' : tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
   </div>
   {#if tab === 'seal' && !query && sealGroups.length}
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
@@ -262,6 +292,21 @@
       <p class="parts-note" role="status">{t('parts.failed')}</p>
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
+    {:else if tab === 'catalog'}
+      <p class="parts-note">{t('parts.catalog.source')}</p>
+      {#if catalogFailed}<p class="parts-note" role="status">{t('parts.failed')}</p>
+      {:else if !catalog}<p class="parts-note" role="status">{t('parts.loading')}</p>
+      {:else if !catalogMatches.length}<p class="parts-note">{t('parts.none')}</p>
+      {:else}
+        <div class="catalog-pages" role="group" aria-label={t('parts.catalog.pages')}>
+          <button type="button" disabled={catalogPage === 0} onclick={() => catalogPage--}>{t('parts.catalog.previous')}</button>
+          <input type="number" min="1" max={catalogPages} value={catalogPage + 1} aria-label={t('parts.catalog.pages')}
+            onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) catalogPage = Math.max(0, Math.min(catalogPages - 1, Math.floor(value) - 1)) }} />
+          <span>{t('parts.catalog.page', { page: catalogPage + 1, pages: catalogPages, count: catalogMatches.length })}</span>
+          <button type="button" disabled={catalogPage + 1 >= catalogPages} onclick={() => catalogPage++}>{t('parts.catalog.next')}</button>
+        </div>
+        {@render grid(catalogShown)}
+      {/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}
@@ -302,6 +347,9 @@
   .parts-tabs button,.parts-counts button{border:0;background:transparent;font-size:12px;padding:6px 10px;border-radius:5px;color:var(--_muted)}
   .parts-tabs button.active,.parts-counts button.active{background:var(--_surface-selected);color:var(--_ink)}
   .parts-filter{flex:1 1 100%;min-width:0;padding:6px 8px;font-size:13px}
+  .catalog-pages{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
+  .catalog-pages button{padding:4px 8px}
+  .catalog-pages input{width:6em;padding:4px 6px}
   .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}

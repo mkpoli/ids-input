@@ -533,6 +533,16 @@ its three equal full components. Missing or excluded glyphs retain component
 composition. This catalog covers the pinned Unicode 16.0 source, rather than
 claiming coverage of unencoded characters or later Unicode additions.
 
+### Composer catalog
+
+`composer-catalog.json.gz` indexes the parseable record keys with outlines, descriptions or
+learned compositions in the demo's pinned default composer export, together with bundled
+Tangut, Small Seal, Bopomofo and component-form records. The parts panel adds bundled
+Unicode coverage and palette entries at runtime. Rebuild with
+`node scripts/build_composer_catalog.mjs`; this downloads all record shards from the pinned
+export. The catalog describes that export; a different configured export may have different
+glyph coverage.
+
 ### Gongche notation components
 
 Suggested by परवद💙💛 ([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)):
