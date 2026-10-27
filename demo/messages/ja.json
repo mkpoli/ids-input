@@ -126,14 +126,15 @@
   "app.title": "IDS工房",
   "app.toolbar": "ツール",
   "app.replacement.title": "部品を置き換える",
-  "app.replacement.help": "文字を指定し、その部品を一つ置き換えます。作業中の内容を残して、結果を開きます。",
-  "app.replacement.source": "文字",
+  "app.replacement.help": "文字や IDS の部品を置き換えます。各欄に文字または ⿰木木 のような完全な IDS を入力できます。作業中の内容を残して結果を開きます。",
+  "app.replacement.source": "文字または IDS",
   "app.replacement.target": "置き換える部品",
   "app.replacement.replacement": "置き換え先",
   "app.replacement.submit": "結果を開く",
   "app.replacement.loading": "部品を検索中…",
   "app.replacement.notFound": "文字の中にその部品が見つかりませんでした。",
   "app.replacement.failed": "文字を検索できませんでした。もう一度お試しください。",
+  "app.replacement.tooLong": "3 つの入力を合わせて 64 コードポイント以内にしてください。",
   "app.source.tangutGlosses": "文字情報パネルに表示する西夏文字の英語の語釈。用法を限定する注記も表示します。",
   "app.source.tangutComponentMeaning": "部件𘥇と馬に関する意味との関連（2020年4月21日）。"
 }

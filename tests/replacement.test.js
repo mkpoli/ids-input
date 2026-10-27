@@ -30,6 +30,24 @@ describe('zi.tools replacement expressions', () => {
     expect(await resolve('🔄森木火')).toBe('⿱火林')
     expect(await resolve('🔄赢贝女')).toBe('⿱吂⿲月女凡')
   })
+  it('accepts complete IDS operands and rejects incomplete or unknown operands', () => {
+    expect(replacementQuery('🔄⿰木木木火')).toEqual({ source: '⿰木木', target: '木', replacement: '火' })
+    expect(replacementQuery('RP林木⿱日月')).toEqual({ source: '林', target: '木', replacement: '⿱日月' })
+    expect(replacementQuery('🔄⿰林林⿰木木火')).toEqual({ source: '⿰林林', target: '⿰木木', replacement: '火' })
+    expect(replacementQuery('🔄⿰木木木⿱日')).toBeNull()
+    expect(replacementQuery('🔄⿰木？木火')).toBeNull()
+    expect(replacementQuery('🔄林木？︀')).toBeNull()
+    expect(replacementQuery('🔄⿰木？︀木火')).toBeNull()
+    expect(replacementQuery('🔄⿰木⬚木火')).toBeNull()
+    expect(replacementQuery('🔄' + '⿾'.repeat(65) + '木木火')).toBeNull()
+  })
+  it('replaces a component or subtree with an IDS, including within opened descriptions', async () => {
+    expect(await resolve('🔄⿰木木木火')).toBe('⿰火木')
+    expect(await resolve('🔄林木⿱日月')).toBe('⿰木⿱日月')
+    expect(await resolve('🔄⿰⿰木木日⿰木木火')).toBe('⿰火日')
+    expect(await resolve('🔄⿰林林⿰木木火')).toBe('⿰林火')
+    expect(await resolve('🔄⿰木日⿱木日火')).toBeNull()
+  })
   it('opens nested components and terminates when descriptions are cyclic', async () => {
     expect(await resolve('🔄甲木火')).toBe('⿰⿱甲火口')
     expect(await resolve('🔄甲水火')).toBeNull()
@@ -50,6 +68,24 @@ describe('zi.tools replacement expressions', () => {
     finish([{ text: '⿰木木' }])
     await expect(request).rejects.toThrow()
     expect(calls).toBe(1)
+  })
+  it('does not return a result too long for the editor', async () => {
+    const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
+    const result = await resolveReplacement(query, async () => [{ text: `⿰${'⿾'.repeat(58)}木日` }])
+    expect(result).toBeNull()
+  })
+  it('tries another match if the preferred result would be too long', async () => {
+    const query = replacementQuery(`🔄甲木${'⿾'.repeat(10)}火`)
+    const result = await resolveReplacement(query, async char => char === '甲'
+      ? [{ text: `⿰${'⿾'.repeat(58)}日木` }, { text: '⿰木口' }] : [])
+    expect(write(result)).toBe(`⿰${'⿾'.repeat(10)}火口`)
+  })
+  it('can replace a subtree after an expansion temporarily exceeds the editor length', async () => {
+    const target = `${'⿾'.repeat(59)}木`
+    const query = replacementQuery(`🔄⿰甲日${target}火`)
+    const result = await resolveReplacement(query, async char => char === '甲'
+      ? [{ text: `⿲${target}乙丙` }] : [])
+    expect(write(result)).toBe('⿰⿲火乙丙日')
   })
   it('preserves component variation selectors in the output', async () => {
     expect(await resolve('🔄林木火︀')).toBe('⿰木火︀')

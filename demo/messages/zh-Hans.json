@@ -126,14 +126,15 @@
   "app.title": "IDS工坊",
   "app.toolbar": "工具",
   "app.replacement.title": "替换部件",
-  "app.replacement.help": "输入一个字，再替换其中的一个部件。结果会在工作区中打开，保留当前作品。",
-  "app.replacement.source": "汉字",
+  "app.replacement.help": "替换汉字或 IDS 中的部件。每一栏可输入一个字或完整的 IDS，例如 ⿰木木。结果会在工作区中打开，保留当前作品。",
+  "app.replacement.source": "汉字或 IDS",
   "app.replacement.target": "要替换的部件",
   "app.replacement.replacement": "替换为",
   "app.replacement.submit": "打开结果",
   "app.replacement.loading": "正在查找部件…",
   "app.replacement.notFound": "在该字中未找到这个部件。",
   "app.replacement.failed": "无法查询该字，请重试。",
+  "app.replacement.tooLong": "三个输入合计不能超过 64 个码位。",
   "app.source.tangutGlosses": "文字信息面板中的西夏字英语释义，保留用法限定。",
   "app.source.tangutComponentMeaning": "部件𘥇与马相关的语义关联（2020年4月21日）。"
 }
