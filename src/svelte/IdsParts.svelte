@@ -8,6 +8,7 @@
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
+  import { tick } from 'svelte'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -84,6 +85,18 @@
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
 
+  const visibleParts = $derived(failed || !parts ? [] : filtered ?? shown.flatMap(group => group.parts))
+  let copyStatus = $state('')
+  let copyMode = $state(false)
+  /** @param {string} value */
+  async function copy(value) {
+    copyStatus = ''; await tick()
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable')
+      await navigator.clipboard.writeText(value)
+      copyStatus = t('parts.copied')
+    } catch { copyStatus = t('parts.copyFailed') }
+  }
   /** @param {string} part */
   function pick(part) {
     recent = [part, ...recent.filter(other => other !== part)].slice(0, RECENT_MAX)
@@ -119,8 +132,9 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
-        draggable={!disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => pick(part.part)}>
+      <button type="button" class="part" class:compound={isSequence(part.part)} disabled={disabled && !copyMode} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
+        draggable={!disabled && !copyMode} ondragstart={event => event.dataTransfer?.setData('text/plain', part.part)} onclick={() => copyMode ? copy(part.part) : pick(part.part)}
+        onkeydown={event => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'c' && (window.getSelection()?.isCollapsed ?? true)) { event.preventDefault(); event.stopPropagation(); copy(part.part) } }}>
         {#if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />
           <span class="compound-mark" aria-hidden="true">IDS</span>
@@ -142,6 +156,9 @@
           onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{t(`parts.tab.${name}`)}</button>
       {/each}
     </div>
+    <button type="button" class="copy-mode" aria-pressed={copyMode} onclick={() => copyMode = !copyMode}>{t('parts.copyMode')}</button>
+    <button type="button" class="copy-visible" disabled={!visibleParts.length} onclick={() => copy(visibleParts.map(part => part.part).join('\n'))}>{t('parts.copyVisible')}</button>
+    <span class="copy-status" role="status">{copyStatus}</span>
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
       placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
   </div>
@@ -211,6 +228,9 @@
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
+  .copy-mode,.copy-visible{padding:4px 8px;font-size:12px}
+  .copy-mode[aria-pressed="true"]{border-color:var(--_accent);background:var(--_accent-light);color:var(--_ink)}
+  .copy-status{font-size:11px;color:var(--_muted)}
   .part.compound{position:relative;padding:5px}
   .compound-mark{position:absolute;right:1px;bottom:1px;padding:1px 2px;border-radius:3px;
     font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_accent);background:var(--_surface);border:1px solid var(--_line)}
