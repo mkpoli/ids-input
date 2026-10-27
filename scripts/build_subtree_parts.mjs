@@ -72,8 +72,8 @@ export function strokeCounter(table, rows) {
   return count
 }
 
-// Useful unencoded components absent from the corpus remain explicit manual shortcuts.
-export const MANUAL_PARTS = ['⿰冫⿱丿丶']
+// Requested literal IDS remain selectable even below the frequency cutoff.
+export const MANUAL_PARTS = ['⿰冫⿱丿丶', '⿳亠㐅厂', '⿳亠丷厂']
 // IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
 // Exact root descriptions in the bundled corpus. Preserve regional spellings as aliases.
 export const ENCODED_PARTS = {
@@ -82,7 +82,7 @@ export const ENCODED_PARTS = {
   '⿱卝隻': '蒦', '⿸辰寸': '辱', '⿹勹巳': '包',
   '⿱⿱㇒⿻日丿十': '卑', '⿻九丶': '丸',
 }
-export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'] }
+export const SOURCE_ALIASES = { '⿰冫⿱丿丶': ['{11}'], '⿳亠㐅厂': ['⿱文厂'], '⿳亠丷厂': ['产'] }
 
 export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
   const spellings = new Set([text, ...aliases])

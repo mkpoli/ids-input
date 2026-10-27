@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,699 Han entries (694 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,701 Han entries (696 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -252,8 +252,8 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The manual four-dot entry
-brings the compound total to seventeen. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The three manual entries
+bring the compound total to nineteen. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -318,6 +318,22 @@ length only and translating the bars vertically to retain their stroke thickness
 Both forms have Sans/Serif outlines. The four-bar form keeps two editable columns;
 the atomic upper-卑 drawing falls back to individual operands in adjustment mode
 when the configured export supplies them.
+
+The shared enclosures of 彥/產 and 彦/産 are manual literal shortcuts:
+`⿳亠㐅厂` (also rendered/searched as `⿱文厂`) and `⿳亠丷厂`.
+Both have an estimated six strokes and appear in Common and Stroke count.
+The latter deliberately remains IDS despite its encoded equivalent 产 (`U+4EA7`),
+so selecting it preserves the component spelling. Its 29 direct corpus uses
+combine the literal IDS and 产; the former has zero exact subtree matches
+because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across nodes.
+This count does not assert that the visible component is absent from 彥 or 產.
+The traditional outline is extracted from Noto 產 with 生 removed; the other
+uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
+with separate Sans/Serif outlines. These are atomic native previews;
+adjustment mode uses operand outlines when available. Native compound previews use
+outline-based layout rather than extrapolating the learned glyph layout model;
+Kaisho keeps its export layout. Source aliases remain
+searchable and visible in tooltips, without changing the inserted IDS.
 
 ## Small Seal
 
