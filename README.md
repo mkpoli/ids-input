@@ -594,7 +594,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Gen Kojitani, [Script-hybrid and abbreviated CJK letters, IRG N2637](https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf),
   2023-06-23, Table 1 no.1 and Fig.1: the Bouyei form `⿰亻Ａ`, from 《布依方塊古文字》p.64.
   The example `⿰亻A` uses ASCII A.
-- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
+- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄥ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
 - mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
   `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.

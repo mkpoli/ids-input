@@ -19,7 +19,7 @@
 // https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf#page=2
 // ⿰扌3 is a shape approximation to the Sawndip form in N2744 Fig.7 (p.8), whose pictographic
 // right component also has a dot. ASCII 3 here specifies a drawing shape, not that component's origin.
-// ⿰木き, ⿰木⿳ㄙㄨㄙ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
+// ⿰木き, ⿰木⿳ㄙㄨㄥ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
 // communication, 2026-10-27. No published source is recorded here.
 // ⿺辶說, ⿱龹幸, ⿶む子 and 〾⿱⿰大⿱七六⿵勹五: mkpoli, personal communication,
 // 2026-10-27. Published sources for these exact forms are not recorded here.
@@ -122,7 +122,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' },
     { sequence: '⿰亻A', char: '' },
     { sequence: '⿰扌3', char: '' },
-    { sequence: '⿰木⿳ㄙㄨㄙ', char: '' },
+    { sequence: '⿰木⿳ㄙㄨㄥ', char: '' },
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },

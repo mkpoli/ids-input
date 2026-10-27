@@ -19,6 +19,10 @@ import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, ma
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
+
+const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
+  [sequence, `⿱${part}${pair}`, `⿱${part}⿰${part}${part}`].map(ids => [ids, char])))
 
 export class LookupError extends Error { name = 'LookupError' }
 
@@ -338,7 +342,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
-    if (this.layout && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    // Native compound forms have no trained layout features; fit their actual outlines.
+    if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -393,8 +398,7 @@ export class Composer {
 
   /** Whole-character lookup for attested expanded pyramid-glyphs; nested editing keeps its leaves. */
   standalonePyramid(node) {
-    const equivalents = {"⿱木⿰木木": "森", "⿱日⿰日日": "晶", "⿱金⿰金金": "鑫", "⿱水⿰水水": "淼", "⿱火⿰火火": "焱", "⿱土⿰土土": "垚", "⿱女⿰女女": "姦", "⿱子⿰子子": "孨", "⿱口⿰口口": "品", "⿱吉⿰吉吉": "嚞", "⿱隹⿰隹隹": "雥", "⿱魚⿰魚魚": "鱻", "⿱牛⿰牛牛": "犇", "⿱馬⿰馬馬": "驫", "⿱羊⿰羊羊": "羴", "⿱犬⿰犬犬": "猋", "⿱貝⿰貝貝": "贔", "⿱毛⿰毛毛": "毳", "⿱手⿰手手": "掱", "⿱耳⿰耳耳": "聶", "⿱虫⿰虫虫": "蟲", "⿱車⿰車車": "轟", "⿱力⿰力力": "劦"}
-    const char = equivalents[keyOf(node)]
+    const char = pyramidGlyphs.get(keyOf(node))
     return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 

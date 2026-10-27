@@ -9,13 +9,15 @@
   let { editor, keyHints = true, slot = $bindable(null), status = true } = $props()
   const t = $derived(editor.t)
   const picked = $derived(editor.picked)
+  function apply() { if (editor.enter()) queueMicrotask(() => { slot?.focus(); slot?.select() }) }
 </script>
 
 <div class="ids-part-tools">
   <div class="ids-tools">
     <input class="ids-slot" bind:this={slot} bind:value={editor.piece} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
       aria-label={t('ids.slot')} placeholder={t('ids.slotHint')}
-      onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); if (editor.enter()) queueMicrotask(() => slot?.select()) } }} />
+      onkeydown={event => { if (event.key === 'Enter' && !event.isComposing) { event.preventDefault(); apply() } }} />
+    <button type="button" class="ids-apply" disabled={editor.disabled || !editor.piece.trim()} onclick={apply}>{t('ids.apply')}</button>
     <button type="button" class="ids-empty" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
       title={`${t('ids.empty')} (${shortcut('backspace')})`} aria-label={t('ids.empty')} onclick={() => editor.empty(editor.chosen)}>⬚</button>
     <button type="button" class="ids-clear" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}

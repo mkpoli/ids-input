@@ -75,6 +75,14 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     ys=[v for _,points in bar for v in points[1::2]]
     dy=200-(min(ys)+max(ys))/2
     bar=[[ops,[v if i%2==0 else v+dy for i,v in enumerate(points)]] for ops,points in bar]
+    # The 文-shaped shared enclosure of 彥/產, without 產's 生.
+    # Native contours preserve the crossing strokes and the long 厂 descender.
+    c=cs('產')
+    yan=group([c[0],c[1],c[2]] if style=='sans' else [c[0],c[2]])
+    forms['⿳亠㐅厂']=[yan]
+    forms['⿱文厂']=[yan]
+    # Keep the 立-shaped form as literal IDS even though 产 has a code point.
+    forms['⿳亠丷厂']=[group(cs('产'))]
     forms['⿱士冖']=crown
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]

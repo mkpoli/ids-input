@@ -205,6 +205,19 @@ export function replaceAt(tree, path, part) {
   return { op: tree.op, parts: tree.parts.map((p, i) => i === head ? replaceAt(p, rest, part) : p) }
 }
 
+/** Move a part within its parent, retaining the order of the other siblings.
+ * Paths must name two distinct children of the same node.
+ * @param {Part} tree @param {Path} from @param {Path} to @returns {Part} */
+export function reorderSiblings(tree, from, to) {
+  if (!from.length || from.length !== to.length || from.at(-1) === to.at(-1) || from.slice(0, -1).some((n, i) => n !== to[i])) return tree
+  const parentPath = from.slice(0, -1), parent = partAt(tree, parentPath)
+  const start = from[from.length - 1], end = to[to.length - 1]
+  if (!isNode(parent) || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < 0 || start >= parent.parts.length || end >= parent.parts.length) return tree
+  const parts = [...parent.parts]
+  parts.splice(end, 0, parts.splice(start, 1)[0])
+  return replaceAt(tree, parentPath, { op: parent.op, parts })
+}
+
 /**
  * `part` under `op`: the part first and an empty slot for every other part the operator takes, so a
  * component can be split in place (⿰ round 失 gives ⿰失⬚).
