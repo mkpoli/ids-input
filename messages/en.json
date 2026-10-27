@@ -212,5 +212,14 @@
   "info.relation.seal": "Small Seal forms",
   "info.script.han": "Han character",
   "info.script.seal": "Small Seal character",
-  "info.keyboard": "F1 to enter · Esc to close"
+  "info.keyboard": "F1 to enter · Esc to close",
+  "parts.tab.gongche": "Gongche",
+  "parts.gongche.notes": "Note characters",
+  "parts.gongche.regional": "Regional forms",
+  "parts.gongche.modifiers": "Components",
+  "parts.gongche.guide": "Notation and input guide",
+  "parts.gongche.conventions": "Register marks differ between traditions. Cantonese and traditional Gongche notation use 亻 and 彳 differently.",
+  "parts.gongche.compose": "For a left-side component, insert ⿰, then the component and the note. Follow the source score for musical usage.",
+  "parts.gongche.beiguan": "Beiguan notation · Taiwan Historica",
+  "parts.gongche.cantonese": "Cantonese notation · CCLI 2022/03, Annex II"
 }

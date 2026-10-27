@@ -208,5 +208,14 @@
   "info.relation.seal": "소전 자형",
   "info.script.han": "한자",
   "info.script.seal": "소전",
-  "info.keyboard": "F1로 상세 정보 이동 · Esc로 닫기"
+  "info.keyboard": "F1로 상세 정보 이동 · Esc로 닫기",
+  "parts.tab.gongche": "공척보",
+  "parts.gongche.notes": "음표 글자",
+  "parts.gongche.regional": "지역별 글자",
+  "parts.gongche.modifiers": "부수",
+  "parts.gongche.guide": "기보 및 입력 안내",
+  "parts.gongche.conventions": "높고 낮은 음의 표시는 전통에 따라 다릅니다. 광둥 음악과 전통 공척보는 亻와 彳의 용법도 다릅니다.",
+  "parts.gongche.compose": "왼쪽 부수를 붙이려면 ⿰, 부수, 음표 글자 순서로 입력하세요. 음악적 용법은 원래 악보를 확인하세요.",
+  "parts.gongche.beiguan": "북관 공척보 · 대만문헌관",
+  "parts.gongche.cantonese": "광둥 공척보 · CCLI 2022/03 부록 II"
 }

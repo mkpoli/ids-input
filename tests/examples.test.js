@@ -7,7 +7,6 @@ import { onlyTangut } from '../src/composer/tangut.js'
 import { size } from '../src/composer/loader.js'
 import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 
-const sealTable = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))).toString('utf8')).table
 const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 /** The characters BabelStone describes with each sequence. */
 const described = new Map()
@@ -29,11 +28,14 @@ describe('the demo examples', () => {
       const found = described.get(sequence) ?? []
       if (char) {
         expect([...char]).toHaveLength(1)
-        if ('source' in example) {
+        if ('source' in example && example.source === 'data/small-seal.json.gz') {
+          const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))
+          expect(seal.table[char]).toContain(sequence)
+          expect(seal.modern[char]).toContain(example.modern)
+        } else if ('source' in example) {
           expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
           expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
-        } else if (sealTable[char]) expect(sealTable[char]).toContain(sequence)
-        else expect(found).toContain(char)
+        } else expect(found).toContain(char)
       } else {
         expect(found).toEqual([])
       }

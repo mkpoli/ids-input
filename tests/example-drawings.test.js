@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { EXAMPLES } from '../demo/lib/examples.js'
+import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 const data = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
@@ -75,7 +75,10 @@ it('prepares the examples of reflection, rotation and subtraction', () => {
 })
 
 it('prepares the Small Seal examples with bundled outlines', () => {
-  for (const sequence of ['⿰𽁭𽁭', '⿱𽄨𽄨', '⿴𽌣𽄘']) {
-    expect(data.drawings[sequence]?.drawn.d.length).toBeGreaterThan(100)
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'seal').examples
+  for (const { sequence } of examples) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
   }
 })
