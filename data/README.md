@@ -250,6 +250,9 @@ word definition. Other Tangut components can show glossed characters whose recor
 [BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt) explicitly
 contain them. These are usage examples, not inferred component meanings.
 
+The association's explicit `sense` field scopes its search links to the horse meaning;
+the displayed label retains the source's qualification.
+
 Small Seal links use the direct modern correspondences in `small-seal.json.gz`,
 from the CHISE and Unicode sources described above. The MOE-derived 𠙵→口 search alias
 is omitted from historical-form links. Only forms in the bundled font's

@@ -18,6 +18,7 @@ describe('character relationships',()=>{
    for(const char of ['馬','马','𘆽','🐎',horseSeal]) expect(found,query).toContain(char)
   }
   for(const query of ['water','💧','水','𗋽']) for(const char of ['水','💧','𗋽']) expect(chars(query),query).toContain(char)
+  for(const query of ['horse','🐎','馬','𘆽','𘥇']) expect(index.search(query).find(h=>h.char==='🐎')?.label).toBe('horse')
  })
  test('every glossed component occurrence is searchable in both directions',()=>{
   const component='𘠀'
@@ -59,6 +60,10 @@ describe('character relationships',()=>{
   const search=createRelationSearch(fixture,null,new Map())
   expect(search.search('tree').map(h=>h.char)).not.toContain('𗀁')
   expect(search.search('木').map(h=>h.char)).toEqual(expect.arrayContaining(['𗀀','𗀁']))
+  const horse = createRelationSearch({ ...doc, entries: { '馬': doc.entries['馬'] } }, null, new Map())
+  expect(horse.search('horse').find(h=>h.char==='𘥇')?.label).toBe('associated with horses')
+  expect(horse.search('surname').map(h=>h.char)).not.toContain('𘥇')
+  expect(chars('surname',1000)).not.toContain('𘥇')
  })
 })
 

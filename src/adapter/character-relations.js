@@ -51,7 +51,7 @@ export function createRelationSearch(doc, seal, table) {
     const id = `${char}\0${foldName(key(name))}`
     if (!aliases.has(id)) names.push({ char, name: key(name), source: '', detail: '' })
     aliases.set(id, { label, sense, curated })
-    if (sense) senseLabels.set(`${char}\0${sense}`, label)
+    if (sense && !senseLabels.has(`${char}\0${sense}`)) senseLabels.set(`${char}\0${sense}`, label)
   }
   const drawable = new Set([...Object.keys(seal?.table ?? {}), ...(seal?.parts ?? []).map(p => p.part)])
   const chars = new Set([...Object.keys(doc.entries), ...Object.keys(doc.components), ...Object.keys(seal?.modern ?? {}), ...Object.values(seal?.modern ?? {}).flat()])
@@ -67,12 +67,13 @@ export function createRelationSearch(doc, seal, table) {
         alias(char, lemma(term), gloss, senseOf(term))
       }
     }
-    if (info.association) alias(char, info.association, info.association)
-    for (const row of info.relations) link(char, row.char, row.kind === 'seal' || row.kind === 'modern' ? 'seal' : info.association ? 'association' : 'meaning', info.association ? undefined : row.meaning)
+    const associationSense = doc.components[char]?.sense ?? info.association
+    if (info.association) alias(char, info.association, info.association, senseOf(associationSense ?? info.association))
+    for (const row of info.relations) link(char, row.char, row.kind === 'seal' || row.kind === 'modern' ? 'seal' : info.association ? 'association' : 'meaning', associationSense ?? row.meaning)
     for (const emoji of info.emoji) {
-      link(char, emoji.text, 'emoji', info.association ? undefined : emoji.meaning)
-      alias(emoji.text, emoji.meaning, emoji.meaning, senseOf(emoji.meaning), true)
-      labels.set(emoji.text, emoji.meaning)
+      link(char, emoji.text, 'emoji', associationSense ?? emoji.meaning)
+      alias(emoji.text, emoji.meaning, emoji.meaning, senseOf(associationSense ?? emoji.meaning), true)
+      if (!labels.has(emoji.text)) labels.set(emoji.text, emoji.meaning)
     }
     for (const i of doc.entries[char]?.aids ?? []) for (const term of doc.aids[i].en) {
       const sense = senseOf(term)
