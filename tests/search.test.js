@@ -117,8 +117,20 @@ describe('component lookup expressions', () => {
   })
 
   it('follows descriptions that are single-component aliases', () => {
-    const index = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']]]))
+    const index = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']], ['甲', ['⿰訁木']]]))
     expect(index.search('㇯訁？').hits.map(hit => hit.char)).toEqual(['言', '亠', '口'])
+    expect(index.search('㇯？言').hits.map(hit => hit.char)).toContain('訁')
+    expect(index.search('㇯？口').hits.map(hit => hit.char)).toContain('訁')
+    expect(index.search('㇯？言').hits.map(hit => hit.char)).toContain('甲')
+    const folded = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']]]), { forms: new Map([['訁', '言']]) })
+    expect(folded.search('㇯？言').hits.map(hit => hit.char)).toContain('訁')
+  })
+
+  it('opens a readable description or the component when the source contains placeholders', () => {
+    const index = createSearch(new Map([['體', ['⿰骨豊']], ['骨', ['⿳{108}冖⺝', '⿱冖月']], ['豊', ['⿱{123}豆']]]))
+    const hits = index.search('㇯體？').hits
+    expect(hits.find(hit => hit.char === '骨').sequence).toBe('⿱冖月')
+    expect(hits.find(hit => hit.char === '豊').sequence).toBe('豊')
   })
 
   it('does not turn incomplete subtractions into component lookups', () => {

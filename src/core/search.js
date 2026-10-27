@@ -14,7 +14,7 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isDescription, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
 import { createStructuralSearch } from './structural-search.js'
@@ -555,10 +555,47 @@ export function createSearch(table, { forms = new Map() } = {}) {
     const sorted = [...depths].sort((a, b) => a[1] - b[1] || tier(a[0]) - tier(b[0])
       || /** @type {number} */ (a[0].codePointAt(0)) - /** @type {number} */ (b[0].codePointAt(0)))
     const hits = sorted.slice(0, limit).map(([part, depth]) => {
-      const description = treesOf(lookupChar(part))[0]
-      return { char: part, sequence: description ? written(description, []).text : part, spans: [], score: depth }
+      const description = (table.get(lookupChar(part)) ?? []).find(isDescription)
+      return { char: part, sequence: description ?? part, spans: [], score: depth }
     })
     return { hits, total: sorted.length }
+  }
+
+  /** The containing lookup, including single-component alias descriptions.
+   * @param {string} part @param {number} limit @returns {{ hits: Hit[], total: number }} */
+  function containingPart(part, limit) {
+    /** @type {Map<string, string[]>} */
+    const aliases = new Map()
+    for (const [char, descriptions] of table) for (const text of descriptions) {
+      const list = tokens(text)
+      if (list.length !== 1 || list[0] === char || isSequence(text) || unencoded(list[0]) !== null || !isComponent(list[0])) continue
+      const key = fold(list[0])
+      if (!aliases.has(key)) aliases.set(key, [])
+      aliases.get(key)?.push(char)
+    }
+    const queue = [part], seen = new Set([fold(part)])
+    /** @type {Map<string, Hit>} */
+    const found = new Map()
+    /** @param {string} key */
+    const addAliases = key => {
+      for (const char of aliases.get(key) ?? []) {
+        if (char !== part && !found.has(char)) found.set(char, { char, sequence: char, spans: [], score: 0 })
+        const folded = fold(char)
+        if (!seen.has(folded)) { seen.add(folded); queue.push(char) }
+      }
+    }
+    for (let i = 0; i < queue.length; i++) {
+      const current = queue[i]
+      for (const hit of search(current, { limit: Infinity }).hits) {
+        const old = found.get(hit.char)
+        if (!old || hit.score < old.score) found.set(hit.char, hit)
+        addAliases(fold(hit.char))
+      }
+      addAliases(fold(current))
+    }
+    const sorted = [...found.values()].sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char)
+      || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
+    return { hits: sorted.slice(0, limit), total: sorted.length }
   }
 
   /**
@@ -571,7 +608,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
     // zi.tools uses these two complete expressions for component lookup. Keep empty draft slots
     // distinct from the explicit wildcard so an unfinished subtraction remains a normal query.
     const special = componentQuery(query)
-    if (special?.kind === 'containing') return search(special.char, { limit })
+    if (special?.kind === 'containing') return containingPart(special.char, limit)
     if (special?.kind === 'parts') return partsOf(special.char, limit)
     const { terms, problem } = parseQuery(query)
     if (problem) return { hits: [], total: 0, problem }
