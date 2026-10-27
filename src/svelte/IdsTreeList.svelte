@@ -46,6 +46,9 @@
     if (editor.tree) walk(editor.tree, [], 0, null)
     return out
   })
+  $effect(() => {
+    if (editing && !rows.some(row => row.key === key(editing.path))) editing = null
+  })
   const tabStop = $derived(rows.some(row => row.key === focusKey) ? focusKey : rows[0]?.key)
   /** @param {Row} row */
   const selected = row => editor.chosen !== null && key(editor.chosen) === row.key
