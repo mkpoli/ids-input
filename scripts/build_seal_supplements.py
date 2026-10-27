@@ -57,10 +57,15 @@ def evidence():
 
 
 def unresolved(report, doc):
-    """Modern components that the current data cannot map to any seal form."""
+    """Modern components that the current data cannot map to any seal form.
+
+    Only original dataset heads count. Supplementary reference glyphs add audit
+    rows whose modern descriptions would otherwise pull in more entries.
+    """
     known = {name for names in doc['modern'].values() for name in names}
     needed = set()
     for row in report['rows']:
+        if row['char'] not in doc['modern']: continue
         if row['status'] not in ('incomplete', 'no-candidate'): continue
         for candidate in row['candidates']:
             needed.update(candidate['unmapped'])
