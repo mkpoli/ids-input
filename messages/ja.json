@@ -21,6 +21,7 @@
   "ids.do.split": "{part}を{op}で分ける",
   "ids.do.swap": "{from}を{op}に変える",
   "ids.do.type": "{text}と入力",
+  "ids.do.wrap": "{op}で囲む",
   "ids.do.unwrap": "{op}を外す",
   "ids.empty": "空き",
   "ids.unknown": "不明な部品「？」を入れる（検索では任意の部品）",

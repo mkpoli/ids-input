@@ -19,6 +19,7 @@ export const OPERATORS = [
   ['⿺', 2], ['⿻', 2], ['⿼', 2], ['⿽', 2], ['⿾', 1], ['⿿', 1], ['㇯', 2], ['〾', 1],
 ]
 const ARITY = new Map(OPERATORS)
+const ENCLOSURES = new Set(['⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿼', '⿽'])
 
 /**
  * The operators grouped by how many parts they take, as a palette shows them: those that change one
@@ -262,16 +263,19 @@ export function swapOp(tree, path, op) {
 
 /**
  * Where an operator goes in a draft, and what the tree becomes. On a node it swaps the operator; on
- * a slot or a component it splits it, the old part first. With no target (every slot filled and none
- * chosen) the whole tree becomes the operator's first part. Answers the new tree and the part to
- * choose next, or `{ problem: 'drop' }`.
+ * a slot or a component it splits it, the old part first. With no target, an enclosing operator puts
+ * the whole tree inside an empty frame; other operators put it first. Answers the new tree and the
+ * part to choose next, or `{ problem: 'drop' }`.
  * @param {Part} tree
  * @param {Path | null} at
  * @param {string} op
  * @returns {{ tree: Part, chosen: Path, problem?: undefined } | { problem: 'drop', tree?: undefined, chosen?: undefined }}
  */
 export function applyOperator(tree, at, op) {
-  if (!at) return { tree: wrap(op, tree), chosen: arity(op) > 1 ? [1] : [] }
+  if (!at) {
+    if (tree !== null && ENCLOSURES.has(op)) return { tree: { op, parts: [null, tree] }, chosen: [0] }
+    return { tree: wrap(op, tree), chosen: arity(op) > 1 ? [1] : [] }
+  }
   const part = partAt(tree, at)
   if (isNode(part)) {
     const swapped = swapOp(tree, at, op)

@@ -21,6 +21,7 @@
   "ids.do.split": "Chia {part} bằng {op}",
   "ids.do.swap": "Đổi {from} thành {op}",
   "ids.do.type": "Nhập {text}",
+  "ids.do.wrap": "Bọc bằng {op}",
   "ids.do.unwrap": "Bỏ {op}",
   "ids.empty": "Ô trống",
   "ids.unknown": "Chèn bộ phận chưa biết ？ (ký tự đại diện khi tìm kiếm)",

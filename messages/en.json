@@ -21,6 +21,7 @@
   "ids.do.split": "Split {part} with {op}",
   "ids.do.swap": "Change {from} to {op}",
   "ids.do.type": "Type {text}",
+  "ids.do.wrap": "Wrap with {op}",
   "ids.do.unwrap": "Remove {op}",
   "ids.empty": "Empty slot",
   "ids.unknown": "Insert unknown part ？ (wildcard in searches)",
