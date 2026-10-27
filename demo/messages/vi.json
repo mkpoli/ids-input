@@ -101,7 +101,7 @@
   "app.source.noto": "Đường viền mà han-compose di chuyển và phông chữ cho các bộ phận.",
   "app.source.plangothic": "Đường viền cho các bộ phận không có trong Noto Sans CJK.",
   "app.source.smallSeal": "Phân tích Thuyết Văn bản Jiguge: 49 chữ và 31 thành phần đã ánh xạ. Các bản ghi nguồn khác vẫn chưa được xử lý.",
-  "app.source.sealFont": "1,334 glyph từ bản của Trần Xương Trí. Việc duyệt thượng nguồn chưa hoàn tất.",
+  "app.source.sealFont": "1,383 glyph từ bản của Trần Xương Trí. Việc duyệt thượng nguồn chưa hoàn tất.",
   "app.source.qrcode": "Mã QR trong mục Chia sẻ.",
   "app.source.rime": "Phân loại nét đầu trong bảng chọn bộ phận.",
   "app.source.unihan": "Số nét và khu vực nguồn.",

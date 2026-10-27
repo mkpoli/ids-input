@@ -491,10 +491,11 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
-| Drawable palette forms | 1,334 |
+| Drawable palette forms | 1,383 |
 | Selected basic parts | 138 |
 | Compound forms | 1,172 |
-| Other / unclassified forms | 24 |
+| Other forms | 73 |
+| Curated crosswalk mappings | 49 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -502,7 +503,9 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 There are 29 additional apparent-form descriptions, so the description statuses total
 11,143. An empty field does not distinguish an atomic character from unfinished data.
 The editor's 49 descriptions are machine-validated imports, without a separate
-palaeographic review.
+palaeographic review. The palette also carries 49 curated crosswalks from
+`scripts/data/small-seal/supplements.json`; they mark a Unicode SealSources value
+and one CHISE record, and ship with pinned glyphs and checksums.
 
 Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
 

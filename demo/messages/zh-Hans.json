@@ -105,7 +105,7 @@
   "app.source.hfhchan": "部件表中不再拆分的部件。",
   "app.source.kanjivg": "组字器的部分切分；含此切分的字形须以相同方式共享。",
   "app.source.smallSeal": "汲古阁本《说文解字》构形数据：49个已映射字及31个部件，其余原始记录尚未完成映射。",
-  "app.source.sealFont": "取自陈昌治本的1,334个字形，来源项目尚未完成审校。",
+  "app.source.sealFont": "取自陈昌治本的1,383个字形，来源项目尚未完成审校。",
   "app.source.tangut": "西夏文显示与组字所用的字形。",
   "app.source.noto": "han-compose所用的字形轮廓及部件字体。",
   "app.source.plangothic": "Noto Sans CJK所缺部件的字形。",

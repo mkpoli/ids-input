@@ -33,15 +33,23 @@ def main():
     raw = (ROOT / 'fonts/IDSSeal-sources.tar.gz').read_bytes()
     if hashlib.sha256(raw).hexdigest() != source['archiveSha256']: raise ValueError('SVG source archive checksum mismatch')
     data = json.loads(gzip.decompress((ROOT / 'data/small-seal.json.gz').read_bytes()))
+    supplements = ROOT / 'scripts/data/small-seal/supplements.json'
+    curated = {entry['char']: entry for entry in json.loads(supplements.read_text())['entries']} if supplements.exists() else {}
     chars = sorted(set(data['table']) | {p['part'] for p in data['parts']})
     glyphs = {'.notdef': TTGlyphPen(None).glyph()}
     provenance = {}
     with tarfile.open(fileobj=io.BytesIO(raw), mode='r:gz') as tar:
+        members = set(tar.getnames())
         review = {row['codepoint']: row for row in csv.DictReader(io.StringIO(tar.extractfile('data/provenance/glyphs.csv').read().decode()))}
         for c in chars:
             name = f'glyphs/u{ord(c):X}.svg'
-            svg = tar.extractfile(name).read()
-            if hashlib.sha256(svg).hexdigest() != source['files'][name]: raise ValueError('SVG checksum mismatch')
+            if name in members:
+                svg = tar.extractfile(name).read()
+                if hashlib.sha256(svg).hexdigest() != source['files'][name]: raise ValueError('SVG checksum mismatch')
+            elif c in curated:
+                svg = (ROOT / 'scripts/data/small-seal' / curated[c]['glyph']).read_bytes()
+                if hashlib.sha256(svg).hexdigest() != curated[c]['glyphSha256']: raise ValueError('Supplement SVG checksum mismatch')
+            else: raise ValueError('Missing SVG source: ' + name)
             root = ElementTree.fromstring(svg)
             if root.attrib['viewBox'] != '0 -880 1000 1000': raise ValueError('Unexpected SVG viewBox')
             pen = TTGlyphPen(None)

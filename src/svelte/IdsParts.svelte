@@ -310,7 +310,7 @@
     tab === 'hangul' ? substituteNames[part.part] : null,
     ...(part.aliases ?? []),
     ...(part.modern ?? []),
-    part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
+    part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
     tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
     part.uses ? t('parts.uses', { count: part.uses }) : null,
   ].filter(Boolean).join(' · ')

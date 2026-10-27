@@ -60,21 +60,24 @@ When the audit combines modern IDS tables, `modernSource` lists all supplied tab
 
 ## Curated supplementary mappings
 
-`scripts/data/small-seal/supplements.json` records provider crosswalks for seal
-glyphs outside the bundled app palette. Each entry pairs one Unicode SealSources
+`scripts/data/small-seal/supplements.json` records provider crosswalks that connect
+seal forms to modern characters. Each entry pairs one Unicode SealSources
 `kSEAL_MCJK` value with a single CHISE ShuoWen record that lists the modern
-characters together. The entry names the record and carries checksums for the
-Unicode table, the CHISE archive and a pinned Kaiyuan SVG.
+characters together, and names a pinned Kaiyuan SVG with checksums for the
+Unicode table and the CHISE archive.
 
 `python3 scripts/build_seal_supplements.py REPORT_JSON` adds a seal form when its
 Unicode mapping reaches a modern component that the report leaves unmapped,
 either directly or inside a nested expansion, for example U+3DB6E for 爭 and 争
-or U+3DDAF for 其. The audit includes the
-aliases; supplementary mappings stay outside the source-backed decomposition
-table. They do not resolve an IDS row whose entity lacks a unique seal
-character.
+or U+3DDAF for 其.
 
-The checksums are verified during generation and by every entry in
-`python3 -m unittest discover -s scripts -p test_small_seal.py`. Supplementary
-glyphs are reference evidence for the audit and remain separate from the app
-font.
+`python3 scripts/build_small_seal_palette.py` compiles the entries into
+`data/small-seal.json.gz`: the modern map gains their aliases and the palette
+gains one part per entry with `sealBasis: crosswalk` in the Other group.
+`scripts/build_small_seal_font.py` adds their SVGs to the webfont, so search and
+the palette can draw them. The audit reads the same manifest.
+
+These mappings do not resolve an IDS row whose entity lacks a unique seal
+character, and they stay outside the source-backed decomposition table. Their
+checksums are verified during both builds and by every entry in
+`python3 -m unittest discover -s scripts -p test_small_seal.py`.
