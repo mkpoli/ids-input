@@ -693,6 +693,13 @@
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
               editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
           {/key}
+          {#if encoded.length}
+            <div class="encoded-characters" aria-label={t('app.encoded')}>
+              {#each encoded as ch (ch)}
+                <button type="button" class="tool encoded-character" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><span lang="ja">{ch}</span><Icon name="copy" /></button>
+              {/each}
+            </div>
+          {/if}
           <div class="adjust">
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
@@ -812,6 +819,9 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .encoded-characters{display:flex;flex-wrap:wrap;gap:6px;padding-top:8px}
+  .encoded-character{gap:6px}
+  .encoded-character span{font-size:1.25em}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
