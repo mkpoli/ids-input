@@ -372,7 +372,10 @@ evaluates affine, projective and Möbius transform chains, traverses a document
 with host-supplied local geometry and placements, and writes a scoped tree whose
 component cuts and ㇯ subtraction become SVG masks. It also provides a session that
 keeps the chosen layer, an allocator and undo/redo over whole documents. A
-composer-backed provider, storage and the editor binding are not part of that
+separated composer drawing supplies the base layout through
+[`src/composer/document-source.js`](../src/composer/document-source.js); it
+uses leaf ownership when present and otherwise infers one non-cut part per
+component in reading order. Storage and the editor binding are not part of that
 module yet.
 
 Before implementing import/export, the conformance cases must cover identity
