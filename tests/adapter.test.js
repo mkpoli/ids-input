@@ -170,6 +170,13 @@ describe('the shipped data', () => {
     expect(ids.has('𫜺')).toBe(false)
   })
   const ids = parseIdsTable(require('node:zlib').gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
+  it('includes zi.tools operator modifiers, without variant notes or stroke chains', () => {
+    const table = parseIdsTable(require('node:zlib').gunzipSync(readFileSync(new URL('../data/yi-bai-ids.tsv.gz', import.meta.url))).toString())
+    expect(table.get('甲')).toEqual([{ text: '⿻[1:]丨日', regions: '' }])
+    const written = [...table.values()].flat().map(sequence => sequence.text)
+    expect(written.some(text => /[()]|^\{/u.test(text))).toBe(false)
+    expect(written.some(text => text.includes('#('))).toBe(false)
+  })
   it('holds every ideograph of BabelStone IDS', () => {
     expect(ids.size).toBe(97680 + 6145)
     expect(ids.get('滑')?.map(s => s.text)).toContain('⿰氵骨')
@@ -197,6 +204,12 @@ describe('an encoded character', () => {
   it('is found by the description it has, exactly', async () => {
     const adapter = babelStoneAdapter({ table })
     expect(await adapter.encoded('⿰木木')).toEqual(['林'])
+    // A zi.tools modifier narrows which character a description names; the plain one still follows.
+    const modifier = '甲\t⿻[1:]丨日\n由\t⿻[:-1]丨日\n申\t⿻丨日\n'
+    const exact = babelStoneAdapter({ ids: 'modifiers', fetch: async () => new Response(modifier), worker: null })
+    expect(await exact.encoded('⿻[1:]丨日')).toEqual(['甲', '申'])
+    expect(await exact.encoded('⿻[:-1]丨日')).toEqual(['由', '申'])
+    expect(await exact.encoded('⿻丨日')).toEqual(['申'])
     expect(await adapter.encoded('⿳𭁟冖⺼')).toEqual(['骨'])
     expect(await adapter.encoded('⿰木口')).toEqual([])
     expect(await adapter.encoded('一')).toEqual([])
