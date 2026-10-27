@@ -169,6 +169,10 @@
   }
 
   let theme = $state(storedTheme())
+  const savedTint = load('tintMode', 'hover')
+  /** @type {import('../src/svelte/editor.svelte.js').TintMode} */
+  let tintMode = $state(savedTint === 'on' || savedTint === 'off' ? savedTint : 'hover')
+  $effect(() => save('tintMode', tintMode === 'hover' ? undefined : tintMode))
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
   /** @type {'sans' | 'serif' | 'klee'} */
@@ -201,7 +205,7 @@
   }
 
   const uid = $props.id()
-  const editor = createEditor(() => ({ adapter, messages, locale }))
+  const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
@@ -711,7 +715,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
-<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">

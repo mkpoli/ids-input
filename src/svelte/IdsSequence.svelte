@@ -121,7 +121,7 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
@@ -142,7 +142,7 @@
   .ids-title{font-size:11px;color:var(--_muted)}
   .sequence-wrap{position:relative;min-width:0}
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
-  .sequence-paint span{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent);border-radius:3px}
+  .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
   input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;padding:6px 10px;font-family:var(--_font);color:inherit;
     border:1px solid var(--_line);border-radius:8px;background:transparent}
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
@@ -152,6 +152,6 @@
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
-  .sequence-paint span.hovered{background:color-mix(in oklab,var(--tint) 30%,transparent);box-shadow:inset 0 -2px var(--_accent)}
-  .sequence-paint span.selected{background:color-mix(in oklab,var(--_accent) 22%,var(--tint) 12%);box-shadow:inset 0 -2px var(--_accent)}
+  .sequence-paint span.hovered{box-shadow:inset 0 -2px var(--_accent)}
+  .sequence-paint span.selected{background:color-mix(in oklab,var(--_accent) 22%,transparent);box-shadow:inset 0 -2px var(--_accent)}
 </style>

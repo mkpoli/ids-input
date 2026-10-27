@@ -116,7 +116,7 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={rowLabel(row)} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
@@ -154,6 +154,6 @@
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}
   .part.empty{font-size:15px;color:var(--_muted)}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
-  li{background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  li:where(.tinted){background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
   li.hovered{box-shadow:inset 0 0 0 2px color-mix(in oklab,var(--_accent) 65%,transparent)}
 </style>
