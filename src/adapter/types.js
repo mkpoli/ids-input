@@ -62,6 +62,7 @@
  * @property {(query: string, options?: Options) => Promise<Found[]>} [searchCharacters] Characters whose readings or meanings match what is typed.
  * @property {(sequence: string, options?: Options) => Promise<string[]>} [encoded] The encoded characters a whole description describes exactly.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'extra' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core).
+ * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.

@@ -17,6 +17,7 @@
 import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
+import { createStructuralSearch } from './structural-search.js'
 import { searchShape, SHAPE_COMPONENTS } from './search-shapes.js'
 
 /**
@@ -676,5 +677,6 @@ export function createSearch(table, { forms = new Map() } = {}) {
     })
     return { hits, total: found.length }
   }
-  return { search, index: () => { index() }, fold }
+  const structural = createStructuralSearch(table, { forms })
+  return { search, structure: structural.search, index: () => { index() }, fold }
 }

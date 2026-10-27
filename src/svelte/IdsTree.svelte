@@ -1,5 +1,6 @@
 <script>
   import { tint } from './tokens.js'
+  import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
@@ -63,6 +64,10 @@
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
+  /** @type {{ path: Path } | null} */ let editing = $state(null)
+  /** The first click's target, retained if selection changes the layout before the second click. @type {string | null} */ let clickPath = null
+  /** @param {Path} path */
+  function editPart(path) { if (!editor.disabled) { editor.choose(path, { toggle: false }); editing = { path } } }
   /** @param {Path} path @param {number} x @param {number} y */
   function openMenu(path, x, y) {
     if (editor.disabled) return
@@ -76,6 +81,7 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
       const next = neighbor(editor.tree, path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
       if (path.length && !editor.disabled) { event.preventDefault(); if (next) { editor.reorder(path, next); editor.focusChosen(rootEl) } }
@@ -110,7 +116,7 @@
     const target = /** @type {HTMLElement} */ (event.target)
     const frame = /** @type {HTMLElement} */ (event.currentTarget)
     const parts = /** @type {HTMLElement | null} */ (frame.querySelector(':scope > .ids-parts'))
-    if (target.closest('button') || parts?.contains(target)) return
+    if (target.closest('button,.inline-edit') || parts?.contains(target)) return
     editor.choose(path)
   }
 </script>
@@ -129,7 +135,11 @@
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
-        <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
+        {#if editing && samePath(editing.path, path)}
+          {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} onclose={() => editing = null} />{/key}
+        {:else}
+          <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
+        {/if}
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrap')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -141,11 +151,15 @@
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
+    {#if editing && samePath(editing.path, path)}
+      {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
+    {:else}
     <button type="button" class="ids-part" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+    {/if}
   {/if}
 {/snippet}
 
@@ -154,7 +168,16 @@
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)}>
+  }} onpointerleave={() => editor.hover(null)} onclickcapture={event => {
+    if (event.detail !== 1) return
+    const target = /** @type {HTMLElement} */ (event.target)
+    clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
+  }} ondblclick={event => {
+    if (clickPath == null) return
+    const path = clickPath
+    const anchor = /** @type {HTMLElement | null | undefined} */ (rootEl?.querySelector(`[data-hover-path="${CSS.escape(path)}"]`))
+    if (anchor) { event.preventDefault(); editPart(path === '' ? [] : path.split('.').map(Number)) }
+  }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
@@ -215,6 +238,7 @@
   .ids-op :global(svg *){vector-effect:none}
   .ids-parts{flex:1;display:flex;gap:6em;min-width:0;min-height:0}
   .ids-cell{flex:1;display:grid;min-width:0;min-height:0;container-type:size}
+  .ids-cell:has(:global(.inline-edit)){position:relative;z-index:2}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits

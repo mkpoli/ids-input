@@ -26,7 +26,7 @@ gzipped, 2.2 MB as text.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,699 Han entries (694 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,711 Han entries (706 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -252,8 +252,8 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The manual four-dot entry
-brings the compound total to seventeen. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The thirteen manual entries
+bring the compound total to twenty-nine. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -318,6 +318,69 @@ length only and translating the bars vertically to retain their stroke thickness
 Both forms have Sans/Serif outlines. The four-bar form keeps two editable columns;
 the atomic upper-卑 drawing falls back to individual operands in adjustment mode
 when the configured export supplies them.
+
+The shared enclosures of 彥/產 and 彦/産 are manual literal shortcuts:
+`⿳亠㐅厂` (also rendered/searched as `⿱文厂`) and `⿳亠丷厂`.
+Both have an estimated six strokes and appear in Common and Stroke count.
+The latter deliberately remains IDS despite its encoded equivalent 产 (`U+4EA7`),
+so selecting it preserves the component spelling. Its 29 direct corpus uses
+combine the literal IDS and 产; the former has zero exact subtree matches
+because descriptions such as `⿳亠㐅⿸厂彡` distribute its strokes across nodes.
+This count does not assert that the visible component is absent from 彥 or 產.
+The traditional outline is extracted from Noto 產 with 生 removed; the other
+uses Noto 产. Both preserve the native em, stroke weight and long 厂 stroke,
+with separate Sans/Serif outlines. These are atomic native previews;
+adjustment mode uses operand outlines when available. Native compound previews use
+outline-based layout rather than extrapolating the learned glyph layout model;
+Kaisho keeps its export layout. Source aliases remain
+searchable and visible in tooltips, without changing the inserted IDS.
+
+These curated components were suggested by परवद💙💛
+([@zoenshiueh_lieu](https://x.com/zoenshiueh_lieu)). The zi.tools stroke-chain
+and overlap notation is recorded as a search alias; selected items insert the
+standard Unicode IDS shown below, without adding a second parser dialect.
+
+| Shortcut | Direct source uses | Estimated strokes | Host examples |
+| --- | ---: | ---: | --- |
+| `⿻𢆶戈` | 9 | 10 | 幾、畿 |
+| `⿸尸彳` | 0 | 6 | 屐、履 |
+| `㇯鹿比` | 27 | 7 | 鹿、慶 |
+| `㇯馬灬` | 13 | 6 | 馬、𩡧 |
+| `㇯鳥灬` | 25 | 7 | 鳥、島 |
+| `⿳亠口冖` | 28 | 7 | 亭、亮 |
+| `⿸尸氺` | 1 | 8 | 犀、𣺳 |
+| `⿳𰀉冖木` | 0 | 11 | 橐、櫜 |
+| `⿳卝罒冖` | 2 | 11 | 夢、𮒽 |
+| `⿱丿乚` | 5 | 2 | 𦨊、𠝉 |
+
+The three zi.tools spellings correspond to the outside of 鹿, 馬 without 灬,
+and 鳥 without 灬, as confirmed by the host entries in
+[Yi Bai's IDS data](https://github.com/yi-bai/ids/blob/da1e9f8a09e2ec8faaf176bac99203f978282041/ids_lv0.txt):
+`⿸广⿻[:-1]〢コ`, `⿷#(-一丨b𠃌)𰀁`, and
+`⿱丿⿷⿴#(一-𠃍丨b𠃌)一一`. Their original strings remain searchable.
+BabelStone placeholders `{29}`, `{55}`, `{51}`, `{47}`, and `{87}` supply
+counts for the corresponding native forms. `{29}` names the outside of 幾/畿;
+its approximate replacement uses 弋, while this requested drawing preserves 戈.
+The three reviewed subtractions have explicit stroke estimates. Other
+subtractions still have unknown stroke counts.
+
+Nine previews use pinned Noto native host outlines: 畿 without 田, 屐 without
+支, 鹿 without 比, 馬/鳥 without 灬, 亭 without 丁, 犀 without 牛, 橐 without
+石, and 夢 without 夕. The TC font face supplies 氺 in 犀 and the separated
+four-stroke 卝 in 夢. The Serif 夢 preview combines its crown with the native
+冖 from 亭, translated down 70 font units. Removed connected outlines are
+reconstructed at existing path points; remaining strokes keep native thickness
+and placement. `⿱丿乚` uses ordinary composition.
+
+Frequency alone cannot select every useful visual part. The raw report counts
+exact written subtrees, not recursive expansions through encoded characters,
+regroupings across node boundaries, or all Unicode-equivalent spellings.
+For example, 履 is recorded as `⿸尸復`; 橐 uses `{38}` above 䂞; and 夢's
+crown is usually split across a ternary root. The current automatic cutoff is
+30 distinct characters below the root. Curated entries and reviewed aliases
+therefore supplement that ranking. The counts above are direct corpus counts,
+not estimates of how often the visible shapes occur after expansion. The raw
+frequency report and automatic cutoff are unchanged.
 
 ## Small Seal
 
