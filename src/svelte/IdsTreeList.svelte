@@ -59,6 +59,12 @@
     focusKey = key
     queueMicrotask(() => /** @type {HTMLElement | null | undefined} */ (listEl?.querySelector(`[data-path="${CSS.escape(key)}"]`))?.focus())
   }
+  /** Expand the ancestors of the slot selected after editing. @param {Path} path */
+  function reveal(path) {
+    const next = new Set(collapsed)
+    for (let i = 0; i < path.length; i++) next.delete(key(path.slice(0, i)))
+    collapsed = next
+  }
   /** @param {Row} row */
   function toggle(row) {
     const next = new Set(collapsed)
@@ -139,7 +145,7 @@
       </li>
     {/each}
   </ul>
-  {#if editing}{#key editing}<IdsInlineEdit {editor} path={editing.path} anchor={editing.anchor} onclose={() => editing = null} />{/key}{/if}
+  {#if editing}{#key editing}<IdsInlineEdit {editor} path={editing.path} anchor={editing.anchor} onreveal={reveal} onclose={() => editing = null} />{/key}{/if}
 </div>
 
 <style>

@@ -3,8 +3,8 @@
   import { tick, untrack } from 'svelte'
   import { parse, place, samePath, write } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
-  /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, anchor: HTMLElement, onclose: () => void }} */
-  let { editor, path, anchor, onclose } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, anchor: HTMLElement, onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
+  let { editor, path, anchor, onclose, onreveal } = $props()
   const targetPath = untrack(() => path)
   const targetAnchor = untrack(() => anchor)
   const initialValue = untrack(() => editor.sequenceAt(targetPath))
@@ -34,6 +34,7 @@
   /** @param {boolean} [followSelection] */
   function close(followSelection = false) {
     const focusPath = followSelection ? editor.chosen ?? targetPath : targetPath
+    if (followSelection) onreveal?.(focusPath)
     onclose()
     tick().then(() => requestAnimationFrame(() => {
       const target = samePath(focusPath, targetPath) && targetAnchor.isConnected && targetAnchor.matches('button,[tabindex]')
