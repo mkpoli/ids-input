@@ -43,12 +43,15 @@ export function parseIdsTable(text) {
 
 /**
  * The palette file's rows as objects.
- * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string> } }} document
+ * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
  * @returns {PalettePart[]}
  */
 export const paletteRows = ({ columns, parts, subtrees }) => parts.map(row => {
   const part = /** @type {PalettePart} */ (Object.fromEntries(columns.map((name, i) => [name, row[i]])))
-  const aliases = Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids)
+  const aliases = [...new Set([
+    ...Object.entries(subtrees?.encoded ?? {}).filter(([, encoded]) => encoded === part.part).map(([ids]) => ids),
+    ...(subtrees?.sourceAliases?.[part.part] ?? []),
+  ])]
   if (aliases.length) part.aliases = aliases
   return part
 })
