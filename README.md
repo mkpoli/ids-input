@@ -154,8 +154,8 @@ compound cells show their sequence and expose the stroke count on hover. `adapte
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
-`--ids-font` and others; see the top of each component's style). The defaults use `light-dark()`,
-so the page needs `color-scheme: light dark` for its dark scheme.
+`--ids-font`, `--ids-glyph-fallback` and others; see the top of each component's style). The defaults
+use `light-dark()`, so the page needs `color-scheme: light dark` for its dark scheme.
 
 ### Core
 
@@ -183,7 +183,9 @@ allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D�
 A combining mark fills an operand slot when one is due, and trails the whole description when the
 description is complete; only a variation selector attaches to the preceding component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 56,651 bundled font
-outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
+outlines, including 〇, 〆, Greek, Cyrillic and other scripts. `fonts.css` offers the same outlines
+to text as the `IDS Fallback` webfont, placed after the reader's fonts, so a character no installed
+font draws appears in its shape rather than a missing-glyph box. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
 The seven code points above are the positions OBAYASHI Muneaki proposed for the four letters the

@@ -5,6 +5,7 @@
    range and is imported first; it is the face that carries those glyphs, since the general subset
    omits them. The rest of the text falls through to the page's own fonts.
    See fonts/README.md for their sources and licences. */
+@import url("./unicode.css");
 @font-face{font-family:"IDS Parts";src:url("./Plangothic-ids-parts.woff2") format("woff2");font-display:swap;
   unicode-range:U+2E80-2EFF,U+31E4-31EF,U+20000-3FFFF}
 @font-face{font-family:"IDS Project";src:url("./Plangothic-ids-project.woff2") format("woff2");font-display:swap;
