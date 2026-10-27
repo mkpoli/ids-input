@@ -31,10 +31,13 @@
   })
   $effect(() => { if (input) tick().then(() => { input?.focus(); input?.select() }) })
   $effect(() => { if (editor.revision !== revision || !samePath(editor.chosen, targetPath)) onclose() })
-  function close() {
+  /** @param {boolean} [followSelection] */
+  function close(followSelection = false) {
+    const focusPath = followSelection ? editor.chosen ?? targetPath : targetPath
     onclose()
     tick().then(() => requestAnimationFrame(() => {
-      const target = targetAnchor.isConnected && targetAnchor.matches('button,[tabindex]') ? targetAnchor : owner?.querySelector(`[data-path="${CSS.escape(targetPath.join('.'))}"]`)
+      const target = samePath(focusPath, targetPath) && targetAnchor.isConnected && targetAnchor.matches('button,[tabindex]')
+        ? targetAnchor : owner?.querySelector(`[data-path="${CSS.escape(focusPath.join('.'))}"]`)
       if (target instanceof HTMLElement) target.focus()
     }))
   }
@@ -43,21 +46,21 @@
   function apply() {
     const text = value.trim()
     if (text === initialValue) { close(); return }
-    if (!text || text === '⬚' || text === '＋') { editor.empty(targetPath); close(); return }
+    if (!text || text === '⬚' || text === '＋') { editor.empty(targetPath); close(true); return }
     const literal = parse(text, { open: true })
     const found = literal.problem ? parse(unalias(text), { open: true }) : literal
     if (found.problem) { error = editor.t(`ids.problem.${found.problem}`); return }
-    if (found.tree === null) { editor.empty(targetPath); close(); return }
+    if (found.tree === null) { editor.empty(targetPath); close(true); return }
     const problem = parse(write(place(editor.tree, targetPath, found.tree).tree), { open: true }).problem
     if (problem) { error = editor.t(`ids.problem.${problem}`); return }
-    editor.put(found.tree, targetPath); close()
+    editor.put(found.tree, targetPath); close(true)
   }
 </script>
 
 <div class="inline-edit" role="group" aria-label={editor.t('ids.inline.label')} style:left="{left}px" style:top="{top}px">
   <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oncompositionstart={() => composing = true} oncompositionend={() => composing = false} />
   <button type="button" onkeydown={key} onclick={() => { if (!composing) apply() }} disabled={editor.disabled}>{editor.t('ids.inline.apply')}</button>
-  <button type="button" onkeydown={key} onclick={close}>{editor.t('ids.inline.cancel')}</button>
+  <button type="button" onkeydown={key} onclick={() => close()}>{editor.t('ids.inline.cancel')}</button>
   {#if error}<span class="error" role="status">{error}</span>{/if}
 </div>
 
