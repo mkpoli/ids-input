@@ -702,11 +702,11 @@ characters require a host-supplied mapping and never inherit Unifont's private a
 
 ### Other script parts
 
-`script-parts.json.gz` groups additional scripts from bundled Unicode outlines and
-palette entries by Unicode Script. `script-parts-index.json`
+`script-parts.json.gz` groups the symbols and additional scripts that bundled Unicode outlines
+draw, plus palette entries, by Unicode Script. Symbols and mixed-script descriptions have no other
+palette view, so the Other scripts selector offers them alongside the named scripts. `script-parts-index.json`
 holds group sizes, and `script-parts-metadata.json` pins the sources. Existing Han, Latin,
-Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded. Mixed-script
-descriptions and common symbols are also excluded; this index adds only other scripts.
+Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded.
 
 To rebuild, run `node scripts/build_script_parts.mjs`. The builder uses Unicode 18.0 `Scripts.txt` and `PropertyValueAliases.txt`, checked against pinned SHA-256
 hashes. Unicode data is distributed under the Unicode License v3; see
