@@ -183,6 +183,8 @@ describe('the composer', () => {
       expect(leaves.map(leaf => leaf.index)).toEqual(leaves.map((_, i) => i))
     }
     expect((await compose(source, '⿴𨺅木')).approximate).toEqual(['⿾'])
+    // A zi.tools modifier is kept with the description; the layout draws the description alone.
+    expect((await compose(source, '⿴[1]𨺅木')).approximate).toEqual(['⿾', '⿴'])
     const leaves = await sketch(source, '⿴行氵')
     const explicit = await sketch(source, '⿲彳氵亍')
     expect(leaves).toHaveLength(2)
