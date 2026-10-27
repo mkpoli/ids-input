@@ -4,6 +4,7 @@ import constants from './constants.json' with { type: 'json' }
 
 export function bundledSource({ load, matches, fallback = null }) {
   let ready = null, records = null
+  const owns = key => matches(key) && records?.[key] != null
   const source = {
     manifest: null, layout: null,
     ready() {
@@ -14,14 +15,14 @@ export function bundledSource({ load, matches, fallback = null }) {
       }).catch(error => { ready = null; throw error })
     },
     load: names => fallback ? fallback.load(names) : Promise.resolve(),
-    filesOf: keys => fallback ? fallback.filesOf(keys.filter(key => !matches(key))) : new Set(),
+    filesOf: keys => fallback ? fallback.filesOf(keys.filter(key => !owns(key))) : new Set(),
     store() {
       const remote = fallback?.store()
       return {
         manifest: source.manifest, layout: source.layout, missing: remote?.missing ?? new Set(),
-        rec: key => matches(key) ? records[key] ?? null : remote?.rec(key) ?? null,
-        hosts: (key, place) => matches(key) ? [] : remote?.hosts(key, place) ?? [],
-        places: key => matches(key) ? [] : remote?.places(key) ?? [],
+        rec: key => owns(key) ? records[key] ?? null : remote?.rec(key) ?? null,
+        hosts: (key, place) => owns(key) ? [] : remote?.hosts(key, place) ?? [],
+        places: key => owns(key) ? [] : remote?.places(key) ?? [],
       }
     },
   }
