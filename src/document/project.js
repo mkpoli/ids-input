@@ -2,8 +2,8 @@
 // The bridge between the editor's positional core tree and the identified document. The core tree
 // stays the projection the existing controls edit; this module reconciles it into a document at the
 // same paths, keeping each layer's ID, name and transform through replacements and structural edits.
-import { parse, write } from '../core/ids.js'
-import { allocatorFor, assertDocument, fromSequence } from './model.js'
+import { parse, sameTree, write } from '../core/ids.js'
+import { DocumentError, allocatorFor, assertDocument, fromSequence } from './model.js'
 
 /** @typedef {import('../core/ids.js').Part} Part */
 /** @typedef {import('../core/ids.js').Node} TreeNode */
@@ -57,6 +57,15 @@ function reconcile(old, part, allocator) {
   return operator
 }
 
+/** The description of `tree`, refusing one whose parts would read back differently. @param {Part} tree */
+function project(tree) {
+  const text = write(tree), read = parse(text, { open: true })
+  if (read.problem || !sameTree(read.tree, tree)) {
+    throw new DocumentError([{ path: '/root', message: 'tree does not project to the same parts' }])
+  }
+  return text
+}
+
 /**
  * Reconcile `tree` into `document`, preserving identity and transforms layer by layer. `allocator`
  * must be the long-lived allocator of the editing session so removed layers do not return; without
@@ -64,6 +73,7 @@ function reconcile(old, part, allocator) {
  * @param {Document} document @param {Part} tree @param {{ allocator?: Allocator }} [options] @returns {Document}
  */
 export function syncDocument(document, tree, { allocator = allocatorFor(document) } = {}) {
+  project(tree)
   const root = reconcile(document.root, tree, allocator)
   const next = { ...document, root }
   assertDocument(next)
@@ -75,5 +85,5 @@ export function syncDocument(document, tree, { allocator = allocatorFor(document
  * @returns {Document}
  */
 export function documentFromTree(tree, { id = 'root', allocator } = {}) {
-  return fromSequence(write(tree), { id, ...(allocator ? { allocator } : {}) })
+  return fromSequence(project(tree), { id, ...(allocator ? { allocator } : {}) })
 }

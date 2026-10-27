@@ -384,6 +384,7 @@
     <button type="button" class="compose-result" data-character={composed?.text} disabled={disabled || !composed}
       title={composed ? `${composed.text} · ${codePoints(composed.text)}` : undefined}
       aria-label={composed ? `${t('parts.hangul.insert')} ${composed.text}` : t('parts.hangul.compose')}
+      aria-describedby={composed && !composed.precomposed ? `${uid}-hangul-note` : undefined}
       onclick={pickComposed}>
       <span class="compose-glyph">{composed?.text ?? ''}</span>
       <span class="compose-detail">
@@ -391,7 +392,8 @@
         <span class="compose-action">{t('parts.hangul.insert')}</span>
       </span>
     </button>
-    {#if composed && !composed.precomposed}<p class="parts-note">{t('parts.hangul.oldCluster')}</p>{/if}
+    {#if composed && !composed.precomposed}<p class="parts-note" id={`${uid}-hangul-note`}>{t('parts.hangul.oldCluster')}</p>{/if}
+    <p class="compose-live" aria-live="polite">{composed ? `${composed.text} ${codePoints(composed.text)}` : ''}</p>
   </div>
 {/snippet}
 
@@ -564,6 +566,7 @@
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .compose-code{font:11px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow-wrap:anywhere}
   .compose-action{font-size:12px;color:var(--_accent)}
+  .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}

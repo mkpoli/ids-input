@@ -25,6 +25,12 @@ describe('a document from IDS', () => {
     expect(right.char).toBe('木')
     expect(left.id).not.toBe(right.id)
   })
+  it('projects an Old Hangul jamo run as one component', () => {
+    const cluster = String.fromCodePoint(0x1100, 0x1161, 0x11eb), text = `⿰${cluster}木`
+    const document = fromSequence(text)
+    expect(toSequence(document.root)).toBe(text)
+    expect(toSequence(readDocument(writeDocument(document)).root)).toBe(text)
+  })
   it('refuses text that is not an open IDS draft', () => {
     expect(() => fromSequence('木口')).toThrow(DocumentError)
     expect(() => fromSequence('⿰木')).not.toThrow()

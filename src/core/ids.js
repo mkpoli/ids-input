@@ -148,6 +148,11 @@ export function descriptionEnd(chars, at = 0) {
 /** Whether `part` is a node. @param {Part | undefined} part @returns {part is Node} */
 export const isNode = part => part !== null && typeof part === 'object'
 
+/** Whether two parts have the same operators and components, ignoring extra fields.
+ * @param {Part} a @param {Part} b @returns {boolean} */
+export const sameTree = (a, b) => a === b || isNode(a) && isNode(b) && a.op === b.op
+  && a.parts.length === b.parts.length && a.parts.every((part, i) => sameTree(part, b.parts[i]))
+
 /** A tree written back as a description, an empty slot as ⬚. @param {Part} tree @returns {string} */
 export const write = tree => tree === null ? EMPTY : isNode(tree) ? tree.op + tree.parts.map(write).join('') : tree
 

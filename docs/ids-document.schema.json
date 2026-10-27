@@ -280,7 +280,7 @@
             "char": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 2
+              "maxLength": 64
             }
           }
         }

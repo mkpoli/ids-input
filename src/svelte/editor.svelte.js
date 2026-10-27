@@ -11,7 +11,7 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, reorderSiblings, samePath, unwrap,
+import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, reorderSiblings, samePath, sameTree, unwrap,
   write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
@@ -148,6 +148,7 @@ export function createEditor(options) {
   function apply(next, select, label, { destructive = false, reorder } = {}) {
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
+    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}) }

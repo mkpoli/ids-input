@@ -5,6 +5,7 @@
 // it, projects a document to IDS and builds one from IDS. A renderer, storage and the editor binding
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
+import { hangulClusterAt } from '../core/hangul.js'
 import { arity, isComponent, isSelector, parse } from '../core/ids.js'
 import { inspectJson } from './json.js'
 
@@ -249,10 +250,15 @@ function validateNode(value, path, depth, ids, issues) {
   validateLayerFields(value, path, issues)
   if (value.kind === 'component') {
     closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'extensions'], path, issues)
-    if (typeof value.char !== 'string' || [...value.char].length < 1 || [...value.char].length > 2) {
-      issues.push({ path: `${path}/char`, message: 'a component is one character and at most one selector' })
+    const chars = typeof value.char === 'string' ? [...value.char] : []
+    const cluster = chars.length ? hangulClusterAt(chars, 0) : null
+    const run = Boolean(cluster && cluster.end === chars.length)
+    if (typeof value.char !== 'string' || !chars.length || !run && chars.length > 2) {
+      issues.push({ path: `${path}/char`, message: 'a component is one character, at most one selector, or a Hangul jamo run' })
+    } else if (run) {
+      if (!isComponent(chars[0])) issues.push({ path: `${path}/char`, message: 'not a component' })
     } else {
-      const [first, second] = [...value.char]
+      const [first, second] = chars
       if (!isComponent(first)) issues.push({ path: `${path}/char`, message: 'not a component' })
       if (second !== undefined && !isSelector(second)) issues.push({ path: `${path}/char`, message: 'not a variation selector' })
     }

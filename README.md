@@ -39,7 +39,7 @@ tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 The Hangul tab composes a syllable from initial, medial and final jamo, modern or historical, and
 inserts the precomposed syllable or the Old Hangul jamo run. Its filter searches the 11,172 modern
-syllables by character or code point.
+syllables by character, jamo or code point.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -162,8 +162,8 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
 private-use character, with an optional variation selector. A run of conjoining Hangul jamo that
-forms one syllable is one component; modern jamo compose to a precomposed syllable, while Old Hangul
-stays a jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
+forms one syllable is one component; the Hangul palette writes modern combinations as a precomposed
+syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F.
