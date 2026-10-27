@@ -691,8 +691,14 @@
       <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#key activeId}
-            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
-              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
+              {#snippet detailContent()}
+                {#each encoded as ch (ch)}
+                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                {/each}
+              {/snippet}
+            </IdsPreview>
           {/key}
           <div class="adjust">
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
@@ -803,6 +809,11 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+  .encoded-character code{font:11px ui-monospace,monospace}
+  .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
+  .encoded-character button:hover{color:var(--ink);background:var(--hover)}
+  .encoded-character button:focus-visible{outline:2px solid var(--focus)}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}

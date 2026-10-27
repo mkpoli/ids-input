@@ -22,9 +22,9 @@
 
   /** @typedef {{ dx?: number, dy?: number, scale?: number, rotate?: number }} PartAdjustment */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, drawing?: Drawing | null, editable?: boolean, adjustments?: Record<string, PartAdjustment>, onchoose?: ((path: Path) => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, editable?: boolean, adjustments?: Record<string, PartAdjustment>, onchoose?: ((path: Path) => void) | null }}
    */
-  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', drawing = $bindable(null),
+  let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
     editable = false, adjustments = $bindable({}), onchoose = null } = $props()
   const t = $derived(translator(messages, locale))
 
@@ -343,7 +343,7 @@
   {#if small || !quiet}
     <figcaption class="ids-preview-meta">
       {#if small}<div class="ids-preview-small">{@render picture('small', false)}</div>{/if}
-      {#if detail}<code class="ids-preview-detail">{detail}</code>{/if}
+      {#if detailContent}{@render detailContent()}{:else if detail}<code class="ids-preview-detail">{detail}</code>{/if}
       {#if !quiet}
         {#if step === 'loading'}<span class="ids-preview-spinner" aria-hidden="true"></span>{/if}
         <span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>
