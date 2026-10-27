@@ -123,5 +123,14 @@
   "app.theme.light": "淺色",
   "app.theme.system": "跟隨系統",
   "app.title": "IDS工坊",
-  "app.toolbar": "工具"
+  "app.toolbar": "工具",
+  "app.replacement.title": "替換部件",
+  "app.replacement.help": "輸入一個字，再替換其中的一個部件。結果會在工作區中開啟，保留目前作品。",
+  "app.replacement.source": "漢字",
+  "app.replacement.target": "要替換的部件",
+  "app.replacement.replacement": "替換為",
+  "app.replacement.submit": "開啟結果",
+  "app.replacement.loading": "正在查找部件…",
+  "app.replacement.notFound": "在該字中找不到這個部件。",
+  "app.replacement.failed": "無法查詢該字，請重試。"
 }

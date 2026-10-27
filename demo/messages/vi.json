@@ -125,5 +125,14 @@
   "app.examples.complex": "Cấu trúc phức tạp",
   "app.examples.repeated": "Bộ phận lặp lại",
   "app.examples.enclosures": "Kết cấu bao quanh",
-  "app.examples.mixed": "Hệ chữ hỗn hợp"
+  "app.examples.mixed": "Hệ chữ hỗn hợp",
+  "app.replacement.title": "Thay bộ phận",
+  "app.replacement.help": "Chọn một chữ rồi thay một bộ phận của chữ đó. Kết quả mở trong vùng làm việc và giữ nguyên nội dung hiện tại.",
+  "app.replacement.source": "Chữ",
+  "app.replacement.target": "Bộ phận cần thay",
+  "app.replacement.replacement": "Thay bằng",
+  "app.replacement.submit": "Mở kết quả",
+  "app.replacement.loading": "Đang tìm bộ phận…",
+  "app.replacement.notFound": "Không tìm thấy bộ phận đó trong chữ.",
+  "app.replacement.failed": "Không thể tra chữ này. Vui lòng thử lại."
 }

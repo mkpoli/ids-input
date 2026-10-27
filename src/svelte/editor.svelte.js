@@ -17,6 +17,7 @@ import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
 import { lookupChar } from '../core/decompose.js'
+import { replacementPrefix, replacementQuery, resolveReplacement } from '../core/replacement.js'
 import { createLookup } from './lookup.svelte.js'
 import { translator } from './i18n.js'
 
@@ -63,6 +64,7 @@ export function createEditor(options) {
   const history = createHistory(100)
   let steps = $state.raw(/** @type {{ done: string[], undone: string[] }} */ ({ done: [], undone: [] }))
   let typing = false, run = false, changes = 0
+  /** @type {AbortController | null} */ let resolution = null
   const lookup = createLookup(() => options().adapter)
   /** @type {((text: string, whole: boolean) => void)[]} */
   const listeners = []
@@ -94,9 +96,27 @@ export function createEditor(options) {
     const ok = isNode(tree) && !nextEmpty(tree) && !parse(done, { open: true }).problem && isDescription(write(tree))
     for (const listen of listeners) listen(done, ok)
   }
+  /** Resolve complete zi.tools replacement input without overwriting a later edit.
+   * @param {string} input */
+  function resolveInput(input) {
+    const query = replacementQuery(input)
+    if (!query || disabled()) return
+    cancelResolution()
+    const controller = new AbortController()
+    resolution = controller
+    const ticket = revision, adapter = options().adapter
+    resolveReplacement(query, char => adapter.structure(char, { signal: controller.signal }), { signal: controller.signal }).then(result => {
+      if (result === null || revision !== ticket || draft !== input || disabled() || options().adapter !== adapter) return
+      apply(result, null, t('ids.do.type', { text: write(result) }))
+    }).catch(() => { /* Leave the original input in place if the data cannot be read. */ })
+      .finally(() => { if (resolution === controller) resolution = null })
+  }
+  function cancelResolution() { resolution?.abort(); resolution = null }
+  function invalidateResolution() { revision++; cancelResolution() }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
-    revision++; history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
+    invalidateResolution()
+    history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -105,7 +125,8 @@ export function createEditor(options) {
   }
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
-    revision++; caret = null
+    invalidateResolution()
+    caret = null
     hovered = null
     tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
@@ -152,7 +173,8 @@ export function createEditor(options) {
   }
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
-    revision++; caret = null
+    invalidateResolution()
+    caret = null
     hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
@@ -248,14 +270,15 @@ export function createEditor(options) {
   /** The field, read as it is typed: ASCII operator names become operators where the caret is. @param {HTMLInputElement} field */
   function edit(field) {
     const typedText = field.value, caret = field.selectionStart ?? typedText.length
-    const written = unalias(typedText)
+    // RP's operands may themselves be Latin letters; do not turn an operand into an IDC alias.
+    const written = replacementPrefix(typedText) ? typedText : unalias(typedText)
     if (written !== typedText) {
       const at = [...unalias(typedText.slice(0, caret))].length
       field.value = written
       const offset = [...written].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
     }
-    if (draft !== written) revision++
+    if (draft !== written) invalidateResolution()
     draft = written
     const found = parse(written, { open: true })
     if (found.problem) { sync(); return }
@@ -371,6 +394,7 @@ export function createEditor(options) {
     get t() { return t },
     lookup, name, text, pathKey,
     reset, operator, put, take, reorder, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
     /** Hear every change: the text and whether it is a whole description. @param {(text: string, whole: boolean) => void} listen */
