@@ -1,5 +1,6 @@
 <script>
   import { tint } from './tokens.js'
+  import IdsInlineEdit from './IdsInlineEdit.svelte'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
   // box. A click on a row chooses that part, a click on its arrow opens or closes its parts, and a
   // part dragged from a palette or a search drops onto the row. Arrow keys move, ArrowRight opens a
@@ -23,6 +24,9 @@
   let over = $state(null)
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
+  /** @type {{ path: Path, anchor: HTMLElement } | null} */ let editing = $state(null)
+  /** @param {Row} row @param {HTMLElement} anchor */
+  function editRow(row, anchor) { if (!editor.disabled) { editor.choose(row.path, { toggle: false }); editing = { path: row.path, anchor } } }
 
   /** @type {Row[]} */
   const rows = $derived.by(() => {
@@ -74,6 +78,7 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === 'F2') { event.preventDefault(); editRow(row, /** @type {HTMLElement} */ (event.currentTarget)); return }
     if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
@@ -120,7 +125,7 @@
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={rowLabel(row)} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
-        onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
+        onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} ondblclick={event => { if (!/** @type {HTMLElement} */ (event.target).closest('[data-toggle]')) editRow(row, /** @type {HTMLElement} */ (event.currentTarget)) }} onkeydown={event => keyRow(event, index)}
         ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
         {#if row.node}
@@ -134,6 +139,7 @@
       </li>
     {/each}
   </ul>
+  {#if editing}{#key editing}<IdsInlineEdit {editor} path={editing.path} anchor={editing.anchor} onclose={() => editing = null} />{/key}{/if}
 </div>
 
 <style>

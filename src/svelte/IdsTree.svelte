@@ -1,5 +1,6 @@
 <script>
   import { tint } from './tokens.js'
+  import IdsInlineEdit from './IdsInlineEdit.svelte'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
@@ -41,6 +42,10 @@
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
+  /** @type {{ path: Path, anchor: HTMLElement } | null} */ let editing = $state(null)
+  /** The first click's target, retained if selection changes the layout before the second click. @type {string | null} */ let clickPath = null
+  /** @param {Path} path @param {HTMLElement} anchor */
+  function editPart(path, anchor) { if (!editor.disabled) { editor.choose(path, { toggle: false }); editing = { path, anchor } } }
   /** @param {Path} path @param {number} x @param {number} y */
   function openMenu(path, x, y) {
     if (editor.disabled) return
@@ -54,6 +59,7 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === 'F2') { event.preventDefault(); editPart(path, /** @type {HTMLElement} */ (event.currentTarget)); return }
     if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) {
       event.preventDefault()
       const r = /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect()
@@ -126,8 +132,18 @@
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)}>
+  }} onpointerleave={() => editor.hover(null)} onclickcapture={event => {
+    if (event.detail !== 1) return
+    const target = /** @type {HTMLElement} */ (event.target)
+    clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
+  }} ondblclick={event => {
+    if (clickPath == null) return
+    const path = clickPath
+    const anchor = /** @type {HTMLElement | null | undefined} */ (rootEl?.querySelector(`[data-hover-path="${CSS.escape(path)}"]`))
+    if (anchor) { event.preventDefault(); editPart(path === '' ? [] : path.split('.').map(Number), anchor) }
+  }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
+  {#if editing}{#key editing}<IdsInlineEdit {editor} path={editing.path} anchor={editing.anchor} onclose={() => editing = null} />{/key}{/if}
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
     <!-- svelte-ignore a11y_interactive_supports_focus -->
