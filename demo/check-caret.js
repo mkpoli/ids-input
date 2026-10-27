@@ -36,6 +36,16 @@ try {
     f.dispatchEvent(new ClipboardEvent('paste', {clipboardData, bubbles:true, cancelable:true}))
   })
   assert.equal(await field.inputValue(), '⿲木水日')
+  // A zi.tools entry reads as its description: the notes around it are left out, and a caret
+  // beside a part still names that part.
+  const settled = (text) => page.waitForFunction(want => document.querySelector('.ids-field input')?.value === want, text)
+  await field.fill('{士}⿱十一')
+  await settled('⿱十一')
+  await select(2, 2)
+  await page.keyboard.insertText('水')
+  assert.equal(await field.inputValue(), '⿳十水一')
+  await field.fill('⿻乚一(.,T)')
+  await settled('⿻乚一')
   await field.fill('⿰木日')
   await select(2, 2)
   const cdp = await page.context().newCDPSession(page)
