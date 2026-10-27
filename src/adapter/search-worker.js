@@ -1,7 +1,7 @@
 // @ts-check
 // The description search in a Web Worker, so its index is built once off the page's thread. It
-// receives `{ id, ids, additionalIds, forms, formsText, smallSeal, query, limit }`: the first message
-// loads the IDS tables and the forms at `forms` (or takes `formsText`) and builds the index; a failed load is tried again
+// receives `{ id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode }`: the first
+// message loads the IDS tables and forms; each search builds its index when needed. A failed load is tried again
 // on the next message. Each answers `{ id, result }` or `{ id, error }`.
 import { sealTable, sealForms } from './seal-data.js'
 import { createSearch } from '../core/search.js'
@@ -18,13 +18,12 @@ async function load(ids, additionalIds, forms, given, smallSeal) {
   const merged = new Map([...mergeIdsTables(parseIdsTable(text), parseIdsTable(extra)), ...(doc ? sealTable(doc) : [])])
   const table = new Map([...merged].map(([char, sequences]) => [char, sequences.map(s => s.text)]))
   const search = createSearch(table, { forms: sealForms(formsText, doc) })
-  search.index()
   return search
 }
-self.onmessage = async ({ data: { id, ids, additionalIds, forms, formsText, smallSeal, query, limit } }) => {
+self.onmessage = async ({ data: { id, ids, additionalIds, forms, formsText, smallSeal, query, limit, mode } }) => {
   try {
     ready ??= load(ids, additionalIds, forms, formsText, smallSeal).catch(error => { ready = null; throw error })
     const search = await ready
-    self.postMessage({ id, result: search.search(query, { limit }) })
+    self.postMessage({ id, result: (mode === 'structure' ? search.structure : search.search)(query, { limit }) })
   } catch (error) { self.postMessage({ id, error: String(/** @type {Error} */ (error)?.message ?? error) }) }
 }

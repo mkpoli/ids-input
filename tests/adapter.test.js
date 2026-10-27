@@ -48,6 +48,7 @@ describe('the BabelStone adapter', () => {
     expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
     expect(await adapter.encoded('⿱山田')).toContain('𫜺')
     expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
+    expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
   })
   it('retains distinct regional tags from both sources', async () => {
     const extra = '林\t⿰木木(J) ⿱木木(MT) ⿱木木(P) ⿱木木(P)\n'

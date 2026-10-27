@@ -127,8 +127,8 @@ clears, removes a level or copies that part's sequence. "Take parts from" reads 
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
 also work without an editor. The Stroke count panel includes both common and hard-to-type
-parts, including compound IDS, grouped by stroke count and first stroke. Compound palette cells show an `IDS` marker and expose
-the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
+compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -308,6 +308,35 @@ replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it conta
 standard IDS subset of Yi Bai's data. Extended expressions and variant annotations are not included.
 
 ## Search
+
+`IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
+four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+The demo offers it beside the existing character search below the editor. Selecting a preset
+runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
+characters** copies the complete result, including hits beyond the visible page.
+
+```js
+import { createStructuralSearch } from 'ids-input'
+const patterns = createStructuralSearch(table, { forms })
+patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
+patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
+patterns.search('⿲ABA')           // matching outer parts, such as 弼
+patterns.search('⿸⬚⬚')           // any upper-left enclosure
+```
+
+A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
+Different letters may match the same part. Positional forms use the supplied forms table.
+`⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
+be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+and opens encoded components up to six levels, considering source alternatives. It does not find
+a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
+remain explicit operators. Coverage depends on the supplied descriptions and forms.
+
+`babelStoneAdapter.findByStructure(query, { limit, signal })` runs this search in the same worker
+as description search. It returns `{ hits, total, characters, problem? }`: `characters` contains
+all matching characters without separators, while `hits` is limited for display. Invalid patterns
+return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
+other characters, with code-point ordering within each group.
 
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
@@ -601,7 +630,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Gen Kojitani, [Script-hybrid and abbreviated CJK letters, IRG N2637](https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf),
   2023-06-23, Table 1 no.1 and Fig.1: the Bouyei form `⿰亻Ａ`, from 《布依方塊古文字》p.64.
   The example `⿰亻A` uses ASCII A.
-- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
+- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄥ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
 - mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
   `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.

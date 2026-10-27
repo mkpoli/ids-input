@@ -15,3 +15,5 @@ export { createEditor, OP_NAMES } from './editor.svelte.js'
 export { createLookup } from './lookup.svelte.js'
 export { shortcut, isApple } from './shortcut.js'
 export { translator, en } from './i18n.js'
+
+export { default as IdsStructuralSearch } from './IdsStructuralSearch.svelte'

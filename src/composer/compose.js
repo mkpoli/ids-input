@@ -342,7 +342,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
-    if (this.layout && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    // Native compound forms have no trained layout features; fit their actual outlines.
+    if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
