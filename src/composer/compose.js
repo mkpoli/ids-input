@@ -150,7 +150,7 @@ export class Composer {
     this.approximate.clear()
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
-    const tree = number(this.parse(sequence))
+    const tree = number(this.cancelTransforms(this.parse(sequence)))
     const out = this.node(this.standaloneExpandedOverlay(tree) ?? this.standalonePyramid(tree) ?? this.standaloneRepeatedGrid(tree) ?? this.normalizeRepeatedGrids(tree), this.face.slice(), true)
     // Separated drawings retain reading order. Only publish ownership when every
     // rendered leaf produced exactly one piece (including empty placeholders).
@@ -229,7 +229,7 @@ export class Composer {
         }
       } else kids.forEach(kid => walk(kid, region, false))
     }
-    walk(this.parse(sequence), this.face.slice(), true)
+    walk(this.cancelTransforms(this.parse(sequence)), this.face.slice(), true)
     return out
   }
 
@@ -376,6 +376,14 @@ export class Composer {
     return valid ? { owners, split } : null
   }
 
+  /** Two identical reflections or half-turns restore the subtree, before lookup and layout. */
+  cancelTransforms(node) {
+    if (!Array.isArray(node)) return node
+    const kids = node.slice(1).map(child => this.cancelTransforms(child))
+    if ((node[0] === MIRROR || node[0] === ROTATE) && Array.isArray(kids[0]) && kids[0][0] === node[0]) return kids[0][1]
+    return [node[0], ...kids]
+  }
+
   /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
   standaloneExpandedOverlay(node) {
     const equivalents = {"⿻大⿰人人": "夾", "⿻工⿰人人": "巫", "⿻⿰人人土": "坐"}
@@ -418,6 +426,18 @@ export class Composer {
   splitEnclosure(node) {
     if (!Array.isArray(node) || node.length !== 3) return null
     const [op, outer, inner] = node
+    // Match explicit hosts without merging the original editable leaves.
+    if (op === '⿴' && keyOf(outer) === '⿰彳亍') return { tree: ['⿲', '彳', inner, '亍'], innerIndex: 1 }
+    if (op === '⿴' && keyOf(outer) === '⿰弓弓') return { tree: ['⿲', '弓', inner, '弓'], innerIndex: 1 }
+    if (op === '⿴' && keyOf(outer) === '⿰𤣩王') return { tree: ['⿲', '𤣩', inner, '王'], innerIndex: 1 }
+    if (op === '⿴' && keyOf(outer) === '⿰辛辛') return { tree: ['⿲', '辛', inner, '辛'], innerIndex: 1 }
+    if (op === '⿴' && keyOf(outer) === '⿰隹隹') return { tree: ['⿲', '隹', inner, '隹'], innerIndex: 1 }
+    if (op === '⿴' && keyOf(outer) === '⿱亠𧘇') return { tree: ['⿳', '亠', inner, '𧘇'], innerIndex: 1 }
+    if (op === '⿸' && keyOf(outer) === '⿰方𠂉') return { tree: ['⿰', '方', ['⿱', '𠂉', inner]], innerIndex: 2 }
+    if (op === '⿹' && keyOf(outer) === '⿰匕頁') return { tree: ['⿰', ['⿱', '匕', inner], '頁'], innerIndex: 1 }
+    if (op === '⿸' && keyOf(outer) === '⿰𠦝𠆢') return { tree: ['⿰', '𠦝', ['⿱', '𠆢', inner]], innerIndex: 2 }
+    if (op === '⿶' && keyOf(outer) === '⿱⿰弓弓鬲') return { tree: ['⿱', ['⿲', '弓', inner, '弓'], '鬲'], innerIndex: 1 }
+    if (op === '⿹' && keyOf(outer) === '⿰⿳士冖一殳') return { tree: ['⿰', ['⿱', ['⿳', '士', '冖', '一'], inner], '殳'], innerIndex: 3 }
     if (op === '⿴' && (outer === '林' || keyOf(outer) === '⿰木木')) return { tree: ['⿲', '木', inner, '木'], innerIndex: 1 }
     const sides = { 行: ['彳', '亍'], 弜: ['弓', '弓'], 玨: ['𤣩', '王'], 辡: ['辛', '辛'], 雔: ['隹', '隹'] }
     if (op === '⿴' && Object.hasOwn(sides, outer)) return { tree: ['⿲', sides[outer][0], inner, sides[outer][1]], innerIndex: 1 }

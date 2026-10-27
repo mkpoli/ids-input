@@ -125,7 +125,8 @@ and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps 
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. Compound palette cells show an `IDS` marker and expose
+also work without an editor. The Stroke count panel includes both common and hard-to-type
+parts, including compound IDS, grouped by stroke count and first stroke. Compound palette cells show an `IDS` marker and expose
 the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
@@ -228,8 +229,15 @@ a nonlinear chain is flattened within a tolerance and its pole is checked agains
 hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
 local geometry and each operator child's placement, applies the nested layer transforms, and reports
 missing geometry or unsupported transforms. `renderScopes` keeps component cuts and operator children
-apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction. A composer-backed
-source, storage and the editor binding are not part of these modules yet.
+apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction.
+
+`createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
+reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
+`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+whole documents. `session.document` returns a detached copy; use session edits to change it.
+`listen` tells a host when to redraw; a throwing listener is reported through
+`onListenerError` (or `reportError`) and does not undo the committed edit. A composer-backed source,
+storage and the editor binding are not part of these modules yet.
 
 ## Adapters
 
@@ -686,7 +694,7 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 
 - A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
   by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of hard-to-type components by stroke count and first stroke, with font subsets for
+- A parts palette of common and hard-to-type components by stroke count and first stroke, with font subsets for
   the parts few fonts draw.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.

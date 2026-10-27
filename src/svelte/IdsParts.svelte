@@ -3,8 +3,8 @@
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
   // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, plus frequent components and compound IDS,
   // most used first; Tangut
-  // the Tangut components in code point order; Hard to
-  // type the rest, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
+  // the Tangut components in code point order; Stroke count holds all common and hard-to-type
+  // parts, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
@@ -49,10 +49,10 @@
   })
 
   const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
-  const difficult = $derived((parts ?? []).filter(part => part.kind === 'd'))
-  // Stroke counts that Hard to type holds, in order, null (not recorded) last; `count` is the one
+  const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
+  // Stroke counts available in the Stroke count panel, in order, null (not recorded) last; `count` is the one
   // chosen, undefined until one is, so the first count shows.
-  const counts = $derived([...new Set(difficult.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
+  const counts = $derived([...new Set(strokeParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
   const shownCount = $derived(count !== undefined && counts.includes(count) ? count : counts[0])
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
@@ -79,7 +79,7 @@
     if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
-    if (tab === 'difficult') return grouped(difficult.filter(part => (part.strokes ?? null) === shownCount))
+    if (tab === 'difficult') return grouped(strokeParts.filter(part => (part.strokes ?? null) === shownCount))
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
