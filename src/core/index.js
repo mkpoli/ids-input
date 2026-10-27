@@ -2,6 +2,7 @@
 export * from './ids.js'
 export * from './pyramid.js'
 export * from './aliases.js'
+export * from './strokes.js'
 export * from './keys.js'
 export * from './history.js'
 export * from './decompose.js'

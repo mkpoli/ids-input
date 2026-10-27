@@ -50,3 +50,13 @@ test('a modifier stays with its operator, and a range inside it names no part', 
   expect(rangeToken(spans, 1, 4)).toBeNull()
   expect(rangeToken(spans, 0, 4)?.path).toEqual([])
 })
+test('a stroke chain that names a character is one token, the chain as written', () => {
+  const text = '⿰#(H)木'
+  const spans = tokens(text)
+  expect(spans.map(t => t.text)).toEqual(['⿰', '#(H)', '木'])
+  expect(spans.map(t => t.path)).toEqual([[], [0], [1]])
+  expect(text.slice(spans[0].start, spans[0].end)).toBe(text)
+  // A variation selector written after the chain stays in its token.
+  expect(tokens('⿰#(H)\u{E0100}木').map(t => t.text)).toEqual(['⿰', '#(H)\u{E0100}', '木'])
+
+})
