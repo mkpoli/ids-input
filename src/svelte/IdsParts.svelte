@@ -28,14 +28,19 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'gongche', 'tangut', 'seal', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'difficult' | 'strokes' | 'recent')[]} */
+  const TABS = ['common', 'gongche', 'tangut', 'seal', 'bopomofo', 'difficult', 'strokes', 'recent']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
   /** @param {string} key @param {unknown} value */
   const remember = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)) } catch { /* Kept for this page only. */ } }
 
+  const range = (/** @type {number} */ first, /** @type {number} */ last) =>
+    Array.from({ length: last - first + 1 }, (_, i) => String.fromCodePoint(first + i))
+  const extra = [...range(0x3105, 0x312f), ...range(0x31a0, 0x31bf)]
+  /** @param {string[]} chars @returns {PalettePart[]} */
+  const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
   let tab = $state(/** @type {(typeof TABS)[number]} */ ('common')), filter = $state('')
@@ -48,7 +53,7 @@
     recent = Array.isArray(kept) ? [...new Set(kept.filter(part => typeof part === 'string'))].slice(0, RECENT_MAX) : []
     const read = adapter.parts
     if (!read) { failed = true; return }
-    read().then(found => { parts = found; failed = false }, () => { failed = true })
+    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts(extra.filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
@@ -82,6 +87,7 @@
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
   const shown = $derived.by(() => {
     if (!parts) return []
+    if (tab === 'bopomofo') return [{ cls: undefined, parts: extra.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]

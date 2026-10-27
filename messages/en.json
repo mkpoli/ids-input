@@ -146,6 +146,7 @@
   "parts.strokeCount.one": "{count} stroke",
   "parts.strokeCount.other": "{count} strokes",
   "parts.tab.seal": "Small Seal",
+  "parts.tab.bopomofo": "Bopomofo",
   "parts.tab.tangut": "Tangut",
   "parts.tab.common": "Common",
   "parts.tab.difficult": "Stroke count",
