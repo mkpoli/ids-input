@@ -3,6 +3,7 @@
 import constants from './constants.json' with { type: 'json' }
 
 export function bundledSource({ load, matches, fallback = null }) {
+  // `ready()` fills `records`; callers ask for files and records after it resolves.
   let ready = null, records = null
   const owns = key => matches(key) && records?.[key] != null
   const source = {
