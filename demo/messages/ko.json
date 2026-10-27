@@ -100,6 +100,7 @@
   "app.source.characterDataPresentation": "𰻞𰻞會(2026년 10월 16일) 발표. 문자 데이터를 다루는 데 참고했다.",
   "app.source.babelstone": "각 글자의 구성 기술. 분해, 부품표, 대조에 사용.",
   "app.source.hanCompose": "기존 글자의 부품으로 미리보기를 그립니다.",
+  "app.source.hanReassemble": "한자 부품을 다시 조합해 단어를 만드는 게임.",
   "app.source.hfhchan": "부품표에서 더 나누지 않는 부품.",
   "app.source.kanjivg": "조합기의 일부 절단. 그 절단을 쓴 자형은 동일 조건으로 공유.",
   "app.source.smallSeal": "급고각본 《설문해자》의 자형 구조: 매핑된 49자와 부품 31개를 제공합니다. 나머지 원본 기록은 아직 매핑되지 않았습니다.",

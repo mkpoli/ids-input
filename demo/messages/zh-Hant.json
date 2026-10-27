@@ -100,6 +100,7 @@
   "app.source.characterDataPresentation": "𰻞𰻞會（2026年10月16日）的發表，處理文字資料時參考的資料。",
   "app.source.babelstone": "各字的結構描述，用於拆分、部件表與比對。",
   "app.source.hanCompose": "用現有字的部件繪製預覽。",
+  "app.source.hanReassemble": "將漢字部件重新組合成詞語的遊戲。",
   "app.source.hfhchan": "部件表中不再拆分的部件。",
   "app.source.kanjivg": "組字器的部分切分；含此切分的字形須以相同方式共享。",
   "app.source.smallSeal": "汲古閣本《說文解字》構形資料：49個已映射字及31個部件，其餘原始記錄尚未完成映射。",

@@ -100,6 +100,7 @@
   "app.source.characterDataPresentation": "𰻞𰻞会（2026年10月16日）的报告，处理文字数据时参考的资料。",
   "app.source.babelstone": "各字的结构描述，用于拆分、部件表与比对。",
   "app.source.hanCompose": "用现有字的部件绘制预览。",
+  "app.source.hanReassemble": "将汉字部件重新组合成词语的游戏。",
   "app.source.hfhchan": "部件表中不再拆分的部件。",
   "app.source.kanjivg": "组字器的部分切分；含此切分的字形须以相同方式共享。",
   "app.source.smallSeal": "汲古阁本《说文解字》构形数据：49个已映射字及31个部件，其余原始记录尚未完成映射。",

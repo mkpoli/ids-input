@@ -93,6 +93,7 @@
   "app.source.characterDataPresentation": "Bài trình bày tại BiangBiangCon ngày 16 tháng 10 năm 2026, tài liệu tham khảo khi làm việc với dữ liệu chữ.",
   "app.source.babelstone": "Mô tả từng chữ, dùng để phân tách, lập bảng chọn bộ phận và tìm chữ khớp cấu trúc.",
   "app.source.hanCompose": "Vẽ hình xem trước từ các bộ phận có sẵn trong những chữ khác.",
+  "app.source.hanReassemble": "Trò chơi ghép lại các bộ phận chữ Hán để tạo thành từ.",
   "app.source.hfhchan": "Xác định những bộ phận được giữ nguyên trong bảng chọn.",
   "app.source.kanjivg": "Một số cách tách bộ phận dùng khi ghép hình; hình dùng các cách tách này được chia sẻ theo cùng giấy phép.",
   "app.source.tangut": "Phông chữ Tây Hạ và đường viền dùng để ghép hình.",
