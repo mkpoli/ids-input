@@ -232,7 +232,7 @@ and 457 single Tangut characters. `scripts/build_character_info.py` builds it fr
   `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
   `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
   Only single-character Tangut entries with glosses enter the panel data; duplicate
-  glosses are combined, with source qualifiers preserved. Each panel links to the
+  glosses are combined, with source qualifiers preserved. Each adapter record links to the
   original entry, whose history records its contributors. The adapted Tangut gloss data remains
   CC BY-SA 4.0; the Unihan records retain Unicode License v3.
 

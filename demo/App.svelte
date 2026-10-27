@@ -711,7 +711,7 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
   <footer class="foot">
     <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
