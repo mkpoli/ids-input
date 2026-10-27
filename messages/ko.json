@@ -105,6 +105,8 @@
   "ids.replace": "{part}을(를) 바꾸기",
   "ids.search": "구성 요소 찾기",
   "ids.search.containing": "‘{sequence}’을 포함하는 글자",
+  "ids.search.partsOf": "‘{char}’의 부품",
+  "ids.search.emptyHint": "검색하려면 이 칸을 비워 두고, 글자를 조합하려면 채우세요.",
   "ids.search.count.other": "{count}개",
   "ids.search.failed": "검색에 실패했습니다.",
   "ids.search.open": "{sequence} 열기",
@@ -141,6 +143,8 @@
   "parts.none": "맞는 구성 요소가 없습니다.",
   "parts.strokeCount.other": "{count}획",
   "parts.tab.seal": "소전",
+  "parts.tab.bopomofo": "주음부호",
+  "parts.tab.alphabet": "문자와 숫자",
   "parts.tab.tangut": "서하",
   "parts.tab.common": "자주 쓰는",
   "parts.tab.difficult": "획수",
@@ -179,5 +183,8 @@
   "ids.structural.betweenColumn": "상하가 같음",
   "ids.structural.enclosed": "전체 둘러쌈",
   "ids.structural.corner": "왼쪽 위 둘러쌈",
-  "ids.structural.overlap": "겹침"
+  "ids.structural.overlap": "겹침",
+  "ids.pick.templates": "구조",
+  "ids.group.4": "4개 부품",
+  "ids.templates.insert": "구조 삽입: {sequence}"
 }

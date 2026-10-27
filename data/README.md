@@ -50,6 +50,13 @@ plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_pa
 - Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
 
+The displayed Common palette places traditional, simplified and positional forms
+from `component-forms.tsv` next to one another. Each family starts where its
+first member appeared in frequency order; forms remain separate selectable
+entries. Contextual search substitutions such as 田/由/甲/申/电, 己/已/巳,
+用/甩 and 斗/鬥 remain separate. Stroke-count and first-stroke groups keep their boundaries, and Recent
+keeps selection order. The data file itself remains frequency-sorted.
+
 Sources:
 
 - BabelStone IDS, as above: which components the sequences use, how many ideographs use each, and

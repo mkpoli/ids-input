@@ -88,6 +88,9 @@ export async function readText(response) {
 
 /** Components the forms table folds that the names keep apart. */
 const SEPARATE = new Set(['斗', '鬥'])
+// Contextual search substitutions do not make these independent characters
+// palette variants (田/由/甲/申/电, 己/已/巳, 用/甩, 手/才, 刀/刁, 幺/乡).
+const PALETTE_SEPARATE = new Set([...SEPARATE, ...'由甲申电甴己已巳甩才刁乡'])
 
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
@@ -135,8 +138,8 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   /** The description search on this thread, over the table and the forms. */
   const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc) })).catch(error => { local = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] */
-  function inWorker(query, limit, mode = 'ids') {
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -159,7 +162,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -194,7 +197,19 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
       : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
-  ]).then(([base, doc]) => doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base)
+    formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
+  ]).then(([base, doc, text]) => {
+    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+    // Keep reviewed contextual search substitutions out of palette families.
+    const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
+    const variants = readForms(safe)
+    for (const root of variants.values()) variants.set(root, root)
+    return rows.map(part => {
+      if (part.kind !== 'c' && part.kind !== 'd' || isSequence(part.part) || PALETTE_SEPARATE.has(part.part)) return part
+      const variantGroup = variants.get(part.part)
+      return variantGroup ? { ...part, variantGroup } : part
+    })
+  })
     .catch(error => { palette = null; throw error })
 
   // The names the component search knows, and the forms table that opens a name's component into
@@ -381,8 +396,8 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       return result
     },
-    async findByIds(query, { limit = 60, signal } = {}) {
-      const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
+    async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },

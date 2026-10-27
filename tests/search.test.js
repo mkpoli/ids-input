@@ -85,6 +85,88 @@ describe('the search', () => {
   })
 })
 
+describe('component lookup expressions', () => {
+  it('finds characters containing the right-hand component', () => {
+    expect(search.search('㇯？木')).toEqual(search.search('木'))
+    expect(search.search('su？木', { limit: 2 })).toEqual(search.search('木', { limit: 2 }))
+  })
+
+  it('lists the encoded parts of the left-hand character through its descriptions', () => {
+    const result = search.search('㇯森？')
+    expect(result.hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['木', '林', '十', '一', '丨', '八']))
+    expect(result.hits.map(hit => hit.char)).not.toContain('森')
+    expect(new Set(result.hits.map(hit => hit.char)).size).toBe(result.total)
+    expect(search.search('su森？', { limit: 2 })).toEqual({ hits: result.hits.slice(0, 2), total: result.total })
+    expect(search.search('㇯口？')).toEqual({ hits: [], total: 0 })
+  })
+
+  it('terminates on cycles and does not report subtraction operands as surviving parts', () => {
+    const index = createSearch(new Map([['甲', ['⿰乙口']], ['乙', ['⿱甲木']], ['丙', ['㇯甲口']]]))
+    expect(index.search('㇯甲？').hits.map(hit => hit.char)).toEqual(['乙', '口', '木'])
+    expect(index.search('㇯丙？').hits).toEqual([])
+  })
+
+  it('opens selected variants by their base character and follows long chains', () => {
+    const index = createSearch(new Map([
+      ['甲', ['⿰乙︀口']], ['乙', ['⿰丙口']], ['丙', ['⿰丁口']], ['丁', ['⿰戊口']],
+      ['戊', ['⿰己口']], ['己', ['⿰庚口']], ['庚', ['⿰辛口']], ['辛', ['⿰木口']],
+    ]))
+    const parts = index.search('㇯甲︀？').hits
+    expect(parts.map(hit => hit.char)).toEqual(expect.arrayContaining(['乙︀', '辛', '木']))
+    expect(parts.find(hit => hit.char === '乙︀').sequence).toBe('⿰丙口')
+  })
+
+  it('follows descriptions that are single-component aliases', () => {
+    const index = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']], ['甲', ['⿰訁木']]]))
+    expect(index.search('㇯訁？').hits.map(hit => hit.char)).toEqual(['言', '亠', '口'])
+    expect(index.search('㇯？言').hits.map(hit => hit.char)).toContain('訁')
+    expect(index.search('㇯？口').hits.map(hit => hit.char)).toContain('訁')
+    expect(index.search('㇯？言').hits.map(hit => hit.char)).toContain('甲')
+    const folded = createSearch(new Map([['訁', ['言']], ['言', ['⿱亠口']]]), { forms: new Map([['訁', '言']]) })
+    expect(folded.search('㇯？言').hits.map(hit => hit.char)).toContain('訁')
+  })
+
+  it('finds holders through chains of aliases without looping on cycles', () => {
+    const index = createSearch(new Map([['甲', ['乙']], ['乙', ['丙']], ['丙', ['甲']], ['丁', ['⿰甲木']]]))
+    expect(index.search('㇯？丙').hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['甲', '乙', '丁']))
+    const cycle = createSearch(new Map([['甲', ['⿰乙口']], ['乙', ['甲']]]))
+    expect(cycle.search('㇯？甲').hits.map(hit => hit.char)).toEqual(['乙'])
+  })
+
+  it('keeps an alias literal even when the same kana is a visual search substitute', () => {
+    const index = createSearch(new Map([['イ', ['木']], ['甲', ['⿰人口']], ['乙', ['⿰イ口']]]))
+    const hits = index.search('㇯？木').hits.map(hit => hit.char)
+    expect(hits).toEqual(expect.arrayContaining(['イ', '乙']))
+    expect(hits).not.toContain('甲')
+    const direct = createSearch(new Map([['イ', ['⿰人口']], ['甲', ['⿰人口']]]))
+    expect(direct.search('㇯？イ').hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['イ', '甲']))
+    const indirect = createSearch(new Map([['イ', ['⿰乙口']], ['乙', ['甲']], ['甲', ['⿰人口']]]))
+    expect(indirect.search('㇯？イ').hits.map(hit => hit.char)).toContain('イ')
+    const alias = createSearch(new Map([['イ', ['人']]]))
+    expect(alias.search('㇯？イ').hits.map(hit => hit.char)).toContain('イ')
+  })
+
+  it('opens a readable description or the component when the source contains placeholders', () => {
+    const index = createSearch(new Map([['體', ['⿰骨豊']], ['骨', ['⿳{108}冖⺝', '⿱冖月']], ['豊', ['⿱{123}豆']]]))
+    const hits = index.search('㇯體？').hits
+    expect(hits.find(hit => hit.char === '骨').sequence).toBe('⿱冖月')
+    expect(hits.find(hit => hit.char === '豊').sequence).toBe('豊')
+  })
+
+  it('treats an empty slot as the same wildcard for both lookup directions', () => {
+    for (const empty of ['⬚', '＋']) {
+      expect(search.search(`㇯木${empty}`)).toEqual(search.search('㇯木？'))
+      expect(search.search(`㇯${empty}木`)).toEqual(search.search('㇯？木'))
+    }
+    expect(search.search('㇯⬚⬚')).toEqual(search.search('㇯？？'))
+  })
+
+  it('still permits a structural search for a subtraction with a wildcard', () => {
+    const index = createSearch(new Map([['甲', ['㇯木口', '⿰木水']]]))
+    expect(index.search('㇯木⬚', { componentLookup: false }).hits.map(hit => hit.char)).toContain('甲')
+  })
+})
+
 
 describe('visual substitutes in IDS queries', () => {
   const shapes = createSearch(new Map(Object.entries({

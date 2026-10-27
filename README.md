@@ -87,7 +87,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from']` | the part picker's tabs; a tab the adapter cannot answer is left out |
+| `pickers` | `['find', 'characters', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -342,7 +342,16 @@ other characters, with code-point ordering within each group.
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
 searches for the selected part, or the whole tree when nothing is selected. Each operator frame
-shows its subsequence in muted text. Selecting an empty slot clears the search.
+shows its subsequence in muted text. Selecting an empty slot clears the search, except when one
+side of a `㇯` expression names a component, in which case the whole expression is searched.
+
+To find characters containing 木, use `㇯⬚木`; to list the components of 森, use `㇯森⬚`.
+The empty slot works as a wildcard in both searches. The zi.tools spellings `㇯？木` and `㇯森？`
+also work, and `SU` can be used in place of `㇯`. These searches use the adapter's own data;
+components hidden inside a subtraction are omitted because the data does not establish which survive.
+For a structural search of a subtraction with a wildcard, use the structural-search mode, or pass
+`{ componentLookup: false }` to `createSearch().search()` or `adapter.findByIds()`; the latter
+also finds matching subtrees inside a character.
 
 IDS queries accept visual substitutes. The kana families follow the encoded
 components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)

@@ -169,6 +169,11 @@ describe('an encoded character', () => {
 })
 
 describe('the description search', () => {
+  it('preserves wildcard subtraction searches when component lookup is disabled', async () => {
+    const adapter = babelStoneAdapter({ table: parseIdsTable('甲\t㇯木口 ⿰木水\n乙\t⿱甲水\n') })
+    const found = await adapter.findByIds('㇯木⬚', { componentLookup: false })
+    expect(found.hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['甲', '乙']))
+  })
   it('finds characters by a structure with empty slots, folding forms, on the caller\'s thread without a worker', async () => {
     const adapter = babelStoneAdapter({ table, formsText: 'form\tchar\tsource\tdetail\n⺡\t氵\tunicode-ucd\tx\n' })
     const { hits, total } = await adapter.findByIds('⿰？木')

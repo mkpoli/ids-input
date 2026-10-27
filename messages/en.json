@@ -106,6 +106,8 @@
   "ids.replace": "Replace {part} with",
   "ids.search": "Find a component",
   "ids.search.containing": "Characters containing “{sequence}”",
+  "ids.search.partsOf": "Parts of “{char}”",
+  "ids.search.emptyHint": "Leave this slot empty to search, or fill it to compose.",
   "ids.search.count.one": "{count} found",
   "ids.search.count.other": "{count} found",
   "ids.search.failed": "The search failed.",
@@ -144,6 +146,8 @@
   "parts.strokeCount.one": "{count} stroke",
   "parts.strokeCount.other": "{count} strokes",
   "parts.tab.seal": "Small Seal",
+  "parts.tab.bopomofo": "Bopomofo",
+  "parts.tab.alphabet": "Letters & numbers",
   "parts.tab.tangut": "Tangut",
   "parts.tab.common": "Common",
   "parts.tab.difficult": "Stroke count",
@@ -183,5 +187,8 @@
   "ids.structural.betweenColumn": "Matching top/bottom",
   "ids.structural.enclosed": "Enclosed",
   "ids.structural.corner": "Upper-left enclosure",
-  "ids.structural.overlap": "Overlapping"
+  "ids.structural.overlap": "Overlapping",
+  "ids.pick.templates": "Templates",
+  "ids.group.4": "4 parts",
+  "ids.templates.insert": "Insert layout {sequence}"
 }

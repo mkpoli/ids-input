@@ -105,6 +105,8 @@
   "ids.replace": "将{part}换成",
   "ids.search": "查找部件",
   "ids.search.containing": "含“{sequence}”的字",
+  "ids.search.partsOf": "“{char}”的部件",
+  "ids.search.emptyHint": "留空可搜索，填入部件可组字。",
   "ids.search.count.other": "{count}个",
   "ids.search.failed": "检索失败。",
   "ids.search.open": "打开{sequence}",
@@ -141,6 +143,8 @@
   "parts.none": "没有匹配的部件。",
   "parts.strokeCount.other": "{count}画",
   "parts.tab.seal": "小篆",
+  "parts.tab.bopomofo": "注音符号",
+  "parts.tab.alphabet": "字母和数字",
   "parts.tab.tangut": "西夏",
   "parts.tab.common": "常用",
   "parts.tab.difficult": "笔画数",
@@ -179,5 +183,8 @@
   "ids.structural.betweenColumn": "上下相同",
   "ids.structural.enclosed": "全包围",
   "ids.structural.corner": "左上包围",
-  "ids.structural.overlap": "重叠"
+  "ids.structural.overlap": "重叠",
+  "ids.pick.templates": "构字式",
+  "ids.group.4": "4个部件",
+  "ids.templates.insert": "插入构字式：{sequence}"
 }

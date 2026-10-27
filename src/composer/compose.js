@@ -66,6 +66,23 @@ export const keyOf = node => typeof node === 'string' ? node : node[0] + node.sl
 export const EMPTY = '⬚'
 /** Whether a node is an empty slot, numbered in reading order (`⬚0`, `⬚1`, …) by `compose`. */
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
+const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
+  node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
+
+/** Six copies in rows of one, two and three, with equal cells centred on each row. */
+function sixInRows(node, region) {
+  if (!Array.isArray(node) || node[0] !== '⿳' || node.length !== 4 || typeof node[1] !== 'string' || isEmpty(node[1])) return null
+  const part = node[1], rows = node.slice(1)
+  if (keyOf(rows[1]) !== `⿰${part}${part}` || keyOf(rows[2]) !== `⿲${part}${part}${part}`) return null
+  const [x0, y0, x1, y1] = region, gap = 0.04 * Math.min(x1 - x0, y1 - y0)
+  const cell = Math.min((x1 - x0 - 2 * gap) / 3, (y1 - y0 - 2 * gap) / 3)
+  if (cell <= 0) return null
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
+  return [1, 2, 3].flatMap((n, row) => Array.from({ length: n }, (_, i) => {
+    const x = cx + (i - (n - 1) / 2) * (cell + gap), y = cy + (1 - row) * (cell + gap)
+    return [x - cell / 2, y - cell / 2, x + cell / 2, y + cell / 2]
+  }))
+}
 
 /** The operators this port draws beyond the composer's, with rooms and turns of its own choosing: a
  *  preview using them is approximate, and no stored drawing has them. */
@@ -184,6 +201,11 @@ export class Composer {
   sketch(sequence) {
     const out = []
     const walk = (node, region, atRoot) => {
+      const cells = sixInRows(node, region)
+      if (cells) {
+        for (const box of cells) out.push({ index: out.length, box, empty: false })
+        return
+      }
       const repeated = isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
       if (repeated) {
         for (const part of repeated) out.push({ index: out.length, box: part.target, empty: false })
@@ -307,6 +329,8 @@ export class Composer {
 
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
+    const cells = sixInRows(node, region)
+    if (cells) return cells.flatMap(box => this.node(node[1], box))
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
     const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key))
       ? componentParts(key, region, this.fontStyle, atRoot) : null
@@ -343,7 +367,7 @@ export class Composer {
       if (!glyph) throw new LookupError(`No glyph or sequence draws ${node}.`)
       return [this.place(glyph, region, this.ink(node), `glyph ${node}`)]
     }
-    const found = this.separate || hasRepetition || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
+    const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
     if (found) return [found]
     node = this.respelled(node)
     const op = node[0], children = node.slice(1)
@@ -535,6 +559,9 @@ export class Composer {
   /** The drawn part closest to what `node` needs at `index` of `op` inside `box`, as [record, piece]. */
   host(op, index, node, siblings, box, isPlaced = false) {
     if (containsComponentForm(keyOf(node))) return null
+    // A cut of an entire repeated row can include strokes belonging to its host.
+    // Draw the row from its own glyph or its operands instead.
+    if (isRepeatedRow(node)) return null
     // A separated drawing gives each leaf its own piece, so a host for a whole operand sequence is
     // not used; the sequence is drawn through `node` instead.
     if (this.separate && Array.isArray(node)) return null

@@ -105,6 +105,8 @@
   "ids.replace": "Thay {part} bằng",
   "ids.search": "Tìm bộ phận",
   "ids.search.containing": "Các chữ chứa “{sequence}”",
+  "ids.search.partsOf": "Các bộ phận của “{char}”",
+  "ids.search.emptyHint": "Để trống ô này để tìm kiếm, hoặc điền bộ phận để ghép chữ.",
   "ids.search.count.other": "Tìm thấy {count} kết quả",
   "ids.search.failed": "Không thể tìm kiếm.",
   "ids.search.open": "Mở {sequence}",
@@ -140,6 +142,8 @@
   "parts.noRecent": "Các bộ phận bạn chọn sẽ xuất hiện ở đây.",
   "parts.none": "Không tìm thấy bộ phận phù hợp.",
   "parts.strokeCount.other": "{count} nét",
+  "parts.tab.bopomofo": "Chú âm",
+  "parts.tab.alphabet": "Chữ cái và chữ số",
   "parts.tab.tangut": "Tây Hạ",
   "parts.tab.common": "Thường dùng",
   "parts.tab.difficult": "Số nét",
@@ -179,5 +183,8 @@
   "ids.structural.betweenColumn": "Trên dưới giống nhau",
   "ids.structural.enclosed": "Bao quanh",
   "ids.structural.corner": "Bao góc trên trái",
-  "ids.structural.overlap": "Chồng lên nhau"
+  "ids.structural.overlap": "Chồng lên nhau",
+  "ids.pick.templates": "Bố cục",
+  "ids.group.4": "4 bộ phận",
+  "ids.templates.insert": "Chèn bố cục {sequence}"
 }
