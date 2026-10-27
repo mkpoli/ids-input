@@ -161,7 +161,7 @@ letters from every block, and scripts beyond CJK. Operators, empty-slot markers,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
-component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
+component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
