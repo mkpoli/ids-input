@@ -370,13 +370,13 @@
 {#snippet hangulCompose()}
   <div class="hangul-compose" role="group" aria-label={t('parts.hangul.compose')}>
     <label class="compose-field">{t('parts.hangul.initial')}
-      <select bind:value={initial}>{@render jamoOptions(HANGUL_INITIALS)}</select>
+      <select bind:value={initial} {disabled}>{@render jamoOptions(HANGUL_INITIALS)}</select>
     </label>
     <label class="compose-field">{t('parts.hangul.medial')}
-      <select bind:value={medial}>{@render jamoOptions(HANGUL_MEDIALS)}</select>
+      <select bind:value={medial} {disabled}>{@render jamoOptions(HANGUL_MEDIALS)}</select>
     </label>
     <label class="compose-field">{t('parts.hangul.final')}
-      <select bind:value={final}>
+      <select bind:value={final} {disabled}>
         <option value="">{t('parts.hangul.noFinal')}</option>
         {@render jamoOptions(HANGUL_FINALS)}
       </select>
