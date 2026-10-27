@@ -491,14 +491,14 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
     return {
       leading: example.char || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? point : t('app.examples.none'),
+      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
@@ -691,8 +691,14 @@
       <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#key activeId}
-            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false} detail={encoded.map(ch => cp(ch)).join(' · ')}
-              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing />
+            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
+              {#snippet detailContent()}
+                {#each encoded as ch (ch)}
+                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                {/each}
+              {/snippet}
+            </IdsPreview>
           {/key}
           <div class="adjust">
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
@@ -713,17 +719,6 @@
   </main>
   <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
-  <footer class="foot">
-    <a class="repository" href="https://github.com/mkpoli/ids-input" aria-label="ids-input · GitHub" title="ids-input · GitHub"><Icon name="github" size={14} /><span>ids-input</span></a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <button type="button" class="link" aria-label={t('app.footer.about')} onclick={() => aboutOpen = true}><Icon name="book" size={14} /><span class="foot-full">{t('app.footer.about')}</span><span class="foot-short" aria-hidden="true">{t('app.footer.sources')}</span></button>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/han-compose"><Icon name="github" size={14} />han-compose</a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://github.com/mkpoli/ids-input/blob/main/LICENSE" rel="license"><Icon name="scales" size={14} />{t('app.about.codeLicense')}</a>
-    <span class="foot-separator" aria-hidden="true">·</span>
-    <a href="https://mkpo.li" rel="me" title="mkpo.li"><Icon name="globe" size={14} />mkpoli</a>
-  </footer>
 </div>
 
 <Toast {toast} ondone={() => toast = null} />
@@ -783,7 +778,7 @@
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
   :global(.tool:disabled){color:var(--muted);background:var(--surface-2);cursor:default}
-  :global(.tool:focus-visible),.link:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  :global(.tool:focus-visible){outline:2px solid var(--focus);outline-offset:1px}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
@@ -814,6 +809,11 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+  .encoded-character code{font:11px ui-monospace,monospace}
+  .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
+  .encoded-character button:hover{color:var(--ink);background:var(--hover)}
+  .encoded-character button:focus-visible{outline:2px solid var(--focus)}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
@@ -835,16 +835,6 @@
   .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
   .point-list li span{font-family:var(--cjk);font-size:18px}
   code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .link{padding:0;border:0;background:none;color:var(--accent);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
-  .foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px 8px;padding:4px max(16px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));font-size:12px;line-height:16px;color:var(--muted)}
-  .foot a,.foot .link{display:inline-flex;align-items:center;gap:5px;color:inherit;white-space:nowrap}
-  .foot-short{display:none}
-  @media (max-width:600px){
-    .foot{column-gap:8px;padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
-    .foot a,.foot .link{gap:4px}
-    .foot-full,.foot-separator,.repository span{display:none}
-    .foot-short{display:inline}
-  }
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}

@@ -9,7 +9,11 @@
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
-  import { adjacentVariants } from '../core/palette.js'
+  import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
+  import { adjacentVariants, matchScriptParts } from '../core/palette.js'
+  import { groupPaletteParts, isOtherScript } from '../core/scripts.js'
+  import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
+  import { unpack } from '../composer/loader.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -27,8 +31,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent')[]} */
-  const TABS = ['common', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent']
+  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent' | 'other')[]} */
+  const TABS = ['common', 'gongche', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -62,7 +66,43 @@
     read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
   })
 
-  const byPart = $derived(new Map((parts ?? []).map(part => [part.part, part])))
+  const PAGE_SIZE = 120
+  let otherScript = $state('Grek'), otherPage = $state(0)
+  /** @type {Record<string, string[]> | null} */
+  let otherData = $state.raw(null)
+  let otherFailed = $state(false), otherLoading = false
+  const partsByScript = $derived(groupPaletteParts(parts ?? []))
+  const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
+  /** @param {string} id */
+  const scriptName = id => scriptNames?.of(id) ?? id
+  const otherScripts = $derived.by(() => {
+    const ids = new Set([...scriptIndex.map(group => group.id), ...partsByScript.keys()])
+    return [...ids].filter(isOtherScript).sort((a, b) => scriptName(a).localeCompare(scriptName(b)))
+  })
+  $effect(() => {
+    if (tab !== 'other' || !parts || otherData || otherLoading || otherFailed) return
+    otherLoading = true
+    fetch(new URL('../../data/script-parts.json.gz', import.meta.url))
+      .then(response => { if (!response.ok) throw new Error('script parts'); return response.arrayBuffer() })
+      .then(unpack).then(JSON.parse).then(data => { otherData = data })
+      .catch(() => { otherLoading = false; otherFailed = true })
+  })
+  function retryOther() { otherLoading = false; otherFailed = false }
+  $effect(() => { tab; otherScript; filter; otherPage = 0 })
+  const otherKeys = $derived([...new Set([...(partsByScript.get(otherScript) ?? []).map(part => part.part), ...(otherData?.[otherScript] ?? [])])])
+  const otherMatches = $derived.by(() => {
+    const term = filter.trim()
+    if (!term) return otherKeys
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    return matchScriptParts(otherKeys, text, Boolean(code))
+  })
+  const otherPages = $derived(Math.max(1, Math.ceil(otherMatches.length / PAGE_SIZE)))
+  /** @type {PalettePart[]} */
+  const otherShown = $derived(otherMatches.slice(otherPage * PAGE_SIZE, (otherPage + 1) * PAGE_SIZE)
+    .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
+
+  const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
   // Stroke counts available in the Stroke count panel, in order, null (not recorded) last; `count` is the one
   // chosen, undefined until one is, so the first count shows.
@@ -79,8 +119,9 @@
   const sealGroups = $derived(SEAL_GROUPS.map(name => ({ name, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
   const query = $derived(filter.trim())
+  const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
-    if (!query || !parts) return null
+    if (!query || !parts || tab === 'other') return null
     if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
     if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
@@ -218,7 +259,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={part.kind === 't' ? 'txg' : 'ja'} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -240,9 +281,16 @@
       {#each TABS as name, index (name)}
         <button type="button" role="tab" id={`${uid}-tab-${name}`} aria-controls={`${uid}-panel`} bind:this={tabButtons[index]}
           class:active={tab === name} aria-selected={tab === name} tabindex={tab === name ? 0 : -1}
-          onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{t(`parts.tab.${name}`)}</button>
+          onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{name === 'other' ? t('parts.script.choose') : t(`parts.tab.${name}`)}</button>
       {/each}
     </div>
+    {#if tab === 'other'}
+      <label class="script-select">{t('parts.script.label')}
+        <select value={otherScript} onchange={event => { otherScript = event.currentTarget.value; filter = '' }}>
+          {#each otherScripts as script (script)}<option value={script}>{scriptName(script)}</option>{/each}
+        </select>
+      </label>
+    {/if}
     <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
       placeholder={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} aria-label={t(tab === 'seal' ? 'parts.seal.filter' : 'parts.filter')} />
   </div>
@@ -258,10 +306,36 @@
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
-    {#if failed}
+    {#if tab === 'gongche'}
+      {#each gongcheShown as group (group.key)}
+        <h4 class="parts-class">{t(`parts.gongche.${group.key}`)}</h4>
+        {@render grid(group.parts)}
+      {:else}<p class="parts-note">{t('parts.none')}</p>{/each}
+      <details class="gongche-guide"><summary>{t('parts.gongche.guide')}</summary>
+        <p>{t('parts.gongche.conventions')}</p>
+        <p>{t('parts.gongche.compose')}</p>
+        <a href="https://www.th.gov.tw/Epaper_Content/237/8985/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguan')} ↗</a>
+        <a href="https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.cantonese')} ↗</a>
+      </details>
+    {:else if failed}
       <p class="parts-note" role="status">{t('parts.failed')}</p>
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
+    {:else if tab === 'other'}
+      {#if !otherData && !otherFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
+      {#if otherFailed}<p class="parts-note" role="status">{t('parts.script.unavailable')} <button type="button" onclick={retryOther}>{t('parts.script.retry')}</button></p>{/if}
+      {#if otherMatches.length}
+        {#if otherPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={otherPage === 0} onclick={() => otherPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={otherPages} value={otherPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) otherPage = Math.max(0, Math.min(otherPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: otherPage + 1, pages: otherPages, count: otherMatches.length })}</span>
+            <button type="button" disabled={otherPage + 1 >= otherPages} onclick={() => otherPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(otherShown)}
+      {:else if otherData && !otherFailed}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}
@@ -293,15 +367,20 @@
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
-  :where(.ids-parts) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface)}
+  :where(.ids-parts) :is(button,input,select){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface)}
   :where(.ids-parts) button{cursor:pointer}
   :where(.ids-parts) button:disabled{cursor:default;opacity:.55}
-  :where(.ids-parts) :is(button,input):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
+  :where(.ids-parts) :is(button,input,select):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .parts-top{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
   .parts-tabs{display:flex;flex-wrap:wrap;gap:4px}
   .parts-tabs button,.parts-counts button{border:0;background:transparent;font-size:12px;padding:6px 10px;border-radius:5px;color:var(--_muted)}
   .parts-tabs button.active,.parts-counts button.active{background:var(--_surface-selected);color:var(--_ink)}
   .parts-filter{flex:1 1 100%;min-width:0;padding:6px 8px;font-size:13px}
+  .script-select{display:flex;align-items:center;gap:8px;width:100%;font-size:13px}
+  .script-select select{flex:1;min-width:0;padding:4px 6px}
+  .script-pages{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
+  .script-pages button,.script-pages input{padding:4px 6px}
+  .script-pages input{width:6em}
   .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
@@ -323,5 +402,7 @@
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
+  .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
+  .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
 </style>

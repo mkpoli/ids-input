@@ -51,3 +51,12 @@ it('keeps the palette usable when forms are absent or cannot be fetched', async 
     { ...palette[0], variantGroup: '马' }, palette[1], { ...palette[2], variantGroup: '马' },
   ])
 })
+
+it('finds catalog descriptions by component while keeping code point lookups exact', async () => {
+  const { matchScriptParts } = await import('../src/core/palette.js')
+  const parts = ['木', '⿰木口', '⿱火木', '⿰火口', '𪚴']
+  expect(matchScriptParts(parts, '木')).toEqual(['木', '⿰木口', '⿱火木'])
+  expect(matchScriptParts(parts, '木', true)).toEqual(['木'])
+  expect(matchScriptParts(parts, '⿰木口')).toEqual(['⿰木口'])
+  expect(matchScriptParts(parts, '𪚴')).toEqual(['𪚴'])
+})

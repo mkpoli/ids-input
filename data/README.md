@@ -319,11 +319,17 @@ Common also shows hard-to-type components used by at least 50 characters
 (285 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The fifteen manual entries
-bring the compound total to thirty-one. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The sixteen manual entries
+bring the compound total to thirty-two. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
+
+The requested compound `⿲彳⿱山一攵` is available as a single palette candidate,
+with an estimated eleven strokes. Its exact sequence has no uses in the bundled
+corpus, so it is retained as a manual entry. As an enclosure host,
+`⿵⿲彳⿱山一攵⬚` places the slot below 一, between 彳 and 攵; the composer
+renders it as `⿲彳⿱⿱山一⬚攵` while preserving the source leaves for editing.
 
 The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
@@ -609,6 +615,12 @@ remain editable. This supplies the form even when the Serif export lacks 𰀪.
 The `⿰氵氵` drawing repeats the same native water-radical outline by translation,
 so both columns have matching proportions and remain separated in either style.
 
+The 工尺譜 tab in `IdsParts` collects ten base note characters, three regional
+forms and five left-side components. `src/core/gongche.js` defines this small
+catalogue independently of palette loading. A collapsible guide explains
+left-side composition and regional notation differences. The panel links to Taiwan
+Historica's 北管 account and CCLI 2022/03 Annex II for regional conventions.
+
 ### Palette fallback outlines
 
 `palette-outlines.json.gz` contains 45 glyphs whose palette entries are missing from the
@@ -658,3 +670,19 @@ sources, grouped by Unicode block. It excludes ranges handled by the main CJK ex
 bundles. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
 available source glyphs; the remaining characters need additional source outlines. Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
+
+### Other script parts
+
+`script-parts.json.gz` groups additional scripts from bundled Unicode outlines and
+palette entries by Unicode Script. `script-parts-index.json`
+holds group sizes, and `script-parts-metadata.json` pins the sources. Existing Han, Latin,
+Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded. Mixed-script
+descriptions and common symbols are also excluded; this index adds only other scripts.
+
+To rebuild, run `node scripts/build_script_parts.mjs`. The builder uses Unicode 18.0 `Scripts.txt` and `PropertyValueAliases.txt`, checked against pinned SHA-256
+hashes. Unicode data is distributed under the Unicode License v3; see
+[`Unicode-3.0.txt`](licences/Unicode-3.0.txt).
+
+`script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
+host adapter. These parts remain available in their script group, including when the bundled
+catalog cannot be loaded. A configured composer export or font can have different coverage.
