@@ -828,8 +828,12 @@ correspondences when Small Seal data is supplied. [Data coverage and sources](da
 describe the limits of each relationship.
 
 `IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
-the floating panel and Esc to dismiss it. Clicks retain their editing action. Custom
-layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} />` beside
+the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+chosen slot, or replace the inspected character in the tree or sequence field. Custom
+layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
 tree components expose `data-character` targets; custom character controls can use
-the same attribute. Hosts without `characterInfo` retain their existing titles.
+the same attribute. Optional `data-path` identifies a tree position; without it, the
+host chooses the insertion target. `disabled` prevents insertion. Sources remain in
+the adapter records and the data documentation. Hosts without `characterInfo` retain
+their existing titles.
