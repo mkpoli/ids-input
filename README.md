@@ -90,6 +90,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
+| `tintMode` | `"hover"` | branch tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
 | `disabled` | | |
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.

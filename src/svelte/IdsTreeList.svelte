@@ -116,7 +116,7 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={rowLabel(row)} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
@@ -154,9 +154,10 @@
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}
   .part.empty{font-size:15px;color:var(--_muted)}
   .name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--_muted)}
-  li{background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
-  li.hovered{position:relative;background:color-mix(in oklab,var(--tint) 28%,var(--_surface));border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);border-radius:0;padding-left:calc(3px + var(--level) * 16px);padding-right:7px}
-  li.hovered + li.hovered::before{content:"";position:absolute;top:-3px;left:-2px;right:-2px;height:3px;box-sizing:border-box;border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);background:color-mix(in oklab,var(--tint) 28%,var(--_surface));pointer-events:none}
+  li:where(.tinted){background:color-mix(in oklab,var(--tint) 9%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  li.hovered{position:relative;border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);border-radius:0;padding-left:calc(3px + var(--level) * 16px);padding-right:7px}
+  li.hovered.tinted{background:color-mix(in oklab,var(--tint) 28%,var(--_surface))}
+  li.hovered + li.hovered::before{content:"";position:absolute;top:-3px;left:-2px;right:-2px;height:3px;box-sizing:border-box;border-left:2px solid var(--_accent);border-right:2px solid var(--_accent);background:inherit;pointer-events:none}
   li.hovered:not(li.hovered + li.hovered){border-radius:8px 8px 0 0;box-shadow:inset 0 2px var(--_accent)}
   li.hovered:not(:has(+ li.hovered)){border-radius:0 0 8px 8px;box-shadow:inset 0 -2px var(--_accent)}
   li.hovered:not(li.hovered + li.hovered):not(:has(+ li.hovered)){border-radius:8px;box-shadow:inset 0 2px var(--_accent),inset 0 -2px var(--_accent)}

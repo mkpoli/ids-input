@@ -16,12 +16,12 @@
   import { shortcut } from './shortcut.js'
 
   /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, value?: string, char?: string, disabled?: boolean, messages?: Record<string, string>, locale?: string,
-   *   pickers?: ('find' | 'characters' | 'parts' | 'from')[], recentKey?: string | null, keyHints?: boolean, onuse?: (sequence: string) => void,
+   *   pickers?: ('find' | 'characters' | 'parts' | 'from')[], recentKey?: string | null, keyHints?: boolean, tintMode?: import('./editor.svelte.js').TintMode, onuse?: (sequence: string) => void,
    *   onchange?: (text: string, whole: boolean) => void, preview?: import('svelte').Snippet<[string, boolean]> }} */
   let { adapter, value = $bindable(''), char = '', disabled = false, messages, locale = 'en', pickers = ['find', 'characters', 'parts', 'from'],
-    recentKey = 'ids-input.recentParts', keyHints = true, onuse, onchange, preview } = $props()
+    recentKey = 'ids-input.recentParts', keyHints = true, tintMode = 'hover', onuse, onchange, preview } = $props()
 
-  const editor = createEditor(() => ({ adapter, messages, locale, disabled }))
+  const editor = createEditor(() => ({ adapter, messages, locale, disabled, tintMode }))
   const t = $derived(editor.t)
   /** @type {HTMLElement | null} */ let root = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)

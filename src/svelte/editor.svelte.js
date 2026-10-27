@@ -8,6 +8,8 @@
 // the tree is chosen at a time. Every change is a named step in the history ("Split ⬚ with ⿰",
 // "Put 木"), so it can be undone and redone, a hundred steps each way; a run of typing in the field
 // is one step.
+import { insertAt } from './insertion.js'
+import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, samePath, unwrap,
   write } from '../core/ids.js'
@@ -22,7 +24,8 @@ import { translator } from './i18n.js'
  * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
  * @typedef {import('../core/ids.js').Part} Part
  * @typedef {import('../core/ids.js').Path} Path
- * @typedef {{ adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
+ * @typedef {'hover' | 'on' | 'off'} TintMode
+ * @typedef {{ tintMode?: TintMode, adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
  * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean }} Change
  */
 
@@ -48,6 +51,8 @@ export function createEditor(options) {
   const text = part => part === null || part === undefined ? '' : write(part)
 
   let tree = $state.raw(/** @type {Part} */ (null))
+  let caret = $state(/** @type {number | null} */ (null))
+  let selectionVersion = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   let draft = $state(''), piece = $state(''), note = $state('')
@@ -90,7 +95,7 @@ export function createEditor(options) {
   }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
-    history.clear(); hovered = null; note = ''; change = null; typing = false; run = false
+    history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -99,8 +104,9 @@ export function createEditor(options) {
   }
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
+    caret = null
     hovered = null
-    tree = next; chosen = select; note = ''
+    tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
     if (!typing) draft = next === null ? '' : write(next)
     const part = select ? partAt(next, select) : undefined
@@ -113,6 +119,8 @@ export function createEditor(options) {
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean }} [how]
    */
   function apply(next, select, label, { destructive = false } = {}) {
+    const valid = parse(write(next), { open: true })
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive }
@@ -143,6 +151,7 @@ export function createEditor(options) {
   }
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
+    caret = null
     hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
@@ -154,8 +163,23 @@ export function createEditor(options) {
 
   // Where an operator or a part goes when nothing is chosen: the first empty slot.
   const target = () => chosen ?? (tree === null ? [] : nextEmpty(tree))
+  /** @param {Part} part @param {string} [op] */
+  function insert(part, op) {
+    if (disabled() || caret === null || typed.problem) return
+    const next = insertAt(tree, draft, caret, part, op)
+    const valid = parse(write(next.tree), {open:true})
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
+    const label = op ? t('ids.do.split', { part: '⬚', op }) : t('ids.do.put', { part: text(part) })
+    apply(next.tree, next.operator ? next.path : null, label)
+    if (!next.operator) {
+      const token = tokens(draft).find(token => samePath(token.path, next.path))
+      caret = token?.end ?? draft.length
+    }
+  }
   /** An operator on the chosen part (or the first empty slot): it splits a slot, or takes a node's place. @param {string} op @param {Path | null} [at] */
-  function operator(op, at = target()) {
+  function operator(op, at) {
+    if (at === undefined && caret !== null && !typed.problem) { insert(null, op); return }
+    at = at === undefined ? target() : at
     if (disabled()) return
     const before = at ? partAt(tree, at) : tree
     const done = applyOperator(tree, at, op)
@@ -164,7 +188,9 @@ export function createEditor(options) {
     apply(done.tree, done.chosen, label)
   }
   /** `part` in the chosen slot (or the first empty one), or at `at`. @param {Part} part @param {Path | null} [at] */
-  function put(part, at = target()) {
+  function put(part, at) {
+    if (at === undefined && caret !== null && !typed.problem) { insert(part); return }
+    at = at === undefined ? target() : at
     if (disabled()) return
     if (!at) { note = t('ids.chooseFirst'); return }
     const before = partAt(tree, at)
@@ -202,6 +228,8 @@ export function createEditor(options) {
   }
   /** Choose the part at `path`, or none; choosing the chosen part again lets it go. @param {Path | null} path @param {{ toggle?: boolean }} [how] */
   function choose(path, { toggle = true } = {}) {
+    caret = null
+    selectionVersion++
     chosen = path && toggle && samePath(chosen, path) ? null : path
     note = ''
     const part = chosen ? partAt(tree, chosen) : undefined
@@ -291,7 +319,24 @@ export function createEditor(options) {
     /** @param {Path | null} path */
     hover(path) { hovered = disabled() ? null : path },
     /** @param {Path} path */
+    isTinted(path) {
+      const mode = options().tintMode ?? 'hover'
+      return mode === 'on' || (mode === 'hover' && hovered !== null && hovered.every((n, i) => path[i] === n))
+    },
+    /** @param {Path} path */
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
+    get selectionVersion() { return selectionVersion },
+    get selectionRange() { return caret !== null ? { start: caret, end: caret } : chosen === null ? null : tokens(draft).find(token => samePath(token.path, chosen)) ?? null },
+    /** @param {number} start @param {number} end */
+    selectText(start, end) {
+      caret = start === end ? start : null
+      const token = rangeToken(tokens(draft), start, end)
+      chosen = token?.path ?? null
+      piece = text(chosen ? partAt(tree, chosen) : undefined)
+      if (typeof picked === 'string') lookup.read(lookupChar(picked))
+    },
+    /** @param {Path} path */
+    isSelected(path) { return chosen !== null && chosen.every((n, i) => path[i] === n) },
     get tree() { return tree },
     get chosen() { return chosen },
     get draft() { return draft },
