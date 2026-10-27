@@ -499,6 +499,7 @@
       label: example.sequence,
       sequence: example.sequence,
       note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
+      cardNote: example.char ? point : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),

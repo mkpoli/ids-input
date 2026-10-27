@@ -43,7 +43,7 @@
             {/if}
             <span class="card-text">
               <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
-              {#if item.note !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{item.note}</span>{/if}
+              {#if item.note !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{item.cardNote ?? item.note}</span>{/if}
             </span>
           </button>
         {/each}
@@ -96,16 +96,16 @@
   .view{display:flex;align-items:center;gap:4px;padding:3px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
   .view[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
   .view:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:2px 2px 6px}
-  .card{display:flex;align-items:center;gap:6px;min-width:0;min-height:48px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
-  .card:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px;padding:2px 4px 6px}
+  .card{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+  .card:not(:disabled):is(:hover,:focus-visible){background:var(--hover)}
   .card:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .card:disabled{opacity:.45;cursor:default}
-  .card-art{display:block;flex:none;width:36px;height:36px;color:var(--ink)}
+  .card-art{display:block;width:40px;height:40px;color:var(--ink)}
   .card-art path{fill:currentColor}
-  .card-glyph{display:block;flex:none;width:36px;height:36px;overflow:hidden;font-family:var(--cjk);font-size:20px;line-height:36px;color:var(--ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
-  .card-text{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
-  .card-label{font-family:var(--cjk);font-size:10.5px;line-height:1.35;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card-note{color:var(--muted);font:500 9.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-glyph{display:block;width:40px;height:40px;overflow:hidden;font-family:var(--cjk);font-size:22px;line-height:40px;color:var(--ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
+  .card-text{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;min-width:0}
+  .card-label{display:block;max-width:100%;font-family:var(--cjk);font-size:10.5px;line-height:1.35;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-note{max-width:100%;color:var(--muted);font:500 9.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note.unencoded{font:inherit;font-size:10px;font-style:italic}
 </style>
