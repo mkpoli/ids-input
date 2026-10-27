@@ -141,8 +141,8 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
   const readCandidates = () => candidates ??= Promise.all([readSeal(), read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : ''])
     .then(([doc, found, text]) => doc ? createSealCandidates(doc, found, readForms(text), [given ? 'provided table' : ids ? String(ids) : 'empty table', ...(additionalIds ? [String(additionalIds)] : [])].join(' + ')) : null)
     .catch(error => { candidates = null; throw error })
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] */
-  function inWorker(query, limit, mode = 'ids') {
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
       searcher.onmessage = ({ data }) => {
@@ -165,7 +165,7 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -402,8 +402,8 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
       signal?.throwIfAborted()
       return result
     },
-    async findByIds(query, { limit = 60, signal } = {}) {
-      const result = worker && !given ? await inWorker(query, limit) : (await localSearch()).search(query, { limit })
+    async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },
