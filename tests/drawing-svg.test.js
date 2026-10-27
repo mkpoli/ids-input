@@ -43,3 +43,8 @@ it('includes emoji in SVG output and escapes text', () => {
   expect(svg).toContain('>👩🏽‍💻</text>')
   expect(svg).toContain('>&lt;&amp;</text>')
 })
+
+it('applies a selected emoji part transform to the exported text', () => {
+  const svg = drawingSvg({ d: '', parts: [{ d: '' }], transforms: ['translate(25 30)'], emoji: [{ text: '👩🏽‍💻', box: [0, 0, 500, 500], part: 0 }] })
+  expect(svg).toContain('<g transform="translate(25 30)"><text')
+})

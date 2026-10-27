@@ -8,6 +8,7 @@ import { createDrawer } from './client.js'
 import { LIMITS, tooLarge } from './loader.js'
 import { isNode, parse, write } from '../core/ids.js'
 import { emojiPrefix } from '../core/emoji.js'
+import { groupParts } from '../core/preview.js'
 import { onlyBundled } from './local.js'
 
 export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
@@ -29,10 +30,12 @@ export class UnavailableError extends Error { name = 'UnavailableError' }
 /** Replace emoji sequences with empty slots while the composer calculates their positions. @param {string} sequence */
 function emojiSlots(sequence) {
   const parsed = parse(sequence, { open: true })
-  if (parsed.problem || !parsed.tree) return { sequence, slots: [] }
+  if (parsed.problem || !parsed.tree) return { sequence, slots: [], slotLeaves: [], unsupported: false }
   /** @type {(string | null)[]} */
   const slots = []
-  let unsupported = false
+  /** @type {number[]} */
+  const slotLeaves = []
+  let leaf = 0, unsupported = false
   /** @param {import('../core/ids.js').Part} part @returns {import('../core/ids.js').Part} */
   function convert(part) {
     if (isNode(part)) {
@@ -41,12 +44,13 @@ function emojiSlots(sequence) {
       if (['⿾', '⿿', '㇯'].includes(part.op) && slots.slice(start).some(Boolean)) unsupported = true
       return { ...part, parts }
     }
-    if (part === null) { slots.push(null); return null }
-    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); return null }
+    const index = leaf++
+    if (part === null) { slots.push(null); slotLeaves.push(index); return null }
+    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); slotLeaves.push(index); return null }
     return part
   }
   const result = convert(parsed.tree)
-  return { sequence: write(result), slots, unsupported }
+  return { sequence: write(result), slots, slotLeaves, unsupported }
 }
 
 /** How many drawings a preview keeps for a repeated sequence. */
@@ -111,16 +115,29 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     try {
       let sketch = null
       const answer = await asked.draw(prepared.sequence, leaves => {
-        sketch = leaves
-        if (!signal?.aborted) onSketch?.(leaves)
+        sketch = leaves.map(leaf => ({ ...leaf, empty: prepared.slotLeaves.some((index, slot) => index === leaf.index && prepared.slots[slot]) ? false : leaf.empty }))
+        if (!signal?.aborted) onSketch?.(sketch)
       }, { separate, fontStyle })
       if (answer.status === 'composed') {
         const drawn = answer.drawn
         const emoji = (drawn.slots ?? []).flatMap(slot => {
           const text = prepared.slots[slot.index]
-          return text ? [{ text, box: slot.box }] : []
+          return text ? [{ text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }] : []
         })
         if (emoji.length) {
+          const existing = drawn.parts ?? []
+          const originalSketch = /** @type {import('../adapter/types.js').SketchLeaf[] | null} */ (sketch)
+          const oldSketch = originalSketch?.map(leaf => ({ ...leaf, empty: emoji.some(item => item.leaf === leaf.index) || leaf.empty })) ?? []
+          const groups = existing.length ? groupParts(existing, oldSketch) : []
+          if (groups) {
+            const pieces = existing.map(part => ({ ...part }))
+            for (const group of groups) for (const index of group.parts) pieces[index].leaf = group.index
+            for (const item of emoji) {
+              item.part = pieces.length
+              pieces.push({ leaf: item.leaf, origin: 'emoji', box: item.box, d: '' })
+            }
+            drawn.parts = pieces
+          }
           drawn.emoji = emoji
           drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index]).map((slot, index) => ({ ...slot, index }))
         }

@@ -173,3 +173,15 @@ it('rejects emoji transformations without rejecting unrelated transformed compon
   worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
   expect((await result).emoji[0].text).toBe('👩🏽‍💻')
 })
+
+it('assigns emoji a selectable piece alongside drawn components', async () => {
+  const draw = preview(), sketches = []
+  const result = draw('⿰👩🏽‍💻木', { onSketch: sketch => sketches.push(sketch) })
+  const [worker] = FakeWorker.made, id = worker.posted[0].id
+  worker.answer({ id, sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: true }, { index: 1, box: [500, 0, 500, 1000], empty: false }] })
+  worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 500, 1000] }], parts: [{ origin: 'glyph 木', box: [500, 0, 500, 1000], d: 'M0 0Z' }] } })
+  const found = await result
+  expect(sketches[0][0].empty).toBe(false)
+  expect(found.emoji[0]).toMatchObject({ leaf: 0, part: 1 })
+  expect(found.parts.map(part => part.leaf)).toEqual([1, 0])
+})

@@ -138,7 +138,7 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
  * draws each as the editor does, in the ink at half strength.
  * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
- *   parts?: { d: string, cut?: boolean }[], transforms?: (string | null)[], emoji?: { text: string, box: number[] }[] }} drawing
+ *   parts?: { d: string, cut?: boolean }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number }[] }} drawing
  * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
  * @returns {string}
  */
@@ -172,7 +172,10 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     if (box.length < 4 || typeof emoji.text !== 'string') continue
     const [x, y, width, height] = box
     const text = emoji.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const transform = Number.isInteger(emoji.part) && transforms ? transformData(transforms[emoji.part]) : ''
+    if (transform) out.push(`<g transform="${transform}">`)
     out.push(`<text x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`)
+    if (transform) out.push('</g>')
   }
   if (placeholders) for (const slot of drawing.slots ?? []) {
     const box = (slot.box ?? []).slice(0, 4).map(v => num(v, 0))
