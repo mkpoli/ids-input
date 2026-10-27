@@ -62,3 +62,10 @@ Build the webfont and `data/small-seal-outlines.json.gz` with
 their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
 and writes deterministic font and outline files. Exact-description mappings in the
 outline data come from CHISE and retain its GPL-2.0-or-later license.
+
+## Unicode fallback outlines
+
+The composer uses Noto outlines for 40,221 additional components when the selected export lacks
+a glyph. These are stored as sharded geometry rather than a webfont. Sources, rebuild instructions
+and coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
+[OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the source copyright notices and SIL OFL 1.1.

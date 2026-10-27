@@ -152,7 +152,9 @@ controls, default-ignorable characters, surrogates and unassigned code points ar
 allocation U+3D000–U+3FC3F.
 Combining marks are individual components; only a variation selector attaches to the preceding
 component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
-preview font coverage: an accepted component may have no outline in the selected composer export.
+preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
+still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
@@ -401,8 +403,8 @@ frequency or Unihan's school grade. Without `characters` the tab is not shown.
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
-Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut, Bopomofo, Small Seal and Unicode fallback outlines are
+bundled and loaded on demand. Han and mixed descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -416,12 +418,20 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
-use the bundled outlines. When the export loads but a part has no drawing, its badge reads
+origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
+can still render. Other previews keep their placeholders. When the export loads but a part has
+no outline in either source, its badge reads
 "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
+
+`fromUrl(base)` uses a selected export's own glyphs first, then loads bundled fallback glyphs for
+missing components. `unicodeSource()` supplies only bundled Unicode glyphs with geometric layout.
+For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
+from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
+`hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
+with the source Noto font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or

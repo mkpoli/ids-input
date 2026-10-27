@@ -9,6 +9,7 @@ import { LIMITS, tooLarge } from './loader.js'
 import { parse } from '../core/ids.js'
 import { onlyBundled } from './local.js'
 
+export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
 export { createDrawer } from './client.js'
 export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
 
@@ -60,7 +61,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
   function open(sequence = '') {
     let root
     try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch {
-      if (!onlyBundled(sequence)) throw new UnavailableError(`${base} is not a URL.`)
+      if (!onlyBundled(sequence, false, true)) throw new UnavailableError(`${base} is not a URL.`)
       root = base
     }
     if (!drawer) drawer = createDrawer(worker, root)
