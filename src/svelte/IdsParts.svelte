@@ -557,7 +557,7 @@
   .hangul-compose{display:flex;flex-direction:column;gap:8px}
   .compose-field{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
   .compose-field select{flex:1;min-width:0;padding:4px 6px;font-size:13px;color:var(--_ink)}
-  .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;min-height:96px;padding:10px;border-color:var(--_line);
+  .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;min-height:104px;padding:12px;border-color:var(--_line);
     background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
   .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,sans-serif)}

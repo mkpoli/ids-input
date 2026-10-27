@@ -11,6 +11,7 @@ try {
   await page.getByRole('tab', { name: 'Parts', exact: true }).click()
   await page.getByRole('tab', { name: 'Hangul', exact: true }).click()
   const select = page.getByRole('combobox', { name: 'Show', exact: true })
+  await select.waitFor()
   await page.locator('.parts-grid .part').first().waitFor()
   assert.equal(await select.inputValue(), 'parts')
   assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), '◇')

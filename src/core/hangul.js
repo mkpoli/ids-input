@@ -99,5 +99,5 @@ export function composeJamo(text) {
   if (!initial || !medial) return null
   const finals = chars.slice(2).map(char => toConjoiningJamo(char, 'T'))
   if (finals.some(char => char === null)) return null
-  return composeHangul(initial, medial, finals.join('') ?? '')?.text ?? null
+  return composeHangul(initial, medial, finals.join(''))?.text ?? null
 }
