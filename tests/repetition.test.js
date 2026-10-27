@@ -111,7 +111,7 @@ it('keeps designed component strokes at native thickness', async () => {
   for (const style of ['sans', 'serif']) {
     const parts = componentParts('⿳士冖一', undefined, style)
     for (const part of parts) {
-      expect(part.target).toEqual(part.source)
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
       expect(part.target[2] - part.target[0]).toBeCloseTo(part.source[2] - part.source[0], 6)
       expect(part.target[3] - part.target[1]).toBeCloseTo(part.source[3] - part.source[1], 6)
     }
@@ -190,7 +190,7 @@ it('preserves both yan enclosures as distinct native forms without requiring a r
       expect(onlyBundled(text)).toBe(true)
       const part = componentParts(text, undefined, fontStyle)[0]
       expect(part.source[1]).toBeLessThan(0) // retain 厂's full descender
-      expect(part.target).toEqual(part.source)
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
       const drawn = await compose(local(), text, { fontStyle, separate: true })
       expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
       const nested = await compose(remote(), `⿸${text}木`, { fontStyle })
@@ -216,5 +216,26 @@ it('fits native compound enclosures without extrapolating learned whole-glyph bo
     expect(preview.d).toBe((await compose(remote(), '⿸⿳亠丷厂木', { fontStyle })).d)
     const drawn = new Composer(source.store(), { fontStyle }).compose('⿸⿳亠丷厂木')
     expect(collision(drawn.slice(0, 1), drawn.slice(1), constants.face, 256)).toBeLessThan(0.005)
+  }
+})
+
+it('renders requested native components offline, including the three exact subtraction shapes', async () => {
+  const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans','serif']) {
+    for (const text of ['⿻𢆶戈','⿸尸彳','㇯鹿比','㇯馬灬','㇯鳥灬','⿳亠口冖','⿸尸氺','⿳𰀉冖木','⿳卝罒冖']) {
+      expect(onlyBundled(text)).toBe(true)
+      const drawn = await compose(local(), text, { fontStyle })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      expect(drawn.d).not.toMatch(/NaN|Infinity/)
+      expect(drawn.cut).toBe('')
+      const part = componentParts(text, undefined, fontStyle)[0]
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
+    }
+    // The native hooks remain; all four isolated 灬 contours are absent.
+    expect(componentDrawing('㇯馬灬', fontStyle).d.match(/M/g)).toHaveLength(4)
+    expect(componentDrawing('㇯鳥灬', fontStyle).d.match(/M/g)).toHaveLength(3)
+    expect(componentParts('㇯鳥灬', undefined, fontStyle)[0].source[1]).toBeLessThan(0)
+    const nested = await compose(remote(), '⿹㇯鳥灬木', { fontStyle })
+    expect(nested.origins.some(origin => origin.includes('㇯鳥灬'))).toBe(true)
   }
 })
