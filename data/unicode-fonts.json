@@ -779,6 +779,12 @@
       "sha256": "472201e45a050bff4c7658208b8c73e34ebce3764b287a5a46c7774038ef9391",
       "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont_upper-18.0.01.otf",
       "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "UniHieroglyphica.ttf",
+      "sha256": "ad60bb2f469697837b556388d47b500a21d866370a49a8be770b206108aaf664",
+      "url": "https://raw.githubusercontent.com/thesaurus-linguae-aegyptiae/unihieroglyphica/9375eba4e2b626658e57e3a526118b8225c0581e/font_files/UniHieroglyphica.ttf",
+      "license": "SIL OFL 1.1"
     }
   ],
   "svgSources": [

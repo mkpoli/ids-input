@@ -106,3 +106,17 @@ it('renders the audited Unicode gaps as real outlines', async () => {
 it('does not assign arbitrary Unifont private-use glyphs to users', () => {
   for (const cp of [0xE000, 0xF0000, 0xFE400, 0x100000]) expect(hasUnicodeGlyph(String.fromCodePoint(cp))).toBe(false)
 })
+
+
+it('composes every Egyptian Extended-A character with another component', async () => {
+  const local = source()
+  for (let cp = 0x13460; cp <= 0x143FA; cp++) {
+    const char = String.fromCodePoint(cp)
+    expect(hasUnicodeGlyph(char)).toBe(true)
+    const drawn = await compose(local, `⿰${char}〇`, { separate: true })
+    expect(drawn.origins).toEqual([`glyph ${char}`, 'glyph 〇'])
+    expect(drawn.parts).toHaveLength(2)
+    expect(drawn.parts.every(part => part.d.length > 20 && part.box.every(Number.isFinite))).toBe(true)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+}, 30000)

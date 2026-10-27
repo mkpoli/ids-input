@@ -556,8 +556,8 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 49,483 glyph outlines in 235 chunks, each covering at most
-256 code points. The full set is 16,535,359 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 53,478 glyph outlines in 250 chunks, each covering at most
+256 code points. The full set is 24,224,164 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
@@ -570,7 +570,7 @@ Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/O
 [Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
 
 Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
-package font directories plus every Noto CJK, Jigmo, Noto Emoji and Unifont file listed in
+package font directories plus every Noto CJK, Jigmo, Noto Emoji, Unifont and UniHieroglyphica file listed in
 `unicode-fonts.json`. The builder checks every source digest, selects the first
 available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
 [FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
@@ -678,6 +678,9 @@ Its pixel-based outlines retain their original design. The host export's glyphs 
   pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
 - [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
   [upstream license](../fonts/LICENSE-Unifont.txt), including its OFL option.
+- [UniHieroglyphica](https://github.com/thesaurus-linguae-aegyptiae/unihieroglyphica/tree/9375eba4e2b626658e57e3a526118b8225c0581e):
+  3,995 Egyptian Hieroglyphs Extended-A outlines, designed by Michel Suignard;
+  copyright Regents of the University of California, [SIL OFL 1.1](../fonts/OFL-UniHieroglyphica.txt).
 - [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
   `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
   Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)

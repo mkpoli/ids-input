@@ -1,7 +1,7 @@
 {
   "unicode": "18.0.0",
   "scope": "Assigned fallback candidates outside dedicated bundles and host-handled CJK ranges; private use excluded",
-  "count": 5318,
+  "count": 1323,
   "blocks": [
     {
       "block": "Archaic Cuneiform Numerals",
@@ -10,16 +10,6 @@
         [
           75088,
           75398
-        ]
-      ]
-    },
-    {
-      "block": "Egyptian Hieroglyphs Extended-A",
-      "count": 3995,
-      "ranges": [
-        [
-          78944,
-          82938
         ]
       ]
     },
