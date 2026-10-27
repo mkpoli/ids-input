@@ -215,6 +215,51 @@ close names in the character search.
 - Licence: **CC BY-SA 4.0** for the file as a whole, because its KANJIDIC2 rows are
   (<https://creativecommons.org/licenses/by-sa/4.0/>); the Unihan rows keep Unicode License v3.
 
+## Character information panels
+
+`character-info.json.gz` contains full English definitions for 23,310 Han characters
+and 457 single Tangut characters. `scripts/build_character_info.py` builds it from:
+
+- **Unihan 18.0.0**, `kDefinition`, Copyright Unicode, Inc., Unicode License v3.
+  [Source archive](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip), SHA-256
+  `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`.
+- **English Wiktionary contributors**, extracted by Tatu Ylonen's Wiktextract and
+  distributed through [Kaikki's Tangut dictionary](https://kaikki.org/dictionary/Tangut/index.html),
+  under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
+  The [JSONL source](https://kaikki.org/dictionary/Tangut/kaikki.org-dictionary-Tangut.jsonl)
+  was retrieved on 2026-10-27. Kaikki identifies this edition as extracted on 2026-09-09
+  from the 2026-09-02 English Wiktionary dump. The unmodified snapshot is retained as
+  `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
+  `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
+  Only single-character Tangut entries with glosses enter the panel data; duplicate
+  glosses are combined, with source qualifiers preserved. Each panel links to the
+  original entry, whose history records its contributors. The adapted Tangut gloss data remains
+  CC BY-SA 4.0; the Unihan records retain Unicode License v3.
+
+`character-meaning-aids.json` contains 57 editorial translations of selected English
+senses into Han characters, with emoji mnemonics. Tangut matches require a complete
+recorded English sense; no links are inferred from glyph shape or a shared component.
+The reverse Han-to-Tangut links retain the matched sense. These translations describe
+one meaning, not interchangeability in every context or historical descent. Han emoji
+use explicitly selected characters, independently of the wording of their definitions.
+
+The horse association for component 𘥇 is paraphrased from
+[Andrew West, @TangutSea, 2020-04-21](https://www.babelstone.co.uk/TangutSea/1252582046343536641.html#Status_1252590258019094528).
+This is a semantic association observed in horse-related characters, not a standalone
+word definition. Other Tangut components can show glossed characters whose recorded
+[BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt) explicitly
+contain them. These are usage examples, not inferred component meanings.
+
+Small Seal links use the direct modern correspondences in `small-seal.json.gz`,
+from the CHISE and Unicode sources described above. The MOE-derived 𠙵→口 search alias
+is omitted from historical-form links. Only forms in the bundled font's
+`table ∪ parts` coverage are displayed. A Tangut translation does not imply a Small
+Seal ancestor. Missing meanings stay unspecified.
+
+Rebuild with `python3 scripts/build_character_info.py`. The builder verifies both
+source digests. The character-information file is fetched only when a panel is used;
+hovering does not send the character to a dictionary service.
+
 ## Tangut
 
 The same IDS table also includes 6,145 records from Andrew West's

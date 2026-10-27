@@ -813,3 +813,19 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+### Character information
+
+`babelStoneAdapter({ characterInfo: url, ... })` accepts the bundled
+`data/character-info.json.gz`, or its decoded document. The optional
+`adapter.characterInfo(char, { signal })` returns English glosses, cited component
+associations, editorial Han translations and emoji mnemonics, and direct Small Seal
+correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
+describe the limits of each relationship.
+
+`IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
+the floating panel and Esc to dismiss it. Clicks retain their editing action. Custom
+layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} />` beside
+their editor, where `root` is the containing element. The parts, search, sequence and
+tree components expose `data-character` targets; custom character controls can use
+the same attribute. Hosts without `characterInfo` retain their existing titles.

@@ -105,7 +105,7 @@
   "app.source.hfhchan": "Which components the palette leaves whole.",
   "app.source.kanjivg": "Some component cuts used by the composer; drawings with those cuts are shared alike.",
   "app.source.smallSeal": "Jiguge Shuowen decompositions: 49 mapped characters and 31 components. Other source records remain unresolved.",
-  "app.source.sealFont": "76 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
+  "app.source.sealFont": "1,334 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
   "app.source.tangut": "Tangut text and composition outlines.",
   "app.source.noto": "The outlines han-compose moves, and the parts font.",
   "app.source.plangothic": "Outlines for parts Noto Sans CJK lacks.",
@@ -133,5 +133,7 @@
   "app.replacement.submit": "Open result",
   "app.replacement.loading": "Looking up components…",
   "app.replacement.notFound": "Could not find that component in the character.",
-  "app.replacement.failed": "Could not look up the character. Please try again."
+  "app.replacement.failed": "Could not look up the character. Please try again.",
+  "app.source.tangutGlosses": "English Tangut glosses, with source qualifiers, for character information panels.",
+  "app.source.tangutComponentMeaning": "The horse-related semantic association of component 𘥇 (2020-04-21)."
 }

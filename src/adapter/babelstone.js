@@ -1,6 +1,7 @@
 // @ts-check
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
+import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms } from './seal-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms } from '../core/search.js'
@@ -111,15 +112,15 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * component forms together before a name is compared. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
- * same table and palette; its modern equivalents supply component-search labels only.
+ * same table and palette; its modern correspondences supply search labels and character information.
  * @param {{ ids?: string | URL, additionalIds?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string, characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -324,8 +325,29 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     return [...new Set(chars)].filter(isComponent).map(char => ({ char, label: codePoint(char) }))
   }
 
+  /** @type {Promise<{ doc: import('./character-info.js').CharacterInfoData, lookup: ReturnType<typeof createCharacterInfo> }> | null} */
+  let information = null
+  const readInformation = () => information ??= Promise.all([
+    typeof characterInfo === 'string' || characterInfo instanceof URL
+      ? load(characterInfo).then(readText).then(JSON.parse) : characterInfo,
+    readSeal(),
+  ]).then(([doc, seal]) => ({ doc, lookup: createCharacterInfo(doc, seal) }))
+    .catch(error => { information = null; throw error })
+
   return {
     table: read,
+    ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
+      signal?.throwIfAborted()
+      const { doc, lookup } = await readInformation()
+      const info = lookup(char)
+      if (info?.script === 'component') {
+        info.relations.push(...componentExamples(char, doc, await read()))
+        for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
+        if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
+      }
+      signal?.throwIfAborted()
+      return info
+    } } : {}),
     async structure(char, { signal } = {}) {
       const found = (await read()).get(char) ?? []
       signal?.throwIfAborted()

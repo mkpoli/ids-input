@@ -104,7 +104,7 @@
   "app.source.hfhchan": "부품표에서 더 나누지 않는 부품.",
   "app.source.kanjivg": "조합기의 일부 절단. 그 절단을 쓴 자형은 동일 조건으로 공유.",
   "app.source.smallSeal": "급고각본 《설문해자》의 자형 구조: 매핑된 49자와 부품 31개를 제공합니다. 나머지 원본 기록은 아직 매핑되지 않았습니다.",
-  "app.source.sealFont": "진창치본에 따른 자형 76개입니다. 원본 프로젝트의 검토가 아직 끝나지 않았습니다.",
+  "app.source.sealFont": "진창치본에 따른 자형 1,334개입니다. 원본 프로젝트의 검토가 아직 끝나지 않았습니다.",
   "app.source.tangut": "서하 문자 표시와 조합에 쓰는 자형.",
   "app.source.noto": "han-compose가 쓰는 윤곽과 부품 글꼴.",
   "app.source.plangothic": "Noto Sans CJK에 없는 부품의 자형.",
@@ -132,5 +132,7 @@
   "app.replacement.submit": "결과 열기",
   "app.replacement.loading": "부품 찾는 중…",
   "app.replacement.notFound": "글자에서 해당 부품을 찾을 수 없습니다.",
-  "app.replacement.failed": "글자를 조회하지 못했습니다. 다시 시도해 주세요."
+  "app.replacement.failed": "글자를 조회하지 못했습니다. 다시 시도해 주세요.",
+  "app.source.tangutGlosses": "문자 정보에 표시하는 서하 문자의 영어 뜻과 용법 제한.",
+  "app.source.tangutComponentMeaning": "부품𘥇과 말의 의미 사이의 관련성(2020년4월21일)."
 }
