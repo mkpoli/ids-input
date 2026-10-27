@@ -118,6 +118,7 @@
   "app.tabs.duplicate": "複製分頁",
   "app.tabs.edited": "已編輯",
   "app.tabs.menu": "分頁操作",
+  "app.tabs.none": "沒有開啟的分頁",
   "app.tabs.new": "新增分頁",
   "app.tabs.untitled": "無標題",
   "app.theme.dark": "深色",

@@ -106,10 +106,10 @@
   }
   /** @param {string} id */
   async function close(id) {
-    if (tabs.length < 2) return
     onclose(id)
     await tick()
-    focus(activeId)
+    if (tabs.length) focus(activeId)
+    else /** @type {HTMLElement | null} */ (document.querySelector('.tab-new'))?.focus()
   }
   /**
    * @param {KeyboardEvent} event
@@ -126,7 +126,7 @@
     else if (event.key === 'ArrowLeft') { event.preventDefault(); move((at - 1 + tabs.length) % tabs.length) }
     else if (event.key === 'Home') { event.preventDefault(); move(0) }
     else if (event.key === 'End') { event.preventDefault(); move(last) }
-    else if ((event.key === 'Delete' || event.key === 'Backspace') && tabs.length > 1) { event.preventDefault(); close(tabs[at].id) }
+    else if ((event.key === 'Delete' || event.key === 'Backspace')) { event.preventDefault(); close(tabs[at].id) }
   }
 </script>
 
@@ -140,7 +140,7 @@
       {@const name = label(tab)}
       {@const marked = edited(tab)}
       <div class="tab" class:on={tab.id === activeId} data-tab-id={tab.id}
-        onauxclick={event => { if (event.button === 1) { event.preventDefault(); if (tabs.length > 1) close(tab.id) } }}>
+        onauxclick={event => { if (event.button === 1) { event.preventDefault(); close(tab.id) } }}>
         <button type="button" class="tab-main" role="tab" id={`${panelId}-tab-${tab.id}`} aria-selected={tab.id === activeId}
           aria-controls={panelId} tabindex={tab.id === activeId ? 0 : -1} title={name} aria-label={marked ? `${name}, ${t('app.tabs.edited')}` : name}
           onclick={() => onselect(tab.id)} onkeydown={event => key(event, at)}
@@ -149,10 +149,8 @@
             {#if marked}<span class="tab-dot" title={t('app.tabs.edited')} aria-hidden="true"></span>{/if}
           </span>
         </button>
-        {#if tabs.length > 1}
           <button type="button" class="tab-close" tabindex="-1" title={t('app.tabs.close', { name })} aria-label={t('app.tabs.close', { name })}
             onclick={() => close(tab.id)} onkeydown={event => key(event, at)}><Icon name="close" size={11} /></button>
-        {/if}
       </div>
     {/each}
   </div>
@@ -181,7 +179,7 @@
   .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--bg) 10.5px)}
   .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--bg) 10.5px)}
   .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
-  .tab:not(.on) .tab-main,.tab:only-child .tab-main{padding-inline:12px}
+  .tab:not(.on) .tab-main{padding-inline:12px}
   .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
   .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:28px;height:28px}
   .tab:not(.on) .tab-icon{opacity:.7}

@@ -118,6 +118,7 @@
   "app.tabs.duplicate": "タブを複製",
   "app.tabs.edited": "編集済み",
   "app.tabs.menu": "タブの操作",
+  "app.tabs.none": "開いているタブはありません",
   "app.tabs.new": "新しいタブ",
   "app.tabs.untitled": "無題",
   "app.theme.dark": "ダーク",

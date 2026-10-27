@@ -233,25 +233,25 @@
 
   // The tabs of the workspace: one description each, the open ones and the active one kept for the
   // next visit. A tab's tree and history wait in `states` while another tab is shown.
-  const stored = readTabs(), linked = canonical(sequenceFrom(location))
+  const stored = readTabs(), linked = canonical(sequenceFrom(location)), savedActiveId = readActiveTab()
   // Bring the old single-document autosave into the first tab on upgrade.
-  if (!stored.length) {
+  if (!stored.length && savedActiveId !== '') {
     const previous = load('current', '')
     if (typeof previous === 'string' && previous) stored.push(makeTab(previous))
   }
-  const keptTab = stored.find(tab => tab.id === readActiveTab())
+  const keptTab = stored.find(tab => tab.id === savedActiveId)
   const linkedTab = linked ? stored.find(tab => tab.sequence === linked) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
   const fromLink = linked && !linkedTab ? makeTab(linked) : undefined
-  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : [fromLink ?? makeTab(linked || EXAMPLES[0].sequence)]
+  const opening = stored.length ? [...stored, ...(fromLink ? [fromLink] : [])] : fromLink ? [fromLink] : savedActiveId === '' ? [] : [makeTab(linked || EXAMPLES[0].sequence)]
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
-  let activeId = $state(initial.id)
-  const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
+  let activeId = $state(initial?.id ?? '')
+  const activeTab = $derived(tabs.find(tab => tab.id === activeId))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
-  editor.reset(initial.sequence)
+  editor.reset(initial?.sequence ?? '')
   const pathKey = (/** @type {number[]} */ path) => path.join('.')
   let knownSequence = editor.whole
   $effect(() => {
@@ -401,7 +401,6 @@
   }
   /** Close a tab, showing its neighbour; the note brings it back. @param {string} id */
   function closeTab(id) {
-    if (tabs.length < 2) return
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
     const tab = tabs[at]
@@ -412,12 +411,20 @@
     tabs.splice(at, 1)
     if (id === activeId) {
       const next = tabs[at] ?? tabs[at - 1]
-      activeId = next.id
-      const saved = states.get(next.id)
-      states.delete(next.id)
-      if (saved) editor.restore(saved)
-      else editor.reset(next.sequence)
-      restoreAdjustments(next.id)
+      activeId = next?.id ?? ''
+      if (next) {
+        const saved = states.get(next.id)
+        states.delete(next.id)
+        if (saved) editor.restore(saved)
+        else editor.reset(next.sequence)
+        restoreAdjustments(next.id)
+      } else {
+        editor.reset('')
+        adjustments = {}
+        adjusting = false
+        knownSequence = editor.whole
+        history.replaceState(null, '', linkTo('', location))
+      }
     }
     toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
       run: () => reopen(tab, state, adjusted, at) }
@@ -457,7 +464,7 @@
   }
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
-    { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
+    { label: t('app.tabs.duplicate'), icon: 'copy', disabled: !activeTab, run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
@@ -549,6 +556,7 @@
       else if (inEditor) focusActiveEditor()
       return
     }
+    if (!activeTab) return
     if (mod && event.key.toLowerCase() === 's') { event.preventDefault(); keepDraft(); return }
     if (target.closest('input, textarea, select, [contenteditable="true"], [role="menu"]')) return
     if (mod && ['c', 'x', 'v', 'a'].includes(event.key.toLowerCase())) {
@@ -620,6 +628,7 @@
   </div>
 
   <main class="workspace" bind:this={work}>
+    {#if activeTab}
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
       <section class="pane input" id="input-panel" aria-label={t('app.input')}>
@@ -716,6 +725,9 @@
         </div>
       </section>
     </div>
+    {:else}
+      <div class="empty-workspace"><p>{t('app.tabs.none')}</p><button type="button" class="tool" onclick={() => addTab()}><Icon name="plus" />{t('app.tabs.new')}</button></div>
+    {/if}
   </main>
   <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
 
@@ -785,6 +797,8 @@
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
   .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
+  .empty-workspace{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--muted)}
+  .empty-workspace p{margin:0}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
