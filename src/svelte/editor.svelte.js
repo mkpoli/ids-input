@@ -53,6 +53,7 @@ export function createEditor(options) {
   let tree = $state.raw(/** @type {Part} */ (null))
   let caret = $state(/** @type {number | null} */ (null))
   let selectionVersion = $state(0)
+  let revision = $state(0)
   let hovered = $state.raw(/** @type {Path | null} */ (null))
   let chosen = $state.raw(/** @type {Path | null} */ (null))
   let draft = $state(''), piece = $state(''), note = $state('')
@@ -95,7 +96,7 @@ export function createEditor(options) {
   }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
   function reset(start) {
-    history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
+    revision++; history.clear(); caret = null; hovered = null; note = ''; change = null; typing = false; run = false
     const read = parse(start, { open: true })
     // A pasted ＋ for an empty slot is written back as ⬚.
     tree = read.tree ?? null; chosen = null; piece = ''
@@ -104,7 +105,7 @@ export function createEditor(options) {
   }
   /** @param {Part} next @param {Path | null} select */
   function commit(next, select) {
-    caret = null
+    revision++; caret = null
     hovered = null
     tree = next; chosen = select; selectionVersion++; note = ''
     // An empty tree is an empty field, not an empty slot (⬚); a slot is written inside a node.
@@ -151,7 +152,7 @@ export function createEditor(options) {
   }
   /** Put back a state from `snapshot`, as when a host switches between documents. @param {ReturnType<typeof snapshot>} state */
   function restore(state) {
-    caret = null
+    revision++; caret = null
     hovered = null
     history.restore(state.history)
     tree = state.tree ?? null; chosen = state.chosen ?? null; draft = state.draft; piece = state.piece
@@ -253,6 +254,7 @@ export function createEditor(options) {
       const offset = [...written].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
     }
+    if (draft !== written) revision++
     draft = written
     const found = parse(written, { open: true })
     if (found.problem) { sync(); return }
@@ -290,7 +292,7 @@ export function createEditor(options) {
   function keydown(event, { root = null, slot = null } = {}) {
     if (disabled()) return
     const el = /** @type {HTMLElement} */ (event.target)
-    if (el.closest?.('input, textarea, select, [contenteditable="true"], dialog, [role="menu"]')) return
+    if (el.closest?.('input, textarea, select, [contenteditable="true"], dialog, [role="menu"], .inline-edit')) return
     const command = commandFor(event)
     if (!command) return
     const inPicker = Boolean(el.closest?.('.ids-pick-tabs, .ids-pick-panel'))
@@ -331,6 +333,7 @@ export function createEditor(options) {
     },
     /** @param {Path} path */
     isHovered(path) { return hovered !== null && hovered.every((n, i) => path[i] === n) },
+    get revision() { return revision },
     get selectionVersion() { return selectionVersion },
     get selectionRange() { return caret !== null ? { start: caret, end: caret } : chosen === null ? null : tokens(draft).find(token => samePath(token.path, chosen)) ?? null },
     /** @param {number} start @param {number} end */

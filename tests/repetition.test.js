@@ -238,7 +238,7 @@ it('uses the native traditional whole glyphs, including the 文 alias', async ()
       return { ...data, rec: key => rec([inner, '亠', '㐅', '厂', '文'].includes(key) ? '木' : key) }
     }
     const excluded = await compose(source, text, { fontStyle, exclude: [inner === '生' ? '產' : '彥'] })
-    expect(excluded.origins).not.toContain(`Noto ${fontStyle === 'serif' ? 'Serif' : 'Sans'} CJK JP: ${text}`)
+    expect(excluded.origins.some(origin => origin.includes(text))).toBe(false)
     expect(excluded.parts.length).toBeGreaterThan(1)
     if (inner === '生') expect(excluded.origins.some(origin => origin.includes('Noto'))).toBe(false)
     expect(onlyBundled(text, false, false, 'kaisho')).toBe(false)
@@ -302,4 +302,46 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(collision([complexParts[1]], [complexLegs], constants.face, 1024)).toBeGreaterThan(0)
     expect(complexParts.slice(3).every(part => part.weight[1] <= 0)).toBe(true)
   }
+})
+
+it('renders requested native components offline, including the three exact subtraction shapes', async () => {
+  const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans','serif']) {
+    for (const text of ['⿻𢆶戈','⿸尸彳','㇯鹿比','㇯馬灬','㇯鳥灬','⿳亠口冖','⿸尸氺','⿳𰀉冖木','⿳卝罒冖']) {
+      expect(onlyBundled(text)).toBe(true)
+      const drawn = await compose(local(), text, { fontStyle })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      expect(drawn.d).not.toMatch(/NaN|Infinity/)
+      expect(drawn.cut).toBe('')
+      const part = componentParts(text, undefined, fontStyle)[0]
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
+    }
+    // The native hooks remain; all four isolated 灬 contours are absent.
+    expect(componentDrawing('㇯馬灬', fontStyle).d.match(/M/g)).toHaveLength(4)
+    expect(componentDrawing('㇯鳥灬', fontStyle).d.match(/M/g)).toHaveLength(3)
+    expect(componentParts('㇯鳥灬', undefined, fontStyle)[0].source[1]).toBeLessThan(0)
+    const nested = await compose(remote(), '⿹㇯鳥灬木', { fontStyle })
+    expect(nested.origins.some(origin => origin.includes('㇯鳥灬'))).toBe(true)
+  }
+})
+
+it('reports subtraction as approximate when its native form is unavailable or separated', async () => {
+  const source = remote()
+  await compose(source, '木')
+  const store = source.store
+  source.store = () => {
+    const data = store(), rec = data.rec
+    return { ...data, rec: key => rec(['鹿', '比'].includes(key) ? '木' : key) }
+  }
+  for (const options of [{ fontStyle: 'kaisho' }, { fontStyle: 'sans', separate: true }]) {
+    const drawing = await compose(source, '㇯鹿比', options)
+    expect(drawing.cut).not.toBe('')
+    expect(drawing.approximate).toContain('㇯')
+  }
+  const native = await compose(source, '㇯鹿比', { fontStyle: 'sans' })
+  expect(native.cut).toBe('')
+  expect(native.approximate).not.toContain('㇯')
+  const fallback = await compose(local(), '㇯鹿比', { fontStyle: 'sans', separate: true })
+  expect(fallback.cut).toBe('')
+  expect(fallback.approximate).not.toContain('㇯')
 })

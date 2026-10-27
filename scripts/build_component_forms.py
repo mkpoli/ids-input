@@ -95,6 +95,42 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
                                 ('⿱文厂', [('彡','彥'), ('生','產')])]:
         for inner, ch in examples:
             forms['⿸'+enclosure+inner]=[group(cs(ch))]
+    # Requested reusable parts, cut from native host glyphs at their original em.
+    c=cs('畿')
+    if style=='sans':
+        # Bypass the connected 田 outline; retain 戈's falling stroke.
+        outside=c[0][:40]+[('lineTo', ((408,-29),))]+c[0][47:]
+        forms['⿻𢆶戈']=[group([outside,c[5]])]
+    else:
+        forms['⿻𢆶戈']=[group(c[5:])]
+    c=cs('屐')
+    forms['⿸尸彳']=[group([c[i] for i in ([0,1] if style=='sans' else [0,1,2,5])])]
+    c=cs('鹿')
+    forms['㇯鹿比']=[group(c[:6] if style=='sans' else c[:4])]
+    # 灬 consists of the first four independent contours in both source fonts.
+    for ch in ['馬','鳥']:
+        forms['㇯'+ch+'灬']=[group(cs(ch)[4:])]
+    c=cs('亭')
+    forms['⿳亠口冖']=[group(c[:4] if style=='sans' else [c[0],c[2],c[3],c[4]])]
+    # TC supplies the 氺 form of 犀 and the four-stroke 卝 in 夢.
+    tc=TTFont(path,fontNumber=3); tcgs=tc.getGlyphSet(); tccmap=tc.getBestCmap()
+    tcs=lambda ch:contours(tcgs,tccmap[ord(ch)])
+    c=tcs('犀')
+    forms['⿸尸氺']=[group(c[:7] if style=='sans' else [c[0],c[1],c[3],c[4]])]
+    c=cs('橐')
+    if style=='sans':
+        wood=c[1][:16]+[('lineTo', ((460,233),))]+c[1][30:]
+        forms['⿳𰀉冖木']=[group([c[2],c[3],c[4],wood])]
+    else:
+        wood=[('moveTo', ((468,237),))]+c[3][13:36]+[('closePath', ())]
+        forms['⿳𰀉冖木']=[group([c[0],c[1],c[2],wood])]
+    c=tcs('夢')
+    if style=='sans':
+        forms['⿳卝罒冖']=[group(c[:7])]
+    else:
+        cover=group([cs('亭')[4]])
+        cover=[[ops,[v if i%2==0 else v-70 for i,v in enumerate(points)]] for ops,points in cover]
+        forms['⿳卝罒冖']=[group([c[0],c[1],c[3],c[4],c[5],c[6]])+cover]
     forms['⿱士冖']=crown
     forms['⿳士冖一']=crown+[bar]
     forms['⿱⿱士冖一']=crown+[bar]
@@ -136,5 +172,6 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     result['forms'][style]=forms
-    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0}
+    result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
+        'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

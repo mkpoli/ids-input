@@ -145,9 +145,11 @@ function keysOf(tree, out = [], separate = false) {
 }
 
 // A dedicated form consumes its internal operators, including the mirrored spelling.
-function extraOperators(tree) {
-  if (typeof tree === 'string' || isComponentForm(keyOf(tree))) return []
-  return [tree[0], ...tree.slice(1).flatMap(extraOperators)].filter(op => APPROXIMATE.includes(op))
+function extraOperators(tree, { fontStyle, separate }) {
+  if (typeof tree === 'string') return []
+  const key = keyOf(tree)
+  if (fontStyle !== 'kaisho' && (separate ? isGroupedForm(key) : isComponentForm(key))) return []
+  return [tree[0], ...tree.slice(1).flatMap(child => extraOperators(child, { fontStyle, separate }))].filter(op => APPROXIMATE.includes(op))
 }
 
 /** A box in font units (y up) as the drawing's SVG box has it: [x, y, width, height], y down. */
@@ -203,7 +205,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree)), ...composer.approximate])] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

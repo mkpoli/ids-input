@@ -9,21 +9,36 @@
   import { translator } from './i18n.js'
 
   /** @typedef {import('../adapter/types.js').IdsHit} IdsHit */
-  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number,
+  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure',
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
-  let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, onopen, ontake } = $props()
+  let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, mode = 'ids', onopen, ontake } = $props()
   const t = $derived(translator(messages, locale))
   const asked = $derived(query.trim())
-  let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra', hits: IdsHit[], total: number }} */ ({ status: 'idle', hits: [], total: 0 }))
+  let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra' | 'pattern', hits: IdsHit[], total: number, characters: string }} */ ({ status: 'idle', hits: [], total: 0, characters: '' }))
   let asks = 0
+  let shown = $state(60)
+  let copied = $state(false)
+  let copying = $state(false)
+  let copyFailed = $state(false)
+  $effect(() => { asked; mode; shown = limit; copied = false; copyFailed = false })
+  async function copyAll() {
+    const id = asks
+    copying = true
+    try {
+      await navigator.clipboard.writeText(found.characters)
+      if (id === asks) copied = true
+    } catch { if (id === asks) copyFailed = true }
+    finally { copying = false }
+  }
   $effect(() => {
-    const text = asked, find = adapter.findByIds, most = limit
-    if (!text || !find) { found = { status: 'idle', hits: [], total: 0 }; return }
-    const id = ++asks, controller = new AbortController()
+    const text = asked, find = mode === 'structure' ? adapter.findByStructure : adapter.findByIds, most = shown
+    const id = ++asks
+    if (!text || !find) { found = { status: 'idle', hits: [], total: 0, characters: '' }; return }
+    const controller = new AbortController()
     untrack(() => { found = { ...found, status: 'loading' } })
     const timer = setTimeout(() => find(text, { limit: most, signal: controller.signal }).then(
-      result => { if (id === asks) found = { status: result.problem === 'extra' ? 'extra' : result.problem ? 'idle' : 'ready', hits: result.hits, total: result.total } },
-      () => { if (id === asks && !controller.signal.aborted) found = { status: 'failed', hits: [], total: 0 } }), delay)
+      result => { if (id === asks) found = { status: result.problem === 'extra' ? 'extra' : result.problem === 'pattern' ? 'pattern' : result.problem ? 'idle' : 'ready', hits: result.hits, total: result.total, characters: 'characters' in result ? result.characters : '' } },
+      () => { if (id === asks && !controller.signal.aborted) found = { status: 'failed', hits: [], total: 0, characters: '' } }), delay)
     return () => { clearTimeout(timer); controller.abort() }
   })
   /** The description in pieces, each marked when a term matched it. @param {IdsHit} hit */
@@ -42,9 +57,16 @@
 <section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
   <p class="count" aria-live="polite">
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
+    {:else if found.status === 'pattern'}<span class="fault">{t('ids.structural.invalid')}</span>
     {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
     {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: found.total })}{/if}
   </p>
+  {#if mode === 'structure' && found.status === 'ready' && found.total > 0}
+    <div class="result-actions">
+      <button type="button" disabled={copying} onclick={copyAll}>{t(copied ? 'ids.structural.copied' : 'ids.structural.copy')}</button>
+      {#if copyFailed}<span role="status">{t('ids.structural.copyFailed')}</span>{/if}
+    </div>
+  {/if}
   {#if found.hits.length}
     <ol class="hits" class:stale={found.status === 'loading'}>
       {#each found.hits as hit (hit.char)}
@@ -60,6 +82,9 @@
         </li>
       {/each}
     </ol>
+    {#if mode === 'structure' && found.hits.length < found.total}
+      <button type="button" class="more" disabled={found.status === 'loading'} onclick={() => shown += limit}>{t('ids.structural.more')}</button>
+    {/if}
   {:else if found.status !== 'loading'}
     <!-- Nothing found, or nothing asked: a drawing of an empty search. -->
     <svg class="empty" viewBox="0 0 120 80" aria-hidden="true"><rect x="18" y="14" width="44" height="44" rx="8" /><path d="M40 26v20M30 36h20" /><circle cx="84" cy="44" r="16" /><path d="m96 56 12 12" /></svg>
@@ -77,6 +102,9 @@
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
   button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}
+  .result-actions{display:flex;align-items:center;gap:8px;font-size:12px}
+  .result-actions button,.more{border:1px solid var(--_line);background:var(--_surface);color:var(--_ink);border-radius:6px;padding:5px 10px;font:inherit;cursor:pointer}
+  .more{align-self:center}
   .fault{color:var(--_fault)}
   .hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;margin:0;padding:0;list-style:none;transition:opacity .15s}
   .hits.stale{opacity:.55}

@@ -30,7 +30,7 @@ export function componentParts(text, region = constants.face, style = 'sans', at
   // complete native glyphs retain their designed proportions and side bearings.
   // Nested forms use the description's contextual row/column allocation.
   const target = atRoot ? mapped(frame, constants.face, region) : region
-  const origin = text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK JP: ${text}`
+  const origin = text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK: ${text}`
   return parts.map(part => ({ ...placed(part, part.box, mapped(part.box, frame, target), ink, origin), fixed: true }))
 }
 export function componentDrawing(text, style = 'sans') {
