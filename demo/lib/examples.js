@@ -7,9 +7,9 @@
 // of 園), ⿱一心 (@jianhuazi_bot2, the 二簡字 of 德) and ⿰忄実 (@Umihotarus, 舘暲's character for
 // ヴァーチャル).
 //
-// Hybrid examples from SCRIPT-HYBRID (BiangBiangCon v19, slide dated 2026-10-16; supplied
-// 2026-10-26). The encoded forms use BabelStone IDS. The forms with no code point: ⿴口도 is the
-// slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
+// Hybrid examples from Gen Kojitani’s “Script-Hybrid CJK Ideographs” (BiangBiangCon,
+// 2026-10-16; SCRIPT-HYBRID slides v19). The encoded forms use BabelStone IDS. For the forms
+// with no code point, ⿴口도 is the slide's proposed 図; ⿰艦ラ, ⿰艦ツ and ⿰掌キ are after CINCPAC-CINCPOA Bulletin 18-45 and
 // Japanese Military and Technical Terms (1945-07-30) p.217, L2/24-201 Fig.44, with images from
 // @xWcvlUaljn96009; ⿰门T is after N2744 Fig.8 and N2741 p.10 (唐蘭『古文字学導論』p.134).
 // ⿰𛂦方 describes 𭤪 (U+2D92A): Gen Kojitani, Reply to N2741, IRG N2744 (2024-10-20), p.7.
@@ -19,7 +19,7 @@
 // https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf#page=2
 // ⿰扌3 is a shape approximation to the Sawndip form in N2744 Fig.7 (p.8), whose pictographic
 // right component also has a dot. ASCII 3 here specifies a drawing shape, not that component's origin.
-// ⿰木き, ⿰木⿳ㄙㄨㄙ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
+// ⿰木き, ⿰木⿳ㄙㄨㄥ and ⿰木⿱ㄅㄞ: attested forms reported by mkpoli, personal
 // communication, 2026-10-27. No published source is recorded here.
 // ⿺辶說, ⿱龹幸, ⿶む子 and 〾⿱⿰大⿱七六⿵勹五: mkpoli, personal communication,
 // 2026-10-27. Published sources for these exact forms are not recorded here.
@@ -31,11 +31,25 @@
 // ⿰要勿 (覅): https://www.cns11643.gov.tw/wordView.jsp?ID=149313
 // ⿹⿺㇉一卄 (與 variant), JYN00001; ⿰扌⿸厃⿱儿𢀛 (擔 variant), JYN00010:
 // https://jyutnet.github.io/unencoded-characters/ (dictionary evidence linked per record).
+// 嫑 (⿱不要): BabelStone IDS; ⿺辶比 (避) and ⿱艹半 (瓣):
+// https://www.babelstone.co.uk/Fonts/Erjian.html, entries 2.2:007 and 2.2:003.
+// ⿵門覃 and ⿰舟邊: https://jyutnet.github.io/unencoded-characters/, JYN00013 / JYN00017.
 // 匜, 爽, 㕚, 氷, 臦, 𢨋 and 𧰧: BabelStone IDS.
 // 㕚 (⿼叉丶) and 氷 (⿽水丶) also appear in IRG N2572, p.2:
 // https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
+// 𣥄 (⿾正), 𠄔 (⿿予), 𠕄 (⿿凹), 𦣩 (⿰臣⿾臣), 𣥒 (⿱⿿止止),
+// and 𧹂 (⿱⿰虎⿿虎貝): BabelStone IDS. The first two also appear in IRG N2572, p.2.
+// https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
+// Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
+// https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
+    { sequence: '⿾正', char: '𣥄' },
+    { sequence: '⿿予', char: '𠄔' },
+    { sequence: '⿿凹', char: '𠕄' },
+    { sequence: '⿱不要', char: '嫑' },
+    { sequence: '⿱艹半', char: '' },
+    { sequence: '⿰舟邊', char: '' },
     { sequence: '⿻大㸚', char: '爽' },
     { sequence: '㇯豕㇒', char: '𧰧' },
     { sequence: '⿱成龙', char: '' },
@@ -50,6 +64,9 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰忄実', char: '' },
   ] },
   { key: 'complex', examples: [
+    { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
+    { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
+    { sequence: '⿰𦚏⿷己三', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
@@ -60,6 +77,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰氵鬱', char: '灪' },
   ] },
   { key: 'repeated', examples: [
+    { sequence: '⿰臣⿾臣', char: '𦣩' },
+    { sequence: '⿱⿿止止', char: '𣥒' },
     { sequence: '⿰⿾臣臣', char: '臦' },
     { sequence: '⿱或⿿或', char: '𢨋' },
     { sequence: '⿰⿱興興⿱興興', char: '𠔻' },
@@ -75,6 +94,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
+    { sequence: '⿵門覃', char: '' },
+    { sequence: '⿺辶比', char: '' },
     { sequence: '⿷匚也', char: '匜' },
     { sequence: '⿼叉丶', char: '㕚' },
     { sequence: '⿽水丶', char: '氷' },
@@ -101,7 +122,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' },
     { sequence: '⿰亻A', char: '' },
     { sequence: '⿰扌3', char: '' },
-    { sequence: '⿰木⿳ㄙㄨㄙ', char: '' },
+    { sequence: '⿰木⿳ㄙㄨㄥ', char: '' },
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },

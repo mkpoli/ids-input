@@ -70,3 +70,5 @@ component choices, unmapped components, and unavailable glyphs.
 
 These files are editorial decisions. Publishing them as source-backed IDS requires
 separate source checking and dataset maintenance.
+
+When the adapter combines modern IDS tables, `modernSource` lists all supplied tables. This is table-level provenance; it does not assign individual descriptions to one source.

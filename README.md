@@ -33,7 +33,8 @@ The package has four layers, and an optional preview:
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
   [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
 
-The bundled data holds BabelStone's Han and Tangut decompositions, and the palette has a Tangut
+The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
+from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
@@ -90,6 +91,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
+| `tintMode` | `"hover"` | branch tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
 | `disabled` | | |
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
@@ -124,8 +126,9 @@ and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps 
 clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
 on it.
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. Compound palette cells show an `IDS` marker and expose
-the sequence and stroke count on hover. `adapter.icon` supplies their outlines;
+also work without an editor. The Stroke count panel includes both common and hard-to-type
+parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
+compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
 (`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
@@ -145,12 +148,19 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 ```
 
-A component is an ideograph, a radical, a stroke, a letter or digit, a private-use character or
-`？` for a part no character names, with an optional variation selector. The letters and digits are
-those of Latin, IPA, Greek, Cyrillic, hiragana, katakana (コ, マ standing for a component of that
-shape), Bopomofo, Hangul syllables and jamo, the full- and half-width forms and the kana supplements that the
-preview's fonts draw (Noto Sans CJK JP and Plangothic), so a ligature such as 慶應's `⿸广⿰KO` can be
-written and drawn. `isLetter` tells them apart. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
+private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
+letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
+controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
+allocation U+3D000–U+3FC3F.
+Combining marks are individual components; only a variation selector attaches to the preceding
+component. Acceptance follows the JavaScript runtime's Unicode version and is independent of
+preview font coverage. The composer supplements missing export glyphs with 40,221 bundled Noto
+outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
+still have no preview; private-use characters need an outline supplied by the host.
+`isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
+The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
+supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
 ### Small Seal (小篆)
 
@@ -225,8 +235,21 @@ transform engine evaluates affine, projective and Möbius chains on paths: affin
 a nonlinear chain is flattened within a tolerance and its pole is checked against the path's control
 hull. `renderLayers(document, source)` walks the tree with a host that supplies each component's
 local geometry and each operator child's placement, applies the nested layer transforms, and reports
-missing geometry or unsupported transforms. Compositing (including ㇯), storage and the editor binding
-are not part of these modules yet.
+missing geometry or unsupported transforms. `renderScopes` keeps component cuts and operator children
+apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction.
+
+`createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
+reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
+`clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
+whole documents. `session.document` returns a detached copy; use session edits to change it.
+`listen` tells a host when to redraw; a throwing listener is reported through
+`onListenerError` (or `reportError`) and does not undo the committed edit.
+
+`documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
+placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
+builds it in one call; the preview must use `separate: true`. When the composer omits leaf ownership,
+the source infers it only from one non-cut part per component in reading order; anything else leaves
+the source incomplete. Storage and the editor binding are not part of these modules yet.
 
 ## Adapters
 
@@ -270,6 +293,11 @@ Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen par
 keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
 for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
 
+A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
+each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
+source together. The composer's leaf ownership is used when present; without it, one non-cut part per
+component in reading order is inferred. Other drawings report themselves incomplete.
+
 `babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
 (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん
 when `names` is given), `searchCharacters` (a character by a reading or meaning when `characters` is
@@ -281,7 +309,40 @@ search builds an index in memory on first use: under Bun, about half a second fo
 components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
 there instead. It has no `variants`, `drawing` or `preview`.
 
+Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
+replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated
+standard IDS subset of Yi Bai's data. Extended expressions and variant annotations are not included.
+
 ## Search
+
+`IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
+four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+The demo offers it beside the existing character search below the editor. Selecting a preset
+runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
+characters** copies the complete result, including hits beyond the visible page.
+
+```js
+import { createStructuralSearch } from 'ids-input'
+const patterns = createStructuralSearch(table, { forms })
+patterns.search('⿱A⿰AA')          // 品, 森, 麤, …; A must be the same component
+patterns.search('⿱⿰AA⿰AA | ⿰⿱AA⿱AA') // both four-part grid orientations
+patterns.search('⿲ABA')           // matching outer parts, such as 弼
+patterns.search('⿸⬚⬚')           // any upper-left enclosure
+```
+
+A–Z bind components or subtrees; repeated letters must have a common compatible decomposition.
+Different letters may match the same part. Positional forms use the supplied forms table.
+`⬚` and `？` match any part; `|` separates up to eight alternative patterns. Each pattern must
+be a complete IDS of at most 64 code points. Matching starts at the character's whole description
+and opens encoded components up to six levels, considering source alternatives. It does not find
+a pattern merely contained somewhere inside an unrelated outer structure. Approximation marks
+remain explicit operators. Coverage depends on the supplied descriptions and forms.
+
+`babelStoneAdapter.findByStructure(query, { limit, signal })` runs this search in the same worker
+as description search. It returns `{ hits, total, characters, problem? }`: `characters` contains
+all matching characters without separators, while `hits` is limited for display. Invalid patterns
+return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
+other characters, with code-point ordering within each group.
 
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
@@ -401,8 +462,8 @@ frequency or Unihan's school grade. Without `characters` the tab is not shown.
 ## Preview
 
 `ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. Tangut outlines are bundled and loaded on demand. Han and mixed
-Han–Tangut descriptions also read the static files han-compose's `export-web` writes (format 5):
+MIT), ported to the browser. Tangut, Bopomofo, Small Seal and Unicode fallback outlines are
+bundled and loaded on demand. Han and mixed descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
@@ -416,15 +477,24 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 ```
 
 `base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. Without it Han previews keep their placeholders and show no badge; Tangut previews
-use the bundled outlines. When the export loads but a part has no drawing, its badge reads
+origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
+can still render. Other previews keep their placeholders. When the export loads but a part has
+no outline in either source, its badge reads
 "Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
 
-The demo draws from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`;
-`?composer=<url>` or `VITE_COMPOSER_BASE` points it at another copy of the export.
+`fromUrl(base)` uses a selected export's own glyphs first, then loads bundled fallback glyphs for
+missing components. `unicodeSource()` supplies only bundled Unicode glyphs with geometric layout.
+For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
+from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
+`hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
+with the source Noto font's design; they do not imitate a selected serif or handwritten face.
+
+The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+`VITE_COMPOSER_BASE` points every face at another copy of one export.
 
 ## Keyboard
 
@@ -487,8 +557,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   rows, 831 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB) and
-  Klee One (2.8 MB), SIL Open Font License 1.1.
+- `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
+  Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
@@ -501,6 +571,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 `scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
 
 ## Sources
+
+- Yi Bai IDS, <https://github.com/yi-bai/ids>, MIT: additional unannotated Han descriptions.
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
@@ -529,8 +601,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   1.1.
 - Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
   <https://github.com/notofonts/noto-fonts/tree/main/unhinted/ttf/NotoSerifTangut>: Tangut text.
-- Klee One Regular, Copyright 2020 The Klee Project Authors, SIL OFL 1.1,
-  <https://github.com/google/fonts/tree/main/ofl/kleeone>: the Klee One glyph face.
+- Kureedo v0.4.3, Copyright The Klee Project Authors, SIL OFL 1.1,
+  <https://github.com/mkpoli/kureedo>: the Kaisho glyph face.
+- GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Kaisho fallback.
 - han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
   export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
   CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
@@ -547,8 +620,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
-- SCRIPT-HYBRID (BiangBiangCon v19), slides dated 2026-10-16 (JST), supplied 2026-10-26, for the
-  hybrid examples. ⿴口도 is the slide's proposed 図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+- Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
+- Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
+- Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
+  2026-10-16, for the hybrid examples (slides: SCRIPT-HYBRID v19). ⿴口도 is the slide's proposed
+  図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
   CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
   L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
@@ -560,7 +636,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Gen Kojitani, [Script-hybrid and abbreviated CJK letters, IRG N2637](https://www.unicode.org/irg/docs/n2637-HybridIdeographs.pdf),
   2023-06-23, Table 1 no.1 and Fig.1: the Bouyei form `⿰亻Ａ`, from 《布依方塊古文字》p.64.
   The example `⿰亻A` uses ASCII A.
-- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄙ` and
+- mkpoli, personal communication, 2026-10-27: attested forms `⿰木き`, `⿰木⿳ㄙㄨㄥ` and
   `⿰木⿱ㄅㄞ`. No published source is recorded here.
 - mkpoli, personal communication, 2026-10-27: `⿺辶說`, `⿱龹幸`, `⿶む子` and
   `〾⿱⿰大⿱七六⿵勹五`. Published sources for these exact forms are not recorded here.
@@ -576,11 +652,19 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [Jyutnet's dictionary collection](https://jyutnet.github.io/unencoded-characters/):
   `⿹⿺㇉一卄`, a 與 variant (JYN00001; 1939 and 1985 dictionary evidence), and
   `⿰扌⿸厃⿱儿𢀛`, a 擔 variant (JYN00010; three historical dictionary references).
+- [BabelStone Erjian](https://www.babelstone.co.uk/Fonts/Erjian.html), entries 2.2:007 and
+  2.2:003: `⿺辶比` (避) and `⿱艹半` (瓣). Jyutnet records JYN00013 and JYN00017 supply
+  `⿵門覃` and `⿰舟邊`. 嫑 (`⿱不要`) follows BabelStone IDS.
 - BabelStone IDS also supplies 匜 (`⿷匚也`), 爽 (`⿻大㸚`), 㕚 (`⿼叉丶`), 氷 (`⿽水丶`),
   臦 (`⿰⿾臣臣`), 𢨋 (`⿱或⿿或`) and 𧰧 (`㇯豕㇒`). These complete the examples' coverage
   of all 17 IDCs; the approximation marker `〾` is represented separately.
   [IRG N2572, p.2](https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2) also illustrates
   the descriptions of 㕚, 氷 and 𧰧.
+- Further BabelStone descriptions: 𣥄 (`⿾正`), 𠄔 (`⿿予`), 𠕄 (`⿿凹`),
+  𦣩 (`⿰臣⿾臣`), 𣥒 (`⿱⿿止止`) and 𧹂 (`⿱⿰虎⿿虎貝`). The descriptions of 𣥄 and 𠄔
+  also appear in IRG N2572, p.2. Jyutnet records JYN00003 and JYN00025 supply the historical
+  寫 and 龍 variants `⿳宀⿰丨⿴⿻冂一一⿹𠃌灬` and `⿰𦚏⿷己三`, citing 道漢字音
+  (1939), pp.72 and 4 respectively.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
@@ -634,6 +718,19 @@ The data the editor runs on is listed under [Sources](#sources) with its licence
 
 ## Prior art
 
+### KAGE and GlyphWiki
+
+[KAGE](https://github.com/kamichikoichi/kage-engine), created by Koichi Kamichi, and the
+[GlyphWiki](https://glyphwiki.org/) contributors have developed a shared system for describing and
+drawing characters from reusable parts. Their work is an important predecessor to this project's
+character composition. The [KAGE engine](https://github.com/kurgm/kage-engine) renders descriptions
+of strokes and component references; han-compose assembles existing font outlines from an IDS,
+using placement learned from the font. Its serif export can include outlines from
+[Jigmo](https://kamichikoichi.github.io/jigmo/), generated with KAGE from glyphs contributed to
+GlyphWiki and released under CC0 1.0.
+
+### Mojidata
+
 Mojidata is "an open-source collection of Chinese character information databases", and the
 Mojidata Web App searches and displays them (<https://mojidata.ryusei.dev/about>). Its code is at
 <https://github.com/mandel59/mojidata>, <https://github.com/mandel59/mojidata-api> and
@@ -662,10 +759,22 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 
 - A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
   by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of hard-to-type components by stroke count and first stroke, with font subsets for
+- A parts palette of common and hard-to-type components by stroke count and first stroke, with font subsets for
   the parts few fonts draw.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
+
+## Acknowledgments
+
+Thanks to:
+
+- [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
+  rendering and decompositions, and suggestions for component shortcuts and small-seal decomposition.
+- [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
+  component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
+- [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
+- [馬のゆい (@umanoyui)](https://x.com/umanoyui) for asking about kana support, prompting a review
+  of support for components from other writing systems.
 
 ## Licenses
 
@@ -687,7 +796,6 @@ bun run check           # tsc and svelte-check
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
-bun demo/check.js --shots shots [--chromium PATH]   # the built demo in Chromium, with screenshots
 ```
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at

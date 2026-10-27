@@ -8,6 +8,7 @@ import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
 import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hexOf } from './sha256.js'
+import { unicodeSource } from './unicode.js'
 
 export { LookupError } from './compose.js'
 
@@ -109,14 +110,14 @@ export function createSource(read, { concurrency = 10 } = {}) {
 /** A source over HTTP: `base` is the folder holding the export, `suffix` what each name carries there (`.gz`). */
 export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch } = {}) {
   const root = base.endsWith('/') ? base : `${base}/`
-  return createSource(async name => {
+  return unicodeSource({ fallback: createSource(async name => {
     const response = await get(`${root}${name}${suffix}`)
     // Only a shard (`g/`, `p/`) may be missing, as the export writes none where no key falls; a
     // missing manifest or layout fails with its status like any other error.
     if (response.status === 404 && /^[gp]\//.test(name)) return null
     if (!response.ok) throw new Error(`${name}: ${response.status}`)
     return await response.arrayBuffer()
-  })
+  }) })
 }
 
 const ROUNDS = 16
@@ -202,7 +203,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(tree), ...composer.approximate])] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree)), ...composer.approximate])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

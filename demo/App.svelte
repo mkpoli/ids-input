@@ -5,12 +5,13 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
-  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
   import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
@@ -21,7 +22,7 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import exampleDrawings from './lib/example-drawings.json'
-  import { COMPOSER_BASE } from './lib/composer.js'
+  import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
@@ -44,11 +45,15 @@
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
 
   const params = new URLSearchParams(location.search)
+  /** @type {'sans' | 'serif' | 'klee'} */
+  let face = $state(load('font', 'sans'))
+  $effect(() => save('font', face === 'sans' ? undefined : face))
+  $effect(() => { document.documentElement.dataset.font = face })
   // The han-compose export the preview draws from; `?composer=`, VITE_COMPOSER_BASE or Preferences point it elsewhere.
   let composer = $state(params.get('composer') || load('composer', '') || '')
-  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASE)
+  const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, parts, forms, names, folds, characters })
+  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters })
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -57,7 +62,7 @@
   const separate = $derived(adjusting || adjustmentCount > 0)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
@@ -76,13 +81,17 @@
     } catch { return null }
   }
   const preparedBase = exportUrl(COMPOSER_BASE)
-  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif'} style */
+  /** A prepared drawing applies only to the composed preview. @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   function previewFor(at, split, style) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split, style)
-    if (split || style !== 'sans' || exportUrl(at) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
+    // The compact Serif export covers the BMP; a sequence outside it draws from the sans export.
+    const outsideSerif = at === COMPOSER_BASES.serif && [...editor.whole].some(ch => (ch.codePointAt(0) ?? 0) > 0xffff)
+    const usableAt = outsideSerif ? COMPOSER_BASE : at
+    const usableStyle = outsideSerif ? 'sans' : style
+    const composed = previewAt(usableAt, split, usableStyle)
+    if (split || usableStyle !== 'sans' || exportUrl(usableAt) !== preparedBase) { previewsWithExamples.set(key, composed); return composed }
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -98,7 +107,7 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** @param {string} at @param {'sans' | 'serif'} style */
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
@@ -108,7 +117,7 @@
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const componentStyle = $derived(face === 'serif' ? 'serif' : 'sans')
+  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
 
@@ -173,16 +182,16 @@
   }
 
   let theme = $state(storedTheme())
+  const savedTint = load('tintMode', 'hover')
+  /** @type {import('../src/svelte/editor.svelte.js').TintMode} */
+  let tintMode = $state(savedTint === 'on' || savedTint === 'off' ? savedTint : 'hover')
+  $effect(() => save('tintMode', tintMode === 'hover' ? undefined : tintMode))
   let keyHints = $state(load('keyHints', true))
   $effect(() => save('keyHints', keyHints ? undefined : false))
-  /** @type {'sans' | 'serif' | 'klee'} */
-  let face = $state(load('font', 'sans'))
-  $effect(() => save('font', face === 'sans' ? undefined : face))
-  $effect(() => { document.documentElement.dataset.font = face })
   let view = $state(load('view', 'shape'))
   $effect(() => save('view', view === 'shape' ? undefined : view))
-  let exampleCards = $state(load('exampleCards', false))
-  $effect(() => save('exampleCards', exampleCards ? true : undefined))
+  let exampleCards = $state(load('exampleCards', true))
+  $effect(() => save('exampleCards', exampleCards ? undefined : false))
   // The share of the middle column given to the tree; the search takes the rest.
   let split = $state(clampSplit(load('split', 60)))
   /** @type {HTMLElement | null} */ let middleEl = $state(null)
@@ -207,7 +216,8 @@
   }
 
   const uid = $props.id()
-  const editor = createEditor(() => ({ adapter, messages, locale }))
+  const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
+  let structuralSearch = $state(false)
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
@@ -571,7 +581,7 @@
 <svelte:window onkeydown={keys} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
-<div class="app" lang={locale}>
+<div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
       <a class="brand" href="./" aria-label={t('app.title')}>
@@ -657,10 +667,18 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" aria-label={t('ids.search.title')}>
+        <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
+          <div class="search-modes" aria-label={t('ids.search.title')}>
+            <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+          </div>
+          {#if structuralSearch}
+            <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else}
           <h2 class="label">{searchQuery ? t('ids.search.containing', { sequence: searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {/if}
         </section>
       </div>
       <div class="column-gap output-gap">
@@ -720,7 +738,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
-<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
@@ -730,6 +748,10 @@
 </Dialog>
 
 <style>
+  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
+  .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
+
   .app{display:flex;flex-direction:column;min-height:100dvh}
   .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
@@ -820,6 +842,8 @@
   .column-gap{display:none}
   .split{display:none}
   .results{gap:6px}
+  .results.structural{overflow:auto}
+  .results.structural :global(.hits){overflow:visible;flex:none}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
   @media (min-width:880px){
     .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr);column-gap:0;align-items:stretch}

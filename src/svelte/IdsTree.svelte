@@ -1,4 +1,7 @@
 <script>
+  import { tint } from './tokens.js'
+  import IdsInlineEdit from './IdsInlineEdit.svelte'
+  import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside the first, or one over the other. A click chooses a part; a part
   // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
@@ -7,34 +10,53 @@
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
+  import { layout, treeSizes } from './tree-layout.js'
 
   /** @typedef {import('../core/ids.js').Part} Part @typedef {import('../core/ids.js').Path} Path */
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean }} */
   let { editor, keyHints = true } = $props()
   const t = $derived(editor.t)
 
-  /** @type {Record<string, string>} */
-  const LAYOUT = { '⿰': 'row', '⿲': 'row', '⿱': 'column', '⿳': 'column', '⿻': 'stack', '㇯': 'stack', '⿾': 'stack', '⿿': 'stack', '〾': 'stack' }
-  /** @param {string} op */
-  const layout = op => LAYOUT[op] ?? 'enclosure'
+  const sizes = $derived(treeSizes(editor.tree))
   /** @param {Path} path */
   const key = path => path.join('.')
 
   // Dropping a part on a box.
   let over = $state(/** @type {string | null} */ (null))
+  /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
+  /** @param {DragEvent} event @param {Path} path */
+  function startDrag(event, path) {
+    if (editor.disabled || !path.length || !event.dataTransfer) return
+    dragging = { path, tree: editor.tree }
+    event.dataTransfer.effectAllowed = 'move'
+    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.stopPropagation()
+  }
+  function endDrag() { dragging = null; over = null }
+
   /** @param {DragEvent} event @param {Path} path */
   function dragover(event, path) {
-    if (editor.disabled || !event.dataTransfer?.types.includes('text/plain')) return
-    event.preventDefault()
+    if (editor.disabled || !event.dataTransfer) return
+    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'move'; over = key(path); return
+    }
+    if (!event.dataTransfer.types.includes('text/plain')) return
+    event.preventDefault(); event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
     over = key(path)
   }
   /** @param {DragEvent} event @param {Path} path */
   function drop(event, path) {
     over = null
+    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation(); editor.reorder(dragging.path, path)
+      dragging = null; return
+    }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given) return
-    event.preventDefault()
+    event.preventDefault(); event.stopPropagation()
     editor.take(given, path)
   }
 
@@ -42,6 +64,10 @@
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
+  /** @type {{ path: Path } | null} */ let editing = $state(null)
+  /** The first click's target, retained if selection changes the layout before the second click. @type {string | null} */ let clickPath = null
+  /** @param {Path} path */
+  function editPart(path) { if (!editor.disabled) { editor.choose(path, { toggle: false }); editing = { path } } }
   /** @param {Path} path @param {number} x @param {number} y */
   function openMenu(path, x, y) {
     if (editor.disabled) return
@@ -55,6 +81,13 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
+    if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
+    if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
+      const next = neighbor(editor.tree, path, ['ArrowLeft', 'ArrowUp'].includes(event.key) ? -1 : 1)
+      if (path.length && !editor.disabled) { event.preventDefault(); if (next) { editor.reorder(path, next); editor.focusChosen(rootEl) } }
+      return
+    }
     if (event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey)) {
       event.preventDefault()
       const r = /** @type {HTMLElement} */ (event.currentTarget).getBoundingClientRect()
@@ -84,7 +117,7 @@
     const target = /** @type {HTMLElement} */ (event.target)
     const frame = /** @type {HTMLElement} */ (event.currentTarget)
     const parts = /** @type {HTMLElement | null} */ (frame.querySelector(':scope > .ids-parts'))
-    if (target.closest('button') || parts?.contains(target)) return
+    if (target.closest('button,.inline-edit') || parts?.contains(target)) return
     editor.choose(path)
   }
 </script>
@@ -96,33 +129,63 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {layout(part.op)}" class:chosen={selected} class:over={over === key(path)} data-op={part.op} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}>
+    <div class="ids-node {layout(part.op)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
       <div class="ids-head">
-        <button type="button" class="ids-op" data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
-          aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}`}
+        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
+          aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
-        <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
+        {#if editing && samePath(editing.path, path)}
+          {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} onclose={() => editing = null} />{/key}
+        {:else}
+          <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
+        {/if}
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrap')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
       <div class="ids-parts">
         {#each part.parts as inner, i (key([...path, i]))}
-          <div class="ids-cell" data-index={i}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
+          <div class="ids-cell" data-index={i} style:flex-grow={sizes.get(inner)?.[layout(part.op) === 'row' ? 'width' : 'height'] ?? 1}>{@render box(inner, [...path, i], { op: part.op, n: i + 1 })}</div>
         {/each}
       </div>
     </div>
   {:else}
     {@const label = part === null ? t('ids.empty') : part}
-    <button type="button" class="ids-part" class:empty={part === null} class:chosen={selected} class:over={over === key(path)} aria-pressed={selected}
-      data-path={key(path)} disabled={editor.disabled} title={part === null ? label : t('ids.choose', { part })}
+    {#if editing && samePath(editing.path, path)}
+      {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
+    {:else}
+    <button type="button" class="ids-part" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
+      data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+    {/if}
   {/if}
 {/snippet}
 
-<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}>
+<div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}
+  onpointermove={event => {
+    const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
+    const path = target?.getAttribute('data-hover-path')
+    editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
+  }} onpointerleave={() => editor.hover(null)} onpointerdown={event => {
+    const target = /** @type {HTMLElement} */ (event.target)
+    if (!editor.disabled && (target === event.currentTarget || target.classList.contains('ids-tree-root'))) {
+      const active = document.activeElement
+      if (editing && active instanceof HTMLElement && rootEl?.contains(active)) active.blur()
+      editor.choose(null)
+    }
+  }} onclickcapture={event => {
+    if (event.detail !== 1) return
+    const target = /** @type {HTMLElement} */ (event.target)
+    clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
+  }} ondblclick={event => {
+    if (clickPath == null) return
+    const path = clickPath
+    const anchor = /** @type {HTMLElement | null | undefined} */ (rootEl?.querySelector(`[data-hover-path="${CSS.escape(path)}"]`))
+    if (anchor) { event.preventDefault(); editPart(path === '' ? [] : path.split('.').map(Number)) }
+  }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
@@ -163,29 +226,36 @@
   :where(.ids-tree) button{font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);cursor:pointer}
   :where(.ids-tree) button:disabled{cursor:default;opacity:.55}
   :where(.ids-tree) button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
-  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:24px 6px 6px;border:1.5px dashed var(--_line-strong);border-radius:10px;cursor:pointer;
+  /* Each node scales its frame and controls to its containing cell. One em is at most
+     one pixel, shrinking together with the available width and height. */
+  .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
   .ids-node.disabled{cursor:default}
+  :is(.ids-op,.ids-part)[draggable="true"]{cursor:grab}
+  :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
-  .ids-head{position:absolute;top:3px;left:4px;right:4px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
+  .ids-head{position:absolute;top:3em;left:4em;right:4em;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   .ids-head button{pointer-events:auto;flex-shrink:0}
-  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11px/1.4 var(--_font);color:var(--_muted)}
-  .ids-op{display:grid;place-items:center;padding:1px 3px;border-color:transparent;background:none}
+  .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 .545em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11em/1.4 var(--_font);color:var(--_muted)}
+  .ids-op{display:grid;place-items:center;padding:1em 3em;border-width:1em;border-radius:6em;border-color:transparent;background:none}
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
-  .ids-unwrap{padding:0 5px;font-size:13px;line-height:1.2;color:var(--_muted);border-color:transparent;background:none}
+  .ids-unwrap{padding:0 .385em;font-size:13em;line-height:1.2;border-width:.077em;border-radius:.46em;color:var(--_muted);border-color:transparent;background:none}
   .ids-unwrap:not(:disabled):hover{color:var(--_fault);border-color:var(--_fault)}
-  .ids-parts{flex:1;display:flex;gap:6px;min-width:0;min-height:0}
+  .ids-op :global(svg){width:16em;height:16em}
+  .ids-op :global(svg *){vector-effect:none}
+  .ids-parts{flex:1;display:flex;gap:6em;min-width:0;min-height:0}
   .ids-cell{flex:1;display:grid;min-width:0;min-height:0;container-type:size}
+  .ids-cell:has(:global(.inline-edit)){position:relative;z-index:2}
   .row > .ids-parts{flex-direction:row}
   .column > .ids-parts,.stack > .ids-parts{flex-direction:column}
   /* An enclosure: the first part fills the box, its glyph on the closed side, and the second sits
      inside it where the operator puts it, leaving a band of the first open around it. */
-  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:44px minmax(min-content,1fr) 44px;grid-template-rows:44px minmax(min-content,1fr) 44px}
+  .enclosure > .ids-parts{display:grid;gap:0;grid-template-columns:min(28em,12%) minmax(0,1fr) min(28em,12%);grid-template-rows:min(28em,12%) minmax(0,1fr) min(28em,12%)}
   .enclosure > .ids-parts > .ids-cell[data-index="0"]{grid-area:1/1/4/4}
-  .enclosure > .ids-parts > .ids-cell[data-index="1"]{z-index:1;margin:4px}
+  .enclosure > .ids-parts > .ids-cell[data-index="1"]{z-index:1;margin:min(4em,2cqw,2cqh)}
   .enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part{background:var(--_surface)}
-  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(26px,66cqh,66cqw);padding:2px 8px}
+  .enclosure > .ids-parts > .ids-cell[data-index="0"] > .ids-part{font-size:min(22px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));padding:min(2px,2cqh) min(3px,2cqw)}
   [data-op="⿴"] > .ids-parts > [data-index="1"]{grid-area:2/2/3/3}
   [data-op="⿵"] > .ids-parts > [data-index="1"]{grid-area:2/2/4/3}
   [data-op="⿶"] > .ids-parts > [data-index="1"]{grid-area:1/2/3/3}
@@ -204,14 +274,22 @@
   [data-op="⿹"] > .ids-parts > [data-index="0"] > .ids-part{place-items:start end}
   [data-op="⿺"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end start}
   [data-op="⿽"] > .ids-parts > [data-index="0"] > .ids-part{place-items:end end}
-  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:2px 4px;font-size:min(var(--ids-part-size,32px),66cqh,66cqw);line-height:1.05;overflow:hidden;
-    font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:1px solid var(--_line);border-radius:8px}
+  .ids-part{display:grid;place-items:center;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;padding:min(2px,2cqh) min(4px,2cqw);font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));line-height:1.4;overflow:hidden;
+    font-family:var(--_font);color:var(--_ink);background:var(--_surface);border:min(1px,1cqw,1cqh) solid var(--_line);border-radius:min(8px,8cqw,8cqh)}
   .ids-part:not(:disabled):hover{border-color:var(--_line-strong)}
-  .ids-part.empty{font-size:min(20px,66cqh,66cqw);color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
-  .ids-tree-root > .ids-part{font-size:min(140px,66cqh,66cqw)}
-  .ids-tree-root > .ids-part.empty{font-size:min(48px,66cqh,66cqw)}
-  .ids-part.chosen{border:2px solid var(--_accent);padding:1px 5px;background:var(--_accent-light)}
-  .ids-part.over{border:2px solid var(--_accent);border-style:solid}
+  .ids-part.empty{font-size:min(20px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)));color:var(--_muted);border-style:dashed;border-color:var(--_line-strong);background:transparent}
+  .ids-tree-root > .ids-part{font-size:min(140px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
+  .ids-tree-root > .ids-part.empty{font-size:min(48px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
+  .ids-part.chosen{border:min(2px,2cqw,2cqh) solid var(--_accent);background:var(--_accent-light)}
+  .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
+
+  /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
+     Clip the header visually while keeping its node button available to keyboard navigation. */
+  @container (max-height:12px) or (max-width:12px){
+    .ids-node{border-width:0;padding:0}
+    .ids-head{inset:0;overflow:hidden;clip-path:inset(50%)}
+    .ids-part,.ids-part.chosen,.ids-part.over{border-width:0;padding:0}
+  }
 
   .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
     border:1px solid var(--_line);border-radius:10px;background:var(--_surface);box-shadow:0 10px 30px rgb(0 0 0 / .18)}
@@ -225,4 +303,7 @@
   .ids-menu-item:not(:disabled):hover,.ids-menu-item:focus-visible{background:var(--_surface-selected) !important}
   .ids-menu-item kbd,.ids-menu-seq{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .ids-menu-seq{font-family:var(--_font);font-size:14px}
+  .ids-node:where(.tinted),.ids-part:where(.tinted){background:color-mix(in oklab,var(--tint) 10%,var(--_surface));color:color-mix(in oklab,var(--_ink) 80%,var(--tint))}
+  .ids-node.hovered,.ids-part.hovered{box-shadow:inset 0 0 0 2px var(--_accent)}
+  .ids-node.hovered.tinted,.ids-part.hovered.tinted,.enclosure > .ids-parts > .ids-cell[data-index="1"] > .ids-part.hovered.tinted{background:color-mix(in oklab,var(--tint) 28%,var(--_surface))}
 </style>

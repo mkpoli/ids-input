@@ -40,6 +40,33 @@ describe('the BabelStone adapter', () => {
   it('reads a table served uncompressed', async () => {
     expect(await babelStoneAdapter({ ids: 'plain.tsv', fetch }).structure('滑')).toEqual([{ text: '⿰氵骨', regions: 'GHTJKPV' }])
   })
+  it('adds descriptions from a second table without replacing or duplicating the first', async () => {
+    const extra = '林\t⿰木木 ⿱木木\n𫜺\t⿱山田\n'
+    const get = async url => new Response(url === 'extra' ? extra : TABLE)
+    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
+    expect(await adapter.structure('林')).toEqual([{ text: '⿰木木', regions: 'GHTJKPV' }, { text: '⿱木木', regions: '' }])
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+    expect(await adapter.encoded('⿱山田')).toContain('𫜺')
+    expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
+    expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
+  })
+  it('retains distinct regional tags from both sources', async () => {
+    const extra = '林\t⿰木木(J) ⿱木木(MT) ⿱木木(P) ⿱木木(P)\n'
+    const get = async url => new Response(url === 'extra' ? extra : TABLE)
+    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
+    expect(await adapter.structure('林')).toEqual([
+      { text: '⿰木木', regions: 'GHTJKPV' }, { text: '⿰木木', regions: 'J' },
+      { text: '⿱木木', regions: 'MT' }, { text: '⿱木木', regions: 'P' },
+    ])
+  })
+  it('retries a failed additional table instead of caching incomplete data', async () => {
+    let attempts = 0
+    const get = async url => url !== 'extra' ? new Response(TABLE)
+      : ++attempts === 1 ? new Response('', { status: 503 }) : new Response('𫜺\t⿱山田\n')
+    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
+    await expect(adapter.structure('𫜺')).rejects.toThrow('503')
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+  })
   it('gives no descriptions for a character that names only itself, or none at all', async () => {
     const adapter = babelStoneAdapter({ table })
     expect(await adapter.structure('一')).toEqual([])
@@ -98,6 +125,11 @@ describe('the component search', () => {
 })
 
 describe('the shipped data', () => {
+  it('includes a standard zi.tools description for a character absent from BabelStone', () => {
+    const text = require('node:zlib').gunzipSync(readFileSync(new URL('../data/yi-bai-ids.tsv.gz', import.meta.url))).toString()
+    expect(parseIdsTable(text).get('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+    expect(ids.has('𫜺')).toBe(false)
+  })
   const ids = parseIdsTable(require('node:zlib').gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
   it('holds every ideograph of BabelStone IDS', () => {
     expect(ids.size).toBe(97680 + 6145)
@@ -157,4 +189,18 @@ it('limits visual aliases to IDS search, leaving direct and exact lookups intact
   expect(await adapter.encoded('⿱스口')).toEqual([])
   expect(await adapter.encoded('⿱亼口')).toEqual(['合'])
   expect(await adapter.structure('스')).toEqual([])
+})
+
+it('finds ideographic zero and arbitrary graphic components literally or by code point', async () => {
+  const adapter = babelStoneAdapter({ table: new Map() })
+  for (const char of ['〇', '〆', '〡', 'ӂ', 'ꙮ', 'ά', 'א', '∞', '😀']) {
+    expect((await adapter.search(char)).map(hit => hit.char)).toContain(char)
+    expect((await adapter.search(`U+${char.codePointAt(0).toString(16).padStart(4, '0')}`)).map(hit => hit.char)).toContain(char)
+  }
+  expect((await adapter.search('〇木')).map(hit => hit.char)).toEqual(['〇', '木'])
+})
+
+it('finds literal braces as contained components', async () => {
+  const adapter = babelStoneAdapter({ table: new Map([['甲', [{ text: '⿳{1}', regions: '' }]]]) })
+  expect((await adapter.containing('{1')).items).toContain('甲')
 })

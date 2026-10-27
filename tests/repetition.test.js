@@ -111,7 +111,7 @@ it('keeps designed component strokes at native thickness', async () => {
   for (const style of ['sans', 'serif']) {
     const parts = componentParts('⿳士冖一', undefined, style)
     for (const part of parts) {
-      expect(part.target).toEqual(part.source)
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
       expect(part.target[2] - part.target[0]).toBeCloseTo(part.source[2] - part.source[0], 6)
       expect(part.target[3] - part.target[1]).toBeCloseTo(part.source[3] - part.source[1], 6)
     }
@@ -132,5 +132,166 @@ it('combines the intact 士冖 crown above 一 in both equivalent descriptions',
     const b = await compose(local(), '⿱⿱士冖一', { fontStyle, separate: true })
     expect(a.d).toBe(b.d)
     expect(groupParts(b.parts, await sketch(local(), '⿱⿱士冖一', { fontStyle }))).toHaveLength(3)
+  }
+})
+
+it('draws the upper component of 興 locally with two editable operands in both styles', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const source = local()
+    expect(onlyBundled('⿴𦥑同')).toBe(true)
+    const { componentParts } = await import('../src/composer/component-forms.js')
+    if (fontStyle === 'serif') expect(componentParts('⿴𦥑同', undefined, fontStyle)[0].source[2]).toBeLessThanOrEqual(900)
+    const drawn = await compose(source, '⿴𦥑同', { fontStyle, separate: true })
+    const leaves = await sketch(source, '⿴𦥑同', { fontStyle })
+    expect(drawn.parts).toHaveLength(2)
+    expect(groupParts(drawn.parts, leaves)).toHaveLength(2)
+    expect(drawn.approximate).toEqual([])
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    const nested = await compose(remote(), '⿱⿴𦥑同木', { fontStyle })
+    expect(nested.origins.some(origin => origin.includes('⿴𦥑同'))).toBe(true)
+  }
+})
+
+it('keeps the four-bar component separated into two adjustable columns', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const parts = componentParts('⿰二二', undefined, fontStyle)
+    expect(parts[1].target[0] - parts[0].target[2]).toBeGreaterThan(100)
+    const source = local()
+    const drawn = await compose(source, '⿰二二', { fontStyle, separate: true })
+    expect(drawn.d.match(/M/g)).toHaveLength(4)
+    expect(groupParts(drawn.parts, await sketch(source, '⿰二二', { fontStyle }))).toHaveLength(2)
+  }
+})
+
+it('renders the connected-stroke upper part of 卑 without its bottom 十', async () => {
+  const { componentParts, componentDrawing } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const source = local(), text = '⿱㇒⿻日丿'
+    expect(onlyBundled(text)).toBe(true)
+    const parts = componentParts(text, undefined, fontStyle)
+    expect(parts).toHaveLength(1)
+    expect(parts[0].source[1]).toBeGreaterThanOrEqual(170)
+    expect(parts[0].source[0]).toBeGreaterThan(100)
+    expect(parts[0].target).toEqual(parts[0].source)
+    const drawn = await compose(source, text, { fontStyle, separate: true })
+    expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(groupParts(drawn.parts, await sketch(source, text, { fontStyle }))).toBeNull()
+  }
+})
+
+it('preserves both yan enclosures as distinct native forms without requiring a remote font', async () => {
+  const { componentParts, componentDrawing } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    expect(componentDrawing('⿳亠㐅厂', fontStyle).d).toBe(componentDrawing('⿱文厂', fontStyle).d)
+    expect(componentDrawing('⿳亠㐅厂', fontStyle).d).not.toBe(componentDrawing('⿳亠丷厂', fontStyle).d)
+    for (const text of ['⿳亠㐅厂', '⿳亠丷厂']) {
+      expect(onlyBundled(text)).toBe(true)
+      const part = componentParts(text, undefined, fontStyle)[0]
+      expect(part.source[1]).toBeLessThan(0) // retain 厂's full descender
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
+      const drawn = await compose(local(), text, { fontStyle, separate: true })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      const nested = await compose(remote(), `⿸${text}木`, { fontStyle })
+      expect(nested.origins.some(origin => origin.includes(text))).toBe(true)
+      expect(nested.d).not.toMatch(/NaN|Infinity/)
+    }
+  }
+})
+
+it('fits native compound enclosures without extrapolating learned whole-glyph boxes', async () => {
+  const { collision, Composer } = await import('../src/composer/compose.js')
+  const { constants } = await import('./fixtures/composer-export.js')
+  const predicted = JSON.parse(files['layout.json'])
+  // A valid learned prediction for ordinary glyphs, but unsuitable for this
+  // compound enclosure: both operands fill the entire em.
+  predicted.seeds[0][1] = Buffer.from(new Float32Array([0, 0, 1, 1, 0, 0, 1, 1]).buffer).toString('base64')
+  const source = createSource(async name => {
+    const file = name === 'layout.json' ? JSON.stringify(predicted) : files[name]
+    return file ? typeof file === 'string' ? new TextEncoder().encode(file).buffer : Uint8Array.from(file).buffer : null
+  })
+  for (const fontStyle of ['sans', 'serif']) {
+    const preview = await compose(source, '⿸⿳亠丷厂木', { fontStyle })
+    expect(preview.d).toBe((await compose(remote(), '⿸⿳亠丷厂木', { fontStyle })).d)
+    const drawn = new Composer(source.store(), { fontStyle }).compose('⿸⿳亠丷厂木')
+    expect(collision(drawn.slice(0, 1), drawn.slice(1), constants.face, 256)).toBeLessThan(0.005)
+  }
+})
+
+it('renders requested native components offline, including the three exact subtraction shapes', async () => {
+  const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans','serif']) {
+    for (const text of ['⿻𢆶戈','⿸尸彳','㇯鹿比','㇯馬灬','㇯鳥灬','⿳亠口冖','⿸尸氺','⿳𰀉冖木','⿳卝罒冖']) {
+      expect(onlyBundled(text)).toBe(true)
+      const drawn = await compose(local(), text, { fontStyle })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      expect(drawn.d).not.toMatch(/NaN|Infinity/)
+      expect(drawn.cut).toBe('')
+      const part = componentParts(text, undefined, fontStyle)[0]
+      part.target.forEach((value, i) => expect(value).toBeCloseTo(part.source[i], 8))
+    }
+    // The native hooks remain; all four isolated 灬 contours are absent.
+    expect(componentDrawing('㇯馬灬', fontStyle).d.match(/M/g)).toHaveLength(4)
+    expect(componentDrawing('㇯鳥灬', fontStyle).d.match(/M/g)).toHaveLength(3)
+    expect(componentParts('㇯鳥灬', undefined, fontStyle)[0].source[1]).toBeLessThan(0)
+    const nested = await compose(remote(), '⿹㇯鳥灬木', { fontStyle })
+    expect(nested.origins.some(origin => origin.includes('㇯鳥灬'))).toBe(true)
+  }
+})
+
+it('joins the shallow sweep to the hook in both source spellings and preserves two editable strokes', async () => {
+  const { componentDrawing, componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans','serif']) {
+    const parts = componentParts('⿱丿乚', undefined, fontStyle)
+    expect(parts).toHaveLength(2)
+    const [sweep, hook] = parts.map(part => part.source)
+    expect(sweep[2] - sweep[0]).toBeGreaterThan(3 * (sweep[3] - sweep[1]))
+    expect(hook[3]).toBeGreaterThan(sweep[1])
+    expect(hook[3]).toBeLessThan(sweep[3])
+    expect(hook[0]).toBeGreaterThan(sweep[0])
+    expect(hook[0]).toBeLessThan(sweep[2])
+    expect(componentDrawing('⿱丿乚', fontStyle).d).toBe(componentDrawing('⿱㇒乚', fontStyle).d)
+    for (const text of ['⿱丿乚','⿱㇒乚']) {
+      expect(onlyBundled(text)).toBe(true)
+      const drawn = await compose(local(), text, { fontStyle, separate: true })
+      expect(drawn.d).toBe(componentDrawing(text, fontStyle).d)
+      expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+      const nested = await compose(remote(), `⿰木${text}`, { fontStyle })
+      expect(nested.origins.filter(origin => origin.includes(text))).toHaveLength(2)
+      expect(nested.d).not.toMatch(/NaN|Infinity/)
+    }
+  }
+  expect(componentDrawing('⿱丿乚','kaisho')).toBeNull()
+})
+
+it('draws the Gongche three-sweep component locally in both styles with two editable leaves', async () => {
+  for (const fontStyle of ['sans', 'serif']) {
+    const text = '⿱𰀪亻'
+    expect(onlyBundled(text, true)).toBe(true)
+    const drawn = await compose(local(), text, { fontStyle, separate: true })
+    expect(drawn.d.match(/M/g)).toHaveLength(3)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(drawn.approximate).toEqual([])
+    expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+    const nested = await compose(remote(), `⿰${text}木`, { fontStyle })
+    expect(nested.origins.filter(origin => origin.includes(text))).toHaveLength(2)
+  }
+})
+
+it('repeats identical water-radical outlines without overlap in both styles', async () => {
+  const { componentParts } = await import('../src/composer/component-forms.js')
+  for (const fontStyle of ['sans', 'serif']) {
+    const text = '⿰氵氵'
+    const parts = componentParts(text, undefined, fontStyle)
+    expect(parts).toHaveLength(2)
+    const [a, b] = parts.map(part => part.target)
+    expect(a[2]).toBeLessThan(b[0])
+    expect(a[2] - a[0]).toBeCloseTo(b[2] - b[0])
+    expect(a[1]).toBe(b[1])
+    expect(a[3]).toBe(b[3])
+    const drawn = await compose(local(), text, { fontStyle, separate: true })
+    expect(drawn.approximate).toEqual([])
+    expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
   }
 })

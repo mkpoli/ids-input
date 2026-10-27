@@ -16,7 +16,8 @@
 // spans of it the terms matched, for highlighting.
 import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isSequence } from './ids.js'
 import { unalias } from './aliases.js'
-import { tokens } from './decompose.js'
+import { tokens, unencoded } from './decompose.js'
+import { createStructuralSearch } from './structural-search.js'
 import { searchShape, SHAPE_COMPONENTS } from './search-shapes.js'
 
 /**
@@ -75,7 +76,12 @@ export function parseQuery(text) {
       collect(tree)
       terms.push({ kind: 'structure', text: term, tree, leaves })
     } else {
-      const leaves = list.filter(t => typeof t !== 'string' || ((isComponent([...t][0]) || SHAPE_COMPONENTS.has([...t][0])) && t !== UNKNOWN && !EMPTY_MARKS.includes(t)))
+      // A following kana voicing mark keeps the preceding kana literal without asking for
+      // another component. A mark typed alone remains searchable.
+      const components = list.filter((token, i) => !(typeof token === 'string'
+        && /^[゙゚゛゜]$/u.test(token) && i > 0
+        && /[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(typed[i - 1])))
+      const leaves = components.filter(t => typeof t !== 'string' || ((isComponent([...t][0]) || SHAPE_COMPONENTS.has([...t][0])) && t !== UNKNOWN && !EMPTY_MARKS.includes(t)))
       if (leaves.length) terms.push({ kind: 'components', text: term, leaves })
     }
   }
@@ -188,7 +194,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
     /** @param {Tree} t */
     const walk = t => {
       if (typeof t !== 'string') { add(key(t.op), 1); if (t.op !== '㇯') t.parts.forEach(walk); return }
-      if (t === UNKNOWN || t.startsWith('{') || t === char) return
+      if (t === UNKNOWN || unencoded(t) !== null || t === char) return
       add(key(fold(t)), 1)
       const inner = holdingsOf(t, path)
       for (let i = 0; i < inner.length; i += 2) add(inner[i], inner[i + 1])
@@ -314,7 +320,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
     /** @param {Tree} tree @param {string} char @param {Set<string>} path @param {Set<number>} blocked @returns {Matches} */
     const walk = (tree, char, path, blocked) => {
       if (typeof tree === 'string') {
-        if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return { states: [zero], cut: false }
+        if (tree === char || tree === UNKNOWN || unencoded(tree) !== null) return { states: [zero], cut: false }
         const inner = describe(tree, path, blocked)
         return { states: add(direct(keyOf.get(fold(tree)), blocked), inner.states), cut: inner.cut }
       }
@@ -344,7 +350,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
           }
           return { count: Math.min(demand, count), cut }
         }
-        if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return { count: 0, cut: false }
+        if (tree === char || tree === UNKNOWN || unencoded(tree) !== null) return { count: 0, cut: false }
         const id = keyOf.get(fold(tree)), direct = id !== undefined && target.has(id) && !blocked.has(id) ? 1 : 0
         if (path.has(tree) || path.size > 12) return { count: direct, cut: true }
         const without = new Set(blocked)
@@ -373,7 +379,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
         for (const part of tree.parts) state = witness(part, char, path, blocked, state)
         return state
       }
-      if (tree === char || tree === UNKNOWN || tree.startsWith('{')) return state
+      if (tree === char || tree === UNKNOWN || unencoded(tree) !== null) return state
       const id = keyOf.get(fold(tree))
       let next = state.slice()
       if (id !== undefined && !blocked.has(id)) {
@@ -466,7 +472,7 @@ export function createSearch(table, { forms = new Map() } = {}) {
     let best = here === null ? null : { tree: here, path: [], depth: 0, opened: cost.opened }
     if (best && best.opened === 0) return best
     if (typeof data === 'string') {
-      if (depth >= OPEN_DEPTH || data === UNKNOWN || data.startsWith('{')) return best
+      if (depth >= OPEN_DEPTH || data === UNKNOWN || unencoded(data) !== null) return best
       // Inside a component: in its first description that holds the pattern.
       for (const tree of treesOf(data)) {
         const inner = find(pattern, tree, depth + 1)
@@ -616,5 +622,6 @@ export function createSearch(table, { forms = new Map() } = {}) {
     })
     return { hits, total: found.length }
   }
-  return { search, index: () => { index() }, fold }
+  const structural = createStructuralSearch(table, { forms })
+  return { search, structure: structural.search, index: () => { index() }, fold }
 }

@@ -6,7 +6,7 @@
 // per source region) holds the most any one of them names of each component, so two regional forms
 // never add up to two. Components are counted: 木木 finds 林 and 森 but not 本.
 import { arity } from '../core/ids.js'
-import { tokens } from '../core/decompose.js'
+import { tokens, unencoded } from '../core/decompose.js'
 
 /** The most parts a query takes. */
 export const PARTS = 8
@@ -58,7 +58,7 @@ export function componentIndex(table, { fold = char => char } = {}) {
     const [kind, value] = node
     if (kind === 'leaf') {
       const leaf = /** @type {string} */ (value)
-      if (leaf === char || leaf === '？' || leaf.startsWith('{')) return [{ held: new Map(), size: 1, top: new Set() }, false]
+      if (leaf === char || leaf === '？' || unencoded(leaf) !== null) return [{ held: new Map(), size: 1, top: new Set() }, false]
       // A description leading back to a character being expanded describes nothing new.
       if (path.has(leaf)) return [{ held: new Map(), size: 1, top: new Set() }, true]
       const [inner, short] = describe(leaf, new Set([...path, char]))
@@ -144,7 +144,7 @@ export function componentIndex(table, { fold = char => char } = {}) {
     const [kind, value] = node
     if (kind === 'leaf') {
       const leaf = /** @type {string} */ (value)
-      if (leaf === char || leaf === '？' || leaf.startsWith('{') || path.has(leaf)) return 1
+      if (leaf === char || leaf === '？' || unencoded(leaf) !== null || path.has(leaf)) return 1
       return 1 + sizeIn(leaf, path)
     }
     const parts = /** @type {Tree[]} */ (value).map(operand => sizeOfTree(operand, char, path))

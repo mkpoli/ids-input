@@ -9,6 +9,7 @@ import { LIMITS, tooLarge } from './loader.js'
 import { parse } from '../core/ids.js'
 import { onlyBundled } from './local.js'
 
+export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
 export { createDrawer } from './client.js'
 export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
 
@@ -37,7 +38,7 @@ const CACHE = 32
  * spells it, so every leaf has a piece of its own. A sequence drawn once is answered from memory
  * next time. `warm()` starts the worker on the manifest and layout before the first drawing.
  * `worker` makes the Web Worker; the default is the module worker beside this file.
- * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif', worker?: () => WorkerLike }} options
+ * @param {{ base: string, separate?: boolean, fontStyle?: 'sans' | 'serif' | 'kaisho', worker?: () => WorkerLike }} options
  * @returns {ComposerPreview}
  */
 export function composerPreview({ base, separate = false, fontStyle = 'sans', worker = () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }) }) {
@@ -60,7 +61,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
   function open(sequence = '') {
     let root
     try { root = new URL(base.endsWith('/') ? base : `${base}/`, globalThis.location?.href).href } catch {
-      if (!onlyBundled(sequence)) throw new UnavailableError(`${base} is not a URL.`)
+      if (!onlyBundled(sequence, false, true)) throw new UnavailableError(`${base} is not a URL.`)
       root = base
     }
     if (!drawer) drawer = createDrawer(worker, root)
@@ -99,3 +100,5 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
   }
   return preview
 }
+
+export { composeDocumentSource, documentSource } from './document-source.js'

@@ -13,7 +13,7 @@ describe('a whole description', () => {
   it('names what is wrong', () => {
     expect(parse('⿰亻').problem).toBe('missing')
     expect(parse('⿰亻木林').problem).toBe('extra')
-    expect(parse('⿰亻!').problem).toBe('component')
+    expect(parse('⿰亻\u0378').problem).toBe('component')
     expect(parse('木').problem).toBe('character')
     expect(parse('').problem).toBe('character')
     expect(parse('⿰亻 木').problem).toBe('character')
@@ -30,18 +30,34 @@ describe('a whole description', () => {
     expect(isDescription('⿱コ疋')).toBe(true)
     expect(isDescription('⿱㇒一')).toBe(true)
     expect(isDescription('⿰⺡骨')).toBe(true)
-    expect(isComponent('!')).toBe(false)
+    expect(isComponent('\u0378')).toBe(false)
     expect(isComponent(null)).toBe(false)
   })
-  it('takes the letters and digits of alphabets and syllabaries the composer draws', () => {
+  it('takes letters and digits independently of preview font coverage', () => {
     expect(parse('⿸广⿰KO').tree).toEqual({ op: '⿸', parts: ['广', { op: '⿰', parts: ['K', 'O'] }] })
-    for (const char of ['a', 'Z', '0', 'é', 'Ω', 'Ж', 'あ', 'ア', 'ー', 'ㇰ', '가', 'ㄱ', 'ᄀ', 'Ｋ', '０', 'ｶ', '\u{1B001}']) {
+    for (const char of ['a', 'Z', '0', 'é', 'Ω', 'Ж', 'ӂ', 'ꙮ', 'ά', 'א', 'ش', 'अ', '𐐀', 'あ', 'ア', 'ー', 'ㇰ', '가', 'ㄱ', 'ᄀ', 'Ｋ', '０', 'ｶ', '\u{1B001}']) {
       expect(isLetter(char)).toBe(true)
       expect(isComponent(char)).toBe(true)
     }
-    // Punctuation, spaces, Hangul fillers and letters no font of the composer draws stay out.
-    for (const char of ['!', '.', '-', ' ', '\u3164', '\u115F', '\uFFA0', 'ӂ', 'ꙮ']) expect(isComponent(char)).toBe(false)
+    // Spaces and invisible Hangul fillers stay out.
+    for (const char of [' ', '\u3164', '\u115F', '\uFFA0']) expect(isComponent(char)).toBe(false)
     expect(isLetter('木')).toBe(false)
+  })
+  it('round-trips ideographs, symbols and private-use components', () => {
+    for (const char of ['〇', '〆', '〡', '𛅰', '𘬀', '!', '.', '-', '∞', '☯', '😀', '\u0301', '\uE000', '\u{F0000}', '\u{100000}']) {
+      const text = `⿰${char}木`
+      expect(isComponent(char)).toBe(true)
+      expect(write(parse(text).tree)).toBe(text)
+      expect(descriptionEnd([...text])).toBe([...text].length)
+    }
+    expect(isLetter('〇')).toBe(false)
+    expect(parse('〇', { open: true }).tree).toBe('〇')
+    expect(write(parse('⿰〇\u{E0100}木').tree)).toBe('⿰〇\u{E0100}木')
+  })
+  it('reserves operators, slots and invisible or invalid code points', () => {
+    for (const char of [...OPERATORS.map(([op]) => op), EMPTY, '＋', '\u0000', '\u200D', '\uFE0F', '\u{E0100}', '\uD800', '\uFFFF', '\u{10FFFF}', '\u0378']) {
+      expect(isComponent(char)).toBe(false)
+    }
   })
   it('knows each operator\'s arity', () => {
     expect(OPERATORS).toHaveLength(18)
@@ -54,7 +70,7 @@ describe('a whole description', () => {
   it('finds where a description ends inside longer text', () => {
     expect(descriptionEnd([...'⿰亻哥と'])).toBe(3)
     expect(descriptionEnd([...'⿰亻'])).toBe(-1)
-    expect(descriptionEnd([...'!'])).toBe(-1)
+    expect(descriptionEnd([...'\u0378'])).toBe(-1)
     expect(descriptionEnd([...'⿰KO and'])).toBe(3)
   })
 })
@@ -68,7 +84,7 @@ describe('a draft read as the editor reads it', () => {
   })
   it('still names what is wrong', () => {
     expect(parse('⿰亻木林', { open: true }).problem).toBe('extra')
-    expect(parse('⿰亻!', { open: true }).problem).toBe('component')
+    expect(parse('⿰亻\u0378', { open: true }).problem).toBe('component')
   })
   it('keeps ？, the part no character names, apart from an empty slot', () => {
     expect(tree('⿰？木')).toEqual({ op: '⿰', parts: ['？', '木'] })
@@ -142,6 +158,13 @@ describe('an operator put on a draft', () => {
     const { tree: next, chosen } = applyOperator(tree('⿰亻木'), null, '⿱')
     expect(write(next)).toBe('⿱⿰亻木⬚')
     expect(chosen).toEqual([1])
+  })
+  it('puts the whole tree inside a new empty enclosure', () => {
+    for (const op of ['⿴', '⿵', '⿶', '⿷', '⿸', '⿹', '⿺', '⿼', '⿽']) {
+      const { tree: next, chosen } = applyOperator(tree('⿰亻⬚'), null, op)
+      expect(write(next)).toBe(`${op}⬚⿰亻⬚`)
+      expect(chosen).toEqual([0])
+    }
   })
 })
 

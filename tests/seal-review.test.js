@@ -105,3 +105,13 @@ it('identifies unavailable reference and component glyphs', () => {
   expect(c.candidates[0].missingGlyphs).toEqual([])
   expect(c.candidates[2].missingGlyphs).toEqual([variant])
 })
+
+it('retains the supplemental modern table in exported candidate provenance', async () => {
+  const adapter = smallSealAdapter({data:doc, ids:'https://example.test/base.tsv', additionalIds:'https://example.test/extra.tsv', palette:[], fetch:async url => new Response(String(url).endsWith('extra.tsv') ? '林\t⿰木木' : '')})
+  const comparison=(await adapter.sealReview('林')).items[0]
+  expect(comparison.candidates).toHaveLength(2)
+  expect(comparison.modernSource).toBe('https://example.test/base.tsv + https://example.test/extra.tsv')
+  const candidate=comparison.candidates[0]
+  const review=makeReview(comparison,candidate,candidate.text,'','accepted')
+  expect(JSON.parse(exportReviews([review])).reviews[0].evidence.modernSource).toBe(comparison.modernSource)
+})

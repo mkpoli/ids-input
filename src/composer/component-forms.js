@@ -9,15 +9,17 @@ const styles = Object.fromEntries(Object.entries(data.forms).map(([style, forms]
     const parts = groups.map(group => makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points }))))
     return [text, { parts, frame: union(parts.map(p => p.box)), ink: parts.reduce((n, p) => n + partInk(p), 0) }]
   }))]))
+// Kureedo's brush forms are the export's own; the bundled Sans forms must not replace them.
+const forms = style => style === 'kaisho' ? null : (styles[style] ?? styles.sans)
 export const containsComponentForm = text => [...styles.sans.keys()].some(key => text.includes(key))
 export const isGroupedForm = text => (styles.sans.get(text)?.parts.length ?? 0) > 1
 export const isComponentForm = text => styles.sans.has(text)
 export function componentRecord(text, style = 'sans') {
-  const form = (styles[style] ?? styles.sans).get(text)
+  const form = forms(style)?.get(text)
   return form ? { ink: form.ink, o: form.parts.reduce((n, p) => n + p.contours.length, 0) } : null
 }
 export function componentParts(text, region = constants.face, style = 'sans', atRoot = true) {
-  const form = (styles[style] ?? styles.sans).get(text)
+  const form = forms(style)?.get(text)
   if (!form) return null
   const { parts, frame, ink } = form
   // Preserve the source font's em and placement for standalone forms. A crop
@@ -25,7 +27,7 @@ export function componentParts(text, region = constants.face, style = 'sans', at
   // complete native glyphs retain their designed proportions and side bearings.
   // Nested forms use the description's contextual row/column allocation.
   const target = atRoot ? mapped(frame, constants.face, region) : region
-  const origin = text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK JP: ${text}`
+  const origin = text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK: ${text}`
   return parts.map(part => ({ ...placed(part, part.box, mapped(part.box, frame, target), ink, origin), fixed: true }))
 }
 export function componentDrawing(text, style = 'sans') {

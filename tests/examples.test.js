@@ -56,11 +56,11 @@ it('keeps all Tangut examples in a separate section', () => {
 })
 
 it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {
-  for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄙ', '⿰木⿱ㄅㄞ', '⿰木き']) {
+  for (const sequence of ['⿰扌3', '⿰𛂦方', '⿰亻A', '⿰木⿳ㄙㄨㄥ', '⿰木⿱ㄅㄞ', '⿰木き']) {
     expect(EXAMPLES.some(example => example.sequence === sequence)).toBe(true)
     expect(parse(sequence).problem).toBeUndefined()
   }
-  expect(leaves(parse('⿰木⿳ㄙㄨㄙ').tree).map(leaf => leaf.char)).toEqual(['木', 'ㄙ', 'ㄨ', 'ㄙ'])
+  expect(leaves(parse('⿰木⿳ㄙㄨㄥ').tree).map(leaf => leaf.char)).toEqual(['木', 'ㄙ', 'ㄨ', 'ㄥ'])
 })
 
 
