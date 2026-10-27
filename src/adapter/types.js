@@ -14,6 +14,7 @@
  * @property {string} [label] What to show beside it (a reading, a name, a code point).
  *
  * @typedef {object} PalettePart A part of the parts palette.
+ * @property {string} [variantGroup] Shared identity for adjacent palette variants; selection keeps the literal form.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
  * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.

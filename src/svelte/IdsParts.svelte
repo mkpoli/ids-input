@@ -2,13 +2,14 @@
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
   // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, plus frequent components and compound IDS,
-  // most used first; Tangut
+  // most used families first, with related forms adjacent; Tangut
   // the Tangut components in code point order; Stroke count holds all common and hard-to-type
   // parts, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
   // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
   // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
+  import { adjacentVariants } from '../core/palette.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
@@ -57,7 +58,7 @@
   const shownCount = $derived(count !== undefined && counts.includes(count) ? count : counts[0])
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
-    .map(cls => ({ cls, parts: list.filter(part => (part.first ?? null) === cls) }))
+    .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
     .filter(group => group.parts.length)
 
   const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
@@ -69,15 +70,15 @@
   const filtered = $derived.by(() => {
     if (!query || !parts) return null
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || part.modern?.some(char => [...query].includes(char)))
-    if (/^\d+$/.test(query)) return parts.filter(part => part.strokes === Number(query))
+    if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
-    return parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query)))
+    return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
   const shown = $derived.by(() => {
     if (!parts) return []
-    if (tab === 'common') return [{ cls: undefined, parts: parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50) }]
+    if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'difficult') return grouped(strokeParts.filter(part => (part.strokes ?? null) === shownCount))
