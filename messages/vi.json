@@ -17,6 +17,7 @@
   "ids.do.put": "Chèn {part}",
   "ids.dragSibling": "Kéo hoặc nhấn Alt+phím mũi tên để đổi thứ tự các phần cùng cấp",
   "ids.do.reorder": "Đổi thứ tự bộ phận",
+  "ids.do.resolve": "Giải thành {char}",
   "ids.do.replace": "Thay {from} bằng {part}",
   "ids.do.split": "Chia {part} bằng {op}",
   "ids.do.swap": "Đổi {from} thành {op}",

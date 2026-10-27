@@ -171,6 +171,10 @@ still have no preview; private-use characters need an outline supplied by the ho
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+A zi.tools description that carries a stroke chain this package cannot draw resolves to the
+character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
+table as `chains` (the workshop's `data/zi-tools-chains.tsv.gz`); without it the text stays.
+
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.

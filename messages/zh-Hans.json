@@ -17,6 +17,7 @@
   "ids.do.put": "放入{part}",
   "ids.dragSibling": "拖动或按Alt+方向键调整同层部件顺序",
   "ids.do.reorder": "调整部件顺序",
+  "ids.do.resolve": "解析为{char}",
   "ids.do.replace": "将{from}换成{part}",
   "ids.do.split": "用{op}拆分{part}",
   "ids.do.swap": "将{from}改为{op}",

@@ -154,6 +154,24 @@ describe('an encoded character', () => {
   it('is found by the description it has, exactly', async () => {
     const adapter = babelStoneAdapter({ table })
     expect(await adapter.encoded('⿰木木')).toEqual(['林'])
+    // A description carrying a stroke chain resolves to the character the supplied table names.
+    const chained = babelStoneAdapter({ ids: 'ids.tsv.gz', chains: 'chains.tsv', fetch: async url => url === 'chains.tsv' ? new Response('#(H)\t一\n⿱丿⿹#(-𠃌㇉)一\t乌\n') : new Response(TABLE), worker: null })
+    expect(await chained.chainCharacter('⿱丿⿹#(-𠃌㇉)一')).toBe('乌')
+    expect(await chained.chainCharacter('⿱木口')).toBeNull()
+    expect(await babelStoneAdapter({ ids: 'ids.tsv.gz', fetch: async () => new Response(TABLE), worker: null }).chainCharacter('⿱丿⿹#(-𠃌㇉)一')).toBeNull()
+    // A failed chain table is tried again, and an aborted ask rejects before it answers.
+    let attempts = 0
+    const flaky = babelStoneAdapter({ ids: 'ids.tsv.gz', chains: 'chains.tsv', fetch: async url => {
+      if (url !== 'chains.tsv') return new Response(TABLE)
+      attempts++
+      if (attempts === 1) throw new Error('down')
+      return new Response('#(H)\t一\n')
+    }, worker: null })
+    await expect(flaky.chainCharacter('#(H)')).rejects.toThrow('down')
+    expect(await flaky.chainCharacter('#(H)')).toBe('一')
+    const controller = new AbortController()
+    controller.abort()
+    await expect(flaky.chainCharacter('#(H)', { signal: controller.signal })).rejects.toThrow()
     expect(await adapter.encoded('⿳𭁟冖⺼')).toEqual(['骨'])
     expect(await adapter.encoded('⿰木口')).toEqual([])
     expect(await adapter.encoded('一')).toEqual([])

@@ -17,6 +17,7 @@
   "ids.do.put": "Put {part}",
   "ids.dragSibling": "Drag or press Alt+arrow to reorder siblings",
   "ids.do.reorder": "Reorder parts",
+  "ids.do.resolve": "Resolve to {char}",
   "ids.do.replace": "Replace {from} with {part}",
   "ids.do.split": "Split {part} with {op}",
   "ids.do.swap": "Change {from} to {op}",
