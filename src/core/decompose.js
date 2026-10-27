@@ -4,6 +4,7 @@
 import { isComponent, isDescription, leaves, parse } from './ids.js'
 import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'
+import { strokeChainChar } from './strokes.js'
 
 /**
  * @typedef {{ text: string, regions?: string }} Sequence A description of a character, with the source regions it describes (`GHTJKPV`).
@@ -36,7 +37,23 @@ export function tokens(text) {
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
     else out.push(token)
   }
-  return out
+  // A stroke chain that names a character is one token, that character.
+  /** @type {string[]} */
+  const merged = []
+  for (let i = 0; i < out.length; i++) {
+    if (out[i] === '#' && out[i + 1] === '(') {
+      // The closing bracket may carry the chain's variation selector.
+      const end = out.findIndex((token, k) => k > i + 1 && token.startsWith(')'))
+      const char = end < 0 ? undefined : strokeChainChar(out.slice(i + 2, end).join(''))
+      if (char !== undefined) {
+        merged.push(char + out[end].slice(1))
+        i = end
+        continue
+      }
+    }
+    merged.push(out[i])
+  }
+  return merged
 }
 
 /** The number of an unencoded component `{n}`, or null for any other token. @param {string | null | undefined} token */

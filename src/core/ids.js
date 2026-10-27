@@ -1,5 +1,6 @@
 // @ts-check
 import { unicodeProperty } from './unicode.js'
+import { strokeChain } from './strokes.js'
 export { UNICODE_VERSION } from './unicode.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
@@ -95,6 +96,14 @@ export function parse(text, { open = false } = {}) {
   const read = () => {
     const char = chars[at++]
     if (char === undefined) { if (open) return null; throw 'missing' }
+    // A stroke chain that names a character stands for that character.
+    if (char === '#') {
+      const chain = strokeChain(chars, at - 1)
+      if (chain) {
+        at = chain.end
+        return isSelector(chars[at]) ? chain.char + chars[at++] : chain.char
+      }
+    }
     const n = arity(char)
     if (!n) {
       if (open && EMPTY_MARKS.includes(char)) return null
@@ -129,6 +138,8 @@ export const problemOf = text => parse(text).problem ?? null
 export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
+  const chain = strokeChain(chars, at)
+  if (chain) return chain.end
   const n = arity(char)
   if (!n) return isComponent(char) ? (isSelector(chars[at + 1]) ? at + 2 : at + 1) : -1
   let end = at + 1

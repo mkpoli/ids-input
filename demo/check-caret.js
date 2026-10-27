@@ -36,6 +36,10 @@ try {
     f.dispatchEvent(new ClipboardEvent('paste', {clipboardData, bubbles:true, cancelable:true}))
   })
   assert.equal(await field.inputValue(), '⿲木水日')
+  // A stroke chain that names a character reads as that character.
+  await field.fill('⿰#(H)木')
+  await page.waitForFunction(() => document.querySelector('.ids-field input')?.value === '⿰一木')
+  assert.equal(await field.getAttribute('aria-invalid'), 'false')
   await field.fill('⿰木日')
   await select(2, 2)
   const cdp = await page.context().newCDPSession(page)

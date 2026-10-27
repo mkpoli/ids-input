@@ -1,5 +1,6 @@
 // @ts-check
 import { arity, isSelector, parse } from '../core/ids.js'
+import { strokeChainLength } from '../core/strokes.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string}} Token */
 /** UTF-16 offsets match the native input, including supplementary characters and selectors.
@@ -14,6 +15,14 @@ export function tokens(text) {
     const start = at
     const char = String.fromCodePoint(text.codePointAt(at) ?? 0)
     if (at < text.length) at += char.length
+    // A stroke chain that names a character is one component, its text the chain as written.
+    const chain = char === '#' ? strokeChainLength(text, start) : 0
+    if (chain) {
+      at = start + chain
+      if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+      out.push({ path, start, tokenEnd: at, end: at, text: text.slice(start, at) })
+      return
+    }
     const n = arity(char)
     if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
     const token = { path, start, tokenEnd: at, end: at, text: text.slice(start, at) }
