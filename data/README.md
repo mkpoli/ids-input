@@ -670,3 +670,19 @@ sources, grouped by Unicode block. It excludes ranges handled by the main CJK ex
 bundles. These are missing glyphs, not parser restrictions. Jurchen coverage is limited to the four
 available source glyphs; the remaining characters need additional source outlines. Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
+
+### Other script parts
+
+`script-parts.json.gz` groups additional scripts from bundled Unicode outlines and
+palette entries by Unicode Script. `script-parts-index.json`
+holds group sizes, and `script-parts-metadata.json` pins the sources. Existing Han, Latin,
+Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded. Mixed-script
+descriptions and common symbols are also excluded; this index adds only other scripts.
+
+To rebuild, run `node scripts/build_script_parts.mjs`. The builder uses Unicode 18.0 `Scripts.txt` and `PropertyValueAliases.txt`, checked against pinned SHA-256
+hashes. Unicode data is distributed under the Unicode License v3; see
+[`Unicode-3.0.txt`](licences/Unicode-3.0.txt).
+
+`script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
+host adapter. These parts remain available in their script group, including when the bundled
+catalog cannot be loaded. A configured composer export or font can have different coverage.
