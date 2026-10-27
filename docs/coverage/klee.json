@@ -11,7 +11,7 @@
     "scripts/audit_render_coverage.mjs": "f51ecb8ed6f46169cc3300ac6c7b9e4265af7a257dffe4be3f7e6d8ad6b9be4b",
     "src/composer/bopomofo.js": "806a9313cf476551b65c66607108a3a4d280687feb85473eec42db9e365ae67b",
     "src/composer/bundled-coverage.js": "21ff05c32bf7d0e42712a49643097ba9f977c4cf317b14d39b3bf334a8796113",
-    "src/composer/bundled.js": "f05f5b10e50e4966c201d25cb0b9329d333cc553c6b85f420588dc6613bde944",
+    "src/composer/bundled.js": "2556a389afab0e0530ec7e8c116e1a4c642939d52191f3eb991013fca0df3110",
     "src/composer/client.js": "bb5f236c856c3c6c4f238ee951feb15d19f5c01b7878e58b78d6e17f617c27e2",
     "src/composer/component-forms.js": "4d359cc3ab79210bcc54f1811009fda10b6c75bf52cc4d541510858154590a89",
     "src/composer/component-forms.json": "ec500030aacc2433e8c4feda09ebe89256db368e8b16bafc4d5088d0069e3678",
