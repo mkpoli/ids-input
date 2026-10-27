@@ -30,6 +30,12 @@ The bundled BabelStone IDS snapshot supplies the outer decompositions and the ex
 
 The fully expanded four-mouth grid is normalized before glyph/host lookup so both spellings choose the same rendering: `⿰⿱口口⿱口口` is laid out as `⿱⿰口口⿰口口`. Either spelling can be the outer operand of `⿴`; its middle operand is placed between the two rows. An editor retains the original leaf order, including column-first selection for the column-first input. Other grids are unchanged.
 
+The literal host `⿲彳⿱山一攵` supports the requested bottom opening:
+`⿵⿲彳⿱山一攵X` renders as `⿲彳⿱⿱山一X攵`. The inserted operand sits
+below 一 and between 彳 and 攵. This is a manually specified composition
+convention; the exact host has no occurrences in the bundled corpus. Other
+operators and similar hosts do not use this rule.
+
 ## Sources
 
 - `data/babelstone-ids.tsv.gz`: bundled BabelStone IDS data, records for the components and examples above. Regional labels describe the source forms; X labels alternative analyses.

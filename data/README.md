@@ -282,7 +282,9 @@ separate exact counts. Single-character promotion keeps its existing cutoff of 5
 
 The requested compound `⿲彳⿱山一攵` is available as a single palette candidate,
 with an estimated eleven strokes. Its exact sequence has no uses in the bundled
-corpus, so it is retained as a manual entry.
+corpus, so it is retained as a manual entry. As an enclosure host,
+`⿵⿲彳⿱山一攵⬚` places the slot below 一, between 彳 and 攵; the composer
+renders it as `⿲彳⿱⿱山一⬚攵` while preserving the source leaves for editing.
 
 The manual shortcut `⿰冫⿱丿丶` is included with
 113 corpus uses and an estimated four strokes. BabelStone’s source component
