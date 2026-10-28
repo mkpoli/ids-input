@@ -33,10 +33,16 @@ reactivate an old geometry edit by reusing its removed target ID. Labels use an 
 
 | `kind` | required content | IDS projection |
 | --- | --- | --- |
-| `component` | `char`: one core component, optionally followed by one variation selector | `char` |
-| `operator` | `op`, `children` in operand order | `op` followed by each child's projection |
+| `component` | `char`: one core component, optionally followed by one variation selector and loose marks, or one conjoining Hangul jamo run | `char` |
+| `operator` | `op`, `children` in operand order, optional `marks` | `op`, each child's projection, then `marks` |
 | `slot` | none | `⬚` |
 | `group` | one `child` | child's projection |
+
+A loose mark is a combining mark, a modifier letter or a superscript written after the whole
+description (`⿰亻木ˊ`): it annotates the character rather than taking an operand's place. Marks
+therefore belong where the projection ends—the root, the last child of its last child, or the child of
+a root group—and an edit that would carry them inside the tree hoists them back to the root, in
+reading order. A slot cannot carry them.
 
 An operator has exactly the arity defined by `src/core/ids.js`. A group has an
 identity layout and carries an authored transform independently of an IDS
@@ -329,7 +335,8 @@ ID syntax, render modes and per-array limits. A semantic reader additionally:
    edit IDs each have their own document-wide namespace. ID allocation reserves
    current/history IDs and stored target references, including after reload.
 2. Projects the tree to IDS, validates with the core open parser, and requires
-   each component to be one accepted component plus at most one selector.
+   each component to be one accepted component plus at most one selector, or one
+   conjoining Hangul jamo run.
 3. Checks every known operation's mathematical validity and finite coefficients.
 4. Checks pinned recipe completeness and resolves geometry references without
    retargeting them. Unresolved geometry edits are valid stored records.
@@ -365,11 +372,11 @@ document inside it is the same `.ids.json` document.
 ## Implementation boundary and checks
 
 The current editor still uses positional core trees, canvas-space drawing
-pieces, flat affine adjustments and sequence-based draft storage. The
-identified document model can be reconciled from those trees with
-`syncDocument`, preserving layer identity and transforms at the same paths;
-the editor, renderer and storage bindings have not switched to it yet. The core IDS parser and writer remain the projection
-boundary.
+pieces and flat affine adjustments. The identified document model is reconciled
+from those trees with `syncDocument`, and the workshop keeps a session with
+each tab and saved draft. The preview, transform controls and share links have
+not switched to the document yet. The core IDS parser and writer remain the
+projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports
 and projects IDS, checks the document structure and transforms, reads and writes

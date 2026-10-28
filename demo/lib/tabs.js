@@ -5,7 +5,7 @@
 import { parse, write } from '../../src/core/index.js'
 import { load, save } from './storage.js'
 
-/** @typedef {{ id: string, sequence: string, saved: string, whole: string }} Tab */
+/** @typedef {{ id: string, sequence: string, saved: string, whole: string, document?: import('../../src/document/index.js').SessionRecord }} Tab */
 
 let made = 0
 // Each browser window keeps its own working set through reloads. localStorage seeds a new window
@@ -35,9 +35,9 @@ const readable = text => wholeOf(text) || text
 /** `sequence` as the editor writes it, for comparing with a tab's text. @param {string} sequence */
 export const canonical = sequence => readable(sequence)
 
-/** A new tab over `sequence`, clean against `saved` (the sequence itself by default). @param {string} sequence @param {string} [saved] @returns {Tab} */
-export function makeTab(sequence = '', saved = sequence) {
-  return { id: newId(), sequence: readable(sequence), saved: readable(saved), whole: wholeOf(sequence) }
+/** A new tab over `sequence`, clean against `saved` (the sequence itself by default). @param {string} sequence @param {string} [saved] @param {Tab['document']} [document] @returns {Tab} */
+export function makeTab(sequence = '', saved = sequence, document = undefined) {
+  return { id: newId(), sequence: readable(sequence), saved: readable(saved), whole: wholeOf(sequence), ...(document ? { document } : {}) }
 }
 
 /** The tabs kept from an earlier visit, oldest first. @returns {Tab[]} */
@@ -50,13 +50,16 @@ export function readTabs() {
     seen.add(item.id)
     const sequence = readable(item.sequence)
     const saved = typeof item.saved === 'string' ? readable(item.saved) : sequence
-    return [{ id: item.id, sequence, saved, whole: wholeOf(sequence) }]
+    const document = item.document && typeof item.document === 'object' && !Array.isArray(item.document)
+      ? /** @type {Tab['document']} */ (item.document)
+      : undefined
+    return [{ id: item.id, sequence, saved, whole: wholeOf(sequence), ...(document ? { document } : {}) }]
   })
 }
 
 /** Keep the tabs and the active one for the next visit. @param {Tab[]} tabs @param {string} activeId */
 export function writeTabs(tabs, activeId) {
-  const records = tabs.map(tab => ({ id: tab.id, sequence: tab.sequence, saved: tab.saved }))
+  const records = tabs.map(tab => ({ id: tab.id, sequence: tab.sequence, saved: tab.saved, ...(tab.document ? { document: tab.document } : {}) }))
   keepSession('tabs', records)
   keepSession('activeTab', activeId)
   save('tabs', records)

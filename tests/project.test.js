@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { arity, parse } from '../src/core/ids.js'
 import {
-  allocatorFor, documentFromTree, emptyDocument, fromSequence, syncDocument, toSequence, treeFromDocument,
+  DocumentError, allocatorFor, documentFromTree, emptyDocument, fromSequence, syncDocument, toSequence, treeFromDocument,
 } from '../src/document/index.js'
 
 const tree = sequence => parse(sequence, { open: true }).tree
@@ -14,6 +14,9 @@ describe('projecting a document to the editor tree', () => {
     const grouped = /** @type {any} */ (document)
     grouped.root = { id: 'g', kind: 'group', child: grouped.root }
     expect(treeFromDocument(grouped)).toEqual({ op: '⿰', parts: ['木', null] })
+  })
+  it('refuses a tree whose parts would merge when written', () => {
+    expect(() => documentFromTree({ op: '⿰', parts: [String.fromCodePoint(0x1100), String.fromCodePoint(0x1161)] })).toThrow(DocumentError)
   })
   it('builds a document from a tree with fresh IDs', () => {
     const made = documentFromTree(tree('⿱木口'))

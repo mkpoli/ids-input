@@ -1,5 +1,6 @@
 // @ts-check
-import { arity, isSelector, parse } from '../core/ids.js'
+import { hangulClusterAt } from '../core/hangul.js'
+import { arity, isMark, isSelector, parse } from '../core/ids.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string}} Token */
 /** UTF-16 offsets match the native input, including supplementary characters and selectors.
@@ -13,15 +14,25 @@ export function tokens(text) {
   function read(path) {
     const start = at
     const char = String.fromCodePoint(text.codePointAt(at) ?? 0)
-    if (at < text.length) at += char.length
     const n = arity(char)
-    if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+    const cluster = hangulClusterAt([...text.slice(at)], 0)
+    if (cluster) at += cluster.text.length
+    else {
+      if (at < text.length) at += char.length
+      if (!n && isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+    }
     const token = { path, start, tokenEnd: at, end: at, text: text.slice(start, at) }
     out.push(token)
     for (let i = 0; i < n; i++) read([...path, i])
     token.end = at
   }
   read([])
+  // Loose marks trail the whole description: they get a token of their own at the end, belonging to
+  // the root, while the root's span reaches over them so a selection of the whole still finds it.
+  if (out.length && at < text.length && isMark([...text.slice(at)][0])) {
+    out[0].end = text.length
+    out.push({ path: [], start: at, tokenEnd: text.length, end: text.length, text: text.slice(at) })
+  }
   return out
 }
 

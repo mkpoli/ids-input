@@ -6,12 +6,12 @@
   let { open = $bindable(false), t } = $props()
 </script>
 
-{#snippet list(/** @type {import('../lib/credits.js').Credit[]} */ items, /** @type {string} */ prefix)}
+{#snippet list(/** @type {import('../lib/credits.js').Credit[]} */ items, /** @type {(key: string) => string} */ label)}
   <ul>
     {#each items as item (item.key)}
       <li>
         <a href={item.url} target="_blank" rel="noreferrer">{item.name}</a>{#if item.by}<span class="by">{item.by}</span>{/if}{#if item.licence}<span class="licence">{item.licence}</span>{/if}
-        <p>{t(`${prefix}.${item.key}`)}</p>
+        <p>{label(item.key)}</p>
       </li>
     {/each}
   </ul>
@@ -26,9 +26,9 @@
     <p>{t('app.about.dataLicense')} <a href="https://github.com/mkpoli/ids-input/blob/main/data/README.md">{t('app.about.sources')}</a></p>
     <p>{t('app.about.outputLicense')}</p>
     <h3>{t('app.footer.sources')}</h3>
-    {@render list(SOURCES, 'app.source')}
+    {@render list(SOURCES, key => t(`app.source.${key}`))}
     <h3>{t('app.about.inspired')}</h3>
-    {@render list(INSPIRED, 'app.inspired')}
+    {@render list(INSPIRED, key => t(`app.inspired.${key}`))}
     <h3>{t('app.about.acknowledgments')}</h3>
     <p>{t('app.about.feedbackThanks')}</p>
     <p class="feedback-names"><a href="https://x.com/zoenshiueh_lieu" target="_blank" rel="noreferrer">परवद💙💛</a> · <a href="https://x.com/integuraru_P" target="_blank" rel="noreferrer">Fn</a> · <a href="https://x.com/nakiha_kanji" target="_blank" rel="noreferrer">なきは</a> · <a href="https://x.com/umanoyui" target="_blank" rel="noreferrer">馬のゆい</a></p>

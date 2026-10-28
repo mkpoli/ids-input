@@ -153,5 +153,7 @@ export async function resolveReplacementExpression(expression, structure, { sign
     return { op: node.op, parts }
   }
   const tree = await resolve(expression)
-  return tree == null || parse(write(tree), { open: true }).problem ? null : tree
+  if (tree == null) return null
+  const text = write(tree)
+  return [...text].length > LONGEST || parse(text, { open: true }).problem ? null : tree
 }

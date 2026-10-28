@@ -83,7 +83,9 @@
       if (!open) return
       if (!entry || entry.status === 'loading') out.push({ key: `${key}/loading`, level: level + 1, kind: 'status', status: 'loading', part: c, take: null, openable: false, open: false, swaps: [] })
       else if (entry.status === 'failed') out.push({ key: `${key}/failed`, level: level + 1, kind: 'status', status: 'failed', part: c, take: null, openable: false, open: false, swaps: [] })
-      else variants(entry).forEach((found, i) => sequence(found, `${key}/${i}`, level + 1, [...ancestors, c]))
+      else {
+        variants(entry).forEach((variant, i) => sequence(variant, `${key}/${i}`, level + 1, [...ancestors, c]))
+      }
     }
     /** @param {import('../core/ids.js').Node} node @param {string} key @param {number} level @param {string[]} ancestors */
     const parts = (node, key, level, ancestors) => node.parts.forEach((inner, i) => isNode(inner)
@@ -94,11 +96,12 @@
       out.push({ key, level, kind: 'node', text: write(part), take: write(part), openable: true, open, swaps: [] })
       if (open) parts(part, key, level + 1, ancestors)
     }
-    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part }} found @param {string} key @param {number} level @param {string[]} ancestors */
-    const sequence = ({ text: written, regions, tree: read }, key, level, ancestors) => {
+    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part, derived?: boolean }} found @param {string} key @param {number} level @param {string[]} ancestors */
+    const sequence = ({ text: written, regions, tree: read, derived }, key, level, ancestors) => {
+      if (typeof read === 'string') { char(read, key, level, ancestors); return }
       if (isNode(read)) {
         const open = isOpen(key, true)
-        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, swaps: [] })
+        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, note: derived ? 'layered' : null, swaps: [] })
         if (open) parts(read, key, level + 1, ancestors)
         return
       }
@@ -351,7 +354,7 @@
     --_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-from) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface)}
   :where(.ids-from) button{cursor:pointer}

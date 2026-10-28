@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { gzipSync } from 'node:zlib'
+import { gunzipSync, gzipSync } from 'node:zlib'
 import { readFileSync } from 'node:fs'
 import { babelStoneAdapter, componentIndex, parseIdsTable, paletteRows } from '../src/adapter/index.js'
 
@@ -74,6 +74,25 @@ describe('the BabelStone adapter', () => {
   })
   it('keeps a sequence naming an unencoded component', async () => {
     expect(await babelStoneAdapter({ table }).structure('彡')).toEqual([{ text: '⿹{22}一', regions: 'G' }])
+  })
+  it('writes out a numbered component the fragments table names', async () => {
+    const componentsText = '{22}\toutside of 与\t⿺㇉一\n{50}\ttop right of 叚\t\n'
+    expect(await babelStoneAdapter({ table, componentsText }).structure('彡')).toEqual([{ text: '⿹⿺㇉一一', regions: 'G' }])
+  })
+  it("writes out 龍's numbered right part as its IDS", async () => {
+    const componentsText = readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')
+    const adapter = babelStoneAdapter({ table: parseIdsTable('龍\t⿰𦚏{12}(G)\n'), componentsText })
+    expect(await adapter.structure('龍')).toEqual([{ text: '⿰𦚏⿷己三', regions: 'G' }])
+    expect(await adapter.encoded('⿰𦚏⿷己三')).toEqual(['龍'])
+  })
+  it("writes out 書's, 畫's and 晝's top as 聿", async () => {
+    const componentsText = readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')
+    const shipped = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
+    const adapter = babelStoneAdapter({ table: shipped, componentsText })
+    expect(await adapter.structure('書')).toEqual([{ text: '⿱聿日', regions: 'GTJKPV' }, { text: '⿱聿曰', regions: 'H' }])
+    expect(await adapter.structure('晝')).toEqual([{ text: '⿱書一', regions: 'GHTJKP' }, { text: '⿱聿旦', regions: 'X' }])
+    expect(await adapter.structure('畫')).toEqual([{ text: '⿱𤱪一', regions: 'GHTJKPV' }, { text: '⿳聿田一', regions: 'X' }])
+    expect(await adapter.structure('𤱪')).toEqual([{ text: '⿱聿田', regions: 'GT' }, { text: '⿻聿日', regions: 'UCS2003' }])
   })
   it('fails, and tries again on the next call, when the table cannot be loaded', async () => {
     const adapter = babelStoneAdapter({ ids: 'missing.tsv', fetch })

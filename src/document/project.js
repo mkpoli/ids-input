@@ -2,8 +2,8 @@
 // The bridge between the editor's positional core tree and the identified document. The core tree
 // stays the projection the existing controls edit; this module reconciles it into a document at the
 // same paths, keeping each layer's ID, name and transform through replacements and structural edits.
-import { parse, write } from '../core/ids.js'
-import { allocatorFor, assertDocument, fromSequence } from './model.js'
+import { parse, sameTree, write } from '../core/ids.js'
+import { DocumentError, allocatorFor, assertDocument, fromSequence } from './model.js'
 
 /** @typedef {import('../core/ids.js').Part} Part */
 /** @typedef {import('../core/ids.js').Node} TreeNode */
@@ -19,7 +19,7 @@ export function treeFromDocument(document) {
     if (node.kind === 'slot') return null
     if (node.kind === 'component') return node.char
     if (node.kind === 'group') return part(node.child)
-    return { op: node.op, parts: node.children.map(part) }
+    return { op: node.op, parts: node.children.map(part), ...(node.marks ? { marks: node.marks } : {}) }
   }
   return part(document.root)
 }
@@ -52,9 +52,19 @@ function reconcile(old, part, allocator) {
     return { ...kept(old, allocator, 'component'), kind: 'component', char: part }
   }
   const oldChildren = old?.kind === 'operator' ? old.children : []
-  const operator = /** @type {import('./model.js').OperatorNode} */ ({ ...kept(old, allocator, 'operator'), kind: 'operator', op: part.op })
+  const operator = /** @type {import('./model.js').OperatorNode} */ ({ ...kept(old, allocator, 'operator'), kind: 'operator', op: part.op,
+    ...(part.marks ? { marks: part.marks } : {}) })
   operator.children = part.parts.map((child, index) => reconcile(oldChildren[index], child, allocator))
   return operator
+}
+
+/** The description of `tree`, refusing one whose parts would read back differently. @param {Part} tree */
+function project(tree) {
+  const text = write(tree), read = parse(text, { open: true })
+  if (read.problem || !sameTree(read.tree, tree)) {
+    throw new DocumentError([{ path: '/root', message: 'tree does not project to the same parts' }])
+  }
+  return text
 }
 
 /**
@@ -64,6 +74,7 @@ function reconcile(old, part, allocator) {
  * @param {Document} document @param {Part} tree @param {{ allocator?: Allocator }} [options] @returns {Document}
  */
 export function syncDocument(document, tree, { allocator = allocatorFor(document) } = {}) {
+  project(tree)
   const root = reconcile(document.root, tree, allocator)
   const next = { ...document, root }
   assertDocument(next)
@@ -75,5 +86,5 @@ export function syncDocument(document, tree, { allocator = allocatorFor(document
  * @returns {Document}
  */
 export function documentFromTree(tree, { id = 'root', allocator } = {}) {
-  return fromSequence(write(tree), { id, ...(allocator ? { allocator } : {}) })
+  return fromSequence(project(tree), { id, ...(allocator ? { allocator } : {}) })
 }
