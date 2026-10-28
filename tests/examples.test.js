@@ -2,12 +2,14 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
-import { parseIdsTable } from '../src/adapter/babelstone.js'
+import { expandNumberedComponents, parseIdsTable, readNumberedComponents } from '../src/adapter/babelstone.js'
 import { onlyTangut } from '../src/composer/tangut.js'
 import { size } from '../src/composer/loader.js'
 import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 
-const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
+const shipped = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
+const components = readNumberedComponents(readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8'))
+const table = expandNumberedComponents(shipped, components)
 /** The characters BabelStone describes with each sequence. */
 const described = new Map()
 for (const [char, sequences] of table) for (const { text } of sequences) {
@@ -55,6 +57,10 @@ describe('the demo examples', () => {
     expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '', abbreviates: '寮' })
     expect(group.examples.every(example => example.char === '' && example.abbreviates)).toBe(true)
     expect(group.examples).toHaveLength(11)
+  })
+  it("writes out 龍's numbered right part", () => {
+    expect(table.get('龍').map(entry => entry.text)).toContain('⿰𦚏⿷己三')
+    expect(described.get('⿰𦚏⿷己三')).toContain('龍')
   })
   it('are distinct', () => {
     expect(new Set(EXAMPLES.map(example => example.sequence)).size).toBe(EXAMPLES.length)

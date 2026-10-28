@@ -43,7 +43,7 @@
 // and 𧹂 (⿱⿰虎⿿虎貝): BabelStone IDS. The first two also appear in IRG N2572, p.2.
 // https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
 // 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
-// Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
+// Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
 // Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), section 西文字母, read 2026-10-28:
 // https://zh.wikipedia.org/wiki/全学联汉字
@@ -82,7 +82,6 @@ export const EXAMPLE_GROUPS = [
   { key: 'complex', examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
     { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
-    { sequence: '⿰𦚏⿷己三', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },

@@ -30,12 +30,35 @@ gzipped, 2.2 MB as text.
   credited all the same.
 - Format: one line per ideograph, `char<TAB>sequences`, every alternative the file gives,
   space-separated, each with the source regions it describes (`⿰氵骨(GHTJKPV)`). The maintainer's `*`
-  notes are left out. `{n}` is BabelStone's unencoded component n and `？` an unrepresentable one.
+  notes are left out. `{n}` is BabelStone's numbered component n, kept as the source writes it;
+  `data/ids-components.tsv` gives the fragments that write out the ones note 6 knows, and the adapter
+  applies them. `？` is an unrepresentable one.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
   from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
+
+## `ids-components.tsv`
+
+BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
+the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
+fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+`{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
+names its two halves, 𦚏 and ⿷己三.
+
+`{82}`, the top of 書, is 聿. The note writes that shape as `⿱𦘒一`, which is 說文解字's own analysis
+of 聿 (「从𦘒一聲」, <https://www.shuowen.org/view/1932>); the file uses the encoded 聿 for the same
+shape elsewhere — 㶳 is `⿱{82}火` in G and `⿱聿火` in TP, 衋 is `⿱⿻聿皕血` in GHTKP and `⿳{82}皕血`
+in J, and 𤱪 was `⿱聿田` before Unicode 6.0 — and CHISE's IDS writes 書 `⿱聿曰`, 畫 `⿳聿田一` and
+晝 `⿱聿旦` (<https://gitlab.chise.org/CHISE/ids>). 書 then reads `⿱聿日` (`⿱聿曰` in H), 畫's X form
+`⿳聿田一` and 晝's `⿱聿旦`; the G forms of 畫 and 晝 reach the same 聿 through 𤱪 `⿱聿田` and 書.
+
+The fragments are BabelStone's own (IDS.TXT note 6), public domain; the two above are editorial. The
+adapter reads the file with `babelStoneAdapter({ components })`; the descriptions it answers and
+searches name the parts rather than BabelStone's numbers. Built by
+`scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
+its own header note.
 
 ## `ids-parts.json`
 
@@ -313,6 +336,30 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## New Korean Orthography outlines
+
+`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+(조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
+
+- U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
+- U+A97E / U+D7FD: 된리을 (strong rieul), `HANGUL CHOSEONG LIEUL` / `HANGUL JONGSEONG LIEUL`
+- U+A97F / U+D7FE: 위읍 (wi-eup), `HANGUL CHOSEONG UEUB` / `HANGUL JONGSEONG UEUB`
+- U+D7C7: 여린이 (soft i), `HANGUL JUNGSEONG BANMOEUM-I`
+
+Unicode 18.0.0 leaves these code points unassigned. They are the positions in
+OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); [L2/19-233](https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf)
+answered the proposal. The editor treats the range as a bundled allocation, as it
+does U+3D000–U+3FC3F for Small Seal; the text is not claimed to be assigned Unicode.
+
+The drawings are [Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s
+SVGs on Wikimedia Commons, made 2016-02-08, CC BY-SA 4.0. Their files and digests,
+the proposal and the Wikipedia articles are recorded in
+[`new-korean/sources.json`](new-korean/sources.json); `new-korean/README.md` explains
+the letters. Rebuild the `IDS New Korean` font and these outlines with
+`uv run scripts/build_new_korean.py`. The script checks the SVG digests and derives
+the outline records from the same quadratic curves as the font.
 
 ## Subtree frequencies and compound palette entries
 
@@ -668,14 +715,17 @@ CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-25
 
 ## Unicode character properties
 
-`unicode-properties.json` pins component acceptance and letter classification to Unicode 18.0.0,
-independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
+`unicode-properties.json` pins component acceptance, letter classification and loose marks to Unicode
+18.0.0, independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
 snapshots and a source manifest with original URLs and SHA-256s. Rebuild with
 `python3 scripts/build_unicode_properties.py`; the builder verifies those digests.
 
 Graphic categories L, M, N, P, S and Co are eligible, except default-ignorable characters, IDS
 operators and draft markers. The existing Small Seal allocation remains supported. Ideographic and
-Radical properties distinguish ideographs from alphabetic letters. Source: the
+Radical properties distinguish ideographs from alphabetic letters. The `marks` property holds what
+may follow a whole description: categories M and Lm, the Sk accents and tone letters of
+U+00A8, U+00AF, U+00B4, U+00B8, U+02D2–02DF, U+02E5–02ED, U+309B–309C and U+A700–A71F, and
+superscript or subscript digits (No in U+00B2–B3, U+00B9 and U+2070–209F). Source: the
 [Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
 [Unicode License v3](licences/Unicode-3.0.txt).
 

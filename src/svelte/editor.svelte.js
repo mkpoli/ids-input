@@ -11,8 +11,8 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, reorderSiblings, samePath, unwrap,
-  write } from '../core/ids.js'
+import { applyOperator, clear, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+  samePath, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
@@ -146,6 +146,8 @@ export function createEditor(options) {
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path } }} [how]
    */
   function apply(next, select, label, { destructive = false, reorder } = {}) {
+    // A description's text can only carry marks at its end; keep them there.
+    next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
@@ -227,8 +229,25 @@ export function createEditor(options) {
     apply(next.tree, next.chosen, before === null || before === undefined ? t('ids.do.put', { part: text(part) })
       : t('ids.do.replace', { from: text(before), part: text(part) }), { destructive: isNode(before) })
   }
-  /** A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place. @param {string} written @param {Path | null} [at] */
-  function take(written, at) {
+  /**
+   * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
+   * With `loose`, a run of marks annotates the whole description instead of filling a slot.
+   * @param {string} written @param {Path | null} [at] @param {{ loose?: boolean }} [how]
+   */
+  function take(written, at, { loose = false } = {}) {
+    if (at === undefined) {
+      const marks = unalias(written)
+      if (loose && isMarks(marks)) {
+        if (tree === null) {
+          const read = parse(marks, { open: true })
+          if (read.problem || read.tree === undefined) return false
+          apply(read.tree, [], t('ids.do.put', { part: marks }))
+          return true
+        }
+        apply(withMarks(tree, marks), chosen, t('ids.do.put', { part: marks }))
+        return true
+      }
+    }
     const found = parse(unalias(written), { open: true })
     if (found.problem) { note = t(`ids.problem.${found.problem}`); return false }
     if (found.tree === null) return false
