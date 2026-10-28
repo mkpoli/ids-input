@@ -102,3 +102,58 @@ export function composeJamo(text) {
   if (finals.length > 1 || finals.some(char => char === null)) return null
   return composeHangul(initial, medial, finals.join(''))?.text ?? null
 }
+
+// Revised Romanization of Korean (National Institute of Korean Language, 2000) and the normalized
+// initial spellings of McCune-Reischauer (1939), as syllable spellings: the tables below, without
+// the assimilation rules that apply across syllable boundaries.
+// https://www.korean.go.kr/front_eng/roman/roman_01.do
+// https://en.wikipedia.org/wiki/McCune%E2%80%93Reischauer
+const ROMAN_INITIALS = ['g', 'kk', 'n', 'd', 'tt', 'r', 'm', 'b', 'pp', 's', 'ss', '', 'j', 'jj', 'ch', 'k', 't', 'p', 'h']
+const ROMAN_MR_INITIALS = ['k', 'kk', 'n', 't', 'tt', 'r', 'm', 'p', 'pp', 's', 'ss', '', 'ch', 'tch', 'ch', 'k', 't', 'p', 'h']
+const ROMAN_VOWELS = ['a', 'ae', 'ya', 'yae', 'eo', 'e', 'yeo', 'ye', 'o', 'wa', 'wae', 'oe', 'yo', 'u', 'wo', 'we', 'wi', 'yu', 'eu', 'ui', 'i']
+const ROMAN_FINALS = ['', 'k', 'k', 'k', 'n', 'n', 'n', 't', 'l', 'k', 'm', 'l', 'l', 'l', 'p', 'l', 'm', 'p', 'p', 't', 't', 'ng', 't', 't', 'k', 't', 'p', 't']
+
+/** The Revised Romanization of one precomposed Hangul syllable, or null for anything else.
+ * @param {string} syllable @returns {string | null} */
+export function romanizeHangul(syllable) {
+  const cp = syllable.codePointAt(0)
+  if (cp === undefined || [...syllable].length !== 1 || cp < 0xac00 || cp > 0xd7a3) return null
+  const index = cp - 0xac00
+  return ROMAN_INITIALS[Math.floor(index / 588)] + ROMAN_VOWELS[Math.floor(index % 588 / 28)] + ROMAN_FINALS[index % 28]
+}
+
+/** Fold the forms people type for a romanized syllable: case, separators, McCune's breve vowels. @param {string} text */
+export function normalizeRomanization(text) {
+  return text.normalize('NFC').toLowerCase().replace(/[’'\-–—\s]/g, '').replace(/ŏ/g, 'eo').replace(/ŭ/g, 'eu')
+}
+
+/** @type {Map<string, string[]> | null} */
+let romanizationIndex = null
+/** @returns {Map<string, string[]>} */
+function romanizationSyllables() {
+  if (romanizationIndex) return romanizationIndex
+  romanizationIndex = new Map()
+  for (let cp = 0xac00; cp <= 0xd7a3; cp++) {
+    const syllable = String.fromCodePoint(cp), index = cp - 0xac00
+    const l = Math.floor(index / 588), v = Math.floor(index % 588 / 28), t = index % 28
+    for (const key of new Set([ROMAN_INITIALS[l] + ROMAN_VOWELS[v] + ROMAN_FINALS[t], ROMAN_MR_INITIALS[l] + ROMAN_VOWELS[v] + ROMAN_FINALS[t]])) {
+      const found = romanizationIndex.get(key)
+      if (found) found.push(syllable)
+      else romanizationIndex.set(key, [syllable])
+    }
+  }
+  return romanizationIndex
+}
+
+/** The precomposed syllables whose romanization is exactly `query`, or starts with it, in code
+ * point order. @param {string} query @returns {string[]} */
+export function findSyllablesByRomanization(query) {
+  const key = normalizeRomanization(query)
+  if (!key || /[^a-z]/.test(key)) return []
+  const index = romanizationSyllables()
+  const exact = index.get(key)
+  if (exact) return exact
+  const matches = []
+  for (const [roman, syllables] of index) if (roman.startsWith(key)) matches.push(...syllables)
+  return [...new Set(matches)].sort((a, b) => (a.codePointAt(0) ?? 0) - (b.codePointAt(0) ?? 0))
+}

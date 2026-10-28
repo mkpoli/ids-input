@@ -10,7 +10,7 @@
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
-  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, toConjoiningJamo } from '../core/hangul.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
@@ -74,24 +74,18 @@
   // Hangul tone marks and enclosed forms also have bundled Unicode outlines.
   const hangul = [...substitutes, ...hangulLetters, ...range(0x3200, 0x321e), ...range(0x3260, 0x327e), '〮', '〯']
   const hangulSyllables = range(0xac00, 0xd7a3)
-  // Modern compatibility jamo are the familiar keyboard forms; each is mapped to its conjoining
-  // form when it enters the syllable. Historical forms come from the conjoining jamo tables.
+  // All jamo at once, in the three classes and modern forms first. Each class keeps its modern
+  // forms in the familiar order, then the historical forms from the conjoining jamo tables.
   const MODERN_INITIALS = [...'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ']
   const MODERN_VOWELS = [...'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ']
   const MODERN_FINAL_CLUSTERS = [...'ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ']
   /** @typedef {'consonant' | 'vowel' | 'final'} JamoKind */
   /** @typedef {{ key: string, label: string, chars: readonly string[], kind: JamoKind }} JamoGroup */
   /** @type {ReadonlyArray<JamoGroup>} */
-  const MODERN_JAMO_GROUPS = [
-    { key: 'consonants', label: 'parts.hangul.consonants', chars: MODERN_INITIALS, kind: 'consonant' },
-    { key: 'vowels', label: 'parts.hangul.vowels', chars: MODERN_VOWELS, kind: 'vowel' },
-    { key: 'finalClusters', label: 'parts.hangul.finalClusters', chars: MODERN_FINAL_CLUSTERS, kind: 'final' },
-  ]
-  /** @type {ReadonlyArray<JamoGroup>} */
-  const HISTORICAL_JAMO_GROUPS = [
-    { key: 'consonants', label: 'parts.hangul.consonants', chars: [...HANGUL_INITIALS.historical], kind: 'consonant' },
-    { key: 'vowels', label: 'parts.hangul.vowels', chars: [...HANGUL_MEDIALS.historical], kind: 'vowel' },
-    { key: 'finals', label: 'parts.hangul.finals', chars: [...HANGUL_FINALS.historical], kind: 'final' },
+  const JAMO_GROUPS = [
+    { key: 'consonants', label: 'parts.hangul.consonants', chars: [...MODERN_INITIALS, ...HANGUL_INITIALS.historical], kind: 'consonant' },
+    { key: 'vowels', label: 'parts.hangul.vowels', chars: [...MODERN_VOWELS, ...HANGUL_MEDIALS.historical], kind: 'vowel' },
+    { key: 'finals', label: 'parts.hangul.finals', chars: [...MODERN_FINAL_CLUSTERS, ...HANGUL_FINALS.historical], kind: 'final' },
   ]
 
   // Loose marks (`marksOf` reads them from a description's end): Bopomofo tone marks, tone bars and
@@ -124,7 +118,6 @@
 
   const PAGE_SIZE = 120
   let hangulGroup = $state(/** @type {'jamo' | 'compose' | 'syllable'} */ ('jamo')), hangulPage = $state(0)
-  let jamoMode = $state(/** @type {'modern' | 'historical'} */ ('modern'))
   $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
     const syllables = hangulGroup === 'syllable'
@@ -139,6 +132,10 @@
     if (hangulGroup === 'compose') return []
     const term = filter.trim()
     if (!term) return hangulKeys
+    if (hangulGroup === 'syllable') {
+      const romanized = findSyllablesByRomanization(term)
+      if (romanized.length) return romanized
+    }
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point)
       : hangulGroup === 'syllable' ? composeJamo(term) ?? term : term
@@ -159,7 +156,6 @@
 
   // The jamo keyboard composes in the order the letters are clicked: initial, medial, final.
   let initial = $state(''), medial = $state(''), final = $state('')
-  const jamoGroups = $derived(jamoMode === 'modern' ? MODERN_JAMO_GROUPS : HISTORICAL_JAMO_GROUPS)
   const composed = $derived(initial && medial ? composeHangul(initial, medial, final) : null)
   const preview = $derived(composed?.text ?? initial)
   /** @param {string | undefined} text */
@@ -417,14 +413,16 @@
   /** @param {PalettePart} part */
   const title = part => {
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
+    const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
     return [
       isNewKorean(part.part) ? null : part.part,
       (tab === 'gongche' && !isSequence(part.part) || tab === 'marks') ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
+      romanization,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
-      nko ? null : tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
+      nko || romanization ? null : tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
       part.uses ? t('parts.uses', { count: part.uses }) : null,
     ].filter(Boolean).join(' · ')
   }
@@ -484,12 +482,7 @@
         <button type="button" class="compose-clear" disabled={disabled || (!initial && !medial && !final)} onclick={clearCompose}>{t('parts.hangul.clear')}</button>
       </div>
     </div>
-    <div class="compose-mode" role="group" aria-label={t('parts.hangul.group')}>
-      {#each /** @type {const} */ ([['modern', 'parts.hangul.modern'], ['historical', 'parts.hangul.historical']]) as [mode, label] (mode)}
-        <button type="button" class:active={jamoMode === mode} aria-pressed={jamoMode === mode} onclick={() => { jamoMode = /** @type {'modern' | 'historical'} */ (mode) }}>{t(label)}</button>
-      {/each}
-    </div>
-    {#each jamoGroups as group (group.key)}
+    {#each JAMO_GROUPS as group (group.key)}
       <section class="jamo-group" data-hangul-group={group.key}>
         <h4>{t(group.label)}</h4>
         <div class="jamo-grid" role="group" aria-label={t(group.label)}>
@@ -682,9 +675,6 @@
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .compose-code{font:11px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow-wrap:anywhere}
   .compose-action{font-size:12px;color:var(--_accent)}
-  .compose-mode{display:flex;gap:2px;padding:3px;border-radius:8px;background:var(--_surface-subtle)}
-  .compose-mode button{border:0;background:transparent;padding:4px 9px;border-radius:6px;font-size:12px;color:var(--_muted)}
-  .compose-mode button.active{background:var(--_surface);color:var(--_ink)}
   .jamo-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .jamo-group h4{margin:2px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
   .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}

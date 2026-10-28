@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, hangulClusterAt, jamoClass,
+  HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, hangulClusterAt, jamoClass,
+  normalizeRomanization, romanizeHangul,
 } from '../src/core/hangul.js'
 import { descriptionEnd, parse, write } from '../src/core/ids.js'
 
@@ -72,5 +73,28 @@ describe('Hangul runs in descriptions', () => {
   it('leaves a lone jamo a single component', () => {
     expect(parse(g, { open: true })).toEqual({ tree: g })
     expect(parse(`⿰${g}木`)).toEqual({ tree: { op: '⿰', parts: [g, '木'] } })
+  })
+})
+
+
+describe('Romanized syllables', () => {
+  it('romanizes a syllable by its Revised Romanization spelling', () => {
+    for (const [syllable, roman] of [['가', 'ga'], ['각', 'gak'], ['갃', 'gak'], ['간', 'gan'], ['강', 'gang'],
+      ['알', 'al'], ['라', 'ra'], ['의', 'ui'], ['괜', 'gwaen'], ['좋', 'jot']]) expect(romanizeHangul(syllable)).toBe(roman)
+    expect(romanizeHangul('木')).toBeNull()
+    expect(romanizeHangul('가나')).toBeNull()
+  })
+  it('finds syllables by Revised Romanization and normalised McCune-Reischauer', () => {
+    expect(findSyllablesByRomanization('gan')).toEqual(['간', '갅', '갆'])
+    expect(findSyllablesByRomanization('GANG')).toEqual(['강'])
+    expect(findSyllablesByRomanization('gak')).toContain('각')
+    expect(findSyllablesByRomanization('kak')).toContain('각')
+    expect(findSyllablesByRomanization('tchak')).toContain('짝')
+    expect(findSyllablesByRomanization('geon')).toContain('건')
+    expect(findSyllablesByRomanization('g').length).toBeGreaterThan(500)
+    expect(findSyllablesByRomanization('가')).toEqual([])
+    expect(findSyllablesByRomanization('zzz')).toEqual([])
+    expect(findSyllablesByRomanization('kŏn')).toContain('건')
+    expect(normalizeRomanization('KŎN')).toBe('keon')
   })
 })
