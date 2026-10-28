@@ -63,6 +63,19 @@ export function mergeIdsTables(base, extra) {
 }
 
 /**
+ * The layered descriptions a `layers` document holds, by character. A document without a
+ * `characters` or `layers` object is empty; a description that does not parse is left out.
+ * @param {string} text
+ * @returns {Map<string, string>}
+ */
+export function parseLayers(text) {
+  if (!text) return new Map()
+  const doc = JSON.parse(text)
+  const characters = doc?.characters ?? doc?.layers ?? {}
+  return new Map(Object.entries(characters).filter(([, sequence]) => typeof sequence === 'string' && !parse(sequence).problem))
+}
+
+/**
  * The palette file's rows as objects.
  * @param {{ columns: string[], parts: unknown[][], subtrees?: { encoded?: Record<string, string>, sourceAliases?: Record<string, string[]> } }} document
  * @returns {PalettePart[]}
@@ -158,7 +171,10 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * readings the component search knows (絞絲, ノ文, のぎ, 宝盖, water, shui, mizu); without it the
  * search still takes characters and code points. `folds` is the URL of
  * `data/component-name-folds.tsv` (or `foldsText` its text), which folds Chinese scripts and
- * component forms together before a name is compared. The description search (`findByIds`) runs in
+ * component forms together before a name is compared. `layers` (or `layersText`)
+ * reads a table of descriptions computed from other characters, such as Tangut's largest character
+ * split, and offers each where it differs from the character's own descriptions; a layer is marked
+ * `derived` so a reader knows it is not a source record. The description search (`findByIds`) runs in
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
@@ -166,12 +182,13 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   charactersRare?: string | URL, charactersRareText?: string, characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
+ *   layers?: string | URL, layersText?: string,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, charactersRare, charactersRareText, characterInfo, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, charactersRare, charactersRareText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -189,7 +206,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => local ??= Promise.all([read(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
+  const localSearch = () => local ??= Promise.all([readSearch(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
     createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
@@ -217,7 +234,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       asked.set(id, { resolve, reject })
       searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined,
         components: components ? new URL(String(components), base).href : undefined, componentsText,
-        forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+        forms: forms ? new URL(String(forms), base).href : undefined, formsText,
+        layers: layers ? new URL(String(layers), base).href : undefined, layersText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -249,6 +267,31 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return doc ? new Map([...merged, ...sealTable(doc)]) : merged
   })
     .catch(error => { table = null; throw error })
+
+  /** The characters with a description computed from other characters, and that description.
+   * @type {Promise<Map<string, string>> | null} */
+  let layered = null
+  const readLayers = () => layered ??= (layersText !== undefined ? Promise.resolve(layersText)
+    : layers ? load(layers).then(readText) : Promise.resolve(''))
+    .then(parseLayers)
+    .catch(error => { layered = null; throw error })
+
+  /** The source table and the derived descriptions, for the description search and `encoded`. The
+   * derived reading is an alternative description, so a layered sequence finds its character.
+   * A failed layer file leaves the source descriptions standing.
+   * @type {Promise<Map<string, Sequence[]>> | null} */
+  let searchTable = null
+  const readSearch = () => searchTable ??= Promise.all([read(), readLayers().catch(() => new Map())])
+    .then(([found, derived]) => {
+      if (!derived.size) return found
+      const merged = new Map(found)
+      for (const [char, text] of derived) {
+        const sequences = merged.get(char) ?? []
+        if (!sequences.some(sequence => sequence.text === text)) merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
+      }
+      return merged
+    })
+    .catch(error => { searchTable = null; throw error })
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
@@ -459,9 +502,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       return info
     } } : {}),
     async structure(char, { signal } = {}) {
-      const found = (await read()).get(char) ?? []
+      const found = (await readSearch()).get(char) ?? []
       signal?.throwIfAborted()
-      // A sequence with no operator names the character itself: it has no smaller parts.
+      // A sequence with no operator names the character itself: it has no smaller parts. A derived
+      // reading is first, so it is the one the tree opens and the editor splits by.
       return found.filter(sequence => isSequence(sequence.text))
     },
     async search(query, { limit = 24, signal } = {}) {
@@ -509,7 +553,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     },
     async encoded(sequence) {
       // Built once from the table; a failed load is tried again on the next call.
-      described ??= read().then(found => {
+      described ??= readSearch().then(found => {
         /** @type {Map<string, string[]>} */
         const by = new Map()
         const prefixes = new Set()

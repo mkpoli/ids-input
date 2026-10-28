@@ -1,0 +1,95 @@
+import { describe, expect, it } from 'bun:test'
+import { readFileSync } from 'node:fs'
+import { gunzipSync } from 'node:zlib'
+import { babelStoneAdapter, parseIdsTable, paletteRows } from '../src/adapter/index.js'
+import { isNode, parse } from '../src/core/ids.js'
+import { roots, searchParts, variants } from '../src/core/decompose.js'
+import { tangutLayers } from '../scripts/build_tangut_layers.mjs'
+
+const text = gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString()
+const table = parseIdsTable(text)
+const parts = paletteRows(JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url))))
+const layerText = gunzipSync(readFileSync(new URL('../data/tangut-layers.json.gz', import.meta.url))).toString()
+const doc = JSON.parse(layerText)
+
+describe('the Tangut character layers', () => {
+  it('cover the descriptions that hold another character', () => {
+    expect(doc.counts).toEqual({ characters: 6145, parsed: 6137, rejected: 8, layered: 2408, direct: 2190, single: 28, ambiguous: 1 })
+    const rebuilt = tangutLayers(table)
+    expect(rebuilt.layers.size).toBe(doc.counts.layered)
+    expect(Object.fromEntries(rebuilt.layers)).toEqual(doc.characters)
+  })
+
+  it('take the largest character-sized subtree first', () => {
+    expect(doc.characters['𗀃']).toBe('⿱𘠀𗸡')
+    expect(doc.characters['𗀅']).toBe('⿱𘠀𗄯')
+    expect(doc.characters['𗀔']).toBe('⿱𘠀⿲𘠨𗢨𘠢')
+    // A single-component ideograph is already the smallest part and is not listed.
+    expect(doc.characters['𗢨']).toBeUndefined()
+    // A description with no character-sized part keeps its BabelStone text and is not listed.
+    expect(doc.characters['𗀀']).toBeUndefined()
+  })
+
+  it('parse, differ from the source, and hold a character', () => {
+    const source = new Map([...table].map(([char, sequences]) => [char, sequences[0]?.text]))
+    const characters = new Set([...table.keys()].filter(char => /[\u{17000}-\u{187FF}\u{18D00}-\u{18DFF}]/u.test(char)))
+    for (const [char, sequence] of Object.entries(doc.characters)) {
+      const read = parse(sequence)
+      expect([char, read.problem]).toEqual([char, undefined])
+      expect(sequence).not.toBe(source.get(char))
+      const held = []
+      const walk = node => { if (isNode(node)) node.parts.forEach(walk); else if (characters.has(node)) held.push(node) }
+      walk(read.tree)
+      expect([char, held.length > 0]).toEqual([char, true])
+    }
+  })
+
+  it('never loop through their character parts', () => {
+    const layers = new Map(Object.entries(doc.characters))
+    const seen = new Set()
+    const walk = (char, path) => {
+      if (path.has(char)) throw new Error(`Cycle: ${[...path, char].join(' → ')}`)
+      if (seen.has(char)) return
+      seen.add(char)
+      const read = parse(/** @type {string} */ (layers.get(char)))
+      if (!read.tree) return
+      const next = new Set([...path, char])
+      const visit = node => {
+        if (isNode(node)) { node.parts.forEach(visit); return }
+        if (layers.has(node)) walk(node, next)
+      }
+      visit(read.tree)
+    }
+    for (const char of layers.keys()) walk(char, new Set())
+    expect(seen.size).toBe(layers.size)
+  })
+})
+
+describe('an adapter over the layers', () => {
+  const adapter = babelStoneAdapter({ table, palette: parts, layersText: layerText })
+
+  it('offers the layered description before BabelStone’s own', async () => {
+    const found = await adapter.structure('𗀃')
+    expect(found[0]).toEqual({ text: '⿱𘠀𗸡', regions: '', derived: true })
+    expect(found[1]).toEqual({ text: '⿱𘠀⿰𘣣𘠐', regions: '' })
+    expect(variants({ status: 'ready', sequences: found }).map(found => [found.text, found.derived])).toEqual([
+      ['⿱𘠀𗸡', true],
+      ['⿱𘠀⿰𘣣𘠐', false],
+    ])
+  })
+
+  it('finds and encodes a layered description', async () => {
+    expect(await adapter.encoded('⿱𘠀𗸡')).toContain('𗀃')
+    expect((await adapter.findByIds('⿱𘠀𗸡')).hits.map(hit => hit.char)).toContain('𗀃')
+  })
+
+  it('asks the containing search for source components, not character parts', async () => {
+    const entry = { status: /** @type {const} */ ('ready'), sequences: await adapter.structure('𗀃') }
+    expect(searchParts(roots('𗀃'), { '𗀃': entry })).toBe('𘠀𘣣𘠐')
+  })
+
+  it('leaves characters and other scripts alone', async () => {
+    expect(await adapter.structure('𗀀')).toEqual([{ text: '⿱𘠀⿰𘢰𘠆', regions: '' }])
+    expect(await adapter.structure('一')).toEqual(await babelStoneAdapter({ table, palette: parts }).structure('一'))
+  })
+})

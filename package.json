@@ -73,7 +73,8 @@
     "build:demo": "vite build demo",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "preview": "vite preview demo",
-    "prepack": "tsc -p tsconfig.json"
+    "prepack": "tsc -p tsconfig.json",
+    "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.4",

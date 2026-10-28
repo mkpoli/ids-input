@@ -59,7 +59,7 @@
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
  * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
- * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
+ * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived description computed from other characters (such as a Tangut character's largest character split) comes first and is marked `derived`; [] for one that has no smaller parts.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.
  * @property {(query: string, options?: Options & { rare?: boolean }) => Promise<Found[]>} [searchCharacters] Characters whose readings or meanings match what is typed; `rare` searches the optional rare table too.

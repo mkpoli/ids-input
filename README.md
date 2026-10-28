@@ -64,6 +64,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import 'ids-input/fonts.css'
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
+  import layers from 'ids-input/data/tangut-layers.json.gz?url'
   import components from 'ids-input/data/ids-components.tsv?url'
   import parts from 'ids-input/data/ids-parts.json?url'
   import forms from 'ids-input/data/component-forms.tsv?url'
@@ -72,7 +73,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
   import charactersRare from 'ids-input/data/character-vocabulary-rare.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })
+  const adapter = babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters, charactersRare })
   let value = $state('')
 </script>
 
@@ -378,7 +379,7 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })` answers
+`babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters, charactersRare })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
 meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
@@ -392,6 +393,13 @@ different components and a name finds only the form and the script the table rec
 search builds an index in memory on first use: under Bun, about half a second for the most frequent
 components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
 there instead. It has no `variants`, `drawing` or `preview`.
+
+`layers` adds a computed description before a Tangut character's own: the largest proper subtrees
+that spell another Tangut character whole become those characters, and components that spell a
+one-component character become it, so 𗀃 reads `⿱𘠀𗸡` before BabelStone's `⿱𘠀⿰𘣣𘠐`. The tree
+marks the computed reading *Split by characters* and keeps BabelStone's description beside it. The
+data file's `characters` lists only descriptions that change; other characters keep their source
+description alone. It is a reading of shapes, not a recorded segmentation or a claim of descent.
 
 Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
 replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated
@@ -640,6 +648,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
+- `data/tangut-layers.json.gz`: the largest character split of 2,408 Tangut descriptions, computed
+  from those public-domain decompositions (16 KB); it adds no source and records no descent.
 - `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
   that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
   the adapter reads descriptions by it.

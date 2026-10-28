@@ -23,7 +23,7 @@
    * @typedef {import('../adapter/types.js').Swap} Swap
    * @typedef {import('./lookup.svelte.js').Lookup} Lookup
    * @typedef {{ key: string, level: number, kind: 'char' | 'node' | 'sequence' | 'status', part?: string, text?: string, regions?: string,
-   *   take: string | null, openable: boolean, open: boolean, note?: string | null, status?: 'loading' | 'failed', swaps: Swap[] }} Row
+   *   take: string | null, openable: boolean, open: boolean, note?: string | null, derived?: boolean, status?: 'loading' | 'failed', swaps: Swap[] }} Row
    */
   /** @type {{ adapter: IdsAdapter, lookup?: Lookup, disabled?: boolean, messages?: Record<string, string>, locale?: string, ontake?: (part: string) => void, text?: string }} */
   let { adapter, lookup: given, disabled = false, messages, locale = 'en', ontake, text = $bindable('') } = $props()
@@ -83,7 +83,11 @@
       if (!open) return
       if (!entry || entry.status === 'loading') out.push({ key: `${key}/loading`, level: level + 1, kind: 'status', status: 'loading', part: c, take: null, openable: false, open: false, swaps: [] })
       else if (entry.status === 'failed') out.push({ key: `${key}/failed`, level: level + 1, kind: 'status', status: 'failed', part: c, take: null, openable: false, open: false, swaps: [] })
-      else variants(entry).forEach((found, i) => sequence(found, `${key}/${i}`, level + 1, [...ancestors, c]))
+      else {
+        const found = variants(entry), layered = found.some(variant => variant.derived)
+        found.forEach((variant, i) => sequence(variant, `${key}/${i}`, level + 1, [...ancestors, c],
+          variant.derived || !layered, variant.derived ? 'layered' : layered ? 'source' : null))
+      }
     }
     /** @param {import('../core/ids.js').Node} node @param {string} key @param {number} level @param {string[]} ancestors */
     const parts = (node, key, level, ancestors) => node.parts.forEach((inner, i) => isNode(inner)
@@ -94,20 +98,20 @@
       out.push({ key, level, kind: 'node', text: write(part), take: write(part), openable: true, open, swaps: [] })
       if (open) parts(part, key, level + 1, ancestors)
     }
-    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part }} found @param {string} key @param {number} level @param {string[]} ancestors */
-    const sequence = ({ text: written, regions, tree: read }, key, level, ancestors) => {
+    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part, derived?: boolean }} found @param {string} key @param {number} level @param {string[]} ancestors @param {boolean} [byDefault] @param {string | null} [note] */
+    const sequence = ({ text: written, regions, tree: read, derived }, key, level, ancestors, byDefault = true, note = null) => {
       if (isNode(read)) {
-        const open = isOpen(key, true)
-        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, swaps: [] })
+        const open = isOpen(key, byDefault)
+        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, note, derived, swaps: [] })
         if (open) parts(read, key, level + 1, ancestors)
         return
       }
-      const named = namedParts(written), open = named.length > 0 && isOpen(key, true)
-      out.push({ key, level, kind: 'sequence', text: written, regions, take: null, openable: named.length > 0, open, note: 'unreadable', swaps: [] })
+      const named = namedParts(written), open = named.length > 0 && isOpen(key, byDefault)
+      out.push({ key, level, kind: 'sequence', text: written, regions, take: null, openable: named.length > 0, open, note: note ?? 'unreadable', derived, swaps: [] })
       if (open) named.forEach((part, i) => char(part, `${key}~${i}`, level + 1, ancestors))
     }
     for (const root of all) root.kind === 'sequence'
-      ? sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [])
+      ? sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [], true, null)
       : char(root.char, root.key, 1, [], true)
     return out
   })

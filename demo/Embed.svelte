@@ -2,6 +2,7 @@
   import { IdsInput } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import layers from '../data/tangut-layers.json.gz?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import parts from '../data/ids-parts.json?url'
@@ -11,7 +12,7 @@
   import characterInfo from '../data/character-info.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
   import charactersRare from '../data/character-vocabulary-rare.tsv.gz?url'
-  const adapter = smallSealAdapter({ data: sealData, ids, components, parts, forms, names, folds, characters, charactersRare, characterInfo })
+  const adapter = smallSealAdapter({ data: sealData, ids, layers, components, parts, forms, names, folds, characters, charactersRare, characterInfo })
   let value = $state('')
   let used = $state('')
 </script>
