@@ -31,7 +31,9 @@ async function load(ids, additionalIds, components, componentsText, forms, given
   ])
   const table = new Map([...merged].map(([char, sequences]) => [char, sequences.map(s => s.text)]))
   // A derived reading is an alternative description, so a layered sequence finds its character.
-  for (const [char, sequence] of parseLayers(layerText)) {
+  let layerMap = new Map()
+  try { layerMap = parseLayers(layerText) } catch { /* The optional file may be malformed. */ }
+  for (const [char, sequence] of layerMap) {
     const texts = table.get(char) ?? []
     if (!texts.includes(sequence)) table.set(char, [sequence, ...texts])
   }

@@ -192,22 +192,32 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
+  /** Bumped whenever the search table is rebuilt with a fresh reading of the layer file. */
+  let searchGeneration = 0
   /** @type {Promise<PalettePart[]> | null} */
   let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
   /** @type {Promise<{by: Map<string, string[]>, prefixes: Set<string>}> | null} */
   let described = null
+  let describedGeneration = -1
   /** @type {Promise<ReturnType<typeof createSearch>> | null} */
   let local = null
+  let localGeneration = -1
   /** @type {Worker | null} */
   let searcher = null
   /** @type {Map<number, { resolve: (value: any) => void, reject: (error: Error) => void }>} */
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => local ??= Promise.all([readSearch(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) =>
-    createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })).catch(error => { local = null; throw error })
+  const localSearch = () => {
+    if (local && localGeneration === searchGeneration) return local
+    local = Promise.all([readSearch(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
+      localGeneration = searchGeneration
+      return createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })
+    }).catch(error => { local = null; throw error })
+    return local
+  }
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
@@ -289,6 +299,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       let derived
       try { derived = await readLayers() }
       catch { searchTable = null; return found }
+      searchGeneration++
       if (!derived.size) return found
       const merged = new Map(found)
       for (const [char, text] of derived) {
@@ -548,20 +559,25 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       return uniqueHits(hits, limit)
     },
     async encoded(sequence) {
-      // Built once from the table; a failed load is tried again on the next call.
-      described ??= readSearch().then(found => {
-        /** @type {Map<string, string[]>} */
-        const by = new Map()
-        const prefixes = new Set()
-        for (const [char, sequences] of found) for (const { text } of sequences) {
-          if (!isSequence(text)) continue
-          let prefix = ''
-          for (const point of text) { prefix += point; prefixes.add(prefix) }
-          const chars = by.get(text)
-          if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
-        }
-        return { by, prefixes }
-      }).catch(error => { described = null; throw error })
+      // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
+      // again on the next call, and the source index serves until then.
+      if (!described || describedGeneration !== searchGeneration) {
+        described = readSearch().then(found => {
+          const generation = searchGeneration
+          /** @type {Map<string, string[]>} */
+          const by = new Map()
+          const prefixes = new Set()
+          for (const [char, sequences] of found) for (const { text } of sequences) {
+            if (!isSequence(text)) continue
+            let prefix = ''
+            for (const point of text) { prefix += point; prefixes.add(prefix) }
+            const chars = by.get(text)
+            if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
+          }
+          describedGeneration = generation
+          return { by, prefixes }
+        }).catch(error => { described = null; throw error })
+      }
       const { by, prefixes } = await described
       const tree = parse(sequence.trim()).tree
       if (!tree || typeof tree === 'string') return []

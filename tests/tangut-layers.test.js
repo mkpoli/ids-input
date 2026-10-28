@@ -30,6 +30,17 @@ describe('the Tangut character layers', () => {
     expect(doc.characters['𗀀']).toBeUndefined()
   })
 
+  it('leaves a description shared by two characters unreplaced', () => {
+    const shared = new Map([
+      ['𗀀', [{ text: '⿰𘠀𘠁' }]],
+      ['𗀁', [{ text: '⿰𘠀𘠁' }]],
+      ['𗀂', [{ text: '⿱𘠀⿰𘠀𘠁' }]],
+    ])
+    const result = tangutLayers(shared)
+    expect(result.layers.size).toBe(0)
+    expect(result.ambiguous).toEqual({ '⿰𘠀𘠁': ['𗀀', '𗀁'] })
+  })
+
   it('parse, differ from the source, and hold a character', () => {
     const source = new Map([...table].map(([char, sequences]) => [char, sequences[0]?.text]))
     const characters = new Set([...table.keys()].filter(char => /[\u{17000}-\u{187FF}\u{18D00}-\u{18DFF}]/u.test(char)))
@@ -116,6 +127,27 @@ describe('an adapter over the layers', () => {
     expect((await retrying.structure('𗀃'))[0]).toEqual({ text: '⿱𘠀𗸡', regions: '', derived: true })
     expect(calls).toBe(2)
   })
+
+  it('rebuilds the search and encoding indexes when layers arrive later', async () => {
+    const retrying = () => {
+      let calls = 0
+      const get = async (url) => {
+        if (!String(url).endsWith('layers.json.gz')) return new Response('', { status: 404 })
+        calls++
+        return calls === 1 ? new Response('', { status: 503 }) : new Response(layerText)
+      }
+      return babelStoneAdapter({ table, layers: 'layers.json.gz', fetch: get })
+    }
+    const searching = retrying()
+    expect((await searching.findByIds('⿱𘠀𗸡')).hits.map(hit => hit.char)).not.toContain('𗀃')
+    expect((await searching.structure('𗀃'))[0].derived).toBe(true)
+    expect((await searching.findByIds('⿱𘠀𗸡')).hits.map(hit => hit.char)).toContain('𗀃')
+
+    const encoding = retrying()
+    expect(await encoding.encoded('⿱𘠀𗸡')).toEqual([])
+    expect((await encoding.structure('𗀃'))[0].derived).toBe(true)
+    expect(await encoding.encoded('⿱𘠀𗸡')).toContain('𗀃')
+  }, 15000)
 
   it('leaves characters and other scripts alone', async () => {
     expect(await adapter.structure('𗀀')).toEqual([{ text: '⿱𘠀⿰𘢰𘠆', regions: '' }])
