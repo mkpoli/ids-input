@@ -322,8 +322,10 @@ description.
 
 The reading is editorial: it follows the shapes BabelStone records, not a dictionary's semantic or
 phonetic analysis, and an identical description does not prove that the part is that character or
-that either descends from the other. The editor shows it before the source description and marks it
-derived; the source remains in `babelstone-ids.tsv.gz`. Built by
+that either descends from the other. The editor marks the character-first description as derived.
+Expanding its characters reconstructs each of the 6,137 readable source descriptions exactly;
+the eight malformed descriptions remain as source text. The source remains in
+`babelstone-ids.tsv.gz` and both forms remain searchable. Built by
 `node scripts/build_tangut_layers.mjs` from the table, which carries the pinned source digest.
 
 ## `tangut-outlines.json.gz`

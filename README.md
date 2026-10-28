@@ -395,12 +395,13 @@ search builds an index in memory on first use: under Bun, about half a second fo
 components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
 there instead. It has no `variants`, `drawing` or `preview`.
 
-`layers` adds a computed description before a Tangut character's own: the largest proper subtrees
-that spell another Tangut character whole become those characters, and components that spell a
-one-component character become it, so 𗀃 reads `⿱𘠀𗸡` before BabelStone's `⿱𘠀⿰𘣣𘠐`. The tree
-marks the computed reading *Split by characters* and keeps BabelStone's description beside it. The
-data file's `characters` lists only descriptions that change; other characters keep their source
-description alone. It is a reading of shapes, not a recorded segmentation or a claim of descent.
+`layers` supplies a character-first Tangut description: the largest proper subtrees that spell another
+Tangut character whole become those characters, and components that spell a one-component character
+become it. 𗀃 reads `⿱𘠀𗸡`; opening 𗸡 reaches `⿰𘣣𘠐`, reconstructing BabelStone's description.
+The tree marks the computed reading *Split by characters*. Characters without a computed description
+keep their source description; malformed descriptions stay as source text. Both the computed and
+source descriptions remain searchable. The computed reading follows shapes and does not assert a
+recorded segmentation or historical descent.
 
 Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
 replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated

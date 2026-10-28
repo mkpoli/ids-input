@@ -198,6 +198,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let palette = null
   /** @type {ReturnType<typeof componentIndex> | null} */
   let index = null
+  let indexGeneration = -1
   /** @type {Promise<{by: Map<string, string[]>, prefixes: Set<string>}> | null} */
   let described = null
   let describedGeneration = -1
@@ -511,9 +512,15 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     async structure(char, { signal } = {}) {
       const found = (await readSearch()).get(char) ?? []
       signal?.throwIfAborted()
-      // A sequence with no operator names the character itself: it has no smaller parts. A derived
-      // reading is first, so it is the one the tree opens and the editor splits by.
-      return found.filter(sequence => isSequence(sequence.text))
+      // A computed character-first description replaces its source in the decomposition tree;
+      // both remain indexed for search. Preserve malformed descriptions as source text.
+      const derived = found.find(sequence => sequence.derived)
+      // The first source entry is the BabelStone description used to build the layer. Preserve
+      // additional descriptions supplied by the host.
+      if (derived) return [derived, ...found.filter(sequence => !sequence.derived).slice(1)]
+      return found.filter(sequence => isSequence(sequence.text) ||
+        (/^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(char) &&
+         /^[\u{18800}-\u{18AFF}\u{18D80}-\u{18DFF}]$/u.test(sequence.text)))
     },
     async search(query, { limit = 24, signal } = {}) {
       if (limit <= 0) return []
@@ -632,9 +639,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       },
     } : {}),
     async containing(asked, { limit = 24 } = {}) {
-      if (!index) {
-        const [found, search] = await Promise.all([read(), smallSeal ? localSearch() : null])
+      const [found, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
+      if (!index || indexGeneration !== searchGeneration) {
         index = componentIndex(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
+        indexGeneration = searchGeneration
       }
       return index.search(asked, limit)
     },

@@ -55,21 +55,36 @@ describe('the Tangut character layers', () => {
     }
   })
 
-  it('expand back to the source components exactly', () => {
-    const source = new Map([...table].map(([char, sequences]) => [char, sequences[0]?.text]))
-    const sourceTree = char => {
-      const text = /** @type {string} */ (source.get(char))
-      return [...text].length === 1 ? text : parse(text).tree
+  it('recursively reconstructs every readable source through the public adapter', async () => {
+    const adapter = babelStoneAdapter({ table, layersText: layerText })
+    const source = new Map([...table].filter(([char]) => /^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(char)))
+    const descriptions = new Map()
+    for (const [char] of source) descriptions.set(char, await adapter.structure(char))
+    let reconstructed = 0, malformed = 0, single = 0
+    const expand = (node, path) => {
+      if (isNode(node)) return { op: node.op, parts: node.parts.map(part => expand(part, path)) }
+      if (typeof node !== 'string' || !source.has(node)) return node
+      if (path.has(node)) throw new Error(`Cycle at ${node}`)
+      const choices = variants({ status: 'ready', sequences: descriptions.get(node) })
+      expect(choices).toHaveLength(1)
+      if (!choices[0].tree) throw new Error(`Unreadable nested character ${node}`)
+      return expand(choices[0].tree, new Set([...path, node]))
     }
-    const expand = node => {
-      if (!isNode(node)) return source.has(node) ? expand(sourceTree(node)) : node
-      return { op: node.op, parts: node.parts.map(expand) }
+    for (const [char, sourceRows] of source) {
+      expect(sourceRows).toHaveLength(1)
+      const choices = variants({ status: 'ready', sequences: descriptions.get(char) })
+      expect(choices).toHaveLength(1)
+      if (!choices[0].tree) {
+        malformed++
+        expect(choices[0].text).toBe(sourceRows[0].text)
+        continue
+      }
+      if (typeof choices[0].tree === 'string') single++
+      expect([char, write(expand(choices[0].tree, new Set([char])))]).toEqual([char, sourceRows[0].text])
+      reconstructed++
     }
-    for (const [char, sequence] of Object.entries(doc.characters)) {
-      const read = parse(sequence)
-      expect([char, write(expand(read.tree))]).toEqual([char, source.get(char)])
-    }
-  })
+    expect({ reconstructed, malformed, single }).toEqual({ reconstructed: 6137, malformed: 8, single: 28 })
+  }, 30000)
 
   it('never loop through their character parts', () => {
     const layers = new Map(Object.entries(doc.characters))
@@ -95,13 +110,20 @@ describe('the Tangut character layers', () => {
 describe('an adapter over the layers', () => {
   const adapter = babelStoneAdapter({ table, palette: parts, layersText: layerText })
 
-  it('offers the layered description before BabelStone’s own', async () => {
-    const found = await adapter.structure('𗀃')
-    expect(found[0]).toEqual({ text: '⿱𘠀𗸡', regions: '', derived: true })
-    expect(found[1]).toEqual({ text: '⿱𘠀⿰𘣣𘠐', regions: '' })
-    expect(variants({ status: 'ready', sequences: found }).map(found => [found.text, found.derived])).toEqual([
-      ['⿱𘠀𗸡', true],
-      ['⿱𘠀⿰𘣣𘠐', false],
+  it('offers only the character-first description and opens single-component characters', async () => {
+    expect(await adapter.structure('𗀃')).toEqual([{ text: '⿱𘠀𗸡', regions: '', derived: true }])
+    const single = await adapter.structure('𗢨')
+    expect(single).toEqual([{ text: '𘢌', regions: '' }])
+    expect(variants({ status: 'ready', sequences: single })[0].tree).toBe('𘢌')
+  })
+
+  it('retains additional source descriptions', async () => {
+    const extra = new Map(table)
+    extra.set('𗀃', [...table.get('𗀃'), { text: '⿰𘠀𘠁', regions: 'X' }])
+    const withExtra = babelStoneAdapter({ table: extra, layersText: layerText })
+    expect(await withExtra.structure('𗀃')).toEqual([
+      { text: '⿱𘠀𗸡', regions: '', derived: true },
+      { text: '⿰𘠀𘠁', regions: 'X' },
     ])
   })
 
@@ -110,10 +132,13 @@ describe('an adapter over the layers', () => {
     expect((await adapter.findByIds('⿱𘠀𗸡')).hits.map(hit => hit.char)).toContain('𗀃')
   })
 
-  it('asks the containing search for source components, not character parts', async () => {
+  it('finds characters by both character-first and source components', async () => {
     const entry = { status: /** @type {const} */ ('ready'), sequences: await adapter.structure('𗀃') }
-    expect(searchParts(roots('𗀃'), { '𗀃': entry })).toBe('𘠀𘣣𘠐')
-  })
+    const query = searchParts(roots('𗀃'), { '𗀃': entry })
+    expect(query).toBe('𘠀𗸡')
+    expect((await adapter.containing(query)).items).toContain('𗀃')
+    expect((await adapter.containing('𘠀𘣣𘠐')).items).toContain('𗀃')
+  }, 30000)
 
   it('tries the layer file again after a transient failure', async () => {
     let calls = 0

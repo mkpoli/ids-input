@@ -85,7 +85,8 @@ export function variants(entry) {
       : { regions: [...new Set([...had.regions, ...merged])].join(''), derived: had.derived || Boolean(derived) })
   }
   return [...listed].map(([text, { regions, derived }]) => {
-    const read = parse(text)
+    // A single encoded component can describe a distinct character, as in Tangut 𗢨 → 𘢌.
+    const read = [...text].length === 1 && isComponent(text) ? parse(text, { open: true }) : parse(text)
     return { text, regions, derived, tree: read.problem ? null : /** @type {import('./ids.js').Part} */ (read.tree) }
   })
 }
@@ -107,10 +108,7 @@ export function searchParts(found, known) {
   let parts
   if (found.length === 1 && found[0].kind === 'sequence') parts = leaves(found[0].tree).map(leaf => leaf.char)
   else if (found.length === 1 && found[0].kind === 'char') {
-    // The containing index is built from source descriptions, so a derived reading's character
-    // parts would ask for parts no source description holds. Ask for the character's own components.
-    const foundVariants = variants(known[lookupChar(found[0].char)])
-    const tree = (foundVariants.find(v => v.tree && !v.derived) ?? foundVariants.find(v => v.tree))?.tree
+    const tree = variants(known[lookupChar(found[0].char)]).find(v => v.tree)?.tree
     parts = tree ? leaves(tree).map(leaf => leaf.char) : []
   } else parts = found.map(root => root.kind === 'char' ? root.char : null)
   const asked = parts.filter(part => typeof part === 'string' && (unicodeProperty('ideographic', lookupChar(part)) || PART.test(lookupChar(part).normalize('NFKC')))).map(lookupChar)
