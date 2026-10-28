@@ -16,6 +16,7 @@
   import layers from '../data/tangut-layers.json.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
   import projectIds from '../data/ids-project.tsv.gz?url'
+  import contextIds from '../data/ids-context.tsv?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
@@ -64,7 +65,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters, charactersRare, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], context: contextIds, components, parts, forms, names, folds, characters, charactersRare, characterInfo })
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
@@ -106,6 +107,11 @@
         const drawn = prepared.get(sequence)
         if (drawn) return drawn
       }
+      const adapted = split ? [] : await babel.context?.(sequence).catch(() => []) ?? []
+      for (const char of adapted) {
+        if ([...char].length !== 1 || char === sequence) continue
+        try { return await composed(char, options) } catch { /* compose the sequence */ }
+      }
       return composed(sequence, options)
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
@@ -131,6 +137,11 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
+      const adapted = split ? [] : await babel.context?.(sequence).catch(() => []) ?? []
+      for (const char of adapted) {
+        if ([...char].length !== 1 || char === sequence) continue
+        try { return await composed(char, options) } catch { /* compose the sequence */ }
+      }
       const draw = defaultFace ? sans : composed
       try { return await draw(sequence, options) } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
@@ -168,6 +179,11 @@
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
     const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans' })
     return async (/** @type {string} */ sequence) => {
+      const adapted = await babel.context?.(sequence).catch(() => []) ?? []
+      for (const char of adapted) {
+        if ([...char].length !== 1 || char === sequence) continue
+        try { return await composed(char) } catch { /* compose the sequence */ }
+      }
       try { return await composed(sequence) } catch (error) {
         if (stopping(error)) throw error
         return await sans(sequence)

@@ -50,6 +50,12 @@ describe('the BabelStone adapter', () => {
     expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
     expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
   })
+  it('draws a context-adapted variant as the encoded character', async () => {
+    const contextText = '⿰𦚏𳳳\t龍\tJYutnet JYN00025\n'
+    const adapter = babelStoneAdapter({ ids: 'base', contextText, fetch: async () => new Response(TABLE), worker: null })
+    expect(await adapter.context('⿰𦚏𳳳')).toEqual(['龍'])
+    expect(await adapter.context('⿰𦚏⿷己三')).toEqual([])
+  })
   it('adds several additional tables in the order given', async () => {
     const project = `${String.fromCodePoint(0x33473)}\t⿷⿺己一三\n`
     const get = async url => new Response(url === 'project' ? project : url === 'extra' ? '𫜺\t⿱山田\n' : TABLE)

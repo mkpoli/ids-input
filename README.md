@@ -394,21 +394,23 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-<<<<<<< HEAD
-`babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters })` answers
+`babelStoneAdapter({ ids, layers, additionalIds, context, components, parts, forms, names, folds, characters, charactersRare })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given), `containing` and `parts` from the files in `data/`.
-`components` writes out BabelStone's numbered components (`{12}`, the right of 龍, as `⿷己三`), so
-龍's description reads `⿰𦚏⿷己三` and its parts can be taken individually; `{82}`, the top of 書,
-writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝 reach the same 聿 that 建 and 律
-use, through 𤱪 and 書. `forms` folds the description search's
-components and opens a named component into the forms that stand for it; `folds` folds Chinese
-scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
-different components and a name finds only the form and the script the table records. The containing
-search builds an index in memory on first use: under Bun, about half a second for the most frequent
-components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
-there instead. It has no `variants`, `drawing` or `preview`.
+meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
+from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
+right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
+individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
+format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
+than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `context` maps a
+whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
+description search's components and opens a named component into the forms that stand for it;
+`folds` folds Chinese scripts and positional forms together before names are compared. Without them
+`⺡` and `氵` are different components and a name finds only the form and the script the table
+records. The containing search builds an index in memory on first use: under Bun, about half a
+second for the most frequent components and 150 MB of heap with the table loaded; a host with a
+server can answer `containing` there instead. It has no `variants`, `drawing` or `preview`.
 
 `layers` supplies a character-first Tangut description: the largest proper subtrees that spell another
 Tangut character whole become those characters, and components that spell a one-component character
@@ -418,32 +420,11 @@ keep their source description; malformed descriptions stay as source text. Both 
 source descriptions remain searchable. The computed reading follows shapes and does not assert a
 recorded segmentation or historical descent.
 
-Pass `additionalIds` as the URL of another IDS table in the same format to add descriptions without
-replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`; it contains the unannotated
-standard IDS subset of Yi Bai's data. Extended expressions and variant annotations are not included.
-=======
-`babelStoneAdapter({ ids, additionalIds, components, parts, forms, names, folds, characters, charactersRare })` answers
-`structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
-such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
-from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
-right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
-individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
-reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
-format, one URL or an array: Yi Bai's descriptions and this project's own
-`data/ids-project.tsv.gz`, which describes characters newer than BabelStone's (`𳑳`, U+33473, as
-`⿷⿺己一三`). `forms` folds the description search's components and opens a named component into the
-forms that stand for it; `folds` folds Chinese scripts and positional forms together before names
-are compared. Without them `⺡` and `氵` are different components and a name finds only the form and
-the script the table records. The containing search builds an index in memory on first use: under
-Bun, about half a second for the most frequent components and 150 MB of heap with the table loaded; a host with a server can answer `containing`
-there instead. It has no `variants`, `drawing` or `preview`.
-
 Pass `additionalIds` as the URL of an IDS table in the same format, or an array of them, to add
 descriptions without replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`, Yi
 Bai's unannotated standard subset, and its own `data/ids-project.tsv.gz` for characters newer than
-BabelStone's. Extended expressions and variant annotations are not included.
->>>>>>> fffd16f (feat: add the project's own IDS dataset)
+BabelStone's (empty at present; the newer character 𳑳 is a 獨體字). Extended expressions and variant
+annotations are not included.
 
 ## Search
 
@@ -696,6 +677,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
   `𳑳` (U+33473) as `⿷⿺己一三` (0.3 KB gzipped).
+- `data/ids-context.tsv`: descriptions that draw as an encoded character's context-adapted form,
+  `⿰𦚏𳳳` as 龍 (JYutnet JYN00025); the adapter reads it with `context`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
