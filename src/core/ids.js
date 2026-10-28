@@ -343,6 +343,9 @@ export function place(tree, at, part) {
  * @returns {{ base: string, marks: string }}
  */
 export function splitDescription(text) {
+  // Most descriptions end on a component: without a mark at the end there is nothing to read.
+  const chars = [...(text ?? '')]
+  if (!isMark(chars[chars.length - 1])) return { base: text ?? '', marks: '' }
   const read = parse(text, { open: true })
   if (read.problem || read.tree === null) return { base: text ?? '', marks: '' }
   const marks = marksOf(read.tree)
