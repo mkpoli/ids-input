@@ -18,7 +18,8 @@ try {
     ['된리을', 2, '\u{A97E}', '된리을'],
     ['위읍', 2, '\u{A97F}', '위읍'],
     ['여린이', 1, '\u{D7C7}', '여린이'],
-    ['반시읏', 2, '\u{317F}', '반시읏'],
+    ['반시읏', 3, '\u{317F}', '반시읏'],
+    ['여린히읗', 3, '\u{3186}', '여린히읗'],
   ]) {
     await filter.fill(query)
     assert.equal(await page.locator('.parts-grid .part').count(), count, query)
