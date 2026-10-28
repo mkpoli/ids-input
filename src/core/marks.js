@@ -82,8 +82,10 @@ export function normalizeMarks(tree) {
       if (marks) found.push(marks)
       return base
     }
+    // A node's marks come after its children's, so collect the children first.
+    const parts = part.parts.map(strip)
     if (part.marks) found.push(part.marks)
-    return { op: part.op, parts: part.parts.map(strip) }
+    return { op: part.op, parts }
   }
   const base = strip(tree)
   return found.length ? withMarks(base, found.join('')) : tree

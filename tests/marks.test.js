@@ -68,6 +68,11 @@ describe('loose marks', () => {
     expect(write(placed.tree)).toBe('⿰亻水ˇ')
   })
 
+  it('keeps a child mark before the marks of the node that holds it', () => {
+    const tree = { op: '⿰', parts: ['木', { op: '⿱', parts: ['七', '口'], marks: 'ˇ' }], marks: 'ˊ' }
+    expect(write(normalizeMarks(tree))).toBe('⿰木⿱七口ˇˊ')
+  })
+
   it('gives the whole description one token in the field, marks included', () => {
     const spans = tokens('⿰亻木ˊ')
     expect(spans[0]).toMatchObject({ path: [], start: 0, end: 4, text: '⿰' })
@@ -120,6 +125,17 @@ describe('drawing loose marks', () => {
     const left = tone.parts.at(-1)
     expect(left.origin).toBe('mark 〮')
     expect(left.box[0]).toBeLessThan(200)
+  })
+
+  it('fits long mark runs inside the drawing box', async () => {
+    const local = source()
+    for (const sequence of ['⿰ㄅㄚ' + '\u0301'.repeat(16), '⿰ㄅㄚ' + '\u0301'.repeat(4) + 'ˊ', '⿰ㄅㄚ〯〯〯']) {
+      const drawn = await compose(local, sequence)
+      for (const part of drawn.parts) {
+        const [x, y, width, height] = part.box
+        expect([sequence, part.origin, x >= 0 && y >= 0 && x + width <= 1000 && y + height <= 1000]).toEqual([sequence, part.origin, true])
+      }
+    }
   })
 
   it('sketches the description alone and judges bundled data with the marks', async () => {

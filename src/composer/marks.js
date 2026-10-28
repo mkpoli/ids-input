@@ -71,10 +71,15 @@ export function markParts(composer, marks, frame = composer.face) {
   const above = glyphs.filter(g => g.kind === 'attached' && !hangsBelow(g.part))
   if (above.length) {
     let scale = base * 0.85
-    const heights = above.map(g => (g.part.box[3] - g.part.box[1]) * scale)
-    const total = heights.reduce((sum, h) => sum + h, 0)
     const room = height * 0.34
-    if (total > room) scale *= room / total
+    let heights = above.map(g => (g.part.box[3] - g.part.box[1]) * scale)
+    let total = heights.reduce((sum, h) => sum + h, 0)
+    if (total > room) {
+      // Fit the whole stack; the top stays where it was, so the marks stay in the box.
+      scale *= room / total
+      heights = above.map(g => (g.part.box[3] - g.part.box[1]) * scale)
+      total = heights.reduce((sum, h) => sum + h, 0)
+    }
     // The first mark sits closest to the drawing; the ones after it stack above it.
     let y = y1 - inset - total
     for (const g of above) {
@@ -88,10 +93,14 @@ export function markParts(composer, marks, frame = composer.face) {
   const below = glyphs.filter(g => g.kind === 'attached' && hangsBelow(g.part))
   if (below.length) {
     let scale = base * 0.85
-    const heights = below.map(g => (g.part.box[3] - g.part.box[1]) * scale)
-    const total = heights.reduce((sum, h) => sum + h, 0)
     const room = height * 0.34
-    if (total > room) scale *= room / total
+    let heights = below.map(g => (g.part.box[3] - g.part.box[1]) * scale)
+    let total = heights.reduce((sum, h) => sum + h, 0)
+    if (total > room) {
+      scale *= room / total
+      heights = below.map(g => (g.part.box[3] - g.part.box[1]) * scale)
+      total = heights.reduce((sum, h) => sum + h, 0)
+    }
     // The first mark hangs closest to the drawing; the ones after it below it. The stack's foot
     // stays in the character box, so a mark does not fall outside the drawing.
     let y = y0 + inset
@@ -105,13 +114,18 @@ export function markParts(composer, marks, frame = composer.face) {
 
   const hangul = glyphs.filter(g => g.kind === 'hangul')
   if (hangul.length) {
-    const scale = base * 0.8, gap = height * 0.03
-    let y = (y0 + y1) / 2 + (hangul.length - 1) * gap / 2
-    for (const g of hangul) {
-      const w = (g.part.box[2] - g.part.box[0]) * scale, h = (g.part.box[3] - g.part.box[1]) * scale
-      targets.push({ ...g, target: [x0 + inset, y - h / 2, x0 + inset + w, y + h / 2] })
-      y -= h + gap
-    }
+    const scale0 = base * 0.8, gap0 = height * 0.03
+    // A stack of tone marks is centered on the character's left, and fitted to stay in the box.
+    const total0 = hangul.reduce((sum, g) => sum + (g.part.box[3] - g.part.box[1]) * scale0, 0) + gap0 * (hangul.length - 1)
+    const fit = total0 > height * 0.6 ? height * 0.6 / total0 : 1
+    const scale = scale0 * fit, gap = gap0 * fit
+    const heights = hangul.map(g => (g.part.box[3] - g.part.box[1]) * scale)
+    let top = (y0 + y1) / 2 + (heights.reduce((sum, h) => sum + h, 0) + gap * (hangul.length - 1)) / 2
+    heights.forEach((h, i) => {
+      const g = hangul[i], w = (g.part.box[2] - g.part.box[0]) * scale
+      targets.push({ ...g, target: [x0 + inset, top - h, x0 + inset + w, top] })
+      top -= h + gap
+    })
   }
 
   return targets.map(({ char, part, target }) => placed(part, part.box, target, 0, `mark ${char}`))

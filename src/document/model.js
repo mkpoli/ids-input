@@ -154,8 +154,8 @@ export function hoistMarks(document) {
       const { base, marks } = splitMarks(node.char)
       if (marks) { found.push(marks); node.char = /** @type {string} */ (base) }
     } else if (node.kind === 'operator') {
-      if (node.marks) { found.push(node.marks); delete node.marks }
       node.children.forEach(strip)
+      if (node.marks) { found.push(node.marks); delete node.marks }
     } else if (node.kind === 'group') strip(node.child)
   }
   strip(copy.root)

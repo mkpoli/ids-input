@@ -215,6 +215,19 @@ describe('identity edits', () => {
   })
 })
 
+describe('loose marks across the projection bridge', () => {
+  it('keeps them in both directions between the document and the core tree', async () => {
+    const { treeFromDocument, syncDocument } = await import('../src/document/project.js')
+    const { parse, write: writeTree } = await import('../src/core/index.js')
+    const marked = fromSequence('⿰亻木ˊ')
+    expect(writeTree(treeFromDocument(marked))).toBe('⿰亻木ˊ')
+    const synced = syncDocument(fromSequence('⿰亻木'), parse('⿰亻木ˊ').tree)
+    expect(toSequence(synced.root)).toBe('⿰亻木ˊ')
+    const dropped = syncDocument(marked, parse('⿰亻木').tree)
+    expect(toSequence(dropped.root)).toBe('⿰亻木')
+  })
+})
+
 describe('loose marks in a document', () => {
   it('keeps them at the end of the projection, on the root', () => {
     const marked = fromSequence('⿰亻木ˊ')
