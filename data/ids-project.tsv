@@ -1,0 +1,6 @@
+# The project's own IDS descriptions for characters newer than the bundled sources.
+# One line per description: char<TAB>IDS<TAB>source.
+#
+# Currently empty: the newer character this project knows, 𳑳 (U+33473), is a 獨體字 with no IDS
+# decomposition, so it is listed in `ids-characters.tsv` instead. Add a line here only for a
+# character that decomposes.

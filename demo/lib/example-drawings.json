@@ -6361,5 +6361,12 @@
    }
   }
  },
- "failed": []
+ "failed": [
+  {
+   "sequence": "⿰𦚏𳑳",
+   "char": "",
+   "name": "Error",
+   "message": "No glyph or sequence draws 𳑳."
+  }
+ ]
 }

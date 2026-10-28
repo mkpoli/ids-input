@@ -12,11 +12,11 @@ import { expandNumberedComponents, mergeIdsTables, parseIdsTable, parseLayers, r
 let ready = null
 /** A file's response, refused unless it came back whole. @param {string} url */
 const get = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`${url}: ${response.status}`); return response }
-/** @param {string} ids @param {string | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal */
+/** @param {string} ids @param {string[] | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal */
 async function load(ids, additionalIds, components, componentsText, forms, given, layers, layersText, smallSeal) {
-  const [text, extra, numbered, formsText, layerText] = await Promise.all([
+  const [text, extras, numbered, formsText, layerText] = await Promise.all([
     get(ids).then(readText),
-    additionalIds ? get(additionalIds).then(readText) : '',
+    Promise.all((additionalIds ?? []).map(url => get(url).then(readText))),
     componentsText !== undefined ? componentsText : components ? get(components).then(readText) : '',
     given !== undefined ? given : forms ? get(forms).then(r => r.text()) : '',
     // Layers are an extra reading; a failed file leaves the source search standing.
@@ -26,7 +26,7 @@ async function load(ids, additionalIds, components, componentsText, forms, given
   const parts = readNumberedComponents(numbered)
   /** @type {Map<string, import('../core/decompose.js').Sequence[]>} */
   const merged = new Map([
-    ...mergeIdsTables(expandNumberedComponents(parseIdsTable(text), parts), expandNumberedComponents(parseIdsTable(extra), parts)),
+    ...extras.reduce((found, extra) => mergeIdsTables(found, expandNumberedComponents(parseIdsTable(extra), parts)), expandNumberedComponents(parseIdsTable(text), parts)),
     ...(doc ? sealTable(doc) : []),
   ])
   const table = new Map([...merged].map(([char, sequences]) => [char, sequences.map(s => s.text)]))

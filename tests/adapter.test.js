@@ -50,6 +50,26 @@ describe('the BabelStone adapter', () => {
     expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
     expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
   })
+  it('draws an overwrite description as the encoded character', async () => {
+    const overwriteText = `⿰𦚏𳳳\t龍\tJYutnet JYN00025\n⿷⿺己一三\t${String.fromCodePoint(0x33473)}\tzi.tools\n`
+    const adapter = babelStoneAdapter({ ids: 'base', overwriteText, fetch: async () => new Response(TABLE), worker: null })
+    expect(await adapter.overwrite('⿰𦚏𳳳')).toEqual(['龍'])
+    expect(await adapter.overwrite('⿷⿺己一三')).toEqual([String.fromCodePoint(0x33473)])
+    expect(await adapter.overwrite('⿰𦚏⿷己三')).toEqual([])
+  })
+  it('adds several additional tables in the order given', async () => {
+    const project = '𱁬\t⿰木木\n'
+    const get = async url => new Response(url === 'project' ? project : url === 'extra' ? '𫜺\t⿱山田\n' : TABLE)
+    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: ['extra', 'project'], fetch: get, worker: null })
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+    expect(await adapter.structure('𱁬')).toEqual([{ text: '⿰木木', regions: '' }])
+    expect(await adapter.encoded('⿰木木')).toContain('𱁬')
+  })
+  it('leaves a 獨體字 without a decomposition', async () => {
+    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: ['project'], fetch: async url => new Response(url === 'project' ? '' : TABLE), worker: null })
+    expect(await adapter.structure(String.fromCodePoint(0x33473))).toEqual([])
+    expect(await adapter.encoded('⿷⿺己一三')).toEqual([])
+  })
   it('retains distinct regional tags from both sources', async () => {
     const extra = '林\t⿰木木(J) ⿱木木(MT) ⿱木木(P) ⿱木木(P)\n'
     const get = async url => new Response(url === 'extra' ? extra : TABLE)
@@ -153,6 +173,10 @@ describe('the shipped data', () => {
   it('holds every ideograph of BabelStone IDS', () => {
     expect(ids.size).toBe(97680 + 6145)
     expect(ids.get('滑')?.map(s => s.text)).toContain('⿰氵骨')
+  })
+  it('leaves the project table empty for the 獨體字', () => {
+    const project = parseIdsTable(gunzipSync(readFileSync(new URL('../data/ids-project.tsv.gz', import.meta.url))).toString())
+    expect(project.size).toBe(0)
   })
   it('finds 滑 by 水骨\'s written forms, 氵 and 骨, and 林 and 森 by 木木', () => {
     const index = componentIndex(new Map([...ids].map(([char, sequences]) => [char, sequences.map(s => s.text)])))

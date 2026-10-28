@@ -161,12 +161,15 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
  * `components` is the URL of `data/ids-components.tsv` (or `componentsText` its text), the numbered
  * components IDS.TXT note 6 names and the IDS fragments that write them out ({12}, the right of 龍,
- * as ⿷己三); a sequence naming one reads as the IDS it names. `additionalIds` is an optional second
- * table in the same format; new descriptions follow the first table's descriptions. Duplicate
- * untagged descriptions are omitted; distinct region tags are kept. `table` and `palette` hand the
- * data over directly instead. `forms` is the URL of `data/component-forms.tsv` (or `formsText` its
- * text), which the description search folds components by and the component search opens the names
- * of a component's other forms with.
+ * as ⿷己三); a sequence naming one reads as the IDS it names. `additionalIds` is an optional table,
+ * or an array of tables, in the same format; new descriptions follow the first table's descriptions.
+ * The workshop supplies Yi Bai's set and this project's own `data/ids-project.tsv.gz` for characters
+ * newer than BabelStone's. Duplicate untagged descriptions are omitted; distinct region tags are
+ * kept. `overwrite` is an optional table (or `overwriteText` its text) of descriptions that draw as an
+ * encoded character's context-adapted form, such as ⿰𦚏𳳳 as 龍; `overwrite(sequence)` returns that
+ * character. `table` and `palette` hand the data over directly instead. `forms` is the URL of
+ * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
+ * components by and the component search opens the names of a component's other forms with.
  * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names, words and
  * readings the component search knows (絞絲, ノ文, のぎ, 宝盖, water, shui, mizu); without it the
  * search still takes characters and code points. `folds` is the URL of
@@ -178,7 +181,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
- * @param {{ ids?: string | URL, additionalIds?: string | URL, components?: string | URL, componentsText?: string,
+ * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
+ *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
@@ -188,7 +192,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -243,7 +247,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined,
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href,
+        additionalIds: extraIds.length ? extraIds.map(url => new URL(String(url), base).href) : undefined,
         components: components ? new URL(String(components), base).href : undefined, componentsText,
         forms: forms ? new URL(String(forms), base).href : undefined, formsText,
         layers: layers ? new URL(String(layers), base).href : undefined, layersText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
@@ -266,15 +271,35 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return doc
   })().catch(error => { seal = null; throw error })
 
+  /** @type {Promise<Map<string, string>> | null} */
+  let overwriteMap = null
+  const overwrites = () => overwriteMap ??= (overwriteText !== undefined ? Promise.resolve(overwriteText) : overwrite ? load(overwrite).then(readText) : Promise.resolve(''))
+    .then(text => {
+      const map = new Map()
+      for (const line of text.split(/\r?\n/)) {
+        if (!line.trim() || line.startsWith('#')) continue
+        const [sequence, char] = line.split('\t')
+        if (!sequence || !char || [...char].length !== 1) continue
+        map.set(sequence, char)
+      }
+      return map
+    })
+    .catch(error => { overwriteMap = null; throw error })
+
+  /** The additional tables, as one list; an optional single table stays one. @type {Array<string | URL>} */
+  const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
   const read = () => table ??= Promise.all([
     given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
       : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
-    additionalIds ? load(additionalIds).then(readText).then(parseIdsTable) : Promise.resolve(new Map()),
+    ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
     componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
-  ]).then(([base, extra, numbered, doc]) => {
+  ]).then(([base, ...rest]) => {
+    const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
+    const numbered = /** @type {string} */ (rest[extraIds.length])
+    const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
     const parts = readNumberedComponents(numbered)
-    const merged = mergeIdsTables(expandNumberedComponents(base, parts), expandNumberedComponents(extra, parts))
+    const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
     return doc ? new Map([...merged, ...sealTable(doc)]) : merged
   })
     .catch(error => { table = null; throw error })
@@ -564,6 +589,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       }
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
+    },
+    async overwrite(sequence) {
+      const char = (await overwrites()).get(sequence.trim())
+      return char ? [char] : []
     },
     async encoded(sequence) {
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried

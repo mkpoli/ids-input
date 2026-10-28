@@ -58,6 +58,10 @@
 // Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
 // and shows 宀+R for 寮. The Japanese Wikipedia article ゲバ字 gives the same form:
 // https://ja.wikipedia.org/wiki/ゲバ字
+// Historical variant of 龍 (JYN00025), CSK1939 p.4: the record's ⿰𦚏⿷己三 is its source
+// transcription; its right side, 𳑳 (U+33473), is a 獨體字, and the context table draws the
+// variant as 龍.
+// https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
     { sequence: '⿾正', char: '𣥄' },
@@ -85,6 +89,7 @@ export const EXAMPLE_GROUPS = [
   { key: 'complex', examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
     { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
+    { sequence: '⿰𦚏𳑳', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },

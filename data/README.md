@@ -60,6 +60,45 @@ searches name the parts rather than BabelStone's numbers. Built by
 `scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
 its own header note.
 
+## `ids-project.tsv.gz`
+
+This project's own IDS descriptions for characters newer than BabelStone's Unicode 16.0 edition and
+Yi Bai's set. The source is `data/ids-project.tsv`, one line per description,
+`char<TAB>IDS<TAB>source`; `scripts/build_ids_project.py` checks each description and writes the
+compact `char<TAB>sequences` table the adapter reads with
+`babelStoneAdapter({ additionalIds })`.
+
+The table is currently empty. The newer character this project knows, 𳑳 (U+33473), is a 獨體字 with
+no IDS decomposition; it is listed in `ids-characters.tsv` instead. Add a line here only for a
+character that decomposes.
+
+The descriptions are this project's, not a copy of CHISE's or BabelStone's. The built table is
+downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
+source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
+
+## `ids-characters.tsv`
+
+Characters this project draws from their own outline rather than an IDS composition. One line per
+character, `char<TAB>source`; `scripts/build_project_outlines.py` and
+`scripts/build_project_font.py` read it.
+
+`𳑳` (U+33473) is CJK Extension J (U+323B0–U+33479), Unicode 17.0, released 2025-09-09. Unihan
+18.0.0 gives `kIRG_VSource` VN-F0BEA, `kRSUnicode` 212.-9, `kTotalStrokes` 7 and `kStrange` I:U+9F8D.
+It is a 獨體字; its outline and UI glyph come from Plangothic P2 (SIL OFL 1.1).
+
+## `ids-overwrites.tsv`
+
+Descriptions drawn as an encoded character (an overwrite) instead of a composition. One line per description,
+`sequence<TAB>char<TAB>source`; `babelStoneAdapter({ overwrite })` answers the character, and the
+preview draws that character's glyph in the chosen face before composing the parts.
+
+`⿰𦚏𳳳` (JYutnet JYN00025, CSK1939 p.4) is a variant form of 龍. Its right side, 𳳳 (U+33473), is a
+獨體字 with its own outline when it stands alone; inside 龍 the encoded 龍 glyph supplies the side
+form, so the variant draws as 龍.
+
+`⿷⿺己一三` is zi.tools' stroke-level decomposition of 𳳳, not an IDS decomposition. Drawing it
+overwrites the operands with 𳳳's own outline, so the composition does not invent a form.
+
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
@@ -666,6 +705,11 @@ curves with a maximum error of 0.5 normalized units; packed coordinates use quar
 Unicode acceptance uses the bundled Unicode 18.0.0 properties, matching the editor's rules. The gzip OS header is
 normalized so supported Python versions produce the same shard bytes.
 
+After the main build, `uv run scripts/build_project_outlines.py` replaces the fallback outlines of the
+characters in `ids-characters.tsv` with Plangothic P2 glyphs (SIL OFL 1.1), a Source Han Sans design, so
+Extension J characters such as 𳑳 match the Sans face instead of Jigmo's serif. The script updates the
+shard hashes and adds the Plangothic source to `unicode-outlines.json`.
+
 These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
 A variation selector needs an explicit glyph in the selected export; it is not silently dropped.
 Unassigned and private-use characters without a source outline remain unavailable.
@@ -759,12 +803,17 @@ superscript or subscript digits (No in U+00B2–B3, U+00B9 and U+2070–209F). S
 
 The fallback order retains existing Noto outlines, then uses Jigmo3 2025-09-12 (CC0-1.0),
 Noto Emoji (SIL OFL 1.1), and GNU Unifont 18.0.01 (under its SIL OFL 1.1 option).
-Jigmo supplies CJK Extension J; Noto Emoji supplies monochrome emoji contours. Unifont fills
-remaining published glyphs, including recent kana, Cyrillic, phonetic letters and ideographic marks.
-Its pixel-based outlines retain their original design. The host export's glyphs take precedence.
+Jigmo supplies CJK Extension J, except the project's own characters, which
+`build_project_outlines.py` takes from Plangothic P2 (a sans design); Noto Emoji supplies monochrome
+emoji contours. Unifont fills remaining published glyphs, including recent kana, Cyrillic, phonetic
+letters and ideographic marks. Its pixel-based outlines retain their original design. The host
+export's glyphs take precedence.
 
 - [Jigmo](https://kamichikoichi.github.io/jigmo/): source file and digest in `unicode-fonts.json`;
   [CC0 text](../fonts/LICENSE-Jigmo.txt).
+- [Plangothic](https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project): P2 V2.9.5795,
+  SIL OFL 1.1, for the project's Extension J fallback glyphs; source URL and digest in
+  `unicode-outlines.json`.
 - [Noto Emoji](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji):
   pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
 - [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
