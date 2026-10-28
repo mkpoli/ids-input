@@ -65,7 +65,10 @@ export function charactersByDescription(trees) {
 function rewrite(node, self, byText, root = true) {
   const pick = (/** @type {string} */ text) => {
     const chars = byText.get(text)
-    return chars?.find(char => char !== self) ?? null
+    // Two characters share this description, so which one a part is cannot be known from the
+    // description alone. Leave the components in place rather than choosing one.
+    if (!chars || chars.length !== 1) return null
+    return chars[0] === self ? null : chars[0]
   }
   if (typeof node === 'string') return root ? node : pick(node) ?? node
   if (!root) {
@@ -114,7 +117,7 @@ export function build(root = new URL('../', import.meta.url)) {
   const characters = Object.fromEntries([...layers].sort(([a], [b]) => /** @type {number} */ (a.codePointAt(0)) - /** @type {number} */ (b.codePointAt(0))))
   const doc = {
     source: sourceLine(tableText),
-    method: 'A maximal proper subtree whose text is another Tangut ideograph\'s complete BabelStone description becomes that ideograph; a component whose glyph is a single-component ideograph becomes that ideograph. The root is kept. Only rewritten descriptions are listed.',
+    method: 'A maximal proper subtree whose text is another Tangut ideograph\'s complete BabelStone description becomes that ideograph; a component whose glyph is a single-component ideograph becomes that ideograph; a description shared by two characters is left alone. The root is kept. Only rewritten descriptions are listed.',
     counts: {
       characters: sourceCharacters,
       parsed: trees.size,

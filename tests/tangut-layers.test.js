@@ -2,7 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { babelStoneAdapter, parseIdsTable, paletteRows } from '../src/adapter/index.js'
-import { isNode, parse } from '../src/core/ids.js'
+import { isNode, parse, write } from '../src/core/ids.js'
 import { roots, searchParts, variants } from '../src/core/decompose.js'
 import { tangutLayers } from '../scripts/build_tangut_layers.mjs'
 
@@ -41,6 +41,22 @@ describe('the Tangut character layers', () => {
       const walk = node => { if (isNode(node)) node.parts.forEach(walk); else if (characters.has(node)) held.push(node) }
       walk(read.tree)
       expect([char, held.length > 0]).toEqual([char, true])
+    }
+  })
+
+  it('expand back to the source components exactly', () => {
+    const source = new Map([...table].map(([char, sequences]) => [char, sequences[0]?.text]))
+    const sourceTree = char => {
+      const text = /** @type {string} */ (source.get(char))
+      return [...text].length === 1 ? text : parse(text).tree
+    }
+    const expand = node => {
+      if (!isNode(node)) return source.has(node) ? expand(sourceTree(node)) : node
+      return { op: node.op, parts: node.parts.map(expand) }
+    }
+    for (const [char, sequence] of Object.entries(doc.characters)) {
+      const read = parse(sequence)
+      expect([char, write(expand(read.tree))]).toEqual([char, source.get(char)])
     }
   })
 
@@ -86,6 +102,19 @@ describe('an adapter over the layers', () => {
   it('asks the containing search for source components, not character parts', async () => {
     const entry = { status: /** @type {const} */ ('ready'), sequences: await adapter.structure('𗀃') }
     expect(searchParts(roots('𗀃'), { '𗀃': entry })).toBe('𘠀𘣣𘠐')
+  })
+
+  it('tries the layer file again after a transient failure', async () => {
+    let calls = 0
+    const get = async (url) => {
+      if (!String(url).endsWith('layers.json.gz')) return new Response('', { status: 404 })
+      calls++
+      return calls === 1 ? new Response('', { status: 503 }) : new Response(layerText)
+    }
+    const retrying = babelStoneAdapter({ table, layers: 'layers.json.gz', fetch: get })
+    expect(await retrying.structure('𗀃')).toEqual([{ text: '⿱𘠀⿰𘣣𘠐', regions: '' }])
+    expect((await retrying.structure('𗀃'))[0]).toEqual({ text: '⿱𘠀𗸡', regions: '', derived: true })
+    expect(calls).toBe(2)
   })
 
   it('leaves characters and other scripts alone', async () => {

@@ -278,11 +278,17 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** The source table and the derived descriptions, for the description search and `encoded`. The
    * derived reading is an alternative description, so a layered sequence finds its character.
-   * A failed layer file leaves the source descriptions standing.
+   * A failed layer file leaves the source descriptions standing and is tried again on the next
+   * call, instead of turning the failure into a source-only table for the life of the adapter.
    * @type {Promise<Map<string, Sequence[]>> | null} */
   let searchTable = null
-  const readSearch = () => searchTable ??= Promise.all([read(), readLayers().catch(() => new Map())])
-    .then(([found, derived]) => {
+  const readSearch = () => {
+    if (searchTable) return searchTable
+    searchTable = read().then(async found => {
+      /** @type {Map<string, string>} */
+      let derived
+      try { derived = await readLayers() }
+      catch { searchTable = null; return found }
       if (!derived.size) return found
       const merged = new Map(found)
       for (const [char, text] of derived) {
@@ -290,8 +296,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         if (!sequences.some(sequence => sequence.text === text)) merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
       }
       return merged
-    })
-    .catch(error => { searchTable = null; throw error })
+    }).catch(error => { searchTable = null; throw error })
+    return searchTable
+  }
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)

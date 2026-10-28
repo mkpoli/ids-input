@@ -312,12 +312,11 @@ Tangut ideograph with Tangut components, one layer deep. Many of those component
 ideograph whole, and 28 components are a one-component ideograph's whole glyph. This file rewrites
 each description top-down: a maximal proper subtree whose text is another ideograph's complete
 BabelStone description becomes that ideograph, a component that is a one-component ideograph becomes
-it, and the root is kept. Only rewritten descriptions are listed; every other Tangut character keeps
+it, a description shared by two characters is left alone, and the root is kept. Only rewritten descriptions are listed; every other Tangut character keeps
 its BabelStone description as it is.
 
 Format: `source`, `method`, `counts`, `characters` (character → layered description), and
-`ambiguous` (a description shared by two characters, with both, though neither is rewritten in
-another character). Counts: 6,145 Tangut records, 6,137 parsed, 8 malformed source records skipped,
+`ambiguous` (a description shared by two characters, with both; it is not rewritten). Counts: 6,145 Tangut records, 6,137 parsed, 8 malformed source records skipped,
 2,408 layered, 2,190 with a character in the first layer, 28 one-component ideographs, 1 ambiguous
 description.
 

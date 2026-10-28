@@ -19,7 +19,8 @@ async function load(ids, additionalIds, components, componentsText, forms, given
     additionalIds ? get(additionalIds).then(readText) : '',
     componentsText !== undefined ? componentsText : components ? get(components).then(readText) : '',
     given !== undefined ? given : forms ? get(forms).then(r => r.text()) : '',
-    layersText !== undefined ? layersText : layers ? get(layers).then(readText) : '',
+    // Layers are an extra reading; a failed file leaves the source search standing.
+    layersText !== undefined ? layersText : layers ? get(layers).then(readText).catch(() => '') : '',
   ])
   const doc = typeof smallSeal === 'string' ? JSON.parse(await readText(await get(smallSeal))) : smallSeal
   const parts = readNumberedComponents(numbered)
