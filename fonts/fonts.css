@@ -1,7 +1,10 @@
+@import "./gongche.css";
 /* The parts few installed fonts draw: CJK strokes and the empty-slot mark ⬚ (IDS Strokes), CJK
    Radicals Supplement and the supplementary planes (IDS Parts), the New Korean Orthography
-   letters (IDS New Korean). Their ranges do not overlap, and the rest of the text falls
-   through to the page's own fonts. See fonts/README.md for their sources and licences. */
+   letters (IDS New Korean). gongche.css repeats 17 Gongche code points inside the supplementary
+   range and is imported first; it is the face that carries those glyphs, since the general subset
+   omits them. The rest of the text falls through to the page's own fonts.
+   See fonts/README.md for their sources and licences. */
 @font-face{font-family:"IDS Parts";src:url("./Plangothic-ids-parts.woff2") format("woff2");font-display:swap;
   unicode-range:U+2E80-2EFF,U+31E4-31EF,U+20000-3FFFF}
 @font-face{font-family:"IDS Project";src:url("./Plangothic-ids-project.woff2") format("woff2");font-display:swap;
@@ -20,7 +23,3 @@
 /* The unencoded letters of the New Korean Orthography, in the positions proposed in L2/19-230R. */
 @font-face{font-family:"IDS New Korean";src:url("./IDSNewKorean.woff2") format("woff2");font-display:swap;
   unicode-range:U+A97D-A97F,U+D7C7,U+D7FC-D7FE}
-
-/* Encoded Gongche forms absent from the general parts subset. */
-@font-face{font-family:"IDS Parts";src:url("./Plangothic-gongche.woff2") format("woff2");font-display:swap;
-  unicode-range:U+224BC,U+2A6D7-2A6DD}

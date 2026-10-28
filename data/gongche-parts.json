@@ -1,0 +1,554 @@
+{
+  "sources": {
+    "kunqu": {
+      "url": "https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf",
+      "locator": "Chan et al. (2018), Table 1, pp. 3–4; UTC-02976/02977 are now U+3176B/U+3176C"
+    },
+    "ccli": {
+      "url": "https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf",
+      "locator": "Annex II, Figure 1 (p. 8), eight staccato forms; paragraph 7 on productive 氵 combinations"
+    },
+    "beiguan": {
+      "url": "https://tcmb.culture.tw/zh-tw/detail?id=245144&indexCode=Culture_Media",
+      "locator": "Chiu Huo-Jung and Chiu Chao-Wen, Beiguan tutorial (2000), transcription: 亻乂"
+    },
+    "taiwan": {
+      "url": "https://dict.th.gov.tw/detailPage.aspx?Ca=163&ID=2045",
+      "locator": "Taiwan Historica, entry 2045: Nanguan note forms and 艸-head modifier"
+    },
+    "hk": {
+      "url": "https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/",
+      "locator": "Gongche notation and shared rhythm/other symbols tables"
+    },
+    "seiraku": {
+      "url": "https://www.isc.meiji.ac.jp/~katotoru/singaku-20.html",
+      "locator": "Toru Kato, updated 2012-02-07: 板眼記号式, ○ー式, note-duration notation"
+    },
+    "rest": {
+      "url": "https://lib.ntua.edu.tw/wSite/public/Data/f1717039599418.pdf",
+      "locator": "Shi De-Yu, 論說崑曲工尺譜, printed p. 269 (PDF p. 273), 夕陽簫鼓 example: 勺 as a rest; scan checked against misleading OCR"
+    },
+    "user": {
+      "url": "https://x.com/zoenshiueh_lieu",
+      "locator": "परवद💙💛, supplied Gongche component suggestions: ⿰氵氵 and ⿱𰀪亻; no score citation supplied"
+    },
+    "gou": {
+      "url": "https://www.mct.gov.cn/whzx/whyw/201112/t20111201_707074.htm",
+      "locator": "Ministry of Culture, 陕西百名农民进京演绎盛唐古乐 (2005-06-16): inventory includes 勾; no universal pitch mapping inferred"
+    }
+  },
+  "groups": [
+    {
+      "key": "notes",
+      "parts": [
+        {
+          "part": "合",
+          "kind": "c",
+          "strokes": 6
+        },
+        {
+          "part": "四",
+          "kind": "c",
+          "strokes": 5
+        },
+        {
+          "part": "一",
+          "kind": "c",
+          "strokes": 1
+        },
+        {
+          "part": "上",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "尺",
+          "kind": "c",
+          "strokes": 4
+        },
+        {
+          "part": "工",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "凡",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "六",
+          "kind": "c",
+          "strokes": 4
+        },
+        {
+          "part": "五",
+          "kind": "c",
+          "strokes": 4
+        },
+        {
+          "part": "乙",
+          "kind": "c",
+          "strokes": 1
+        }
+      ],
+      "sources": [
+        "kunqu"
+      ]
+    },
+    {
+      "key": "regional",
+      "parts": [
+        {
+          "part": "士",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "反",
+          "kind": "c",
+          "strokes": 4
+        },
+        {
+          "part": "乂",
+          "kind": "c",
+          "strokes": 2
+        },
+        {
+          "part": "生",
+          "kind": "c",
+          "strokes": 5
+        },
+        {
+          "part": "凢",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "甲",
+          "kind": "c",
+          "strokes": 5
+        },
+        {
+          "part": "下",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "勾",
+          "kind": "c",
+          "strokes": 4
+        }
+      ],
+      "sources": [
+        "ccli",
+        "kunqu",
+        "hk",
+        "taiwan",
+        "gou"
+      ]
+    },
+    {
+      "key": "kunqu",
+      "parts": [
+        {
+          "part": "𪛗",
+          "kind": "c",
+          "strokes": 6
+        },
+        {
+          "part": "𪛘",
+          "kind": "c",
+          "strokes": 5
+        },
+        {
+          "part": "𪛙",
+          "kind": "c",
+          "strokes": 1
+        },
+        {
+          "part": "𪛚",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "𪛛",
+          "kind": "c",
+          "strokes": 4
+        },
+        {
+          "part": "𪛜",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "𪛝",
+          "kind": "c",
+          "strokes": 3
+        }
+      ],
+      "sources": [
+        "kunqu"
+      ]
+    },
+    {
+      "key": "single",
+      "parts": [
+        {
+          "part": "仩",
+          "kind": "c",
+          "strokes": 5,
+          "aliases": [
+            "⿰亻上"
+          ]
+        },
+        {
+          "part": "伬",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰亻尺"
+          ]
+        },
+        {
+          "part": "仜",
+          "kind": "c",
+          "strokes": 5,
+          "aliases": [
+            "⿰亻工"
+          ]
+        },
+        {
+          "part": "𠆩",
+          "kind": "c",
+          "strokes": 5,
+          "aliases": [
+            "⿰亻凡"
+          ]
+        },
+        {
+          "part": "𠆾",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰亻六"
+          ]
+        },
+        {
+          "part": "伍",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰亻五"
+          ]
+        },
+        {
+          "part": "亿",
+          "kind": "c",
+          "strokes": 3,
+          "aliases": [
+            "⿰亻乙"
+          ]
+        },
+        {
+          "part": "佮",
+          "kind": "c",
+          "strokes": 8,
+          "aliases": [
+            "⿰亻合"
+          ]
+        },
+        {
+          "part": "仕",
+          "kind": "c",
+          "strokes": 5,
+          "aliases": [
+            "⿰亻士"
+          ]
+        },
+        {
+          "part": "仮",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰亻反"
+          ]
+        },
+        {
+          "part": "𪜧",
+          "kind": "c",
+          "strokes": 4,
+          "aliases": [
+            "⿰亻乂"
+          ]
+        }
+      ],
+      "sources": [
+        "kunqu",
+        "ccli",
+        "beiguan"
+      ]
+    },
+    {
+      "key": "double",
+      "parts": [
+        {
+          "part": "𱝫",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰彳上"
+          ]
+        },
+        {
+          "part": "鿈",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰彳尺"
+          ]
+        },
+        {
+          "part": "𢓁",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰彳工"
+          ]
+        },
+        {
+          "part": "𱝬",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰彳凡"
+          ]
+        },
+        {
+          "part": "𢓌",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰彳六"
+          ]
+        },
+        {
+          "part": "鿉",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰彳五"
+          ]
+        },
+        {
+          "part": "𢒼",
+          "kind": "c",
+          "strokes": 4,
+          "aliases": [
+            "⿰彳乙"
+          ]
+        },
+        {
+          "part": "𢓉",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰彳反"
+          ]
+        }
+      ],
+      "sources": [
+        "kunqu",
+        "ccli",
+        "hk"
+      ]
+    },
+    {
+      "key": "staccato",
+      "parts": [
+        {
+          "part": "洽",
+          "kind": "c",
+          "strokes": 9,
+          "aliases": [
+            "⿰氵合"
+          ]
+        },
+        {
+          "part": "⿰氵士",
+          "strokes": 6,
+          "derived": 1,
+          "kind": "c"
+        },
+        {
+          "part": "㲸",
+          "kind": "c",
+          "strokes": 4,
+          "aliases": [
+            "⿰氵乙"
+          ]
+        },
+        {
+          "part": "𰛈",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰氵上"
+          ]
+        },
+        {
+          "part": "沢",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰氵尺"
+          ]
+        },
+        {
+          "part": "江",
+          "kind": "c",
+          "strokes": 6,
+          "aliases": [
+            "⿰氵工"
+          ]
+        },
+        {
+          "part": "汳",
+          "kind": "c",
+          "strokes": 7,
+          "aliases": [
+            "⿰氵反"
+          ]
+        },
+        {
+          "part": "⿰氵六",
+          "strokes": 7,
+          "derived": 1,
+          "kind": "c"
+        }
+      ],
+      "sources": [
+        "ccli"
+      ]
+    },
+    {
+      "key": "modifiers",
+      "parts": [
+        {
+          "part": "亻",
+          "kind": "c",
+          "strokes": 2
+        },
+        {
+          "part": "彳",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "⿱𰀪亻",
+          "strokes": 4,
+          "derived": 1,
+          "kind": "c"
+        },
+        {
+          "part": "氵",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "⿰氵氵",
+          "strokes": 6,
+          "derived": 1,
+          "kind": "c"
+        },
+        {
+          "part": "艹",
+          "kind": "c",
+          "strokes": 4
+        }
+      ],
+      "sources": [
+        "ccli",
+        "taiwan",
+        "user"
+      ]
+    },
+    {
+      "key": "rhythm",
+      "parts": [
+        {
+          "part": "㐅",
+          "kind": "c",
+          "strokes": 2
+        },
+        {
+          "part": "丶",
+          "kind": "c",
+          "strokes": 1
+        },
+        {
+          "part": "‧",
+          "kind": "c"
+        },
+        {
+          "part": "○",
+          "kind": "c"
+        },
+        {
+          "part": "×",
+          "kind": "c"
+        },
+        {
+          "part": "、",
+          "kind": "c"
+        },
+        {
+          "part": "。",
+          "kind": "c"
+        }
+      ],
+      "sources": [
+        "hk",
+        "seiraku"
+      ]
+    },
+    {
+      "key": "marks",
+      "parts": [
+        {
+          "part": "勺",
+          "kind": "c",
+          "strokes": 3
+        },
+        {
+          "part": "｜",
+          "kind": "c"
+        },
+        {
+          "part": "『",
+          "kind": "c"
+        },
+        {
+          "part": "』",
+          "kind": "c"
+        },
+        {
+          "part": "，",
+          "kind": "c"
+        },
+        {
+          "part": "…",
+          "kind": "c"
+        },
+        {
+          "part": "*",
+          "kind": "c"
+        }
+      ],
+      "sources": [
+        "hk",
+        "rest"
+      ]
+    }
+  ]
+}

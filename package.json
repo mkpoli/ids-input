@@ -60,6 +60,7 @@
     "LICENSE",
     "README.md",
     "docs/document-format.md",
+    "docs/gongche-coverage.md",
     "docs/small-seal-candidates.md",
     "docs/ids-document.schema.json",
     "docs/ids-document.example.json"

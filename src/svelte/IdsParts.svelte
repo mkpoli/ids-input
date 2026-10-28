@@ -570,10 +570,12 @@
       <details class="gongche-guide"><summary>{t('parts.gongche.guide')}</summary>
         <p>{t('parts.gongche.conventions')}</p>
         <p>{t('parts.gongche.compose')}</p>
-        <a href="https://www.th.gov.tw/Epaper_Content/237/8985/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguan')} ↗</a>
+        <a href="https://dict.th.gov.tw/detailPage.aspx?Ca=163&ID=2045" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguan')} ↗</a>
         <a href="https://www.ccli.gov.hk/doc/wgcliac2022-03.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.cantonese')} ↗</a>
         <a href="https://www.unicode.org/L2/L2018/18245-n4967-gongche.pdf" target="_blank" rel="noopener noreferrer">{t('parts.gongche.kunquSource')} ↗</a>
         <a href="https://hkmusicminiatures.com/notes-on-traditional-mnemonic-notation-and-gongche-notation/" target="_blank" rel="noopener noreferrer">{t('parts.gongche.marksSource')} ↗</a>
+        <a href="https://tcmb.culture.tw/zh-tw/detail?id=245144&indexCode=Culture_Media" target="_blank" rel="noopener noreferrer">{t('parts.gongche.beiguanSource')} ↗</a>
+        <a href="https://www.isc.meiji.ac.jp/~katotoru/singaku-20.html" target="_blank" rel="noopener noreferrer">{t('parts.gongche.seirakuSource')} ↗</a>
       </details>
     {:else if failed}
       <p class="parts-note" role="status">{t('parts.failed')}</p>
