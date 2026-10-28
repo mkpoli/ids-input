@@ -156,5 +156,9 @@
   "app.replacement.tooLong": "三个输入合计不能超过 64 个码位。",
   "app.source.tangutGlosses": "文字信息面板中的西夏字英语释义，保留用法限定。",
   "app.source.tangutComponentMeaning": "部件𘥇与马相关的语义关联（2020年4月21日）。",
-  "app.replacement.nestedHint": "也可以把含替换的表达式粘贴到序列输入框，例如 ⿱🔄林木火水。"
+  "app.replacement.nestedHint": "也可以把含替换的表达式粘贴到序列输入框，例如 ⿱🔄林木火水。",
+  "app.file.saveDocument": "保存文档…",
+  "app.file.openDocument": "打开文档…",
+  "app.file.saved": "已保存 {name}",
+  "app.file.openFailed": "无法打开 {name}。"
 }

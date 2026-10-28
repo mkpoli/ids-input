@@ -10,6 +10,8 @@
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
+  import { createDocumentSession, sessionRecord, toSequence } from '../src/document/index.js'
+  import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import layers from '../data/tangut-layers.json.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
@@ -249,6 +251,7 @@
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
+  /** @type {HTMLInputElement | null} */ let documentInput = $state(null)
   let fromText_ = $state('')
   /** @type {import('../src/adapter/types.js').Drawing | null} */
   let drawing = $state.raw(null)
@@ -527,9 +530,46 @@
     store()
     note(t('app.drafts.kept', { sequence: editor.whole }))
   }
+  /** Save the active tab's document as .ids.json. */
+  function saveDocument() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    const file = documentFile(sessionFor(tab).document, editor.whole)
+    const url = URL.createObjectURL(file)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = file.name
+    anchor.hidden = true
+    document.body.append(anchor)
+    anchor.click()
+    anchor.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+    note(t('app.file.saved', { name: file.name }))
+  }
+
+  /** Open a chosen .ids.json as a new tab. @param {Event} event */
+  async function openDocument(event) {
+    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
+    const file = input.files?.[0]
+    input.value = ''
+    if (!file) return
+    try {
+      const document = await readDocumentFile(file)
+      const session = createDocumentSession(document)
+      const tab = makeTab(toSequence(document.root), toSequence(document.root), sessionRecord(session))
+      tabs.push(tab)
+      activate(tab.id)
+    } catch {
+      note(t('app.file.openFailed', { name: file.name }))
+    }
+  }
+
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
     { label: t('app.pyramid.title'), icon: 'pyramid', run: () => pyramidOpen = true },
+    { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
+    { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
@@ -798,6 +838,7 @@
 
 </div>
 
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,application/json" hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
