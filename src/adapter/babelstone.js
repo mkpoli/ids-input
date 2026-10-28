@@ -165,8 +165,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * or an array of tables, in the same format; new descriptions follow the first table's descriptions.
  * The workshop supplies Yi Bai's set and this project's own `data/ids-project.tsv.gz` for characters
  * newer than BabelStone's. Duplicate untagged descriptions are omitted; distinct region tags are
- * kept. `context` is an optional table (or `contextText` its text) of descriptions that draw as an
- * encoded character's context-adapted form, such as ⿰𦚏𳳳 as 龍; `context(sequence)` returns that
+ * kept. `overwrite` is an optional table (or `overwriteText` its text) of descriptions that draw as an
+ * encoded character's context-adapted form, such as ⿰𦚏𳳳 as 龍; `overwrite(sequence)` returns that
  * character. `table` and `palette` hand the data over directly instead. `forms` is the URL of
  * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
  * components by and the component search opens the names of a component's other forms with.
@@ -182,10 +182,9 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
  * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
- *   context?: string | URL, contextText?: string,
+ *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
- *   charactersRare?: string | URL, charactersRareText?: string,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
@@ -193,7 +192,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, context, contextText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, charactersRare, charactersRareText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -273,8 +272,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   })().catch(error => { seal = null; throw error })
 
   /** @type {Promise<Map<string, string>> | null} */
-  let contextMap = null
-  const contexts = () => contextMap ??= (contextText !== undefined ? Promise.resolve(contextText) : context ? load(context).then(readText) : Promise.resolve(''))
+  let overwriteMap = null
+  const overwrites = () => overwriteMap ??= (overwriteText !== undefined ? Promise.resolve(overwriteText) : overwrite ? load(overwrite).then(readText) : Promise.resolve(''))
     .then(text => {
       const map = new Map()
       for (const line of text.split(/\r?\n/)) {
@@ -285,7 +284,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       }
       return map
     })
-    .catch(error => { contextMap = null; throw error })
+    .catch(error => { overwriteMap = null; throw error })
 
   /** The additional tables, as one list; an optional single table stays one. @type {Array<string | URL>} */
   const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
@@ -591,8 +590,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
     },
-    async context(sequence) {
-      const char = (await contexts()).get(sequence.trim())
+    async overwrite(sequence) {
+      const char = (await overwrites()).get(sequence.trim())
       return char ? [char] : []
     },
     async encoded(sequence) {

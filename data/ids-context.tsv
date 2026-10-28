@@ -1,6 +1,0 @@
-# Descriptions drawn as an encoded character's context-adapted form.
-# One line per description: sequence<TAB>char<TAB>source.
-#
-# JYutnet JYN00025, CSK1939 p.4: a variant form of 龍. Its right side is 𳑳 (U+33473); 龍's glyph
-# supplies the side form. https://jyutnet.github.io/unencoded-characters/
-⿰𦚏𳑳	龍	JYutnet JYN00025, CSK1939 p.4, variant form of 龍

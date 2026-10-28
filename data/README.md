@@ -86,15 +86,18 @@ character, `char<TAB>source`; `scripts/build_project_outlines.py` and
 18.0.0 gives `kIRG_VSource` VN-F0BEA, `kRSUnicode` 212.-9, `kTotalStrokes` 7 and `kStrange` I:U+9F8D.
 It is a 獨體字; its outline and UI glyph come from Plangothic P2 (SIL OFL 1.1).
 
-## `ids-context.tsv`
+## `ids-overwrites.tsv`
 
-Descriptions that draw as an encoded character's context-adapted form. One line per description,
-`sequence<TAB>char<TAB>source`; `babelStoneAdapter({ context })` answers the character, and the
+Descriptions drawn as an encoded character (an overwrite) instead of a composition. One line per description,
+`sequence<TAB>char<TAB>source`; `babelStoneAdapter({ overwrite })` answers the character, and the
 preview draws that character's glyph in the chosen face before composing the parts.
 
 `⿰𦚏𳳳` (JYutnet JYN00025, CSK1939 p.4) is a variant form of 龍. Its right side, 𳳳 (U+33473), is a
 獨體字 with its own outline when it stands alone; inside 龍 the encoded 龍 glyph supplies the side
 form, so the variant draws as 龍.
+
+`⿷⿺己一三` is zi.tools' stroke-level decomposition of 𳳳, not an IDS decomposition. Drawing it
+overwrites the operands with 𳳳's own outline, so the composition does not invent a form.
 
 ## `ids-parts.json`
 

@@ -65,7 +65,7 @@
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [searchCharacters] Characters whose readings or meanings match what is typed.
  * @property {(sequence: string, options?: Options) => Promise<string[]>} [encoded] The encoded characters a whole description describes exactly.
- * @property {(sequence: string, options?: Options) => Promise<string[]>} [context] The encoded characters a whole description draws as, for a context-adapted variant (⿰𦚏𳳳 as 龍).
+ * @property {(sequence: string, options?: Options) => Promise<string[]>} [overwrite] The encoded characters a whole description draws as, for a context-adapted variant (⿰𦚏𳳳 as 龍).
  * @property {(query: string, options?: Options & { componentLookup?: boolean }) => Promise<{ hits: IdsHit[], total: number, problem?: 'empty' | 'extra' | 'terms' }>} [findByIds] Characters a description query finds, closest first (see `createSearch` in the core); `componentLookup: false` searches a wildcard subtraction structurally.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.

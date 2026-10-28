@@ -50,11 +50,12 @@ describe('the BabelStone adapter', () => {
     expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
     expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
   })
-  it('draws a context-adapted variant as the encoded character', async () => {
-    const contextText = '⿰𦚏𳳳\t龍\tJYutnet JYN00025\n'
-    const adapter = babelStoneAdapter({ ids: 'base', contextText, fetch: async () => new Response(TABLE), worker: null })
-    expect(await adapter.context('⿰𦚏𳳳')).toEqual(['龍'])
-    expect(await adapter.context('⿰𦚏⿷己三')).toEqual([])
+  it('draws an overwrite description as the encoded character', async () => {
+    const overwriteText = `⿰𦚏𳳳\t龍\tJYutnet JYN00025\n⿷⿺己一三\t${String.fromCodePoint(0x33473)}\tzi.tools\n`
+    const adapter = babelStoneAdapter({ ids: 'base', overwriteText, fetch: async () => new Response(TABLE), worker: null })
+    expect(await adapter.overwrite('⿰𦚏𳳳')).toEqual(['龍'])
+    expect(await adapter.overwrite('⿷⿺己一三')).toEqual([String.fromCodePoint(0x33473)])
+    expect(await adapter.overwrite('⿰𦚏⿷己三')).toEqual([])
   })
   it('adds several additional tables in the order given', async () => {
     const project = '𱁬\t⿰木木\n'

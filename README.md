@@ -82,7 +82,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, layers, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters, charactersRare })
+  const adapter = babelStoneAdapter({ ids, layers, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -394,16 +394,16 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, additionalIds, context, components, parts, forms, names, folds, characters, charactersRare })` answers
+`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
+meaning when `characters` is given), `containing` and `parts`
 from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
-than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `context` maps a
+than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
 description search's components and opens a named component into the forms that stand for it;
 `folds` folds Chinese scripts and positional forms together before names are compared. Without them
@@ -679,8 +679,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).
 - `data/ids-characters.tsv`: characters this project draws from their own outline, 𳳳 (U+33473)
   from Plangothic P2; the outline and font builders read it.
-- `data/ids-context.tsv`: descriptions that draw as an encoded character's context-adapted form,
-  `⿰𦚏𳳳` as 龍 (JYutnet JYN00025); the adapter reads it with `context`.
+- `data/ids-overwrites.tsv`: descriptions drawn as an encoded character instead of a composition,
+  `⿰𦚏𳳳` as 龍 and `⿷⿺己一三` as 𳳳 (JYutnet JYN00025; zi.tools); the adapter reads it with
+  `overwrite`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).

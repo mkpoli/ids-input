@@ -1,0 +1,10 @@
+# Descriptions drawn as an encoded character (an overwrite) instead of composing their parts.
+# One line per description: sequence<TAB>char<TAB>source.
+#
+# JYutnet JYN00025, CSK1939 p.4: a variant form of 龍. Its right side is 𳑳 (U+33473); 龍's glyph
+# supplies the side form. https://jyutnet.github.io/unencoded-characters/
+⿰𦚏𳑳	龍	JYutnet JYN00025, CSK1939 p.4, variant form of 龍
+#
+# 𳑳 is a 獨體字. zi.tools gives a stroke-level decomposition, ⿷⿺#(𠃑-一乚)一三; composing it yields
+# the character's outline as an overwrite, not a synthesized form.
+⿷⿺己一三	𳑳	zi.tools ids_zi_tools; 獨體字, own outline
