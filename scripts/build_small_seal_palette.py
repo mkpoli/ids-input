@@ -125,6 +125,33 @@ def bundle(upstream, doc):
     (ROOT / 'fonts/small-seal-sources.json').write_text(json.dumps(meta, indent=2) + '\n')
 
 
+def merge_supplements(doc, manifest):
+    """Add curated crosswalk entries to the shipped palette and modern map."""
+    if manifest.get('format') != 1: raise ValueError('Unsupported seal supplement format')
+    unicodeSha = hashlib.sha256((ROOT / 'data/seal-sources.txt.gz').read_bytes()).hexdigest()
+    archiveSha = hashlib.sha256((ROOT / 'data/small-seal-sources.tar.gz').read_bytes()).hexdigest()
+    parts = doc['parts']
+    known = {part['part'] for part in parts}
+    sources = doc.setdefault('paletteSources', [])
+    for entry in manifest['entries']:
+        glyph = (ROOT / 'scripts/data/small-seal' / entry['glyph']).read_bytes()
+        if hashlib.sha256(glyph).hexdigest() != entry['glyphSha256']: raise ValueError('Seal supplement glyph checksum mismatch')
+        if entry['unicodeEvidence']['sha256'] != unicodeSha or entry['chiseEvidence']['archiveSha256'] != archiveSha:
+            raise ValueError('Seal supplement source checksum mismatch')
+        doc['modern'][entry['char']] = list(dict.fromkeys([*doc['modern'].get(entry['char'], []), *entry['modern']]))
+        if entry['char'] in known:
+            # An upstream refresh can add the glyph with its own CHISE classification.
+            # Keep that stronger basis and merge the crosswalk aliases into the part.
+            part = next(part for part in parts if part['part'] == entry['char'])
+            part['modern'] = list(dict.fromkeys([*(part.get('modern') or []), *entry['modern']]))
+        else:
+            parts.append({'part': entry['char'], 'uses': 0, 'strokes': None, 'first': None, 'kind': 'seal',
+                          'sealGroup': 'other', 'sealBasis': 'crosswalk', 'modern': entry['modern']})
+            known.add(entry['char'])
+        if not any(source.get('char') == entry['char'] for source in sources): sources.append(entry)
+    return doc
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--upstream', type=Path)
@@ -133,6 +160,8 @@ def main():
     doc = json.loads(gzip.decompress(path.read_bytes()))
     if args.upstream: bundle(args.upstream, doc)
     augment_palette(doc)
+    supplements = ROOT / 'scripts/data/small-seal/supplements.json'
+    if supplements.exists(): merge_supplements(doc, json.loads(supplements.read_text(encoding='utf-8')))
     path.write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False, separators=(',', ':')).encode(), mtime=0))
     print(len(doc['parts']), dict(Counter(p['sealGroup'] for p in doc['parts'])), dict(Counter(p['sealBasis'] for p in doc['parts'])))
 

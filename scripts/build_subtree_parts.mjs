@@ -1,10 +1,10 @@
 // Count the exact trees in the bundled corpus; no recursive expansion or glyph normalization.
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { gzipSync, gunzipSync } from 'node:zlib'
 import { fileURLToPath } from 'node:url'
 import { resolve } from 'node:path'
 import { arity, isSelector, parse } from '../src/core/ids.js'
-import { parseIdsTable } from '../src/adapter/babelstone.js'
+import { expandNumberedComponents, parseIdsTable, readNumberedComponents } from '../src/adapter/babelstone.js'
 
 export function subtrees(text) {
   const tokens = text.match(/\{\d+\}|./gu) ?? []
@@ -107,13 +107,17 @@ export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
 export function build(root = new URL('../', import.meta.url)) {
   const data = name => new URL(`data/${name}`, root)
   const table = parseIdsTable(gunzipSync(readFileSync(data('babelstone-ids.tsv.gz'))).toString())
+  // The counts follow the descriptions as the adapter serves them, BabelStone's numbered components
+  // written out, so 書 counts 聿. Structural parts keep the spellings the corpus uses.
+  const components = data('ids-components.tsv')
+  const written = existsSync(components) ? expandNumberedComponents(table, readNumberedComponents(readFileSync(components, 'utf8'))) : table
   const palette = JSON.parse(readFileSync(data('ids-parts.json'), 'utf8'))
   // Remove previously generated compounds so running the builder again is deterministic.
   const rows = palette.parts.filter(row => !arity([...row[0]][0]))
   const count = strokeCounter(table, rows)
   const rejected = []
   const entries = frequencies(table, rejected)
-  const usage = new Map(entries.map(entry => [entry.text, entry.uses]))
+  const usage = new Map(frequencies(written, []).map(entry => [entry.text, entry.uses]))
   for (const row of rows) row[1] = usage.get(row[0]) ?? 0
   const threshold = 30
   const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem).map(entry => ({ ...entry }))

@@ -187,6 +187,7 @@
   "parts.seal.filter": "按小篆或汉字筛选",
   "parts.seal.estimate": "≈ 根据现代汉字推定的分类",
   "parts.seal.inferred": "根据现代汉字IDS推定分类：{ids}",
+  "parts.seal.crosswalk": "Unicode与CHISE的对应",
   "ids.structural.title": "结构搜索",
   "ids.structural.examples": "结构示例",
   "ids.structural.morePatterns": "其他结构",

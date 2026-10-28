@@ -207,6 +207,7 @@
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
   // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
+  // @x18n-keys
   /** @type {Record<string, string>} */
   const PSEUDO_SCRIPTS = { symbols: 'parts.script.symbols', mixed: 'parts.script.mixed' }
   /** @param {string} id */
@@ -421,7 +422,7 @@
       romanization,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
-      part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
+      part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
       nko || romanization ? null : tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
       part.uses ? t('parts.uses', { count: part.uses }) : null,
     ].filter(Boolean).join(' · ')

@@ -187,6 +187,7 @@
   "parts.seal.filter": "Lọc theo tiểu triện hoặc chữ Hán",
   "parts.seal.estimate": "≈ Phân nhóm suy từ chữ Hán hiện đại",
   "parts.seal.inferred": "Phân nhóm suy từ IDS chữ Hán hiện đại: {ids}",
+  "parts.seal.crosswalk": "Đối chiếu Unicode và CHISE",
   "ids.structural.title": "Tìm theo cấu trúc",
   "ids.structural.examples": "Ví dụ cấu trúc",
   "ids.structural.morePatterns": "Cấu trúc khác",

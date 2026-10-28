@@ -26,8 +26,8 @@ export async function loadSealSupplements(doc) {
     inputs['data/seal-sources.txt.gz'] = digest(unicode)
     inputs['data/small-seal-sources.tar.gz'] = digest(chise)
     modern[entry.char] = [...new Set([...(modern[entry.char] ?? []),...entry.modern])]
-    if (!parts.some(p=>p.part===entry.char)) parts.push({part:entry.char,kind:'seal',uses:0,strokes:null,first:null})
-    sources.push(entry)
+    if (!parts.some(p=>p.part===entry.char)) parts.push({part:entry.char,kind:'seal',uses:0,strokes:null,first:null,sealGroup:'other',sealBasis:'crosswalk',modern:entry.modern})
+    if (!sources.some(source=>source.char===entry.char)) sources.push(entry)
     glyphs.set(entry.char,{file:entry.glyph,bytes:svg})
   }
   return {doc:{...doc,modern,parts,paletteSources:sources},glyphs,inputs}

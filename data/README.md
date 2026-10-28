@@ -64,7 +64,7 @@ its own header note.
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,713 Han entries (708 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,714 Han entries (709 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -72,6 +72,9 @@ plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_pa
   decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+- `uses`: the ideographs whose descriptions name the part, counted from the descriptions with
+  BabelStone's numbered components written out as `data/ids-components.tsv` gives them, so 書 counts
+  聿. The parts listed stay the components IDS.TXT names itself.
 
 The displayed Common palette places traditional, simplified and positional forms
 from `component-forms.tsv` next to one another. Each family starts where its
@@ -363,14 +366,16 @@ The frequency report contains every exact subtree, including leaves, complete
 roots, numbered unknown components and variation selectors. Its columns are
 `[part, uses, occurrences, nestedUses, strokes]`: `uses` counts distinct source
 characters, `occurrences` counts tree positions across distinct IDS alternatives,
-and `nestedUses` counts characters using the tree below the root. Palette usage
-counts are refreshed from `uses` for single-character entries too. Identical
-regional alternatives count once. Characters are not recursively expanded and
-variant glyphs are not merged. The report records malformed sequences under
-`rejected`; the current corpus has eight, all Tangut.
+and `nestedUses` counts characters using the tree below the root. The palette's
+counts for single-character entries follow the corpus with BabelStone's numbered
+components written out, so they can exceed the report's `uses`, which keep the
+source spellings. Identical regional alternatives count once. Characters are not
+recursively expanded for the report and variant glyphs are not merged. The report
+records malformed sequences under `rejected`; the current corpus has eight, all
+Tangut.
 
 Common also shows hard-to-type components used by at least 50 characters
-(285 in this corpus), while keeping them available in their stroke groups.
+(286 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
 and twelve normalize to ten encoded characters. The sixteen manual entries
@@ -538,10 +543,10 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
-| Drawable palette forms | 1,334 |
+| Drawable palette forms | 1,383 |
 | Selected basic parts | 138 |
 | Compound forms | 1,172 |
-| Other / unclassified forms | 24 |
+| Other forms, including 49 curated crosswalks | 73 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -549,7 +554,9 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 There are 29 additional apparent-form descriptions, so the description statuses total
 11,143. An empty field does not distinguish an atomic character from unfinished data.
 The editor's 49 descriptions are machine-validated imports, without a separate
-palaeographic review.
+palaeographic review. The palette also carries 49 curated crosswalks from
+`scripts/data/small-seal/supplements.json`; they mark a Unicode SealSources value
+and one CHISE record, and ship with pinned glyphs and checksums.
 
 Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
 
@@ -568,7 +575,8 @@ The palette is independent of the 49 complete descriptions. It includes mapped
 CHISE heads and the Unicode Shuowen radical heads for which a pinned SVG exists.
 `seal-sources.txt.gz` preserves the pinned Unicode mapping from the Kaiyuan source
 archive; its license is in `COPYING-seal-sources.txt`. `paletteSources` records the
-Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lookup alias.
+Unicode digest, the BabelStone IDS digest, the reference for the 𠙵/口 lookup alias,
+and each curated crosswalk entry.
 
 `parts` entries carry `modern` lookup names, `sealGroup`, and `sealBasis`:
 
@@ -580,6 +588,9 @@ Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lo
   are retained for inspection and the UI marks the grouping with `≈`.
 - `other` / `unknown`: no classification is established. An empty source field
   never establishes that a character is atomic.
+- `other` / `crosswalk`: a curated Unicode SealSources and CHISE crosswalk from
+  `scripts/data/small-seal/supplements.json`. It supplies modern lookup names and a
+  pinned glyph, and never adds a `table` entry.
 
 Modern IDS inference affects palette grouping only. It never supplies a seal
 `table` entry or changes exact encoding lookup. Palette usage counts include mapped
@@ -591,7 +602,7 @@ To refresh the bundled SVG subset from the same pinned Kaiyuan revision, pass
 Rebuild the font and outlines afterward with `uv run scripts/build_small_seal_font.py`.
 
 JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
-labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
+labels), `sources`, `paletteSources`, `license`, and `records`. Each source record has its ID, mapped
 character or null, original structural description, and a `descriptions` list. Each
 description preserves `original`, `kind` (`structural` or `apparent`), resolved `text`,
 `status`, and any `unresolved` identifiers. `unsupported` covers resolved expressions
