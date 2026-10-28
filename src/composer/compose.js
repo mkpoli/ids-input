@@ -21,7 +21,7 @@ import { componentParts, componentPosition, componentPositionBox, componentRecor
 import { features, forward } from './layout.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
-import { markParts } from './marks.js'
+import { isOutbound, markFace, markParts } from './marks.js'
 import { hexOf } from './sha256.js'
 import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
@@ -205,17 +205,35 @@ export class Composer {
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
     const rendered = this.normalizeRequestedEnclosures(tree)
-    const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
-    // Separated drawings retain reading order. Only publish ownership when every
-    // rendered leaf produced exactly one piece (including empty placeholders).
-    const ownership = this.separate ? this.leafOwners(tree) : null
-    if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
-      out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+    // A mark that sits beside the drawing takes a margin: the character shrinks toward the opposite
+    // corner, so the mark stands outside its strokes instead of over them.
+    const frame = this.face.slice()
+    let face = frame
+    if (marks) {
+      const outbound = [...marks].filter(isOutbound).join('')
+      if (outbound) {
+        const probe = markParts(this, outbound, frame, frame)
+        if (probe.length) {
+          const fitted = markFace(frame, union(probe.map(part => part.target)))
+          if (fitted.scale < 1) face = fitted.face
+        }
+      }
     }
-    if (!this.partial && this.weighted) this.balance(out)
-    // Loose marks annotate the whole drawing; they take no part in its layout or weight.
-    if (marks) out.push(...markParts(this, marks))
-    return out
+    const previous = this.face
+    this.face = face
+    try {
+      const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
+      // Separated drawings retain reading order. Only publish ownership when every
+      // rendered leaf produced exactly one piece (including empty placeholders).
+      const ownership = this.separate ? this.leafOwners(tree) : null
+      if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
+        out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+      }
+      if (!this.partial && this.weighted) this.balance(out)
+      // Loose marks annotate the whole drawing; they take no part in its layout or weight.
+      if (marks) out.push(...markParts(this, marks, frame, face))
+      return out
+    } finally { this.face = previous }
   }
 
   /**
