@@ -894,6 +894,32 @@ export class Composer {
       return [...outer, ...inner]
     }
     const axis = this.AXIS[op]
+    // Without a host cut a whole glyph stands in for a component. Equal halves make a left 木 as
+    // wide as the right one; a font draws it narrow instead. The learned boxes say how wide each
+    // part is, so take the split from them, give both the full across-axis extent, and let each
+    // glyph fill its share.
+    if (!this.hosted && this.layout && children.length === 2) {
+      const boxes = this.predict(op, children), frame = union(boxes)
+      if (frame[2] > frame[0] && frame[3] > frame[1] && boxes.every(b => b[2] > b[0] && b[3] > b[1])) {
+        const [first, second] = boxes.map(b => mapped(b, frame, region))
+        const across = 1 - axis, lo = region[axis], hi = region[axis + 2]
+        const gap = (hi - lo) * 0.01, edge = (first[axis + 2] + second[axis]) / 2
+        const ranges = [[Math.max(first[axis], lo), Math.min(first[axis + 2], edge - gap)],
+          [Math.max(second[axis], edge + gap), Math.min(second[axis + 2], hi)]]
+        if (ranges.every(([a, b]) => b > a)) {
+          const groups = []
+          for (const [i, child] of children.entries()) {
+            const box = region.slice()
+            box[axis] = ranges[i][0]
+            box[axis + 2] = ranges[i][1]
+            const glyph = typeof child === 'string' ? this.glyph(child) : null
+            if (glyph) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
+            else groups.push(this.row(child, box, children.length))
+          }
+          return groups.flat()
+        }
+      }
+    }
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
     const other = children[1]
     const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'

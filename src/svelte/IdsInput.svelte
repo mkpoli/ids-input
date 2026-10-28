@@ -67,10 +67,10 @@
   <IdsPartTools {editor} {keyHints} bind:slot />
   <IdsPicker {editor} {pickers} {recentKey} />
   <div class="ids-actions">
-    <button type="button" class="ids-undo" disabled={disabled || !editor.canUndo} title={editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo')}
-      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
-    <button type="button" class="ids-redo" disabled={disabled || !editor.canRedo} title={editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo')}
-      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+    <button type="button" class="ids-undo" disabled={disabled || !editor.canUndo} title={editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label')}
+      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo.label')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
+    <button type="button" class="ids-redo" disabled={disabled || !editor.canRedo} title={editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label')}
+      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo.label')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
     {#if onuse}<button type="button" class="ids-use" disabled={disabled || !editor.usable} onclick={use}>{t('ids.use')}{#if keyHints}<kbd aria-hidden="true">{shortcut('enter', undefined, { compact: true })}</kbd>{/if}</button>{/if}
   </div>
 </div>

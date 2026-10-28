@@ -19,7 +19,7 @@
       </button>
     {/each}
   </div>
-  <label class="other">{t('ids.structural.other')}
+  <label class="other">{t('ids.structural.morePatterns')}
     <select value={selected} onchange={event => { const p = STRUCTURAL_PRESETS.find(p => p.id === event.currentTarget.value); if (p) query = p.query }}>
       <option value="" disabled>{t('ids.structural.custom')}</option>
       {#each STRUCTURAL_PRESETS as preset}<option value={preset.id}>{t(`ids.structural.${preset.id}`)} · {preset.examples}</option>{/each}

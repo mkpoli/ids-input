@@ -137,6 +137,7 @@
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
   // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
+  // @x18n-keys
   /** @type {Record<string, string>} */
   const PSEUDO_SCRIPTS = { symbols: 'parts.script.symbols', mixed: 'parts.script.mixed' }
   /** @param {string} id */
@@ -222,10 +223,11 @@
   const tangutShown = $derived(tangutMatches.slice(tangutPage * PAGE_SIZE, (tangutPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('t') }))
 
-  const SEAL_GROUPS = /** @type {const} */ (['basic', 'compound', 'other'])
-  let sealGroup = $state(/** @type {(typeof SEAL_GROUPS)[number]} */ ('basic'))
+  // Group names, and the message each one reads: `other` would read as a plural form in the catalogue.
+  const SEAL_GROUPS = /** @type {const} */ ([{ name: 'basic', message: 'basic' }, { name: 'compound', message: 'compound' }, { name: 'other', message: 'misc' }])
+  let sealGroup = $state(/** @type {(typeof SEAL_GROUPS)[number]['name']} */ ('basic'))
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
-  const sealGroups = $derived(SEAL_GROUPS.map(name => ({ name, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === name) })).filter(group => group.parts.length))
+  const sealGroups = $derived(SEAL_GROUPS.map(group => ({ ...group, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === group.name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
   const query = $derived(filter.trim())
   const gongcheShown = $derived(gongcheGroups(query))
@@ -367,7 +369,7 @@
   }
   // A stroke outside the five classes (㇣) is another kind of stroke; any other part lacks the record.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.other') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
@@ -420,7 +422,7 @@
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
       {#each sealGroups as group (group.name)}
         <button type="button" class:active={selectedSealGroup?.name === group.name} aria-pressed={selectedSealGroup?.name === group.name}
-          onclick={() => sealGroup = group.name}>{t(`parts.seal.${group.name}`)} <span>{group.parts.length}</span></button>
+          onclick={() => sealGroup = group.name}>{t(`parts.seal.${group.message}`)} <span>{group.parts.length}</span></button>
       {/each}
     </div>
   {/if}
