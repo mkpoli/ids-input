@@ -89,7 +89,7 @@ MYBOX_URL = f"https://raw.githubusercontent.com/Mararsh/MyBox/{MYBOX_REV}/docs/d
 MYBOX_SHA256 = "a1c61d488ec56bfb6daaefa9d3fd77eddd093d345fceeb0bafe4d33c5631667e"
 
 KANJIDIC2_URL = "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz"
-KANJIDIC2_SHA256 = "3617aa8a34015d4283f9ac22e00d2b80448f882cbc5a8e588b5f7ceae6493589"
+KANJIDIC2_SHA256 = "554c23fa1d4a0528c6d839017123cb752dff81f0d53696e12e2cef72dbb72dc1"
 
 UNIHAN_URL = "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip"
 UNIHAN_SHA256 = "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
@@ -838,7 +838,7 @@ def header(wikipedia: dict, wikidata: dict, rows: list[tuple[str, str, str, str]
 # Built by scripts/build_component_names.py.
 # source kanji-tools: anzumura/kanji-tools data/radicals.txt at {KANJI_TOOLS_REV}; MIT; Copyright (c) 2022 Dan H
 #   https://github.com/anzumura/kanji-tools
-# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-300, created 2026-10-27), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
+# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-301, created 2026-10-28), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
 #   names, meanings, Japanese, Korean and Vietnamese readings and pinyin of the radicals; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
 # source ja-wikipedia: the redirects to the Japanese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched {wikipedia['fetched']}
 #   https://ja.wikipedia.org/
