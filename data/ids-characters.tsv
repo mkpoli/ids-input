@@ -1,0 +1,7 @@
+# Characters this project draws from their own outline: newly encoded characters and 獨體字 with no
+# IDS decomposition. One line per character: char<TAB>source.
+#
+# U+33473 𳑳: Unicode 17.0 CJK Extension J (released 2025-09-09); Unihan 18.0.0 kIRG_VSource
+# VN-F0BEA, kRSUnicode 212.-9, kTotalStrokes 7, kStrange I:U+9F8D. A 獨體字: it has no IDS
+# decomposition. Its outline and UI glyph come from Plangothic P2 (SIL OFL 1.1).
+𳑳	Unicode 17.0 U+33473, 獨體字; Plangothic P2 outline

@@ -68,15 +68,23 @@ Yi Bai's set. The source is `data/ids-project.tsv`, one line per description,
 compact `char<TAB>sequences` table the adapter reads with
 `babelStoneAdapter({ additionalIds })`.
 
+The table is currently empty. The newer character this project knows, 𳑳 (U+33473), is a 獨體字 with
+no IDS decomposition; it is listed in `ids-characters.tsv` instead. Add a line here only for a
+character that decomposes.
+
+The descriptions are this project's, not a copy of CHISE's or BabelStone's. The built table is
+downloadable at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its
+source at <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
+
+## `ids-characters.tsv`
+
+Characters this project draws from their own outline rather than an IDS composition. One line per
+character, `char<TAB>source`; `scripts/build_project_outlines.py` and
+`scripts/build_project_font.py` read it.
+
 `𳑳` (U+33473) is CJK Extension J (U+323B0–U+33479), Unicode 17.0, released 2025-09-09. Unihan
 18.0.0 gives `kIRG_VSource` VN-F0BEA, `kRSUnicode` 212.-9, `kTotalStrokes` 7 and `kStrange` I:U+9F8D.
-zi.tools decomposes it as `⿷⿺#(𠃑-一乚)一三` (`ids_zi_tools`, `api/zi`, read 2026-10-28); its
-three-stroke group is 己, so the description here is `⿷⿺己一三`. That substitution is editorial.
-
-The descriptions are this project's, not a copy of CHISE's or BabelStone's. Add a line to the source
-file and run `uv run scripts/build_ids_project.py`. The built table is downloadable at
-<https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its source at
-<https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
+It is a 獨體字; its outline and UI glyph come from Plangothic P2 (SIL OFL 1.1).
 
 ## `ids-context.tsv`
 
@@ -84,9 +92,9 @@ Descriptions that draw as an encoded character's context-adapted form. One line 
 `sequence<TAB>char<TAB>source`; `babelStoneAdapter({ context })` answers the character, and the
 preview draws that character's glyph in the chosen face before composing the parts.
 
-`⿰𦚏𳳳` (JYutnet JYN00025, CSK1939 p.4) is a variant form of 龍. Its right side, 𳳳 (U+33473), has
-its own outline when it stands alone; inside 龍 the encoded 龍 glyph supplies the side form, so the
-variant draws as 龍.
+`⿰𦚏𳳳` (JYutnet JYN00025, CSK1939 p.4) is a variant form of 龍. Its right side, 𳳳 (U+33473), is a
+獨體字 with its own outline when it stands alone; inside 龍 the encoded 龍 glyph supplies the side
+form, so the variant draws as 龍.
 
 ## `ids-parts.json`
 
@@ -669,7 +677,7 @@ Unicode acceptance uses the bundled Unicode 18.0.0 properties, matching the edit
 normalized so supported Python versions produce the same shard bytes.
 
 After the main build, `uv run scripts/build_project_outlines.py` replaces the fallback outlines of the
-characters in `ids-project.tsv` with Plangothic P2 glyphs (SIL OFL 1.1), a Source Han Sans design, so
+characters in `ids-characters.tsv` with Plangothic P2 glyphs (SIL OFL 1.1), a Source Han Sans design, so
 Extension J characters such as 𳑳 match the Sans face instead of Jigmo's serif. The script updates the
 shard hashes and adds the Plangothic source to `unicode-outlines.json`.
 

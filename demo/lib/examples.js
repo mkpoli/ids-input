@@ -46,7 +46,8 @@
 // Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
 // Historical variant of 龍 (JYN00025), CSK1939 p.4: the record's ⿰𦚏⿷己三 is its source
-// transcription; its right side is 𳑳 (U+33473), so the description uses the encoded character.
+// transcription; its right side, 𳑳 (U+33473), is a 獨體字, and the context table draws the
+// variant as 龍.
 // https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [

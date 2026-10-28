@@ -1,9 +1,6 @@
 # The project's own IDS descriptions for characters newer than the bundled sources.
-# BabelStone IDS is the Unicode 16.0 edition (File Date 2025-06-27); Yi Bai's level-1 set is older.
 # One line per description: char<TAB>IDS<TAB>source.
 #
-# U+33473 𳑳: Unicode 17.0 CJK Extension J (released 2025-09-09); Unihan 18.0.0 kIRG_VSource VN-F0BEA,
-# kRSUnicode 212.-9, kTotalStrokes 7, kStrange I:U+9F8D.
-# zi.tools decomposes it as ⿷⿺#(𠃑-一乚)一三 (ids_zi_tools, api/zi, read 2026-10-28); the three-stroke
-# group is 己, so the IDS here is ⿷⿺己一三. Editorial.
-𳑳	⿷⿺己一三	zi.tools ids_zi_tools ⿷⿺#(𠃑-一乚)一三; Unicode 17.0 U+33473
+# Currently empty: the newer character this project knows, 𳑳 (U+33473), is a 獨體字 with no IDS
+# decomposition, so it is listed in `ids-characters.tsv` instead. Add a line here only for a
+# character that decomposes.

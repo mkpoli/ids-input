@@ -6,7 +6,7 @@
 
 The UI's text stack draws rare components from a Plangothic subset; characters newer than the
 bundled sources are not in it. This subsets Plangothic P2 (SIL OFL 1.1), a Source Han Sans design,
-to the characters in `data/ids-project.tsv`, so 𳑳 renders in the same sans style as the drawing.
+to the characters in `data/ids-characters.tsv`, so 𳑳 renders in the same sans style as the drawing.
 Run after changing that file:
 
     uv run scripts/build_project_font.py [--font PlangothicP2-Regular.ttf]
@@ -20,7 +20,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "data" / "ids-project.tsv"
+SOURCE = ROOT / "data" / "ids-characters.tsv"
 TARGET = ROOT / "fonts" / "Plangothic-ids-project.woff2"
 PLANGOTHIC = {
     "file": "PlangothicP2-Regular.ttf",

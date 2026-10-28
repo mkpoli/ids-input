@@ -344,10 +344,9 @@ from the files in `data/`. `components` writes out BabelStone's numbered compone
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
-format, one URL or an array: Yi Bai's descriptions and this project's own
-`data/ids-project.tsv.gz`, which describes characters newer than BabelStone's (`𳑳`, U+33473, as
-`⿷⿺己一三`); `context` maps a whole description to the encoded character it draws as
-(`⿰𦚏𳳳` as 龍). `forms` folds the description search's components and opens a named component into the
+format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
+than BabelStone's (currently empty; 𳳳, U+33473, is a 獨體字 and is not described); `context` maps a
+whole description to the encoded character it draws as (`⿰𦚏𳳳` as 龍). `forms` folds the description search's components and opens a named component into the
 forms that stand for it; `folds` folds Chinese scripts and positional forms together before names
 are compared. Without them `⺡` and `氵` are different components and a name finds only the form and
 the script the table records. The containing search builds an index in memory on first use: under
@@ -357,7 +356,7 @@ there instead. It has no `variants`, `drawing` or `preview`.
 Pass `additionalIds` as the URL of an IDS table in the same format, or an array of them, to add
 descriptions without replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`, Yi
 Bai's unannotated standard subset, and its own `data/ids-project.tsv.gz` for characters newer than
-BabelStone's. Extended expressions and variant annotations are not included.
+BabelStone's (empty at present; the newer character 𳳳 is a 獨體字). Extended expressions and variant annotations are not included.
 
 ## Search
 
@@ -608,7 +607,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   the adapter reads descriptions by it.
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
-  `𳑳` (U+33473) as `⿷⿺己一三` (0.3 KB gzipped).
+  currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).
+- `data/ids-characters.tsv`: characters this project draws from their own outline, 𳳳 (U+33473)
+  from Plangothic P2; the outline and font builders read it.
 - `data/ids-context.tsv`: descriptions that draw as an encoded character's context-adapted form,
   `⿰𦚏𳳳` as 龍 (JYutnet JYN00025); the adapter reads it with `context`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
@@ -666,9 +667,6 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Unicode 17.0.0, released 2025-09-09, CJK Extension J: `𳳳` (U+33473), a Vietnamese variant
   (VN-F0BEA) and `kStrange` of 龍. <https://www.unicode.org/versions/Unicode17.0.0/>; the code
   chart is <https://www.unicode.org/charts/PDF/U323B0.pdf>, p.55.
-- 字統网 (zi.tools), `ids_zi_tools` for U+33473, `⿷⿺#(𠃑-一乚)一三`, read through
-  <https://zi.tools/api/zi/%F0%B3%91%B3> on 2026-10-28: the reference for the description in
-  `data/ids-project.tsv`; the stroke group is written as 己 there.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.
