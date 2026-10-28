@@ -1163,7 +1163,7 @@ export class Composer {
         }
         const measured = p.part.contours[0]?.width
         const own = measured ? measured[axis] : curve(p.native, axis)
-        weight.push(Math.min(p.weightLimit?.[axis] ?? 1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
+        weight.push(Math.min(p.weightLimit?.[axis] ?? (this.C.WEIGHT_GROWTH ?? 3), Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
       }
       p.target = target
       p.weight = weight
