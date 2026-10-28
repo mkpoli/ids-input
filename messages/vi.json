@@ -34,6 +34,7 @@
   "ids.from.expand": "Hiện các bộ phận của {part}",
   "ids.from.failed": "Không thể tải các bộ phận của {char}.",
   "ids.from.hint": "Dùng phím mũi tên để di chuyển giữa các bộ phận, phím mũi tên phải để chọn dạng thay thế. Nhấp hoặc nhấn Enter để chèn vào ô đã chọn hoặc ô trống đầu tiên.",
+  "ids.from.layered": "Tách theo chữ",
   "ids.from.loading": "Đang tải các bộ phận của {char}…",
   "ids.from.more": "thêm…",
   "ids.from.noneContaining": "Không có chữ nào chứa tất cả các bộ phận này.",

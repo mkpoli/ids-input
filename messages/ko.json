@@ -34,6 +34,7 @@
   "ids.from.expand": "{part}의 구성 요소 보기",
   "ids.from.failed": "{char}의 구성 요소를 불러오지 못했습니다.",
   "ids.from.hint": "화살표 키로 구성 요소 사이를 움직이고, 오른쪽 화살표 키로 대신 쓸 후보로 갑니다. 클릭하거나 Enter를 누르면 고른 자리, 없으면 첫 빈 자리에 들어갑니다.",
+  "ids.from.layered": "글자 단위 분해",
   "ids.from.loading": "{char}의 구성 요소를 불러오는 중…",
   "ids.from.more": "더 있음…",
   "ids.from.noneContaining": "이 구성 요소를 모두 포함하는 글자가 없습니다.",

@@ -83,7 +83,9 @@
       if (!open) return
       if (!entry || entry.status === 'loading') out.push({ key: `${key}/loading`, level: level + 1, kind: 'status', status: 'loading', part: c, take: null, openable: false, open: false, swaps: [] })
       else if (entry.status === 'failed') out.push({ key: `${key}/failed`, level: level + 1, kind: 'status', status: 'failed', part: c, take: null, openable: false, open: false, swaps: [] })
-      else variants(entry).forEach((found, i) => sequence(found, `${key}/${i}`, level + 1, [...ancestors, c]))
+      else {
+        variants(entry).forEach((variant, i) => sequence(variant, `${key}/${i}`, level + 1, [...ancestors, c]))
+      }
     }
     /** @param {import('../core/ids.js').Node} node @param {string} key @param {number} level @param {string[]} ancestors */
     const parts = (node, key, level, ancestors) => node.parts.forEach((inner, i) => isNode(inner)
@@ -94,11 +96,12 @@
       out.push({ key, level, kind: 'node', text: write(part), take: write(part), openable: true, open, swaps: [] })
       if (open) parts(part, key, level + 1, ancestors)
     }
-    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part }} found @param {string} key @param {number} level @param {string[]} ancestors */
-    const sequence = ({ text: written, regions, tree: read }, key, level, ancestors) => {
+    /** @param {{ text: string, regions: string, tree: import('../core/ids.js').Part, derived?: boolean }} found @param {string} key @param {number} level @param {string[]} ancestors */
+    const sequence = ({ text: written, regions, tree: read, derived }, key, level, ancestors) => {
+      if (typeof read === 'string') { char(read, key, level, ancestors); return }
       if (isNode(read)) {
         const open = isOpen(key, true)
-        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, swaps: [] })
+        out.push({ key, level, kind: 'sequence', text: written, regions, take: written, openable: true, open, note: derived ? 'layered' : null, swaps: [] })
         if (open) parts(read, key, level + 1, ancestors)
         return
       }

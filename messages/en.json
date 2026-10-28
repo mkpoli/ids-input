@@ -34,6 +34,7 @@
   "ids.from.expand": "Show the parts of {part}",
   "ids.from.failed": "Could not load the parts of {char}.",
   "ids.from.hint": "Arrow keys move through the parts, and ArrowRight reaches a part's swaps. Click or press Enter to put one in the chosen slot, or in the first empty one.",
+  "ids.from.layered": "Split by characters",
   "ids.from.loading": "Loading the parts of {char}…",
   "ids.from.more": "more…",
   "ids.from.noneContaining": "No character has all these parts.",

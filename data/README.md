@@ -308,6 +308,29 @@ from this source edition and the palette. Both data builders include Tangut thro
 
 The keys of the bundled Tangut outline records, used to browse the full Tangut palette without loading the outlines. Regenerate with `node scripts/build_tangut_parts.mjs` after updating the outline source.
 
+## `tangut-layers.json.gz`
+
+The largest character split of 2,408 Tangut descriptions, 16 KB gzipped. BabelStone describes every
+Tangut ideograph with Tangut components, one layer deep. Many of those component trees spell another
+ideograph whole, and 28 components are a one-component ideograph's whole glyph. This file rewrites
+each description top-down: a maximal proper subtree whose text is another ideograph's complete
+BabelStone description becomes that ideograph, a component that is a one-component ideograph becomes
+it, a description shared by two characters is left alone, and the root is kept. Only rewritten descriptions are listed; every other Tangut character keeps
+its BabelStone description as it is.
+
+Format: `source`, `method`, `counts`, `characters` (character → layered description), and
+`ambiguous` (a description shared by two characters, with both; it is not rewritten). Counts: 6,145 Tangut records, 6,137 parsed, 8 malformed source records skipped,
+2,408 layered, 2,190 with a character in the first layer, 28 one-component ideographs, 1 ambiguous
+description.
+
+The reading is editorial: it follows the shapes BabelStone records, not a dictionary's semantic or
+phonetic analysis, and an identical description does not prove that the part is that character or
+that either descends from the other. The editor marks the character-first description as derived.
+Expanding its characters reconstructs each of the 6,137 readable source descriptions exactly;
+the eight malformed descriptions remain as source text. The source remains in
+`babelstone-ids.tsv.gz` and both forms remain searchable. Built by
+`node scripts/build_tangut_layers.mjs` from the table, which carries the pinned source digest.
+
 ## `tangut-outlines.json.gz`
 
 Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
