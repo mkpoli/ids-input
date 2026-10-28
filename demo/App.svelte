@@ -533,18 +533,19 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, abbreviates?: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
+    const target = example.char || example.abbreviates || ''
     return {
-      leading: example.char || undefined,
+      leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
+      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
+      hint: example.char ? `${example.char}　${example.sequence}　${point}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
   }

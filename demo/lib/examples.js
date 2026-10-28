@@ -145,18 +145,20 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
+  // `abbreviates` names the standard character a Geba form stands for; `char` stays empty because the
+  // form is not an encoding of it.
   { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
-    { sequence: '⿱宀R', char: '寮' },
-    { sequence: '⿰亻⿱宀R', char: '僚' },
-    { sequence: '⿸疒R', char: '療' },
-    { sequence: '⿱冖G', char: '軍' },
-    { sequence: '⿰石K', char: '確' },
-    { sequence: '⿰龺K', char: '韓' },
-    { sequence: '⿺辶K', char: '還' },
-    { sequence: '⿰飠K', char: '館' },
-    { sequence: '⿰糸N', char: '縄' },
-    { sequence: '⿰言N', char: '認' },
-    { sequence: '⿰言R', char: '論' },
+    { sequence: '⿱宀R', char: '', abbreviates: '寮' },
+    { sequence: '⿰亻⿱宀R', char: '', abbreviates: '僚' },
+    { sequence: '⿸疒R', char: '', abbreviates: '療' },
+    { sequence: '⿱冖G', char: '', abbreviates: '軍' },
+    { sequence: '⿰石K', char: '', abbreviates: '確' },
+    { sequence: '⿰龺K', char: '', abbreviates: '韓' },
+    { sequence: '⿺辶K', char: '', abbreviates: '還' },
+    { sequence: '⿰飠K', char: '', abbreviates: '館' },
+    { sequence: '⿰糸N', char: '', abbreviates: '縄' },
+    { sequence: '⿰言N', char: '', abbreviates: '認' },
+    { sequence: '⿰言R', char: '', abbreviates: '論' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', examples: [

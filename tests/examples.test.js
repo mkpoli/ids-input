@@ -29,7 +29,10 @@ describe('the demo examples', () => {
         const found = described.get(sequence) ?? []
         if (group.source) {
           expect(group.source).toMatch(/^https:\/\//)
-          expect([...char]).toHaveLength(1)
+          const name = char || example.abbreviates
+          expect(typeof name).toBe('string')
+          expect([...name]).toHaveLength(1)
+          if (example.abbreviates) expect(char).toBe('')
         } else if (char) {
           expect([...char]).toHaveLength(1)
           if ('source' in example && example.source === 'data/small-seal.json.gz') {
@@ -49,7 +52,8 @@ describe('the demo examples', () => {
   it('keep the Geba abbreviations in one cited group', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
     expect(group.source).toBe('https://zh.wikipedia.org/wiki/全学联汉字')
-    expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '寮' })
+    expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '', abbreviates: '寮' })
+    expect(group.examples.every(example => example.char === '' && example.abbreviates)).toBe(true)
     expect(group.examples).toHaveLength(11)
   })
   it('are distinct', () => {

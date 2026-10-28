@@ -736,7 +736,7 @@ commands. File → Duplicate tab copies the active document; right-clicking a ta
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and drawing adjustments, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, examples (each with its
-character and code point, or marked when it has none), a share link with its QR code, the language,
+character and code point, an abbreviated character, or marked when it has none), a share link with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
