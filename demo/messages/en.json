@@ -106,7 +106,7 @@
   "app.source.hfhchan": "Which components the palette leaves whole.",
   "app.source.kanjivg": "Some component cuts used by the composer; drawings with those cuts are shared alike.",
   "app.source.smallSeal": "Jiguge Shuowen decompositions: 49 mapped characters and 31 components. Other source records remain unresolved.",
-  "app.source.sealFont": "1,334 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
+  "app.source.sealFont": "1,383 glyphs from the Chen Changzhi edition. Upstream review is incomplete.",
   "app.source.tangut": "Tangut text and composition outlines.",
   "app.source.noto": "The outlines han-compose moves, and the parts font.",
   "app.source.plangothic": "Outlines for parts Noto Sans CJK lacks.",

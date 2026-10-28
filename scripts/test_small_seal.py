@@ -87,4 +87,24 @@ class SealSupplementEvidence(unittest.TestCase):
             self.assertIn(b'<path ', glyph)
 
 
+class ShippedCrosswalkTests(unittest.TestCase):
+    def test_dataset_palette_carries_every_crosswalk(self):
+        import gzip, json
+        from pathlib import Path
+        root = Path(__file__).resolve().parents[1]
+        entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text(encoding='utf-8'))['entries']
+        doc = json.loads(gzip.decompress((root / 'data/small-seal.json.gz').read_bytes()))
+        outlines = json.loads(gzip.decompress((root / 'data/small-seal-outlines.json.gz').read_bytes()))
+        parts = {part['part']: part for part in doc['parts']}
+        for entry in entries:
+            char = entry['char']
+            self.assertIn(char, doc['modern'])
+            self.assertTrue(set(entry['modern']) <= set(doc['modern'][char]))
+            self.assertEqual(parts[char]['sealBasis'], 'crosswalk')
+            self.assertEqual(parts[char]['sealGroup'], 'other')
+            self.assertEqual(parts[char]['modern'], entry['modern'])
+            self.assertIn(char, outlines['records'])
+        self.assertEqual(len([p for p in doc['parts'] if p.get('sealBasis') == 'crosswalk']), len(entries))
+
+
 if __name__ == '__main__': unittest.main()

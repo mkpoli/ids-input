@@ -37,20 +37,23 @@ and SVG/PNG export, under the same font licence.
 
 ## IDS Seal
 
-`IDSSeal-Regular.woff2` is a 1,334-glyph derivative of
+`IDSSeal-Regular.woff2` is a 1,383-glyph derivative of
 [Kaiyuan Small Seal](https://github.com/frankslin/kaiyuan-small-seal-font) at revision
 `97433695858330ec9fdb7de9c4604da2f635eba6`, by Kaiyuan Small Seal Font Contributors.
-It covers the expanded palette and the heads of the bundled CHISE descriptions.
+It covers the expanded palette, the curated crosswalks and the heads of the bundled
+CHISE descriptions.
 Other Small Seal code points need another installed font.
 
 The SVGs are traced from the Chen Changzhi edition of 說文解字. Upstream describes the
 font as under review; these outlines have not received a separate glyph-by-glyph
 review here. They can differ from the Jiguge shapes described by CHISE. Upstream
-marks 807 selected glyphs `approved`, 8 `manual`, and 519 `aligned`. The outline
+marks 814 selected glyphs `approved`, 8 `manual`, and 561 `aligned`. The outline
 metadata retains each glyph's full review record.
 `IDSSeal-sources.tar.gz` includes the original SVGs with crop references, upstream
 provenance and approval tables, and the original license. File digests and the pinned
-revision are in `small-seal-sources.json`.
+revision are in `small-seal-sources.json`. The 49 curated crosswalk glyphs live in
+`scripts/data/small-seal/` and are pinned by `supplements.json`; their evidence and
+digests are checked when the palette is built.
 
 The font uses the verbatim [Kaiyuan font license](LICENSE-IDSSeal.txt). Although its
 header calls it SIL OFL 1.1, its conditions differ from the standard SIL license.
@@ -58,8 +61,8 @@ The derivative family is named IDS Seal and retains Kaiyuan Small Seal in the
 Compatible Fullname field. The license and copyright notice are embedded in the font.
 
 Build the webfont and `data/small-seal-outlines.json.gz` with
-`uv run scripts/build_small_seal_font.py`. This uses the bundled SVG sources, checks
-their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
+`uv run scripts/build_small_seal_font.py`. This uses the bundled SVG sources and the pinned
+crosswalk SVGs, checks their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
 and writes deterministic font and outline files. Exact-description mappings in the
 outline data come from CHISE and retain its GPL-2.0-or-later license.
 

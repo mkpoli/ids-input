@@ -174,11 +174,11 @@ supplies the ideographic operands; the other graphic categories are this editor'
 ### Small Seal (小篆)
 
 The optional `smallSealAdapter` provides CHISE's 汲古閣本《說文解字》 decompositions.
-Its current Unicode mapping supports **49 character descriptions and 1,334 drawable palette forms**.
+Its current Unicode mapping supports **49 character descriptions and 1,383 drawable palette forms**.
 The workshop includes these in its searches and Small Seal palette. Searching for `玨`
 finds its seal counterpart, U+3D10C; its description is `⿰𽁭𽁭`. Searching for
 `𽄌` or `U+3D10C` returns its modern correspondences, 玨 and 珏. Character lookup
-uses 1,353 mapped seal forms; some have no resolved decomposition or bundled glyph.
+uses 1,402 mapped seal forms; some have no resolved decomposition or bundled glyph.
 
 The Small Seal palette opens on 138 selected basic parts. Compound parts and
 unclassified forms have separate groups. Type a modern character such as 木 or 口

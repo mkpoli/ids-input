@@ -174,6 +174,7 @@
   "parts.seal.filter": "小篆・漢字で絞り込み",
   "parts.seal.estimate": "≈ 現代漢字から推定した分類",
   "parts.seal.inferred": "現代漢字のIDSから分類を推定: {ids}",
+  "parts.seal.crosswalk": "Unicode・CHISEの対応",
   "ids.structural.title": "構造検索",
   "ids.structural.examples": "構造の例",
   "ids.structural.other": "ほかの構造",
