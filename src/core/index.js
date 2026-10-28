@@ -1,5 +1,6 @@
 // @ts-check
 export * from './ids.js'
+export * from './pyramid.js'
 export * from './aliases.js'
 export * from './keys.js'
 export * from './history.js'

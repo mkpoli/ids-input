@@ -5,7 +5,7 @@
 // it, projects a document to IDS and builds one from IDS. A renderer, storage and the editor binding
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
-import { arity, isComponent, isSelector, parse } from '../core/ids.js'
+import { arity, isComponent, isMark, isSelector, parse, splitMarks } from '../core/ids.js'
 import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
@@ -31,11 +31,11 @@ const SLOT = '⬚'
 /** @typedef {Record<string, unknown>} Extensions */
 /** @typedef {{ id: string, name?: string, transform?: Chain, extensions?: Extensions }} Layer */
 /** @typedef {Layer & { kind: 'component', char: string }} Component */
-/** @typedef {Layer & { kind: 'operator', op: string, children: Node[] }} OperatorNode */
+/** @typedef {Layer & { kind: 'operator', op: string, children: Node[], marks?: string }} OperatorNode */
 /** @typedef {Layer & { kind: 'slot' }} Slot */
 /** @typedef {Layer & { kind: 'group', child: Node }} Group */
 /** @typedef {Component | OperatorNode | Slot | Group} Node */
-/** @typedef {{ kind: 'component', char: string } | { kind: 'operator', op: string, children: Content[] } | { kind: 'slot' } | { kind: 'group', child: Content }} Content */
+/** @typedef {{ kind: 'component', char: string } | { kind: 'operator', op: string, children: Content[], marks?: string } | { kind: 'slot' } | { kind: 'group', child: Content }} Content */
 /** @typedef {{ mode: 'unbound', extensions?: Extensions } | { mode: 'pinned', engine: string, revision: string, options: Record<string, unknown>, assets: { role: string, sha256: string, uri?: string }[], extensions?: Extensions }} Render */
 /** @typedef {{ kind: 'contour', piece: number, contour: number } | { kind: 'stroke', id: string }} Target */
 /** @typedef {{ id: string, node: string, geometry: string, target: Target, transform: Chain, extensions?: Extensions }} GeometryEdit */
@@ -104,7 +104,8 @@ function nodeFromTree(id, sequence, allocator) {
   const read = part => {
     if (part === null) return { id: allocator.next(), kind: 'slot' }
     if (typeof part === 'string') return { id: allocator.next(), kind: 'component', char: part }
-    return { id: allocator.next(), kind: 'operator', op: part.op, children: part.parts.map(read) }
+    return { id: allocator.next(), kind: 'operator', op: part.op, children: part.parts.map(read),
+      ...(part.marks ? { marks: part.marks } : {}) }
   }
   if (sequence === '') return { id, kind: 'slot' }
   const found = parse(sequence, { open: true })
@@ -128,7 +129,39 @@ export function toSequence(node) {
   if (node.kind === 'component') return node.char
   if (node.kind === 'slot') return SLOT
   if (node.kind === 'group') return toSequence(node.child)
-  return node.op + node.children.map(toSequence).join('')
+  return node.op + node.children.map(toSequence).join('') + (node.marks ?? '')
+}
+
+/** `node` carrying `marks` after it, on its component text, operator or group child. A slot has no
+ * text to carry them, so a marked slot is refused. @param {Node} node @param {string} marks @returns {Node} */
+export function annotateMarks(node, marks) {
+  if (!marks) return node
+  if (node.kind === 'component') return { ...node, char: node.char + marks }
+  if (node.kind === 'operator') return { ...node, marks: (node.marks ?? '') + marks }
+  if (node.kind === 'group') return { ...node, child: annotateMarks(node.child, marks) }
+  throw new DocumentError([{ path: '/root', message: 'a slot cannot carry loose marks' }])
+}
+
+/** `document` with every loose mark hoisted to its root, in reading order, so its IDS projection keeps
+ *  the marks at the end where the text grammar reads them. @param {Document} document @returns {Document} */
+export function hoistMarks(document) {
+  const copy = /** @type {Document} */ (structuredClone(document))
+  /** @type {string[]} */
+  const found = []
+  /** @param {Node} node */
+  const strip = node => {
+    if (node.kind === 'component') {
+      const { base, marks } = splitMarks(node.char)
+      if (marks) { found.push(marks); node.char = /** @type {string} */ (base) }
+    } else if (node.kind === 'operator') {
+      node.children.forEach(strip)
+      if (node.marks) { found.push(node.marks); delete node.marks }
+    } else if (node.kind === 'group') strip(node.child)
+  }
+  strip(copy.root)
+  if (!found.length) return copy
+  copy.root = annotateMarks(copy.root, found.join(''))
+  return copy
 }
 
 /** A layer and its descendants as `{ node, parent, key, index }`, or null. @param {Node} root @param {string} id
@@ -238,8 +271,18 @@ function validateLayerFields(value, path, issues) {
   if (value.extensions !== undefined && !object(value.extensions)) issues.push({ path: `${path}/extensions`, message: 'extensions must be an object' })
 }
 
-/** Validate a node and its descendants. @param {unknown} value @param {string} path @param {number} depth @param {Set<string>} ids @param {Issue[]} issues */
-function validateNode(value, path, depth, ids, issues) {
+/** Validate loose marks: a run of combining marks, modifier letters or superscripts, at most 16. @param {unknown} value @param {string} path @param {Issue[]} issues @returns {boolean} */
+function validateMarks(value, path, issues) {
+  if (typeof value !== 'string' || !value || [...value].length > 16 || ![...value].every(isMark)) {
+    issues.push({ path, message: 'loose marks are 1 to 16 combining marks, modifier letters or superscripts' })
+    return false
+  }
+  return true
+}
+
+/** Validate a node and its descendants. `end` is whether the node's text ends the description, where
+ *  loose marks are written. @param {unknown} value @param {string} path @param {number} depth @param {Set<string>} ids @param {Issue[]} issues @param {boolean} [end] */
+function validateNode(value, path, depth, ids, issues, end = true) {
   if (!object(value)) { issues.push({ path, message: 'node must be an object' }); return }
   if (depth > MAX_DEPTH) issues.push({ path, message: `layer depth over ${MAX_DEPTH}` })
   if (typeof value.id === 'string') {
@@ -249,12 +292,21 @@ function validateNode(value, path, depth, ids, issues) {
   validateLayerFields(value, path, issues)
   if (value.kind === 'component') {
     closedFields(value, ['id', 'kind', 'char', 'name', 'transform', 'extensions'], path, issues)
-    if (typeof value.char !== 'string' || [...value.char].length < 1 || [...value.char].length > 2) {
-      issues.push({ path: `${path}/char`, message: 'a component is one character and at most one selector' })
-    } else {
-      const [first, second] = [...value.char]
-      if (!isComponent(first)) issues.push({ path: `${path}/char`, message: 'not a component' })
-      if (second !== undefined && !isSelector(second)) issues.push({ path: `${path}/char`, message: 'not a variation selector' })
+    if (typeof value.char !== 'string') issues.push({ path: `${path}/char`, message: 'a component needs text' })
+    else {
+      let { base, marks } = splitMarks(value.char)
+      // Text that is not a valid mark run is read as a component followed by a bad selector, as before.
+      if (marks && ![...marks].every(isMark)) { base = value.char; marks = '' }
+      const chars = [.../** @type {string} */ (base)]
+      if (chars.length < 1 || chars.length > 2) issues.push({ path: `${path}/char`, message: 'a component is one character and at most one selector' })
+      else {
+        if (!isComponent(chars[0])) issues.push({ path: `${path}/char`, message: 'not a component' })
+        if (chars[1] !== undefined && !isSelector(chars[1])) issues.push({ path: `${path}/char`, message: 'not a variation selector' })
+      }
+      if (marks) {
+        if (!end) issues.push({ path: `${path}/char`, message: 'loose marks end the description' })
+        else validateMarks(marks, `${path}/char`, issues)
+      }
     }
     return
   }
@@ -265,16 +317,23 @@ function validateNode(value, path, depth, ids, issues) {
   if (value.kind === 'group') {
     closedFields(value, ['id', 'kind', 'child', 'name', 'transform', 'extensions'], path, issues)
     if (!object(value.child)) issues.push({ path: `${path}/child`, message: 'a group needs a child' })
-    else validateNode(value.child, `${path}/child`, depth + 1, ids, issues)
+    else validateNode(value.child, `${path}/child`, depth + 1, ids, issues, end)
     return
   }
   if (value.kind === 'operator') {
-    closedFields(value, ['id', 'kind', 'op', 'children', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'op', 'children', 'marks', 'name', 'transform', 'extensions'], path, issues)
     const op = value.op
     if (typeof op !== 'string' || arity(op) === 0) issues.push({ path: `${path}/op`, message: 'unknown operator' })
+    if (value.marks !== undefined) {
+      if (!end) issues.push({ path: `${path}/marks`, message: 'loose marks end the description' })
+      else validateMarks(value.marks, `${path}/marks`, issues)
+    }
     if (!array(value.children) || value.children.length !== (typeof op === 'string' ? arity(op) : 0)) {
       issues.push({ path: `${path}/children`, message: 'wrong number of operands' })
-    } else value.children.forEach((child, i) => validateNode(child, `${path}/children/${i}`, depth + 1, ids, issues))
+    } else {
+      const children = /** @type {unknown[]} */ (value.children)
+      children.forEach((child, i) => validateNode(child, `${path}/children/${i}`, depth + 1, ids, issues, end && i === children.length - 1))
+    }
     return
   }
   issues.push({ path: `${path}/kind`, message: 'unknown layer kind' })

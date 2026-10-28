@@ -1,20 +1,25 @@
 // @ts-check
 import { unicodeProperty } from './unicode.js'
+import { isMark, normalizeMarks, marksOf, withMarks, withoutMarks } from './marks.js'
 export { UNICODE_VERSION } from './unicode.js'
+export * from './marks.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
 // point, a private-use character, or one of the bundled allocations below, with an optional
 // variation selector. ？ names an unknown part. Operators, draft slots and invisible characters
-// cannot be components.
+// cannot be components. A run of loose marks (`marks.js`) after the whole description annotates it:
+// ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛.
 
 /**
- * @typedef {string} Component A component's text, with its variation selector if it has one.
- * @typedef {{ op: string, parts: Part[] }} Node An operator with its parts.
+ * @typedef {string} Component A component's text, with its variation selector and any loose marks it carries.
+ * @typedef {{ op: string, parts: Part[], marks?: string }} Node An operator with its parts, and the loose marks written after them.
  * @typedef {Component | Node | null} Part A part of a tree; null is a slot still to fill.
  * @typedef {number[]} Path The part indices from the root down to a part.
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
+
+import { pyramidRows } from './pyramid-shape.js'
 
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
@@ -36,8 +41,12 @@ export const OPERATOR_GROUPS = [
   { arity: 3, ops: ['⿲', '⿳'] },
 ]
 
-/** The longest description, in code points. */
+/** The longest ordinary description, in code points. */
 export const LONGEST = 64
+/** The longest pyramid description, in code points: 64 rows take 3,818. */
+export const PYRAMID_LONGEST = 8192
+/** The deepest operator nest the parser reads, so a long input cannot exhaust the call stack. */
+const MAX_DEPTH = 512
 // Component acceptance follows Unicode categories, independently of preview font coverage.
 // Unicode IDS operands: https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-18/
 // Letters, numbers, marks, punctuation and symbols extend those operands for mixed-script work.
@@ -92,7 +101,8 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
  * write it) and every part an
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
- * ？ stays the component it is.
+ * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
+ * of three or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
  *
  * @param {string | null | undefined} text
  * @param {{ open?: boolean }} [options]
@@ -101,22 +111,34 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
 export function parse(text, { open = false } = {}) {
   const chars = [...(text ?? '')]
   if (open && !chars.length) return { tree: null }
-  if (!chars.length || chars.length > LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
-  let at = 0
+  const long = chars.length > LONGEST
+  if (!chars.length || chars.length > PYRAMID_LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
+  let at = 0, depth = 0
   /** @returns {Part} */
   const read = () => {
-    const char = chars[at++]
-    if (char === undefined) { if (open) return null; throw 'missing' }
-    const n = arity(char)
-    if (!n) {
-      if (open && EMPTY_MARKS.includes(char)) return null
-      if (!isComponent(char)) throw 'component'
-      return isSelector(chars[at]) ? char + chars[at++] : char
-    }
-    return { op: char, parts: Array.from({ length: n }, read) }
+    if (depth++ >= MAX_DEPTH) throw 'character'
+    try {
+      const char = chars[at++]
+      if (char === undefined) { if (open) return null; throw 'missing' }
+      const n = arity(char)
+      if (!n) {
+        if (open && EMPTY_MARKS.includes(char)) return null
+        if (!isComponent(char)) throw 'component'
+        return isSelector(chars[at]) ? char + chars[at++] : char
+      }
+      return { op: char, parts: Array.from({ length: n }, read) }
+    } finally { depth-- }
   }
   try {
-    const tree = read()
+    let tree = read()
+    // Loose marks trail the whole description; where a mark fills an operand, it is that operand.
+    if (at < chars.length && isMark(chars[at])) {
+      let marks = ''
+      while (at < chars.length && isMark(chars[at])) marks += chars[at++]
+      tree = withMarks(tree, marks)
+    }
+    // A whole description may run past the ordinary length only as a pyramid; a draft may be long.
+    if (!open && long && !pyramidRows(tree)) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
@@ -151,8 +173,8 @@ export function descriptionEnd(chars, at = 0) {
 /** Whether `part` is a node. @param {Part | undefined} part @returns {part is Node} */
 export const isNode = part => part !== null && typeof part === 'object'
 
-/** A tree written back as a description, an empty slot as ⬚. @param {Part} tree @returns {string} */
-export const write = tree => tree === null ? EMPTY : isNode(tree) ? tree.op + tree.parts.map(write).join('') : tree
+/** A tree written back as a description, an empty slot as ⬚, loose marks after their part. @param {Part} tree @returns {string} */
+export const write = tree => tree === null ? EMPTY : isNode(tree) ? tree.op + tree.parts.map(write).join('') + (tree.marks ?? '') : tree
 
 /**
  * Every component of a tree with its path, in reading order; an empty slot has the `char` null.
@@ -214,7 +236,7 @@ export function replaceAt(tree, path, part) {
   if (!path.length) return part
   if (!isNode(tree)) return tree
   const [head, ...rest] = path
-  return { op: tree.op, parts: tree.parts.map((p, i) => i === head ? replaceAt(p, rest, part) : p) }
+  return { ...tree, parts: tree.parts.map((p, i) => i === head ? replaceAt(p, rest, part) : p) }
 }
 
 /** Move a part within its parent, retaining the order of the other siblings.
@@ -227,7 +249,7 @@ export function reorderSiblings(tree, from, to) {
   if (!isNode(parent) || !Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < 0 || start >= parent.parts.length || end >= parent.parts.length) return tree
   const parts = [...parent.parts]
   parts.splice(end, 0, parts.splice(start, 1)[0])
-  return replaceAt(tree, parentPath, { op: parent.op, parts })
+  return replaceAt(tree, parentPath, { ...parent, parts })
 }
 
 /**
@@ -252,7 +274,8 @@ export const clear = (tree, path) => replaceAt(tree, path, null)
 export function unwrap(tree, path) {
   const node = partAt(tree, path)
   if (!isNode(node)) return tree
-  return replaceAt(tree, path, node.parts.find(part => part !== null) ?? null)
+  const kept = node.parts.find(part => part !== null) ?? null
+  return normalizeMarks(replaceAt(tree, path, withMarks(kept, node.marks ?? '')))
 }
 
 /**
@@ -269,7 +292,7 @@ export function swapOp(tree, path, op) {
   if (!isNode(node) || !n) return { tree }
   if (node.parts.slice(n).some(part => part !== null)) return { problem: 'drop' }
   const parts = Array.from({ length: n }, (_, i) => node.parts[i] ?? null)
-  return { tree: replaceAt(tree, path, { op, parts }) }
+  return { tree: normalizeMarks(replaceAt(tree, path, { op, parts, ...(node.marks ? { marks: node.marks } : {}) })) }
 }
 
 /**
@@ -284,8 +307,10 @@ export function swapOp(tree, path, op) {
  */
 export function applyOperator(tree, at, op) {
   if (!at) {
-    if (tree !== null && ENCLOSURES.has(op)) return { tree: { op, parts: [null, tree] }, chosen: [0] }
-    return { tree: wrap(op, tree), chosen: arity(op) > 1 ? [1] : [] }
+    // Loose marks annotate the description; a new operator around it takes them with the whole.
+    const marks = marksOf(tree), base = withoutMarks(tree)
+    if (base !== null && ENCLOSURES.has(op)) return { tree: normalizeMarks(withMarks({ op, parts: [null, base] }, marks)), chosen: [0] }
+    return { tree: normalizeMarks(withMarks(wrap(op, base), marks)), chosen: arity(op) > 1 ? [1] : [] }
   }
   const part = partAt(tree, at)
   if (isNode(part)) {
@@ -295,7 +320,7 @@ export function applyOperator(tree, at, op) {
   // The old part stays first; the slot to fill next is the new one beside it, or the operator's only
   // one when the slot was empty.
   const chosen = part === null ? [...at, 0] : arity(op) === 1 ? at : [...at, 1]
-  return { tree: replaceAt(tree, at, wrap(op, part ?? null)), chosen }
+  return { tree: normalizeMarks(replaceAt(tree, at, wrap(op, part ?? null))), chosen }
 }
 
 /**
@@ -306,6 +331,23 @@ export function applyOperator(tree, at, op) {
  * @returns {{ tree: Part, chosen: Path }}
  */
 export function place(tree, at, part) {
-  const next = replaceAt(tree, at, part)
+  const next = normalizeMarks(replaceAt(tree, at, part))
   return { tree: next, chosen: nextEmpty(next, at) ?? at }
+}
+
+/**
+ * `text` split at its loose marks: the description without them and the marks it ends with. A text
+ * that is not one description, or has none, answers itself and ''. Where a mark fills an operand
+ * (⿰ㄅˊ with ⿰ short of one) it stays a component, as it reads.
+ * @param {string | null | undefined} text
+ * @returns {{ base: string, marks: string }}
+ */
+export function splitDescription(text) {
+  // Most descriptions end on a component: without a mark at the end there is nothing to read.
+  const chars = [...(text ?? '')]
+  if (!isMark(chars[chars.length - 1])) return { base: text ?? '', marks: '' }
+  const read = parse(text, { open: true })
+  if (read.problem || read.tree === null) return { base: text ?? '', marks: '' }
+  const marks = marksOf(read.tree)
+  return marks ? { base: write(withoutMarks(read.tree)), marks } : { base: text ?? '', marks: '' }
 }

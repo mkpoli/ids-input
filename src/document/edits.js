@@ -1,7 +1,7 @@
 // @ts-check
 // Identity-preserving edits over a layer document. Every function works on a clone, validates the
 // result and leaves the caller's document untouched.
-import { allocatorFor, assertDocument, findLayer, fromSequence, toSequence } from './model.js'
+import { allocatorFor, annotateMarks, assertDocument, findLayer, fromSequence, hoistMarks, toSequence } from './model.js'
 import { DocumentError } from './model.js'
 import { arity } from '../core/ids.js'
 
@@ -57,7 +57,8 @@ function contentNode(content, allocator, id) {
   }
   if (content.kind === 'operator') {
     if (typeof content.op !== 'string' || !Array.isArray(content.children)) throw new DocumentError([{ path: '', message: 'operator content needs op and children' }])
-    return { id, kind: 'operator', op: content.op, children: content.children.map(child => contentNode(child, allocator, allocator.next())) }
+    return { id, kind: 'operator', op: content.op, children: content.children.map(child => contentNode(child, allocator, allocator.next())),
+      ...(typeof content.marks === 'string' && content.marks ? { marks: content.marks } : {}) }
   }
   throw new DocumentError([{ path: '', message: 'unknown layer kind' }])
 }
@@ -72,7 +73,7 @@ export function replaceNode(document, id, content, { allocator = allocatorFor(do
   if (hit.parent?.kind === 'operator') hit.parent.children[hit.index] = replacement
   else if (hit.parent?.kind === 'group') hit.parent.child = replacement
   else copy.root = replacement
-  return assertDocument(copy)
+  return assertDocument(hoistMarks(copy))
 }
 
 /** Replace a layer with a sequence, keeping its ID, name and transform. @param {Document} document @param {string} id @param {string} sequence @param {{ allocator?: Allocator }} [options] */
@@ -86,7 +87,7 @@ export function replaceWithSequence(document, id, sequence, { allocator = alloca
   if (hit.parent?.kind === 'operator') hit.parent.children[hit.index] = replacement
   else if (hit.parent?.kind === 'group') hit.parent.child = replacement
   else copy.root = replacement
-  return assertDocument(copy)
+  return assertDocument(hoistMarks(copy))
 }
 
 /** Turn a component into its operator, keeping the layer ID and transform. @param {Document} document @param {string} id @param {string} sequence @param {{ allocator?: Allocator }} [options] */
@@ -111,7 +112,7 @@ export function wrapNode(document, id, op, { allocator = allocatorFor(document) 
   if (hit.parent?.kind === 'operator') hit.parent.children[hit.index] = wrapped
   else if (hit.parent?.kind === 'group') hit.parent.child = wrapped
   else copy.root = wrapped
-  return { document: assertDocument(copy), id: newId }
+  return { document: assertDocument(hoistMarks(copy)), id: newId }
 }
 
 /** Turn an operator into a group, keeping its ID and transform; the first filled operand is retained.
@@ -121,12 +122,15 @@ export function unwrapNode(document, id) {
   const copy = /** @type {Document} */ (structuredClone(document))
   const hit = findLayer(copy.root, id)
   if (!hit || hit.node.kind !== 'operator') throw new DocumentError([{ path: '', message: `${id} is not an operator` }])
-  const retained = /** @type {Node[]} */ (hit.node.children).find(child => toSequence(child) !== '⬚') ?? hit.node.children[0]
-  const replacement = /** @type {Node} */ ({ ...common(hit.node), kind: 'group', child: retained })
+  const node = /** @type {OperatorNode} */ (hit.node)
+  const kept = /** @type {Node[]} */ (node.children).find(child => toSequence(child) !== '⬚') ?? node.children[0]
+  // The operator's loose marks go to the part that stands in its place.
+  const retained = annotateMarks(kept, node.marks ?? '')
+  const replacement = /** @type {Node} */ ({ ...common(node), kind: 'group', child: retained })
   if (hit.parent?.kind === 'operator') hit.parent.children[hit.index] = replacement
   else if (hit.parent?.kind === 'group') hit.parent.child = replacement
   else copy.root = replacement
-  return assertDocument(copy)
+  return assertDocument(hoistMarks(copy))
 }
 
 /** Delete a layer; an operator parent gets a fresh slot in its place. Root and group children are refused.

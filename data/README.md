@@ -720,14 +720,17 @@ CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-25
 
 ## Unicode character properties
 
-`unicode-properties.json` pins component acceptance and letter classification to Unicode 18.0.0,
-independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
+`unicode-properties.json` pins component acceptance, letter classification and loose marks to Unicode
+18.0.0, independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
 snapshots and a source manifest with original URLs and SHA-256s. Rebuild with
 `python3 scripts/build_unicode_properties.py`; the builder verifies those digests.
 
 Graphic categories L, M, N, P, S and Co are eligible, except default-ignorable characters, IDS
 operators and draft markers. The existing Small Seal allocation remains supported. Ideographic and
-Radical properties distinguish ideographs from alphabetic letters. Source: the
+Radical properties distinguish ideographs from alphabetic letters. The `marks` property holds what
+may follow a whole description: categories M and Lm, the Sk accents and tone letters of
+U+00A8, U+00AF, U+00B4, U+00B8, U+02D2–02DF, U+02E5–02ED, U+309B–309C and U+A700–A71F, and
+superscript or subscript digits (No in U+00B2–B3, U+00B9 and U+2070–209F). Source: the
 [Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
 [Unicode License v3](licences/Unicode-3.0.txt).
 
