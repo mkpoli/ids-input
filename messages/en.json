@@ -236,6 +236,5 @@
   "parts.gongche.encoded": "Encoded compound notes",
   "parts.gongche.marks": "Notation marks",
   "parts.gongche.kunquSource": "Kunqu notation · Unicode proposal",
-  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures",
-  "ids.characters.rare": "Include rare characters"
+  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures"
 }
