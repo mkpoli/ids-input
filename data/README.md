@@ -60,6 +60,24 @@ searches name the parts rather than BabelStone's numbers. Built by
 `scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
 its own header note.
 
+## `ids-project.tsv.gz`
+
+This project's own IDS descriptions for characters newer than BabelStone's Unicode 16.0 edition and
+Yi Bai's set. The source is `data/ids-project.tsv`, one line per description,
+`char<TAB>IDS<TAB>source`; `scripts/build_ids_project.py` checks each description and writes the
+compact `char<TAB>sequences` table the adapter reads with
+`babelStoneAdapter({ additionalIds })`.
+
+`𳑳` (U+33473) is CJK Extension J (U+323B0–U+33479), Unicode 17.0, released 2025-09-09. Unihan
+18.0.0 gives `kIRG_VSource` VN-F0BEA, `kRSUnicode` 212.-9, `kTotalStrokes` 7 and `kStrange` I:U+9F8D.
+zi.tools decomposes it as `⿷⿺#(𠃑-一乚)一三` (`ids_zi_tools`, `api/zi`, read 2026-10-28); its
+three-stroke group is 己, so the description here is `⿷⿺己一三`. That substitution is editorial.
+
+The descriptions are this project's, not a copy of CHISE's or BabelStone's. Add a line to the source
+file and run `uv run scripts/build_ids_project.py`. The built table is downloadable at
+<https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its source at
+<https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
+
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how

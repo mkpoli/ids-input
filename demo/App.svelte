@@ -12,6 +12,7 @@
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import projectIds from '../data/ids-project.tsv.gz?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
@@ -60,7 +61,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, components, parts, forms, names, folds, characters, charactersRare, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters, charactersRare, characterInfo })
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
@@ -135,6 +136,14 @@
         for (const char of found) {
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
+        }
+        // A character the face has no glyph for draws the description the adapter knows it by.
+        if ([...sequence].length === 1) {
+          const described = await babel.structure(sequence).catch(() => [])
+          for (const { text } of described) {
+            if (text === sequence) continue
+            try { return await composed(text, options) } catch { /* the default export draws it */ }
+          }
         }
         if (defaultFace) throw error
         return sans(sequence, options)

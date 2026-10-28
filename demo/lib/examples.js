@@ -45,6 +45,9 @@
 // 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
 // Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
+// Historical variant of 龍 (JYN00025), CSK1939 p.4: the record's ⿰𦚏⿷己三 is its source
+// transcription; its right side is 𳑳 (U+33473), so the description uses the encoded character.
+// https://jyutnet.github.io/unencoded-characters/
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
     { sequence: '⿾正', char: '𣥄' },
@@ -72,6 +75,7 @@ export const EXAMPLE_GROUPS = [
   { key: 'complex', examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
     { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
+    { sequence: '⿰𦚏𳑳', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
