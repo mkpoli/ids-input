@@ -37,3 +37,63 @@ describe('a drawing as an SVG file', () => {
     expect(injected.match(/<path [^>]*>/g)).toEqual(['<path d="M0 0sctZ" fill="#000000"/>'])
   })
 })
+
+it('includes emoji in SVG output and escapes text', () => {
+  const svg = drawingSvg({ d: '', emoji: [{ text: '👩🏽‍💻', box: [0, 0, 500, 1000] }, { text: '<&', box: [500, 0, 500, 1000] }] })
+  expect(svg).toContain('>👩🏽‍💻</text>')
+  expect(svg).toContain('>&lt;&amp;</text>')
+})
+
+it('applies a selected emoji part transform to the exported text', () => {
+  const svg = drawingSvg({ d: '', parts: [{ d: '' }], transforms: ['translate(25 30)'], emoji: [{ text: '👩🏽‍💻', box: [0, 0, 500, 500], part: 0 }] })
+  expect(svg).toContain('<g transform="translate(25 30)"><text')
+})
+
+it('keeps emoji and paths in operand order for overlays', () => {
+  const draw = { d: 'M0 0Z', parts: [{ d: 'M0 0Z', leaf: 1 }, { d: '', leaf: 0 }], emoji: [{ text: '😀', box: [0, 0, 500, 500], part: 1 }] }
+  const svg = drawingSvg(draw)
+  expect(svg.indexOf('>😀</text>')).toBeLessThan(svg.indexOf('<path'))
+  draw.parts[0].leaf = 0
+  draw.parts[1].leaf = 1
+  const reversed = drawingSvg(draw)
+  expect(reversed.indexOf('<path')).toBeLessThan(reversed.indexOf('>😀</text>'))
+})
+
+
+it('reflects emoji about its layout box', () => {
+  const svg = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [true, false] }] })
+  expect(svg).toContain('transform="translate(120 0) scale(-1 1)"')
+})
+
+it('reflects a cut emoji inside the mask', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', emoji: [{ text: '😀', box: [0, 0, 100, 200], flip: [false, true], cut: true }] })
+  expect(svg).toContain('<text filter="url(#emoji-cut-ink)" transform="translate(0 200) scale(1 -1)"')
+})
+
+it('masks emoji ink with a path cut and no emoji filter', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', cut: 'M0 0H10V10Z', emoji: [{ text: '😀', box: [0, 0, 500, 500] }] })
+  expect(svg).toContain('<path d="M0 0H10V10Z" fill="#000"/>')
+  expect(svg).toContain('<text mask="url(#cut)"')
+  expect(svg).not.toContain('emoji-cut-ink')
+})
+
+it('draws a restored emoji without the cut mask', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', cut: 'M0 0H10V10Z', emoji: [{ text: '😀', box: [0, 0, 500, 500], restored: true }] })
+  expect(svg).toContain('>😀</text>')
+  expect(svg).not.toContain('<text mask=')
+})
+
+it('keeps a malformed emoji box out of its transform', () => {
+  const svg = drawingSvg({ d: '', emoji: [{ text: '😀', box: ['x', 'y', 'w', 'h'], flip: [true, false] }] })
+  expect(svg).not.toContain('NaN')
+  expect(svg).not.toContain('scale(')
+})
+
+it('uses an emoji cut as a luminance mask on paths and emoji', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', emoji: [{ text: '😀', box: [0, 0, 500, 500] }, { text: '👩🏽‍💻', box: [0, 0, 500, 500], cut: true }] })
+  expect(svg).toContain('<filter id="emoji-cut-ink"')
+  expect(svg).toContain('filter="url(#emoji-cut-ink)"')
+  expect(svg).toContain('mask="url(#cut)"')
+  expect(svg.indexOf('>👩🏽‍💻</text>')).toBeLessThan(svg.indexOf('</mask>'))
+  expect(svg.indexOf('>😀</text>')).toBeGreaterThan(svg.indexOf('</mask>'))
+})

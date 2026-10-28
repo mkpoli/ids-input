@@ -9,7 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { FACE, STROKE, badge, groupParts, partTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, groupParts, partTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { translator } from './i18n.js'
 
   /**
@@ -96,15 +96,20 @@
   }
   /** @param {DOMPoint} point @param {number[]} box */
   const insideBox = (point, box) => point.x >= box[0] && point.x <= box[0] + box[2] && point.y >= box[1] && point.y <= box[1] + box[3]
+  /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
+  const emojiBox = item => {
+    const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
+  }
   const saved = $derived(adjustments ?? {})
   const hasAdjustments = $derived(Object.keys(saved).length > 0)
   const groups = $derived.by(() => {
     const drawn = shown?.drawn
-    if (!drawn?.parts?.length || drawn.cut || !sketched || sketched.text !== sequence) return null
+    if (!drawn?.parts?.length || drawn.cut || drawn.emoji?.some(item => item.cut) || !sketched || sketched.text !== sequence) return null
     return groupParts(drawn.parts, sketched.leaves)
   })
   // Parts are drawn one by one while a host edits them, or while an adjustment needs applying.
-  const useParts = $derived(Boolean(groups?.length && (editable || hasAdjustments)))
+  const useParts = $derived(Boolean(groups?.length && (editable || hasAdjustments || shown?.drawn?.emoji?.length)))
   const adjustable = $derived(Boolean(editable && groups?.length))
   const chosenIndex = $derived(chosen ? parts.findIndex(leaf => samePath(leaf.path, chosen)) : -1)
   const selection = $derived(chosenIndex >= 0 && groups ? groups.find(group => group.index === chosenIndex) ?? null : null)
@@ -262,6 +267,7 @@
             <span class="final" style:--drawing={`url("${shown.url}")`}></span>
           {:else if shown.drawn}
             {@const drawn = shown.drawn}
+            {@const hasCut = Boolean(drawn.cut || drawn.emoji?.some(item => item.cut))}
             <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
             <svg viewBox="0 0 1000 1000" class:adjusting={interactive}
               aria-hidden={interactive ? undefined : 'true'}
@@ -272,8 +278,20 @@
               onpointerup={interactive ? endDrag : undefined}
               onpointercancel={interactive ? endDrag : undefined}
               onkeydown={interactive ? adjustKey : undefined}>
-              {#if drawn.cut}
-                <mask id="{uid}-{name}"><rect width="1000" height="1000" fill="#fff" /><path d={drawn.cut} fill="#000" /></mask>
+              {#if hasCut}
+                {#if drawn.emoji?.some(item => item.cut)}
+                  <filter id="{uid}-{name}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
+                {/if}
+                <mask id="{uid}-{name}">
+                  <rect width="1000" height="1000" fill="#fff" />
+                  {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
+                  {#each drawn.emoji ?? [] as item}
+                    {#if item.cut}
+                      {@const box = emojiBox(item)}
+                      <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                    {/if}
+                  {/each}
+                </mask>
               {/if}
               {#if useParts && groups}
                 {#each groups as group (group.index)}
@@ -283,12 +301,24 @@
                     onpointerdown={interactive ? event => startDrag(event, group, 'move') : undefined}>
                     {#if interactive}<rect x={group.box[0]} y={group.box[1]} width={group.box[2]} height={group.box[3]} fill="transparent" pointer-events="all" />{/if}
                     {#each group.parts as index (index)}
-                      <path class="ink" d={drawn.parts?.[index]?.d} />
+                      {@const item = drawn.emoji?.find(item => item.part === index)}
+                      {#if item}
+                        {@const box = emojiBox(item)}
+                        <text transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                      {:else}<path class="ink" d={drawn.parts?.[index]?.d} />{/if}
                     {/each}
                   </g>
                 {/each}
               {:else}
-                <path class="ink" d={drawn.d} mask={drawn.cut ? `url(#${uid}-${name})` : undefined} />
+                <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
+              {/if}
+              {#if !useParts}
+                {#each drawn.emoji ?? [] as item}
+                  {#if !item.cut}
+                    {@const box = emojiBox(item)}
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                  {/if}
+                {/each}
               {/if}
               {#each drawn.slots ?? [] as s (s.index)}
                 {@render slot(s.box, drawn.stroke?.[0] ?? STROKE, inChosen(slotLeaf(s.index)), false)}

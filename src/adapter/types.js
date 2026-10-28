@@ -46,6 +46,7 @@
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
  * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
  * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (⬚), numbered in reading order, in the box the layout gives it.
+ * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask.
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.

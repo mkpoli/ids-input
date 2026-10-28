@@ -16,11 +16,13 @@ import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { unicodeSource } from './unicode.js'
-import { splitDescription } from '../core/ids.js'
+import { leaves, parse, splitDescription } from '../core/ids.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
-  const local = !warm && onlyBundled(sequence, separate, false, fontStyle)
+  const parsed = !warm ? parse(sequence, { open: true }) : null
+  const emptyOnly = parsed && !parsed.problem && parsed.tree !== null && leaves(parsed.tree).every(leaf => leaf.char === null)
+  const local = !warm && (emptyOnly || onlyBundled(sequence, separate, false, fontStyle))
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
   const seal = !warm && hasSmallSeal(sequence)
   const newKorean = !warm && hasNewKorean(sequence)

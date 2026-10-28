@@ -1,6 +1,7 @@
 // @ts-check
 import { hangulClusterAt } from './hangul.js'
 import { unicodeProperty } from './unicode.js'
+import { emojiPrefix } from './emoji.js'
 import { isMark, normalizeMarks, marksOf, withMarks, withoutMarks } from './marks.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
@@ -114,21 +115,25 @@ export function parse(text, { open = false } = {}) {
   const chars = [...(text ?? '')]
   if (open && !chars.length) return { tree: null }
   const long = chars.length > LONGEST
-  if (!chars.length || chars.length > PYRAMID_LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
+  if (!chars.length || chars.length > PYRAMID_LONGEST || (!open && !isSequence(text))) return { problem: 'character' }
   let at = 0, depth = 0
   /** @returns {Part} */
   const read = () => {
     if (depth++ >= MAX_DEPTH) throw 'character'
     try {
-      const char = chars[at++]
+      const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(chars[at] ?? '') ? emojiPrefix(chars.slice(at).join('')) : ''
+      const char = emoji || chars[at]
+      at += emoji ? [...emoji].length : 1
       if (char === undefined) { if (open) return null; throw 'missing' }
       const n = arity(char)
       if (!n) {
         if (open && EMPTY_MARKS.includes(char)) return null
+        // An emoji sequence may hold zero-width joiners; other invisible characters are not components.
+        if (!emoji && /[\p{Cc}\p{Cf}\p{Z}]/u.test(char)) throw 'character'
         if (!isComponent(char)) throw 'component'
         const cluster = hangulClusterAt(chars, at - 1)
         if (cluster) { at = cluster.end; return cluster.text }
-        return isSelector(chars[at]) ? char + chars[at++] : char
+        return !emoji && isSelector(chars[at]) ? char + chars[at++] : char
       }
       return { op: char, parts: Array.from({ length: n }, read) }
     } finally { depth-- }
@@ -170,6 +175,8 @@ export function descriptionEnd(chars, at = 0) {
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
+    const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(char) ? emojiPrefix(chars.slice(at).join('')) : ''
+    if (emoji) return at + [...emoji].length
     const cluster = hangulClusterAt(chars, at)
     if (cluster) return cluster.end
     return isSelector(chars[at + 1]) ? at + 2 : at + 1
