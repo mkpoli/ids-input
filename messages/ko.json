@@ -163,6 +163,8 @@
   "parts.script.unavailable": "추가 문자 구성 요소를 불러오지 못했습니다.",
   "parts.script.label": "문자",
   "parts.script.choose": "다른 문자",
+  "parts.script.symbols": "기호",
+  "parts.script.mixed": "혼합 부품",
   "parts.script.pages": "페이지",
   "parts.script.previous": "이전",
   "parts.script.next": "다음",
@@ -239,5 +241,6 @@
   "parts.gongche.encoded": "인코딩된 합성 음표",
   "parts.gongche.marks": "기보 기호",
   "parts.gongche.kunquSource": "곤곡 기보법 · Unicode 제안서",
-  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures"
+  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures",
+  "ids.characters.rare": "희귀 글자 포함"
 }

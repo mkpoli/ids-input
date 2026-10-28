@@ -7,7 +7,7 @@ import { isOtherScript, partScript } from '../src/core/scripts.js'
 const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
 const gz = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}`, import.meta.url))))
 
-it('indexes additional scripts without changing the existing script groups', () => {
+it('indexes additional scripts, symbols and mixed descriptions without changing the existing script groups', () => {
   const groups = gz('script-parts.json.gz'), index = read('script-parts-index.json')
   const metadata = read('script-parts-metadata.json')
   expect(metadata.unicode).toBe(UNICODE_VERSION)
@@ -25,6 +25,6 @@ it('indexes additional scripts without changing the existing script groups', () 
   for (const row of [...paletteRows(read('ids-parts.json')), ...gz('small-seal.json.gz').parts]) {
     if (isOtherScript(partScript(row.part))) expect(seen.has(row.part)).toBe(true)
   }
-  for (const [group, char] of [['Hebr', 'א'], ['Arab', 'ش'], ['Deva', 'अ'], ['Hira', 'あ'], ['Kana', 'ア']]) expect(groups[group]).toContain(char)
-  for (const id of ['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes', 'symbols', 'mixed']) expect(groups[id]).toBeUndefined()
+  for (const [group, char] of [['Hebr', 'א'], ['Arab', 'ش'], ['Deva', 'अ'], ['Hira', 'あ'], ['Kana', 'ア'], ['symbols', '◇'], ['mixed', '⿱㇒⿻日丿']]) expect(groups[group]).toContain(char)
+  for (const id of ['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes']) expect(groups[id]).toBeUndefined()
 })

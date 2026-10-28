@@ -1,0 +1,52 @@
+{
+  "letters": [
+    {
+      "file": "rieu.svg",
+      "title": "File:Nkchar-l.svg",
+      "url": "https://commons.wikimedia.org/wiki/File:Nkchar-l.svg",
+      "sha256": "2b59f01ceb42cdbbdd88a7196ca88a895c3e1896330bead2a03b3a9026a83581",
+      "codePoints": ["A97D", "D7FC"],
+      "name": "여린리을",
+      "nameEn": "soft rieul",
+      "glyph": "rieu"
+    },
+    {
+      "file": "lieul.svg",
+      "title": "File:Nkchar-rr.svg",
+      "url": "https://commons.wikimedia.org/wiki/File:Nkchar-rr.svg",
+      "sha256": "d58699af84fc6c0f5377c060828b0cb158b1c33c7333bf38a8bb53f2155349d6",
+      "codePoints": ["A97E", "D7FD"],
+      "name": "된리을",
+      "nameEn": "strong rieul",
+      "glyph": "lieul"
+    },
+    {
+      "file": "ueub.svg",
+      "title": "File:Nkchar-w.svg",
+      "url": "https://commons.wikimedia.org/wiki/File:Nkchar-w.svg",
+      "sha256": "e510920455a14b1a49b32464b74b4291eeace390b919594de59a37a92d5cd78e",
+      "codePoints": ["A97F", "D7FE"],
+      "name": "위읍",
+      "nameEn": "wi-eup",
+      "glyph": "ueub"
+    },
+    {
+      "file": "banmoeumi.svg",
+      "title": "File:Nkchar-y.svg",
+      "url": "https://commons.wikimedia.org/wiki/File:Nkchar-y.svg",
+      "sha256": "ef8d4fee1b58ca4bea2ea552e0b1259588e76c05920417743bdabdb953dc6ca1",
+      "codePoints": ["D7C7"],
+      "name": "여린이",
+      "nameEn": "soft i",
+      "glyph": "banmoeumi"
+    }
+  ],
+  "author": "Nanuun-saram",
+  "authorUrl": "https://commons.wikimedia.org/wiki/User:Nanuun-saram",
+  "date": "2016-02-08",
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "proposal": "https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf",
+  "response": "https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf",
+  "wikipedia": "https://ja.wikipedia.org/wiki/%E6%9C%9D%E9%AE%AE%E8%AA%9E%E6%96%B0%E7%B6%B4%E5%AD%97%E6%B3%95"
+}

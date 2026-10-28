@@ -163,6 +163,8 @@
   "parts.script.unavailable": "無法載入其他文字部件。",
   "parts.script.label": "文字",
   "parts.script.choose": "其他文字",
+  "parts.script.symbols": "符號",
+  "parts.script.mixed": "混合部件",
   "parts.script.pages": "頁碼",
   "parts.script.previous": "上一頁",
   "parts.script.next": "下一頁",
@@ -239,5 +241,6 @@
   "parts.gongche.encoded": "已編碼的合成譜字",
   "parts.gongche.marks": "記譜符號",
   "parts.gongche.kunquSource": "崑曲記譜 · Unicode 提案",
-  "parts.gongche.marksSource": "記譜符號 · 香港微音樂"
+  "parts.gongche.marksSource": "記譜符號 · 香港微音樂",
+  "ids.characters.rare": "包含生僻字"
 }

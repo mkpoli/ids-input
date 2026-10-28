@@ -162,6 +162,8 @@
   "parts.script.unavailable": "Không thể tải thêm bộ phận chữ viết.",
   "parts.script.label": "Chữ viết",
   "parts.script.choose": "Chữ viết khác",
+  "parts.script.symbols": "Ký hiệu",
+  "parts.script.mixed": "Bộ phận hỗn hợp",
   "parts.script.pages": "Trang",
   "parts.script.previous": "Trước",
   "parts.script.next": "Sau",
@@ -239,5 +241,6 @@
   "parts.gongche.encoded": "Chữ nhạc ghép đã mã hóa",
   "parts.gongche.marks": "Ký hiệu ghi nhạc",
   "parts.gongche.kunquSource": "Ký âm Côn khúc · Đề xuất Unicode",
-  "parts.gongche.marksSource": "Ký hiệu ghi nhạc · Hong Kong Music Miniatures"
+  "parts.gongche.marksSource": "Ký hiệu ghi nhạc · Hong Kong Music Miniatures",
+  "ids.characters.rare": "Gồm cả chữ hiếm"
 }

@@ -48,16 +48,18 @@
       () => { if (!controller.signal.aborted) found = { status: 'failed', items: [] } }), 150)
     return () => { clearTimeout(timer); controller.abort() }
   })
-  // The characters tab: characters whose readings or meanings answer for what is typed.
+  // The characters tab: characters whose readings or meanings answer for what is typed. The rare
+  // table is an explicit opt-in, so the common search stays small and quick.
   let characterQuery = $state('')
+  let characterRare = $state(false)
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let characters = $state({ status: 'idle', items: [] })
   $effect(() => {
-    const asked = characterQuery.trim(), search = adapter.searchCharacters
+    const asked = characterQuery.trim(), search = adapter.searchCharacters, rare = characterRare
     if (!asked || !search) { characters = { status: 'idle', items: [] }; return }
     const controller = new AbortController()
     characters = { status: 'loading', items: [] }
-    const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: 24 }).then(
+    const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: 24, rare }).then(
       items => { if (!controller.signal.aborted) characters = { status: 'ready', items: items ?? [] } },
       () => { if (!controller.signal.aborted) characters = { status: 'failed', items: [] } }), 150)
     return () => { clearTimeout(timer); controller.abort() }
@@ -100,6 +102,9 @@
             <div class="ids-find">
               <input type="search" bind:value={characterQuery} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
                 aria-label={t('ids.pick.characters')} placeholder={t('ids.characters.placeholder')} />
+              {#if adapter.rareCharacters}
+                <label class="ids-rare"><input type="checkbox" bind:checked={characterRare} disabled={editor.disabled} /> {t('ids.characters.rare')}</label>
+              {/if}
               {#if characters.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
               {:else if characters.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
               {:else if characters.status === 'ready' && !characters.items.length}<p class="ids-note">{t('ids.characters.none')}</p>
@@ -130,7 +135,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-search) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
   :where(.ids-search) button{cursor:pointer}
@@ -143,6 +148,8 @@
   .ids-pick-panel[hidden]{display:none}
   .ids-find{display:flex;flex-direction:column;gap:6px}
   .ids-find input{font-size:14px;padding:7px 10px}
+  .ids-rare{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--_muted)}
+  .ids-rare input{width:auto;border:0;padding:0;accent-color:var(--_accent)}
   .ids-found{display:flex;flex-wrap:wrap;gap:4px}
   .ids-hit{display:flex;align-items:baseline;gap:6px;max-width:100%;min-width:0;padding:2px 8px;border-color:transparent;background:var(--_surface-subtle)}
   .ids-hit:not(:disabled):hover{border-color:var(--_accent)}

@@ -106,6 +106,7 @@
   "app.source.kanjivg": "조합기의 일부 절단. 그 절단을 쓴 자형은 동일 조건으로 공유.",
   "app.source.smallSeal": "급고각본 《설문해자》의 자형 구조: 매핑된 49자와 부품 31개를 제공합니다. 나머지 원본 기록은 아직 매핑되지 않았습니다.",
   "app.source.sealFont": "진창치본에 따른 자형 1,334개입니다. 원본 프로젝트의 검토가 아직 끝나지 않았습니다.",
+  "app.source.newKoreanLetters": "미부호화 조선어 신철자법 4자의 그림. L2/19-230R이 제안한 부호 위치를 따릅니다.",
   "app.source.tangut": "서하 문자 표시와 조합에 쓰는 자형.",
   "app.source.noto": "han-compose가 쓰는 윤곽과 부품 글꼴.",
   "app.source.plangothic": "Noto Sans CJK에 없는 부품의 자형.",

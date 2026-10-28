@@ -166,6 +166,8 @@
   "parts.script.unavailable": "Additional script parts could not be loaded.",
   "parts.script.label": "Script",
   "parts.script.choose": "Other scripts",
+  "parts.script.symbols": "Symbols",
+  "parts.script.mixed": "Mixed descriptions",
   "parts.script.pages": "Pages",
   "parts.script.previous": "Previous",
   "parts.script.next": "Next",
@@ -243,5 +245,6 @@
   "parts.gongche.encoded": "Encoded compound notes",
   "parts.gongche.marks": "Notation marks",
   "parts.gongche.kunquSource": "Kunqu notation · Unicode proposal",
-  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures"
+  "parts.gongche.marksSource": "Notation marks · Hong Kong Music Miniatures",
+  "ids.characters.rare": "Include rare characters"
 }

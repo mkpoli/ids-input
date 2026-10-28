@@ -35,7 +35,8 @@ The package has four layers, and an optional preview:
 
 The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
 from Yi Bai's IDS dataset, and the palette has a Tangut
-tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut
+and New Korean text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 The Hangul tab composes a syllable from initial, medial and final jamo, modern or historical, and
 inserts the precomposed syllable or the Old Hangul jamo run. Its filter searches the 11,172 modern
@@ -66,13 +67,15 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import 'ids-input/fonts.css'
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
+  import components from 'ids-input/data/ids-components.tsv?url'
   import parts from 'ids-input/data/ids-parts.json?url'
   import forms from 'ids-input/data/component-forms.tsv?url'
   import names from 'ids-input/data/component-names.tsv?url'
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
+  import charactersRare from 'ids-input/data/character-vocabulary-rare.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, parts, forms, names, folds, characters })
+  const adapter = babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })
   let value = $state('')
 </script>
 
@@ -166,13 +169,17 @@ forms one syllable is one component; the Hangul palette writes modern combinatio
 syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
-allocation U+3D000–U+3FC3F.
+allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
 Combining marks are individual components; only a variation selector attaches to the preceding
 component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 53,478 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
+The seven code points above are the positions OBAYASHI Muneaki proposed for the four letters the
+New Korean Orthography added to Hangul in [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); Unicode 18.0.0 leaves them unassigned. The Hangul palette names them, `fonts.css`
+supplies the `IDS New Korean` face, and their outlines are bundled for previews and export.
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
@@ -319,10 +326,14 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, parts, forms, names, folds, characters })` answers `structure`, `search`
-(a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading such as water or のぶん
-when `names` is given), `searchCharacters` (a character by a reading or meaning when `characters` is
-given), `containing` and `parts` from the files in `data/`. `forms` folds the description search's
+`babelStoneAdapter({ ids, components, parts, forms, names, folds, characters, charactersRare })` answers
+`structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
+such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
+meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
+from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
+right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
+individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -493,7 +504,9 @@ characters Unicode marks with `kIICore` plus every KANJIDIC2 character with an I
 water, shui, mizu, みず, 수 and thủy find 水; person finds 人; silk finds 糸. Results are characters,
 not the forms the Find tab opens; among equally close names the more common character comes first,
 by KANJIDIC2's newspaper
-frequency or Unihan's school grade. Without `characters` the tab is not shown.
+frequency or Unihan's school grade. A second table, `character-vocabulary-rare.tsv.gz`, holds the
+remaining 33,904 named characters; the tab's “Include rare characters” toggle loads it only when
+asked. Without `characters` the tab is not shown.
 
 ## Preview
 
@@ -574,6 +587,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
+- `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
+  that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
+  the adapter reads descriptions by it.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -591,6 +607,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
   4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 152,982
   rows, 1.2 MB gzipped.
+- `data/character-vocabulary-rare.tsv.gz`: the remaining named characters for the optional rare
+  search, same sources and licence; 61,551 rows, 515 KB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),
@@ -612,7 +630,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 - BabelStone IDS, Andrew West (魏安), <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
-  (<https://github.com/kawabata/ids>) and IRG submissions.
+  (<https://github.com/kawabata/ids>) and IRG submissions. Its note 6 supplies the numbered
+  components and their fragments (`data/ids-components.tsv`); `{12}`, the right of 龍, is written
+  out as ⿷己三 here, where the note gives no fragment, and `{82}`, the top of 書, as 聿, which the
+  file uses for the same shape in 㶳 (TP), 衋 and, before Unicode 6.0, 𤱪.
 - BabelStone Tangut IDS, Andrew West, <https://www.babelstone.co.uk/Tangut/TangutIDS.txt>, pinned
   by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
@@ -703,7 +724,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   𦣩 (`⿰臣⿾臣`), 𣥒 (`⿱⿿止止`) and 𧹂 (`⿱⿰虎⿿虎貝`). The descriptions of 𣥄 and 𠄔
   also appear in IRG N2572, p.2. Jyutnet records JYN00003 and JYN00025 supply the historical
   寫 and 龍 variants `⿳宀⿰丨⿴⿻冂一一⿹𠃌灬` and `⿰𦚏⿷己三`, citing 道漢字音
-  (1939), pp.72 and 4 respectively.
+  (1939), pp.72 and 4 respectively. `⿰𦚏⿷己三` is also BabelStone's 龍, its numbered right
+  component `{12}` written out.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
 
@@ -808,7 +830,8 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
-  rendering and decompositions, and suggestions for component shortcuts and small-seal decomposition.
+  rendering and decompositions, and suggestions for component shortcuts, small-seal decomposition
+  and the New Korean Orthography letters.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.

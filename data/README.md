@@ -30,12 +30,35 @@ gzipped, 2.2 MB as text.
   credited all the same.
 - Format: one line per ideograph, `char<TAB>sequences`, every alternative the file gives,
   space-separated, each with the source regions it describes (`⿰氵骨(GHTJKPV)`). The maintainer's `*`
-  notes are left out. `{n}` is BabelStone's unencoded component n and `？` an unrepresentable one.
+  notes are left out. `{n}` is BabelStone's numbered component n, kept as the source writes it;
+  `data/ids-components.tsv` gives the fragments that write out the ones note 6 knows, and the adapter
+  applies them. `？` is an unrepresentable one.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
   from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
+
+## `ids-components.tsv`
+
+BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
+the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
+fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+`{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
+names its two halves, 𦚏 and ⿷己三.
+
+`{82}`, the top of 書, is 聿. The note writes that shape as `⿱𦘒一`, which is 說文解字's own analysis
+of 聿 (「从𦘒一聲」, <https://www.shuowen.org/view/1932>); the file uses the encoded 聿 for the same
+shape elsewhere — 㶳 is `⿱{82}火` in G and `⿱聿火` in TP, 衋 is `⿱⿻聿皕血` in GHTKP and `⿳{82}皕血`
+in J, and 𤱪 was `⿱聿田` before Unicode 6.0 — and CHISE's IDS writes 書 `⿱聿曰`, 畫 `⿳聿田一` and
+晝 `⿱聿旦` (<https://gitlab.chise.org/CHISE/ids>). 書 then reads `⿱聿日` (`⿱聿曰` in H), 畫's X form
+`⿳聿田一` and 晝's `⿱聿旦`; the G forms of 畫 and 晝 reach the same 聿 through 𤱪 `⿱聿田` and 書.
+
+The fragments are BabelStone's own (IDS.TXT note 6), public domain; the two above are editorial. The
+adapter reads the file with `babelStoneAdapter({ components })`; the descriptions it answers and
+searches name the parts rather than BabelStone's numbers. Built by
+`scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
+its own header note.
 
 ## `ids-parts.json`
 
@@ -263,6 +286,14 @@ Rebuild with `python3 scripts/build_character_info.py`. The builder verifies bot
 source digests. The character-information file is fetched only when a panel is used;
 hovering does not send the character to a dictionary service.
 
+## character-vocabulary-rare.tsv.gz
+
+The remaining named characters, for the Characters tab's optional rare search: 33,904 characters and
+61,551 rows, 515 KB gzipped. A character is here when it has an IDS description and at least one
+Unihan or KANJIDIC2 name but is outside the common table. Format and sources match
+`character-vocabulary.tsv.gz`; `rank` is usually empty. Licence: **CC BY-SA 4.0** as a whole, from
+Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0).
+
 ## Tangut
 
 The same IDS table also includes 6,145 records from Andrew West's
@@ -305,6 +336,30 @@ supplies U+31BC–U+31BF. Both are SIL OFL 1.1; licence texts are in `fonts/`.
 The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
+
+## New Korean Orthography outlines
+
+`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+(조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
+
+- U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
+- U+A97E / U+D7FD: 된리을 (strong rieul), `HANGUL CHOSEONG LIEUL` / `HANGUL JONGSEONG LIEUL`
+- U+A97F / U+D7FE: 위읍 (wi-eup), `HANGUL CHOSEONG UEUB` / `HANGUL JONGSEONG UEUB`
+- U+D7C7: 여린이 (soft i), `HANGUL JUNGSEONG BANMOEUM-I`
+
+Unicode 18.0.0 leaves these code points unassigned. They are the positions in
+OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); [L2/19-233](https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf)
+answered the proposal. The editor treats the range as a bundled allocation, as it
+does U+3D000–U+3FC3F for Small Seal; the text is not claimed to be assigned Unicode.
+
+The drawings are [Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s
+SVGs on Wikimedia Commons, made 2016-02-08, CC BY-SA 4.0. Their files and digests,
+the proposal and the Wikipedia articles are recorded in
+[`new-korean/sources.json`](new-korean/sources.json); `new-korean/README.md` explains
+the letters. Rebuild the `IDS New Korean` font and these outlines with
+`uv run scripts/build_new_korean.py`. The script checks the SVG digests and derives
+the outline records from the same quadratic curves as the font.
 
 ## Subtree frequencies and compound palette entries
 
@@ -702,11 +757,11 @@ characters require a host-supplied mapping and never inherit Unifont's private a
 
 ### Other script parts
 
-`script-parts.json.gz` groups additional scripts from bundled Unicode outlines and
-palette entries by Unicode Script. `script-parts-index.json`
+`script-parts.json.gz` groups the symbols and additional scripts that bundled Unicode outlines
+draw, plus palette entries, by Unicode Script. Symbols and mixed-script descriptions have no other
+palette view, so the Other scripts selector offers them alongside the named scripts. `script-parts-index.json`
 holds group sizes, and `script-parts-metadata.json` pins the sources. Existing Han, Latin,
-Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded. Mixed-script
-descriptions and common symbols are also excluded; this index adds only other scripts.
+Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded.
 
 To rebuild, run `node scripts/build_script_parts.mjs`. The builder uses Unicode 18.0 `Scripts.txt` and `PropertyValueAliases.txt`, checked against pinned SHA-256
 hashes. Unicode data is distributed under the Unicode License v3; see

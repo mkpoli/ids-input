@@ -17,7 +17,7 @@
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
   import { unpack } from '../composer/loader.js'
   import IdsPartIcon from './IdsPartIcon.svelte'
-  import { isSequence } from '../core/ids.js'
+  import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
 
   /**
@@ -52,8 +52,25 @@
   // Compatibility jamo are visible on their own; conjoining jamo and extensions include old forms.
   const substitutes = ['◇', '⿺𠃊一', '⿺𠃊二', '⿰⿺𠃊一⿺𠃊一', '𠃊']
   const substituteNames = /** @type {Record<string, string>} */ ({ '◇': '微', '⿺𠃊一': '知', '⿺𠃊二': '徹', '⿰⿺𠃊一⿺𠃊一': '澄', '𠃊': '孃' })
+  // The unencoded letters of the New Korean Orthography, and the two recycled letters, by name.
+  /** @type {Record<string, { name: string, form?: string, code?: string, aliases: string[] }>} */
+  const newKoreanNames = {
+    '\u{A97D}': { name: '여린리을', form: '첫소리', code: 'U+A97D', aliases: ['yeorin rieul', 'soft rieul', 'rieu'] },
+    '\u{D7FC}': { name: '여린리을', form: '끝소리', code: 'U+D7FC', aliases: ['yeorin rieul', 'soft rieul', 'rieu final'] },
+    '\u{A97E}': { name: '된리을', form: '첫소리', code: 'U+A97E', aliases: ['doen rieul', 'strong rieul', 'lieul'] },
+    '\u{D7FD}': { name: '된리을', form: '끝소리', code: 'U+D7FD', aliases: ['doen rieul', 'strong rieul', 'lieul final'] },
+    '\u{A97F}': { name: '위읍', form: '첫소리', code: 'U+A97F', aliases: ['wi eup', 'wi-eup', 'ueub'] },
+    '\u{D7FE}': { name: '위읍', form: '끝소리', code: 'U+D7FE', aliases: ['wi eup', 'wi-eup', 'ueub final'] },
+    '\u{D7C7}': { name: '여린이', form: '가운뎃소리', code: 'U+D7C7', aliases: ['yeorin i', 'soft i', 'banmoeum i', 'banmoeumi'] },
+    '\u{317F}': { name: '반시읏', code: 'U+317F', aliases: ['ban si eut', 'ban si-eut', 'pansios'] },
+    '\u{1140}': { name: '반시읏', code: 'U+1140', aliases: ['ban si eut', 'ban si-eut', 'pansios choseong'] },
+    '\u{11EB}': { name: '반시읏', form: '끝소리', code: 'U+11EB', aliases: ['ban si eut', 'ban si-eut', 'pansios jongseong'] },
+    '\u{3186}': { name: '여린히읗', code: 'U+3186', aliases: ['yeorin hieuh', 'yeorinhieuh'] },
+    '\u{1159}': { name: '여린히읗', code: 'U+1159', aliases: ['yeorin hieuh', 'yeorinhieuh choseong'] },
+    '\u{11F9}': { name: '여린히읗', form: '끝소리', code: 'U+11F9', aliases: ['yeorin hieuh', 'yeorinhieuh jongseong'] },
+  }
   const hangulLetters = [...range(0x3131, 0x318e), ...range(0x1100, 0x11ff), ...range(0xa960, 0xa97f), ...range(0xd7b0, 0xd7ff), ...range(0xffa1, 0xffdc)]
-    .filter(char => /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
+    .filter(char => isNewKorean(char) || /\p{Letter}/u.test(char) && !/\p{Default_Ignorable_Code_Point}/u.test(char))
   // Hangul tone marks and enclosed forms also have bundled Unicode outlines.
   const hangul = [...substitutes, ...hangulLetters, ...range(0x3200, 0x321e), ...range(0x3260, 0x327e), '〮', '〯']
   const hangulSyllables = range(0xac00, 0xd7a3)
@@ -96,7 +113,12 @@
     const available = new Set(hangulKeys)
     const metadata = (partsByScript.get('hangul') ?? []).filter(part => available.has(part.part) &&
       (/^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term))))
-    return [...new Set([...matches, ...metadata.map(part => part.part)])]
+    const folded = term.toLocaleLowerCase()
+    const named = Object.entries(newKoreanNames)
+      .filter(([, info]) => info.name.includes(term) || info.code?.toLowerCase().includes(folded) || info.aliases.some(alias => alias.includes(folded)))
+      .map(([part]) => part)
+      .filter(part => available.has(part))
+    return [...new Set([...matches, ...metadata.map(part => part.part), ...named])]
   })
   const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
   const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
@@ -113,8 +135,11 @@
   let otherFailed = $state(false), otherLoading = false
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
+  // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
+  /** @type {Record<string, string>} */
+  const PSEUDO_SCRIPTS = { symbols: 'parts.script.symbols', mixed: 'parts.script.mixed' }
   /** @param {string} id */
-  const scriptName = id => scriptNames?.of(id) ?? id
+  const scriptName = id => PSEUDO_SCRIPTS[id] ? t(PSEUDO_SCRIPTS[id]) : scriptNames?.of(id) ?? id
   const otherScripts = $derived.by(() => {
     const ids = new Set([...scriptIndex.map(group => group.id), ...partsByScript.keys()])
     return [...ids].filter(isOtherScript).sort((a, b) => scriptName(a).localeCompare(scriptName(b)))
@@ -313,16 +338,19 @@
     selection?.addRange(range)
   }
   /** @param {PalettePart} part */
-  const title = part => [
-    part.part,
-    tab === 'gongche' && !isSequence(part.part) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
-    tab === 'hangul' ? substituteNames[part.part] : null,
-    ...(part.aliases ?? []),
-    ...(part.modern ?? []),
-    part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
-    tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
-    part.uses ? t('parts.uses', { count: part.uses }) : null,
-  ].filter(Boolean).join(' · ')
+  const title = part => {
+    const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
+    return [
+      isNewKorean(part.part) ? null : part.part,
+      tab === 'gongche' && !isSequence(part.part) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
+      nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
+      ...(part.aliases ?? []),
+      ...(part.modern ?? []),
+      part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : null,
+      nko ? null : tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
+      part.uses ? t('parts.uses', { count: part.uses }) : null,
+    ].filter(Boolean).join(' · ')
+  }
   // Arrow keys, Home and End move between the tabs and choose the one reached.
   /** @type {HTMLButtonElement[]} */
   let tabButtons = $state([])
@@ -343,7 +371,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -572,11 +600,11 @@
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
-  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut",var(--ids-ui-font,system-ui,sans-serif)}
+  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean",var(--ids-ui-font,system-ui,sans-serif)}
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,sans-serif)}
   .part.compound{position:relative;padding:5px}
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
