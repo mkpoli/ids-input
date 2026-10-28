@@ -149,7 +149,11 @@ export const EXAMPLE_GROUPS = [
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
   // with no code point; for an encoded character it names that character, which `encoded` reports.
+  // The entries cover the article's single-character tables, one form per row. Left out: the word
+  // ligatures (コンクリート, セメント, ムーブメント, 警察/憲法, 慶応), the ambiguous 广マ, the
+  // unrenderable 㐧, the duplicate variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ and Jo.
   { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
+    // 西文字母
     { sequence: '⿱宀R', char: '', abbreviates: '寮' },
     { sequence: '⿰亻⿱宀R', char: '', abbreviates: '僚' },
     { sequence: '⿸疒R', char: '', abbreviates: '療' },
@@ -161,7 +165,24 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰糸N', char: '', abbreviates: '縄' },
     { sequence: '⿰言N', char: '', abbreviates: '認' },
     { sequence: '⿰言R', char: '', abbreviates: '論' },
+    { sequence: '⿰言S', char: '', abbreviates: '識' },
+    { sequence: '⿸广K', char: '', abbreviates: '慶' },
+    { sequence: '⿸广O', char: '', abbreviates: '応' },
+    // 假名声旁
     { sequence: '⿰言ギ', char: '', abbreviates: '議' },
+    { sequence: '⿰木キ', char: '', abbreviates: '機' },
+    { sequence: '⿺走キ', char: '', abbreviates: '起' },
+    { sequence: '⿰木コ', char: '', abbreviates: '構' },
+    { sequence: '⿰言コ', char: '', abbreviates: '講' },
+    { sequence: '⿰火⿱セン', char: '', abbreviates: '煽' },
+    { sequence: '⿰糸ソ', char: '', abbreviates: '組' },
+    { sequence: '⿸尸ソ', char: '', abbreviates: '層' },
+    { sequence: '⿱龸ド', char: '', abbreviates: '堂' },
+    { sequence: '⿰虫ホ', char: '', abbreviates: '蜂' },
+    { sequence: '⿰扌マ', char: '', abbreviates: '抹' },
+    { sequence: '⿱艹ヤ', char: '', abbreviates: '薬' },
+    { sequence: '⿰阝ヱ', char: '', abbreviates: '衛' },
+    // 通仮・楷化・記号・字形省去・声旁
     { sequence: '斗', char: '斗', abbreviates: '闘' },
     { sequence: '才', char: '才', abbreviates: '歳' },
     { sequence: '门', char: '门', abbreviates: '門' },
@@ -178,6 +199,25 @@ export const EXAMPLE_GROUPS = [
     { sequence: '胜', char: '胜', abbreviates: '勝' },
     { sequence: '选', char: '选', abbreviates: '選' },
     { sequence: '战', char: '战', abbreviates: '戦' },
+    // 记号・字形省去・隶定・訓読・声旁
+    { sequence: '𠮚', char: '𠮚', abbreviates: '国' },
+    { sequence: '紜', char: '紜', abbreviates: '織' },
+    { sequence: '耺', char: '耺', abbreviates: '職' },
+    { sequence: '県', char: '県', abbreviates: '縣' },
+    { sequence: '貭', char: '貭', abbreviates: '質' },
+    { sequence: '仂', char: '仂', abbreviates: '働' },
+    { sequence: '厂', char: '厂', abbreviates: '歴' },
+    { sequence: '𫞂', char: '𫞂', abbreviates: '曜' },
+    { sequence: '云', char: '云', abbreviates: '言' },
+    { sequence: '犾', char: '犾', abbreviates: '憲' },
+    { sequence: '庁', char: '庁', abbreviates: '廳' },
+    // Structural forms
+    { sequence: '⿵门日', char: '间', abbreviates: '間' },
+    { sequence: '⿻𠤎丶', char: '', abbreviates: '義' },
+    { sequence: '⿰虍刂', char: '', abbreviates: '劇' },
+    { sequence: '⿰辶⿱𭕄共', char: '', abbreviates: '選' },
+    { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
+    { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', examples: [
