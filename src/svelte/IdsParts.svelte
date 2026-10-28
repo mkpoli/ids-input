@@ -137,6 +137,7 @@
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
   // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
+  // @x18n-keys
   /** @type {Record<string, string>} */
   const PSEUDO_SCRIPTS = { symbols: 'parts.script.symbols', mixed: 'parts.script.mixed' }
   /** @param {string} id */
