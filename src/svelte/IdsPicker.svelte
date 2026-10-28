@@ -4,6 +4,7 @@
   // adapter can answer it. A part picked goes in `editor`'s chosen slot, or the first empty one; parts
   // can also be dragged onto the tree. Arrow keys, Home and End move between the tabs.
   import { untrack } from 'svelte'
+  import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
@@ -119,7 +120,7 @@
               {/if}
             </div>
           {:else if name === 'templates'}<IdsTemplates {editor} />
-          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part)} />
+          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} />
           {:else}<IdsFrom {adapter} lookup={editor.lookup} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} bind:text={fromText} ontake={part => editor.take(part)} />{/if}
         </div>
       {/if}

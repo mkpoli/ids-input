@@ -19,7 +19,7 @@ export function treeFromDocument(document) {
     if (node.kind === 'slot') return null
     if (node.kind === 'component') return node.char
     if (node.kind === 'group') return part(node.child)
-    return { op: node.op, parts: node.children.map(part) }
+    return { op: node.op, parts: node.children.map(part), ...(node.marks ? { marks: node.marks } : {}) }
   }
   return part(document.root)
 }
@@ -52,7 +52,8 @@ function reconcile(old, part, allocator) {
     return { ...kept(old, allocator, 'component'), kind: 'component', char: part }
   }
   const oldChildren = old?.kind === 'operator' ? old.children : []
-  const operator = /** @type {import('./model.js').OperatorNode} */ ({ ...kept(old, allocator, 'operator'), kind: 'operator', op: part.op })
+  const operator = /** @type {import('./model.js').OperatorNode} */ ({ ...kept(old, allocator, 'operator'), kind: 'operator', op: part.op,
+    ...(part.marks ? { marks: part.marks } : {}) })
   operator.children = part.parts.map((child, index) => reconcile(oldChildren[index], child, allocator))
   return operator
 }

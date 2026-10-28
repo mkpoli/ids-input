@@ -33,8 +33,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent' | 'other')[]} */
-  const TABS = ['common', 'gongche', 'tangut', 'seal', 'bopomofo', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent', 'other']
+  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent' | 'other')[]} */
+  const TABS = ['common', 'gongche', 'tangut', 'seal', 'bopomofo', 'marks', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -93,6 +93,18 @@
     { key: 'vowels', label: 'parts.hangul.vowels', chars: [...HANGUL_MEDIALS.historical], kind: 'vowel' },
     { key: 'finals', label: 'parts.hangul.finals', chars: [...HANGUL_FINALS.historical], kind: 'final' },
   ]
+
+  // Loose marks (`marksOf` reads them from a description's end): Bopomofo tone marks, tone bars and
+  // Chinese tone letters, combining diacritics, kana voicing marks, Hangul tone marks, superscripts.
+  const marks = [...new Set([
+    ...'ˉˊˇˋ˙˪˫', ...'˥˦˧˨˩ˬ', ...'꜀꜁꜂꜃꜄꜅꜆꜇',
+    '\u0300', '\u0301', '\u0304', '\u0306', '\u0307', '\u0308', '\u0309', '\u030A', '\u030B', '\u030C',
+    '\u030F', '\u0311', '\u0313', '\u0315', '\u0323', '\u0325', '\u0327', '\u0328', '\u0330', '\u0331',
+    '\u3099', '\u309A', '\u309B', '\u309C', '\u302E', '\u302F', ...'⁰¹²³⁴⁵⁶⁷⁸⁹',
+  ])]
+  /** A combining mark over a dotted circle, so it is visible before it annotates anything. */
+  const markPalette = /** @type {PalettePart[]} */ (marks.map(part => ({ part, kind: 'extra', display: /^\p{M}$/u.test(part) ? `◌${part}` : part })))
+
   /** @param {string[]} chars @returns {PalettePart[]} */
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
@@ -107,7 +119,7 @@
     recent = Array.isArray(kept) ? [...new Set(kept.filter(part => typeof part === 'string'))].slice(0, RECENT_MAX) : []
     const read = adapter.parts
     if (!read) { failed = true; return }
-    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part)))]; failed = false }, () => { failed = true })
+    read().then(found => { const seen = new Set(found.map(part => part.part)); parts = [...found, ...extraParts([...bopomofo, ...alphabet, ...hangul].filter(part => !seen.has(part))), ...markPalette.filter(part => !seen.has(part.part))]; failed = false }, () => { failed = true })
   })
 
   const PAGE_SIZE = 120
@@ -304,6 +316,7 @@
   const shown = $derived.by(() => {
     if (!parts) return []
     if (tab === 'bopomofo') return [{ cls: undefined, parts: bopomofo.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
+    if (tab === 'marks') return [{ cls: undefined, parts: markPalette }]
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
@@ -405,7 +418,7 @@
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     return [
       isNewKorean(part.part) ? null : part.part,
-      tab === 'gongche' && !isSequence(part.part) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
+      (tab === 'gongche' && !isSequence(part.part) || tab === 'marks') ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
@@ -434,7 +447,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" data-character={part.part} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -442,7 +455,7 @@
           <IdsPartIcon sequence={part.part} {adapter} />
           <span class="part-text compound-text">{part.part}</span>
         {:else}
-          <span class="part-text">{part.part}</span>
+          <span class="part-text">{part.display ?? part.part}</span>
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
@@ -698,6 +711,9 @@
   .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
   .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
+  /* A mark over a dotted circle: the subset faces have no marks, and the page's own font stacks
+     place them over a Latin base the way the standard dotted-circle notation expects. */
+  .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}

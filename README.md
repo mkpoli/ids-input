@@ -154,7 +154,7 @@ so the page needs `color-scheme: light dark` for its dark scheme.
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -162,6 +162,9 @@ parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻'
 write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
+
+pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10 }
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -171,8 +174,8 @@ syllable and Old Hangul as the jamo run that fonts shape as one syllable. This i
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
-Combining marks are individual components; only a variation selector attaches to the preceding
-component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
+A combining mark fills an operand slot when one is due, and trails the whole description when the
+description is complete; only a variation selector attaches to the preceding component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 53,478 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
@@ -183,6 +186,60 @@ New Korean Orthography added to Hangul in [L2/19-230R](https://www.unicode.org/L
 supplies the `IDS New Korean` face, and their outlines are bundled for previews and export.
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+
+### Pyramids
+
+`pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an
+equivalent tree back, whichever way its rows use `⿰`/`⿲` and its stack uses `⿱`/`⿳`. The composer
+draws a pyramid of three or more rows as equal square cells in centred rows, so the 4-row spellings
+given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
+may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
+composer draws up to 64 rows (2,080 cells). The workshop's File → Pyramid dialog makes up to 24 rows,
+where the editor tree is still comfortable.
+
+### Loose marks
+
+A description may end with a run of loose marks: combining marks, modifier letters, tone marks,
+kana voicing marks or superscripts that annotate the whole character instead of taking an operand's
+place. They are ordinary Unicode characters, not operators.
+
+| written | drawn |
+| --- | --- |
+| `⿰亻木ˊ` | 休 with an acute tone mark |
+| `⿰ㄅㄚˇ` | a Bopomofo syllable with the third tone |
+| `⿰ㄅㄚ˙` | the same with the neutral tone dot |
+| `⿰氵青゛` | 清 with a voicing dot (U+309B) |
+| `⿰氵青゙` | the same with the combining U+3099 |
+| `⿰亻木́` | an accent combining over the composed character |
+| `⿰ㄅㄚ〮` | a Hangul single dot tone mark at the left |
+| `⿸广⿰KO¹` | the 慶應 ligature with a superscript numeral |
+| `⿰亻木˥˧` | tone letters after the character |
+
+`isMark` names the characters that may trail a description: every Unicode mark (Mn, Mc, Me), every
+modifier letter (Lm), the modifier symbols for accents and tone letters (Sk: `˙ ˪ ˫ ˥–˩`, `꜀–꜇`,
+`゛ ゜` and the like), and superscript or subscript digits (No). `parse` keeps them on the root, as a
+node's `marks` or the tail of a component's text, and `write` puts them back; `splitDescription(text)`
+answers `{ base, marks }`. A mark written where an operand is still due fills that operand, as it
+always could, so `⿰ㄅˊ` stays a two-operand description. The marks belong to the whole description:
+an edit that would leave them inside the tree moves them back to the root (`normalizeMarks`).
+
+Type or paste the marks after a complete description in the sequence field, or pick one from the
+Marks tab of the parts palette; the Bopomofo and Hangul tabs keep their tone marks. Loose marks are
+not part of an IDS shape, so search ignores them: `⿰亻木ˊ` finds what `⿰亻木` finds. In a
+`.ids.json` document they are `marks` on an operator or the end of a component's `char`, at the end
+of the projection.
+
+The preview draws marks into the same 1000-unit box:
+
+- a combining mark sits over or under the composed drawing, centered, and a run stacks;
+- kana voicing marks, spacing accents, tone letters and superscripts sit at the upper right in a row,
+  sized from the character box; a tone letter keeps the height its font designs;
+- Hangul tone marks sit at the left, where the syllable's tone is written;
+- everything stays inside the box. A mark whose outline is in neither the host export nor the
+  bundled Unicode outlines is left out of the drawing.
+
+Marks are separate parts of the drawing (`origins` holds `mark ˊ`), so they export with the SVG and
+PNG. The test suite draws them from the bundled Bopomofo and Unicode outlines.
 
 ### Small Seal (小篆)
 
@@ -530,7 +587,8 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
 can still render. Other previews keep their placeholders. When the export loads but a part has
 no outline in either source, its badge reads
-"Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
+"Could not compose". Sequences over 24 operators or 8 levels are not drawn, except pyramids of up
+to 64 rows, which are laid out as equal cells. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
@@ -750,7 +808,8 @@ column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
 columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
-commands. File → Duplicate tab copies the active document; right-clicking a tab or pressing
+commands. File → Pyramid opens a generator for a triangle of one component; File → Duplicate tab
+copies the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and drawing adjustments, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, examples (each with its
@@ -821,8 +880,8 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 
 - A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
   by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of common and hard-to-type components by stroke count and first stroke, with font subsets for
-  the parts few fonts draw.
+- A parts palette of common and hard-to-type components by stroke count and first stroke, a Marks
+  tab for combining and tone marks, with font subsets for the parts few fonts draw.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
 
@@ -831,8 +890,8 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
-  rendering and decompositions, and suggestions for component shortcuts, small-seal decomposition
-  and the New Korean Orthography letters.
+  rendering and decompositions, and suggestions for component shortcuts, loose marks (濁點,
+  諺文聲調), small-seal decomposition and the New Korean Orthography letters.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
