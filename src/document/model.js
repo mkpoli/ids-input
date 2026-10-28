@@ -5,7 +5,9 @@
 // it, projects a document to IDS and builds one from IDS. A renderer, storage and the editor binding
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
+import { hangulClusterAt } from '../core/hangul.js'
 import { arity, isComponent, isMark, isSelector, parse, splitMarks } from '../core/ids.js'
+
 import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
@@ -298,8 +300,13 @@ function validateNode(value, path, depth, ids, issues, end = true) {
       // Text that is not a valid mark run is read as a component followed by a bad selector, as before.
       if (marks && ![...marks].every(isMark)) { base = value.char; marks = '' }
       const chars = [.../** @type {string} */ (base)]
-      if (chars.length < 1 || chars.length > 2) issues.push({ path: `${path}/char`, message: 'a component is one character and at most one selector' })
-      else {
+      const cluster = chars.length ? hangulClusterAt(chars, 0) : null
+      const run = Boolean(cluster && cluster.end === chars.length)
+      if (run) {
+        if (!isComponent(chars[0])) issues.push({ path: `${path}/char`, message: 'not a component' })
+      } else if (chars.length < 1 || chars.length > 2) {
+        issues.push({ path: `${path}/char`, message: 'a component is one character, at most one selector, or a Hangul jamo run' })
+      } else {
         if (!isComponent(chars[0])) issues.push({ path: `${path}/char`, message: 'not a component' })
         if (chars[1] !== undefined && !isSelector(chars[1])) issues.push({ path: `${path}/char`, message: 'not a variation selector' })
       }

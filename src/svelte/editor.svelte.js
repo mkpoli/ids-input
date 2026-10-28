@@ -12,7 +12,7 @@ import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
-  samePath, unwrap, withMarks, write } from '../core/ids.js'
+  samePath, sameTree, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
@@ -150,6 +150,7 @@ export function createEditor(options) {
     next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
+    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}) }
