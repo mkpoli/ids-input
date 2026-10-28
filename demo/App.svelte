@@ -322,10 +322,10 @@
   // The output: the encoded characters the whole sequence describes, and its code points.
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
-    const text = editor.usable ? editor.whole : '', ask = adapter.encoded
+    const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
     const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
     encoded = known
-    if (!text || !ask) return
+    if (!editor.usable || !text || !ask) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
@@ -544,11 +544,11 @@
       leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : t('app.examples.none'),
+      note: example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: example.char ? `${example.char}　${example.sequence}　${point}` : example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : `${example.sequence}　${t('app.examples.none')}`,
+      hint: example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
   }

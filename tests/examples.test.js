@@ -19,9 +19,14 @@ for (const [char, sequences] of table) for (const { text } of sequences) {
 
 describe('the demo examples', () => {
   it('read as whole descriptions', () => {
-    for (const { sequence } of EXAMPLES) {
-      expect(parse(sequence).problem).toBeUndefined()
+    for (const { sequence, char } of EXAMPLES) {
       expect([...sequence].length).toBeLessThanOrEqual(LONGEST)
+      if ([...sequence].length === 1) {
+        expect(parse(sequence, { open: true }).tree).toBe(sequence)
+        expect(char).toBe(sequence)
+        continue
+      }
+      expect(parse(sequence).problem).toBeUndefined()
     }
   })
   it('name a character from BabelStone or a cited alternative description', () => {
@@ -34,7 +39,7 @@ describe('the demo examples', () => {
           const name = char || example.abbreviates
           expect(typeof name).toBe('string')
           expect([...name]).toHaveLength(1)
-          if (example.abbreviates) expect(char).toBe('')
+          if (example.abbreviates) expect([...example.abbreviates]).toHaveLength(1)
         } else if (char) {
           expect([...char]).toHaveLength(1)
           if ('source' in example && example.source === 'data/small-seal.json.gz') {
@@ -55,8 +60,11 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
     expect(group.source).toBe('https://zh.wikipedia.org/wiki/全学联汉字')
     expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '', abbreviates: '寮' })
-    expect(group.examples.every(example => example.char === '' && example.abbreviates)).toBe(true)
-    expect(group.examples).toHaveLength(11)
+    expect(group.examples).toContainEqual({ sequence: '⿰言ギ', char: '', abbreviates: '議' })
+    expect(group.examples).toContainEqual({ sequence: '权', char: '权', abbreviates: '権' })
+    expect(group.examples).toContainEqual({ sequence: '战', char: '战', abbreviates: '戦' })
+    expect(group.examples.every(example => example.abbreviates && (example.char === '' || example.char === example.sequence))).toBe(true)
+    expect(group.examples).toHaveLength(28)
   })
   it("writes out 龍's numbered right part", () => {
     expect(table.get('龍').map(entry => entry.text)).toContain('⿰𦚏⿷己三')

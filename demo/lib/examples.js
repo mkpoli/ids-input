@@ -45,11 +45,14 @@
 // 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
 // Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
-// Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), section 西文字母, read 2026-10-28:
+// Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), sections 西文字母, 假名声旁 and the
+// simplified-character tables, read 2026-10-28:
 // https://zh.wikipedia.org/wiki/全学联汉字
-// The table writes the letters full width (Ｒ, Ｋ, …); the examples use ASCII. Each abbreviates the
-// character in `char`: 寮 宀+R, 僚 亻+宀+R, 療 疒+R, 軍 冖+G, 確 石+K, 韓 龺+K, 還 辶+K,
-// 館 飠+K, 縄 糸+N, 認 言+N, 論 言+R. The forms are the HAN-LATIN entries of Gen Kojitani,
+// The table writes the letters full width (Ｒ, Ｋ, …); the examples use ASCII. The eleven letter
+// forms are 寮 宀+R, 僚 亻+宀+R, 療 疒+R, 軍 冖+G, 確 石+K, 韓 龺+K, 還 辶+K, 館 飠+K, 縄 糸+N,
+// 認 言+N, 論 言+R. 言ギ abbreviates 議. The simplified forms 斗, 才, 门, 兴, 争, 权, 队, 论, 业,
+// 际, 产, 运, 阶, 胜, 选, 战 stand for 闘, 歳, 門, 興, 爭, 権, 隊, 論, 業, 際, 産, 運, 階, 勝,
+// 選, 戦. The letter forms are the HAN-LATIN entries of Gen Kojitani,
 // Proposal to add a new CJK Abbreviations block, L2/24-125 (2024-04-24):
 // https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf
 // Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
@@ -144,8 +147,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
-  // `abbreviates` names the standard character a Geba form stands for; `char` stays empty because the
-  // form is not an encoding of it.
+  // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
+  // with no code point; for a simplified character it names that character, which `encoded` reports.
   { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
     { sequence: '⿱宀R', char: '', abbreviates: '寮' },
     { sequence: '⿰亻⿱宀R', char: '', abbreviates: '僚' },
@@ -158,6 +161,23 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰糸N', char: '', abbreviates: '縄' },
     { sequence: '⿰言N', char: '', abbreviates: '認' },
     { sequence: '⿰言R', char: '', abbreviates: '論' },
+    { sequence: '⿰言ギ', char: '', abbreviates: '議' },
+    { sequence: '斗', char: '斗', abbreviates: '闘' },
+    { sequence: '才', char: '才', abbreviates: '歳' },
+    { sequence: '门', char: '门', abbreviates: '門' },
+    { sequence: '兴', char: '兴', abbreviates: '興' },
+    { sequence: '争', char: '争', abbreviates: '爭' },
+    { sequence: '权', char: '权', abbreviates: '権' },
+    { sequence: '队', char: '队', abbreviates: '隊' },
+    { sequence: '论', char: '论', abbreviates: '論' },
+    { sequence: '业', char: '业', abbreviates: '業' },
+    { sequence: '际', char: '际', abbreviates: '際' },
+    { sequence: '产', char: '产', abbreviates: '産' },
+    { sequence: '运', char: '运', abbreviates: '運' },
+    { sequence: '阶', char: '阶', abbreviates: '階' },
+    { sequence: '胜', char: '胜', abbreviates: '勝' },
+    { sequence: '选', char: '选', abbreviates: '選' },
+    { sequence: '战', char: '战', abbreviates: '戦' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', examples: [
