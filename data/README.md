@@ -314,6 +314,30 @@ The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
 
+## New Korean Orthography outlines
+
+`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+(조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
+
+- U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
+- U+A97E / U+D7FD: 된리을 (strong rieul), `HANGUL CHOSEONG LIEUL` / `HANGUL JONGSEONG LIEUL`
+- U+A97F / U+D7FE: 위읍 (wi-eup), `HANGUL CHOSEONG UEUB` / `HANGUL JONGSEONG UEUB`
+- U+D7C7: 여린이 (soft i), `HANGUL JUNGSEONG BANMOEUM-I`
+
+Unicode 18.0.0 leaves these code points unassigned. They are the positions in
+OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); [L2/19-233](https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf)
+answered the proposal. The editor treats the range as a bundled allocation, as it
+does U+3D000–U+3FC3F for Small Seal; the text is not claimed to be assigned Unicode.
+
+The drawings are [Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s
+SVGs on Wikimedia Commons, made 2016-02-08, CC BY-SA 4.0. Their files and digests,
+the proposal and the Wikipedia articles are recorded in
+[`new-korean/sources.json`](new-korean/sources.json); `new-korean/README.md` explains
+the letters. Rebuild the `IDS New Korean` font and these outlines with
+`uv run scripts/build_new_korean.py`. The script checks the SVG digests and derives
+the outline records from the same quadratic curves as the font.
+
 ## Subtree frequencies and compound palette entries
 
 Run `bun run build:subtrees` after rebuilding `ids-parts.json` or the bundled IDS

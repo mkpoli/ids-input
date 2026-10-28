@@ -4,8 +4,9 @@ export { UNICODE_VERSION } from './unicode.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
 //
 // Each operator takes its own number of descriptions. A component is a graphic Unicode code
-// point or a private-use character, with an optional variation selector. ？ names an unknown part.
-// Operators, draft slots and invisible characters cannot be components.
+// point, a private-use character, or one of the bundled allocations below, with an optional
+// variation selector. ？ names an unknown part. Operators, draft slots and invisible characters
+// cannot be components.
 
 /**
  * @typedef {string} Component A component's text, with its variation selector if it has one.
@@ -47,21 +48,32 @@ export const EMPTY = '⬚'
 /** The marks an editor reads as a slot still to fill: ⬚, and ＋ as drafts and links written before ⬚ have it. */
 export const EMPTY_MARKS = [EMPTY, '＋']
 
+/**
+ * The four letters the New Korean Orthography added to Hangul, in the initial, final and medial
+ * positions proposed in OBAYASHI Muneaki, L2/19-230R (2019-06-24). Unicode 18.0.0 leaves them
+ * unassigned; the editor accepts them with the bundled outlines in `data/new-korean-outlines.json.gz`
+ * and the `IDS New Korean` font, as it does for the Small Seal allocation.
+ */
+export const NEW_KOREAN = /[\u{A97D}-\u{A97F}\u{D7C7}\u{D7FC}-\u{D7FE}]/u
+/** Whether `text` contains a New Korean Orthography letter. @param {string | null | undefined} text */
+export const isNewKorean = text => NEW_KOREAN.test(text ?? '')
+
 /** @param {string | undefined} char */
 export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(char)
 
 /** Whether `char` may stand as a component. @param {string | undefined | null} char */
 export const isComponent = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
-  // The bundled CHISE/Kaiyuan Small Seal allocation predates runtime Unicode support.
-  return Boolean(first && (unicodeProperty('graphic', first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first))
+  // The bundled CHISE/Kaiyuan Small Seal allocation and the proposed New Korean Orthography
+  // letters are outside Unicode's assigned set and have bundled outlines.
+  return Boolean(first && (unicodeProperty('graphic', first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first) || NEW_KOREAN.test(first))
     && !ARITY.has(first) && !EMPTY_MARKS.includes(first))
 }
 
 /** Whether `char` is an alphabetic/syllabic letter or decimal digit. @param {string | undefined | null} char */
 export const isLetter = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
-  return Boolean(first && isComponent(first) && unicodeProperty('letters', first))
+  return Boolean(first && isComponent(first) && (unicodeProperty('letters', first) || NEW_KOREAN.test(first)))
 }
 
 /** How many descriptions an operator takes; 0 for anything else. @param {string | undefined} char */

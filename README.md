@@ -35,7 +35,8 @@ The package has four layers, and an optional preview:
 
 The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
 from Yi Bai's IDS dataset, and the palette has a Tangut
-tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut text. Tangut outlines are bundled for previews and SVG/PNG
+tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut
+and New Korean text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 
 <picture>
@@ -162,13 +163,17 @@ A component is a graphic Unicode code point (letter, mark, number, punctuation o
 private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
-allocation U+3D000–U+3FC3F.
+allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
 Combining marks are individual components; only a variation selector attaches to the preceding
 component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 53,478 bundled font
 outlines, including 〇, 〆, Greek, Cyrillic and other scripts. Characters absent from both sources
 still have no preview; private-use characters need an outline supplied by the host.
 `isLetter` identifies alphabetic/syllabic letters and decimal digits, excluding ideographs and radicals.
+The seven code points above are the positions OBAYASHI Muneaki proposed for the four letters the
+New Korean Orthography added to Hangul in [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); Unicode 18.0.0 leaves them unassigned. The Hangul palette names them, `fonts.css`
+supplies the `IDS New Korean` face, and their outlines are bundled for previews and export.
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
@@ -806,7 +811,8 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
-  rendering and decompositions, and suggestions for component shortcuts and small-seal decomposition.
+  rendering and decompositions, and suggestions for component shortcuts, small-seal decomposition
+  and the New Korean Orthography letters.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
