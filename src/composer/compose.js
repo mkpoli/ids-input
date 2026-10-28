@@ -21,6 +21,7 @@ import { componentParts, componentPosition, componentPositionBox, componentRecor
 import { features, forward } from './layout.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
+import { markParts } from './marks.js'
 import { hexOf } from './sha256.js'
 import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
@@ -196,8 +197,8 @@ export class Composer {
   place(part, target, native, origin) { return placed(part, part.box, fitted(part.box, target, this.C.STRETCH), native, origin) }
 
   // ---------------------------------------------------------------- the composer's entry
-  /** The parts drawing `sequence`, weighted. */
-  compose(sequence) {
+  /** The parts drawing `sequence`, weighted, and the loose `marks` its text carries after it. */
+  compose(sequence, marks = '') {
     this.approximate.clear()
     this.nativeEnclosures.clear()
     let slots = 0
@@ -212,6 +213,8 @@ export class Composer {
       out.forEach((part, i) => { part.leaf = ownership.owners[i] })
     }
     if (!this.partial && this.weighted) this.balance(out)
+    // Loose marks annotate the whole drawing; they take no part in its layout or weight.
+    if (marks) out.push(...markParts(this, marks))
     return out
   }
 

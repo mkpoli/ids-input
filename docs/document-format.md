@@ -33,10 +33,16 @@ reactivate an old geometry edit by reusing its removed target ID. Labels use an 
 
 | `kind` | required content | IDS projection |
 | --- | --- | --- |
-| `component` | `char`: one core component, optionally followed by one variation selector | `char` |
-| `operator` | `op`, `children` in operand order | `op` followed by each child's projection |
+| `component` | `char`: one core component, optionally followed by one variation selector and loose marks | `char` |
+| `operator` | `op`, `children` in operand order, optional `marks` | `op`, each child's projection, then `marks` |
 | `slot` | none | `⬚` |
 | `group` | one `child` | child's projection |
+
+A loose mark is a combining mark, a modifier letter or a superscript written after the whole
+description (`⿰亻木ˊ`): it annotates the character rather than taking an operand's place. Marks
+therefore belong where the projection ends—the root, the last child of its last child, or the child of
+a root group—and an edit that would carry them inside the tree hoists them back to the root, in
+reading order. A slot cannot carry them.
 
 An operator has exactly the arity defined by `src/core/ids.js`. A group has an
 identity layout and carries an authored transform independently of an IDS

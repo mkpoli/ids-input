@@ -30,7 +30,7 @@ export function insertAt(tree, draft, offset, part, operator) {
   if (isNode(parent) && (parent.op === '⿰' || parent.op === '⿱')) {
     const parts = [...parent.parts], at = index + (before ? 0 : 1)
     parts.splice(at, 0, part)
-    return { tree: replaceAt(tree, parentPath, { op: parent.op === '⿰' ? '⿲' : '⿳', parts }), path: [...parentPath, at] }
+    return { tree: replaceAt(tree, parentPath, { ...parent, op: parent.op === '⿰' ? '⿲' : '⿳', parts }), path: [...parentPath, at] }
   }
   const op = isNode(parent) && parent.op === '⿳' ? '⿱' : '⿰'
   return { tree: replaceAt(tree, path, { op, parts: before ? [part, current] : [current, part] }), path: [...path, before ? 0 : 1] }
