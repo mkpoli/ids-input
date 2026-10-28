@@ -44,6 +44,10 @@ const isSelector = ch => ch !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.t
 const MODIFIER = /^[0-9:,._xabcdlr|-]+$/u
 const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
+// How far past the heavy master a part squeezed into a narrow box may grow: its stems keep the
+// width the character's density calls for even when the box is a fraction of its own.
+const WEIGHT_GROWTH = 3
+
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
 export function parseTree(sequence, arity) {
@@ -1184,7 +1188,9 @@ export class Composer {
   }
 
   // ---------------------------------------------------------------- weight
-  /** Each part's strokes brought to the width the whole character's density calls for (`_balance`). */
+  /** Each part's strokes brought to the width the whole character's density calls for (`_balance`).
+   * A part drawn into a target narrower than its source may grow past the heavy master, up to
+   * `WEIGHT_GROWTH`; a part already no thicker than a stroke keeps its weight there. */
   balance(group) {
     const C = this.C, stem = this.stem0
     const curve = (density, axis) => C.STEM_CURVE[axis][0] + C.STEM_CURVE[axis][1] * density / 1000
@@ -1207,7 +1213,7 @@ export class Composer {
         }
         const measured = p.part.contours[0]?.width
         const own = measured ? measured[axis] : curve(p.native, axis)
-        weight.push(Math.min(p.weightLimit?.[axis] ?? 1, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
+        weight.push(Math.min(p.weightLimit?.[axis] ?? WEIGHT_GROWTH, Math.max(-0.6, (curve(density, axis) / (scale[axis] * own) - 1) / ratio[axis])))
       }
       p.target = target
       p.weight = weight

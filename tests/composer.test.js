@@ -11,6 +11,7 @@ import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
+import { drawnContours, makePart, placed } from '../src/composer/geometry.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -435,5 +436,42 @@ describe('an empty slot', () => {
     expect(p).toMatchObject({ x: 140, y: 140, width: 320, height: 720 })
     expect(p.gap).toBeGreaterThan(p.dot)
     expect(p).not.toHaveProperty('plus')
+  })
+})
+
+describe('a part squeezed into a narrow box', () => {
+  // The font's stems: 10 units of stem at the light master, 20 at the heavy one, so a weight of 1
+  // draws the heavy master and a weight of 3 draws three times its distance from the light one.
+  const composer = () => {
+    const c = Object.create(Composer.prototype)
+    c.C = { STEM_CURVE: [[85.34, -1.324], [86.93, -1.914]] }
+    c.stem0 = [[10, 20], [10, 20]]
+    return c
+  }
+  /** A 200×100 part whose 60-unit bar is drawn into a 110×55 box. The heavy master's bar is 80
+   *  wide, so a weight between 1 and 3 overshoots the heavy master without reaching the cap. */
+  const squeezed = () => {
+    const bar = (x0, x1) => new Float64Array([x0, 0, x1, 0, x1, 100, x0, 100])
+    const part = makePart([{ ops: [], light: bar(70, 130), heavy: bar(60, 140), width: [60, 60] }], [0, 0, 200, 100])
+    const p = placed(part, [0, 0, 200, 100], [0, 0, 110, 55], 1000, 'test')
+    p.inkLength = 1000
+    return p
+  }
+
+  it('extrapolates past the heavy master below the cap', () => {
+    const p = squeezed()
+    composer().balance([p])
+    expect(p.weight[0]).toBeGreaterThan(1)
+    expect(p.weight[0]).toBeLessThan(3)
+    const xs = drawnContours(p)[0].filter((_, i) => i % 2 === 0)
+    const width = Math.max(...xs) - Math.min(...xs)
+    expect(width).toBeGreaterThan(80 * 0.55) // the heavy master's bar, 44 wide
+  })
+
+  it('keeps the explicit limit a part sets', () => {
+    const p = squeezed()
+    p.weightLimit = [1, 0]
+    composer().balance([p])
+    expect(p.weight).toEqual([1, 0])
   })
 })

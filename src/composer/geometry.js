@@ -260,9 +260,10 @@ export function within(box, room) {
   return w * h / Math.max((box[2] - box[0]) * (box[3] - box[1]), 1)
 }
 
-/** A placed part: `part` drawn into `target` from `source`, moved `weight` of the way to the heavy
- *  master along x and y; `native` is the outline length of the glyph it was drawn in. `flips` mirror
- *  it in turn, each about its point along x, y or both (⿾ ⿿); `cut` marks a part taken away (㇯). */
+/** A placed part: `part` drawn into `target` from `source`, moved `weight` times the light-to-heavy
+ *  distance along x and y (1 is the heavy master, above 1 extrapolates past it); `native` is the
+ *  outline length of the glyph it was drawn in. `flips` mirror it in turn, each about its point
+ *  along x, y or both (⿾ ⿿); `cut` marks a part taken away (㇯). */
 export const placed = (part, source, target, native, origin, weight = [0, 0]) => ({ part, source, target, weight, native, origin })
 
 export const scaleOf = p => [(p.target[2] - p.target[0]) / Math.max(p.source[2] - p.source[0], 1),
