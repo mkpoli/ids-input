@@ -23,23 +23,34 @@ describe('the demo examples', () => {
     }
   })
   it('name a character from BabelStone or a cited alternative description', () => {
-    for (const example of EXAMPLES) {
-      const { sequence, char } = example
-      const found = described.get(sequence) ?? []
-      if (char) {
-        expect([...char]).toHaveLength(1)
-        if ('source' in example && example.source === 'data/small-seal.json.gz') {
-          const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))
-          expect(seal.table[char]).toContain(sequence)
-          expect(seal.modern[char]).toContain(example.modern)
-        } else if ('source' in example) {
-          expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
-          expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
-        } else expect(found).toContain(char)
-      } else {
-        expect(found).toEqual([])
+    for (const group of EXAMPLE_GROUPS) {
+      for (const example of group.examples) {
+        const { sequence, char } = example
+        const found = described.get(sequence) ?? []
+        if (group.source) {
+          expect(group.source).toMatch(/^https:\/\//)
+          expect([...char]).toHaveLength(1)
+        } else if (char) {
+          expect([...char]).toHaveLength(1)
+          if ('source' in example && example.source === 'data/small-seal.json.gz') {
+            const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))
+            expect(seal.table[char]).toContain(sequence)
+            expect(seal.modern[char]).toContain(example.modern)
+          } else if ('source' in example) {
+            expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
+            expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
+          } else expect(found).toContain(char)
+        } else {
+          expect(found).toEqual([])
+        }
       }
     }
+  })
+  it('keep the Geba abbreviations in one cited group', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
+    expect(group.source).toBe('https://zh.wikipedia.org/wiki/全学联汉字')
+    expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '寮' })
+    expect(group.examples).toHaveLength(11)
   })
   it('are distinct', () => {
     expect(new Set(EXAMPLES.map(example => example.sequence)).size).toBe(EXAMPLES.length)
@@ -47,7 +58,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

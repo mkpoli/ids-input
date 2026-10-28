@@ -657,6 +657,13 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
   (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
+- [全学联汉字](https://zh.wikipedia.org/wiki/全学联汉字), Chinese Wikipedia, section 西文字母 (read
+  2026-10-28): the Geba-ji abbreviations in `demo/lib/examples.js`, `⿱宀R` for 寮 and ten more. The
+  table writes the letters full width (Ｒ, Ｋ); the examples use ASCII. The forms are the HAN-LATIN
+  entries in Gen Kojitani, [Proposal to add a new CJK Abbreviations block, L2/24-125](https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf),
+  2024-04-24. Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
+  which shows 宀+R for 寮. The Japanese Wikipedia article [ゲバ字](https://ja.wikipedia.org/wiki/ゲバ字)
+  gives the same form.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),

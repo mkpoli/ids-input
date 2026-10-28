@@ -82,3 +82,13 @@ it('prepares the Small Seal examples with bundled outlines', () => {
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
   }
 })
+
+it('prepares the Geba abbreviations with their Latin letters', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'geba').examples
+  for (const { sequence } of examples) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(drawn.origins).toEqual(expect.arrayContaining([expect.stringMatching(/^glyph [A-Z]$/)]))
+  }
+})

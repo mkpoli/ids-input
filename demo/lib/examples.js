@@ -45,6 +45,16 @@
 // 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
 // Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
 // https://jyutnet.github.io/unencoded-characters/
+// Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), section 西文字母, read 2026-10-28:
+// https://zh.wikipedia.org/wiki/全学联汉字
+// The table writes the letters full width (Ｒ, Ｋ, …); the examples use ASCII. Each abbreviates the
+// character in `char`: 寮 宀+R, 僚 亻+宀+R, 療 疒+R, 軍 冖+G, 確 石+K, 韓 龺+K, 還 辶+K,
+// 館 飠+K, 縄 糸+N, 認 言+N, 論 言+R. The forms are the HAN-LATIN entries of Gen Kojitani,
+// Proposal to add a new CJK Abbreviations block, L2/24-125 (2024-04-24):
+// https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf
+// Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
+// and shows 宀+R for 寮. The Japanese Wikipedia article ゲバ字 gives the same form:
+// https://ja.wikipedia.org/wiki/ゲバ字
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
     { sequence: '⿾正', char: '𣥄' },
@@ -134,6 +144,19 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿱ㄅㄞ', char: '' },
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
+  ] },
+  { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
+    { sequence: '⿱宀R', char: '寮' },
+    { sequence: '⿰亻⿱宀R', char: '僚' },
+    { sequence: '⿸疒R', char: '療' },
+    { sequence: '⿱冖G', char: '軍' },
+    { sequence: '⿰石K', char: '確' },
+    { sequence: '⿰龺K', char: '韓' },
+    { sequence: '⿺辶K', char: '還' },
+    { sequence: '⿰飠K', char: '館' },
+    { sequence: '⿰糸N', char: '縄' },
+    { sequence: '⿰言N', char: '認' },
+    { sequence: '⿰言R', char: '論' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', examples: [
