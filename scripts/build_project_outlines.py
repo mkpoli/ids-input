@@ -6,7 +6,7 @@
 
 `build_unicode_outlines.py` fills gaps from a pinned font order; for CJK Extension J that is Jigmo, a
 serif design. The workshop's default face is Sans, and this project's descriptions cover characters
-newer than the bundled editions (`data/ids-project.tsv`). For those characters, take the outline from
+newer than the bundled editions (`data/ids-characters.tsv`). For those characters, take the outline from
 Plangothic P2 (SIL OFL 1.1), a Source Han Sans design, so the fallback glyph matches the Sans face.
 
 Run after `build_unicode_outlines.py`, since that script rewrites every shard:
@@ -35,7 +35,7 @@ from fontTools.ttLib import TTFont
 from build_tangut_outlines import Contours
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE = ROOT / "data" / "ids-project.tsv"
+SOURCE = ROOT / "data" / "ids-characters.tsv"
 OUTLINES = ROOT / "data" / "unicode-outlines"
 METADATA = ROOT / "data" / "unicode-outlines.json"
 PLANGOTHIC = {

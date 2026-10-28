@@ -676,7 +676,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   the adapter reads descriptions by it.
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
-  `𳑳` (U+33473) as `⿷⿺己一三` (0.3 KB gzipped).
+  currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).
+- `data/ids-characters.tsv`: characters this project draws from their own outline, 𳳳 (U+33473)
+  from Plangothic P2; the outline and font builders read it.
 - `data/ids-context.tsv`: descriptions that draw as an encoded character's context-adapted form,
   `⿰𦚏𳳳` as 龍 (JYutnet JYN00025); the adapter reads it with `context`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
@@ -735,9 +737,6 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Unicode 17.0.0, released 2025-09-09, CJK Extension J: `𳳳` (U+33473), a Vietnamese variant
   (VN-F0BEA) and `kStrange` of 龍. <https://www.unicode.org/versions/Unicode17.0.0/>; the code
   chart is <https://www.unicode.org/charts/PDF/U323B0.pdf>, p.55.
-- 字統网 (zi.tools), `ids_zi_tools` for U+33473, `⿷⿺#(𠃑-一乚)一三`, read through
-  <https://zi.tools/api/zi/%F0%B3%91%B3> on 2026-10-28: the reference for the description in
-  `data/ids-project.tsv`; the stroke group is written as 己 there.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.

@@ -24,7 +24,7 @@ Plane, Extension A included, comes from the reader's own CJK font.
 - `Plangothic-ids-project.woff2` (4.6 KB, 1 character): U+33473 𳑳 from Plangothic P2 V2.9.5795,
   the same source and licence as above, named `IDS Project`; it lets the project's characters render
   in the Sans face before the system fonts. Rebuild with
-  `uv run scripts/build_project_font.py` after changing `data/ids-project.tsv`.
+  `uv run scripts/build_project_font.py` after changing `data/ids-characters.tsv`.
 
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
