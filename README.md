@@ -146,8 +146,8 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. The Stroke count panel includes both common and hard-to-type
-parts, including compound IDS, grouped by stroke count and first stroke. Palette text can be selected and copied;
+also work without an editor. The Components panel shows the most used parts first, then every Han
+component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults

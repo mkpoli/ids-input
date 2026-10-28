@@ -1,13 +1,15 @@
 <script>
   // The parts palette: the parts of ideographic description sequences that are hard to type
-  // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Common holds
-  // the parts that are 常用漢字 or in the first level of the 通用规范汉字表, plus frequent components and compound IDS,
-  // most used families first, with related forms adjacent; Tangut
-  // the Tangut components in code point order; Stroke count holds all common and hard-to-type
-  // parts, by stroke count and then by the class of the first stroke (横 豎 撇 點 折, where
-  // recorded, unknown last); Strokes the CJK strokes; Recent the parts picked here before, kept in
-  // this browser under `recentKey` (none kept when it is null). A filter of characters finds those
-  // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
+  // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
+  // shows, by the choice above the grid, the parts that are 常用漢字 or in the first level of the
+  // 通用规范汉字表, plus frequent components and compound IDS, most used families first with related
+  // forms adjacent, or every Han component of one stroke count, grouped by the class of the first
+  // stroke (横 豎 撇 點 折, where recorded, unknown last). Tangut the Tangut components in code point
+  // order, Small Seal the seal forms, Bopomofo the bopomofo letters, Letters & numbers the Latin,
+  // Cyrillic and ASCII parts, Hangul the Hangul letters, Gongche the gongche notation, Strokes the CJK
+  // strokes, Recent the parts picked here before (kept in this browser under `recentKey`, none when
+  // it is null), and Other scripts the rest. A filter of characters finds those parts or matching
+  // compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
@@ -33,8 +35,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('common' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'difficult' | 'strokes' | 'recent' | 'other')[]} */
-  const TABS = ['common', 'gongche', 'tangut', 'seal', 'bopomofo', 'marks', 'alphabet', 'hangul', 'difficult', 'strokes', 'recent', 'other']
+  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'strokes' | 'recent' | 'other')[]} */
+  const TABS = ['components', 'gongche', 'tangut', 'seal', 'bopomofo', 'marks', 'alphabet', 'hangul', 'strokes', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -103,7 +105,9 @@
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
-  let tab = $state(/** @type {(typeof TABS)[number]} */ ('common')), filter = $state('')
+  let tab = $state(/** @type {(typeof TABS)[number]} */ ('components')), filter = $state('')
+  // The group shown in Components: a stroke count, null for the parts lacking one, undefined for the
+  // curated parts the panel opens on.
   /** @type {number | null | undefined} */
   let count = $state(undefined)
   /** @type {string[]} */
@@ -254,11 +258,13 @@
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
+  // The Components panel: the curated set by use, with related forms adjacent, or every Han component
+  // of one stroke count. `chosen` drops a count the palette no longer holds, back to the curated set.
+  const commonParts = $derived(adjacentVariants((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
-  // Stroke counts available in the Stroke count panel, in order, null (not recorded) last; `count` is the one
-  // chosen, undefined until one is, so the first count shows.
+  // The stroke counts the Han components hold, in order, null (not recorded) last.
   const counts = $derived([...new Set(strokeParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
-  const shownCount = $derived(count !== undefined && counts.includes(count) ? count : counts[0])
+  const chosen = $derived(count === undefined || counts.includes(count) ? count : undefined)
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
     .map(cls => ({ cls, parts: adjacentVariants(list.filter(part => (part.first ?? null) === cls)) }))
@@ -317,10 +323,10 @@
     if (tab === 'marks') return [{ cls: undefined, parts: markPalette }]
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
-    if (tab === 'common') return [{ cls: undefined, parts: adjacentVariants(parts.filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)) }]
+    if (tab === 'components') return chosen === undefined ? [{ cls: undefined, parts: commonParts }]
+      : grouped(strokeParts.filter(part => (part.strokes ?? null) === chosen))
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
-    if (tab === 'difficult') return grouped(strokeParts.filter(part => (part.strokes ?? null) === shownCount))
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
@@ -619,12 +625,15 @@
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}
-      {#if tab === 'difficult'}
-        <div class="parts-counts" role="group" aria-label={t('parts.byStrokes')}>
+      {#if tab === 'components'}
+        <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
+          <button type="button" class:active={chosen === undefined} aria-pressed={chosen === undefined}
+            onclick={() => count = undefined}>{t('parts.tab.common')}</button>
           {#each counts as value (value ?? 'unknown')}
-            <button type="button" class:active={value === shownCount} aria-pressed={value === shownCount}
-              title={value == null ? t('parts.unknownStrokes') : t('parts.strokeCount', { count: value })}
-              onclick={() => count = value}>{value ?? '?'}</button>
+            {@const label = value == null ? t('parts.unknownStrokes') : t('parts.strokeCount', { count: value })}
+            <button type="button" class:active={value === chosen} aria-pressed={value === chosen}
+              title={label} aria-label={label}
+              onclick={() => count = value}>{value == null ? '?' : t('parts.strokeChip', { count: value })}</button>
           {/each}
         </div>
       {/if}
@@ -683,8 +692,8 @@
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,sans-serif)}
   .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
-  .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
-  .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}
+  .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
+  .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
