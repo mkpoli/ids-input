@@ -16,9 +16,9 @@ Muneaki proposed in [L2/19-230R, *Amended Proposal to add the "6 letters" (Hangu
 2019-06-24](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf), which was
 answered by [L2/19-233](https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf). The editor
 accepts them as a bundled allocation, as it does for the Small Seal code points; they will
-remain unassigned until Unicode acts on such a proposal. The initial and final forms share
-one outline because the sources draw one letter; a final form differs in position, not in
-shape.
+remain unassigned until Unicode acts on such a proposal. The initial and final entries share
+one outline because the Commons source draws one form for each letter; a final entry is placed
+by its position, not by a separately drawn final form.
 
 The SVGs are [Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s drawings
 on Wikimedia Commons, made 2016-02-08:
