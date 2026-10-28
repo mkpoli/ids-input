@@ -1,6 +1,7 @@
 # BabelStone IDS numbered components, https://www.babelstone.co.uk/CJK/IDS.TXT, Andrew West (魏安); File Date 2025-06-27.
 # IDS.TXT note 6: {n}<TAB>description<TAB>the IDS fragment that writes the component out, empty where the note gives ？.
 # {12}, the right of 龍, is ⿷己三 here; the note leaves it unrepresentable.
+# {82}, the top of 書, is 聿 here; the note writes the same shape as ⿱𦘒一.
 {1}	bottom of 廌焉舃 (F2A5)	⿹⿺㇉一灬
 {2}	top of 免象 (F0CF)	⿱⺈𫩏
 {3}	top of 夐 (F2A7)	⿱⺈⿵冂人
@@ -81,7 +82,7 @@
 {79}	亞 without the top stroke (F5E1)	
 {80}	top of 罙 [G source glyph] (ECE6)	⿱冖八
 {81}	inner part of 𮭷 (ECE7)	
-{82}	top of 書 (F2E3)	⿱𦘒一
+{82}	top of 書 (F2E3)	聿
 {83}	top of 帝 (ECE9)	⿳亠丷冖
 {84}	厂 with hooked stroke (ECEA)	⿰丿乛
 {85}	广 with hooked stroke (ECEB)	⿰丿⿱丶乛

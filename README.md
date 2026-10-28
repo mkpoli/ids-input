@@ -322,7 +322,8 @@ such as water or のぶん when `names` is given), `searchCharacters` (a charact
 meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
 from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
-individually. `forms` folds the description search's
+individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -577,8 +578,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
 - `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
-  that write them out, `{12}`, the right of 龍, as `⿷己三` (5 KB); the adapter reads descriptions by
-  it.
+  that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
+  the adapter reads descriptions by it.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -621,7 +622,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   2025-06-27. Public domain by its own header; it draws on Kawabata Taichi's IDS data
   (<https://github.com/kawabata/ids>) and IRG submissions. Its note 6 supplies the numbered
   components and their fragments (`data/ids-components.tsv`); `{12}`, the right of 龍, is written
-  out as ⿷己三 here, where the note gives no fragment.
+  out as ⿷己三 here, where the note gives no fragment, and `{82}`, the top of 書, as 聿, which the
+  file uses for the same shape in 㶳 (TP), 衋 and, before Unicode 6.0, 𤱪.
 - BabelStone Tangut IDS, Andrew West, <https://www.babelstone.co.uk/Tangut/TangutIDS.txt>, pinned
   by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the

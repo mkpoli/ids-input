@@ -47,10 +47,18 @@ fragment, 4.6 KB; a component the note leaves `？` keeps its number in the desc
 `{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
 names its two halves, 𦚏 and ⿷己三.
 
-The fragments are BabelStone's own (IDS.TXT note 6), public domain. The adapter reads the file with
-`babelStoneAdapter({ components })`; the descriptions it answers and searches name the parts rather
-than BabelStone's numbers. Built by `scripts/build_ids_components.py`, which fetches IDS.TXT and
-leaves the `{12}` entry in its own header note.
+`{82}`, the top of 書, is 聿. The note writes that shape as `⿱𦘒一`, which is 說文解字's own analysis
+of 聿 (「从𦘒一聲」, <https://www.shuowen.org/view/1932>); the file uses the encoded 聿 for the same
+shape elsewhere — 㶳 is `⿱{82}火` in G and `⿱聿火` in TP, 衋 is `⿱⿻聿皕血` in GHTKP and `⿳{82}皕血`
+in J, and 𤱪 was `⿱聿田` before Unicode 6.0 — and CHISE's IDS writes 書 `⿱聿曰`, 畫 `⿳聿田一` and
+晝 `⿱聿旦` (<https://gitlab.chise.org/CHISE/ids>). 書 then reads `⿱聿日` (`⿱聿曰` in H), 畫's X form
+`⿳聿田一` and 晝's `⿱聿旦`; the G forms of 畫 and 晝 reach the same 聿 through 𤱪 `⿱聿田` and 書.
+
+The fragments are BabelStone's own (IDS.TXT note 6), public domain; the two above are editorial. The
+adapter reads the file with `babelStoneAdapter({ components })`; the descriptions it answers and
+searches name the parts rather than BabelStone's numbers. Built by
+`scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
+its own header note.
 
 ## `ids-parts.json`
 
