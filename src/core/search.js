@@ -14,7 +14,7 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isDescription, isSequence } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isDescription, isSequence, splitDescription } from './ids.js'
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
 import { createStructuralSearch } from './structural-search.js'
@@ -69,7 +69,9 @@ export function parseQuery(text, { literal = false } = {}) {
   for (const term of written) {
     // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
     const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
-    const typed = tokens(matching), list = literal ? typed : typed.map((token, i) => searchShape(token, typed[i + 1]))
+    // Loose marks annotate a description; they are not parts of the shape to find.
+    const source = isSequence(matching) ? splitDescription(matching).base : matching
+    const typed = tokens(source), list = literal ? typed : typed.map((token, i) => searchShape(token, typed[i + 1]))
     if (isSequence(term)) {
       const cursor = { at: 0 }
       /** @returns {Pattern} */

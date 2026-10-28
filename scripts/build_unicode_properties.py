@@ -37,8 +37,19 @@ def ranges(points):
     return out
 
 
+def superscript(point):
+    """A superscript or subscript digit (No), as a loose mark may be written after a description."""
+    return point in (0xB2, 0xB3, 0xB9) or 0x2070 <= point <= 0x209F
+
+
+def tone_symbol(point):
+    """A modifier symbol for an accent or a tone letter (Sk), read as a loose mark."""
+    return point in (0xA8, 0xAF, 0xB4, 0xB8) or 0x2D2 <= point <= 0x2DF or 0x2E5 <= point <= 0x2ED \
+        or 0x309B <= point <= 0x309C or 0xA700 <= point <= 0xA71F
+
+
 def build():
-    graphic, letters = set(), set()
+    graphic, letters, marks = set(), set(), set()
     start = None
     for line in text('UnicodeData.txt').splitlines():
         code, name, category, *_ = line.split(';')
@@ -51,10 +62,15 @@ def build():
             graphic.update(points)
         if category.startswith('L') or category == 'Nd':
             letters.update(points)
+        if category.startswith('M') or category == 'Lm' \
+                or category == 'No' and all(superscript(p) for p in points) \
+                or category == 'Sk' and all(tone_symbol(p) for p in points):
+            marks.update(points)
     invisible = prop('Default_Ignorable_Code_Point', 'DerivedCoreProperties.txt')
     ideographic = prop('Ideographic', 'PropList.txt') | prop('Radical', 'PropList.txt')
     return {'version': '18.0.0', 'graphic': ranges(graphic - invisible),
-            'letters': ranges(letters - invisible - ideographic), 'ideographic': ranges(ideographic)}
+            'letters': ranges(letters - invisible - ideographic), 'ideographic': ranges(ideographic),
+            'marks': ranges(marks - invisible)}
 
 
 if __name__ == '__main__':

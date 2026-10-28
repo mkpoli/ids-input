@@ -16,6 +16,7 @@ import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { unicodeSource } from './unicode.js'
+import { splitDescription } from '../core/ids.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
@@ -24,9 +25,13 @@ self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm 
   const seal = !warm && hasSmallSeal(sequence)
   const newKorean = !warm && hasNewKorean(sequence)
   const palette = !warm && [...sequence].some(hasPaletteGlyph)
-  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${newKorean}:${palette}`
+  // A loose mark's outline comes from the bundled Unicode outlines, even when the rest is local.
+  const loose = !warm && splitDescription(sequence).marks !== ''
+  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${newKorean}:${palette}:${loose}`
   if (!sources.has(key)) {
-    let source = local ? null : fromUrl(base)
+    let source = null
+    if (!local) source = fromUrl(base)
+    else if (loose) source = unicodeSource()
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
     if (seal) source = smallSealSource({ fallback: source })

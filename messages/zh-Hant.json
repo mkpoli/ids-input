@@ -144,6 +144,7 @@
   "parts.strokeCount.other": "{count}畫",
   "parts.tab.seal": "小篆",
   "parts.tab.bopomofo": "注音符號",
+  "parts.tab.marks": "附加符號",
   "parts.tab.alphabet": "字母與數字",
   "parts.tab.hangul": "諺文",
   "parts.hangul.group": "顯示",

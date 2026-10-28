@@ -214,3 +214,35 @@ describe('identity edits', () => {
     expect(allocatorFor(document).ids.has('gone')).toBe(true)
   })
 })
+
+describe('loose marks in a document', () => {
+  it('keeps them at the end of the projection, on the root', () => {
+    const marked = fromSequence('⿰亻木ˊ')
+    expect(toSequence(marked.root)).toBe('⿰亻木ˊ')
+    expect(marked.root.marks).toBe('ˊ')
+    expect(toSequence(fromSequence('木ˊ').root)).toBe('木ˊ')
+    expect(validateDocument(marked)).toEqual([])
+  })
+  it('moves them to the root when an edit would leave them inside', () => {
+    const marked = fromSequence('⿰亻木ˊ')
+    const wrapped = wrapNode(marked, marked.root.id, '⿱').document
+    expect(toSequence(wrapped.root)).toBe('⿱⿰亻木⬚ˊ')
+    const decomposed = replaceWithSequence(fromSequence('口'), 'root', '⿰亻木ˇ')
+    expect(toSequence(decomposed.root)).toBe('⿰亻木ˇ')
+    expect(decomposed.root.marks).toBe('ˇ')
+  })
+  it('hands them to the part that stands in an unwrapped operator', () => {
+    const marked = fromSequence('⿱木口ˋ')
+    expect(toSequence(unwrapNode(marked, 'root').root)).toBe('木ˋ')
+    const inner = fromSequence('⿰⿱木口⬚ˉ')
+    expect(toSequence(unwrapNode(inner, inner.root.children[0].id).root)).toBe('⿰木⬚ˉ')
+  })
+  it('rejects marks inside the tree and text that is not a mark run', () => {
+    const inner = fromSequence('⿰木口')
+    inner.root.children[0].char = '木ˊ'
+    expect(validateDocument(inner).map(issue => issue.message)).toContain('loose marks end the description')
+    const bad = fromSequence('⿰木口ˊ')
+    bad.root.marks = '口'
+    expect(validateDocument(bad).map(issue => issue.message)).toContain('loose marks are 1 to 16 combining marks, modifier letters or superscripts')
+  })
+})

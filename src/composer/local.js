@@ -1,5 +1,5 @@
 // @ts-check
-import { isNode, parse, write } from '../core/ids.js'
+import { isNode, parse, splitDescription, write } from '../core/ids.js'
 import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hasTangut } from './tangut.js'
 import { hasSmallSeal } from './small-seal.js'
@@ -10,7 +10,10 @@ import { hasUnicodeGlyph } from './unicode.js'
 
 /** Whether every filled leaf has bundled outlines. @param {string} sequence @param {boolean} [separate] @param {boolean} [unicode] @param {string} [fontStyle] */
 export function onlyBundled(sequence, separate = false, unicode = false, fontStyle = 'sans') {
-  const result = parse(sequence, { open: true })
+  // A loose mark loads from the bundled Unicode outlines; the description before it decides the rest.
+  const { base, marks } = splitDescription(sequence)
+  if (marks && ![...marks].every(hasUnicodeGlyph)) return false
+  const result = parse(base, { open: true })
   if (result.problem || result.tree === null) return false
   let filled = false
   /** @param {import('../core/ids.js').Part} node */
