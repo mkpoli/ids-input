@@ -543,10 +543,10 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
-| Drawable palette forms | 1,334 |
+| Drawable palette forms | 1,383 |
 | Selected basic parts | 138 |
 | Compound forms | 1,172 |
-| Other / unclassified forms | 24 |
+| Other forms, including 49 curated crosswalks | 73 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -554,7 +554,9 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 There are 29 additional apparent-form descriptions, so the description statuses total
 11,143. An empty field does not distinguish an atomic character from unfinished data.
 The editor's 49 descriptions are machine-validated imports, without a separate
-palaeographic review.
+palaeographic review. The palette also carries 49 curated crosswalks from
+`scripts/data/small-seal/supplements.json`; they mark a Unicode SealSources value
+and one CHISE record, and ship with pinned glyphs and checksums.
 
 Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
 
@@ -573,7 +575,8 @@ The palette is independent of the 49 complete descriptions. It includes mapped
 CHISE heads and the Unicode Shuowen radical heads for which a pinned SVG exists.
 `seal-sources.txt.gz` preserves the pinned Unicode mapping from the Kaiyuan source
 archive; its license is in `COPYING-seal-sources.txt`. `paletteSources` records the
-Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lookup alias.
+Unicode digest, the BabelStone IDS digest, the reference for the 𠙵/口 lookup alias,
+and each curated crosswalk entry.
 
 `parts` entries carry `modern` lookup names, `sealGroup`, and `sealBasis`:
 
@@ -585,6 +588,9 @@ Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lo
   are retained for inspection and the UI marks the grouping with `≈`.
 - `other` / `unknown`: no classification is established. An empty source field
   never establishes that a character is atomic.
+- `other` / `crosswalk`: a curated Unicode SealSources and CHISE crosswalk from
+  `scripts/data/small-seal/supplements.json`. It supplies modern lookup names and a
+  pinned glyph, and never adds a `table` entry.
 
 Modern IDS inference affects palette grouping only. It never supplies a seal
 `table` entry or changes exact encoding lookup. Palette usage counts include mapped
@@ -596,7 +602,7 @@ To refresh the bundled SVG subset from the same pinned Kaiyuan revision, pass
 Rebuild the font and outlines afterward with `uv run scripts/build_small_seal_font.py`.
 
 JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
-labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
+labels), `sources`, `paletteSources`, `license`, and `records`. Each source record has its ID, mapped
 character or null, original structural description, and a `descriptions` list. Each
 description preserves `original`, `kind` (`structural` or `apparent`), resolved `text`,
 `status`, and any `unresolved` identifiers. `unsupported` covers resolved expressions

@@ -18,7 +18,7 @@ const adapter = smallSealAdapter({ data, table, palette: [] })
 it('preserves every Jiguge source record and excludes unresolved data from the editor', () => {
   expect(data.records).toHaveLength(11114)
   expect(Object.keys(data.table)).toHaveLength(49)
-  expect(data.parts).toHaveLength(1334)
+  expect(data.parts).toHaveLength(1383)
   const statuses = {}
   for (const record of data.records) for (const d of record.descriptions) {
     statuses[d.status] = (statuses[d.status] ?? 0) + 1
@@ -44,6 +44,16 @@ it('looks up seal decompositions without replacing modern Han structures', async
   expect((await adapter.search('U+3D10C')).map(h => h.char)).toEqual([seal, '玨', '珏'])
   expect((await adapter.search(seal)).map(h => h.char)).toEqual([seal, '玨', '珏'])
   expect((await adapter.parts()).every(p => p.kind === 'seal')).toBe(true)
+})
+
+it('finds curated crosswalk forms from modern variants', async () => {
+  const zheng = String.fromCodePoint(0x3DB6E)
+  expect((await adapter.search('爭')).map(h => h.char)).toContain(zheng)
+  expect((await adapter.search('争')).map(h => h.char)).toContain(zheng)
+  expect((await adapter.search(zheng)).map(h => h.char)).toEqual(expect.arrayContaining(['爭', '争']))
+  const part = (await adapter.parts()).find(p => p.part === zheng)
+  expect(part.sealBasis).toBe('crosswalk')
+  expect(part.sealGroup).toBe('other')
 })
 
 it('finds seal characters by their parts and keeps result limits', async () => {

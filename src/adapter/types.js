@@ -17,7 +17,7 @@
  * @property {string} [variantGroup] Shared identity for adjacent palette variants; selection keeps the literal form.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
- * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.
+ * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'crosswalk' | 'unknown'} [sealBasis] Evidence for the palette grouping.
  * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
  * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
  * @property {string} part

@@ -181,6 +181,7 @@
   "parts.seal.filter": "Filter by seal or CJK character",
   "parts.seal.estimate": "≈ Group inferred from modern CJK",
   "parts.seal.inferred": "Grouping inferred from modern IDS: {ids}",
+  "parts.seal.crosswalk": "Unicode and CHISE crosswalk",
   "ids.structural.title": "Structural search",
   "ids.structural.examples": "Example structures",
   "ids.structural.morePatterns": "More patterns",

@@ -117,7 +117,7 @@
   "app.source.hfhchan": "部品一覧で分解しない部品の判定。",
   "app.source.kanjivg": "組字器の一部の切り出し。その切り出しを含む字形は同条件で共有。",
   "app.source.smallSeal": "汲古閣本『説文解字』の構字情報。Unicodeに対応付けられた49字と31部件を収録。ほかの原資料の項目は未対応です。",
-  "app.source.sealFont": "陳昌治本に基づく1,334字の字形。提供元での確認作業は未完了です。",
+  "app.source.sealFont": "陳昌治本に基づく1,383字の字形。提供元での確認作業は未完了です。",
   "app.source.newKoreanLetters": "未符号化の朝鮮語新綴字法の4字母の図案。L2/19-230Rが提案する符号位置に置いています。",
   "app.source.tangut": "西夏文字の表示と組字に使う字形。",
   "app.source.noto": "han-composeが動かす字形と、部品用フォント。",

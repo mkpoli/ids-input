@@ -177,6 +177,7 @@
   "parts.seal.filter": "소전 또는 한자로 필터",
   "parts.seal.estimate": "≈ 현대 한자로 추정한 분류",
   "parts.seal.inferred": "현대 한자 IDS로 추정한 분류: {ids}",
+  "parts.seal.crosswalk": "유니코드·CHISE 대응",
   "ids.structural.title": "구조 검색",
   "ids.structural.examples": "구조 예시",
   "ids.structural.morePatterns": "다른 구조",
