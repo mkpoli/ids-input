@@ -134,7 +134,7 @@
   onresize={() => dismiss()} />
 
 <div class="tabbar">
-  <div class="tabs" role="tablist" aria-label={t('app.tabs')} bind:this={strip}>
+  <div class="tabs" role="tablist" aria-label={t('app.tabs.label')} bind:this={strip}>
     {#each tabs as tab, at (tab.id)}
       {@const name = label(tab)}
       {@const marked = edited(tab)}
