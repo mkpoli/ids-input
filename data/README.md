@@ -684,6 +684,11 @@ curves with a maximum error of 0.5 normalized units; packed coordinates use quar
 Unicode acceptance uses the bundled Unicode 18.0.0 properties, matching the editor's rules. The gzip OS header is
 normalized so supported Python versions produce the same shard bytes.
 
+After the main build, `uv run scripts/build_project_outlines.py` replaces the fallback outlines of the
+characters in `ids-project.tsv` with Plangothic P2 glyphs (SIL OFL 1.1), a Source Han Sans design, so
+Extension J characters such as 𳑳 match the Sans face instead of Jigmo's serif. The script updates the
+shard hashes and adds the Plangothic source to `unicode-outlines.json`.
+
 These are individual monochrome glyphs, without contextual shaping or color-emoji layers.
 A variation selector needs an explicit glyph in the selected export; it is not silently dropped.
 Unassigned and private-use characters without a source outline remain unavailable.
@@ -777,12 +782,17 @@ superscript or subscript digits (No in U+00B2–B3, U+00B9 and U+2070–209F). S
 
 The fallback order retains existing Noto outlines, then uses Jigmo3 2025-09-12 (CC0-1.0),
 Noto Emoji (SIL OFL 1.1), and GNU Unifont 18.0.01 (under its SIL OFL 1.1 option).
-Jigmo supplies CJK Extension J; Noto Emoji supplies monochrome emoji contours. Unifont fills
-remaining published glyphs, including recent kana, Cyrillic, phonetic letters and ideographic marks.
-Its pixel-based outlines retain their original design. The host export's glyphs take precedence.
+Jigmo supplies CJK Extension J, except the project's own characters, which
+`build_project_outlines.py` takes from Plangothic P2 (a sans design); Noto Emoji supplies monochrome
+emoji contours. Unifont fills remaining published glyphs, including recent kana, Cyrillic, phonetic
+letters and ideographic marks. Its pixel-based outlines retain their original design. The host
+export's glyphs take precedence.
 
 - [Jigmo](https://kamichikoichi.github.io/jigmo/): source file and digest in `unicode-fonts.json`;
   [CC0 text](../fonts/LICENSE-Jigmo.txt).
+- [Plangothic](https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project): P2 V2.9.5795,
+  SIL OFL 1.1, for the project's Extension J fallback glyphs; source URL and digest in
+  `unicode-outlines.json`.
 - [Noto Emoji](https://github.com/google/fonts/tree/8b0a1d0f5983c89bc2b93f1b5fb55f9e252744b5/ofl/notoemoji):
   pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
 - [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
