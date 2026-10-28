@@ -371,11 +371,11 @@ document inside it is the same `.ids.json` document.
 ## Implementation boundary and checks
 
 The current editor still uses positional core trees, canvas-space drawing
-pieces, flat affine adjustments and sequence-based draft storage. The
-identified document model can be reconciled from those trees with
-`syncDocument`, preserving layer identity and transforms at the same paths;
-the editor, renderer and storage bindings have not switched to it yet. The core IDS parser and writer remain the projection
-boundary.
+pieces and flat affine adjustments. The identified document model is reconciled
+from those trees with `syncDocument`, and the workshop keeps a session with
+each tab and saved draft. The preview, transform controls and share links have
+not switched to the document yet. The core IDS parser and writer remain the
+projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports
 and projects IDS, checks the document structure and transforms, reads and writes

@@ -324,7 +324,9 @@ itself is the `.ids.json` file, written by `writeDocument` and read by `readDocu
 `syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
 document at the same paths, keeping each layer's ID, name and transform through replacements and
 structural edits. Pass the long-lived session allocator so removed IDs do not return.
-`treeFromDocument` and `documentFromTree` convert between the two projections.
+`treeFromDocument` and `documentFromTree` convert between the two projections. The workshop keeps a
+session with each tab and saved draft, so the document survives reloads; the preview and share links
+still use the sequence alone.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
