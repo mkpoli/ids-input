@@ -33,12 +33,19 @@ def main():
     # Eligibility is the same pinned Unicode table used by the parser.
     properties = json.loads((ROOT / 'data/unicode-properties.json').read_text())
     allowed = {cp for lo, hi in properties['graphic'] for cp in range(lo, hi + 1)}
-    # Existing bundles/host exports cover these ranges. Extension J needs a fallback.
-    covered = [(0x2E80, 0x2FDF), (0x3105, 0x312F), (0x31A0, 0x31EF),
-               (0x3400, 0x4DBF), (0x4E00, 0x9FFF), (0xF900, 0xFAFF),
-               (0x17000, 0x18AFF), (0x18D00, 0x18DFF), (0x20000, 0x323AF),
-               (0x33480, 0x3FFFD), (0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)]
-    for lo, hi in covered:
+    # Preserve existing fallbacks; omit host CJK glyphs only when an actual record exists.
+    host = json.loads((ROOT / 'data/host-glyph-coverage.json').read_text())
+    host_points = {cp for lo, hi in host['ranges'] for cp in range(lo, hi + 1)}
+    host_ranges = [(0x2E80, 0x2FDF), (0x3400, 0x4DBF), (0x4E00, 0x9FFF),
+                   (0xF900, 0xFAFF), (0x20000, 0x323AF), (0x33480, 0x3CFFF)]
+    for lo, hi in host_ranges:
+        allowed.difference_update(host_points.intersection(range(lo, hi + 1)))
+    # Dedicated bundles have holes too. Their exact records are the coverage boundary.
+    for name in ['tangut', 'bopomofo', 'small-seal', 'palette']:
+        bundle = json.loads(gzip.decompress((ROOT / f'data/{name}-outlines.json.gz').read_bytes()))
+        allowed.difference_update(ord(key) for key, record in bundle['records'].items()
+                                  if len(key) == 1 and record.get('G', {}).get('p'))
+    for lo, hi in [(0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)]:
         allowed.difference_update(range(lo, hi + 1))
     allowed.difference_update([0x2B1A, 0xFF0B, 0x303E, *range(0x2FF0, 0x3000)])
     records, provenance = {}, []
@@ -138,7 +145,7 @@ def main():
         if points:
             blocks.append({'block': name.strip(), 'count': len(points), 'ranges': compact_ranges(points)})
     (ROOT / 'data/unicode-outline-gaps.json').write_text(json.dumps({
-        'unicode': properties['version'], 'scope': 'Assigned fallback candidates outside dedicated bundles and host-handled CJK ranges; private use excluded',
+        'unicode': properties['version'], 'scope': 'Assigned fallback candidates excluding exact dedicated-bundle records and pinned host CJK outlines; private use excluded',
         'count': len(missing), 'blocks': blocks}, ensure_ascii=False, indent=2) + '\n')
     print(f'{len(records)} outlines, {len(shards)} shards, {sum(x["bytes"] for x in metadata.values())} compressed bytes', flush=True)
 
