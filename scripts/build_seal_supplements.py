@@ -94,12 +94,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('report', type=Path)
     args = parser.parse_args()
-    report = json.loads(args.report.read_text())
-    dataset = (ROOT / 'data/small-seal.json.gz').read_bytes()
-    if report.get('inputs', {}).get('data/small-seal.json.gz') != digest(dataset):
-        raise ValueError('Report inputs do not match the current seal dataset; rerun check_small_seal.mjs')
-    doc = json.loads(gzip.decompress(dataset))
-    manifest = json.loads((DIRECTORY / 'supplements.json').read_text())
+    report = json.loads(args.report.read_text(encoding='utf-8'))
+    inputs = report.get('inputs', {})
+    for name in ('data/small-seal.json.gz', 'data/babelstone-ids.tsv.gz', 'data/yi-bai-ids.tsv.gz', 'data/component-forms.tsv'):
+        if inputs.get(name) != digest((ROOT / name).read_bytes()):
+            raise ValueError(f'Report inputs do not match {name}; rerun check_small_seal.mjs')
+    doc = json.loads(gzip.decompress((ROOT / 'data/small-seal.json.gz').read_bytes()))
+    manifest = json.loads((DIRECTORY / 'supplements.json').read_text(encoding='utf-8'))
     if manifest['format'] != 1: raise ValueError('Unsupported seal supplement format')
     existing = {entry['char']: entry for entry in manifest['entries']}
     needed = unresolved(report, doc)
@@ -140,7 +141,7 @@ def main():
     with ThreadPoolExecutor(max_workers=4) as pool:
         added = list(pool.map(fetch, entries))
     merged = sorted([*existing.values(), *added], key=lambda entry: entry['char'])
-    (DIRECTORY / 'supplements.json').write_text(json.dumps({'format': 1, 'entries': merged}, ensure_ascii=False, indent=2) + '\n')
+    (DIRECTORY / 'supplements.json').write_text(json.dumps({'format': 1, 'entries': merged}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     print(f'{len(added)} entries added, {len(merged)} total; {len(needed)} unresolved components before')
 
 

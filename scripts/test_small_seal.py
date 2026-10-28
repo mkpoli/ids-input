@@ -61,7 +61,7 @@ class SealSupplementEvidence(unittest.TestCase):
         from pathlib import Path
         from build_small_seal import sexps, properties
         root = Path(__file__).resolve().parents[1]
-        entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text())['entries']
+        entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text(encoding='utf-8'))['entries']
         self.assertTrue(entries)
         archive = root / 'data/small-seal-sources.tar.gz'
         archiveSha = hashlib.sha256(archive.read_bytes()).hexdigest()
