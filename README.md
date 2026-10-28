@@ -150,7 +150,7 @@ so the page needs `color-scheme: light dark` for its dark scheme.
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -158,6 +158,9 @@ parse('⿰亻', { open: true })   // a draft: { tree: { op: '⿰', parts: ['亻'
 write(applyOperator(parse('⿰亻失').tree, [1], '⿱').tree)  // '⿰亻⿱失⬚'
 unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
+
+pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10 }
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -177,6 +180,16 @@ New Korean Orthography added to Hangul in [L2/19-230R](https://www.unicode.org/L
 supplies the `IDS New Korean` face, and their outlines are bundled for previews and export.
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
+
+### Pyramids
+
+`pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an
+equivalent tree back, whichever way its rows use `⿰`/`⿲` and its stack uses `⿱`/`⿳`. The composer
+draws a pyramid of three or more rows as equal square cells in centred rows, so the 4-row spellings
+given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
+may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
+composer draws up to 64 rows (2,080 cells). The workshop's File → Pyramid dialog makes up to 24 rows,
+where the editor tree is still comfortable.
 
 ### Small Seal (小篆)
 
@@ -524,7 +537,8 @@ const adapter = { ...babelStoneAdapter({ ids, parts }),
 origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
 can still render. Other previews keep their placeholders. When the export loads but a part has
 no outline in either source, its badge reads
-"Could not compose". Sequences over 24 operators or 8 levels are not drawn. Under
+"Could not compose". Sequences over 24 operators or 8 levels are not drawn, except pyramids of up
+to 64 rows, which are laid out as equal cells. Under
 Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
 so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
 for other bundlers.
@@ -741,7 +755,8 @@ column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
 columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
-commands. File → Duplicate tab copies the active document; right-clicking a tab or pressing
+commands. File → Pyramid opens a generator for a triangle of one component; File → Duplicate tab
+copies the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and drawing adjustments, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, examples (each with its

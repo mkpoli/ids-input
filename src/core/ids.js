@@ -16,6 +16,8 @@ export { UNICODE_VERSION } from './unicode.js'
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
 
+import { pyramidRows } from './pyramid-shape.js'
+
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
   ['⿰', 2], ['⿱', 2], ['⿲', 3], ['⿳', 3], ['⿴', 2], ['⿵', 2], ['⿶', 2], ['⿷', 2], ['⿸', 2], ['⿹', 2],
@@ -36,8 +38,12 @@ export const OPERATOR_GROUPS = [
   { arity: 3, ops: ['⿲', '⿳'] },
 ]
 
-/** The longest description, in code points. */
+/** The longest ordinary description, in code points. */
 export const LONGEST = 64
+/** The longest pyramid description, in code points: 64 rows take 3,818. */
+export const PYRAMID_LONGEST = 8192
+/** The deepest operator nest the parser reads, so a long input cannot exhaust the call stack. */
+const MAX_DEPTH = 512
 // Component acceptance follows Unicode categories, independently of preview font coverage.
 // Unicode IDS operands: https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-18/
 // Letters, numbers, marks, punctuation and symbols extend those operands for mixed-script work.
@@ -92,7 +98,8 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
  * write it) and every part an
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
- * ？ stays the component it is.
+ * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
+ * of three or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
  *
  * @param {string | null | undefined} text
  * @param {{ open?: boolean }} [options]
@@ -101,23 +108,30 @@ export const isSequence = text => arity([...(text ?? '')][0]) > 0
 export function parse(text, { open = false } = {}) {
   const chars = [...(text ?? '')]
   if (open && !chars.length) return { tree: null }
-  if (!chars.length || chars.length > LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
-  let at = 0
+  const long = chars.length > LONGEST
+  if (!chars.length || chars.length > PYRAMID_LONGEST || (!open && !isSequence(text)) || /[\p{Cc}\p{Cf}\p{Z}]/u.test(text ?? '')) return { problem: 'character' }
+  let at = 0, depth = 0
   /** @returns {Part} */
   const read = () => {
-    const char = chars[at++]
-    if (char === undefined) { if (open) return null; throw 'missing' }
-    const n = arity(char)
-    if (!n) {
-      if (open && EMPTY_MARKS.includes(char)) return null
-      if (!isComponent(char)) throw 'component'
-      return isSelector(chars[at]) ? char + chars[at++] : char
-    }
-    return { op: char, parts: Array.from({ length: n }, read) }
+    if (depth++ >= MAX_DEPTH) throw 'character'
+    try {
+      const char = chars[at++]
+      if (char === undefined) { if (open) return null; throw 'missing' }
+      const n = arity(char)
+      if (!n) {
+        if (open && EMPTY_MARKS.includes(char)) return null
+        if (!isComponent(char)) throw 'component'
+        return isSelector(chars[at]) ? char + chars[at++] : char
+      }
+      return { op: char, parts: Array.from({ length: n }, read) }
+    } finally { depth-- }
   }
   try {
     const tree = read()
-    return at < chars.length ? { problem: 'extra' } : { tree }
+    // A whole description may run past the ordinary length only as a pyramid; a draft may be long.
+    if (!open && long && !pyramidRows(tree)) return { problem: 'character' }
+    if (at < chars.length) return { problem: 'extra' }
+    return { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
 

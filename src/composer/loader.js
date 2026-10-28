@@ -8,6 +8,7 @@ import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
 import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hexOf } from './sha256.js'
+import { pyramidRows } from '../core/pyramid.js'
 import { unicodeSource } from './unicode.js'
 
 export { LookupError } from './compose.js'
@@ -124,6 +125,8 @@ const ROUNDS = 16
 /** The largest description drawn. Every sequence BabelStone lists fits: the deepest nest six levels
  *  (𰻞, 𦧄) and the largest holds 21 operators (𦧄). */
 export const LIMITS = { nodes: 24, depth: 8 }
+/** The most rows a pyramid preview draws. Each row adds a cell, so 64 rows is 2,080 cells. */
+export const PYRAMID_LAYERS = 64
 
 /** How many operators a tree has, and how deep they nest: a parsed tree (['⿰', …]) or the editor's
  *  (`{ op, parts }`). */
@@ -133,14 +136,24 @@ export function size(tree) {
   const sizes = kids.map(size)
   return { nodes: 1 + sizes.reduce((s, k) => s + k.nodes, 0), depth: 1 + Math.max(0, ...sizes.map(k => k.depth)) }
 }
-/** Whether a tree is larger than a preview draws (`LIMITS`). */
-export const tooLarge = tree => { const { nodes, depth } = size(tree); return nodes > LIMITS.nodes || depth > LIMITS.depth }
+/** Whether a tree is larger than a preview draws (`LIMITS`), unless it is a pyramid within
+ *  `PYRAMID_LAYERS`. */
+export const tooLarge = tree => {
+  const pyramid = pyramidRows(tree)
+  if (pyramid) return pyramid.layers > PYRAMID_LAYERS
+  const { nodes, depth } = size(tree)
+  return nodes > LIMITS.nodes || depth > LIMITS.depth
+}
 
 /** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot. */
-function keysOf(tree, out = [], separate = false) {
+function keysOf(tree, out = [], separate = false, root = true) {
+  if (root) {
+    const pyramid = pyramidRows(tree)
+    if (pyramid) { out.push(pyramid.part); return out }
+  }
   if ((separate ? isGroupedForm : isComponentForm)(keyOf(tree))) return out
   if (!keyOf(tree).includes(EMPTY)) out.push(keyOf(tree))
-  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out, separate))
+  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out, separate, false))
   return out
 }
 
