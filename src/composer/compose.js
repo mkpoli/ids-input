@@ -126,6 +126,11 @@ export class Composer {
     this.face = face ?? c.face
     this.separate = separate
     this.fontStyle = fontStyle
+    // `hosted` as han-compose's: with no host list there is nothing to cut, and the learned boxes —
+    // where cut parts go — would stretch whole glyphs into component shapes (a squat 木, its bar
+    // merged with its neighbour's). The export's own manifest says how many bytes of host lists it
+    // carries.
+    this.hosted = m.files?.hosts?.bytes !== 0
     // A static brush face keeps its own stroke weights; a variable export weights its parts.
     this.weighted = m.weighted ?? !(m.style === 'kaisho' && m.heavy === 400)
     this.stem0 = c.stem
@@ -281,7 +286,7 @@ export class Composer {
         return
       }
       const op = node[0], kids = node.slice(1)
-      if (kids.length === 2 && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+      if (kids.length === 2 && this.hosted && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
         let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(this.normalizeRequestedEnclosures(kid))))
         if (!atRoot) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
         if (boxes.every(b => b[2] > b[0] && b[3] > b[1])) { kids.forEach((kid, i) => walk(kid, boxes[i], false)); return }
@@ -426,7 +431,7 @@ export class Composer {
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
-    if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -1002,7 +1007,7 @@ export class Composer {
         if (share[op] >= C.OPEN_ROOM && share[op] >= C.OPEN_ONE_SIDE * share[other]) {
           const cells = this.cells(op, outer, region, children[1])
           if (cells) return [...outer, ...cells]
-          if (this.layout?.ops.includes(op)) {
+          if (this.hosted && this.layout?.ops.includes(op)) {
             const boxes = this.predict(op, children), frame = union(boxes)
             return children.flatMap((child, j) => this.node(child, mapped(boxes[j], frame, region)))
           }
