@@ -345,12 +345,29 @@ describe('a host-less export', () => {
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
 
+  it('narrows a left part to the share the learned boxes give it', async () => {
+    const narrow = { ...layout, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') },
+      Buffer.from(Float32Array.from([40, -80, 360, 840, 420, -80, 960, 840].map(v => v / 1000)).buffer).toString('base64')]] }
+    const source = createSource(async name => {
+      if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(narrow))).buffer
+      const body = name === 'manifest.json'
+        ? JSON.stringify({ ...JSON.parse(files['manifest.json']), files: { ...JSON.parse(files['manifest.json']).files, hosts: { bytes: 0 } } })
+        : files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const [left, right] = (await compose(source, '⿰木口')).parts
+    expect(left.box[2]).toBeLessThan(right.box[2] * 0.8)
+    expect(left.box[3]).toBeCloseTo(right.box[3], 0)
+  })
+
   it('lays a sequence out by its plain shares', async () => {
     const boxes = async bytes => (await compose(hostless(bytes), '⿰木口')).parts.map(part => part.box)
     const [plain, learned] = [await boxes(0), await boxes(1)]
-    // The learned layout puts 口 in the fixed box at x 560; the shares start it right after 木.
+    // The split follows the learned boxes at x 560; the glyphs fill the full height instead of the
+    // learned part boxes, and stay apart.
     expect(learned[1][0]).toBeCloseTo(560, 0)
-    expect(plain[1][0]).toBeLessThan(500)
+    expect(plain[1][0]).toBeCloseTo(563, 0)
+    expect(plain[0][3]).toBeGreaterThan(learned[0][3] + 100)
     expect(plain[0][0] + plain[0][2]).toBeLessThan(plain[1][0])
     // The sketch the editor shows before a drawing arrives follows the same layout.
     const boxesOf = async bytes => (await sketch(hostless(bytes), '⿰木口')).map(leaf => leaf.box)
