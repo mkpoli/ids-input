@@ -20,7 +20,6 @@
     download: 'M12 3v12M7 10l5 5 5-5M5 21h14',
     folder: 'M3 6a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z',
     plus: 'M12 5v14M5 12h14',
-    pyramid: 'm12 3 9 18H3ZM7.5 15h9M9.8 9.5h4.4',
     trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
     upload: 'M12 15V3M7 8l5-5 5 5M5 21h14',
     book: 'M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2Zm0 16a2 2 0 0 1 2-2h13',

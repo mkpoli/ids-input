@@ -1,7 +1,7 @@
 // @ts-check
 // Pyramids: one component in rows of 1, 2, 3, … . The sequence generator writes a balanced
 // description; `pyramidRows` reads such a tree back, however its rows and stacks are grouped.
-import { isComponent, isSelector } from './ids.js'
+import { parse } from './ids.js'
 import { pyramidRows } from './pyramid-shape.js'
 
 export { pyramidRows } from './pyramid-shape.js'
@@ -21,9 +21,10 @@ export const pyramidCount = layers => layers * (layers + 1) / 2
  * @returns {string}
  */
 export function pyramidSequence(part, layers) {
-  const chars = [...String(part ?? '')]
-  if (!chars.length || chars.length > 2 || !isComponent(chars[0]) || (chars.length === 2 && !isSelector(chars[1]))) {
-    throw new TypeError('A pyramid part must be one component, with an optional variation selector.')
+  const text = String(part ?? '')
+  const read = parse(text, { open: true })
+  if (read.problem || typeof read.tree !== 'string' || read.tree !== text) {
+    throw new TypeError('A pyramid part must be one component.')
   }
   if (!Number.isSafeInteger(layers) || layers < 1) throw new RangeError('A pyramid needs at least one layer.')
   /** @param {number} count @returns {string} */
@@ -47,5 +48,11 @@ export function pyramidSequence(part, layers) {
     const middle = Math.floor((from + to) / 2)
     return `⿱${stack(from, middle)}${stack(middle + 1, to)}`
   }
-  return stack(1, layers)
+  const sequence = stack(1, layers)
+  const parsed = parse(sequence, { open: true })
+  const shape = parsed.tree === undefined ? null : pyramidRows(parsed.tree, { minLayers: layers })
+  if (!shape || shape.layers !== layers || shape.part !== part) {
+    throw new TypeError('A pyramid part cannot be repeated as one component.')
+  }
+  return sequence
 }
