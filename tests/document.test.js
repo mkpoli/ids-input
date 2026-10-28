@@ -244,6 +244,13 @@ describe('loose marks in a document', () => {
     expect(toSequence(decomposed.root)).toBe('⿰亻木ˇ')
     expect(decomposed.root.marks).toBe('ˇ')
   })
+  it('keeps a child mark before the marks of the node that holds it', async () => {
+    const { hoistMarks } = await import('../src/document/model.js')
+    const document = fromSequence('⿰木口')
+    document.root.children[1].char = '口ˇ'
+    document.root.marks = 'ˊ'
+    expect(toSequence(hoistMarks(document).root)).toBe('⿰木口ˇˊ')
+  })
   it('hands them to the part that stands in an unwrapped operator', () => {
     const marked = fromSequence('⿱木口ˋ')
     expect(toSequence(unwrapNode(marked, 'root').root)).toBe('木ˋ')
