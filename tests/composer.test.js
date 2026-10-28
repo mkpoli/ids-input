@@ -345,6 +345,22 @@ describe('a host-less export', () => {
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
 
+  it('takes the plain shares for a node the host-place index leaves out', async () => {
+    // A hosted export names the places it carries lists for; ⿰木口 has none of them.
+    const source = createSource(async name => {
+      if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(fixed))).buffer
+      if (name === 'manifest.json') {
+        const manifest = JSON.parse(files['manifest.json'])
+        return new Uint8Array(Buffer.from(JSON.stringify({ ...manifest,
+          files: { ...manifest.files, hosts: { bytes: 1, places: ['L\t口'] } } }))).buffer
+      }
+      const body = files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const [left] = (await compose(source, '⿰木口')).parts
+    expect(left.box[3]).toBeGreaterThan(900)
+  })
+
   it('narrows a left part to the share the learned boxes give it', async () => {
     const narrow = { ...layout, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') },
       Buffer.from(Float32Array.from([40, -80, 360, 840, 420, -80, 960, 840].map(v => v / 1000)).buffer).toString('base64')]] }
