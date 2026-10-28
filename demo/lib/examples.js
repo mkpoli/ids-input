@@ -46,13 +46,13 @@
 // Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
 // Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), sections 西文字母, 假名声旁 and the
-// simplified-character tables, read 2026-10-28:
+// simplified-form and 通假 tables, read 2026-10-28:
 // https://zh.wikipedia.org/wiki/全学联汉字
 // The table writes the letters full width (Ｒ, Ｋ, …); the examples use ASCII. The eleven letter
 // forms are 寮 宀+R, 僚 亻+宀+R, 療 疒+R, 軍 冖+G, 確 石+K, 韓 龺+K, 還 辶+K, 館 飠+K, 縄 糸+N,
-// 認 言+N, 論 言+R. 言ギ abbreviates 議. The simplified forms 斗, 才, 门, 兴, 争, 权, 队, 论, 业,
-// 际, 产, 运, 阶, 胜, 选, 战 stand for 闘, 歳, 門, 興, 爭, 権, 隊, 論, 業, 際, 産, 運, 階, 勝,
-// 選, 戦. The letter forms are the HAN-LATIN entries of Gen Kojitani,
+// 認 言+N, 論 言+R. 言ギ abbreviates 議. The simplified and phonetic forms 斗, 才, 门, 兴, 争,
+// 权, 队, 论, 业, 际, 产, 运, 阶, 胜, 选, 战 stand for 闘, 歳, 門, 興, 爭, 権, 隊, 論, 業, 際,
+// 産, 運, 階, 勝, 選, 戦. The letter forms are the HAN-LATIN entries of Gen Kojitani,
 // Proposal to add a new CJK Abbreviations block, L2/24-125 (2024-04-24):
 // https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf
 // Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
@@ -148,7 +148,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
-  // with no code point; for a simplified character it names that character, which `encoded` reports.
+  // with no code point; for an encoded character it names that character, which `encoded` reports.
   { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
     { sequence: '⿱宀R', char: '', abbreviates: '寮' },
     { sequence: '⿰亻⿱宀R', char: '', abbreviates: '僚' },
