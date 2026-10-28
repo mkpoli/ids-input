@@ -418,12 +418,51 @@ describe('the cover bar', () => {
   it('narrows and centres the top bar under 宀', () => {
     const cover = part([100, 500, 900, 700])
     const lower = part([50, 400, 950, 480], [480, 80, 520, 400], [50, 0, 950, 80])
+    const donor = lower.part
+    // Both masters are shared by placements; give the heavy master a distinct outline.
+    donor.contours[0].heavy[0] -= 10
+    const original = structuredClone(donor), sibling = placed(donor, donor.box, donor.box, 0, 'sibling')
     Composer.prototype.fitUnderCover.call(null, '⿱', ['宀', 'X'], [[cover], [lower]])
+    expect(donor).toEqual(original)
+    expect(sibling.part).toBe(donor)
+    expect(lower.part.contours[0].light).not.toBe(donor.contours[0].light)
+    expect(lower.part.contours[0].heavy).not.toBe(donor.contours[0].heavy)
     const bar = lower.part.contours[0].light
     let min = Infinity, max = -Infinity
     for (let i = 0; i < bar.length; i += 2) { min = Math.min(min, bar[i]); max = Math.max(max, bar[i]) }
     expect(max - min).toBeCloseTo(0.72 * 800)
     expect((max + min) / 2).toBeCloseTo(500)
+  })
+
+  const coverSource = () => {
+    const cover = boxGlyph([100, 500, 900, 700])
+    const lower = { ...boxGlyph([50, 0, 950, 480]), p: [
+      ...boxGlyph([50, 400, 950, 480]).p,
+      ...boxGlyph([480, 80, 520, 400]).p,
+      ...boxGlyph([50, 0, 950, 80]).p,
+    ] }
+    const input = { ...files, ...shards('g', [
+      ['宀', { k: '宀', G: cover, ink: 2000, nl: 1, o: 1 }],
+      ['王', { k: '王', G: lower, ink: 4000, nl: 3, o: 3 }],
+    ]) }
+    return createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+  }
+
+  it('renders a cover stack repeatedly from the same cached source', async () => {
+    const source = coverSource()
+    const first = await compose(source, '⿱宀王', { separate: true })
+    expect(first.parts.map(p => p.origin)).toEqual(['glyph 宀', 'glyph 王'])
+    expect(await compose(source, '⿱宀王', { separate: true })).toEqual(first)
+    expect(await compose(source, '⿱宀王', { separate: true })).toEqual(first)
+  })
+
+  it('keeps other drawings from a shared source unchanged after a cover stack', async () => {
+    const source = coverSource()
+    const alone = await compose(source, '王')
+    const stack = await compose(source, '⿱口王', { separate: true })
+    await compose(source, '⿱宀王', { separate: true })
+    expect(await compose(source, '王')).toEqual(alone)
+    expect(await compose(source, '⿱口王', { separate: true })).toEqual(stack)
   })
 
   it('keeps a mid-height bar under a cover', () => {
