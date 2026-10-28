@@ -82,7 +82,14 @@ it('keeps all Tangut examples in a separate section', () => {
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
-  expect(tangut).toHaveLength(12)
+  expect(tangut).toHaveLength(23)
+  const layers = JSON.parse(gunzipSync(readFileSync(new URL('../data/tangut-layers.json.gz', import.meta.url))))
+  expect(tangut).toContainEqual({ sequence: '⿱𘠀⿰𘣣𘠐', char: '𗀃' })
+  expect(layers.characters['𗀃']).toBe('⿱𘠀𗸡')
+  expect(tangut.some(example => example.sequence.includes('⿻'))).toBe(true)
+  for (const operator of ['⿰', '⿱', '⿲', '⿳', '⿵', '⿸', '⿺']) {
+    expect(tangut.some(example => example.sequence.startsWith(operator))).toBe(true)
+  }
   expect(tangut.every(example => /^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(example.char))).toBe(true)
   const trees = tangut.map(example => parse(example.sequence).tree)
   expect(trees.filter(tree => size(tree).depth >= 4).length).toBeGreaterThanOrEqual(3)
