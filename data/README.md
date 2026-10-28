@@ -263,6 +263,14 @@ Rebuild with `python3 scripts/build_character_info.py`. The builder verifies bot
 source digests. The character-information file is fetched only when a panel is used;
 hovering does not send the character to a dictionary service.
 
+## character-vocabulary-rare.tsv.gz
+
+The remaining named characters, for the Characters tab's optional rare search: 33,904 characters and
+61,551 rows, 515 KB gzipped. A character is here when it has an IDS description and at least one
+Unihan or KANJIDIC2 name but is outside the common table. Format and sources match
+`character-vocabulary.tsv.gz`; `rank` is usually empty. Licence: **CC BY-SA 4.0** as a whole, from
+Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0).
+
 ## Tangut
 
 The same IDS table also includes 6,145 records from Andrew West's

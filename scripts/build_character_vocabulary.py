@@ -12,9 +12,9 @@ search offers characters the workshop can open and compose rather than the whole
 - KANJIDIC2 (EDRDG): English meanings, Japanese kana readings, pinyin, Korean and Vietnamese
   readings and nanori. CC BY-SA 4.0.
 
-The file as a whole is shared alike under CC BY-SA 4.0, because its KANJIDIC2 rows are. The build
-fetches the two sources into `cache/`, checks them against their SHA-256, and writes the gzipped
-table. `--refresh` fetches them again.
+Both files are shared alike under CC BY-SA 4.0, because their KANJIDIC2 rows are. The build fetches
+the two sources into `cache/`, checks them against their SHA-256, and writes both gzipped tables.
+`--refresh` fetches them again.
 
     uv run scripts/build_character_vocabulary.py [--refresh]
 """
@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CACHE = ROOT / "cache"
 IDS = ROOT / "data" / "babelstone-ids.tsv.gz"
 TARGET = ROOT / "data" / "character-vocabulary.tsv.gz"
+RARE_TARGET = ROOT / "data" / "character-vocabulary-rare.tsv.gz"
 
 KANJIDIC2_URL = "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz"
 KANJIDIC2_SHA256 = "3617aa8a34015d4283f9ac22e00d2b80448f882cbc5a8e588b5f7ceae6493589"
@@ -144,12 +145,14 @@ def fold_name(text: str) -> str:
     return KATAKANA.sub(lambda match: chr(ord(match.group(0)) - 0x60), text)
 
 
-def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], ids: set[str]) -> list[tuple[str, str, str, str, str]]:
+def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], ids: set[str]) -> tuple[list[tuple[str, str, str, str, str]], list[tuple[str, str, str, str, str]]]:
     common = {char for char in ids if char in unihan["kIICore"] or char in kanjidic}
+    named = {char for char in ids if char in kanjidic or any(unihan[field].get(char) for field in
+             ("kDefinition", "kMandarin", "kJapaneseOn", "kJapaneseKun", "kHangul", "kVietnamese"))}
     # Newspaper frequency for the kanji KANJIDIC2 ranks, the school grade for the others; a lower
     # number comes first among equally close names.
     ranks: dict[str, int] = {}
-    for char in common:
+    for char in named:
         entry = kanjidic.get(char)
         frequency = entry.findtext("misc/freq") if entry is not None else None
         if frequency and frequency.isdigit():
@@ -162,11 +165,11 @@ def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], id
 
     def add(name: str, char: str, source: str, detail: str) -> None:
         name = name.strip()
-        if not name or len(name) > 40 or char not in common:
+        if not name or len(name) > 40 or char not in named:
             return
         rows.append((name, char, source, detail, str(ranks.get(char, ""))))
 
-    for char in sorted(common):
+    for char in sorted(named):
         definitions = unihan["kDefinition"].get(char, "")
         for sense in meaning_senses(definitions):
             add(sense, char, "unihan", f"kDefinition of {char}")
@@ -227,11 +230,12 @@ def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], id
             seen[key] = len(out)
             out.append((name, char, source, detail, rank))
     out.sort(key=lambda row: (ord(row[1][0]), fold_name(row[0]), row[0]))
-    return out
+    return [row for row in out if row[1] in common], [row for row in out if row[1] not in common]
 
 
-def header(rows: list[tuple[str, str, str, str, str]]) -> str:
-    return f"""# The readings and meanings of common characters and KANJIDIC2 kanji, for the character search (src/core/names.js).
+def header(rows: list[tuple[str, str, str, str, str]], rare: bool = False) -> str:
+    title = "rare characters" if rare else "common characters and KANJIDIC2 kanji"
+    return f"""# The readings and meanings of {title}, for the character search (src/core/names.js).
 # columns: name, char, source, detail, rank
 # rows: {len(rows)}
 # rank: lower is more common; KANJIDIC2 newspaper frequency, or 3000 plus Unihan's kGradeLevel
@@ -240,7 +244,7 @@ def header(rows: list[tuple[str, str, str, str, str]]) -> str:
 #   https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip
 # source kanjidic2: KANJIDIC2 (file version 4, database version 2026-300, created 2026-10-27), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
 #   meanings, Japanese, Korean and Vietnamese readings, pinyin and nanori; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
-# The characters are Unihan's kIICore set plus every KANJIDIC2 character, all with an IDS description.
+# The characters are {'every named IDS character outside the common table' if rare else "Unihan's kIICore set plus every KANJIDIC2 character"}, all with an IDS description.
 # The file as a whole is shared alike under CC BY-SA 4.0, because the KANJIDIC2 rows are:
 # https://creativecommons.org/licenses/by-sa/4.0/
 """
@@ -255,10 +259,11 @@ def main(argv: list[str] | None = None) -> int:
     fetch(UNIHAN_URL, CACHE / "Unihan.zip", UNIHAN_SHA256, args.refresh)
     unihan = read_unihan(CACHE / "Unihan.zip")
     kanjidic = read_kanjidic2(CACHE / "kanjidic2.xml.gz")
-    rows = build(unihan, kanjidic, read_ids())
-    text = header(rows) + "".join("\t".join(row) + "\n" for row in rows)
-    TARGET.write_bytes(gzip.compress(text.encode("utf-8"), 9))
-    print(f"wrote {TARGET} ({len(rows)} names, {TARGET.stat().st_size} bytes)")
+    common, rare = build(unihan, kanjidic, read_ids())
+    for path, rows, is_rare in ((TARGET, common, False), (RARE_TARGET, rare, True)):
+        text = header(rows, is_rare) + "".join("\t".join(row) + "\n" for row in rows)
+        path.write_bytes(gzip.compress(text.encode("utf-8"), 9))
+        print(f"wrote {path} ({len(rows)} names, {path.stat().st_size} bytes)")
     return 0
 
 
