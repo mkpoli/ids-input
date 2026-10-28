@@ -3,7 +3,7 @@
 import data from '../../data/unicode-properties.json' with { type: 'json' }
 
 export const UNICODE_VERSION = data.version
-/** @param {'graphic' | 'letters' | 'ideographic'} property @param {string | null | undefined} char */
+/** @param {'graphic' | 'letters' | 'ideographic' | 'marks'} property @param {string | null | undefined} char */
 export function unicodeProperty(property, char) {
   const cp = char?.codePointAt(0)
   if (cp === undefined) return false

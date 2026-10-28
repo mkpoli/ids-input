@@ -95,17 +95,65 @@ const SEPARATE = new Set(['斗', '鬥'])
 // palette variants (田/由/甲/申/电, 己/已/巳, 用/甩, 手/才, 刀/刁, 幺/乡).
 const PALETTE_SEPARATE = new Set([...SEPARATE, ...'由甲申电甴己已巳甩才刁乡'])
 
+/**
+ * The table `data/ids-components.tsv` holds: each numbered component BabelStone writes out, with the
+ * IDS fragment that writes it. Lines starting with `#` are its header.
+ * @param {string} text
+ * @returns {Map<number, string>}
+ */
+export function readNumberedComponents(text) {
+  /** @type {Map<number, string>} */
+  const parts = new Map()
+  for (const line of text.split('\n')) {
+    if (!line || line.startsWith('#')) continue
+    const [number, , written] = line.split('\t')
+    const digits = /^\{(\d+)\}$/.exec(number ?? ''), fragment = written?.trim()
+    if (digits && fragment) parts.set(Number(digits[1]), fragment)
+  }
+  return parts
+}
+
+/**
+ * `table` with every numbered component the fragments write out replaced, and the alternatives that
+ * then read alike kept once.
+ * @param {Map<string, Sequence[]>} table
+ * @param {Map<number, string>} parts
+ * @returns {Map<string, Sequence[]>}
+ */
+export function expandNumberedComponents(table, parts) {
+  if (!parts.size) return table
+  /** @param {string} sequence @param {Set<number>} [seen] @returns {string} */
+  const expand = (sequence, seen = new Set()) => sequence.replace(/\{(\d+)\}/g, (whole, digits) => {
+    const number = Number(digits), fragment = parts.get(number)
+    if (fragment === undefined || seen.has(number)) return whole
+    return expand(fragment, new Set([...seen, number]))
+  })
+  return new Map([...table].map(([char, sequences]) => {
+    /** @type {Sequence[]} */
+    const out = []
+    const seen = new Set()
+    for (const { text, regions } of sequences) {
+      const written = expand(text), key = `${written}\t${regions}`
+      if (!seen.has(key)) { seen.add(key); out.push({ text: written, regions }) }
+    }
+    return [char, out]
+  }))
+}
+
 /** @param {string} char */
 const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 
 /**
  * An adapter over BabelStone IDS. `ids` is the URL of `data/babelstone-ids.tsv.gz` (or of the same
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
- * `additionalIds` is an optional second table in the same format; new descriptions follow the first
- * table's descriptions. Duplicate untagged descriptions are omitted; distinct region tags are kept.
- * `table` and `palette` hand the data over directly instead. `forms` is the URL of
- * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
- * components by and the component search opens the names of a component's other forms with.
+ * `components` is the URL of `data/ids-components.tsv` (or `componentsText` its text), the numbered
+ * components IDS.TXT note 6 names and the IDS fragments that write them out ({12}, the right of 龍,
+ * as ⿷己三); a sequence naming one reads as the IDS it names. `additionalIds` is an optional second
+ * table in the same format; new descriptions follow the first table's descriptions. Duplicate
+ * untagged descriptions are omitted; distinct region tags are kept. `table` and `palette` hand the
+ * data over directly instead. `forms` is the URL of `data/component-forms.tsv` (or `formsText` its
+ * text), which the description search folds components by and the component search opens the names
+ * of a component's other forms with.
  * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names, words and
  * readings the component search knows (絞絲, ノ文, のぎ, 宝盖, water, shui, mizu); without it the
  * search still takes characters and code points. `folds` is the URL of
@@ -114,14 +162,16 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
- * @param {{ ids?: string | URL, additionalIds?: string | URL, parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
- *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string, characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
+ * @param {{ ids?: string | URL, additionalIds?: string | URL, components?: string | URL, componentsText?: string,
+ *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
+ *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -165,7 +215,9 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     const id = ++asks, base = globalThis.location?.href
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
-      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined, forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+      searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href, additionalIds: additionalIds ? new URL(String(additionalIds), base).href : undefined,
+        components: components ? new URL(String(components), base).href : undefined, componentsText,
+        forms: forms ? new URL(String(forms), base).href : undefined, formsText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
     })
   }
 
@@ -189,9 +241,11 @@ export function babelStoneAdapter({ ids, additionalIds, parts, forms, formsText,
     given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
       : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
     additionalIds ? load(additionalIds).then(readText).then(parseIdsTable) : Promise.resolve(new Map()),
+    componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
-  ]).then(([base, extra, doc]) => {
-    const merged = mergeIdsTables(base, extra)
+  ]).then(([base, extra, numbered, doc]) => {
+    const parts = readNumberedComponents(numbered)
+    const merged = mergeIdsTables(expandNumberedComponents(base, parts), expandNumberedComponents(extra, parts))
     return doc ? new Map([...merged, ...sealTable(doc)]) : merged
   })
     .catch(error => { table = null; throw error })

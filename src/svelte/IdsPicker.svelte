@@ -4,6 +4,7 @@
   // adapter can answer it. A part picked goes in `editor`'s chosen slot, or the first empty one; parts
   // can also be dragged onto the tree. Arrow keys, Home and End move between the tabs.
   import { untrack } from 'svelte'
+  import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
@@ -82,7 +83,7 @@
           {#if name === 'find'}
             <div class="ids-find">
               <input type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-                aria-label={t('ids.search')} placeholder={t('ids.find.placeholder')} />
+                aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
               {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
               {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
               {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('parts.none')}</p>
@@ -114,7 +115,7 @@
               {/if}
             </div>
           {:else if name === 'templates'}<IdsTemplates {editor} />
-          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part)} />
+          {:else if name === 'parts'}<IdsParts {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} {recentKey} onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} />
           {:else}<IdsFrom {adapter} lookup={editor.lookup} disabled={editor.disabled} messages={editor.messages} locale={editor.locale} bind:text={fromText} ontake={part => editor.take(part)} />{/if}
         </div>
       {/if}
@@ -130,7 +131,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-search) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
   :where(.ids-search) button{cursor:pointer}

@@ -13,9 +13,10 @@ A part is a component that the sequences of BabelStone IDS use and that a writer
   CJK stroke or a one-stroke ideograph (𠂉 ⿰㇒一, 𠂇 ⿻一丿, 䒑 ⿱丷一);
 - one at least `USE_THRESHOLD` (50) ideographs use, whatever its sequence (殳 門 髟 齒 䖵).
 Each part counts the ideographs whose sequences use it, leaving out the sequences of ideographs that
-hfhchan/ids keeps whole. Every character of the CJK Strokes block (U+31C0–U+31E5) is a part, used or
-not; CJK Radicals Supplement characters are parts when used. Operators, ？ and BabelStone's unencoded
-components {n} are not parts.
+hfhchan/ids keeps whole. BabelStone's numbered components are written out first, as IDS.TXT note 6
+gives them, so 書 counts 聿 and 畫 counts 𤱪's own parts; a number the note leaves `？` stays unread and
+counts for nothing. Every character of the CJK Strokes block (U+31C0–U+31E5) is a part, used or
+not; CJK Radicals Supplement characters are parts when used. Operators and `？` are not parts.
 
 Each part carries:
 - `strokes`: Unihan's kTotalStrokes (its first value, which Unihan gives for the zh-Hans form where
@@ -183,10 +184,37 @@ def components(ids: str) -> list[str]:
     return [char for char in ids if char not in OPERATORS]
 
 
-def read_ids(path: Path) -> tuple[dict[str, list[str]], str]:
-    """char → its sequences (region tags dropped), from IDS.TXT, and the file's File Date."""
+def numbered_fragments(text: str) -> dict[int, str]:
+    """The IDS fragment note 6 gives each numbered component, by number."""
+    from build_ids_components import rows as component_rows
+
+    return {number: fragment for number, _, fragment in component_rows(text) if fragment}
+
+
+def written_out(sequence: str, fragments: dict[int, str], seen: frozenset[int] = frozenset()) -> str:
+    """`sequence` with its numbered components written out as the fragments give them."""
+    def replace(match: re.Match[str]) -> str:
+        number = int(match.group(1))
+        fragment = fragments.get(number)
+        if fragment is None or number in seen:
+            return match.group(0)
+        return written_out(fragment, fragments, seen | {number})
+
+    return re.sub(r"\{(\d+)\}", replace, sequence)
+
+
+def read_ids(path: Path) -> tuple[dict[str, list[str]], dict[str, list[str]], str]:
+    """char → its sequences (region tags dropped) as IDS.TXT writes them, the same with numbered
+    components written out, and the file's File Date."""
     rows, date, _ = read_ids_txt(path)
-    return {char: [REGIONS.sub("", sequence) for sequence in sequences] for _, char, sequences in rows}, date
+    fragments = numbered_fragments(path.read_text(encoding="utf-8-sig"))
+    source: dict[str, list[str]] = {}
+    written: dict[str, list[str]] = {}
+    for _, char, sequences in rows:
+        plain = [REGIONS.sub("", sequence) for sequence in sequences]
+        source[char] = plain
+        written[char] = [written_out(sequence, fragments) for sequence in plain]
+    return source, written, date
 
 
 def hfhchan_atomic(text: str) -> set[str]:
@@ -213,16 +241,22 @@ def compound(sequence: str) -> bool:
     return any(char in OPERATORS for char in sequence)
 
 
-def parts(ids: dict[str, list[str]], atomic: set[str], single: set[str]) -> Counter:
+def parts(ids: dict[str, list[str]], written: dict[str, list[str]], atomic: set[str], single: set[str]) -> Counter:
     """Each part → how many ideographs' sequences use it (once per ideograph).
 
-    `single` holds the one-stroke ideographs (一 丨 丿 丶 乙 亅 …), which count as strokes when a
-    sequence is read for whether it is made of strokes.
+    `written` is the same table with BabelStone's numbered components written out, and the count
+    follows it; `ids` is the table as IDS.TXT gives it, whose components are the ones the palette
+    lists. `single` holds the one-stroke ideographs (一 丨 丿 丶 乙 亅 …), which count as strokes when
+    a sequence is read for whether it is made of strokes.
     """
     uses: Counter = Counter()
-    for char, sequences in ids.items():
+    named_source: set[str] = set()
+    for char, sequences in written.items():
         if char in atomic:
             continue
+        named_source.update(
+            part for sequence in ids.get(char, []) if compound(sequence) for part in components(sequence)
+        )
         named = {part for sequence in sequences if compound(sequence) for part in components(sequence)}
         named.discard(char)
         uses.update(named)
@@ -246,7 +280,7 @@ def parts(ids: dict[str, list[str]], atomic: set[str], single: set[str]) -> Coun
             or uses[part] >= USE_THRESHOLD
         )
 
-    return Counter({part: count for part, count in uses.items() if kept(part)})
+    return Counter({part: count for part, count in uses.items() if part in named_source and kept(part)})
 
 
 def unihan_fields(path: Path) -> dict[str, dict[str, str]]:
@@ -332,15 +366,19 @@ def first_strokes(text: str, forms: str = "") -> dict[str, str]:
 
 
 def palette(
-    ids: dict[str, list[str]], atomic: set[str], unihan: dict[str, dict[str, str]], first: dict[str, str]
+    ids: dict[str, list[str]],
+    written: dict[str, list[str]],
+    atomic: set[str],
+    unihan: dict[str, dict[str, str]],
+    first: dict[str, str],
 ) -> list[list]:
     """Rows `[part, uses, strokes, derived, first, kind]`, most used first; kind is c(ommon),
     d(ifficult) or s(troke)."""
     single = {char for char, value in unihan["kTotalStrokes"].items() if value.split()[0] == "1"}
-    uses = parts(ids, atomic, single)
+    uses = parts(ids, written, atomic, single)
     strokes = STROKES
     names = sorted(set(uses) | set(strokes), key=lambda char: (-uses.get(char, 0), ord(char)))
-    counts = stroke_counts(names, ids, unihan["kTotalStrokes"])
+    counts = stroke_counts(names, written, unihan["kTotalStrokes"])
     common = common_set(unihan)
     rows = []
     for name in names:
@@ -428,9 +466,10 @@ def main(argv: list[str] | None = None) -> int:
     rime_path = fetch(RIME_URL, args.cache / "rime-stroke.dict.yaml", RIME_SHA256, args.refresh)
     ids_path = args.ids or fetch(IDS_URL, args.cache / "IDS.TXT", refresh=args.refresh)
 
-    ids, ids_date = read_ids(ids_path)
+    ids, written, ids_date = read_ids(ids_path)
     rows = palette(
         ids,
+        written,
         hfhchan_atomic(hfhchan_path.read_text(encoding="utf-8")),
         unihan_fields(unihan_path),
         first_strokes(rime_path.read_text(encoding="utf-8"), (ROOT / "data/component-forms.tsv").read_text(encoding="utf-8")),
@@ -441,7 +480,8 @@ def main(argv: list[str] | None = None) -> int:
         "columns": ["part", "uses", "strokes", "derived", "first", "kind"],
         "common": f"常用漢字 (Unihan kJoyoKanji) or 通用规范汉字表 level 1 (Unihan kTGH ≤ {TGH_FIRST_LEVEL})",
         "sources": [
-            f"BabelStone IDS.TXT, File Date {ids_date}, PD, Andrew West, {IDS_URL}",
+            f"BabelStone IDS.TXT, File Date {ids_date}, PD, Andrew West, {IDS_URL}"
+            "; numbered components written out per its note 6",
             f"hfhchan/ids v1.0.2, MIT, Copyright (c) 2021 Henry Chan, {HFHCHAN_URL}",
             f"Unihan {UNICODE_VERSION}, Unicode License v3, Copyright Unicode, Inc., {UNIHAN_URL}",
             RIME_SOURCE,

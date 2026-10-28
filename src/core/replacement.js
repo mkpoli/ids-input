@@ -67,8 +67,8 @@ export async function resolveReplacement({ source, target, replacement }, struct
     for (let j = i; j < end; j++) for (const path of paths(queue[j].tree)) {
       const part = partAt(queue[j].tree, path)
       if (part === undefined || part === null || write(part) !== targetText || (best && order(path, best.path, opened) >= 0)) continue
-      const result = place(queue[j].tree, path, replacementTree).tree
-      if (!parse(write(result), { open: true }).problem) best = { tree: result, path }
+      const result = place(queue[j].tree, path, replacementTree).tree, text = write(result)
+      if ([...text].length <= LONGEST && !parse(text, { open: true }).problem) best = { tree: result, path }
     }
     if (best) return best.tree
     if (opened < 8) for (let j = i; j < end && queue.length < REPLACEMENT_STATES; j++) {

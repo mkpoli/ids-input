@@ -1,5 +1,5 @@
 // @ts-check
-import { arity, isSelector, parse } from '../core/ids.js'
+import { arity, isMark, isSelector, parse } from '../core/ids.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string}} Token */
 /** UTF-16 offsets match the native input, including supplementary characters and selectors.
@@ -22,6 +22,12 @@ export function tokens(text) {
     token.end = at
   }
   read([])
+  // Loose marks trail the whole description: they get a token of their own at the end, belonging to
+  // the root, while the root's span reaches over them so a selection of the whole still finds it.
+  if (out.length && at < text.length && isMark([...text.slice(at)][0])) {
+    out[0].end = text.length
+    out.push({ path: [], start: at, tokenEnd: text.length, end: text.length, text: text.slice(at) })
+  }
   return out
 }
 

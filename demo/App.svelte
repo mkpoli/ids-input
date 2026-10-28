@@ -12,6 +12,7 @@
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
@@ -41,6 +42,7 @@
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
+  import PyramidDialog from './ui/PyramidDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
@@ -57,7 +59,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, additionalIds, components, parts, forms, names, folds, characters, characterInfo })
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
@@ -311,7 +313,7 @@
   $effect(() => {
     const change = editor.change
     untrack(() => {
-      if (change?.destructive && !change.undone) toast = { id: ++notes, text: change.label, action: t('ids.undo'), run: () => editor.undo() }
+      if (change?.destructive && !change.undone) toast = { id: ++notes, text: change.label, action: t('ids.undo.label'), run: () => editor.undo() }
       else if (change && toast?.run) toast = null
     })
   })
@@ -319,10 +321,10 @@
   // The output: the encoded characters the whole sequence describes, and its code points.
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
-    const text = editor.usable ? editor.whole : '', ask = adapter.encoded
+    const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
     const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
     encoded = known
-    if (!text || !ask) return
+    if (!editor.usable || !text || !ask) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
@@ -453,7 +455,7 @@
         knownSequence = editor.whole
       }
     }
-    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
+    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
       run: () => reopen(tab, state, adjusted, at, fresh?.id) }
     store()
   }
@@ -498,10 +500,11 @@
   }
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.pyramid.title'), icon: 'pyramid', run: () => pyramidOpen = true },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
-    { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
+    { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
     .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openSequence(d.sequence) })),
@@ -532,18 +535,19 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, abbreviates?: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
+    const target = example.char || example.abbreviates || ''
     return {
-      leading: example.char || undefined,
+      leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
+      note: example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
+      hint: example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
   }
@@ -563,7 +567,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), pyramidOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -602,8 +606,8 @@
     }
     editor.keydown(event, { root: work, slot })
   }
-  const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo'))
-  const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo'))
+  const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label'))
+  const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label'))
   const editItems = $derived([
     { label: undoTitle, icon: 'undo', shortcut: shortcut('mod+z'), disabled: !editor.canUndo, run: () => editor.undo() },
     { label: redoTitle, icon: 'redo', shortcut: shortcut('mod+shift+z'), disabled: !editor.canRedo, run: () => editor.redo() },
@@ -631,24 +635,24 @@
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>
-      <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file'), items: fileItems }, { label: t('app.edit'), items: editItems }]} {keyHints} /></span>
+      <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
           <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
           <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-          <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+          <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
-      <div class="font-switch" role="group" aria-label={t('app.font')}>
+        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
+      <div class="font-switch" role="group" aria-label={t('app.font.label')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
       </div>
       </nav>
       <div class="end">
-        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
         <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
         <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
         <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
@@ -690,7 +694,7 @@
 
       <div class="middle" bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
-          <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
+          <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
               onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
             <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
@@ -771,16 +775,17 @@
     <div class="more-row">
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
-    <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
+    <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<PyramidDialog bind:open={pyramidOpen} {t} oncreate={sequence => addTab(sequence)} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />

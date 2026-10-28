@@ -66,6 +66,21 @@ crosswalk SVGs, checks their digests, converts cubic curves to quadratic curves 
 and writes deterministic font and outline files. Exact-description mappings in the
 outline data come from CHISE and retain its GPL-2.0-or-later license.
 
+## IDS New Korean
+
+`IDSNewKorean.woff2` is a four-glyph derivative of
+[Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s SVG drawings of the
+four unencoded letters of the New Korean Orthography (조선어 신철자법), made 2016-02-08 on
+Wikimedia Commons. The font maps the seven code points A97D–A97F, D7C7 and D7FC–D7FE,
+the positions proposed in OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24). Unicode 18.0.0 leaves them unassigned; `fonts.css` gives the face the
+matching `unicode-range`.
+
+The drawings are CC BY-SA 4.0; the font and `data/new-korean-outlines.json.gz` keep that
+licence, and [LICENSE-IDSNewKorean.txt](LICENSE-IDSNewKorean.txt) records the attribution.
+The source SVGs, digests and letter names are in [`data/new-korean/`](../data/new-korean/).
+Rebuild the font and outlines with `uv run scripts/build_new_korean.py`.
+
 ## Unicode fallback outlines
 
 The composer uses font-derived outlines for 53,478 additional components when the selected export lacks

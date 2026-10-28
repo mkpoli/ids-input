@@ -16,6 +16,6 @@ it('keeps adapter-supplied parts grouped even when absent from the bundled catal
 })
 
 it('keeps existing palette groups out of Other scripts', () => {
-  for (const group of ['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes', 'symbols', 'mixed']) expect(isOtherScript(group)).toBe(false)
-  for (const group of ['Hebr', 'Arab', 'Hira', 'Kana', 'Pcun']) expect(isOtherScript(group)).toBe(true)
+  for (const group of ['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes']) expect(isOtherScript(group)).toBe(false)
+  for (const group of ['symbols', 'mixed', 'Hebr', 'Arab', 'Hira', 'Kana', 'Pcun']) expect(isOtherScript(group)).toBe(true)
 })

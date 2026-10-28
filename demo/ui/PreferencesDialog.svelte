@@ -18,7 +18,7 @@
       <input type="checkbox" role="switch" bind:checked={keyHints} />
     </label>
     <label class="pref">
-      <span>{t('app.prefs.tint')}</span>
+      <span>{t('app.prefs.tint.label')}</span>
       <select bind:value={tintMode}>
         <option value="hover">{t('app.prefs.tint.hover')}</option>
         <option value="on">{t('app.prefs.tint.on')}</option>

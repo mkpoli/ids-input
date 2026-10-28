@@ -21,6 +21,7 @@
  * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
  * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
  * @property {string} part
+ * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
@@ -36,7 +37,7 @@
  *
  * @typedef {object} DrawingPart One part of a drawing: a piece the composer placed.
  * @property {number} [leaf] Original IDS leaf index when the composer can preserve ownership through a rewrite.
- * @property {string} origin What the piece was drawn from, such as `glyph 木` or `learned 村`.
+ * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村` or `mark ˊ` for a loose mark.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.

@@ -1,6 +1,6 @@
 // Unicode Script grouping shared by the palette and its generated catalog.
 import ranges from '../../data/script-ranges.json' with { type: 'json' }
-import { leaves, parse } from './ids.js'
+import { isNewKorean, leaves, parse } from './ids.js'
 
 /** @param {string} char @returns {string | null} */
 export function characterScript(char) {
@@ -9,6 +9,7 @@ export function characterScript(char) {
   if (cp >= 0x3d000 && cp <= 0x3fc3f) return 'seal'
   if (cp >= 0x31c0 && cp <= 0x31ef) return 'strokes'
   if (cp >= 0x30 && cp <= 0x39) return 'latin'
+  if (isNewKorean(char)) return 'hangul'
   let lo = 0, hi = ranges.length - 1
   while (lo <= hi) {
     const mid = (lo + hi) >> 1, [first, last, script] = ranges[mid]
@@ -46,7 +47,9 @@ export function groupPaletteParts(parts) {
   return groups
 }
 
-// These groups already have palette views or are not a single script.
-const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes', 'symbols', 'mixed'])
+// These groups already have palette views: Han, Latin and Cyrillic tabs, Hangul, Bopomofo, Tangut,
+// Small Seal and the CJK strokes. Symbols and mixed-script descriptions have none, so the Other
+// scripts selector carries them too.
+const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes'])
 /** @param {string | null | undefined} group */
 export const isOtherScript = group => Boolean(group && !EXISTING_GROUPS.has(group))

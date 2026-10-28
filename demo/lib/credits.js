@@ -13,6 +13,7 @@ export const SOURCES = [
   { name: '漢字組直しクイズ', by: 'mkpoli', url: 'https://han-reasm.mkpo.li/', key: 'hanReassemble' },
   { name: 'CHISE Small Seal IDS', by: 'MORIOKA Tomohiko, CHISE contributors', licence: 'GPL-2.0-or-later', url: 'https://gitlab.chise.org/CHISE/ids', key: 'smallSeal' },
   { name: 'IDS Seal / Kaiyuan Small Seal', by: 'Kaiyuan Small Seal Font Contributors', licence: 'Kaiyuan font license', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/OFL.txt', key: 'sealFont' },
+  { name: 'New Korean Orthography letters', by: 'Nanuun-saram', licence: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Nkchar-l.svg', key: 'newKoreanLetters' },
   { name: 'BabelStone IDS', by: 'Andrew West', licence: 'Public domain', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', key: 'babelstone' },
   { name: 'han-compose', by: 'mkpoli', licence: 'MIT', url: 'https://github.com/mkpoli/han-compose', key: 'hanCompose' },
   { name: 'Noto Sans CJK JP', by: 'Adobe, Google', licence: 'SIL OFL 1.1', url: 'https://github.com/notofonts/noto-cjk', key: 'noto' },
