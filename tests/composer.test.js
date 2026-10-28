@@ -11,6 +11,7 @@ import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
+import { makePart, placed } from '../src/composer/geometry.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -435,5 +436,37 @@ describe('an empty slot', () => {
     expect(p).toMatchObject({ x: 140, y: 140, width: 320, height: 720 })
     expect(p.gap).toBeGreaterThan(p.dot)
     expect(p).not.toHaveProperty('plus')
+  })
+})
+
+
+describe('the cover bar', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return placed(p, p.box, p.box, 0, 'test')
+  }
+
+  it('narrows and centres the top bar under 宀', () => {
+    const cover = part([100, 500, 900, 700])
+    const lower = part([50, 400, 950, 480], [480, 80, 520, 400], [50, 0, 950, 80])
+    Composer.prototype.fitUnderCover.call(null, '⿱', ['宀', 'X'], [[cover], [lower]])
+    const bar = lower.part.contours[0].light
+    let min = Infinity, max = -Infinity
+    for (let i = 0; i < bar.length; i += 2) { min = Math.min(min, bar[i]); max = Math.max(max, bar[i]) }
+    expect(max - min).toBeCloseTo(0.72 * 800)
+    expect((max + min) / 2).toBeCloseTo(500)
+  })
+
+  it('keeps a mid-height bar under a cover', () => {
+    const cover = part([100, 500, 900, 700])
+    const lower = part([50, 200, 950, 280], [480, 0, 520, 480])
+    Composer.prototype.fitUnderCover.call(null, '⿱', ['宀', 'X'], [[cover], [lower]])
+    const bar = lower.part.contours[0].light
+    expect(bar[0]).toBe(50)
+    expect(bar[2]).toBe(950)
   })
 })

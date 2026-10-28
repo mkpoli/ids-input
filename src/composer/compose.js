@@ -15,7 +15,7 @@
 // every host entry of it there, cut or not, and `data.places(key)` the places it is held in; each
 // answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
 // before drawing again).
-import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
+import { EM_BOX, area, count, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
@@ -43,6 +43,11 @@ const isSelector = ch => ch !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.t
 
 const MODIFIER = /^[0-9:,._xabcdlr|-]+$/u
 const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
+
+// Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
+const COVERS = new Set(['宀', '冖', '穴', '雨'])
+// Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
+const COVER_BAR = 0.72
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
@@ -859,6 +864,7 @@ export class Composer {
       }
     }
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
+    this.fitUnderCover(op, children, groups)
     return groups.flat()
   }
 
@@ -984,6 +990,7 @@ export class Composer {
         if (!right.some((value, i) => value && mask[i])) break
       }
     } else if (!compactYan) this.space(axis, groups)
+    this.fitUnderCover(op, children, groups)
     return groups.flat()
   }
 
@@ -1180,6 +1187,54 @@ export class Composer {
       const limit = group => C.SQUEEZE * (Math.max(...group.map(p => p.target[axis + 2])) - Math.min(...group.map(p => p.target[axis])))
       squeeze(first, axis, 0, -Math.min(half, limit(first)))
       squeeze(second, axis, Math.min(half, limit(second)), 0)
+    }
+  }
+
+  /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
+   *  centred on it; bars lower in the part and non-cover stacks are left alone. */
+  fitUnderCover(op, children, groups) {
+    const pairs = op === '⿱' ? (COVERS.has(children[0]) ? [[0, 1]] : [])
+      : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && COVERS.has(children[i])).map(i => [i, i + 1]) : []
+    for (const [above, below] of pairs) {
+      const cover = groups[above] ?? [], lower = groups[below] ?? []
+      if (!cover.length || !lower.length) continue
+      const bounds = group => {
+        const boxes = group.map(drawnBox)
+        return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+          Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+      }
+      const coverBox = bounds(cover), lowerBox = bounds(lower)
+      const width = lowerBox[2] - lowerBox[0], height = lowerBox[3] - lowerBox[1]
+      if (width <= 0 || height <= 0) continue
+      for (const p of lower) {
+        let best = null
+        drawnContours(p).forEach((pts, index) => {
+          let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+          for (let k = 0; k < pts.length; k += 2) {
+            x0 = Math.min(x0, pts[k]); x1 = Math.max(x1, pts[k])
+            y0 = Math.min(y0, pts[k + 1]); y1 = Math.max(y1, pts[k + 1])
+          }
+          const w = x1 - x0, h = y1 - y0
+          if (w < 0.5 * width || h > 0.2 * width || y1 < lowerBox[3] - 0.12 * height) return
+          if (!best || w > best.w) best = { w, index, centre: (x0 + x1) / 2 }
+        })
+        if (!best) continue
+        const coverWidth = coverBox[2] - coverBox[0], want = COVER_BAR * coverWidth
+        if (coverWidth <= 0 || best.w <= 0 || want >= best.w) continue
+        const c = p.part.contours[best.index]
+        let minX = Infinity, maxX = -Infinity
+        for (let k = 0; k < c.light.length; k += 2) {
+          minX = Math.min(minX, c.light[k]); maxX = Math.max(maxX, c.light[k])
+        }
+        const centre = (minX + maxX) / 2, factor = want / best.w
+        const shift = ((coverBox[0] + coverBox[2]) / 2 - best.centre) / scaleOf(p)[0]
+        for (let k = 0; k < c.light.length; k += 2) {
+          c.light[k] = centre + shift + (c.light[k] - centre) * factor
+          c.heavy[k] = centre + shift + (c.heavy[k] - centre) * factor
+        }
+        p.part = makePart(p.part.contours)
+        break
+      }
     }
   }
 
