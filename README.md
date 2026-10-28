@@ -71,9 +71,8 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import names from 'ids-input/data/component-names.tsv?url'
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
-  import charactersRare from 'ids-input/data/character-vocabulary-rare.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters, charactersRare })
+  const adapter = babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -226,10 +225,12 @@ of the projection.
 
 The preview draws marks into the same 1000-unit box:
 
-- a combining mark sits over or under the composed drawing, centered, and a run stacks;
-- kana voicing marks, spacing accents, tone letters and superscripts sit at the upper right in a row,
-  sized from the character box; a tone letter keeps the height its font designs;
-- Hangul tone marks sit at the left, where the syllable's tone is written;
+- a combining mark sits over or under the composed drawing, centered, and a run stacks; it may
+  overlap the ink, as a combining mark does over its base;
+- a mark that sits beside the drawing takes a margin: kana voicing marks, spacing accents, tone
+  letters and superscripts at the upper right in a row, Hangul tone marks at the left. The composed
+  drawing shrinks toward the opposite corner so the mark stands outside its strokes, and the row or
+  stack is fitted to its corner of the box;
 - everything stays inside the box. A mark whose outline is in neither the host export nor the
   bundled Unicode outlines is left out of the drawing.
 
@@ -379,14 +380,14 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters, charactersRare })` answers
+`babelStoneAdapter({ ids, layers, components, parts, forms, names, folds, characters })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given; `{ rare: true }` adds `charactersRare`), `containing` and `parts`
-from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
-right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
-individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
-reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `forms` folds the description search's
+meaning when `characters` is given), `containing` and `parts` from the files in `data/`.
+`components` writes out BabelStone's numbered components (`{12}`, the right of 龍, as `⿷己三`), so
+龍's description reads `⿰𦚏⿷己三` and its parts can be taken individually; `{82}`, the top of 書,
+writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝 reach the same 聿 that 建 and 律
+use, through 𤱪 and 書. `forms` folds the description search's
 components and opens a named component into the forms that stand for it; `folds` folds Chinese
 scripts and positional forms together before names are compared. Without them `⺡` and `氵` are
 different components and a name finds only the form and the script the table records. The containing
@@ -558,15 +559,12 @@ characters and code points only.
 
 ### Characters
 
-The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: the common
-characters Unicode marks with `kIICore` plus every KANJIDIC2 character with an IDS description
-(15,062), with 152,982 readings, pinyin, romanizations, Korean, Vietnamese and English meanings.
-water, shui, mizu, みず, 수 and thủy find 水; person finds 人; silk finds 糸. Results are characters,
-not the forms the Find tab opens; among equally close names the more common character comes first,
-by KANJIDIC2's newspaper
-frequency or Unihan's school grade. A second table, `character-vocabulary-rare.tsv.gz`, holds the
-remaining 33,904 named characters; the tab's “Include rare characters” toggle loads it only when
-asked. Without `characters` the tab is not shown.
+The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: every IDS
+character with a Unihan or KANJIDIC2 name (48,966), with 214,533 readings, pinyin, romanizations,
+Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and thủy find 水; person finds
+人; silk finds 糸. Results are characters, not the forms the Find tab opens; among equally close
+names the more common character comes first, by KANJIDIC2's newspaper frequency or Unihan's school
+grade. Without `characters` the tab is not shown.
 
 ## Preview
 
@@ -575,7 +573,9 @@ MIT), ported to the browser. Tangut, Bopomofo, Small Seal and Unicode fallback o
 bundled and loaded on demand. Han and mixed descriptions also read the static files han-compose's `export-web` writes (format 5):
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
-(`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. Drawing runs in a Web Worker,
+(`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. An export that
+carries no host list — the compact Serif one is — has no part to cut; its descriptions are laid out by the
+composer's plain shares instead of the learned boxes, which are where cut parts go. Drawing runs in a Web Worker,
 one sequence at a time; a newer sequence ends the drawing before it.
 
 ```js
@@ -668,10 +668,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   folded together for the name search, CC BY-SA 4.0 as a whole, from `component-forms.tsv`, OpenCC
   (Apache 2.0) and an editorial table of 竜, 亀, 斉 and 歯 (15 KB).
 - `data/character-vocabulary.tsv.gz`: the readings and meanings of the common characters, CC BY-SA
-  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 152,982
-  rows, 1.2 MB gzipped.
-- `data/character-vocabulary-rare.tsv.gz`: the remaining named characters for the optional rare
-  search, same sources and licence; 61,551 rows, 515 KB gzipped.
+  4.0 as a whole, from Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0); 214,533
+  rows, 1.7 MB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (58 KB together), Noto Serif Tangut (1 MB),

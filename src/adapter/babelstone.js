@@ -181,14 +181,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * @param {{ ids?: string | URL, additionalIds?: string | URL, components?: string | URL, componentsText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
- *   charactersRare?: string | URL, charactersRareText?: string, characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
+ *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, charactersRare, charactersRareText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -326,17 +326,6 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     try { folds = readFolds(foldText) } catch { /* names as they are written */ }
     return createNameSearch(readNames(text), { folds })
   }).catch(error => { characterNames = null; throw error })
-
-  /** @type {Promise<ReturnType<typeof createNameSearch>> | null} */
-  let rareCharacterNames = null
-  const rareCharacterIndex = () => rareCharacterNames ??= Promise.all([
-    charactersRareText !== undefined ? charactersRareText : charactersRare ? load(charactersRare).then(readText) : '',
-    foldsText !== undefined ? foldsText : folds ? load(folds).then(response => response.text()).catch(() => '') : '',
-  ]).then(([text, foldText]) => {
-    let folds = new Map()
-    try { folds = readFolds(foldText) } catch { /* names as they are written */ }
-    return createNameSearch(readNames(text), { folds })
-  }).catch(error => { rareCharacterNames = null; throw error })
 
   const nameIndex = () => named ??= Promise.all([
     namesText !== undefined ? namesText : names ? load(names).then(response => response.text()) : '',
@@ -601,29 +590,15 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       return result
     },
     ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
-      /** @param {string} query @param {import('./types.js').Options & { rare?: boolean }} [options] */
-      async searchCharacters(query, { limit = 24, signal, rare = false } = {}) {
+      /** @param {string} query @param {import('./types.js').Options} [options] */
+      async searchCharacters(query, { limit = 24, signal } = {}) {
         if (limit <= 0) return []
         const text = query.trim()
         if (!text) return []
         signal?.throwIfAborted()
         /** @type {{ char: string, label: string }[]} */ let hits = []
-        try {
-          const common = (await characterIndex()).search(text, { limit })
-          hits = common.map(({ char, label }) => ({ char, label }))
-          if (rare && (charactersRare !== undefined || charactersRareText !== undefined)) {
-            try {
-              const extra = (await rareCharacterIndex()).search(text, { limit })
-              // Keep the common result first at each rank, then its rare counterpart; a long list
-              // of common hits must not hide every rare one before the limit.
-              hits = []
-              for (let at = 0; at < Math.max(common.length, extra.length); at++) {
-                if (common[at]) hits.push({ char: common[at].char, label: common[at].label })
-                if (extra[at]) hits.push({ char: extra[at].char, label: extra[at].label })
-              }
-            } catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
-          }
-        } catch (error) { if (!characterInfo) throw error }
+        try { hits = (await characterIndex()).search(text, { limit }).map(({ char, label }) => ({ char, label })) }
+        catch (error) { if (!characterInfo) throw error }
         if (characterInfo) {
           hits = [...await relatedSeeds(text, typed(text)), ...hits]
           try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
@@ -633,7 +608,6 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         return uniqueHits(hits, limit)
       },
     } : {}),
-    ...(charactersRare !== undefined || charactersRareText !== undefined ? { rareCharacters: true } : {}),
     async containing(asked, { limit = 24 } = {}) {
       if (!index) {
         const [found, search] = await Promise.all([read(), smallSeal ? localSearch() : null])

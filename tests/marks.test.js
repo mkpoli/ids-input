@@ -112,6 +112,34 @@ describe('drawing loose marks', () => {
     }
   })
 
+  it('shrinks the character to leave a mark that sits beside it outside the ink', async () => {
+    const local = source()
+    const box = parts => {
+      const boxes = parts.map(part => part.box)
+      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+        Math.max(...boxes.map(b => b[0] + b[2])), Math.max(...boxes.map(b => b[1] + b[3]))]
+    }
+    const base = drawn => drawn.parts.filter(part => !part.origin.startsWith('mark '))
+    const plain = await compose(local, '⿰ㄅㄚ')
+    const marked = await compose(local, '⿰ㄅㄚˇ')
+    const plainBox = box(base(plain)), markedBox = box(base(marked))
+    // The character gives the tone mark the upper right and shrinks toward the lower left.
+    expect(markedBox[1]).toBeGreaterThan(plainBox[1] + 80)
+    expect(markedBox[3]).toBeLessThanOrEqual(plainBox[3])
+    const mark = box(marked.parts.filter(part => part.origin === 'mark ˇ'))
+    const overlaps = Math.min(markedBox[2], mark[2]) > Math.max(markedBox[0], mark[0])
+      && Math.min(markedBox[3], mark[3]) > Math.max(markedBox[1], mark[1])
+    expect(overlaps).toBe(false)
+    // A combining mark over the drawing keeps the character its size.
+    const attached = await compose(local, '⿰ㄅㄚ\u0301')
+    expect(box(base(attached))[3]).toBeCloseTo(plainBox[3], 0)
+    // A Hangul tone mark takes the left, so the character shrinks toward the right.
+    const hangul = await compose(local, '⿰ㄅㄚ〮')
+    const hangulBase = box(base(hangul)), left = box(hangul.parts.filter(part => part.origin === 'mark 〮'))
+    expect(hangulBase[0]).toBeGreaterThan(plainBox[0] + 80)
+    expect(left[2]).toBeLessThanOrEqual(hangulBase[0])
+  })
+
   it('attaches a combining mark over the drawing and a Hangul tone mark at the left', async () => {
     const local = source()
     const acute = await compose(local, '⿰ㄅㄚ\u0301')

@@ -234,6 +234,5 @@
   "parts.gongche.encoded": "인코딩된 합성 음표",
   "parts.gongche.marks": "기보 기호",
   "parts.gongche.kunquSource": "곤곡 기보법 · Unicode 제안서",
-  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures",
-  "ids.characters.rare": "희귀 글자 포함"
+  "parts.gongche.marksSource": "기보 기호 · Hong Kong Music Miniatures"
 }
