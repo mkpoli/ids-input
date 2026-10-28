@@ -92,7 +92,7 @@ class ShippedCrosswalkTests(unittest.TestCase):
         import gzip, json
         from pathlib import Path
         root = Path(__file__).resolve().parents[1]
-        entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text())['entries']
+        entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text(encoding='utf-8'))['entries']
         doc = json.loads(gzip.decompress((root / 'data/small-seal.json.gz').read_bytes()))
         outlines = json.loads(gzip.decompress((root / 'data/small-seal-outlines.json.gz').read_bytes()))
         parts = {part['part']: part for part in doc['parts']}

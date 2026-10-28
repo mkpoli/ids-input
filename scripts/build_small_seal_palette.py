@@ -161,7 +161,7 @@ def main():
     if args.upstream: bundle(args.upstream, doc)
     augment_palette(doc)
     supplements = ROOT / 'scripts/data/small-seal/supplements.json'
-    if supplements.exists(): merge_supplements(doc, json.loads(supplements.read_text()))
+    if supplements.exists(): merge_supplements(doc, json.loads(supplements.read_text(encoding='utf-8')))
     path.write_bytes(gzip.compress(json.dumps(doc, ensure_ascii=False, separators=(',', ':')).encode(), mtime=0))
     print(len(doc['parts']), dict(Counter(p['sealGroup'] for p in doc['parts'])), dict(Counter(p['sealBasis'] for p in doc['parts'])))
 

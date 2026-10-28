@@ -34,7 +34,7 @@ def main():
     if hashlib.sha256(raw).hexdigest() != source['archiveSha256']: raise ValueError('SVG source archive checksum mismatch')
     data = json.loads(gzip.decompress((ROOT / 'data/small-seal.json.gz').read_bytes()))
     supplements = ROOT / 'scripts/data/small-seal/supplements.json'
-    curated = {entry['char']: entry for entry in json.loads(supplements.read_text())['entries']} if supplements.exists() else {}
+    curated = {entry['char']: entry for entry in json.loads(supplements.read_text(encoding='utf-8'))['entries']} if supplements.exists() else {}
     chars = sorted(set(data['table']) | {p['part'] for p in data['parts']})
     glyphs = {'.notdef': TTGlyphPen(None).glyph()}
     provenance = {}
