@@ -33,7 +33,7 @@ reactivate an old geometry edit by reusing its removed target ID. Labels use an 
 
 | `kind` | required content | IDS projection |
 | --- | --- | --- |
-| `component` | `char`: one core component, optionally followed by one variation selector and loose marks | `char` |
+| `component` | `char`: one core component, optionally followed by one variation selector and loose marks, or one conjoining Hangul jamo run | `char` |
 | `operator` | `op`, `children` in operand order, optional `marks` | `op`, each child's projection, then `marks` |
 | `slot` | none | `⬚` |
 | `group` | one `child` | child's projection |
@@ -335,7 +335,8 @@ ID syntax, render modes and per-array limits. A semantic reader additionally:
    edit IDs each have their own document-wide namespace. ID allocation reserves
    current/history IDs and stored target references, including after reload.
 2. Projects the tree to IDS, validates with the core open parser, and requires
-   each component to be one accepted component plus at most one selector.
+   each component to be one accepted component plus at most one selector, or one
+   conjoining Hangul jamo run.
 3. Checks every known operation's mathematical validity and finite coefficients.
 4. Checks pinned recipe completeness and resolves geometry references without
    retargeting them. Unresolved geometry edits are valid stored records.

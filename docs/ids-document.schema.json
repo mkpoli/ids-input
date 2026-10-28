@@ -280,8 +280,8 @@
             "char": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 20,
-              "description": "One component, its variation selector and the loose marks that end the description."
+              "maxLength": 64,
+              "description": "One component, its variation selector and loose marks, or one conjoining Hangul jamo run."
             }
           }
         }

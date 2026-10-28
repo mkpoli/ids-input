@@ -38,6 +38,14 @@ from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut
 and New Korean text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
+The Hangul tab has Jamo, Compose and Syllable views. Compose is one jamo keyboard of modern and
+historical forms, grouped by consonants, vowels and finals: click an initial consonant, a vowel and
+an optional final, and Insert puts the precomposed syllable or the Old Hangul jamo run into the
+editor. Syllable searches the 11,172 modern syllables by character, jamo,
+[Revised Romanization](https://www.korean.go.kr/front_eng/roman/roman_01.do) (or normalized
+[McCune-Reischauer](https://en.wikipedia.org/wiki/McCune%E2%80%93Reischauer) initials and breves) or
+code point; the romanization is a syllable spelling without the assimilation rules that cross
+syllable boundaries.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -164,7 +172,9 @@ pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4,
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
-private-use character, with an optional variation selector. This includes 〇, Greek and Cyrillic
+private-use character, with an optional variation selector. A run of conjoining Hangul jamo that
+forms one syllable is one component; the Hangul palette writes modern combinations as a precomposed
+syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
 allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
@@ -702,6 +712,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   by SHA-256 in `scripts/tangut.py`: the Tangut decompositions and the Tangut palette's usage counts.
 - hfhchan/ids v1.0.2, Henry Chan, MIT, <https://github.com/hfhchan/ids>: which components the
   palette leaves undecomposed.
+- Unicode 18.0.0, Chapter 3, Conjoining Jamo Behavior,
+  <https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-3/>: Hangul syllable composition
+  and the modern and historical jamo classes.
 - Unihan 18.0.0, Unicode, Inc., Unicode License v3, <https://www.unicode.org/reports/tr38/>: stroke
   counts, the common set, the IRG source regions named in the decomposition tree, and the
   definitions, Mandarin, Japanese, Korean and Vietnamese readings of the component and character
