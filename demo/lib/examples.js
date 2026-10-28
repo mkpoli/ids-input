@@ -230,7 +230,20 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
+  // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
+  // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
   { key: 'tangut', examples: [
+    { sequence: '⿱𘠀⿰𘣣𘠐', char: '𗀃' },
+    { sequence: '⿱𘠀𘨐', char: '𗀇' },
+    { sequence: '⿰𘠁𘡤', char: '𗀰' },
+    { sequence: '⿲𘠁𘢌𘠡', char: '𗁀' },
+    { sequence: '⿳𘠛𘡩𘣂', char: '𗇩' },
+    { sequence: '⿺𘠔𘢌', char: '𗇅' },
+    { sequence: '⿸𘡋𘣟', char: '𗔾' },
+    { sequence: '⿵𘢗𘡃', char: '𗬷' },
+    { sequence: '⿱𘠂⿻𘠀𘡃', char: '𗃐' },
+    { sequence: '⿲𘠁⿱𘠀𘠨𘥇', char: '𗁥' },
+    { sequence: '⿺𘢦⿱𘠀⿲𘡃𘠁𘡃', char: '𗮺' },
     { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
     { sequence: '⿰𘫿𘫿', char: '𘴅' },
     { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },
