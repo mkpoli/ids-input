@@ -85,7 +85,7 @@
           {#if name === 'find'}
             <div class="ids-find">
               <input type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-                aria-label={t('ids.search')} placeholder={t('ids.find.placeholder')} />
+                aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
               {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
               {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
               {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('parts.none')}</p>
