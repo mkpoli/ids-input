@@ -10,7 +10,7 @@
   // parts or matching compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
-  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo } from '../core/hangul.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, toConjoiningJamo } from '../core/hangul.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
@@ -74,6 +74,25 @@
   // Hangul tone marks and enclosed forms also have bundled Unicode outlines.
   const hangul = [...substitutes, ...hangulLetters, ...range(0x3200, 0x321e), ...range(0x3260, 0x327e), '〮', '〯']
   const hangulSyllables = range(0xac00, 0xd7a3)
+  // Modern compatibility jamo are the familiar keyboard forms; each is mapped to its conjoining
+  // form when it enters the syllable. Historical forms come from the conjoining jamo tables.
+  const MODERN_INITIALS = [...'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ']
+  const MODERN_VOWELS = [...'ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ']
+  const MODERN_FINAL_CLUSTERS = [...'ㄳㄵㄶㄺㄻㄼㄽㄾㄿㅀㅄ']
+  /** @typedef {'consonant' | 'vowel' | 'final'} JamoKind */
+  /** @typedef {{ key: string, label: string, chars: readonly string[], kind: JamoKind }} JamoGroup */
+  /** @type {ReadonlyArray<JamoGroup>} */
+  const MODERN_JAMO_GROUPS = [
+    { key: 'consonants', label: 'parts.hangul.consonants', chars: MODERN_INITIALS, kind: 'consonant' },
+    { key: 'vowels', label: 'parts.hangul.vowels', chars: MODERN_VOWELS, kind: 'vowel' },
+    { key: 'finalClusters', label: 'parts.hangul.finalClusters', chars: MODERN_FINAL_CLUSTERS, kind: 'final' },
+  ]
+  /** @type {ReadonlyArray<JamoGroup>} */
+  const HISTORICAL_JAMO_GROUPS = [
+    { key: 'consonants', label: 'parts.hangul.consonants', chars: [...HANGUL_INITIALS.historical], kind: 'consonant' },
+    { key: 'vowels', label: 'parts.hangul.vowels', chars: [...HANGUL_MEDIALS.historical], kind: 'vowel' },
+    { key: 'finals', label: 'parts.hangul.finals', chars: [...HANGUL_FINALS.historical], kind: 'final' },
+  ]
   /** @param {string[]} chars @returns {PalettePart[]} */
   const extraParts = chars => chars.map(part => ({ part, kind: 'extra' }))
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
@@ -92,23 +111,25 @@
   })
 
   const PAGE_SIZE = 120
-  let hangulGroup = $state(/** @type {'parts' | 'compose'} */ ('parts')), hangulPage = $state(0)
+  let hangulGroup = $state(/** @type {'jamo' | 'compose' | 'syllable'} */ ('jamo')), hangulPage = $state(0)
+  let jamoMode = $state(/** @type {'modern' | 'historical'} */ ('modern'))
   $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
-    const syllables = hangulGroup === 'compose'
-    const base = syllables ? hangulSyllables : hangul
-    const extra = (partsByScript.get('hangul') ?? []).map(part => part.part).filter(part => {
+    const syllables = hangulGroup === 'syllable'
+    const base = syllables ? hangulSyllables : hangulGroup === 'jamo' ? hangul : []
+    const extra = hangulGroup === 'compose' ? [] : (partsByScript.get('hangul') ?? []).map(part => part.part).filter(part => {
       const point = part.codePointAt(0) ?? 0
       return (point >= 0xac00 && point <= 0xd7a3) === syllables
     })
     return [...new Set([...base, ...extra])]
   })
   const hangulMatches = $derived.by(() => {
+    if (hangulGroup === 'compose') return []
     const term = filter.trim()
-    if (!term) return hangulGroup === 'compose' ? [] : hangulKeys
+    if (!term) return hangulKeys
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point)
-      : hangulGroup === 'compose' ? composeJamo(term) ?? term : term
+      : hangulGroup === 'syllable' ? composeJamo(term) ?? term : term
     const matches = matchScriptParts(hangulKeys, text, Boolean(code))
     const available = new Set(hangulKeys)
     const metadata = (partsByScript.get('hangul') ?? []).filter(part => available.has(part.part) &&
@@ -123,12 +144,54 @@
   const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
   const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
-  let initial = $state(HANGUL_INITIALS.modern[0]), medial = $state(HANGUL_MEDIALS.modern[0]), final = $state('')
-  const composed = $derived(composeHangul(initial, medial, final))
+
+  // The jamo keyboard composes in the order the letters are clicked: initial, medial, final.
+  let initial = $state(''), medial = $state(''), final = $state('')
+  const jamoGroups = $derived(jamoMode === 'modern' ? MODERN_JAMO_GROUPS : HISTORICAL_JAMO_GROUPS)
+  const composed = $derived(initial && medial ? composeHangul(initial, medial, final) : null)
+  const preview = $derived(composed?.text ?? initial)
   /** @param {string | undefined} text */
   const codePoints = text => text ? [...text].map(char => `U+${(char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ') : ''
-  function pickComposed() { if (composed && !disabled) pick(composed.text) }
-  const filterLabel = $derived(t(tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'compose' ? 'parts.hangul.find' : 'parts.filter'))
+  const previewPoints = $derived(codePoints(preview))
+  /** @param {string} char */
+  const canConsonant = char => Boolean(!medial ? toConjoiningJamo(char, 'L') : toConjoiningJamo(char, 'T'))
+  /** @param {string} char */
+  const canVowel = char => Boolean(toConjoiningJamo(char, 'V')) && !final
+  /** @param {string} char */
+  const canFinal = char => Boolean(initial && medial && toConjoiningJamo(char, 'T'))
+  /** @param {string} char @param {JamoKind} kind */
+  const canJamo = (char, kind) => kind === 'vowel' ? canVowel(char) : kind === 'final' ? canFinal(char) : canConsonant(char)
+  /** @param {string} char */
+  function chooseConsonant(char) {
+    if (!canConsonant(char)) return
+    const jamo = /** @type {string} */ (toConjoiningJamo(char, medial ? 'T' : 'L'))
+    if (!medial) initial = jamo
+    else final = jamo
+  }
+  /** @param {string} char */
+  function chooseVowel(char) {
+    if (!canVowel(char)) return
+    if (!initial) initial = /** @type {string} */ (toConjoiningJamo('ㅇ', 'L'))
+    medial = /** @type {string} */ (toConjoiningJamo(char, 'V'))
+  }
+  /** @param {string} char */
+  function chooseFinal(char) {
+    if (!canFinal(char)) return
+    final = /** @type {string} */ (toConjoiningJamo(char, 'T'))
+  }
+  function backspace() {
+    if (final) final = ''
+    else if (medial) medial = ''
+    else initial = ''
+  }
+  function clearCompose() { initial = ''; medial = ''; final = '' }
+  function pickComposed() {
+    if (!composed || disabled) return
+    const text = composed.text
+    clearCompose()
+    pick(text)
+  }
+  const filterLabel = $derived(t(tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -387,41 +450,45 @@
   </div>
 {/snippet}
 
-{#snippet jamoOptions(/** @type {{ modern: string[], historical: string[] }} */ groups)}
-  {#each /** @type {const} */ ([['modern', groups.modern], ['historical', groups.historical]]) as [name, chars] (name)}
-    <optgroup label={t(`parts.hangul.${name}`)}>
-      {#each chars as char (char)}<option value={char}>{char}</option>{/each}
-    </optgroup>
-  {/each}
-{/snippet}
-
 {#snippet hangulCompose()}
   <div class="hangul-compose" role="group" aria-label={t('parts.hangul.compose')}>
-    <label class="compose-field">{t('parts.hangul.initial')}
-      <select bind:value={initial} {disabled}>{@render jamoOptions(HANGUL_INITIALS)}</select>
-    </label>
-    <label class="compose-field">{t('parts.hangul.medial')}
-      <select bind:value={medial} {disabled}>{@render jamoOptions(HANGUL_MEDIALS)}</select>
-    </label>
-    <label class="compose-field">{t('parts.hangul.final')}
-      <select bind:value={final} {disabled}>
-        <option value="">{t('parts.hangul.noFinal')}</option>
-        {@render jamoOptions(HANGUL_FINALS)}
-      </select>
-    </label>
-    <button type="button" class="compose-result" data-character={composed?.text} disabled={disabled || !composed}
-      title={composed ? `${composed.text} · ${codePoints(composed.text)}` : undefined}
-      aria-label={composed ? `${t('parts.hangul.insert')} ${composed.text}` : t('parts.hangul.compose')}
-      aria-describedby={composed && !composed.precomposed ? `${uid}-hangul-note` : undefined}
-      onclick={pickComposed}>
-      <span class="compose-glyph">{composed?.text ?? ''}</span>
-      <span class="compose-detail">
-        <span class="compose-code">{codePoints(composed?.text)}</span>
-        <span class="compose-action">{t('parts.hangul.insert')}</span>
-      </span>
-    </button>
+    <div class="compose-head">
+      <button type="button" class="compose-result" data-character={composed?.text ?? ''} disabled={disabled || !composed}
+        title={preview ? `${preview} · ${previewPoints}` : undefined}
+        aria-label={composed ? `${t('parts.hangul.insert')} ${composed.text}` : t('parts.hangul.compose')}
+        aria-describedby={composed && !composed.precomposed ? `${uid}-hangul-note` : undefined}
+        onclick={pickComposed}>
+        <span class="compose-glyph">{preview || '⬚'}</span>
+        <span class="compose-detail">
+          <span class="compose-code">{previewPoints}</span>
+          <span class="compose-action">{t('parts.hangul.insert')}</span>
+        </span>
+      </button>
+      <div class="compose-actions">
+        <button type="button" class="compose-backspace" aria-label={t('parts.hangul.backspace')} title={t('parts.hangul.backspace')}
+          disabled={disabled || (!initial && !medial && !final)} onclick={backspace}>←</button>
+        <button type="button" class="compose-clear" disabled={disabled || (!initial && !medial && !final)} onclick={clearCompose}>{t('parts.hangul.clear')}</button>
+      </div>
+    </div>
+    <div class="compose-mode" role="group" aria-label={t('parts.hangul.group')}>
+      {#each /** @type {const} */ ([['modern', 'parts.hangul.modern'], ['historical', 'parts.hangul.historical']]) as [mode, label] (mode)}
+        <button type="button" class:active={jamoMode === mode} aria-pressed={jamoMode === mode} onclick={() => { jamoMode = /** @type {'modern' | 'historical'} */ (mode) }}>{t(label)}</button>
+      {/each}
+    </div>
+    {#each jamoGroups as group (group.key)}
+      <section class="jamo-group" data-hangul-group={group.key}>
+        <h4>{t(group.label)}</h4>
+        <div class="jamo-grid" role="group" aria-label={t(group.label)}>
+          {#each group.chars as char (char)}
+            <button type="button" class="jamo-key" data-jamo={char} title={char} aria-label={char}
+              disabled={disabled || !canJamo(char, group.kind)}
+              onclick={() => group.kind === 'vowel' ? chooseVowel(char) : group.kind === 'final' ? chooseFinal(char) : chooseConsonant(char)}>{char}</button>
+          {/each}
+        </div>
+      </section>
+    {/each}
     {#if composed && !composed.precomposed}<p class="parts-note" id={`${uid}-hangul-note`}>{t('parts.hangul.oldCluster')}</p>{/if}
-    <p class="compose-live" aria-live="polite">{composed ? `${composed.text} ${codePoints(composed.text)}` : ''}</p>
+    <p class="compose-live" aria-live="polite">{composed ? `${composed.text} ${previewPoints}` : ''}</p>
   </div>
 {/snippet}
 
@@ -435,12 +502,12 @@
       {/each}
     </div>
     {#if tab === 'hangul'}
-      <label class="script-select">{t('parts.hangul.group')}
-        <select value={hangulGroup} onchange={event => { hangulGroup = /** @type {'parts' | 'compose'} */ (event.currentTarget.value); filter = '' }}>
-          <option value="parts">{t('parts.hangul.parts')}</option>
-          <option value="compose">{t('parts.hangul.compose')}</option>
-        </select>
-      </label>
+      <div class="hangul-views" role="group" aria-label={t('parts.hangul.group')}>
+        {#each /** @type {const} */ ([['jamo', 'parts.hangul.jamo'], ['compose', 'parts.hangul.compose'], ['syllable', 'parts.hangul.syllable']]) as [group, label] (group)}
+          <button type="button" class:active={hangulGroup === group} aria-pressed={hangulGroup === group}
+            onclick={() => { hangulGroup = /** @type {'jamo' | 'compose' | 'syllable'} */ (group); filter = '' }}>{t(label)}</button>
+        {/each}
+      </div>
     {/if}
     {#if tab === 'other'}
       <label class="script-select">{t('parts.script.label')}
@@ -449,8 +516,10 @@
         </select>
       </label>
     {/if}
-    <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
-      placeholder={filterLabel} aria-label={filterLabel} />
+    {#if !(tab === 'hangul' && hangulGroup === 'compose')}
+      <input class="parts-filter" type="search" bind:value={filter} lang="ja" spellcheck="false" autocomplete="off"
+        placeholder={filterLabel} aria-label={filterLabel} />
+    {/if}
   </div>
   {#if tab === 'seal' && !query && sealGroups.length}
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
@@ -497,7 +566,7 @@
     {:else if !parts}
       <p class="parts-note" role="status">{t('parts.loading')}</p>
     {:else if tab === 'hangul'}
-      {#if hangulGroup === 'compose' && !query}
+      {#if hangulGroup === 'compose'}
         {@render hangulCompose()}
       {:else if hangulMatches.length}
         {#if hangulPages > 1}
@@ -581,19 +650,33 @@
   .parts-filter{flex:1 1 100%;min-width:0;padding:6px 8px;font-size:13px}
   .script-select{display:flex;align-items:center;gap:8px;width:100%;font-size:13px}
   .script-select select{flex:1;min-width:0;padding:4px 6px}
+  .hangul-views{display:flex;gap:2px;padding:3px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
+  .hangul-views button{border:0;background:transparent;padding:5px 10px;border-radius:6px;font-size:12px;color:var(--_muted)}
+  .hangul-views button.active{background:var(--_surface);color:var(--_ink);box-shadow:0 1px 2px #00000018}
   .script-pages{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
   .script-pages button,.script-pages input{padding:4px 6px}
   .script-pages input{width:6em}
   .hangul-compose{display:flex;flex-direction:column;gap:8px}
-  .compose-field{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--_muted)}
-  .compose-field select{flex:1;min-width:0;padding:4px 6px;font-size:13px;color:var(--_ink)}
-  .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;min-height:104px;padding:12px;border-color:var(--_line);
-    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS Strokes",var(--ids-font,sans-serif)}
+  .compose-head{display:flex;gap:8px;align-items:stretch;min-width:0}
+  .compose-actions{display:flex;flex-direction:column;gap:4px;flex:none}
+  .compose-actions button{padding:0 8px;font-size:12px;color:var(--_muted)}
+  .compose-actions .compose-backspace{font-size:16px;line-height:1}
+  .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;flex:1;min-width:0;min-height:104px;padding:12px;border-color:var(--_line);
+    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,sans-serif)}
   .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,sans-serif)}
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .compose-code{font:11px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow-wrap:anywhere}
   .compose-action{font-size:12px;color:var(--_accent)}
+  .compose-mode{display:flex;gap:2px;padding:3px;border-radius:8px;background:var(--_surface-subtle)}
+  .compose-mode button{border:0;background:transparent;padding:4px 9px;border-radius:6px;font-size:12px;color:var(--_muted)}
+  .compose-mode button.active{background:var(--_surface);color:var(--_ink)}
+  .jamo-group{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .jamo-group h4{margin:2px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
+  .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}
+  .jamo-key{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:19px;line-height:1;
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,sans-serif)}
+  .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:2px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 6px;font-variant-numeric:tabular-nums}

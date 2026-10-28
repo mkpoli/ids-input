@@ -38,9 +38,10 @@ from Yi Bai's IDS dataset, and the palette has a Tangut
 tab. Bopomofo outlines are bundled for preview and SVG/PNG export. Import `fonts.css` for Tangut
 and New Korean text. Tangut outlines are bundled for previews and SVG/PNG
 export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
-The Hangul tab composes a syllable from initial, medial and final jamo, modern or historical, and
-inserts the precomposed syllable or the Old Hangul jamo run. Its filter searches the 11,172 modern
-syllables by character, jamo or code point.
+The Hangul tab has Jamo, Compose and Syllable views. Compose is a jamo keyboard: click an
+initial consonant, a vowel and an optional final, and Insert puts the precomposed syllable or
+the Old Hangul jamo run into the editor. Syllable searches the 11,172 modern syllables by
+character, jamo or code point.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
