@@ -149,6 +149,11 @@ describe('an adapter over the layers', () => {
     expect(await encoding.encoded('⿱𘠀𗸡')).toContain('𗀃')
   }, 15000)
 
+  it('keeps source descriptions when the layer file is malformed', async () => {
+    const malformed = babelStoneAdapter({ table, layersText: 'not json' })
+    expect(await malformed.structure('𗀃')).toEqual([{ text: '⿱𘠀⿰𘣣𘠐', regions: '' }])
+  })
+
   it('leaves characters and other scripts alone', async () => {
     expect(await adapter.structure('𗀀')).toEqual([{ text: '⿱𘠀⿰𘢰𘠆', regions: '' }])
     expect(await adapter.structure('一')).toEqual(await babelStoneAdapter({ table, palette: parts }).structure('一'))
