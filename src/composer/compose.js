@@ -1221,7 +1221,9 @@ export class Composer {
         if (!best) continue
         const coverWidth = coverBox[2] - coverBox[0], want = COVER_BAR * coverWidth
         if (coverWidth <= 0 || best.w <= 0 || want >= best.w) continue
-        const c = p.part.contours[best.index]
+        const contours = p.part.contours.slice(), original = contours[best.index]
+        const c = { ...original, light: original.light.slice(), heavy: original.heavy.slice() }
+        contours[best.index] = c
         let minX = Infinity, maxX = -Infinity
         for (let k = 0; k < c.light.length; k += 2) {
           minX = Math.min(minX, c.light[k]); maxX = Math.max(maxX, c.light[k])
@@ -1232,7 +1234,7 @@ export class Composer {
           c.light[k] = centre + shift + (c.light[k] - centre) * factor
           c.heavy[k] = centre + shift + (c.heavy[k] - centre) * factor
         }
-        p.part = makePart(p.part.contours)
+        p.part = makePart(contours)
         break
       }
     }
