@@ -103,7 +103,7 @@
       {#each shown as entry (entry.sequence)}
         <article class="card">
           <div class="head">
-            <span class="seq" lang="zh">{entry.sequence}</span>
+            <h2 class="seq" lang="zh">{entry.sequence}</h2>
             <span class="badge">{t('compare.score.f1')} {two(entry.f1)}</span>
           </div>
           <div class="drawings">
@@ -177,7 +177,7 @@
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
   .card{display:flex;flex-direction:column;gap:9px;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow)}
   .head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
-  .seq{font-family:var(--cjk);font-size:24px;line-height:1.2;overflow-wrap:anywhere}
+  .seq{margin:0;font-family:var(--cjk);font-size:24px;font-weight:400;line-height:1.2;overflow-wrap:anywhere}
   .badge{font:600 11.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--accent);background:var(--accent-soft);padding:4px 7px;border-radius:999px;white-space:nowrap}
   .drawings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   figure{margin:0;display:flex;flex-direction:column;gap:3px}
@@ -193,7 +193,9 @@
   footer a{color:var(--accent);text-decoration:none}
   footer a:hover{text-decoration:underline}
   @media (max-width:640px){
-    h1,.slash{display:none}
+    /* The page keeps its heading in the accessibility tree; the brand already names the site. */
+    h1{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    .slash{display:none}
     .bar{gap:8px}
     .lead{font-size:15.5px}
     .grid{grid-template-columns:1fr}
