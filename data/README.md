@@ -78,6 +78,16 @@ file and run `uv run scripts/build_ids_project.py`. The built table is downloada
 <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv.gz>, and its source at
 <https://github.com/mkpoli/ids-input/raw/main/data/ids-project.tsv>.
 
+## `ids-context.tsv`
+
+Descriptions that draw as an encoded character's context-adapted form. One line per description,
+`sequence<TAB>char<TAB>source`; `babelStoneAdapter({ context })` answers the character, and the
+preview draws that character's glyph in the chosen face before composing the parts.
+
+`⿰𦚏𳳳` (JYutnet JYN00025, CSK1939 p.4) is a variant form of 龍. Its right side, 𳳳 (U+33473), has
+its own outline when it stands alone; inside 龍 the encoded 龍 glyph supplies the side form, so the
+variant draws as 龍.
+
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how

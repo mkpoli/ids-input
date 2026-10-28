@@ -346,7 +346,8 @@ individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 read
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own
 `data/ids-project.tsv.gz`, which describes characters newer than BabelStone's (`𳑳`, U+33473, as
-`⿷⿺己一三`). `forms` folds the description search's components and opens a named component into the
+`⿷⿺己一三`); `context` maps a whole description to the encoded character it draws as
+(`⿰𦚏𳳳` as 龍). `forms` folds the description search's components and opens a named component into the
 forms that stand for it; `folds` folds Chinese scripts and positional forms together before names
 are compared. Without them `⺡` and `氵` are different components and a name finds only the form and
 the script the table records. The containing search builds an index in memory on first use: under
@@ -608,6 +609,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
   `𳑳` (U+33473) as `⿷⿺己一三` (0.3 KB gzipped).
+- `data/ids-context.tsv`: descriptions that draw as an encoded character's context-adapted form,
+  `⿰𦚏𳳳` as 龍 (JYutnet JYN00025); the adapter reads it with `context`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
