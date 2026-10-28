@@ -225,10 +225,12 @@ of the projection.
 
 The preview draws marks into the same 1000-unit box:
 
-- a combining mark sits over or under the composed drawing, centered, and a run stacks;
-- kana voicing marks, spacing accents, tone letters and superscripts sit at the upper right in a row,
-  sized from the character box; a tone letter keeps the height its font designs;
-- Hangul tone marks sit at the left, where the syllable's tone is written;
+- a combining mark sits over or under the composed drawing, centered, and a run stacks; it may
+  overlap the ink, as a combining mark does over its base;
+- a mark that sits beside the drawing takes a margin: kana voicing marks, spacing accents, tone
+  letters and superscripts at the upper right in a row, Hangul tone marks at the left. The composed
+  drawing shrinks toward the opposite corner so the mark stands outside its strokes, and the row or
+  stack is fitted to its corner of the box;
 - everything stays inside the box. A mark whose outline is in neither the host export nor the
   bundled Unicode outlines is left out of the drawing.
 
