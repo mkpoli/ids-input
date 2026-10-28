@@ -60,14 +60,24 @@ When the audit combines modern IDS tables, `modernSource` lists all supplied tab
 
 ## Curated supplementary mappings
 
-`scripts/data/small-seal/supplements.json` records explicit provider crosswalks
-for glyphs outside the bundled app palette. U+3DDAF is mapped to 𠔝 by Unicode
-SealSources; CHISE's `SW-JIGUGE-15216` lists 𠔝, 其, 𢍌 and 𠔐 together. The
-audit includes those aliases and a pinned Chen Changzhi SVG from Kaiyuan.
-The source IDS remains unresolved; this mapping does not promote it into the
-source-backed decomposition table.
+`scripts/data/small-seal/supplements.json` records provider crosswalks that connect
+seal forms to modern characters. Each entry pairs one Unicode SealSources
+`kSEAL_MCJK` value with a single CHISE ShuoWen record that lists the modern
+characters together, and names a pinned Kaiyuan SVG with checksums for the
+Unicode table and the CHISE archive.
 
-Supplementary source and glyph checksums are verified during generation and
-included in the report. The CHISE relationship is checked against the bundled
-archive by `python3 -m unittest discover -s scripts -p test_small_seal.py`.
-Supplementary glyphs are drawn from local SVG files, separately from the app font.
+`python3 scripts/build_seal_supplements.py REPORT_JSON` adds a seal form when its
+Unicode mapping reaches a modern component that the report leaves unmapped,
+either directly or inside a nested expansion, for example U+3DB6E for 爭 and 争
+or U+3DDAF for 其.
+
+`python3 scripts/build_small_seal_palette.py` compiles the entries into
+`data/small-seal.json.gz`: the modern map gains their aliases and the palette
+gains one part per entry with `sealBasis: crosswalk` in the Other group.
+`scripts/build_small_seal_font.py` adds their SVGs to the webfont, so search and
+the palette can draw them. The audit reads the same manifest.
+
+These mappings do not resolve an IDS row whose entity lacks a unique seal
+character, and they stay outside the source-backed decomposition table. Their
+checksums are verified during both builds and by every entry in
+`python3 -m unittest discover -s scripts -p test_small_seal.py`.

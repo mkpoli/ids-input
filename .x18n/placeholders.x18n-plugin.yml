@@ -1,0 +1,4 @@
+# yaml-language-server: $schema=https://x18n.dev/schema/plugin.json
+name: single-braces
+placeholders:
+  - '{name}'

@@ -9,6 +9,13 @@ test('tokens map nested subtrees with UTF-16 ranges', () => {
   expect(spans[3].text).toBe('𠀀\u{E0100}')
   expect(spans.map(t => t.text).join('')).toBe(text)
 })
+test('tokens keep a conjoining Hangul run whole', () => {
+  const cluster = String.fromCodePoint(0x1100, 0x1161, 0x11eb), text = `⿰${cluster}木`
+  const spans = tokens(text)
+  expect(spans.map(token => token.text)).toEqual(['⿰', cluster, '木'])
+  expect(spans.at(-1)).toMatchObject({ path: [1], start: 1 + cluster.length, end: text.length })
+  expect(spans.map(token => token.text).join('')).toBe(text)
+})
 test('unfinished slots have zero width; invalid drafts are unmapped', () => {
   expect(tokens('⿰木').at(-1)).toMatchObject({path: [1], start: 2, end: 2, text: ''})
   expect(tokens('⿰木木木')).toEqual([])
@@ -27,4 +34,10 @@ test('ranges select the smallest enclosing subtree without splitting selectors',
   expect(rangeToken(spans, 2, 7)?.path).toEqual([0])
   expect(rangeToken(spans, 2, 8)?.path).toEqual([])
   expect(rangeToken(spans, 2, 2)).toBeNull()
+})
+
+test('treats an emoji sequence as one selectable token', () => {
+  const spans = tokens('⿰👩🏽‍💻木')
+  expect(spans.map(token => token.text)).toEqual(['⿰', '👩🏽‍💻', '木'])
+  expect(rangeToken(spans, 3, 4)?.text).toBe('👩🏽‍💻')
 })

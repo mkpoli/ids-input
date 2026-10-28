@@ -43,8 +43,21 @@
 // and 𧹂 (⿱⿰虎⿿虎貝): BabelStone IDS. The first two also appear in IRG N2572, p.2.
 // https://unicode.org/irg/docs/n2572-NewIDCs.pdf#page=2
 // 皶: BabelStone's GKP form ⿰查皮 is used; the TJ record is ⿰査皮.
-// Historical variants of 寫 (JYN00003) and 龍 (JYN00025), CSK1939 pp.72 and 4:
+// Historical variant of 寫 (JYN00003), CSK1939 p.72:
 // https://jyutnet.github.io/unencoded-characters/
+// Geba-ji abbreviations, 全学联汉字 (Chinese Wikipedia), sections 西文字母, 假名声旁 and the
+// simplified-form and 通假 tables, read 2026-10-28:
+// https://zh.wikipedia.org/wiki/全学联汉字
+// The table writes the letters full width (Ｒ, Ｋ, …); the examples use ASCII. The eleven letter
+// forms are 寮 宀+R, 僚 亻+宀+R, 療 疒+R, 軍 冖+G, 確 石+K, 韓 龺+K, 還 辶+K, 館 飠+K, 縄 糸+N,
+// 認 言+N, 論 言+R. 言ギ abbreviates 議. The simplified and phonetic forms 斗, 才, 门, 兴, 争,
+// 权, 队, 论, 业, 际, 产, 运, 阶, 胜, 选, 战 stand for 闘, 歳, 門, 興, 爭, 権, 隊, 論, 業, 際,
+// 産, 運, 階, 勝, 選, 戦. The letter forms are the HAN-LATIN entries of Gen Kojitani,
+// Proposal to add a new CJK Abbreviations block, L2/24-125 (2024-04-24):
+// https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf
+// Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
+// and shows 宀+R for 寮. The Japanese Wikipedia article ゲバ字 gives the same form:
+// https://ja.wikipedia.org/wiki/ゲバ字
 export const EXAMPLE_GROUPS = [
   { key: 'basic', examples: [
     { sequence: '⿾正', char: '𣥄' },
@@ -72,7 +85,6 @@ export const EXAMPLE_GROUPS = [
   { key: 'complex', examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
     { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', char: '' },
-    { sequence: '⿰𦚏⿷己三', char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
@@ -135,6 +147,78 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', char: '' },
     { sequence: '⿴囗⿱エン', char: '' },
   ] },
+  // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
+  // with no code point; for an encoded character it names that character, which `encoded` reports.
+  // The entries cover the article's single-character tables, one form per row. Left out: the word
+  // ligatures (コンクリート, セメント, ムーブメント, 警察/憲法, 慶応), the ambiguous 广マ, the
+  // unrenderable 㐧, the duplicate variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ and Jo.
+  { key: 'geba', source: 'https://zh.wikipedia.org/wiki/全学联汉字', examples: [
+    // 西文字母
+    { sequence: '⿱宀R', char: '', abbreviates: '寮' },
+    { sequence: '⿰亻⿱宀R', char: '', abbreviates: '僚' },
+    { sequence: '⿸疒R', char: '', abbreviates: '療' },
+    { sequence: '⿱冖G', char: '', abbreviates: '軍' },
+    { sequence: '⿰石K', char: '', abbreviates: '確' },
+    { sequence: '⿰龺K', char: '', abbreviates: '韓' },
+    { sequence: '⿺辶K', char: '', abbreviates: '還' },
+    { sequence: '⿰飠K', char: '', abbreviates: '館' },
+    { sequence: '⿰糸N', char: '', abbreviates: '縄' },
+    { sequence: '⿰言N', char: '', abbreviates: '認' },
+    { sequence: '⿰言R', char: '', abbreviates: '論' },
+    { sequence: '⿰言S', char: '', abbreviates: '識' },
+    { sequence: '⿸广K', char: '', abbreviates: '慶' },
+    { sequence: '⿸广O', char: '', abbreviates: '応' },
+    // 假名声旁
+    { sequence: '⿰言ギ', char: '', abbreviates: '議' },
+    { sequence: '⿰木キ', char: '', abbreviates: '機' },
+    { sequence: '⿺走キ', char: '', abbreviates: '起' },
+    { sequence: '⿰木コ', char: '', abbreviates: '構' },
+    { sequence: '⿰言コ', char: '', abbreviates: '講' },
+    { sequence: '⿰火⿱セン', char: '', abbreviates: '煽' },
+    { sequence: '⿰糸ソ', char: '', abbreviates: '組' },
+    { sequence: '⿸尸ソ', char: '', abbreviates: '層' },
+    { sequence: '⿱龸ド', char: '', abbreviates: '堂' },
+    { sequence: '⿰虫ホ', char: '', abbreviates: '蜂' },
+    { sequence: '⿰扌マ', char: '', abbreviates: '抹' },
+    { sequence: '⿱艹ヤ', char: '', abbreviates: '薬' },
+    { sequence: '⿰阝ヱ', char: '', abbreviates: '衛' },
+    // 通仮・楷化・記号・字形省去・声旁
+    { sequence: '斗', char: '斗', abbreviates: '闘' },
+    { sequence: '才', char: '才', abbreviates: '歳' },
+    { sequence: '门', char: '门', abbreviates: '門' },
+    { sequence: '兴', char: '兴', abbreviates: '興' },
+    { sequence: '争', char: '争', abbreviates: '爭' },
+    { sequence: '权', char: '权', abbreviates: '権' },
+    { sequence: '队', char: '队', abbreviates: '隊' },
+    { sequence: '论', char: '论', abbreviates: '論' },
+    { sequence: '业', char: '业', abbreviates: '業' },
+    { sequence: '际', char: '际', abbreviates: '際' },
+    { sequence: '产', char: '产', abbreviates: '産' },
+    { sequence: '运', char: '运', abbreviates: '運' },
+    { sequence: '阶', char: '阶', abbreviates: '階' },
+    { sequence: '胜', char: '胜', abbreviates: '勝' },
+    { sequence: '选', char: '选', abbreviates: '選' },
+    { sequence: '战', char: '战', abbreviates: '戦' },
+    // 记号・字形省去・隶定・訓読・声旁
+    { sequence: '𠮚', char: '𠮚', abbreviates: '国' },
+    { sequence: '紜', char: '紜', abbreviates: '織' },
+    { sequence: '耺', char: '耺', abbreviates: '職' },
+    { sequence: '県', char: '県', abbreviates: '縣' },
+    { sequence: '貭', char: '貭', abbreviates: '質' },
+    { sequence: '仂', char: '仂', abbreviates: '働' },
+    { sequence: '厂', char: '厂', abbreviates: '歴' },
+    { sequence: '𫞂', char: '𫞂', abbreviates: '曜' },
+    { sequence: '云', char: '云', abbreviates: '言' },
+    { sequence: '犾', char: '犾', abbreviates: '憲' },
+    { sequence: '庁', char: '庁', abbreviates: '廳' },
+    // Structural forms
+    { sequence: '⿵门日', char: '间', abbreviates: '間' },
+    { sequence: '⿻𠤎丶', char: '', abbreviates: '義' },
+    { sequence: '⿰虍刂', char: '', abbreviates: '劇' },
+    { sequence: '⿰辶⿱𭕄共', char: '', abbreviates: '選' },
+    { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
+    { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
+  ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', examples: [
     {"sequence": "⿰𽁭𽁭", "char": "𽄌", "modern": "玨", "source": "data/small-seal.json.gz"},
@@ -146,7 +230,20 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
+  // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
+  // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
   { key: 'tangut', examples: [
+    { sequence: '⿱𘠀⿰𘣣𘠐', char: '𗀃' },
+    { sequence: '⿱𘠀𘨐', char: '𗀇' },
+    { sequence: '⿰𘠁𘡤', char: '𗀰' },
+    { sequence: '⿲𘠁𘢌𘠡', char: '𗁀' },
+    { sequence: '⿳𘠛𘡩𘣂', char: '𗇩' },
+    { sequence: '⿺𘠔𘢌', char: '𗇅' },
+    { sequence: '⿸𘡋𘣟', char: '𗔾' },
+    { sequence: '⿵𘢗𘡃', char: '𗬷' },
+    { sequence: '⿱𘠂⿻𘠀𘡃', char: '𗃐' },
+    { sequence: '⿲𘠁⿱𘠀𘠨𘥇', char: '𗁥' },
+    { sequence: '⿺𘢦⿱𘠀⿲𘡃𘠁𘡃', char: '𗮺' },
     { sequence: '⿱𘠀⿰𘢰𘠆', char: '𗀀' },
     { sequence: '⿰𘫿𘫿', char: '𘴅' },
     { sequence: '⿲𘫺𘢅𘫱', char: '𗐃' },

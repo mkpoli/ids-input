@@ -17,10 +17,11 @@
  * @property {string} [variantGroup] Shared identity for adjacent palette variants; selection keeps the literal form.
  * @property {string[]} [aliases] Exact IDS spellings normalized to this encoded part.
  * @property {'basic' | 'compound' | 'other'} [sealGroup] Small Seal palette group.
- * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'unknown'} [sealBasis] Evidence for the palette grouping.
+ * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'crosswalk' | 'unknown'} [sealBasis] Evidence for the palette grouping.
  * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
  * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
  * @property {string} part
+ * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
@@ -36,7 +37,7 @@
  *
  * @typedef {object} DrawingPart One part of a drawing: a piece the composer placed.
  * @property {number} [leaf] Original IDS leaf index when the composer can preserve ownership through a rewrite.
- * @property {string} origin What the piece was drawn from, such as `glyph 木` or `learned 村`.
+ * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村` or `mark ˊ` for a loose mark.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
@@ -45,6 +46,7 @@
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
  * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
  * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (⬚), numbered in reading order, in the box the layout gives it.
+ * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask.
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
@@ -58,7 +60,7 @@
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
  * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
- * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; [] for one that has no smaller parts.
+ * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived Tangut character-first description replaces its source description and is marked `derived`. A description may be a single distinct component; [] means no smaller parts are recorded.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components found by what is typed: a character, a code point, a name, a word or a reading.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [searchCharacters] Characters whose readings or meanings match what is typed.

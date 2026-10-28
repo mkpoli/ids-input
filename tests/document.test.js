@@ -25,6 +25,12 @@ describe('a document from IDS', () => {
     expect(right.char).toBe('木')
     expect(left.id).not.toBe(right.id)
   })
+  it('projects an Old Hangul jamo run as one component', () => {
+    const cluster = String.fromCodePoint(0x1100, 0x1161, 0x11eb), text = `⿰${cluster}木`
+    const document = fromSequence(text)
+    expect(toSequence(document.root)).toBe(text)
+    expect(toSequence(readDocument(writeDocument(document)).root)).toBe(text)
+  })
   it('refuses text that is not an open IDS draft', () => {
     expect(() => fromSequence('木口')).toThrow(DocumentError)
     expect(() => fromSequence('⿰木')).not.toThrow()
@@ -212,5 +218,57 @@ describe('identity edits', () => {
     document.render = { mode: 'pinned', engine: 'x', revision: '1', options: {}, assets: [{ role: 'font', sha256: '0'.repeat(64) }] }
     document.geometryEdits = [{ id: 'e1', node: 'gone', geometry: '1'.repeat(64), target: { kind: 'contour', piece: 0, contour: 0 }, transform: [] }]
     expect(allocatorFor(document).ids.has('gone')).toBe(true)
+  })
+})
+
+describe('loose marks across the projection bridge', () => {
+  it('keeps them in both directions between the document and the core tree', async () => {
+    const { treeFromDocument, syncDocument } = await import('../src/document/project.js')
+    const { parse, write: writeTree } = await import('../src/core/index.js')
+    const marked = fromSequence('⿰亻木ˊ')
+    expect(writeTree(treeFromDocument(marked))).toBe('⿰亻木ˊ')
+    const synced = syncDocument(fromSequence('⿰亻木'), parse('⿰亻木ˊ').tree)
+    expect(toSequence(synced.root)).toBe('⿰亻木ˊ')
+    const dropped = syncDocument(marked, parse('⿰亻木').tree)
+    expect(toSequence(dropped.root)).toBe('⿰亻木')
+  })
+})
+
+describe('loose marks in a document', () => {
+  it('keeps them at the end of the projection, on the root', () => {
+    const marked = fromSequence('⿰亻木ˊ')
+    expect(toSequence(marked.root)).toBe('⿰亻木ˊ')
+    expect(marked.root.marks).toBe('ˊ')
+    expect(toSequence(fromSequence('木ˊ').root)).toBe('木ˊ')
+    expect(validateDocument(marked)).toEqual([])
+  })
+  it('moves them to the root when an edit would leave them inside', () => {
+    const marked = fromSequence('⿰亻木ˊ')
+    const wrapped = wrapNode(marked, marked.root.id, '⿱').document
+    expect(toSequence(wrapped.root)).toBe('⿱⿰亻木⬚ˊ')
+    const decomposed = replaceWithSequence(fromSequence('口'), 'root', '⿰亻木ˇ')
+    expect(toSequence(decomposed.root)).toBe('⿰亻木ˇ')
+    expect(decomposed.root.marks).toBe('ˇ')
+  })
+  it('keeps a child mark before the marks of the node that holds it', async () => {
+    const { hoistMarks } = await import('../src/document/model.js')
+    const document = fromSequence('⿰木口')
+    document.root.children[1].char = '口ˇ'
+    document.root.marks = 'ˊ'
+    expect(toSequence(hoistMarks(document).root)).toBe('⿰木口ˇˊ')
+  })
+  it('hands them to the part that stands in an unwrapped operator', () => {
+    const marked = fromSequence('⿱木口ˋ')
+    expect(toSequence(unwrapNode(marked, 'root').root)).toBe('木ˋ')
+    const inner = fromSequence('⿰⿱木口⬚ˉ')
+    expect(toSequence(unwrapNode(inner, inner.root.children[0].id).root)).toBe('⿰木⬚ˉ')
+  })
+  it('rejects marks inside the tree and text that is not a mark run', () => {
+    const inner = fromSequence('⿰木口')
+    inner.root.children[0].char = '木ˊ'
+    expect(validateDocument(inner).map(issue => issue.message)).toContain('loose marks end the description')
+    const bad = fromSequence('⿰木口ˊ')
+    bad.root.marks = '口'
+    expect(validateDocument(bad).map(issue => issue.message)).toContain('loose marks are 1 to 16 combining marks, modifier letters or superscripts')
   })
 })

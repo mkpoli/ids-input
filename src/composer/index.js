@@ -5,13 +5,15 @@
 // Sans CJK JP and Plangothic (SIL OFL 1.1); a part cut along KanjiVG's groups (`drawn.kanjivg`) is
 // shared alike under CC BY-SA 3.0.
 import { createDrawer } from './client.js'
-import { LIMITS, tooLarge } from './loader.js'
-import { parse } from '../core/ids.js'
+import { LIMITS, PYRAMID_LAYERS, tooLarge } from './loader.js'
+import { isNode, parse, write } from '../core/ids.js'
+import { emojiPrefix } from '../core/emoji.js'
+import { groupParts } from '../core/preview.js'
 import { onlyBundled } from './local.js'
 
 export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
 export { createDrawer } from './client.js'
-export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
+export { LIMITS, PYRAMID_LAYERS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
 
 /**
  * @typedef {import('../adapter/types.js').Drawing} Drawing
@@ -25,6 +27,41 @@ export class TooLargeError extends Error { name = 'TooLargeError' }
 /** The export could not be read at all (unreachable, refused by CORS, not there, or `base` is no URL): nothing was tried. */
 export class UnavailableError extends Error { name = 'UnavailableError' }
 
+/** Replace emoji sequences with empty slots while the composer calculates their positions. @param {string} sequence */
+function emojiSlots(sequence) {
+  const parsed = parse(sequence, { open: true })
+  if (parsed.problem || !parsed.tree) return { sequence, slots: [], slotLeaves: [], flips: [], cuts: [], overlays: [], restorations: [] }
+  /** @type {(string | null)[]} */
+  const slots = []
+  /** @type {number[]} */
+  const slotLeaves = []
+  /** @type {[boolean, boolean][]} */
+  const flips = []
+  /** @type {boolean[]} */
+  const cuts = []
+  /** @type {boolean[]} */
+  const overlays = []
+  /** @type {boolean[]} */
+  const restorations = []
+  let leaf = 0
+  /** @param {import('../core/ids.js').Part} part @param {boolean} flipX @param {boolean} flipY @param {boolean} cut @param {boolean} overlay @param {boolean} restored @returns {import('../core/ids.js').Part} */
+  function convert(part, flipX = false, flipY = false, cut = false, overlay = false, restored = false) {
+    if (isNode(part)) {
+      const x = flipX !== (part.op === '⿾' || part.op === '⿿')
+      const y = flipY !== (part.op === '⿿')
+      // ㇯ masks its second operand; a subtraction inside that operand puts its own second operand back into the ink.
+      const parts = part.parts.map((child, index) => convert(child, x, y, cut !== (part.op === '㇯' && index === 1), overlay || part.op === '⿻', restored || (part.op === '㇯' && index === 1)))
+      return { ...part, parts }
+    }
+    const index = leaf++
+    if (part === null) { slots.push(null); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
+    if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
+    return part
+  }
+  const result = convert(parsed.tree)
+  return { sequence: write(result), slots, slotLeaves, flips, cuts, overlays, restorations }
+}
+
 /** How many drawings a preview keeps for a repeated sequence. */
 const CACHE = 32
 
@@ -32,7 +69,7 @@ const CACHE = 32
  * A `preview` for an IDS adapter, drawing with han-compose from the export at `base` (a folder URL
  * holding `manifest.json`). Tangut and Bopomofo outlines are bundled; descriptions using only these need no Han
  * export, and mixed descriptions combine both sources. It answers the drawing, or rejects: with a `TooLargeError` for a
- * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
+ * sequence larger than `LIMITS` (or a pyramid taller than `PYRAMID_LAYERS`), an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
  * it has no drawing for). `separate` draws operands as individual pieces where possible, including
  * cuts from a matching whole glyph. A sequence drawn once is answered from memory
@@ -68,7 +105,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     return drawer
   }
   const preview = /** @type {ComposerPreview} */ (async (sequence, { signal, onSketch } = {}) => {
-    if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators or ${LIMITS.depth} levels.`)
+    if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators, ${LIMITS.depth} levels, or ${PYRAMID_LAYERS} pyramid rows.`)
     signal?.throwIfAborted()
     const cached = drawings.get(sequence)
     if (cached) {
@@ -79,16 +116,50 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
       return cached.drawn
     }
     // An abort ends this drawing only while it is still the one being drawn; a newer one replaces it anyway.
-    const asked = open(sequence), mine = ++asking
+    const prepared = emojiSlots(sequence)
+    const asked = open(prepared.sequence), mine = ++asking
     const stop = () => { if (asking === mine) asked.cancel() }
     signal?.addEventListener('abort', stop, { once: true })
     try {
       let sketch = null
-      const answer = await asked.draw(sequence, leaves => {
-        sketch = leaves
-        if (!signal?.aborted) onSketch?.(leaves)
+      const answer = await asked.draw(prepared.sequence, leaves => {
+        sketch = leaves.map(leaf => ({ ...leaf, empty: prepared.slotLeaves.some((index, slot) => index === leaf.index && prepared.slots[slot]) ? false : leaf.empty }))
+        if (!signal?.aborted) onSketch?.(sketch)
       }, { separate, fontStyle })
-      if (answer.status === 'composed') { remember(sequence, answer.drawn, sketch); return answer.drawn }
+      if (answer.status === 'composed') {
+        const drawn = answer.drawn
+        const emoji = (drawn.slots ?? []).flatMap(slot => {
+          const text = prepared.slots[slot.index]
+          if (!text) return []
+          /** @type {{ text: string, box: number[], leaf: number, part: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} */
+          const item = { text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }
+          const flip = prepared.flips[slot.index]
+          if (flip?.[0] || flip?.[1]) item.flip = flip
+          if (prepared.cuts[slot.index]) item.cut = true
+          else if (prepared.restorations[slot.index]) item.restored = true
+          return [item]
+        })
+        if (emoji.length) {
+          const existing = drawn.parts ?? []
+          const originalSketch = /** @type {import('../adapter/types.js').SketchLeaf[] | null} */ (sketch)
+          const oldSketch = originalSketch?.map(leaf => ({ ...leaf, empty: emoji.some(item => item.leaf === leaf.index) || leaf.empty })) ?? []
+          const groups = existing.length ? groupParts(existing, oldSketch) : []
+          const overlaid = (drawn.slots ?? []).some(slot => prepared.slots[slot.index] && prepared.overlays[slot.index])
+          if (!groups && overlaid) throw new Error('Cannot determine emoji stacking order for this overlay.')
+          if (groups) {
+            const pieces = existing.map(part => ({ ...part }))
+            for (const group of groups) for (const index of group.parts) pieces[index].leaf = group.index
+            for (const item of emoji) {
+              item.part = pieces.length
+              pieces.push({ leaf: item.leaf, origin: 'emoji', box: item.box, d: '' })
+            }
+            drawn.parts = pieces
+          }
+          drawn.emoji = emoji
+          drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index]).map((slot, index) => ({ ...slot, index }))
+        }
+        remember(sequence, drawn, sketch); return drawn
+      }
       if (answer.status === 'cancelled') throw new DOMException('The drawing was replaced.', 'AbortError')
       throw answer.unavailable ? new UnavailableError(answer.error) : new Error(answer.error)
     } finally { signal?.removeEventListener('abort', stop) }

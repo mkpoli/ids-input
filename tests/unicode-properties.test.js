@@ -8,7 +8,7 @@ import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import properties from '../data/unicode-properties.json'
 
 const source = name => gunzipSync(readFileSync(new URL(`../data/unicode-18.0.0/${name}.gz`, import.meta.url))).toString()
-it('matches Unicode 18 assigned graphic characters independently of runtime Unicode tables', () => {
+it('matches Unicode 18 assigned graphic characters and the bundled allocations', () => {
   const invisible = new Set()
   for (const line of source('DerivedCoreProperties.txt').split('\n')) {
     const match = line.match(/^([0-9A-F]+)(?:\.\.([0-9A-F]+))?\s*; Default_Ignorable_Code_Point\b/)
@@ -22,10 +22,11 @@ it('matches Unicode 18 assigned graphic characters independently of runtime Unic
     if (!/^[LMNPS]/.test(category) && category !== 'Co') continue
     for (let cp = name.endsWith(', Last>') ? start : point; cp <= point; cp++) graphic.add(cp)
   }
+  const bundled = cp => cp >= 0x3D000 && cp <= 0x3FC3F || cp >= 0xA97D && cp <= 0xA97F || cp === 0xD7C7 || cp >= 0xD7FC && cp <= 0xD7FE
   const mismatches = []
   for (let cp = 0; cp <= 0x10FFFF; cp++) {
     const char = String.fromCodePoint(cp)
-    const expected = (graphic.has(cp) && !invisible.has(cp) || cp >= 0x3D000 && cp <= 0x3FC3F)
+    const expected = (graphic.has(cp) && !invisible.has(cp) || bundled(cp))
       && !arity(char) && !EMPTY_MARKS.includes(char)
     if (isComponent(char) !== expected) mismatches.push(cp.toString(16))
   }

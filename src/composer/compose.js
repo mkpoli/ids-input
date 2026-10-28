@@ -19,6 +19,9 @@ import { EM_BOX, area, count, drawnContours, fill, fitted, grown, groupRings, ma
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import { pyramidCells } from './pyramid.js'
+import { pyramidRows } from '../core/pyramid.js'
+import { isOutbound, markFace, markParts } from './marks.js'
 import { hexOf } from './sha256.js'
 import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
@@ -69,21 +72,6 @@ export const EMPTY = '⬚'
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
 const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
   node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
-
-/** Six copies in rows of one, two and three, with equal cells centred on each row. */
-function sixInRows(node, region) {
-  if (!Array.isArray(node) || node[0] !== '⿳' || node.length !== 4 || typeof node[1] !== 'string' || isEmpty(node[1])) return null
-  const part = node[1], rows = node.slice(1)
-  if (keyOf(rows[1]) !== `⿰${part}${part}` || keyOf(rows[2]) !== `⿲${part}${part}${part}`) return null
-  const [x0, y0, x1, y1] = region, gap = 0.04 * Math.min(x1 - x0, y1 - y0)
-  const cell = Math.min((x1 - x0 - 2 * gap) / 3, (y1 - y0 - 2 * gap) / 3)
-  if (cell <= 0) return null
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
-  return [1, 2, 3].flatMap((n, row) => Array.from({ length: n }, (_, i) => {
-    const x = cx + (i - (n - 1) / 2) * (cell + gap), y = cy + (1 - row) * (cell + gap)
-    return [x - cell / 2, y - cell / 2, x + cell / 2, y + cell / 2]
-  }))
-}
 
 /** The operators this port draws beyond the composer's, with rooms and turns of its own choosing: a
  *  preview using them is approximate, and no stored drawing has them. */
@@ -138,12 +126,18 @@ export class Composer {
     this.face = face ?? c.face
     this.separate = separate
     this.fontStyle = fontStyle
+    // `hosted` as han-compose's: with no host list there is nothing to cut, and the learned boxes —
+    // where cut parts go — would stretch whole glyphs into component shapes (a squat 木, its bar
+    // merged with its neighbour's). The export's own manifest says how many bytes of host lists it
+    // carries.
+    this.hosted = m.files?.hosts?.bytes !== 0
     // A static brush face keeps its own stroke weights; a variable export weights its parts.
     this.weighted = m.weighted ?? !(m.style === 'kaisho' && m.heavy === 400)
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
     this.approximate = new Set()
+    this.pyramids = new WeakMap()
     this.nativeEnclosures = new Set()
   }
 
@@ -153,6 +147,14 @@ export class Composer {
   rec = key => key.includes(EMPTY) ? null : (componentRecord(key, this.fontStyle) ?? this.data.rec(key))
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
+  /** The pyramid a node reads as, remembered for this drawing. */
+  pyramid(node) {
+    if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
+    if (this.pyramids.has(node)) return this.pyramids.get(node)
+    const found = pyramidRows(node)
+    this.pyramids.set(node, found)
+    return found
+  }
 
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
@@ -200,23 +202,43 @@ export class Composer {
   place(part, target, native, origin) { return placed(part, part.box, fitted(part.box, target, this.C.STRETCH), native, origin) }
 
   // ---------------------------------------------------------------- the composer's entry
-  /** The parts drawing `sequence`, weighted. */
-  compose(sequence) {
+  /** The parts drawing `sequence`, weighted, and the loose `marks` its text carries after it. */
+  compose(sequence, marks = '') {
     this.approximate.clear()
     this.nativeEnclosures.clear()
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
     const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
     const rendered = this.normalizeRequestedEnclosures(tree)
-    const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
-    // Separated drawings retain reading order. Only publish ownership when every
-    // rendered leaf produced exactly one piece (including empty placeholders).
-    const ownership = this.separate ? this.leafOwners(tree) : null
-    if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
-      out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+    // A mark that sits beside the drawing takes a margin: the character shrinks toward the opposite
+    // corner, so the mark stands outside its strokes instead of over them.
+    const frame = this.face.slice()
+    let face = frame
+    if (marks) {
+      const outbound = [...marks].filter(isOutbound).join('')
+      if (outbound) {
+        const probe = markParts(this, outbound, frame, frame)
+        if (probe.length) {
+          const fitted = markFace(frame, union(probe.map(part => part.target)))
+          if (fitted.scale < 1) face = fitted.face
+        }
+      }
     }
-    if (!this.partial && this.weighted) this.balance(out)
-    return out
+    const previous = this.face
+    this.face = face
+    try {
+      const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
+      // Separated drawings retain reading order. Only publish ownership when every
+      // rendered leaf produced exactly one piece (including empty placeholders).
+      const ownership = this.separate ? this.leafOwners(tree) : null
+      if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
+        out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+      }
+      if (!this.partial && this.weighted) this.balance(out)
+      // Loose marks annotate the whole drawing; they take no part in its layout or weight.
+      if (marks) out.push(...markParts(this, marks, frame, face))
+      return out
+    } finally { this.face = previous }
   }
 
   /**
@@ -229,9 +251,9 @@ export class Composer {
   sketch(sequence) {
     const out = []
     const walk = (node, region, atRoot) => {
-      const cells = sixInRows(node, region)
-      if (cells) {
-        for (const box of cells) out.push({ index: out.length, box, empty: false })
+      const pyramid = this.pyramid(node)
+      if (pyramid) {
+        for (const box of pyramidCells(region, pyramid.layers)) out.push({ index: out.length, box, empty: false })
         return
       }
       const repeated = isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
@@ -264,7 +286,7 @@ export class Composer {
         return
       }
       const op = node[0], kids = node.slice(1)
-      if (kids.length === 2 && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+      if (kids.length === 2 && this.hosted && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
         let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(this.normalizeRequestedEnclosures(kid))))
         if (!atRoot) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
         if (boxes.every(b => b[2] > b[0] && b[3] > b[1])) { kids.forEach((kid, i) => walk(kid, boxes[i], false)); return }
@@ -357,8 +379,8 @@ export class Composer {
 
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
-    const cells = sixInRows(node, region)
-    if (cells) return cells.flatMap(box => this.node(node[1], box))
+    const pyramid = this.pyramid(node)
+    if (pyramid) return pyramidCells(region, pyramid.layers).flatMap(box => this.node(pyramid.part, box))
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
@@ -409,7 +431,7 @@ export class Composer {
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
-    if (this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -488,6 +510,11 @@ export class Composer {
     let index = 0, split = false, valid = true
     const walk = node => {
       if (!Array.isArray(node)) return [index++]
+      const pyramid = this.pyramid(node)
+      if (pyramid) {
+        split = true
+        return node.slice(1).flatMap(walk)
+      }
       const grid = this.repeatedGrid(node)
       if (grid) {
         split = true
@@ -867,6 +894,32 @@ export class Composer {
       return [...outer, ...inner]
     }
     const axis = this.AXIS[op]
+    // Without a host cut a whole glyph stands in for a component. Equal halves make a left 木 as
+    // wide as the right one; a font draws it narrow instead. The learned boxes say how wide each
+    // part is, so take the split from them, give both the full across-axis extent, and let each
+    // glyph fill its share.
+    if (!this.hosted && this.layout && children.length === 2) {
+      const boxes = this.predict(op, children), frame = union(boxes)
+      if (frame[2] > frame[0] && frame[3] > frame[1] && boxes.every(b => b[2] > b[0] && b[3] > b[1])) {
+        const [first, second] = boxes.map(b => mapped(b, frame, region))
+        const across = 1 - axis, lo = region[axis], hi = region[axis + 2]
+        const gap = (hi - lo) * 0.01, edge = (first[axis + 2] + second[axis]) / 2
+        const ranges = [[Math.max(first[axis], lo), Math.min(first[axis + 2], edge - gap)],
+          [Math.max(second[axis], edge + gap), Math.min(second[axis + 2], hi)]]
+        if (ranges.every(([a, b]) => b > a)) {
+          const groups = []
+          for (const [i, child] of children.entries()) {
+            const box = region.slice()
+            box[axis] = ranges[i][0]
+            box[axis + 2] = ranges[i][1]
+            const glyph = typeof child === 'string' ? this.glyph(child) : null
+            if (glyph) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
+            else groups.push(this.row(child, box, children.length))
+          }
+          return groups.flat()
+        }
+      }
+    }
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
     const other = children[1]
     const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
@@ -980,7 +1033,7 @@ export class Composer {
         if (share[op] >= C.OPEN_ROOM && share[op] >= C.OPEN_ONE_SIDE * share[other]) {
           const cells = this.cells(op, outer, region, children[1])
           if (cells) return [...outer, ...cells]
-          if (this.layout?.ops.includes(op)) {
+          if (this.hosted && this.layout?.ops.includes(op)) {
             const boxes = this.predict(op, children), frame = union(boxes)
             return children.flatMap((child, j) => this.node(child, mapped(boxes[j], frame, region)))
           }

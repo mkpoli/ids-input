@@ -120,3 +120,15 @@ it('composes every Egyptian Extended-A character with another component', async 
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
   }
 }, 30000)
+
+it('draws the formerly excluded CJK fallback glyphs as IDS operands', async () => {
+  const local = source()
+  for (const [first, last] of metadata.ranges) for (let cp = first; cp <= last; cp++) {
+    if (!(cp >= 0x2E80 && cp <= 0x2FDF || cp >= 0x3400 && cp <= 0x9FFF || cp >= 0xF900 && cp <= 0xFAFF || cp >= 0x20000 && cp <= 0x323AF || cp >= 0x1DFD0 && cp <= 0x1DFFF)) continue
+    const char = String.fromCodePoint(cp)
+    const drawn = await compose(local, `⿰${char}〇`, { separate: true })
+    expect(drawn.origins).toEqual([`glyph ${char}`, 'glyph 〇'])
+    expect(drawn.parts.every(part => part.d.length > 20 && part.box.every(Number.isFinite))).toBe(true)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+}, 30000)

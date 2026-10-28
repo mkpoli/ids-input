@@ -12,9 +12,9 @@ const byName = createNameSearch(names, { folds: readFolds(FOLDS) })
 const chars = query => byName.search(query).map(hit => hit.char)
 
 describe('the character vocabulary', () => {
-  it('holds the common character set and its readings', () => {
-    expect(names.length).toBeGreaterThan(150_000)
-    expect(new Set(names.map(name => name.char)).size).toBeGreaterThan(15_000)
+  it('holds every named IDS character and its readings', () => {
+    expect(names.length).toBeGreaterThan(200_000)
+    expect(new Set(names.map(name => name.char)).size).toBeGreaterThan(45_000)
   })
   it('finds a character by an English meaning, pinyin, kana, romaji, Korean or Vietnamese reading', () => {
     expect(chars('water')[0]).toBe('水')
@@ -27,6 +27,7 @@ describe('the character vocabulary', () => {
     expect(chars('silk')[0]).toBe('糸')
     expect(chars('gold')[0]).toBe('金')
     expect(chars('appearance')).toContain('㒵')
+    expect(chars('hillock or mound')).toContain('㐀')
   })
 })
 

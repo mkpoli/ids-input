@@ -785,6 +785,24 @@
       "sha256": "ad60bb2f469697837b556388d47b500a21d866370a49a8be770b206108aaf664",
       "url": "https://raw.githubusercontent.com/thesaurus-linguae-aegyptiae/unihieroglyphica/9375eba4e2b626658e57e3a526118b8225c0581e/font_files/UniHieroglyphica.ttf",
       "license": "SIL OFL 1.1"
+    },
+    {
+      "file": "Jigmo-20250912-Jigmo.ttf",
+      "sha256": "c8f295b9bd8f9f117a76b3a454aaaa1bb5b4babc18e254978c6deb88464e40cf",
+      "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "Jigmo-20250912-Jigmo2.ttf",
+      "sha256": "5da3582efe77e22073b86b3b86b556d7111148a76b957cfb53318a91da2efff0",
+      "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
+      "license": "CC0-1.0"
+    },
+    {
+      "file": "Iosevka-Regular.ttf",
+      "sha256": "1ba24b81d82df65a68c9d0bb44bda306fdcdb5d7763afe89b0dea29ea827d1a2",
+      "url": "https://github.com/be5invis/Iosevka/releases/download/v34.9.1/PkgTTF-Iosevka-34.9.1.zip",
+      "license": "SIL OFL 1.1"
     }
   ],
   "svgSources": [

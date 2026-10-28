@@ -2,11 +2,12 @@
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
 import { isComponent, isDescription, leaves, parse } from './ids.js'
+import { emojiPrefix } from './emoji.js'
 import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'
 
 /**
- * @typedef {{ text: string, regions?: string }} Sequence A description of a character, with the source regions it describes (`GHTJKPV`).
+ * @typedef {{ text: string, regions?: string, derived?: boolean }} Sequence A description of a character, with the source regions it describes (`GHTJKPV`); `derived` marks a reading computed from other characters rather than a description the source records.
  * @typedef {{ status: 'loading' } | { status: 'failed' } | { status: 'ready', sequences: Sequence[] }} Entry What is known of a character's descriptions.
  * @typedef {{ kind: 'sequence', text: string, tree: import('./ids.js').Part } | { kind: 'char', char: string }} Root
  */
@@ -31,8 +32,13 @@ export function tokens(text) {
   const out = []
   // A complete description can use braces and digits as literal graphic operands.
   // Otherwise retain BabelStone's unresolved {n} notation as one token.
-  const pattern = isDescription(text) ? /./gsu : /\{\d+\}|./gsu
-  for (const [token] of (text ?? '').matchAll(pattern)) {
+  const written = text ?? ''
+  const complete = isDescription(text)
+  let at = 0
+  while (at < written.length) {
+    const rest = written.slice(at)
+    const token = emojiPrefix(rest) || (!complete ? /^\{\d+\}/.exec(rest)?.[0] : '') || [...rest][0]
+    at += token.length
     if (SELECTOR.test(token) && out.length) out[out.length - 1] += token
     else out.push(token)
   }
@@ -67,23 +73,27 @@ export function roots(text) {
 
 /**
  * A character's descriptions, once each, in the order given. Each is `{ text, regions, tree }`, the
- * tree null where the sequence cannot be read as a description (one naming an unencoded `{n}`).
+ * tree null where the sequence cannot be read as a description (one naming an unencoded `{n}`);
+ * `derived` marks a reading computed from other characters.
  * @param {Entry | undefined} entry
- * @returns {{ text: string, regions: string, tree: import('./ids.js').Part }[]}
+ * @returns {{ text: string, regions: string, derived: boolean, tree: import('./ids.js').Part }[]}
  */
 export function variants(entry) {
   if (!entry || entry.status !== 'ready') return []
-  /** @type {Map<string, string>} */
+  /** @type {Map<string, { regions: string, derived: boolean }>} */
   const listed = new Map()
-  for (const { text, regions } of entry.sequences) {
+  for (const { text, regions, derived } of entry.sequences) {
     if (!text) continue
-    // The same sequence given twice keeps every region given.
+    // The same sequence given twice keeps every region given, and is derived if either says so.
     const had = listed.get(text)
-    listed.set(text, had === undefined ? regions ?? '' : [...new Set([...had, ...(regions ?? '')])].join(''))
+    const merged = regions ?? ''
+    listed.set(text, had === undefined ? { regions: merged, derived: Boolean(derived) }
+      : { regions: [...new Set([...had.regions, ...merged])].join(''), derived: had.derived || Boolean(derived) })
   }
-  return [...listed].map(([text, regions]) => {
-    const read = parse(text)
-    return { text, regions, tree: read.problem ? null : /** @type {import('./ids.js').Part} */ (read.tree) }
+  return [...listed].map(([text, { regions, derived }]) => {
+    // A single encoded component can describe a distinct character, as in Tangut 𗢨 → 𘢌.
+    const read = [...text].length === 1 && isComponent(text) ? parse(text, { open: true }) : parse(text)
+    return { text, regions, derived, tree: read.problem ? null : /** @type {import('./ids.js').Part} */ (read.tree) }
   })
 }
 
