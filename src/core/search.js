@@ -14,7 +14,7 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isDescription, isSequence } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, isComponent, isDescription, isSequence, splitDescription } from './ids.js'
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
 import { createStructuralSearch } from './structural-search.js'
@@ -69,7 +69,9 @@ export function parseQuery(text, { literal = false } = {}) {
   for (const term of written) {
     // Compose Hangul only: whole-term NFC would also change compatibility ideographs.
     const matching = term.replace(/\p{Script=Hangul}+/gu, run => run.normalize('NFC'))
-    const typed = tokens(matching), list = literal ? typed : typed.map((token, i) => searchShape(token, typed[i + 1]))
+    // Loose marks annotate a description; they are not parts of the shape to find.
+    const source = isSequence(matching) ? splitDescription(matching).base : matching
+    const typed = tokens(source), list = literal ? typed : typed.map((token, i) => searchShape(token, typed[i + 1]))
     if (isSequence(term)) {
       const cursor = { at: 0 }
       /** @returns {Pattern} */
@@ -153,13 +155,24 @@ function allocate(needs, capacity, partial = false) {
   return assigned
 }
 
+/** Structural equality accepts encoded equivalents and explicitly positional forms.
+ * Broad radical variants can change orientation or multiplicity (𡿨/巜/巛, 丿/乀).
+ * @param {string} text @returns {Map<string, string>} */
+export function readStructuralForms(text) {
+  return readForms(text.split(/\r?\n/).filter(line => {
+    const [, , source, detail = ''] = line.split('\t')
+    return source === 'unicode-ucd' && detail === 'EquivalentUnifiedIdeograph'
+      || /^radical-variant (left|right|top|bottom)$/.test(detail)
+  }).join('\n'))
+}
+
 /**
  * A search over `table` (char → its descriptions, region tags dropped) folding components by `forms`
  * (from `readForms`). The index of what each character holds is built on the first query.
  * @param {Map<string, string[]>} table
- * @param {{ forms?: Map<string, string> }} [options]
+ * @param {{ forms?: Map<string, string>, structuralForms?: Map<string, string> }} [options]
  */
-export function createSearch(table, { forms = new Map() } = {}) {
+export function createSearch(table, { forms = new Map(), structuralForms = new Map() } = {}) {
   /** @param {string} c */
   const fold = c => forms.get(c) ?? forms.get([...c][0]) ?? c
   /** @param {QueryLeaf} leaf */
@@ -721,6 +734,6 @@ export function createSearch(table, { forms = new Map() } = {}) {
     })
     return { hits, total: found.length }
   }
-  const structural = createStructuralSearch(table, { forms })
+  const structural = createStructuralSearch(table, { forms: structuralForms })
   return { search, structure: structural.search, index: () => { index() }, fold }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
+import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -17,7 +17,7 @@ describe('a whole description', () => {
     expect(parse('木').problem).toBe('character')
     expect(parse('').problem).toBe('character')
     expect(parse('⿰亻 木').problem).toBe('character')
-    expect(parse('⿰' + '⿰'.repeat(64)).problem).toBe('character')
+    expect(parse('⿰' + '口'.repeat(LONGEST)).problem).toBe('character')
     expect(problemOf('⿰亻木')).toBeNull()
     expect(problemOf('⿰亻')).toBe('missing')
   })

@@ -30,18 +30,41 @@ gzipped, 2.2 MB as text.
   credited all the same.
 - Format: one line per ideograph, `char<TAB>sequences`, every alternative the file gives,
   space-separated, each with the source regions it describes (`⿰氵骨(GHTJKPV)`). The maintainer's `*`
-  notes are left out. `{n}` is BabelStone's unencoded component n and `？` an unrepresentable one.
+  notes are left out. `{n}` is BabelStone's numbered component n, kept as the source writes it;
+  `data/ids-components.tsv` gives the fragments that write out the ones note 6 knows, and the adapter
+  applies them. `？` is an unrepresentable one.
 - The header warns that a sequence describes a character's form in the regions tagged, not an
   absolute glyph; every alternative is kept with its regions.
 - The file draws on Kawabata Taichi's IDS data (<https://github.com/kawabata/ids>), itself descended
   from CHISE, and on IRG submissions, edited by its maintainer. This table is built from BabelStone's file.
 - Built by `scripts/build_ids_data.py`.
 
+## `ids-components.tsv`
+
+BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
+the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
+fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+`{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
+names its two halves, 𦚏 and ⿷己三.
+
+`{82}`, the top of 書, is 聿. The note writes that shape as `⿱𦘒一`, which is 說文解字's own analysis
+of 聿 (「从𦘒一聲」, <https://www.shuowen.org/view/1932>); the file uses the encoded 聿 for the same
+shape elsewhere — 㶳 is `⿱{82}火` in G and `⿱聿火` in TP, 衋 is `⿱⿻聿皕血` in GHTKP and `⿳{82}皕血`
+in J, and 𤱪 was `⿱聿田` before Unicode 6.0 — and CHISE's IDS writes 書 `⿱聿曰`, 畫 `⿳聿田一` and
+晝 `⿱聿旦` (<https://gitlab.chise.org/CHISE/ids>). 書 then reads `⿱聿日` (`⿱聿曰` in H), 畫's X form
+`⿳聿田一` and 晝's `⿱聿旦`; the G forms of 畫 and 晝 reach the same 聿 through 𤱪 `⿱聿田` and 書.
+
+The fragments are BabelStone's own (IDS.TXT note 6), public domain; the two above are editorial. The
+adapter reads the file with `babelStoneAdapter({ components })`; the descriptions it answers and
+searches name the parts rather than BabelStone's numbers. Built by
+`scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
+its own header note.
+
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,713 Han entries (708 common, 967 hard to type, 38 strokes),
+hard to type or a CJK stroke. 1,714 Han entries (709 common, 967 hard to type, 38 strokes),
 plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
@@ -49,6 +72,9 @@ plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_pa
   decomposition choices, Unicode data and explicit radical counts.
 - Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+- `uses`: the ideographs whose descriptions name the part, counted from the descriptions with
+  BabelStone's numbered components written out as `data/ids-components.tsv` gives them, so 書 counts
+  聿. The parts listed stay the components IDS.TXT names itself.
 
 The displayed Common palette places traditional, simplified and positional forms
 from `component-forms.tsv` next to one another. Each family starts where its
@@ -126,7 +152,7 @@ Sources:
 - anzumura/kanji-tools `data/radicals.txt` at c3e52cb (`https://github.com/anzumura/kanji-tools`),
   MIT, Copyright (c) 2022 Dan H: the Japanese names and readings of the 214 radicals (のぎ, のぶん,
   うかんむり).
-- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+- KANJIDIC2, file version 4, database version 2026-301, created 2026-10-28
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: further Japanese radical names (`rad_name`), and the English meanings,
   Japanese, Korean and Vietnamese readings and pinyin of the radicals (みず, 수, thủy).
@@ -195,20 +221,20 @@ other tables leave apart. 593 folds, 15 KB, built by `scripts/build_component_na
 
 ## character-vocabulary.tsv.gz
 
-The readings and meanings of the common characters, for the Characters tab: water, shui, mizu, みず,
-수 and thủy for 水; person for 人; silk for 糸. 102,456 rows, 831 KB gzipped. Format: `name`, `char`,
+The readings and meanings of characters, for the Characters tab: water, shui, mizu, みず,
+수 and thủy for 水; person for 人; silk for 糸. 214,533 rows, 1.7 MB gzipped. Format: `name`, `char`,
 `source`, `detail`, `rank`, one name for one character per row; comments start with `#`.
 
-The characters are the 9,810 Unihan `kIICore` characters that also have an IDS description, so a
-result can be opened in the workshop. `rank` is lower for more common characters: KANJIDIC2's
-newspaper frequency where it has one, otherwise 3000 plus Unihan's `kGradeLevel`. It orders equally
-close names in the character search.
+The characters are every IDS character with a Unihan or KANJIDIC2 name, 48,966 in all, so a result
+can be opened in the workshop. `rank` is lower for more common characters: KANJIDIC2's newspaper
+frequency where it has one, otherwise 3000 plus Unihan's `kGradeLevel`. It orders equally close
+names in the character search.
 
 - Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
   Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
   kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese, and kIICore for the
   character set.
-- KANJIDIC2, file version 4, database version 2026-299, created 2026-10-26
+- KANJIDIC2, file version 4, database version 2026-301, created 2026-10-28
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: English meanings, Japanese kana readings, pinyin, Korean and Vietnamese
   readings, nanori and frequency.
@@ -232,7 +258,7 @@ and 457 single Tangut characters. `scripts/build_character_info.py` builds it fr
   `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
   `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
   Only single-character Tangut entries with glosses enter the panel data; duplicate
-  glosses are combined, with source qualifiers preserved. Each panel links to the
+  glosses are combined, with source qualifiers preserved. Each adapter record links to the
   original entry, whose history records its contributors. The adapted Tangut gloss data remains
   CC BY-SA 4.0; the Unihan records retain Unicode License v3.
 
@@ -249,6 +275,9 @@ This is a semantic association observed in horse-related characters, not a stand
 word definition. Other Tangut components can show glossed characters whose recorded
 [BabelStone Tangut IDS](https://www.babelstone.co.uk/Tangut/TangutIDS.txt) explicitly
 contain them. These are usage examples, not inferred component meanings.
+
+The association's explicit `sense` field scopes its search links to the horse meaning;
+the displayed label retains the source's qualification.
 
 Small Seal links use the direct modern correspondences in `small-seal.json.gz`,
 from the CHISE and Unicode sources described above. The MOE-derived 𠙵→口 search alias
@@ -275,6 +304,33 @@ classes are unknown. Components Supplement is accepted by the parser but is abse
 from this source edition and the palette. Both data builders include Tangut through
 `scripts/tangut.py`; the Han totals above describe the Han portion only.
 
+## `tangut-parts.json.gz`
+
+The keys of the bundled Tangut outline records, used to browse the full Tangut palette without loading the outlines. Regenerate with `node scripts/build_tangut_parts.mjs` after updating the outline source.
+
+## `tangut-layers.json.gz`
+
+The largest character split of 2,408 Tangut descriptions, 16 KB gzipped. BabelStone describes every
+Tangut ideograph with Tangut components, one layer deep. Many of those component trees spell another
+ideograph whole, and 28 components are a one-component ideograph's whole glyph. This file rewrites
+each description top-down: a maximal proper subtree whose text is another ideograph's complete
+BabelStone description becomes that ideograph, a component that is a one-component ideograph becomes
+it, a description shared by two characters is left alone, and the root is kept. Only rewritten descriptions are listed; every other Tangut character keeps
+its BabelStone description as it is.
+
+Format: `source`, `method`, `counts`, `characters` (character → layered description), and
+`ambiguous` (a description shared by two characters, with both; it is not rewritten). Counts: 6,145 Tangut records, 6,137 parsed, 8 malformed source records skipped,
+2,408 layered, 2,190 with a character in the first layer, 28 one-component ideographs, 1 ambiguous
+description.
+
+The reading is editorial: it follows the shapes BabelStone records, not a dictionary's semantic or
+phonetic analysis, and an identical description does not prove that the part is that character or
+that either descends from the other. The editor marks the character-first description as derived.
+Expanding its characters reconstructs each of the 6,137 readable source descriptions exactly;
+the eight malformed descriptions remain as source text. The source remains in
+`babelstone-ids.tsv.gz` and both forms remain searchable. Built by
+`node scripts/build_tangut_layers.mjs` from the table, which carries the pinned source digest.
+
 ## `tangut-outlines.json.gz`
 
 Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
@@ -299,6 +355,30 @@ The compressed document records each source URL and SHA-256. Rebuild with
 `uv run scripts/build_bopomofo_outlines.py FONT_DIR`, using the pinned fonts
 listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
 
+## New Korean Orthography outlines
+
+`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+(조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
+
+- U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
+- U+A97E / U+D7FD: 된리을 (strong rieul), `HANGUL CHOSEONG LIEUL` / `HANGUL JONGSEONG LIEUL`
+- U+A97F / U+D7FE: 위읍 (wi-eup), `HANGUL CHOSEONG UEUB` / `HANGUL JONGSEONG UEUB`
+- U+D7C7: 여린이 (soft i), `HANGUL JUNGSEONG BANMOEUM-I`
+
+Unicode 18.0.0 leaves these code points unassigned. They are the positions in
+OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org/L2/L2019/19230r-six-hangul-letters.pdf)
+(2019-06-24); [L2/19-233](https://www.unicode.org/L2/L2019/19233-hangul-cmts.pdf)
+answered the proposal. The editor treats the range as a bundled allocation, as it
+does U+3D000–U+3FC3F for Small Seal; the text is not claimed to be assigned Unicode.
+
+The drawings are [Nanuun-saram](https://commons.wikimedia.org/wiki/User:Nanuun-saram)'s
+SVGs on Wikimedia Commons, made 2016-02-08, CC BY-SA 4.0. Their files and digests,
+the proposal and the Wikipedia articles are recorded in
+[`new-korean/sources.json`](new-korean/sources.json); `new-korean/README.md` explains
+the letters. Rebuild the `IDS New Korean` font and these outlines with
+`uv run scripts/build_new_korean.py`. The script checks the SVG digests and derives
+the outline records from the same quadratic curves as the font.
+
 ## Subtree frequencies and compound palette entries
 
 Run `bun run build:subtrees` after rebuilding `ids-parts.json` or the bundled IDS
@@ -309,14 +389,16 @@ The frequency report contains every exact subtree, including leaves, complete
 roots, numbered unknown components and variation selectors. Its columns are
 `[part, uses, occurrences, nestedUses, strokes]`: `uses` counts distinct source
 characters, `occurrences` counts tree positions across distinct IDS alternatives,
-and `nestedUses` counts characters using the tree below the root. Palette usage
-counts are refreshed from `uses` for single-character entries too. Identical
-regional alternatives count once. Characters are not recursively expanded and
-variant glyphs are not merged. The report records malformed sequences under
-`rejected`; the current corpus has eight, all Tangut.
+and `nestedUses` counts characters using the tree below the root. The palette's
+counts for single-character entries follow the corpus with BabelStone's numbered
+components written out, so they can exceed the report's `uses`, which keep the
+source spellings. Identical regional alternatives count once. Characters are not
+recursively expanded for the report and variant glyphs are not merged. The report
+records malformed sequences under `rejected`; the current corpus has eight, all
+Tangut.
 
 Common also shows hard-to-type components used by at least 50 characters
-(285 in this corpus), while keeping them available in their stroke groups.
+(286 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
 and twelve normalize to ten encoded characters. The sixteen manual entries
@@ -484,10 +566,10 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 | Explicit, unambiguous entity-to-Unicode mappings | 816 |
 | Editor-ready descriptions / head characters | 49 |
 | Seal components used by those descriptions | 31 |
-| Drawable palette forms | 1,334 |
+| Drawable palette forms | 1,383 |
 | Selected basic parts | 138 |
 | Compound forms | 1,172 |
-| Other / unclassified forms | 24 |
+| Other forms, including 49 curated crosswalks | 73 |
 | Empty descriptions | 337 |
 | Descriptions with an unmapped head character | 10,010 |
 | Descriptions with unresolved component identifiers | 747 |
@@ -495,7 +577,9 @@ IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 There are 29 additional apparent-form descriptions, so the description statuses total
 11,143. An empty field does not distinguish an atomic character from unfinished data.
 The editor's 49 descriptions are machine-validated imports, without a separate
-palaeographic review.
+palaeographic review. The palette also carries 49 curated crosswalks from
+`scripts/data/small-seal/supplements.json`; they mark a Unicode SealSources value
+and one CHISE record, and ship with pinned glyphs and checksums.
 
 Sources, pinned in `scripts/build_small_seal.py` and the output's `sources` field:
 
@@ -514,7 +598,8 @@ The palette is independent of the 49 complete descriptions. It includes mapped
 CHISE heads and the Unicode Shuowen radical heads for which a pinned SVG exists.
 `seal-sources.txt.gz` preserves the pinned Unicode mapping from the Kaiyuan source
 archive; its license is in `COPYING-seal-sources.txt`. `paletteSources` records the
-Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lookup alias.
+Unicode digest, the BabelStone IDS digest, the reference for the 𠙵/口 lookup alias,
+and each curated crosswalk entry.
 
 `parts` entries carry `modern` lookup names, `sealGroup`, and `sealBasis`:
 
@@ -526,6 +611,9 @@ Unicode digest, the BabelStone IDS digest, and the reference for the 𠙵/口 lo
   are retained for inspection and the UI marks the grouping with `≈`.
 - `other` / `unknown`: no classification is established. An empty source field
   never establishes that a character is atomic.
+- `other` / `crosswalk`: a curated Unicode SealSources and CHISE crosswalk from
+  `scripts/data/small-seal/supplements.json`. It supplies modern lookup names and a
+  pinned glyph, and never adds a `table` entry.
 
 Modern IDS inference affects palette grouping only. It never supplies a seal
 `table` entry or changes exact encoding lookup. Palette usage counts include mapped
@@ -537,7 +625,7 @@ To refresh the bundled SVG subset from the same pinned Kaiyuan revision, pass
 Rebuild the font and outlines afterward with `uv run scripts/build_small_seal_font.py`.
 
 JSON format 1 has `table` (seal character to descriptions), `parts`, `modern` (search
-labels), `sources`, `license`, and `records`. Each source record has its ID, mapped
+labels), `sources`, `paletteSources`, `license`, and `records`. Each source record has its ID, mapped
 character or null, original structural description, and a `descriptions` list. Each
 description preserves `original`, `kind` (`structural` or `apparent`), resolved `text`,
 `status`, and any `unresolved` identifiers. `unsupported` covers resolved expressions
@@ -556,8 +644,8 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 49,483 glyph outlines in 235 chunks, each covering at most
-256 code points. The full set is 16,535,359 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 53,478 glyph outlines in 250 chunks, each covering at most
+256 code points. The full set is 24,224,164 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
@@ -570,7 +658,7 @@ Full copyright notices and the license are in [`OFL-NotoUnicode.txt`](../fonts/O
 [Noto CJK](https://github.com/notofonts/noto-cjk/tree/Sans2.004) supplies the CJK marks and kana.
 
 Rebuild with `uv run scripts/build_unicode_outlines.py FONT_DIR [FONT_DIR ...]`, using the extracted
-package font directories plus every Noto CJK, Jigmo, Noto Emoji and Unifont file listed in
+package font directories plus every Noto CJK, Jigmo, Noto Emoji, Unifont and UniHieroglyphica file listed in
 `unicode-fonts.json`. The builder checks every source digest, selects the first
 available glyph in the lock file's order, and normalizes coordinates to 1000 units per em.
 [FontTools Cu2QuPen](https://fonttools.readthedocs.io/en/latest/pens/cu2quPen.html) converts cubic
@@ -653,14 +741,17 @@ CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-25
 
 ## Unicode character properties
 
-`unicode-properties.json` pins component acceptance and letter classification to Unicode 18.0.0,
-independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
+`unicode-properties.json` pins component acceptance, letter classification and loose marks to Unicode
+18.0.0, independent of the JavaScript engine's Unicode version. `unicode-18.0.0/` contains compressed UCD
 snapshots and a source manifest with original URLs and SHA-256s. Rebuild with
 `python3 scripts/build_unicode_properties.py`; the builder verifies those digests.
 
 Graphic categories L, M, N, P, S and Co are eligible, except default-ignorable characters, IDS
 operators and draft markers. The existing Small Seal allocation remains supported. Ideographic and
-Radical properties distinguish ideographs from alphabetic letters. Source: the
+Radical properties distinguish ideographs from alphabetic letters. The `marks` property holds what
+may follow a whole description: categories M and Lm, the Sk accents and tone letters of
+U+00A8, U+00AF, U+00B4, U+00B8, U+02D2–02DF, U+02E5–02ED, U+309B–309C and U+A700–A71F, and
+superscript or subscript digits (No in U+00B2–B3, U+00B9 and U+2070–209F). Source: the
 [Unicode 18.0.0 Character Database](https://www.unicode.org/Public/18.0.0/ucd/), under the
 [Unicode License v3](licences/Unicode-3.0.txt).
 
@@ -678,6 +769,9 @@ Its pixel-based outlines retain their original design. The host export's glyphs 
   pinned font revision, SIL OFL 1.1; copyright notices in `unicode-outlines.json`.
 - [GNU Unifont 18.0.01](https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/):
   [upstream license](../fonts/LICENSE-Unifont.txt), including its OFL option.
+- [UniHieroglyphica](https://github.com/thesaurus-linguae-aegyptiae/unihieroglyphica/tree/9375eba4e2b626658e57e3a526118b8225c0581e):
+  3,995 Egyptian Hieroglyphs Extended-A outlines, designed by Michel Suignard;
+  copyright Regents of the University of California, [SIL OFL 1.1](../fonts/OFL-UniHieroglyphica.txt).
 - [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
   `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
   Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)
@@ -692,11 +786,11 @@ characters require a host-supplied mapping and never inherit Unifont's private a
 
 ### Other script parts
 
-`script-parts.json.gz` groups additional scripts from bundled Unicode outlines and
-palette entries by Unicode Script. `script-parts-index.json`
+`script-parts.json.gz` groups the symbols and additional scripts that bundled Unicode outlines
+draw, plus palette entries, by Unicode Script. Symbols and mixed-script descriptions have no other
+palette view, so the Other scripts selector offers them alongside the named scripts. `script-parts-index.json`
 holds group sizes, and `script-parts-metadata.json` pins the sources. Existing Han, Latin,
-Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded. Mixed-script
-descriptions and common symbols are also excluded; this index adds only other scripts.
+Cyrillic, Hangul, Bopomofo, Tangut, Small Seal and stroke groups are excluded.
 
 To rebuild, run `node scripts/build_script_parts.mjs`. The builder uses Unicode 18.0 `Scripts.txt` and `PropertyValueAliases.txt`, checked against pinned SHA-256
 hashes. Unicode data is distributed under the Unicode License v3; see
@@ -705,3 +799,7 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 `script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
+
+## `seal-extra-parts.json`
+
+Keys from the bundled Small Seal outlines absent from its curated palette. Regenerate with `node scripts/build_seal_extra_parts.mjs` when the source data changes.

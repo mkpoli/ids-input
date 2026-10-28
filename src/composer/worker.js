@@ -11,11 +11,12 @@ import { hasTangut, tangutSource } from './tangut.js'
 
 import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
+import { hasNewKorean, newKoreanSource } from './new-korean.js'
 import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { unicodeSource } from './unicode.js'
-import { leaves, parse } from '../core/ids.js'
+import { leaves, parse, splitDescription } from '../core/ids.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
@@ -24,13 +25,19 @@ self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm 
   const local = !warm && (emptyOnly || onlyBundled(sequence, separate, false, fontStyle))
   const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
   const seal = !warm && hasSmallSeal(sequence)
+  const newKorean = !warm && hasNewKorean(sequence)
   const palette = !warm && [...sequence].some(hasPaletteGlyph)
-  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${palette}`
+  // A loose mark's outline comes from the bundled Unicode outlines, even when the rest is local.
+  const loose = !warm && splitDescription(sequence).marks !== ''
+  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${newKorean}:${palette}:${loose}`
   if (!sources.has(key)) {
-    let source = local ? null : fromUrl(base)
+    let source = null
+    if (!local) source = fromUrl(base)
+    else if (loose) source = unicodeSource()
     if (tangut) source = tangutSource({ fallback: source })
     if (bopomofo) source = bopomofoSource({ fallback: source })
     if (seal) source = smallSealSource({ fallback: source })
+    if (newKorean) source = newKoreanSource({ fallback: source })
     if (palette) source = paletteSource({ fallback: source })
     source ??= bundledSource({ load: async () => ({ records: {} }), matches: () => false })
     sources.set(key, source)
@@ -42,6 +49,7 @@ self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm 
       if (tangut) source = tangutSource({ fallback: source })
       if (bopomofo) source = bopomofoSource({ fallback: source })
       if (seal) source = smallSealSource({ fallback: source })
+      if (newKorean) source = newKoreanSource({ fallback: source })
       if (palette) source = paletteSource({ fallback: source })
       await source.ready()
     } else {

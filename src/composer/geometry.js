@@ -314,14 +314,31 @@ export function raster(group, size = 96) {
 
 const num = v => { const s = v.toFixed(1); return s === '-0.0' ? '0.0' : s }
 
+/** Whether a part's flips turn its contours the other way round: one mirror reverses their winding,
+ *  a mirror in both axes does not. Left as they are, a reversed part cancels the ink it overlaps
+ *  under the nonzero rule. */
+const turnsOver = p => (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
+
+/** A contour's segments drawn the other way round: the same outline, wound as the glyph was drawn. */
+function backwards(segs) {
+  const ends = segs.map(([kind, pts]) => (kind === 'Q' ? pts[1] : pts[0]))
+  const out = [['M', [ends[0]]], ['L', [ends.at(-1)]]]
+  for (let i = segs.length - 1; i > 0; i--) {
+    const [kind, pts] = segs[i]
+    out.push(kind === 'Q' ? ['Q', [pts[0], ends[i - 1]]] : ['L', [ends[i - 1]]])
+  }
+  return out
+}
+
 /** Placed parts as one SVG path in a 1000 × 1000 box, y down from the em's top (`compose.svg_path`);
- *  fill it with the nonzero rule. */
+ *  fill it with the nonzero rule. A mirrored part's contours are wound the way the others are. */
 export function svgPath(group) {
   const out = []
   for (const p of group) {
-    const drawn = drawnContours(p)
+    const drawn = drawnContours(p), over = turnsOver(p)
     p.part.contours.forEach((contour, k) => {
-      for (const [kind, pts] of segments(contour.ops, drawn[k])) out.push(kind + pts.map(q => `${num(q[0])} ${num(ASCENT - q[1])}`).join(' '))
+      const segs = segments(contour.ops, drawn[k])
+      for (const [kind, pts] of over ? backwards(segs) : segs) out.push(kind + pts.map(q => `${num(q[0])} ${num(ASCENT - q[1])}`).join(' '))
       out.push('Z')
     })
   }

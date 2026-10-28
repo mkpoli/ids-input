@@ -74,6 +74,16 @@ it('prepares the examples of reflection, rotation and subtraction', () => {
   }
 })
 
+it('prepares every Tangut example with bundled outlines', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
+  for (const { sequence, char } of examples) {
+    const cached = data.drawings[sequence]
+    expect(cached?.char).toBe(char)
+    expect(cached?.drawn.d.length).toBeGreaterThan(100)
+    expect(cached.drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+})
+
 it('prepares the Small Seal examples with bundled outlines', () => {
   const examples = EXAMPLE_GROUPS.find(group => group.key === 'seal').examples
   for (const { sequence } of examples) {
@@ -81,4 +91,15 @@ it('prepares the Small Seal examples with bundled outlines', () => {
     expect(drawn?.d.length).toBeGreaterThan(100)
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
   }
+})
+
+it('prepares the Geba examples and their letters', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'geba').examples
+  for (const { sequence } of examples) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    if (/[A-Z]/.test(sequence)) expect(drawn.origins).toEqual(expect.arrayContaining([expect.stringMatching(/^glyph [A-Z]$/)]))
+  }
+  expect(data.drawings['⿰言ギ'].drawn.origins).toContain('glyph ギ')
 })

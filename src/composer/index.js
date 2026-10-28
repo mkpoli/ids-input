@@ -5,7 +5,7 @@
 // Sans CJK JP and Plangothic (SIL OFL 1.1); a part cut along KanjiVG's groups (`drawn.kanjivg`) is
 // shared alike under CC BY-SA 3.0.
 import { createDrawer } from './client.js'
-import { LIMITS, tooLarge } from './loader.js'
+import { LIMITS, PYRAMID_LAYERS, tooLarge } from './loader.js'
 import { isNode, parse, write } from '../core/ids.js'
 import { emojiPrefix } from '../core/emoji.js'
 import { groupParts } from '../core/preview.js'
@@ -13,7 +13,7 @@ import { onlyBundled } from './local.js'
 
 export { unicodeSource, hasUnicodeGlyph } from './unicode.js'
 export { createDrawer } from './client.js'
-export { LIMITS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
+export { LIMITS, PYRAMID_LAYERS, LookupError, compose, createSource, fromUrl, size, sketch, svgBox, tooLarge } from './loader.js'
 
 /**
  * @typedef {import('../adapter/types.js').Drawing} Drawing
@@ -69,7 +69,7 @@ const CACHE = 32
  * A `preview` for an IDS adapter, drawing with han-compose from the export at `base` (a folder URL
  * holding `manifest.json`). Tangut and Bopomofo outlines are bundled; descriptions using only these need no Han
  * export, and mixed descriptions combine both sources. It answers the drawing, or rejects: with a `TooLargeError` for a
- * sequence larger than `LIMITS`, an `UnavailableError` when the export cannot be read at all, an
+ * sequence larger than `LIMITS` (or a pyramid taller than `PYRAMID_LAYERS`), an `UnavailableError` when the export cannot be read at all, an
  * `AbortError` once its signal aborts, or an Error saying why the composer could not draw it (a part
  * it has no drawing for). `separate` draws operands as individual pieces where possible, including
  * cuts from a matching whole glyph. A sequence drawn once is answered from memory
@@ -105,7 +105,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     return drawer
   }
   const preview = /** @type {ComposerPreview} */ (async (sequence, { signal, onSketch } = {}) => {
-    if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators or ${LIMITS.depth} levels.`)
+    if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators, ${LIMITS.depth} levels, or ${PYRAMID_LAYERS} pyramid rows.`)
     signal?.throwIfAborted()
     const cached = drawings.get(sequence)
     if (cached) {

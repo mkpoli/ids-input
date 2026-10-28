@@ -10,9 +10,14 @@
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
+  import { createDocumentSession, sessionRecord, toSequence } from '../src/document/index.js'
+  import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
+  import layers from '../data/tangut-layers.json.gz?url'
   import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
@@ -22,11 +27,13 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
@@ -39,11 +46,13 @@
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
+  import PyramidDialog from './ui/PyramidDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
+  import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
   /** @type {'sans' | 'serif' | 'klee'} */
@@ -54,7 +63,12 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const babel = smallSealAdapter({ data: sealData, ids, additionalIds, parts, forms, names, folds, characters, characterInfo })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds, components, parts, forms, names, folds, characters, characterInfo })
+  const babel = { ...sealAdapter, parts: async () => {
+    const curated = await sealAdapter.parts()
+    const seen = new Set(curated.map(part => part.part))
+    return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
+  } }
   // Manual changes to the preview belong to the active document tab.
   let adjusting = $state(false)
   /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
@@ -121,6 +135,18 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
+  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
+  const treeDrawers = new Map()
+  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  function treeDrawer(at, style) {
+    const key = `${at}\0${style}`
+    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(composerPreview({ base: at, fontStyle: style })))
+    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
+  }
+  const treeDraw = $derived.by(() => {
+    const draw = treeDrawer(base, componentStyle)
+    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
+  })
 
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
@@ -218,12 +244,14 @@
 
   const uid = $props.id()
   const editor = createEditor(() => ({ adapter, messages, locale, tintMode }))
-  let structuralSearch = $state(false)
+  /** @type {'current' | 'component' | 'structure'} */
+  let searchMode = $state('current')
   const wholeComponentLookup = $derived(componentQuery(editor.whole))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
+  /** @type {HTMLInputElement | null} */ let documentInput = $state(null)
   let fromText_ = $state('')
   /** @type {import('../src/adapter/types.js').Drawing | null} */
   let drawing = $state.raw(null)
@@ -251,7 +279,20 @@
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
+  /** @type {Map<string, ReturnType<typeof openTabSession>>} */
+  const sessions = new Map()
+  /** @param {import('./lib/tabs.js').Tab} tab */
+  function sessionFor(tab) {
+    let session = sessions.get(tab.id)
+    if (!session) { session = openTabSession(tab); sessions.set(tab.id, session) }
+    return session
+  }
+  /** Reconcile the active editor tree into `tab`'s document. @param {import('./lib/tabs.js').Tab} tab */
+  function keepTabSession(tab) {
+    try { tab.document = syncTabSession(sessionFor(tab), editor.tree ?? null) } catch { /* A malformed tree keeps the last document. */ }
+  }
   editor.reset(initial.sequence)
+  keepTabSession(initial)
   const pathKey = (/** @type {number[]} */ path) => path.join('.')
   let knownSequence = editor.whole
   $effect(() => {
@@ -274,7 +315,11 @@
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
     const tab = tabs.find(tab => tab.id === activeId)
-    if (tab) { tab.sequence = text; tab.whole = editor.tree === null ? '' : editor.whole }
+    if (tab) {
+      tab.sequence = text
+      tab.whole = editor.tree === null ? '' : editor.whole
+      keepTabSession(tab)
+    }
     store()
     history.replaceState(null, '', linkTo(text, location))
   }))
@@ -290,7 +335,7 @@
   $effect(() => {
     const change = editor.change
     untrack(() => {
-      if (change?.destructive && !change.undone) toast = { id: ++notes, text: change.label, action: t('ids.undo'), run: () => editor.undo() }
+      if (change?.destructive && !change.undone) toast = { id: ++notes, text: change.label, action: t('ids.undo.label'), run: () => editor.undo() }
       else if (change && toast?.run) toast = null
     })
   })
@@ -298,10 +343,10 @@
   // The output: the encoded characters the whole sequence describes, and its code points.
   let encoded = $state(/** @type {string[]} */ ([]))
   $effect(() => {
-    const text = editor.usable ? editor.whole : '', ask = adapter.encoded
+    const text = editor.tree === null ? '' : editor.whole, ask = adapter.encoded
     const known = EXAMPLES.filter(example => example.sequence === text && example.char).map(example => example.char)
     encoded = known
-    if (!text || !ask) return
+    if (!editor.usable || !text || !ask) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
@@ -314,8 +359,9 @@
     try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
   }
 
-  // The tabs: choose one, open a new one, open a sequence in one, and close one. A tab closed by
-  // mistake comes back from the note, with its tree and history.
+  // The tabs: choose one, open a new one, open a sequence in one, and close one. One tab always stays
+  // open, so the last one closes into a fresh tab. A tab closed by mistake comes back from the note,
+  // with its tree and history.
   const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
   /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
   /** @type {Map<string, AdjustState>} */
@@ -336,6 +382,7 @@
     if (tab) {
       states.set(tab.id, editor.snapshot())
       adjustedStates.set(tab.id, currentAdjustments())
+      keepTabSession(tab)
     }
   }
   /** @param {string} id */
@@ -372,7 +419,7 @@
     const source = tabs.find(tab => tab.id === id)
     if (!source) return
     flush()
-    const tab = makeTab(source.sequence, source.saved)
+    const tab = makeTab(source.sequence, source.saved, source.document ? JSON.parse(JSON.stringify(source.document)) : undefined)
     const state = states.get(id)
     if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
     const adjusted = adjustedStates.get(id)
@@ -399,9 +446,15 @@
     }
     addTab(text)
   }
-  /** Close a tab, showing its neighbour; the note brings it back. @param {string} id */
+  /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
+  function openDraft(draft) {
+    flush()
+    const tab = makeTab(draft.sequence, draft.sequence, draft.document)
+    tabs.push(tab)
+    activate(tab.id)
+  }
+  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
   function closeTab(id) {
-    if (tabs.length < 2) return
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
     const tab = tabs[at]
@@ -409,29 +462,50 @@
     const adjusted = id === activeId ? currentAdjustments() : adjustedStates.get(id)
     states.delete(id)
     adjustedStates.delete(id)
+    sessions.delete(id)
     tabs.splice(at, 1)
+    /** @type {import('./lib/tabs.js').Tab | undefined} */
+    let fresh
     if (id === activeId) {
       const next = tabs[at] ?? tabs[at - 1]
-      activeId = next.id
-      const saved = states.get(next.id)
-      states.delete(next.id)
-      if (saved) editor.restore(saved)
-      else editor.reset(next.sequence)
-      restoreAdjustments(next.id)
+      if (next) {
+        activeId = next.id
+        const saved = states.get(next.id)
+        states.delete(next.id)
+        if (saved) editor.restore(saved)
+        else editor.reset(next.sequence)
+        restoreAdjustments(next.id)
+      } else {
+        // One tab always stays open: closing the last one leaves a new empty tab in its place.
+        fresh = makeTab()
+        tabs.push(fresh)
+        activeId = fresh.id
+        editor.reset('')
+        adjustments = {}
+        adjusting = false
+        knownSequence = editor.whole
+      }
     }
-    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo'),
-      run: () => reopen(tab, state, adjusted, at) }
+    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
+      run: () => reopen(tab, state, adjusted, at, fresh?.id) }
     store()
   }
   /**
-   * Put a closed tab back where it was.
+   * Put a closed tab back where it was, taking back the empty tab that replaced it.
    * @param {import('./lib/tabs.js').Tab} tab
    * @param {ReturnType<typeof editor.snapshot> | undefined} state
    * @param {AdjustState | undefined} adjusted
    * @param {number} at
+   * @param {string} [replacement]
    */
-  function reopen(tab, state, adjusted, at) {
+  function reopen(tab, state, adjusted, at, replacement) {
     if (tabs.some(kept => kept.id === tab.id)) return
+    const fresh = tabs.find(kept => kept.id === replacement)
+    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      adjustedStates.delete(fresh.id)
+    }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
     if (adjusted) adjustedStates.set(tab.id, adjusted)
@@ -448,22 +522,61 @@
   let drafts = $state(storedDrafts())
   function keepDraft() {
     if (editor.tree === null) return
-    drafts = keep(editor.whole)
     const tab = current()
+    if (tab) keepTabSession(tab)
+    drafts = keep(editor.whole, tab?.document)
     // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
     if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
     store()
     note(t('app.drafts.kept', { sequence: editor.whole }))
   }
+  /** Save the active tab's document as .ids.json. */
+  function saveDocument() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    const file = documentFile(sessionFor(tab).document, editor.whole)
+    const url = URL.createObjectURL(file)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = file.name
+    anchor.hidden = true
+    document.body.append(anchor)
+    anchor.click()
+    anchor.remove()
+    setTimeout(() => URL.revokeObjectURL(url), 0)
+    note(t('app.file.saved', { name: file.name }))
+  }
+
+  /** Open a chosen .ids.json as a new tab. @param {Event} event */
+  async function openDocument(event) {
+    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
+    const file = input.files?.[0]
+    input.value = ''
+    if (!file) return
+    try {
+      const document = await readDocumentFile(file)
+      const session = createDocumentSession(document)
+      const tab = makeTab(toSequence(document.root), toSequence(document.root), sessionRecord(session))
+      tabs.push(tab)
+      activate(tab.id)
+    } catch {
+      note(t('app.file.openFailed', { name: file.name }))
+    }
+  }
+
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.pyramid.title'), icon: 'pyramid', run: () => pyramidOpen = true },
+    { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
+    { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
-    { label: t('app.share'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
+    { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => shareOpen = true },
     .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openSequence(d.sequence) })),
+      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
       { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
   ])
@@ -491,18 +604,19 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, modern?: string }} example @param {string} lang */
+  /** @param {{ sequence: string, char: string, abbreviates?: string, modern?: string }} example @param {string} lang */
   function exampleItem(example, lang) {
     const point = example.char ? cp(example.char) : ''
+    const target = example.char || example.abbreviates || ''
     return {
-      leading: example.char || undefined,
+      leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
+      note: example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
+      hint: example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
       run: () => addTab(canonical(example.sequence)),
     }
   }
@@ -522,7 +636,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), pyramidOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -561,8 +675,8 @@
     }
     editor.keydown(event, { root: work, slot })
   }
-  const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo'))
-  const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo'))
+  const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label'))
+  const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label'))
   const editItems = $derived([
     { label: undoTitle, icon: 'undo', shortcut: shortcut('mod+z'), disabled: !editor.canUndo, run: () => editor.undo() },
     { label: redoTitle, icon: 'redo', shortcut: shortcut('mod+shift+z'), disabled: !editor.canRedo, run: () => editor.redo() },
@@ -590,24 +704,24 @@
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>
-      <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file'), items: fileItems }, { label: t('app.edit'), items: editItems }]} {keyHints} /></span>
+      <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
           <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
           <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
-          <span class="wide-only"><Menu label={t('app.history')} icon="history" text={false} items={historyItems} {keyHints} /></span>
+          <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
-      <div class="font-switch" role="group" aria-label={t('app.font')}>
+        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
+      <div class="font-switch" role="group" aria-label={t('app.font.label')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
       </div>
       </nav>
       <div class="end">
-        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share')} aria-label={t('app.share')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share')}</span></button>
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => shareOpen = true}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
         <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
         <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
         <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
@@ -649,14 +763,14 @@
 
       <div class="middle" bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
-          <div class="view-tabs" role="tablist" aria-label={t('ids.view')}>
+          <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
               onclick={() => view = 'shape'} onkeydown={viewKey}>{t('ids.view.shape')}</button>
             <button type="button" role="tab" id="tree-tab" aria-selected={view === 'tree'} aria-controls="tree-panel" tabindex={view === 'tree' ? 0 : -1}
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
@@ -670,12 +784,15 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" class:structural={structuralSearch} aria-label={t('ids.search.title')}>
+        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')}>
           <div class="search-modes" aria-label={t('ids.search.title')}>
-            <button type="button" aria-pressed={!structuralSearch} onclick={() => structuralSearch = false}>{t('ids.search.title')}</button>
-            <button type="button" aria-pressed={structuralSearch} onclick={() => structuralSearch = true}>{t('ids.structural.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
+            <button type="button" aria-pressed={searchMode === 'structure'} onclick={() => searchMode = 'structure'}>{t('ids.structural.title')}</button>
           </div>
-          {#if structuralSearch}
+          {#if searchMode === 'component'}
+            <ComponentLookup {adapter} {messages} {locale} {t} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
           <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
@@ -717,26 +834,28 @@
       </section>
     </div>
   </main>
-  <IdsCharacterInfo root={work} {adapter} {messages} {locale} />
+  <IdsCharacterInfo root={work} {adapter} {messages} {locale} disabled={editor.disabled} onpick={(part, path) => editor.take(part, path)} />
 
 </div>
 
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,application/json" hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
     <div class="more-row">
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
-    <MenuList label={t('app.history')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file')} items={fileItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.edit')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
+    <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<PyramidDialog bind:open={pyramidOpen} {t} oncreate={sequence => addTab(sequence)} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
@@ -748,7 +867,7 @@
 </Dialog>
 
 <style>
-  .search-modes{display:flex;gap:4px;margin-bottom:8px}
+  .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
 

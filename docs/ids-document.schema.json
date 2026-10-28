@@ -280,7 +280,8 @@
             "char": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 2
+              "maxLength": 64,
+              "description": "One component, its variation selector and loose marks, or one conjoining Hangul jamo run."
             }
           }
         }
@@ -332,6 +333,12 @@
               },
               "minItems": 1,
               "maxItems": 3
+            },
+            "marks": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32,
+              "description": "Loose marks (combining marks, modifier letters or superscripts) written after the operator's parts, at the end of the description."
             }
           },
           "allOf": [

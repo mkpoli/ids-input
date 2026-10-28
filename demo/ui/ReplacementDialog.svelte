@@ -36,6 +36,7 @@
 <Dialog bind:open title={t('app.replacement.title')} closeLabel={t('app.close')}>
   <form class="replacement" onsubmit={event => { event.preventDefault(); submit() }}>
     <p>{t('app.replacement.help')}</p>
+    <p>{t('app.replacement.nestedHint')}</p>
     <label>{t('app.replacement.source')}<input bind:value={source} oninput={() => status = ''} placeholder="林" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>
     <label>{t('app.replacement.target')}<input bind:value={target} oninput={() => status = ''} placeholder="木" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>
     <label>{t('app.replacement.replacement')}<input bind:value={replacement} oninput={() => status = ''} placeholder="火" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>

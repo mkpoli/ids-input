@@ -12,9 +12,9 @@ search offers characters the workshop can open and compose rather than the whole
 - KANJIDIC2 (EDRDG): English meanings, Japanese kana readings, pinyin, Korean and Vietnamese
   readings and nanori. CC BY-SA 4.0.
 
-The file as a whole is shared alike under CC BY-SA 4.0, because its KANJIDIC2 rows are. The build
-fetches the two sources into `cache/`, checks them against their SHA-256, and writes the gzipped
-table. `--refresh` fetches them again.
+The file is shared alike under CC BY-SA 4.0, because its KANJIDIC2 rows are. The build fetches the
+two sources into `cache/`, checks them against their SHA-256, and writes the gzipped table.
+`--refresh` fetches them again.
 
     uv run scripts/build_character_vocabulary.py [--refresh]
 """
@@ -38,7 +38,7 @@ IDS = ROOT / "data" / "babelstone-ids.tsv.gz"
 TARGET = ROOT / "data" / "character-vocabulary.tsv.gz"
 
 KANJIDIC2_URL = "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz"
-KANJIDIC2_SHA256 = "bdf75923744b355dfb678da8c7ae558342e06d5958998fcdde07c7a281a5fdd6"
+KANJIDIC2_SHA256 = "554c23fa1d4a0528c6d839017123cb752dff81f0d53696e12e2cef72dbb72dc1"
 UNIHAN_URL = "https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip"
 UNIHAN_SHA256 = "4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e"
 
@@ -145,11 +145,12 @@ def fold_name(text: str) -> str:
 
 
 def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], ids: set[str]) -> list[tuple[str, str, str, str, str]]:
-    common = {char for char in ids if char in unihan["kIICore"]}
+    named = {char for char in ids if char in kanjidic or any(unihan[field].get(char) for field in
+             ("kDefinition", "kMandarin", "kJapaneseOn", "kJapaneseKun", "kHangul", "kVietnamese"))}
     # Newspaper frequency for the kanji KANJIDIC2 ranks, the school grade for the others; a lower
     # number comes first among equally close names.
     ranks: dict[str, int] = {}
-    for char in common:
+    for char in named:
         entry = kanjidic.get(char)
         frequency = entry.findtext("misc/freq") if entry is not None else None
         if frequency and frequency.isdigit():
@@ -162,11 +163,11 @@ def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], id
 
     def add(name: str, char: str, source: str, detail: str) -> None:
         name = name.strip()
-        if not name or len(name) > 40 or char not in common:
+        if not name or len(name) > 40 or char not in named:
             return
         rows.append((name, char, source, detail, str(ranks.get(char, ""))))
 
-    for char in sorted(common):
+    for char in sorted(named):
         definitions = unihan["kDefinition"].get(char, "")
         for sense in meaning_senses(definitions):
             add(sense, char, "unihan", f"kDefinition of {char}")
@@ -231,16 +232,16 @@ def build(unihan: dict[str, dict[str, str]], kanjidic: dict[str, ET.Element], id
 
 
 def header(rows: list[tuple[str, str, str, str, str]]) -> str:
-    return f"""# The readings and meanings of common characters, for the character search (src/core/names.js).
+    return f"""# The readings and meanings of characters, for the character search (src/core/names.js).
 # columns: name, char, source, detail, rank
 # rows: {len(rows)}
 # rank: lower is more common; KANJIDIC2 newspaper frequency, or 3000 plus Unihan's kGradeLevel
 # Built by scripts/build_character_vocabulary.py.
 # source unihan: Unihan 18.0.0 (Unicode Character Database), Unicode License v3, Copyright Unicode, Inc.; kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul, kVietnamese and kIICore; SHA-256 {UNIHAN_SHA256}
 #   https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip
-# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-299, created 2026-10-26), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
+# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-301, created 2026-10-28), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
 #   meanings, Japanese, Korean and Vietnamese readings, pinyin and nanori; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
-# The characters are Unihan's kIICore set, all with an IDS description: 9,810 characters.
+# The characters are every IDS character with a Unihan or KANJIDIC2 name.
 # The file as a whole is shared alike under CC BY-SA 4.0, because the KANJIDIC2 rows are:
 # https://creativecommons.org/licenses/by-sa/4.0/
 """

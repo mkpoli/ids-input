@@ -11,13 +11,14 @@
 import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
-import { applyOperator, clear, isDescription, isNode, nextEmpty, parse, partAt, paths, place as placed, reorderSiblings, samePath, unwrap,
-  write } from '../core/ids.js'
+import { applyOperator, clear, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
+  samePath, sameTree, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
 import { lookupChar } from '../core/decompose.js'
 import { replacementPrefix, replacementQuery, resolveReplacement } from '../core/replacement.js'
+import { replacementExpression, replacementInput, resolveReplacementExpression, unaliasReplacementInput } from '../core/replacement-expression.js'
 import { createLookup } from './lookup.svelte.js'
 import { translator } from './i18n.js'
 
@@ -100,12 +101,16 @@ export function createEditor(options) {
    * @param {string} input */
   function resolveInput(input) {
     const query = replacementQuery(input)
-    if (!query || disabled()) return
+    const expression = query ? null : replacementExpression(input)
+    if ((!query && !expression) || disabled()) return
     cancelResolution()
     const controller = new AbortController()
     resolution = controller
     const ticket = revision, adapter = options().adapter
-    resolveReplacement(query, char => adapter.structure(char, { signal: controller.signal }), { signal: controller.signal }).then(result => {
+    const structure = (/** @type {string} */ char) => adapter.structure(char, { signal: controller.signal })
+    const request = query ? resolveReplacement(query, structure, { signal: controller.signal })
+      : resolveReplacementExpression(/** @type {import('../core/replacement-expression.js').Expression} */ (expression), structure, { signal: controller.signal })
+    request.then(result => {
       if (result === null || revision !== ticket || draft !== input || disabled() || options().adapter !== adapter) return
       apply(result, null, t('ids.do.type', { text: write(result) }))
     }).catch(() => { /* Leave the original input in place if the data cannot be read. */ })
@@ -141,8 +146,11 @@ export function createEditor(options) {
    * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path } }} [how]
    */
   function apply(next, select, label, { destructive = false, reorder } = {}) {
+    // A description's text can only carry marks at its end; keep them there.
+    next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
+    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}) }
@@ -222,8 +230,25 @@ export function createEditor(options) {
     apply(next.tree, next.chosen, before === null || before === undefined ? t('ids.do.put', { part: text(part) })
       : t('ids.do.replace', { from: text(before), part: text(part) }), { destructive: isNode(before) })
   }
-  /** A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place. @param {string} written @param {Path | null} [at] */
-  function take(written, at) {
+  /**
+   * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
+   * With `loose`, a run of marks annotates the whole description instead of filling a slot.
+   * @param {string} written @param {Path | null} [at] @param {{ loose?: boolean }} [how]
+   */
+  function take(written, at, { loose = false } = {}) {
+    if (at === undefined) {
+      const marks = unalias(written)
+      if (loose && isMarks(marks)) {
+        if (tree === null) {
+          const read = parse(marks, { open: true })
+          if (read.problem || read.tree === undefined) return false
+          apply(read.tree, [], t('ids.do.put', { part: marks }))
+          return true
+        }
+        apply(withMarks(tree, marks), chosen, t('ids.do.put', { part: marks }))
+        return true
+      }
+    }
     const found = parse(unalias(written), { open: true })
     if (found.problem) { note = t(`ids.problem.${found.problem}`); return false }
     if (found.tree === null) return false
@@ -271,9 +296,9 @@ export function createEditor(options) {
   function edit(field) {
     const typedText = field.value, caret = field.selectionStart ?? typedText.length
     // RP's operands may themselves be Latin letters; do not turn an operand into an IDC alias.
-    const written = replacementPrefix(typedText) ? typedText : unalias(typedText)
+    const written = replacementInput(typedText) ? unaliasReplacementInput(typedText) : unalias(typedText)
     if (written !== typedText) {
-      const at = [...unalias(typedText.slice(0, caret))].length
+      const at = [...(replacementInput(typedText) ? unaliasReplacementInput(typedText.slice(0, caret)) : unalias(typedText.slice(0, caret)))].length
       field.value = written
       const offset = [...written].slice(0, at).join('').length
       field.setSelectionRange(offset, offset)
@@ -300,11 +325,11 @@ export function createEditor(options) {
 
   /** @param {Path} path */
   const pathKey = path => path.join('.')
-  /** Move the focus to the chosen part's button within `root`. @param {HTMLElement | null | undefined} root */
+  /** Move the focus to the chosen part's focusable control within `root`. @param {HTMLElement | null | undefined} root */
   async function focusChosen(root) {
     await tick()
     const at = chosen
-    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]`))?.focus()
+    if (at) /** @type {HTMLElement | null | undefined} */ (root?.querySelector(`[data-path="${pathKey(at)}"]:is(button,[tabindex])`))?.focus()
   }
 
   /**

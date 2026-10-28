@@ -7,6 +7,7 @@
   import { untrack } from 'svelte'
   import { isSequence, parse } from '../core/ids.js'
   import { replacementQuery } from '../core/replacement.js'
+  import { replacementExpression } from '../core/replacement-expression.js'
   import { createEditor } from './editor.svelte.js'
   import IdsCharacterInfo from './IdsCharacterInfo.svelte'
   import IdsOperators from './IdsOperators.svelte'
@@ -35,7 +36,7 @@
   $effect(() => {
     const of = char
     untrack(() => {
-      const typed = isSequence(value) || replacementQuery(value) ? value : ''
+      const typed = isSequence(value) || replacementQuery(value) || replacementExpression(value) ? value : ''
       editor.reset(typed)
       if (!typed && of) editor.lookup.read(of).then(found => {
         if (char !== of) return
@@ -46,7 +47,7 @@
   })
   $effect(() => {
     const given = value
-    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) || replacementQuery(given) ? given : '') })
+    untrack(() => { if (given !== seen && given !== editor.draft) editor.reset(isSequence(given) || replacementQuery(given) || replacementExpression(given) ? given : '') })
   })
   function use() { if (editor.usable && !disabled) onuse?.(editor.whole) }
 </script>
@@ -66,15 +67,15 @@
   <IdsPartTools {editor} {keyHints} bind:slot />
   <IdsPicker {editor} {pickers} {recentKey} />
   <div class="ids-actions">
-    <button type="button" class="ids-undo" disabled={disabled || !editor.canUndo} title={editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo')}
-      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
-    <button type="button" class="ids-redo" disabled={disabled || !editor.canRedo} title={editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo')}
-      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
+    <button type="button" class="ids-undo" disabled={disabled || !editor.canUndo} title={editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label')}
+      aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>{t('ids.undo.label')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+z', undefined, { compact: true })}</kbd>{/if}</button>
+    <button type="button" class="ids-redo" disabled={disabled || !editor.canRedo} title={editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label')}
+      aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z" onclick={() => editor.redo()}>{t('ids.redo.label')}{#if keyHints}<kbd aria-hidden="true">{shortcut('mod+shift+z', undefined, { compact: true })}</kbd>{/if}</button>
     {#if onuse}<button type="button" class="ids-use" disabled={disabled || !editor.usable} onclick={use}>{t('ids.use')}{#if keyHints}<kbd aria-hidden="true">{shortcut('enter', undefined, { compact: true })}</kbd>{/if}</button>{/if}
   </div>
 </div>
 
-<IdsCharacterInfo {root} {adapter} {messages} {locale} />
+<IdsCharacterInfo {root} {adapter} {messages} {locale} {disabled} onpick={(part, path) => editor.take(part, path)} />
 
 <style>
   .ids-input{
@@ -84,7 +85,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:12px;min-width:0;color:var(--_ink)}
   .ids-top{display:flex;gap:12px;align-items:flex-start}
   .ids-top-field{flex:1;min-width:0}

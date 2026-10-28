@@ -2,6 +2,7 @@
   import { parse, arity } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
   import { replacementPrefix, replacementQuery } from '../core/replacement.js'
+  import { replacementExpression, replacementInput } from '../core/replacement-expression.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
   let scroll = $state(0)
@@ -15,7 +16,7 @@
   const t = $derived(editor.t)
   $effect(() => {
     const input = editor.draft, adapter = editor.adapter, disabled = editor.disabled
-    if (!adapter || disabled || !replacementQuery(input)) return
+    if (!adapter || disabled || !replacementQuery(input) && !replacementExpression(input)) return
     untrack(() => editor.resolveInput(input))
     return () => editor.cancelResolution()
   })
@@ -51,7 +52,7 @@
   }
   /** @param {string} text */
   function replaceText(text) {
-    if (field && replacementPrefix(field.value)) return false
+    if (field && (replacementInput(field.value) || replacementExpression(field.value))) return false
     if (!field || !text || parse(unalias(text), { open: true }).problem) return false
     if (field.selectionStart === field.selectionEnd) {
       const offset = field.selectionStart ?? 0
@@ -107,7 +108,8 @@
     }
     if (event.isComposing) return
     // Replacement expressions are entered as ordinary text until all three operands are present.
-    if (field && (replacementPrefix(field.value)
+    if (field && (replacementInput(field.value) || replacementExpression(field.value)
+      || (event.inputType.startsWith('insert') && replacementInput(field.value.slice(0, field.selectionStart ?? 0) + (event.data ?? '') + field.value.slice(field.selectionEnd ?? 0)))
       || (/^\s*r$/i.test(field.value) && /^p$/i.test(event.data ?? '')))) return
     if (event.data && event.inputType.startsWith('insert') && replaceText(event.data)) { event.preventDefault(); return }
     expandSelection()
@@ -132,7 +134,7 @@
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
   <div class="sequence-wrap" class:composing>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text} data-path={token.path.join('.')} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
@@ -148,7 +150,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
     display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--_ink)}
   .ids-title{font-size:11px;color:var(--_muted)}
   .sequence-wrap{position:relative;min-width:0}

@@ -4,7 +4,7 @@
 # Built by scripts/build_component_names.py.
 # source kanji-tools: anzumura/kanji-tools data/radicals.txt at c3e52cbca38a1fdbf9a96abb1dd015450cc1411c; MIT; Copyright (c) 2022 Dan H
 #   https://github.com/anzumura/kanji-tools
-# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-299, created 2026-10-26), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
+# source kanjidic2: KANJIDIC2 (file version 4, database version 2026-301, created 2026-10-28), Electronic Dictionary Research and Development Group, CC BY-SA 4.0; Copyright EDRDG
 #   names, meanings, Japanese, Korean and Vietnamese readings and pinyin of the radicals; https://www.edrdg.org/kanjidic/kanjidic2.xml.gz
 # source ja-wikipedia: the redirects to the Japanese Wikipedia articles on the 214 radicals, CC BY-SA 4.0; fetched 2026-10-26
 #   https://ja.wikipedia.org/
