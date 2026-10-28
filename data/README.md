@@ -149,7 +149,7 @@ Sources:
 - anzumura/kanji-tools `data/radicals.txt` at c3e52cb (`https://github.com/anzumura/kanji-tools`),
   MIT, Copyright (c) 2022 Dan H: the Japanese names and readings of the 214 radicals (のぎ, のぶん,
   うかんむり).
-- KANJIDIC2, file version 4, database version 2026-300, created 2026-10-27
+- KANJIDIC2, file version 4, database version 2026-301, created 2026-10-28
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: further Japanese radical names (`rad_name`), and the English meanings,
   Japanese, Korean and Vietnamese readings and pinyin of the radicals (みず, 수, thủy).
@@ -218,20 +218,20 @@ other tables leave apart. 593 folds, 15 KB, built by `scripts/build_component_na
 
 ## character-vocabulary.tsv.gz
 
-The readings and meanings of the common characters, for the Characters tab: water, shui, mizu, みず,
-수 and thủy for 水; person for 人; silk for 糸. 152,982 rows, 1.2 MB gzipped. Format: `name`, `char`,
+The readings and meanings of characters, for the Characters tab: water, shui, mizu, みず,
+수 and thủy for 水; person for 人; silk for 糸. 214,533 rows, 1.7 MB gzipped. Format: `name`, `char`,
 `source`, `detail`, `rank`, one name for one character per row; comments start with `#`.
 
-The characters are the 9,810 Unihan `kIICore` characters plus every KANJIDIC2 character with an IDS
-description, 15,062 in all, so a result can be opened in the workshop. `rank` is lower for more
-common characters: KANJIDIC2's newspaper frequency where it has one, otherwise 3000 plus Unihan's
-`kGradeLevel`. It orders equally close names in the character search.
+The characters are every IDS character with a Unihan or KANJIDIC2 name, 48,966 in all, so a result
+can be opened in the workshop. `rank` is lower for more common characters: KANJIDIC2's newspaper
+frequency where it has one, otherwise 3000 plus Unihan's `kGradeLevel`. It orders equally close
+names in the character search.
 
 - Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
   Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
   kDefinition, kMandarin, kJapaneseOn, kJapaneseKun, kHangul and kVietnamese, and kIICore for the
   character set.
-- KANJIDIC2, file version 4, database version 2026-300, created 2026-10-27
+- KANJIDIC2, file version 4, database version 2026-301, created 2026-10-28
   (`https://www.edrdg.org/kanjidic/kanjidic2.xml.gz`), CC BY-SA 4.0, Electronic Dictionary Research
   and Development Group: English meanings, Japanese kana readings, pinyin, Korean and Vietnamese
   readings, nanori and frequency.
@@ -285,14 +285,6 @@ Seal ancestor. Missing meanings stay unspecified.
 Rebuild with `python3 scripts/build_character_info.py`. The builder verifies both
 source digests. The character-information file is fetched only when a panel is used;
 hovering does not send the character to a dictionary service.
-
-## character-vocabulary-rare.tsv.gz
-
-The remaining named characters, for the Characters tab's optional rare search: 33,904 characters and
-61,551 rows, 515 KB gzipped. A character is here when it has an IDS description and at least one
-Unihan or KANJIDIC2 name but is outside the common table. Format and sources match
-`character-vocabulary.tsv.gz`; `rank` is usually empty. Licence: **CC BY-SA 4.0** as a whole, from
-Unihan 18.0.0 (Unicode License v3) and KANJIDIC2 (CC BY-SA 4.0).
 
 ## Tangut
 

@@ -1,4 +1,4 @@
-// Run against a devrun server: IDS_URL, CHROMIUM_PATH, optional IDS_RARE_SHOTS.
+// Run against a devrun server: IDS_URL, CHROMIUM_PATH, optional IDS_CHARACTER_SHOTS.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { mkdirSync } from 'node:fs'
@@ -9,18 +9,13 @@ try {
     await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`, { waitUntil: 'networkidle' })
     await page.getByRole('tab', { name: 'Characters' }).click()
     const input = page.locator('.ids-pick-panel:not([hidden]) .ids-find input[type="search"]')
-    const toggle = page.getByRole('checkbox', { name: 'Include rare characters' })
-    await toggle.waitFor()
-    assert.equal(await toggle.isChecked(), false)
     await input.fill('hillock or mound')
-    await page.waitForTimeout(1000)
-    await toggle.check()
-    assert.equal(await toggle.isChecked(), true)
     await page.waitForFunction(() => [...document.querySelectorAll('.ids-pick-panel:not([hidden]) .ids-hit-char')].some(el => el.textContent === '㐀'), null, { timeout: 20000 })
-    if (process.env.IDS_RARE_SHOTS) {
-      mkdirSync(process.env.IDS_RARE_SHOTS, { recursive: true })
+    assert.ok(!(await page.getByRole('checkbox', { name: 'Include rare characters' }).count()), 'no rare opt-in is needed')
+    if (process.env.IDS_CHARACTER_SHOTS) {
+      mkdirSync(process.env.IDS_CHARACTER_SHOTS, { recursive: true })
       await page.evaluate(() => document.fonts.ready)
-      await page.locator('.ids-search').screenshot({ path: `${process.env.IDS_RARE_SHOTS}/${scheme}.png` })
+      await page.locator('.ids-search').screenshot({ path: `${process.env.IDS_CHARACTER_SHOTS}/${scheme}.png` })
     }
     await page.close()
   }
