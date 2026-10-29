@@ -229,6 +229,80 @@ describe('the composer', () => {
     expect(drawn).toEqual(await compose(sourceOf(), '⿱木口'))
     expect(rounds).toBe(20)
   })
+  it('draws a dense description no character spells in cells', async () => {
+    const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
+    const drawn = await compose(sourceOf(), sequence)
+    expect(drawn.cells).toBe(true)
+    expect(drawn.parts).toHaveLength(8)
+    expect(drawn.parts.map(part => part.leaf)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(drawn.parts.every(part => part.origin.startsWith('cells '))).toBe(true)
+    // Each part sits in its own cell: positive sizes, inside the face, and no two boxes overlap.
+    for (const [x, y, width, height] of drawn.parts.map(part => part.box)) {
+      expect(width).toBeGreaterThan(0)
+      expect(height).toBeGreaterThan(0)
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(y).toBeGreaterThanOrEqual(0)
+      expect(x + width).toBeLessThanOrEqual(1000)
+      expect(y + height).toBeLessThanOrEqual(1000)
+    }
+    for (let i = 0; i < drawn.parts.length; i++) {
+      for (let j = i + 1; j < drawn.parts.length; j++) {
+        const [x, y, width, height] = drawn.parts[i].box, [u, v, w, h] = drawn.parts[j].box
+        expect(Math.max(0, Math.min(x + width, u + w) - Math.max(x, u))
+          * Math.max(0, Math.min(y + height, v + h) - Math.max(y, v))).toBe(0)
+      }
+    }
+    // Reading order places the top operand above the bottom one.
+    const top = drawn.parts.find(part => part.leaf === 0), bottom = drawn.parts.find(part => part.leaf === 4)
+    expect(top.box[1] + top.box[3]).toBeLessThanOrEqual(bottom.box[1])
+    expect((await compose(sourceOf(), sequence, { layout: 'composed' })).cells).toBeUndefined()
+    expect((await compose(sourceOf(), '⿰木口')).cells).toBeUndefined()
+  })
+  it('draws in cells at eight leaves, and reads across and down in tree order', async () => {
+    const chain = n => '⿱木' + '⿰木'.repeat(n - 2) + '口'
+    expect((await compose(sourceOf(), chain(7))).cells).toBeUndefined()
+    expect((await compose(sourceOf(), chain(8))).cells).toBe(true)
+    const across = await compose(sourceOf(), '⿰木口', { layout: 'cells' })
+    expect(across.parts[0].box[0] + across.parts[0].box[2]).toBeLessThanOrEqual(across.parts[1].box[0])
+    for (const sequence of ['⿲木口木', '⿳木口木', '⿹木口']) {
+      const cells = await compose(sourceOf(), sequence, { layout: 'cells' })
+      expect(cells.parts).toHaveLength(sequence === '⿲木口木' || sequence === '⿳木口木' ? 3 : 2)
+    }
+  })
+  it('gives a single top part less height, and balances the cell drawing', async () => {
+    const chain = n => '⿱木' + '⿰木'.repeat(n - 2) + '口'
+    const tall = await compose(sourceOf(), chain(8))
+    const top = tall.parts.find(part => part.leaf === 0)
+    expect(top.box[3]).toBeLessThan(350)
+    expect(Array.isArray(tall.stroke)).toBe(true)
+    expect(tall.stroke).toHaveLength(2)
+    // A top subtree of several leaves keeps half the height.
+    const multi = await compose(sourceOf(), '⿱⿰⿰木口⿰木口⿰口木', { layout: 'cells' })
+    const first = multi.parts.find(part => part.leaf === 0)
+    expect(first.box[3]).toBeGreaterThan(400)
+  })
+  it('stacks an enclosure in a narrow cell and throws when forced with a modifier', async () => {
+    const narrow = await compose(sourceOf(), '⿰木⿹木口', { layout: 'cells' })
+    const outer = narrow.parts.find(part => part.leaf === 1), inner = narrow.parts.find(part => part.leaf === 2)
+    expect(outer.box[1] + outer.box[3]).toBeLessThanOrEqual(inner.box[1])
+    const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
+    await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
+  })
+  it('keeps the composer for marks, exclusions and approximate operators, and forces cells only when asked', async () => {
+    const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
+    expect((await compose(sourceOf(), `${sequence}ˊ`)).cells).toBeUndefined()
+    expect((await compose(sourceOf(), sequence, { exclude: ['永'] })).cells).toBeUndefined()
+    const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
+    expect((await compose(sourceOf(), modified)).cells).toBeUndefined()
+    await expect(compose(sourceOf(), `${sequence}ˊ`, { layout: 'cells' })).rejects.toThrow('loose marks')
+  })
+  it('keeps the reading order of cell leaves around an empty slot', async () => {
+    const drawn = await compose(sourceOf(), '⿱⿰⿰木⬚⿰木口⿰⿰木口⿰木口')
+    expect(drawn.cells).toBe(true)
+    expect(drawn.parts.map(part => part.leaf)).toEqual([0, 2, 3, 4, 5, 6, 7])
+    expect(drawn.slots).toHaveLength(1)
+    expect(drawn.slots[0].index).toBe(0)
+  })
   it('names the operators it draws beyond the composer, and credits KanjiVG only for its pieces', async () => {
     const source = sourceOf()
     expect((await compose(source, '⿾⿰木口')).approximate).toEqual(['⿾'])
@@ -331,6 +405,8 @@ describe('the preview badge', () => {
     expect(badge('failed')).toEqual({ label: 'failed', params: {} })
     expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })
     expect(badge('composed', { approximate: ['⿾', '㇯'] })).toEqual({ label: 'approximate', params: { ops: '⿾ ㇯' } })
+    expect(badge('composed', { cells: true })).toEqual({ label: 'cells', params: {} })
+    expect(badge('composed', { cells: true, approximate: ['⿼'] })).toEqual({ label: 'approximate', params: { ops: '⿼' } })
     expect(badge('final')).toEqual({ label: 'final', params: {} })
   })
 })

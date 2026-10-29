@@ -256,5 +256,6 @@
   "compare.showMore": "더 보기",
   "app.engines": "엔진 비교",
   "compare.engines": "엔진 비교",
-  "app.layers.oncanvas": "캔버스에서 편집"
+  "app.layers.oncanvas": "캔버스에서 편집",
+  "app.layers.history": "기록"
 }

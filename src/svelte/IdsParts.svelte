@@ -384,6 +384,10 @@
       : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
     const term = filter.trim()
     if (!term) return keys
+    if (/^\d+$/.test(term)) {
+      const count = Number(term)
+      return keys.filter(key => (byPart.get(key)?.strokes ?? tangutStrokes?.[key]) === count)
+    }
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
     const matches = matchScriptParts(keys, text, Boolean(code))
@@ -545,7 +549,7 @@
   }
   // A stroke outside the five classes (㇣) is another kind of stroke; any other part lacks the record.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}

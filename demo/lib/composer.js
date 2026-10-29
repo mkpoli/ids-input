@@ -7,4 +7,5 @@ export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://glyphatlas.org/atlas/composer/62af8c26f961-serif-compose-layout-v4-serif-f5/',
   klee: 'https://glyphatlas.org/atlas/composer/e1e0af4b94e6-kaisho-compose-layout-v4-kaisho-f5/',
+
 }

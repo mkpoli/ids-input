@@ -257,5 +257,6 @@
   "compare.showMore": "Show more",
   "app.engines": "Engine comparison",
   "compare.engines": "Engine comparison",
-  "app.layers.oncanvas": "Edit on canvas"
+  "app.layers.oncanvas": "Edit on canvas",
+  "app.layers.history": "History"
 }

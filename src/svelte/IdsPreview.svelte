@@ -11,7 +11,7 @@
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
   import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '../composer/index.js'
-  import { affineForChain, boxCorners, invertAffine, layerAtPath, multiplyAffine, scopesMarkup } from '../document/index.js'
+  import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
 
   /**
@@ -31,6 +31,9 @@
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
     document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
+  // Serif outlines carry tiny self-overlap and open joins; a hairline stroke of the same ink
+  // seals them without changing the drawn weight.
+  const seal = $derived(adapter.fontStyle === 'serif')
 
   const uid = $props.id()
   const sequence = $derived(write(tree))
@@ -66,7 +69,7 @@
 
   const said = $derived(badge(step, shown?.drawn))
   /** @type {Record<string, string>} */
-  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', tooLarge: 'ids.preview.tooLargeNote' }
+  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', cells: 'ids.preview.cellsNote', tooLarge: 'ids.preview.tooLargeNote' }
   const NAMES = /** @type {Record<string, string>} */ ({ '⿼': 'fromRight', '⿽': 'fromLowerRight', '⿾': 'mirrored', '⿿': 'rotated', '㇯': 'subtracted', '〾': 'variant' })
   // The operators named in words: their characters are too new for most fonts to show.
   const named = $derived(/** @type {Record<string, string>} */ (said.params.ops ? { ops: said.params.ops.split(' ').map((/** @type {string} */ op) => NAMES[op] ? t(`ids.op.${NAMES[op]}`) : op).join(' · ') } : {}))
@@ -95,7 +98,13 @@
     slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
-  const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
+  const chosenLayer = $derived.by(() => {
+    if (!localDoc || !chosen) return null
+    const selected = session?.chosen ? findLayer(localDoc.root, session.chosen)?.node ?? null : null
+    const selectedPath = selected ? pathOfLayer(localDoc.root, selected.id) : null
+    if (selected && selectedPath && selectedPath.join('.') === chosen.join('.')) return selected
+    return layerAtPath(localDoc.root, chosen)
+  })
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
   const selectionBox = $derived(frame ? boxCorners(frame.canvas, frame.box) : null)
   const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
@@ -258,7 +267,7 @@
                     {/each}
                   </mask>
                 {/if}
-                <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
+                <path class="ink" class:seal d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
@@ -344,6 +353,7 @@
   .final{background:currentColor;-webkit-mask:var(--drawing) center/100% 100% no-repeat;mask:var(--drawing) center/100% 100% no-repeat}
   @media (forced-colors: active){.final{forced-color-adjust:none;background:CanvasText}.ink{fill:CanvasText}}
   .ink{fill:currentColor}
+  .ink.seal{stroke:currentColor;stroke-width:2;stroke-linejoin:round}
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}

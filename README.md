@@ -101,7 +101,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts and two-row repeats |
+| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts and repeated rows |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -163,7 +163,7 @@ use `light-dark()`, so the page needs `color-scheme: light dark` for its dark sc
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -175,6 +175,8 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10, reverse: false }
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
+repeatSequence('口', [2, 1, 2])  // '⿳⿰口口口⿰口口'
+enclosedRepeatSequence('囗', '口')  // '⿴囗⿱⿰口口⿰口口'
 repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
 ```
 
@@ -200,6 +202,22 @@ supplies the `IDS New Korean` face, and their outlines are bundled for previews 
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+### Cells
+
+A description of eight or more leaves (an empty slot counts as one) is drawn **in cells** when no
+character spells it as a whole, it uses only alignment and exact enclosure operators, and every leaf
+has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
+cell layout gives the top of a stacked description less than half the height, weights each cell by
+its subtree's leaf count, and lets parts fill their cells, so a dense description reads as one
+character rather than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
+puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
+
+The preview badges a cell drawing **Cells**. `compose(source, sequence, { layout: 'composed' })`
+forces the composer, and `'cells'` forces cells and rejects loose marks and modified operators; the default, `'auto'`, uses
+cells only for such dense descriptions. Pyramids, grouped forms, excluded characters and descriptions
+with loose marks or approximate operators keep the composer.
+
 ### Pyramids
 
 `pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an
@@ -216,13 +234,16 @@ writes that arrangement; `pyramidRows` reports its direction in `reverse`.
 
 ### Repeats
 
-`repeatSequence(part, [top, bottom], { bottom })` writes two rows of repeated components:
-`top` copies of `part` above `bottom` copies of the second component, which defaults to `part`.
-Each row holds two to four copies; rows of two and three use `⿰` and `⿲`, a row of four splits in
-half, and the rows stack with `⿱`. The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns
-with its own Component field, as Pyramids does. A second field, Bottom row, takes another component and
-falls back to the first when empty. These cover the 五同, 六同, 八同 and 二組 arrangements of
-[畳字](https://wikiwiki.jp/myriadrevery/畳字).
+`repeatSequence(part, rows, { bottom })` writes two or three rows of repeated components, with one
+to four copies in a row. The first rows hold `part`; the last holds the second component, which
+defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and the rows stack with
+`⿱`. `repeatSequence('口', [2, 1, 2])` writes 2·1·2 as `⿳⿰口口口⿰口口`. `enclosedRepeatSequence(host, part)` puts four
+copies in a 2×2 grid inside an enclosure.
+
+The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with its own Component field, as
+Pyramids does. A second field, Bottom row, takes another component and falls back to the first when
+empty. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
+五同, 六同, 八同 and 二組 arrangements of [畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
 ### Loose marks
 
@@ -403,9 +424,25 @@ interface IdsAdapter {
   search?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
+  sketchTemplates?(options?): Promise<SketchTemplate[]>   // glyph shapes for the drawing search
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
   icon?(sequence, options?): Promise<Drawing | null>    // concurrent palette icons, separate from preview
   preview?(sequence, options?): Promise<Drawing>          // rejects when it cannot draw
+}
+
+interface SketchTemplate {   // a palette part as the drawing search sees it
+  part: string
+  strokes: number | null
+  uses: number
+  shapes: Shape[]            // the glyph stretched and at its own proportions
+}
+
+interface Shape {            // 40×40; see src/core/sketch.js
+  mask: Uint8Array
+  distance: Uint8Array       // distance from each cell to the ink
+  gradient: Float32Array     // 5×5 cells of 8 stroke directions
+  ink: number
+  points: Uint16Array        // the ink cells
 }
 
 interface Drawing {          // in a 1000-unit box, y down
@@ -440,10 +477,12 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters })` answers
+`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given, and the whole characters those names belong to when
-`characters` is given), `containing` and `parts` from the files in `data/`. `components` writes
+`characters` is given), `containing`, `parts` and `sketchTemplates` from the files in `data/`.
+`sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared masks
+the Find tab's drawing search uses. `components` writes
 out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
@@ -475,7 +514,7 @@ annotations are not included.
 ## Search
 
 `IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
-four-part grids, repeated pairs and triples, the larger two-row repeats, mirrored pairs, matching
+four-part grids, repeated pairs and triples, the larger repeats, mirrored pairs, matching
 outer parts, enclosures and overlays.
 The demo offers it beside the existing character search below the editor. Selecting a preset
 runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
@@ -641,18 +680,21 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part in the box, and the tab lists the palette
 parts whose shapes are closest; picking one puts it in the chosen slot, like a typed find. The
-strokes are compared with the glyphs of the page's own font stack, built once when the pad first
-opens and kept for the page: the palette's parts used in at least 50 descriptions (about 800 here)
-and the CJK strokes. A part a font draws as its missing-glyph box is left out. The host should have
-its CJK faces loaded, as the workshop does. Nothing is sent anywhere, and the pad needs no extra
-data.
+strokes are compared with 803 palette parts and the CJK strokes, each fitted to a square twice.
+
+`babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
+the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
+fonts the page has loaded. Without `sketches`, the same shapes are drawn from the page's
+`--ids-font` when the pad opens, which needs its CJK faces loaded; a part a font draws as its
+missing-glyph box is left out either way. Nothing is sent anywhere.
 
 Parts within one stroke of the drawing's count, or two when the drawing has one or two strokes,
 come before the rest; within that, the closest shapes come first by how far each shape's ink lies
 from the other's and by a coarse histogram of stroke directions. The match is approximate: it looks at outlines, not stroke order, so simple
 parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
-similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison, and
-`sketchTemplates` in the Svelte layer builds the glyph shapes.
+similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison,
+`readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
+the fallback from the page's fonts.
 
 ## Preview
 
@@ -895,6 +937,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
   `⿱宀⿺辶⿱⿰王尔⿲隹貝招`, with the 宀 above the 辶. The proposal's glyph puts the 辶 around the
   宀 and the rows, so the example follows the glyph: `⿺辶⿱宀⿱⿰王尔⿲隹貝招`.
+
+  ![The reference glyph for the 招財進寶 ligature, from L2/12-032](docs/images/utc-00949-reference.png)
+
+  The example's drawing approximates this hand-set glyph rather than copying it. The CDL's boxes put
+  the 宀 bar at the top and the 辶 around the square; the export's 宀 carries longer side strokes
+  than the reference, so placing the parts by the CDL's boxes merges those strokes with 王 and 尔.
 - [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
   oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
@@ -1006,16 +1054,22 @@ Shift+F10 on it offers the same action for that tab. The copy opens beside its s
 selection, undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps, a share link with its QR code, the language,
-settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it opens the
-operator templates and the examples, each with its character and code point, an abbreviated
-character, or a mark when they have none; an example opens a tab. The address bar carries the
-document while a layer transform exists, so copying the location keeps the placement; opening such a
-link keeps the token, and a plain sequence stays in the hash (`#⿰亻哥`, or `?ids=`). Settings hold the
-system, light and dark themes, key hints, and the preview data source; they open beside the toolbar
-button on desktop and in a bottom drawer on mobile. Tabs use
+settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it opens a
+menu: the operator templates, each opening a tab with that operator’s empty slots, then the examples —
+every starter sequence with its character and code point, an abbreviated character, or a mark when
+they have none. The examples open as cards or a list, filter by sequence, character, reading or code
+point, keep only forms with or without a code point, fold each section, and jump to a section from a
+chip that also marks the one in view. An example opens a tab. Settings hold the system, light and
+dark themes, key hints, the preview data source; they open beside the toolbar button on desktop and
+in a bottom drawer on mobile. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a
+link opens it. While a layer transform exists the address bar carries the document instead, so
+copying the location keeps the placement; opening such a link keeps the token. A plain sequence stays
+in the hash. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
-use the `ids-input:` prefix.
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
+text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
+font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys use the
+`ids-input:` prefix.
 
 ### Comparison with KAGE
 
@@ -1134,11 +1188,12 @@ on their use.
 bun install
 bun test tests          # core, adapter, composer and catalogue tests
 COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against han-compose's own drawings
-bun run check           # tsc and svelte-check
-bun run verify          # tests, tsc and svelte-check, and the i18n check; run before pushing
+bun run check           # tsrs and svelte-check
+bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
+bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
 CI only builds the demo and deploys it; the checks above stay local.
@@ -1146,6 +1201,10 @@ CI only builds the demo and deploys it; the checks above stay local.
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+`data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
+the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads
+it, checks its format, and looks up drawings of 日, 木 and 口.
 
 ### Character information
 
