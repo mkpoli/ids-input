@@ -453,6 +453,7 @@
     const tab = current()
     if (!tab) return
     tab.document = sessionRecord(sessionFor(tab))
+    documentTick++
     store()
     syncAddress()
   }
@@ -463,6 +464,7 @@
     const session = sessionFor(tab)
     editor.open(toSequence(session.document.root))
     tab.document = sessionRecord(session)
+    documentTick++
     store()
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
@@ -495,18 +497,6 @@
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
-  /** @param {boolean} undo @returns {string[]} */
-  function layerSteps(undo) {
-    documentTick
-    const tab = current()
-    if (!tab) return []
-    const session = sessionFor(tab)
-    return undo ? [...session.steps.done] : [...session.steps.undone]
-  }
-  /** @param {number} count */
-  function undoLayerTimes(count) { for (let i = 0; i < count; i++) travelLayer(true) }
-  /** @param {number} count */
-  function redoLayerTimes(count) { for (let i = 0; i < count; i++) travelLayer(false) }
   /** Keep the address on the active tab, including transforms when they carry state. */
   function syncAddress() {
     const tab = current()
@@ -765,16 +755,12 @@
   })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
-    const layerDone = layerSteps(true)
-    const layerUndone = layerSteps(false)
     const { done, undone } = editor.steps
-    if (!done.length && !undone.length && !layerDone.length && !layerUndone.length) return [{ label: t('app.history.empty'), disabled: true }]
+    if (!done.length && !undone.length) return [{ label: t('app.history.empty'), disabled: true }]
     return [
-      ...done.map((label, i) => ({ label, run: () => { undoLayerTimes(layerDone.length); editor.travel(i + 1 - done.length) } })),
-      ...layerDone.map((label, i) => ({ label, checked: !undone.length && !layerUndone.length && i === layerDone.length - 1 ? true : undefined, run: () => undoLayerTimes(layerDone.length - i) })),
-      ...(undone.length || layerUndone.length ? [{ heading: t('app.history.undone') }] : []),
-      ...layerUndone.slice().reverse().map((label, i) => ({ label, run: () => redoLayerTimes(i + 1) })),
-      ...undone.map((label, i) => ({ label, run: () => { redoLayerTimes(layerUndone.length); editor.travel(i + 1) } })),
+      ...done.map((label, i) => ({ label, checked: i === done.length - 1 ? true : undefined, run: () => editor.travel(i + 1 - done.length) })),
+      ...(undone.length ? [{ heading: t('app.history.undone') }] : []),
+      ...undone.map((label, i) => ({ label, run: () => editor.travel(i + 1) })),
     ]
   })
 
