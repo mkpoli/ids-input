@@ -315,6 +315,33 @@
   // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(strokeParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
   const partChips = $derived(/** @type {number[]} */ (counts.filter(value => value != null && value < HAN_TAIL)))
+  // The Components views page like the character list: the frequent set, or one count, in
+  // first-stroke order, 120 at a time.
+  let componentPage = $state(0)
+  $effect(() => { tab; count; partTail; characters; filter; componentPage = 0 })
+  const componentList = $derived.by(() => {
+    /** @type {{ part: PalettePart, cls: string | null | undefined }[]} */
+    const list = []
+    if (tab !== 'components' || characters) return list
+    if (chosen === undefined && !partTail) {
+      for (const part of commonParts) list.push({ part, cls: undefined })
+      return list
+    }
+    const chosenParts = strokeParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen)
+    for (const group of grouped(chosenParts)) for (const part of group.parts) list.push({ part, cls: group.cls })
+    return list
+  })
+  const componentPages = $derived(Math.max(1, Math.ceil(componentList.length / PAGE_SIZE)))
+  const componentShown = $derived.by(() => {
+    /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
+    const groups = []
+    for (const entry of componentList.slice(componentPage * PAGE_SIZE, (componentPage + 1) * PAGE_SIZE)) {
+      const last = groups.at(-1)
+      if (last && last.cls === entry.cls) last.parts.push(entry.part)
+      else groups.push({ cls: entry.cls, parts: [entry.part] })
+    }
+    return groups
+  })
   const partTailCount = $derived(strokeParts.filter(part => (part.strokes ?? 0) >= HAN_TAIL).length)
   const partUnknown = $derived(counts.includes(null))
   const chosen = $derived(count === undefined || counts.includes(count) ? count : undefined)
@@ -376,8 +403,6 @@
     if (tab === 'marks') return [{ cls: undefined, parts: markPalette }]
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
-    if (tab === 'components') return chosen === undefined && !partTail ? [{ cls: undefined, parts: commonParts }]
-      : grouped(strokeParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen))
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
@@ -739,6 +764,20 @@
       {:else if hanKeys}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'components'}
+      {#if componentPages > 1}
+        <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+          <button type="button" disabled={componentPage === 0} onclick={() => componentPage--}>{t('parts.script.previous')}</button>
+          <input type="number" min="1" max={componentPages} value={componentPage + 1} aria-label={t('parts.script.pages')}
+            onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) componentPage = Math.max(0, Math.min(componentPages - 1, Math.floor(value) - 1)) }} />
+          <span>{t('parts.script.page', { page: componentPage + 1, pages: componentPages, count: componentList.length })}</span>
+          <button type="button" disabled={componentPage + 1 >= componentPages} onclick={() => componentPage++}>{t('parts.script.next')}</button>
+        </div>
+      {/if}
+      {#each componentShown as group (group.cls ?? 'all')}
+        {#if group.cls !== undefined}<h4 class="parts-class">{heading(group.cls)}</h4>{/if}
+        {@render grid(group.parts)}
+      {/each}
     {:else}
       {#if tab === 'recent' && !recent.length}
         <p class="parts-note">{t('parts.noRecent')}</p>
