@@ -191,10 +191,10 @@
   "app.layers.noSplit": "この部品に使える分解はありません。",
   "app.layers.splitFailed": "この部品を分割できませんでした。",
   "compare.title": "比較",
-  "compare.lead": "同じIDSから、本サイトの合成結果とKAGEの合成結果を並べています。HDIC KRMの未符号化見出し字と常用漢字です。",
-  "compare.dataset": "{total}字 · KRM未符号化{krm}字、常用漢字{joyo}字 · {date}計測",
+  "compare.lead": "同じIDSから、本サイトの合成結果とKAGEの合成結果を並べています。HDIC KRMの未符号化見出し字、常用漢字、以前のレビュー資料の字です。",
+  "compare.dataset": "{total}字 · KRM未符号化{krm}字、常用漢字{joyo}字、レビュー用{review}字 · {date}計測",
   "compare.method": "計測方法",
-  "compare.method.body": "未符号化の見出し字（{shownKrm}/{totalKrm}字）は双方がIDSから合成します。常用漢字（{shownJoyo}/{totalJoyo}字）は双方に字形があり、書体と字種の違いを比べるものになります。どちらも256pxでラスタライズし、F1@4は互いのインクが4px以内にある割合の調和平均、IoUはインクの完全な重なり、レイアウトは三×三のインク配分のL1距離です。",
+  "compare.method.body": "未符号化の見出し字{krm}字は双方がIDSから合成し、常用漢字{joyo}字は双方に字形があり、レビュー用の字{review}字は以前のhan-composeレビュー資料の字です。どちらも256pxでラスタライズし、F1@4は互いのインクが4px以内にある割合の調和平均、IoUはインクの完全な重なり、レイアウトは三×三のインク配分のL1距離です。",
   "compare.method.caveat": "KAGEは基準となる書体であり、正解ではありません。本サイトの書体はインク量が中央値で1.58倍と重く、IoUとF1を下げます。字形のある字では字種や画の作りも異なります。構造の違いはレイアウト値と描画で確認できます。",
   "compare.filter": "構造",
   "compare.filter.all": "すべて",
@@ -233,5 +233,9 @@
   "compare.setTag.joyo": "常用漢字",
   "compare.category.designed": "字形あり",
   "compare.wholeGlyph": "字形全体",
-  "compare.joyoNote": "常用漢字は双方に字形があるため、合成の出来ではなく書体と字種の違いを比べています。"
+  "compare.joyoNote": "常用漢字は双方に字形があるため、合成の出来ではなく書体と字種の違いを比べています。",
+  "compare.reviewNote": "レビュー用の字は以前のhan-composeレビュー資料の字で、まれな形や実験的な形を含みます。どちらもIDSから描いています。",
+  "compare.set.review": "レビュー用",
+  "compare.setTag.review": "レビュー",
+  "compare.showMore": "さらに表示"
 }

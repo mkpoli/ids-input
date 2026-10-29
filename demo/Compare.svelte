@@ -27,11 +27,12 @@
   /** @typedef {'all' | 'side' | 'stacked' | 'enclosure'} Filter */
   /** @type {Filter} */
   let filter = $state('all')
-  /** @typedef {'all' | 'krm' | 'joyo'} SetFilter */
+  /** @typedef {'all' | 'krm' | 'joyo' | 'review'} SetFilter */
   /** @type {SetFilter} */
   let set = $state('krm')
   /** @type {'weakest' | 'best'} */
   let order = $state('weakest')
+  let limit = $state(48)
   const SIDE = new Set(['⿰', '⿲'])
   const STACKED = new Set(['⿱', '⿳'])
   const ENCLOSURE = new Set('⿴⿵⿶⿷⿸⿹⿺⿼⿽')
@@ -40,6 +41,8 @@
       (filter === 'all' || (filter === 'side' ? SIDE.has(e.op) : filter === 'stacked' ? STACKED.has(e.op) : ENCLOSURE.has(e.op))))
     .slice()
     .sort((a, b) => order === 'weakest' ? a.f1 - b.f1 : b.f1 - a.f1))
+  const visible = $derived(shown.slice(0, limit))
+  $effect(() => { void set; void filter; void order; limit = 48 })
   const filters = $derived(/** @type {const} */ ([
     ['all', t('compare.filter.all')], ['side', t('compare.filter.side')],
     ['stacked', t('compare.filter.stacked')], ['enclosure', t('compare.filter.enclosure')],
@@ -78,12 +81,12 @@
 
   <main>
     <p class="lead">{t('compare.lead')}</p>
-    <p class="dataset">{t('compare.dataset', { total: data.entries.length, krm: data.sets.krm.shown, joyo: data.sets.joyo.shown, date: data.generatedAt })}</p>
+    <p class="dataset">{t('compare.dataset', { total: data.entries.length, krm: data.sets.krm.shown, joyo: data.sets.joyo.shown, review: data.sets.review.shown, date: data.generatedAt })}</p>
     <p class="hint">{t('compare.operators')}</p>
 
     <details class="method">
       <summary>{t('compare.method')}</summary>
-      <p>{t('compare.method.body', { shownKrm: data.sets.krm.shown, totalKrm: data.sets.krm.measured, shownJoyo: data.sets.joyo.shown, totalJoyo: data.sets.joyo.measured })}</p>
+      <p>{t('compare.method.body', { krm: data.sets.krm.shown, joyo: data.sets.joyo.shown, review: data.sets.review.shown })}</p>
       <p class="caveat">{t('compare.method.caveat')}</p>
     </details>
 
@@ -94,6 +97,7 @@
           <option value="all">{t('compare.set.all')}</option>
           <option value="krm">{t('compare.set.krm')}</option>
           <option value="joyo">{t('compare.set.joyo')}</option>
+          <option value="review">{t('compare.set.review')}</option>
         </select>
       </label>
       <div class="filters" role="group" aria-label={t('compare.filter')}>
@@ -109,11 +113,12 @@
         </select>
       </label>
     </div>
-    {#if set !== 'krm'}<p class="note">{t('compare.joyoNote')}</p>{/if}
+    {#if set === 'joyo'}<p class="note">{t('compare.joyoNote')}</p>{/if}
+    {#if set === 'review'}<p class="note">{t('compare.reviewNote')}</p>{/if}
     {#if shown.length !== data.entries.length}<p class="count">{t('compare.count', { shown: shown.length, total: data.entries.length })}</p>{/if}
 
     <div class="grid">
-      {#each shown as entry (entry.sequence)}
+      {#each visible as entry (entry.sequence)}
         <article class="card">
           <div class="head">
             <h2 class="seq" lang="zh">{entry.sequence}</h2>
@@ -145,6 +150,9 @@
         </article>
       {/each}
     </div>
+    {#if limit < shown.length}
+      <button type="button" class="more" onclick={() => limit += 48}>{t('compare.showMore')}</button>
+    {/if}
 
     <footer>
       <p>{t('compare.credit')}
@@ -205,6 +213,9 @@
   .links{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px}
   .links a{color:var(--accent);text-decoration:none}
   .links a:hover{text-decoration:underline}
+  .more{display:block;margin:18px auto 0;padding:8px 18px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+  .more:hover{background:var(--hover)}
+  .more:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
   footer p{margin:0;max-width:90ch;line-height:1.6}
   footer a{color:var(--accent);text-decoration:none}
