@@ -1,8 +1,9 @@
 <script>
-  // Find a part by drawing it. The pad keeps the strokes in its own square; on the first pause it
-  // compares them with the palette's shapes, prepared with the palette or built from the page's
-  // fonts, and lists the closest as the Find tab's own buttons. A part picked is handed to `onpick`,
-  // and the pad is cleared for the next drawing.
+  // Find a character or a part by drawing it. The pad keeps the strokes in its own square; on the
+  // first pause it asks the adapter's whole-character recognizer and compares the strokes with the
+  // palette's shapes, prepared with the palette or built from the page's fonts. The closest are
+  // listed as the Find tab's own buttons; a pick is handed to `onpick`, and the pad is cleared for
+  // the next drawing.
   import { onMount, untrack } from 'svelte'
   import { SIZE, rank, shapesOf } from '../core/sketch.js'
   import { sketchTemplates } from './sketch-templates.js'
@@ -28,6 +29,8 @@
 
   /** @type {Point[][]} */
   let strokes = $state.raw([])
+  /** @type {{ part: string }[]} */
+  let characters = $state.raw([])
   /** @type {{ part: string, strokes: number | null }[]} */
   let results = $state.raw([])
   let preparing = $state(true)
@@ -81,8 +84,8 @@
       if (!live) return
       templates = found
       preparing = false
-      failed = !found.length
-      if (found.length) recognize()
+      failed = !found.length && !adapter.recognizeDrawing
+      if (found.length || adapter.recognizeDrawing) recognize()
     }
     const build = () => {
       if (!read) { done([]); return }
@@ -111,7 +114,9 @@
     canvas.setPointerCapture(event.pointerId)
     drawing = event.pointerId
     clearTimeout(timer)
+    characters = []
     results = []
+    asks++
     looked = false
     strokes = [...strokes, [point(event)]]
     paint()
@@ -172,37 +177,56 @@
 
   function schedule() {
     clearTimeout(timer)
-    if (!strokes.length) { results = []; return }
+    if (!strokes.length) { characters = []; results = []; return }
     timer = setTimeout(recognize, 220)
   }
 
-  /** The closest parts to the strokes, after the palette's shapes are ready. */
+  /** The closest characters and parts to the strokes, after the palette's shapes are ready. */
   function recognize() {
-    if (!templates.length || !strokes.length) { results = []; searching = false; return }
+    if (!strokes.length) { characters = []; results = []; searching = false; return }
+    if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; searching = false; return }
     searching = true
     const id = ++asks
+    const strokesAt = strokes
     // Let the searching note paint before the comparison runs.
     clearTimeout(compute)
-    compute = setTimeout(() => {
+    compute = setTimeout(async () => {
       if (id !== asks) return
-      const found = rank(shapesOf(strokes, { size: PITCH }), templates, { limit: 24, strokes: strokes.length })
-      results = found.map(template => ({ part: template.part, strokes: template.strokes }))
+      const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: 24, strokes: strokesAt.length }) : []
+      results = ranked.map(template => ({ part: template.part, strokes: template.strokes }))
       looked = true
       searching = false
+      const recognizeDrawing = adapter.recognizeDrawing
+      if (!recognizeDrawing) return
+      /** @type {string[]} */
+      let drawn = []
+      try {
+        const recognized = await recognizeDrawing(strokesAt.map(stroke => stroke.map(at => ({ x: at.x / PAD * 100, y: at.y / PAD * 100 }))))
+        drawn = Array.isArray(recognized) ? recognized.filter(part => typeof part === 'string') : []
+      } catch {
+        drawn = []
+      }
+      if (id !== asks) return
+      characters = [...new Set(drawn)].slice(0, 24).map(part => ({ part }))
+      const seen = new Set(characters.map(character => character.part))
+      results = ranked.filter(template => !seen.has(template.part)).map(template => ({ part: template.part, strokes: template.strokes }))
     }, 0)
   }
 
   function undo() {
     if (!strokes.length) return
     strokes = strokes.slice(0, -1)
+    characters = []
     results = []
     looked = false
+    asks++
     paint()
     schedule()
   }
 
   function clear() {
     strokes = []
+    characters = []
     results = []
     looked = false
     asks++
@@ -226,8 +250,9 @@
     event.stopPropagation()
     onclose()
   }
+  const total = $derived(characters.length + results.length)
   const status = $derived(preparing ? t('ids.draw.preparing') : failed ? t('ids.draw.failed')
-    : searching ? t('ids.from.searching') : results.length ? t('ids.search.count', { count: results.length })
+    : searching ? t('ids.from.searching') : total ? t('ids.search.count', { count: total })
     : looked && strokes.length ? t('ids.draw.none') : '')
 </script>
 
@@ -244,7 +269,18 @@
   {#if preparing}
     <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax={progress.total || 1} aria-valuenow={progress.done} aria-label={t('ids.draw.preparing')}><span style:width={`${progress.total ? progress.done / progress.total * 100 : 0}%`}></span></div>
   {/if}
+  {#if characters.length}
+    <p class="group">{t('ids.draw.characters')}</p>
+    <div class="found" role="group" aria-label={t('ids.draw.characters')}>
+      {#each characters as result (result.part)}
+        <button type="button" class="hit" disabled={disabled} lang="ja" title={result.part}
+          draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
+          onclick={() => take(result.part)}><span class="char">{result.part}</span></button>
+      {/each}
+    </div>
+  {/if}
   {#if results.length}
+    {#if characters.length}<p class="group">{t('ids.draw.parts')}</p>{/if}
     <div class="found" role="group" aria-label={t('ids.draw.results')}>
       {#each results as result (result.part)}
         <button type="button" class="hit" disabled={disabled} lang="ja"
@@ -277,6 +313,7 @@
   .ids-note{margin:0;font-size:11px;color:var(--_muted)}
   .ids-note.fault{color:var(--_fault)}
   .status{min-height:16px}
+  .group{margin:2px 0 0;font-size:10.5px;letter-spacing:.03em;color:var(--_muted)}
   .bar{height:3px;border-radius:2px;background:var(--_surface-subtle);overflow:hidden}
   .bar span{display:block;height:100%;background:var(--_accent);transition:width .15s}
   .found{display:flex;flex-wrap:wrap;gap:4px}
