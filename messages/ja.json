@@ -124,6 +124,7 @@
   "ids.split": "{part}を部品に分ける",
   "ids.structure": "構成",
   "ids.swaps": "{part}の代わりに",
+  "ids.swaps.close": "置き換え候補を閉じる",
   "ids.undo.label": "元に戻す",
   "ids.undo.named": "元に戻す：{step}",
   "ids.unwrap": "この階層を外す",

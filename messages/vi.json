@@ -124,6 +124,7 @@
   "ids.split": "Tách {part} thành các bộ phận",
   "ids.structure": "Cấu trúc",
   "ids.swaps": "Thay cho {part}",
+  "ids.swaps.close": "Ẩn các mục thay thế",
   "ids.undo.label": "Hoàn tác",
   "ids.undo.named": "Hoàn tác: {step}",
   "ids.unwrap": "Bỏ cấp này",
