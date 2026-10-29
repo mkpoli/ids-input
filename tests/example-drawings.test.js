@@ -19,11 +19,17 @@ describe('the prepared example drawings', () => {
       const drawn = data.drawings[sequence]?.drawn
       expect(drawn?.d.length).toBeGreaterThan(100)
       expect(drawn.d).not.toMatch(/NaN|Infinity/)
-      const expected = { '⿰扌3': 2, '⿰𛂦方': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄥ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
+      const encoded = { '⿰𛂦方': '𭤪' }
+      if (encoded[sequence]) {
+        expect(drawn.parts).toHaveLength(1)
+        expect(drawn.origins).toEqual([`glyph ${encoded[sequence]}`])
+        continue
+      }
+      const expected = { '⿰扌3': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄥ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
       expect(drawn.parts).toHaveLength(expected[sequence])
     }
     expect(data.drawings['⿰扌3'].drawn.origins).toContain('glyph 3')
-    expect(data.drawings['⿰𛂦方'].drawn.origins).toContain('glyph 𛂦')
+    expect(data.drawings['⿰𛂦方'].drawn.origins).toEqual(['glyph 𭤪'])
     expect(data.drawings['⿰亻A'].drawn.origins).toContain('glyph A')
     expect(data.drawings['⿰木⿳ㄙㄨㄥ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ', 'glyph ㄥ']))
     expect(data.drawings['⿰木⿱ㄅㄞ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄅ', 'glyph ㄞ']))
