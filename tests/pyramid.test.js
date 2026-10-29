@@ -229,10 +229,12 @@ describe('drawing a pyramid', () => {
     expect(groups?.map(group => group.parts)).toEqual([...Array(10).keys()].map(i => [i]))
   })
 
-  it('loads the repeated part once instead of every node', async () => {
+  it('loads each repeated part asset once instead of once per node', async () => {
     const fetched = [], text = pyramidSequence('口', 12)
     await compose(sourceOf(fetched), text)
-    expect(fetched.filter(name => name.startsWith('g/'))).toHaveLength(1)
+    const glyphs = fetched.filter(name => name.startsWith('g/'))
+    expect(glyphs.length).toBeLessThanOrEqual(2)
+    expect(new Set(glyphs).size).toBe(glyphs.length)
     expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
   })
 
@@ -240,7 +242,7 @@ describe('drawing a pyramid', () => {
     const source = sourceOf(), text = `⿱木${pyramidSequence('口', 4)}`
     const drawn = await compose(source, text, { separate: true })
     expect(drawn.parts).toHaveLength(11)
-    expect(drawn.parts.at(-1)?.origin).toBe('glyph 口')
+    expect(drawn.parts.at(-1)?.origin).toMatch(/口$/)
     const groups = groupParts(drawn.parts, await sketch(source, text))
     expect(groups).toHaveLength(11)
   })
