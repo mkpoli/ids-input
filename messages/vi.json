@@ -104,6 +104,8 @@
   "ids.preview.failedNote": "Không thể vẽ chuỗi này.",
   "ids.preview.final": "Hoàn chỉnh",
   "ids.preview.loading": "Đang ghép hình…",
+  "ids.preview.cells": "Ô riêng",
+  "ids.preview.cellsNote": "Các bộ phận được vẽ riêng trong ô của mình; mô tả này không có chữ nào để theo hình.",
   "ids.preview.tooLarge": "Quá lớn",
   "ids.preview.tooLargeNote": "Quá lớn để vẽ; các ô thể hiện bố cục.",
   "ids.problem.character": "Bắt đầu bằng một toán tử như ⿰ hoặc ⿱.",

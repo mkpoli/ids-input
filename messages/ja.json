@@ -104,6 +104,8 @@
   "ids.preview.failedNote": "この記述は組めませんでした。",
   "ids.preview.final": "確定",
   "ids.preview.loading": "組字中…",
+  "ids.preview.cells": "分割表示",
+  "ids.preview.cellsNote": "部品をそれぞれの枠に分けて描きます。この記述には字形を参照できる文字がありません。",
   "ids.preview.tooLarge": "大きすぎ",
   "ids.preview.tooLargeNote": "大きすぎて組めません。枠は配置を示します。",
   "ids.problem.character": "⿰や⿱などの演算子から始めてください。",

@@ -37,7 +37,7 @@
  *
  * @typedef {object} DrawingPart One part of a drawing: a piece the composer placed.
  * @property {number} [leaf] Original IDS leaf index when the composer can preserve ownership through a rewrite.
- * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村` or `mark ˊ` for a loose mark.
+ * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村`, `cells 木` or `mark ˊ` for a loose mark.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
@@ -51,6 +51,7 @@
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
+ * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
  * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *

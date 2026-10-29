@@ -105,6 +105,8 @@
   "ids.preview.failedNote": "The composer could not draw this sequence.",
   "ids.preview.final": "Final",
   "ids.preview.loading": "Composing…",
+  "ids.preview.cells": "Cells",
+  "ids.preview.cellsNote": "Each part is drawn in its own cell; this description names no character whose drawing they can follow.",
   "ids.preview.tooLarge": "Too large",
   "ids.preview.tooLargeNote": "Too large to draw: the boxes show the layout.",
   "ids.problem.character": "Start with an operator such as ⿰ or ⿱.",
