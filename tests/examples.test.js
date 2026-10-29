@@ -57,6 +57,15 @@ describe('the demo examples', () => {
       }
     }
   })
+  it('draw the enclosure each source shows', () => {
+    const bySequence = new Map(EXAMPLE_GROUPS.flatMap(group => group.examples.map(example => [example.sequence, example])))
+    expect(bySequence.get('⿵门T')?.refs).toContain(sourceNumber('irg-n2744'))
+    expect(bySequence.has('⿰门T')).toBe(false)
+    expect(bySequence.get('⿺辶⿱𭕄共')?.abbreviates).toBe('選')
+    expect(bySequence.has('⿰辶⿱𭕄共')).toBe(false)
+    expect(bySequence.get('⿰舟ラ')?.refs).toContain(sourceNumber('ndl-jmtt'))
+    expect(bySequence.has('⿰艦ラ')).toBe(false)
+  })
   it('keep the Geba abbreviations in one cited group', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
     expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
