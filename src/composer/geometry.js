@@ -301,14 +301,21 @@ export function drawnContours(p) {
   })
 }
 
-/** The rings of a group of placed parts, for masks. */
-export const groupRings = (group, steps = 6) => group.flatMap(p => rings(p.part.contours, drawnContours(p), steps))
+/** The rings of a group of placed parts, for masks, wound as `svgPath` draws them. */
+export const groupRings = (group, steps = 6) => group.flatMap(p => {
+  const ring_ = rings(p.part.contours, drawnContours(p), steps)
+  return turnsOver(p) ? ring_.map(ring => {
+    const reversed = []
+    for (let i = ring.length - 2; i >= 0; i -= 2) reversed.push(ring[i], ring[i + 1])
+    return reversed
+  }) : ring_
+})
 
 /** A size × size mask of the em, the parts filled and joined (`compose.raster`). */
 export function raster(group, size = 96) {
   const mask = new Uint8Array(size * size)
   for (const p of group) {
-    const m = fill(rings(p.part.contours, drawnContours(p)), size, EM_BOX)
+    const m = fill(groupRings([p]), size, EM_BOX)
     for (let i = 0; i < m.length; i++) mask[i] |= m[i]
   }
   return mask

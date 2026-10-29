@@ -454,6 +454,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    const legs = !this.separate && op === '⿸' && this.legEnclosure(children, region)
+    if (legs) return legs
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
@@ -493,6 +495,45 @@ export class Composer {
       && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
+  }
+
+  /** Any ⿸ whose contents begin ⿱儿: the native legs join the enclosing bar. */
+  legEnclosure(children, region) {
+    if (this.separate || this.fontStyle === 'kaisho') return null
+    const key = keyOf(children[0]), contents = children[1]
+    if (yanSources.has(key) || this.excluded('儿') || this.excluded('元') || this.excluded('詹')
+      || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
+    const outer = this.node(children[0], region)
+    const opening = this.room('⿸', outer, region)
+    if (!opening) return null
+    // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
+    // opening at roughly a third of its height. Lift the native cut so its
+    // left leg joins the bar.
+    const form = (opening[2] - opening[0]) < 550 ? '儿:dan' : '儿:zhan'
+    const box = componentPositionBox(form, this.fontStyle)
+    if (!box) return null
+    const openW = opening[2] - opening[0], openH = opening[3] - opening[1], cx = (opening[0] + opening[2]) / 2
+    const width = openW * 0.88
+    const height = width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1)
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 40
+    const bottom = top - height
+    const legs = componentPosition(form, [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
+    if (!legs) return null
+    const lowerBox = [opening[0], opening[1], opening[2], bottom - 25]
+    const lowerKey = keyOf(contents[2])
+    if (lowerKey === '木') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[3] += openH * 0.03
+    }
+    else if (lowerKey === '𢀛' || lowerKey === '⿱工口') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[1] += openH * 0.04
+      lowerBox[3] -= openH * 0.04
+    }
+    const lower = this.node(contents[2], lowerBox)
+    return [...outer, legs, ...lower]
   }
 
   yanEnclosure(children, region) {
