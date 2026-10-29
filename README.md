@@ -242,8 +242,8 @@ defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and t
 copies in a 2×2 grid inside an enclosure.
 
 The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with the shared Component field. A
-second field, Bottom row, takes another component and falls back to the first when
-empty. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
+second field, Bottom row, takes another component and falls back to the first when empty. A Rows
+field takes two or three counts from 1 to 4, such as `3 4` or `2 1 2`. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
 五同, 六同, 八同 and 二組 arrangements of [畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
 ### Loose marks
