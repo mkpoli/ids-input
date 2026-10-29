@@ -38,6 +38,7 @@ try {
   assert.equal(await value(), '⿰亻⿱七木', 'the palette change can be undone')
 
   await choose(0)
+  await page.keyboard.press('Escape')
   await page.locator('.ids-clear').click()
   assert.equal(await value(), '⿰⬚⿱七木', 'the merged button empties the chosen part')
   await page.locator('.toast button').click()
