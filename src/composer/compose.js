@@ -498,12 +498,13 @@ export class Composer {
     const outer = this.node(key, region)
     const opening = this.room('⿸', outer, region)
     if (!opening) return null
-    // Lift the native bar under the enclosure's top by the room margin plus
-    // 20 units, so both contours overlap rather than meeting on a hairline.
-    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 60
-    // The legs take the upper part of the opening; the lower operand stays below.
-    const bottom = opening[1] + (opening[3] - opening[1]) * 0.45
-    const legs = componentPosition('儿:under-bar', [opening[0], bottom, opening[2], top], this.fontStyle, top - bottom)
+    // The native 儿 sits about two thirds as wide and one third as tall as
+    // the opening (元, 兄, 克 and 見 in GenZui Sans and Noto Serif).
+    const openW = opening[2] - opening[0], openH = opening[3] - opening[1]
+    const width = openW * 0.62, cx = (opening[0] + opening[2]) / 2
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 20
+    const bottom = top - openH * 0.38
+    const legs = componentPosition('儿:under-bar', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, top - bottom)
     if (!legs) return null
     const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
     return [...outer, legs, ...lower]
