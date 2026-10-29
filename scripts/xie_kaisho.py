@@ -48,6 +48,18 @@ def _weighted(contour, amount=20):
     return _split(pen.value)
 
 
+def _clip(contour, bottom):
+    """Cut a contour flat at `bottom`, keeping the part above it."""
+    shape = pathops.Path()
+    replayRecording(contour, shape.getPen())
+    rect = pathops.Path()
+    rect.moveTo(-1000, bottom); rect.lineTo(2000, bottom)
+    rect.lineTo(2000, 2000); rect.lineTo(-1000, 2000); rect.close()
+    pen = RecordingPen()
+    pathops.op(shape, rect, pathops.PathOp.INTERSECTION).draw(pen)
+    return _split(pen.value)[0]
+
+
 def xie_kaisho(gs, cmap):
     """Return groups: 宀, 丨, 冂, lower 一, upper 一, 𠃌, 灬.
 
@@ -100,5 +112,9 @@ def xie_kaisho(gs, cmap):
     # rising angle while keeping the three clear openings optically equal.
     lower = _map(_map(lower, fit), lambda x, y: (x, y - 42))
     upper = _map(_map(upper, fit), lambda x, y: (x, y - 19))
-    return [xie[:1], _weighted(upright), _weighted(frame),
+    # Lower the upright clear of the roof and cut its foot at the bar's top
+    # edge, avoiding both the roof join and a tapered blob inside the bar.
+    upright = [_clip(_map(contour, lambda x, y: (x, y - 23)), 270)
+               for contour in _weighted(upright)]
+    return [xie[:1], upright, _weighted(frame),
             _weighted(lower), _weighted(upper), [hook], dots]

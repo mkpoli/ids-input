@@ -162,6 +162,9 @@ it('seats the Kaisho feet inside the hook bar and keeps native dot scale', () =>
     expect(foot[1]).toBeGreaterThanOrEqual(bar[1] - 2)
     expect(foot[1]).toBeLessThanOrEqual(bar[0] + 2)
   }
+  const roof = componentParts(full, undefined, 'kaisho')[0]
+  const roofBottom = runsAt(roof, 290)[0][1]
+  expect(runsAt(stem, 290)[0][0]).toBeLessThanOrEqual(roofBottom - 10)
   expect(hook.source[1]).toBeLessThan(-60) // native 寫 depth, not the high cut
   const boxes = dots.part.contours.map(contour => {
     const xs = [], ys = []
