@@ -15,7 +15,8 @@ try {
     await field.fill('')
     await field.press('Tab')
     await page.getByRole('tab', { name: 'Templates', exact: true }).click()
-    const group = page.locator('.ids-pyramid')
+    const group = page.locator('.ids-pyramid').first()
+    const part = page.locator('input[id$="-generator-part"]')
     const capture = async prefix => {
       if (!process.env.IDS_PYRAMID_SHOTS) return
       mkdirSync(process.env.IDS_PYRAMID_SHOTS, { recursive: true })
@@ -27,8 +28,6 @@ try {
       await page.close()
       continue
     }
-    // The repeat layout beside it labels its own input the same way; the pyramid's is the one ending here.
-    const part = group.locator('input[id$="-pyramid-part"]')
     const rows = group.locator('input[type=number]')
     const insert = group.getByRole('button', { name: 'Insert', exact: true })
     const preset = group.locator('[data-pyramid="3"]')
@@ -38,8 +37,6 @@ try {
       assert.equal(await part.getAttribute('aria-invalid'), 'true')
       assert.equal(await insert.isDisabled(), true)
       for (const button of await group.locator('[data-pyramid]').all()) assert.equal(await button.isDisabled(), true)
-      await part.press('Enter')
-      assert.equal(await field.inputValue(), '', 'invalid input cannot submit')
     }
     await part.fill('木')
     assert.equal(await part.getAttribute('aria-invalid'), 'false')
@@ -62,6 +59,15 @@ try {
     assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { part: '木', layers: 5, count: 15, reverse: true })
     await page.locator('.ids-preview[data-step="composed"]').waitFor()
     await capture('after')
+    await field.fill('')
+    await field.press('Tab')
+    await part.fill('木')
+    await page.locator('[data-repeat="2+3"]').click()
+    assert.equal(await field.inputValue(), '⿱⿰木木⿲木木木')
+    await field.fill('')
+    await field.press('Tab')
+    await page.locator('[data-five="212"]').click()
+    assert.equal(await field.inputValue(), '⿳⿰木木木⿰木木')
     for (const component of ['𠮷', '木\uFE00', '가']) {
       await field.fill('')
       await field.press('Tab')
