@@ -12,9 +12,10 @@ export const PYRAMID_GAP = 0.13
  * region and is centred in it.
  * @param {number[]} region
  * @param {number} layers
+ * @param {{ reverse?: boolean }} [options] Place the widest row at the top.
  * @returns {number[][]}
  */
-export function pyramidCells(region, layers) {
+export function pyramidCells(region, layers, { reverse = false } = {}) {
   const [x0, y0, x1, y1] = region
   const span = Math.min(x1 - x0, y1 - y0)
   if (!(layers > 0) || !(span > 0)) return []
@@ -23,7 +24,8 @@ export function pyramidCells(region, layers) {
   const cx = (x0 + x1) / 2, top = (y0 + y1) / 2 + ((layers - 1) / 2) * (cell + gap)
   const cells = []
   for (let row = 0; row < layers; row++) {
-    const count = row + 1, width = count * cell + (count - 1) * gap
+    const count = reverse ? layers - row : row + 1
+    const width = count * cell + (count - 1) * gap
     const y = top - row * (cell + gap)
     for (let i = 0; i < count; i++) {
       const x = cx - width / 2 + i * (cell + gap)

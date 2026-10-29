@@ -218,6 +218,8 @@
   "ids.templates.usage": "Dùng trong {count} chữ",
   "ids.templates.hangul": "Cấu trúc âm tiết Hangul",
   "ids.templates.pyramids": "Kim tự tháp",
+  "ids.templates.pyramidReverse": "Đảo chiều",
+  "ids.templates.pyramidInsertReverse": "Chèn kim tự tháp ngược {layers} tầng bằng {part}",
   "ids.templates.pyramidHint": "Chọn một cỡ hoặc nhập số tầng.",
   "ids.templates.pyramidCustom": "Tùy chỉnh",
   "ids.templates.pyramidAdd": "Chèn",

@@ -218,6 +218,8 @@
   "ids.templates.usage": "{count}字で使用",
   "ids.templates.hangul": "ハングルの音節構造",
   "ids.templates.pyramids": "ピラミッド",
+  "ids.templates.pyramidReverse": "逆向き",
+  "ids.templates.pyramidInsertReverse": "{part}の{layers}段逆ピラミッドを挿入",
   "ids.templates.pyramidHint": "段数を選ぶか、数値を入力します。",
   "ids.templates.pyramidCustom": "指定",
   "ids.templates.pyramidAdd": "挿入",

@@ -261,7 +261,7 @@ export class Composer {
     const walk = (node, region, atRoot) => {
       const pyramid = this.pyramid(node)
       if (pyramid) {
-        for (const box of pyramidCells(region, pyramid.layers)) out.push({ index: out.length, box, empty: false })
+        for (const box of pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })) out.push({ index: out.length, box, empty: false })
         return
       }
       const repeated = isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
@@ -388,7 +388,7 @@ export class Composer {
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
-    if (pyramid) return pyramidCells(region, pyramid.layers).flatMap(box => this.node(pyramid.part, box))
+    if (pyramid) return pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse }).flatMap(box => this.node(pyramid.part, box))
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)

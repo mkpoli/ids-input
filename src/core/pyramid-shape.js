@@ -52,12 +52,12 @@ function rowsOf(node) {
 
 /**
  * A triangular arrangement of one repeated component, read from a tree: rows of 1, 2, 3, … of the
- * same component. Null unless it has at least `minLayers` rows. A row may be grouped by any `⿰` or
- * `⿲` tree, and a stack by any `⿱` or `⿳` tree, so the equivalent spellings of a pyramid all read
- * alike.
+ * same component, or in reverse order. Null unless it has at least `minLayers` rows. A row may be
+ * grouped by any `⿰` or `⿲` tree, and a stack by any `⿱` or `⿳` tree, so equivalent spellings read
+ * alike. A single layer has `reverse: false`.
  * @param {unknown} tree
  * @param {{ minLayers?: number }} [options]
- * @returns {{ part: string, layers: number, count: number } | null}
+ * @returns {{ part: string, layers: number, count: number, reverse: boolean } | null}
  */
 export function pyramidRows(tree, { minLayers = 3 } = {}) {
   if (leafCount(tree) < minLayers * (minLayers + 1) / 2) return null
@@ -65,8 +65,10 @@ export function pyramidRows(tree, { minLayers = 3 } = {}) {
   if (!rows || rows.length < minLayers) return null
   const part = rows[0][0]
   if (typeof part !== 'string' || !part || part.startsWith(EMPTY)) return null
+  const reverse = rows.length > 1 && rows[0].length === rows.length
   for (let row = 0; row < rows.length; row++) {
-    if (rows[row].length !== row + 1 || rows[row].some(cell => cell !== part)) return null
+    const count = reverse ? rows.length - row : row + 1
+    if (rows[row].length !== count || rows[row].some(cell => cell !== part)) return null
   }
-  return { part, layers: rows.length, count: rows.length * (rows.length + 1) / 2 }
+  return { part, layers: rows.length, count: rows.length * (rows.length + 1) / 2, reverse }
 }

@@ -218,6 +218,8 @@
   "ids.templates.usage": "用于{count}字",
   "ids.templates.hangul": "谚文音节结构",
   "ids.templates.pyramids": "金字塔",
+  "ids.templates.pyramidReverse": "倒置",
+  "ids.templates.pyramidInsertReverse": "插入{part}的{layers}层倒金字塔",
   "ids.templates.pyramidHint": "选择层数或输入数字。",
   "ids.templates.pyramidCustom": "自定义",
   "ids.templates.pyramidAdd": "插入",

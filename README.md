@@ -170,7 +170,7 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
-pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10 }
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10, reverse: false }
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -203,7 +203,9 @@ draws a pyramid of three or more rows as equal square cells in centred rows, so 
 given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
 may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
 composer draws up to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids
-of 3 to 24 rows, using the selected component or 口.
+of 3 to 24 rows, using the selected component or 口. Its Reverse toggle arranges rows from widest
+to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
+writes that arrangement; `pyramidRows` reports its direction in `reverse`.
 
 ### Loose marks
 

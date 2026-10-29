@@ -18,9 +18,10 @@ export const pyramidCount = layers => layers * (layers + 1) / 2
  * description stays balanced. The 3-row sequence is `⿳口⿰口口⿲口口口`.
  * @param {string} part A component, with an optional variation selector.
  * @param {number} layers
+ * @param {{ reverse?: boolean }} [options] Descend from `layers` components to one.
  * @returns {string}
  */
-export function pyramidSequence(part, layers) {
+export function pyramidSequence(part, layers, { reverse = false } = {}) {
   const text = String(part ?? '')
   const read = parse(text, { open: true })
   if (read.problem || typeof read.tree !== 'string' || read.tree !== text) {
@@ -35,16 +36,18 @@ export function pyramidSequence(part, layers) {
     const left = Math.floor(count / 2)
     return `⿰${row(left)}${row(count - left)}`
   }
+  /** @param {number} index */
+  const rowAt = index => row(reverse ? layers + 1 - index : index)
   /**
-   * Rows `from` through `to`, one-based.
+   * Rows `from` through `to`, one-based in reading order.
    * @param {number} from
    * @param {number} to
    * @returns {string}
    */
   const stack = (from, to) => {
-    if (from === to) return row(from)
-    if (to - from === 1) return `⿱${row(from)}${row(to)}`
-    if (to - from === 2) return `⿳${row(from)}${row(from + 1)}${row(to)}`
+    if (from === to) return rowAt(from)
+    if (to - from === 1) return `⿱${rowAt(from)}${rowAt(to)}`
+    if (to - from === 2) return `⿳${rowAt(from)}${rowAt(from + 1)}${rowAt(to)}`
     const middle = Math.floor((from + to) / 2)
     return `⿱${stack(from, middle)}${stack(middle + 1, to)}`
   }
