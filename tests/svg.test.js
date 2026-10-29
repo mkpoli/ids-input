@@ -91,6 +91,11 @@ describe('compositing SVG', () => {
     expect(svg).toContain('viewBox="-50 -50 1100 1100"')
     expect(svg).toContain('fill="currentColor"')
   })
+  it('draws optional empty-slot boxes with a dashed outline', () => {
+    const svg = scopesSvg(renderScopes(fromSequence('⬚'), source([square()])), { slots: [[100, 100, 300, 500]] })
+    expect(svg).toContain('stroke-dasharray="12 8"')
+    expect(svg).toContain('x="100" y="100" width="300" height="500"')
+  })
   it('accepts a background, ink colour and size, and rejects unsafe values', () => {
     const svg = scopesSvg(renderScopes(fromSequence('木'), source([square()])), { background: '#fafafa', ink: '#123456', size: 640, idPrefix: 'x' })
     expect(svg).toContain('width="640" height="640"')

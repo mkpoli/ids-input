@@ -78,6 +78,7 @@
   let adjusting = $state(false)
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
+  let slots = $state(/** @type {number[][]} */ ([]))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
@@ -962,7 +963,7 @@
         <div class="preview">
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes
+              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
               editable={adjusting} onedit={layerChanged} bind:drawing>
               {#snippet detailContent()}
                 {#each encoded as ch (ch)}
@@ -984,7 +985,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>

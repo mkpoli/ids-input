@@ -26,10 +26,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, editable?: boolean, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], editable?: boolean, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), editable = false, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -92,6 +92,7 @@
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
     scopes = view?.scopes ?? null
+    slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
   const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
