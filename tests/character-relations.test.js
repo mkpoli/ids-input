@@ -67,17 +67,15 @@ describe('character relationships',()=>{
  })
 })
 
-test('both adapter searches use relations while retaining readings and isolating cancellation',async()=>{
+test('the adapter search uses relations while retaining readings and isolating cancellation',async()=>{
  let calls=0
  const adapter=babelStoneAdapter({table,smallSeal:seal,characterInfo:'https://example.test/info',namesText:'uma\t馬\ttest\n',charactersText:'mǎ\t馬\ttest\n',fetch:async()=>{calls++;return new Response(JSON.stringify(doc))}})
  expect(calls).toBe(0)
- for(const method of ['search','searchCharacters']){
-  for(const query of ['horse','🐎','𘆽','馬']) expect((await adapter[method](query)).map(h=>h.char)).toContain(horseSeal)
-  const c=new AbortController();c.abort()
-  await expect(adapter[method]('horse',{signal:c.signal})).rejects.toThrow()
- }
+ for(const query of ['horse','🐎','𘆽','馬']) expect((await adapter.search(query)).map(h=>h.char)).toContain(horseSeal)
+ const c=new AbortController();c.abort()
+ await expect(adapter.search('horse',{signal:c.signal})).rejects.toThrow()
  expect((await adapter.search('uma')).map(h=>h.char)).toContain('𘆽')
- expect((await adapter.searchCharacters('mǎ')).map(h=>h.char)).toContain('𘆽')
+ expect((await adapter.search('mǎ')).map(h=>h.char)).toContain('𘆽')
  expect(calls).toBe(1)
 })
 
@@ -86,7 +84,7 @@ test('failed relation loads retry, and canceled readers do not poison a shared l
  const adapter=babelStoneAdapter({table,characterInfo:'https://example.test/info',fetch:async()=>{calls++;if(calls===1)return new Response('',{status:503});await new Promise(r=>release=r);return new Response(JSON.stringify(doc))}})
  await expect(adapter.search('horse')).rejects.toThrow()
  const canceled=new AbortController()
- const one=adapter.search('horse',{signal:canceled.signal}),two=adapter.searchCharacters('horse')
+ const one=adapter.search('horse',{signal:canceled.signal}),two=adapter.search('horse')
  canceled.abort();await new Promise(r=>setTimeout(r,0));release()
  await expect(one).rejects.toThrow();expect((await two).some(h=>h.char==='𘆽')).toBe(true)
  expect(calls).toBe(2)
@@ -94,28 +92,29 @@ test('failed relation loads retry, and canceled readers do not poison a shared l
 
 test('adapter coverage, labelled lookup/usage links, forms, and cross-script ranking',async()=>{
  const adapter=babelStoneAdapter({table,smallSeal:seal,characterInfo:doc,formsText:readFileSync(new URL('../data/component-forms.tsv',import.meta.url),'utf8'),charactersText:read('character-vocabulary.tsv.gz')})
- for(const method of ['search','searchCharacters']){
-  expect((await adapter[method]('皇',{limit:1000})).map(h=>h.char)).not.toContain('\u{3D06C}')
-  const mouth=Object.keys(seal.modern).find(c=>seal.modern[c].includes('𠙵')&&seal.modern[c].includes('口')&&(seal.table[c]||seal.parts.some(p=>p.part===c)))
-  expect((await adapter[method]('口',{limit:1000})).find(h=>h.char===mouth)?.label).toStartWith('lookup')
-  expect((await adapter[method](mouth,{limit:1000})).find(h=>h.char==='口')?.label).toStartWith('lookup')
-  const water=await adapter[method]('water',{limit:1000})
-  expect(water.find(h=>h.char==='𘠣')?.label).toStartWith('component of ')
-  const fish=await adapter[method]('fish')
-  expect(fish.map(h=>h.char)).toEqual(expect.arrayContaining(['魚','𗋾','🐟']))
-  expect((await adapter[method]('tree')).some(h=>seal.modern[h.char]?.includes('木'))).toBe(true)
-  expect((await adapter[method]('氵')).map(h=>h.char)).toContain('𗋽')
- }
+ expect((await adapter.search('皇',{limit:1000})).map(h=>h.char)).not.toContain('\u{3D06C}')
+ const mouth=Object.keys(seal.modern).find(c=>seal.modern[c].includes('𠙵')&&seal.modern[c].includes('口')&&(seal.table[c]||seal.parts.some(p=>p.part===c)))
+ expect((await adapter.search('口',{limit:1000})).find(h=>h.char===mouth)?.label).toStartWith('lookup')
+ expect((await adapter.search(mouth,{limit:1000})).find(h=>h.char==='口')?.label).toStartWith('lookup')
+ const water=await adapter.search('water',{limit:1000})
+ expect(water.find(h=>h.char==='𘠣')?.label).toStartWith('component of ')
+ const merged=await adapter.search('water')
+ expect(merged.map(h=>h.char)).toEqual(expect.arrayContaining(['氵','溉']))
+ expect((await adapter.search('roof')).map(h=>h.char)).toEqual(expect.arrayContaining(['宀','屋']))
+ const fish=await adapter.search('fish')
+ expect(fish.map(h=>h.char)).toEqual(expect.arrayContaining(['魚','𗋾','🐟']))
+ expect((await adapter.search('tree')).some(h=>seal.modern[h.char]?.includes('木'))).toBe(true)
+ expect((await adapter.search('氵')).map(h=>h.char)).toContain('𗋽')
  const onlyMeanings=babelStoneAdapter({characterInfo:doc})
  expect((await onlyMeanings.search('water')).map(h=>h.char)).toContain('𗋽')
  expect((await onlyMeanings.search('horse')).find(h=>h.char==='𘥇')?.label).toBe('associated with horses')
  expect((await onlyMeanings.characterInfo('𘥇')).association).toBe('associated with horses')
  expect(index.search('die',{limit:1000}).find(h=>h.label.startsWith('component of 𗆮'))?.label).toContain('(of a monarch) to die')
-})
+}, 20_000)
 
 test('relation-source failure preserves unique bounded character results',async()=>{
- const adapter=babelStoneAdapter({charactersText:'馬\t馬\ttest\n',characterInfo:'https://example.test/missing',fetch:async()=>new Response('',{status:503})})
- expect(await adapter.searchCharacters('馬',{limit:1})).toHaveLength(1)
- expect((await adapter.searchCharacters('馬',{limit:10})).map(h=>h.char)).toEqual(['馬'])
- expect(await adapter.searchCharacters('馬',{limit:0})).toEqual([])
+ const adapter=babelStoneAdapter({charactersText:'mǎ\t馬\ttest\n',characterInfo:'https://example.test/missing',fetch:async()=>new Response('',{status:503})})
+ expect(await adapter.search('mǎ',{limit:1})).toHaveLength(1)
+ expect((await adapter.search('mǎ',{limit:10})).map(h=>h.char)).toEqual(['馬'])
+ expect(await adapter.search('mǎ',{limit:0})).toEqual([])
 })

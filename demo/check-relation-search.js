@@ -21,24 +21,21 @@ try{
   await page.evaluate(()=>document.fonts.ready)
   if(process.env.IDS_SEARCH_SHOTS){mkdirSync(process.env.IDS_SEARCH_SHOTS,{recursive:true});await page.screenshot({path:`${process.env.IDS_SEARCH_SHOTS}/${process.env.IDS_SEARCH_BEFORE?'before':'after'}-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})}
   if(process.env.IDS_SEARCH_BEFORE){await page.close();continue}
-  for(const tab of ['Find','Characters']){
-   await tabs.getByRole('tab',{name:tab,exact:true}).click()
-   for(const query of ['horse','🐎','𘆽',horseSeal]){
-    await input.fill(query)
-    for(const char of ['馬','𘆽','🐎',horseSeal])await active.locator(`[data-character="${char}"]`).waitFor()
-   }
-   await input.fill('𘆽');await active.locator('[data-character="𘆽"]').waitFor()
-   await page.waitForFunction(()=>document.querySelector('.ids-pick-panel:not([hidden]) .ids-hit')?.getAttribute('data-character')==='𘆽')
-   await input.fill('die');const die=active.locator('[data-character="𗆮"]');await die.waitFor()
-   assert.match(await die.innerText(),/\(of a monarch\) to die/)
-   await input.fill('horse');await input.fill('water')
-   for(const char of ['水','💧','𗋽'])await active.locator(`[data-character="${char}"]`).waitFor()
-   assert.equal(await active.locator('[data-character="🐎"]').count(),0)
+  for(const query of ['horse','🐎','𘆽',horseSeal]){
+   await input.fill(query)
+   for(const char of ['馬','𘆽','🐎',horseSeal])await active.locator(`[data-character="${char}"]`).waitFor()
   }
+  await input.fill('𘆽');await active.locator('[data-character="𘆽"]').waitFor()
+  await page.waitForFunction(()=>document.querySelector('.ids-pick-panel:not([hidden]) .ids-hit')?.getAttribute('data-character')==='𘆽')
+  await input.fill('die');const die=active.locator('[data-character="𗆮"]');await die.waitFor()
+  assert.match(await die.innerText(),/\(of a monarch\) to die/)
+  await input.fill('horse');await input.fill('water')
+  for(const char of ['水','💧','𗋽'])await active.locator(`[data-character="${char}"]`).waitFor()
+  assert.equal(await active.locator('[data-character="🐎"]').count(),0)
   await input.fill('🐎');await active.locator('[data-character="𘆽"]').click()
   assert.equal(await field.inputValue(),'⿰𘆽⬚')
   assert.deepEqual(errors,[])
-  await page.close();console.log(`PASS ${scheme}: both search tabs, reciprocal relations, qualifiers, stale queries, insertion`)
+  await page.close();console.log(`PASS ${scheme}: reciprocal relations, qualifiers, stale queries, insertion`)
  }
  if(!process.env.IDS_SEARCH_BEFORE){
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})

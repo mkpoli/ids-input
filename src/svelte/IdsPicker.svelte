@@ -1,23 +1,22 @@
 <script>
-  // Where parts come from, in tabs: components the adapter's search finds, the parts palette
-  // (IdsParts) and the parts of any character or description typed (IdsFrom), each only where the
-  // adapter can answer it. A part picked goes in `editor`'s chosen slot, or the first empty one; parts
-  // can also be dragged onto the tree. Arrow keys, Home and End move between the tabs.
+  // Where parts come from, in tabs: components and characters the adapter's search finds, the parts
+  // palette (IdsParts), the parts of any character or description typed (IdsFrom) and structure
+  // templates (IdsTemplates), each only where the adapter can answer it. A part picked goes in
+  // `editor`'s chosen slot, or the first empty one; parts can also be dragged onto the tree. Arrow
+  // keys, Home and End move between the tabs.
   import { untrack } from 'svelte'
   import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
 
-  /** @typedef {'find' | 'characters' | 'parts' | 'from' | 'templates'} Tab */
+  /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
   /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
-  let { editor, pickers = ['find', 'characters', 'parts', 'from', 'templates'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true } = $props()
+  let { editor, pickers = ['find', 'parts', 'from', 'templates'], recentKey = 'ids-input.recentParts', tab = $bindable(null), fromText = $bindable(''), title = true } = $props()
   const t = $derived(editor.t)
   const adapter = $derived(editor.adapter)
   const uid = $props.id()
-  const shown = $derived(pickers.filter(name => name === 'find' ? Boolean(adapter.search)
-    : name === 'characters' ? Boolean(adapter.searchCharacters)
-    : name === 'parts' ? Boolean(adapter.parts) : true))
+  const shown = $derived(pickers.filter(name => name === 'find' ? Boolean(adapter.search) : name === 'parts' ? Boolean(adapter.parts) : true))
   let opened = $state(new Set(/** @type {string[]} */ ([])))
   const current = $derived(tab && shown.includes(tab) ? tab : shown[0])
   $effect(() => { if (current && !opened.has(current)) untrack(() => { opened = new Set([...opened, current]) }) })
@@ -35,7 +34,8 @@
     buttons[to]?.focus()
   }
 
-  // The find tab: components the adapter's search answers for what is typed, once the typing settles.
+  // The find tab: components and characters the adapter's search answers for what is typed, once
+  // the typing settles.
   let query = $state('')
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let found = $state({ status: 'idle', items: [] })
@@ -47,20 +47,6 @@
     const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: 24 }).then(
       items => { if (!controller.signal.aborted) found = { status: 'ready', items: items ?? [] } },
       () => { if (!controller.signal.aborted) found = { status: 'failed', items: [] } }), 150)
-    return () => { clearTimeout(timer); controller.abort() }
-  })
-  // The characters tab: characters whose readings or meanings answer for what is typed.
-  let characterQuery = $state('')
-  /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
-  let characters = $state({ status: 'idle', items: [] })
-  $effect(() => {
-    const asked = characterQuery.trim(), search = adapter.searchCharacters
-    if (!asked || !search) { characters = { status: 'idle', items: [] }; return }
-    const controller = new AbortController()
-    characters = { status: 'loading', items: [] }
-    const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: 24 }).then(
-      items => { if (!controller.signal.aborted) characters = { status: 'ready', items: items ?? [] } },
-      () => { if (!controller.signal.aborted) characters = { status: 'failed', items: [] } }), 150)
     return () => { clearTimeout(timer); controller.abort() }
   })
   const picked = $derived(editor.picked)
@@ -86,30 +72,13 @@
                 aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
               {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
               {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
-              {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('parts.none')}</p>
+              {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('ids.search.none')}</p>
               {:else if found.items.length}
                 <div class="ids-found">
                   {#each found.items as item (item.char)}
                     <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
                       draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                       onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
-                  {/each}
-                </div>
-              {/if}
-            </div>
-          {:else if name === 'characters'}
-            <div class="ids-find">
-              <input type="search" bind:value={characterQuery} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-                aria-label={t('ids.pick.characters')} placeholder={t('ids.characters.placeholder')} />
-              {#if characters.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
-              {:else if characters.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
-              {:else if characters.status === 'ready' && !characters.items.length}<p class="ids-note">{t('ids.characters.none')}</p>
-              {:else if characters.items.length}
-                <div class="ids-found">
-                  {#each characters.items as item (item.char)}
-                    <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
-                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
-                      onclick={() => { characterQuery = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
                   {/each}
                 </div>
               {/if}

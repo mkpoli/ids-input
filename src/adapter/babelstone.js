@@ -173,7 +173,10 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * components by and the component search opens the names of a component's other forms with.
  * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names, words and
  * readings the component search knows (絞絲, ノ文, のぎ, 宝盖, water, shui, mizu); without it the
- * search still takes characters and code points. `folds` is the URL of
+ * search still takes characters and code points. `characters` is the URL of
+ * `data/character-vocabulary.tsv.gz` (or `charactersText` its text), the readings and meanings of
+ * whole characters; with it a name also finds the characters it names, not only components.
+ * `folds` is the URL of
  * `data/component-name-folds.tsv` (or `foldsText` its text), which folds Chinese scripts and
  * component forms together before a name is compared. `layers` (or `layersText`)
  * reads a table of descriptions computed from other characters, such as Tangut's largest character
@@ -571,39 +574,63 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       if (!text) return []
       const direct = typed(text)
       // One ideograph typed on its own is that component; names are for what is longer than one.
-      // A lone letter or syllable (수, の) also searches names, so Korean and kana readings work.
+      // A lone letter or syllable (수, の) also searches readings, so Korean and kana names work.
       const single = [...text].length === 1 && isComponent(text)
       const singleIdeograph = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text) || KANA.test(text))
+      // A lone kana stays the kana in a part search, but characters read as it: き finds 生 by name.
+      const singleIdeographOnly = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text))
       /** @type {{ char: string, label: string }[]} */
       let hits = direct
-      if (!singleIdeograph && (namesText !== undefined || names)) {
+      /** The whole characters a name finds, after the components and their relations. @type {{ char: string, label: string }[]} */
+      let vocabulary = []
+      // The component table opens a name into its forms; the character vocabulary offers the
+      // characters it names.
+      if (!singleIdeograph) {
+        /** @type {{ char: string, label: string }[]} */
+        const named = []
+        if (namesText !== undefined || names) {
+          try {
+            const index = await nameIndex()
+            const found = index.search(text, { limit })
+            if (found.length) {
+              const palette = await paletteForNames()
+              // The closest names first; among names that fit equally, the components people meet most.
+              const ordered = found.map((hit, at) => ({ hit, at })).sort((a, b) =>
+                a.hit.score - b.hit.score
+                || (a.hit.score === 0 ? (palette?.rank.get(b.hit.char) ?? 0) - (palette?.rank.get(a.hit.char) ?? 0) : 0)
+                || (a.hit.score === 0 ? (palette?.uses.get(b.hit.char) ?? 0) - (palette?.uses.get(a.hit.char) ?? 0) : 0)
+                || a.at - b.at).map(({ hit }) => hit)
+              for (const hit of ordered) for (const char of formsOf(hit.char, palette, index)) named.push({ char, label: hit.label })
+            }
+          } catch { /* The names are a convenience; the characters typed still stand. */ }
+        }
+        if (named.length) hits = [...named, ...direct]
+      }
+      if (!singleIdeographOnly && (charactersText !== undefined || characters)) {
         try {
-          const index = await nameIndex()
-          const found = index.search(text, { limit })
-          if (found.length) {
-            const palette = await paletteForNames()
-            // The closest names first; among names that fit equally, the components people meet most.
-            const ordered = found.map((hit, at) => ({ hit, at })).sort((a, b) =>
-              a.hit.score - b.hit.score
-              || (a.hit.score === 0 ? (palette?.rank.get(b.hit.char) ?? 0) - (palette?.rank.get(a.hit.char) ?? 0) : 0)
-              || (a.hit.score === 0 ? (palette?.uses.get(b.hit.char) ?? 0) - (palette?.uses.get(a.hit.char) ?? 0) : 0)
-              || a.at - b.at).map(({ hit }) => hit)
-            /** @type {{ char: string, label: string }[]} */
-            const named = []
-            for (const hit of ordered) for (const char of formsOf(hit.char, palette, index)) named.push({ char, label: hit.label })
-            hits = [...named, ...direct]
-          }
-        } catch { /* The names are a convenience; the characters typed still stand. */ }
+          vocabulary = (await characterIndex()).search(text, { limit }).map(({ char, label }) => ({ char, label }))
+        } catch { /* The vocabulary is a convenience; the components still stand. */ }
       }
       if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
       else if (smallSeal) {
         const doc = await readSeal()
         if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
+      let ranked = false
       if (characterInfo) {
-        try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
-        catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
+        try {
+          // A whole character from the vocabulary ranks below the components, the forms that stand
+          // for them and the characters related to those, above the meanings only the query names.
+          const seeds = vocabulary.length ? [...hits, ...vocabulary.map(hit => ({ ...hit, rank: 3 }))] : hits
+          hits = (await relationIndex()).search(text, { limit, seeds })
+          ranked = true
+        } catch (error) {
+          signal?.throwIfAborted()
+          if (!hits.length && !vocabulary.length) throw error
+        }
       }
+      // Without relations to rank them, the vocabulary's characters follow what the search has.
+      if (!ranked) hits = [...hits, ...vocabulary]
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
     },
@@ -694,25 +721,6 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       signal?.throwIfAborted()
       return result
     },
-    ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
-      /** @param {string} query @param {import('./types.js').Options} [options] */
-      async searchCharacters(query, { limit = 24, signal } = {}) {
-        if (limit <= 0) return []
-        const text = query.trim()
-        if (!text) return []
-        signal?.throwIfAborted()
-        /** @type {{ char: string, label: string }[]} */ let hits = []
-        try { hits = (await characterIndex()).search(text, { limit }).map(({ char, label }) => ({ char, label })) }
-        catch (error) { if (!characterInfo) throw error }
-        if (characterInfo) {
-          hits = [...await relatedSeeds(text, typed(text)), ...hits]
-          try { hits = (await relationIndex()).search(text, { limit, seeds: hits }) }
-          catch (error) { signal?.throwIfAborted(); if (!hits.length) throw error }
-        }
-        signal?.throwIfAborted()
-        return uniqueHits(hits, limit)
-      },
-    } : {}),
     async containing(asked, { limit = 24 } = {}) {
       const [found, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
       if (!index || indexGeneration !== searchGeneration) {

@@ -26,8 +26,9 @@ The package has four layers, and an optional preview:
   adapter reads BabelStone IDS, the parts palette, component forms, names, script folds and the
   character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
-  the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
-  decomposition browser, a search, a character search) and the preview, each placeable on its own
+  the tree, the chosen part's tools, the part pickers (a parts palette, structure templates, a
+  "Take parts from" decomposition browser, a search over components and characters) and the
+  preview, each placeable on its own
   or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
@@ -100,7 +101,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'characters', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
+| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -386,7 +387,6 @@ interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
   search?(query, options?): Promise<{ char: string, label?: string }[]>
-  searchCharacters?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
@@ -428,9 +428,9 @@ component in reading order is inferred. Other drawings report themselves incompl
 
 `babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
-such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given), `containing` and `parts`
-from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
+such as water or のぶん when `names` is given, and the whole characters those names belong to when
+`characters` is given), `containing` and `parts` from the files in `data/`. `components` writes
+out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
@@ -611,18 +611,16 @@ and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer �
 and 龍部, 龙部 and 竜部 all give the forms of 龍. Readings, pinyin, romaji, Korean, Vietnamese and
 English senses work the same way: water, silk, roof, thread, person, みず, mizu, sui, shui,
 jiaosipang, baogaitou, sandianshui, nobun, nogi, ukanmuri, 수, thủy and Bộ Thủy lead to their
-components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph or kana typed on
-its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
-characters and code points only.
+components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph typed on its own
+stays the character it is; a lone kana also searches names, so き finds 生, as does a lone Hangul
+syllable, so 수 finds 水. Without `names` the search takes characters and code points only.
 
-### Characters
-
-The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: every IDS
-character with a Unihan or KANJIDIC2 name (48,966), with 214,533 readings, pinyin, romanizations,
-Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and thủy find 水; person finds
-人; silk finds 糸. Results are characters, not the forms the Find tab opens; among equally close
-names the more common character comes first, by KANJIDIC2's newspaper frequency or Unihan's school
-grade. Without `characters` the tab is not shown.
+With `characters` (`data/character-vocabulary.tsv.gz`, every IDS character with a Unihan or
+KANJIDIC2 name: 48,966 characters, 214,533 readings, pinyin, romanizations, Korean, Vietnamese and
+English meanings), the same search also offers whole characters after the components and the
+characters the relations already know: roof finds 宀 and then 屋, silk finds 丝, 絲 and 糸 and then
+絹, and thuy finds 水 and then 始. Among equally close names the more common character comes first,
+by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 ## Preview
 
@@ -1079,7 +1077,7 @@ associations, editorial Han translations and emoji mnemonics, and direct Small S
 correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
 describe the limits of each relationship.
 
-With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+With `characterInfo`, `search` accepts English glosses,
 emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
 directions, alongside existing names, readings, and component forms. Results keep
 dictionary qualifiers; component occurrences and lookup aliases have separate labels.

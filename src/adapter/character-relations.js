@@ -93,7 +93,7 @@ export function createRelationSearch(doc, seal, table) {
     }
   }
   const meanings = createNameSearch(names)
-  /** @param {string} query @param {{ limit?: number, seeds?: import('./types.js').Found[] }} [options]
+  /** @param {string} query @param {{ limit?: number, seeds?: (import('./types.js').Found & { rank?: number })[] }} [options]
    * @returns {{ char: string, label: string }[]} */
   function search(query, { limit = 24, seeds = [] } = {}) {
     const written = key(query)
@@ -112,7 +112,7 @@ export function createRelationSearch(doc, seal, table) {
     for (const char of direct ?? []) add(char, labels.get(char) ?? code(char), 0, 0, true)
     for (const hit of seeds) {
       const matched = aliases.get(`${hit.char}\0${foldName(written)}`)
-      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), matched ? matched.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 1.5, 0, true, matched?.sense)
+      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 1.5), 0, true, matched?.sense)
     }
     const matches = meanings.search(written, { limit: Infinity }).map(hit => {
       const matched = aliases.get(`${hit.char}\0${foldName(hit.label)}`)

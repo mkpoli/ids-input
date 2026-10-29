@@ -282,14 +282,14 @@ other tables leave apart. 593 folds, 15 KB, built by `scripts/build_component_na
 
 ## character-vocabulary.tsv.gz
 
-The readings and meanings of characters, for the Characters tab: water, shui, mizu, みず,
+The readings and meanings of characters, for the parts finder's Find tab: water, shui, mizu, みず,
 수 and thủy for 水; person for 人; silk for 糸. 214,533 rows, 1.7 MB gzipped. Format: `name`, `char`,
 `source`, `detail`, `rank`, one name for one character per row; comments start with `#`.
 
 The characters are every IDS character with a Unihan or KANJIDIC2 name, 48,966 in all, so a result
 can be opened in the workshop. `rank` is lower for more common characters: KANJIDIC2's newspaper
 frequency where it has one, otherwise 3000 plus Unihan's `kGradeLevel`. It orders equally close
-names in the character search.
+names in the search.
 
 - Unihan 18.0.0 (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, Unicode License v3,
   Copyright Unicode, Inc.; SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`):
