@@ -813,6 +813,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   not read yet.
 
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
+- にぅま, [畳字](https://wikiwiki.jp/myriadrevery/畳字), にぅまのいあ -言葉遊び技法小事典-, last
+  modified 2026-06-28: the 二同系, 三同系, 四同系 and 過畳系 groups behind the repeated
+  examples. The page names 山口翔平
+  (関西大学国文学会) on 理義字 and 『童子字尽安見』「理義字集」, and gives no source for its own
+  examples; each character's description is BabelStone's.
 - X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13, 30-37
   and 39-40): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
   [@Utetamutete](https://x.com/Utetamutete/status/2111106301044699557) (投+石, なげ and いしなとり),
