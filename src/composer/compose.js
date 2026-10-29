@@ -511,7 +511,16 @@ export class Composer {
     const bottom = top - height
     const legs = componentPosition(form, [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
     if (!legs) return null
-    const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
+    const lowerBox = [opening[0], opening[1], opening[2], bottom - 25]
+    const lowerKey = keyOf(contents[2])
+    if (lowerKey === '木') lowerBox[3] += openH * 0.08
+    else if (lowerKey === '𢀛' || lowerKey === '⿱工口') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[1] += openH * 0.04
+      lowerBox[3] -= openH * 0.04
+    }
+    const lower = this.node(contents[2], lowerBox)
     return [...outer, legs, ...lower]
   }
 

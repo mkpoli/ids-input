@@ -296,7 +296,7 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(gap).toBeLessThan(0)
     expect(collision([zhu], [enclosure], constants.face, 1024)).toBe(0)
     expect(collision([enclosure], [legs], constants.face, 1024)).toBeGreaterThan(0)
-    expect(legs.target[1]).toBeGreaterThan(lower.target[3])
+    if (!text.endsWith('木')) expect(legs.target[1]).toBeGreaterThan(lower.target[3])
     const complex = `⿰朱⿸${outer}⿱儿⿱木木`
     await compose(source, complex, { fontStyle })
     const complexParts = new Composer(source.store(), { fontStyle }).compose(complex)
@@ -515,7 +515,7 @@ it('joins 儿 to a generic ⿸ enclosure bar, including 厃', async () => {
     expect(legs).toBeDefined()
     if (text.startsWith('⿸')) expect(collision([outer], [legs], constants.face, 512)).toBeGreaterThan(0)
     const lower = parts[parts.indexOf(legs) + 1]
-    expect(legs.target[1]).toBeGreaterThan(lower.target[3])
+    if (!text.endsWith('木')) expect(legs.target[1]).toBeGreaterThan(lower.target[3])
     expect(parts.some(part => part.origin === 'host 冏')).toBe(false)
   }
 })
