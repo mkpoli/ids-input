@@ -493,9 +493,9 @@ export class Composer {
   legEnclosure(children, region) {
     if (this.separate || this.fontStyle === 'kaisho') return null
     const key = keyOf(children[0]), contents = children[1]
-    if (yanSources.has(key) || this.excluded('儿') || this.excluded('元')
+    if (yanSources.has(key) || this.excluded('儿') || this.excluded('元') || this.excluded('詹')
       || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
-    const outer = this.node(key, region)
+    const outer = this.node(children[0], region)
     const opening = this.room('⿸', outer, region)
     if (!opening) return null
     // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
