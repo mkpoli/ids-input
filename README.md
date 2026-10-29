@@ -815,8 +815,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   not read yet.
 
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
-- X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13 and
-  30-37): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
+- X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13, 30-37
+  and 39-40): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
   [@Utetamutete](https://x.com/Utetamutete/status/2111106301044699557) (投+石, なげ and いしなとり),
   [@ka_disco](https://x.com/ka_disco/status/2016902923863937473) (⿲𠂤日千), eight posts on
   ⿴囗⿱エン ([@sc2rm](https://x.com/sc2rm/status/820172370186944512),
@@ -829,7 +829,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   [@king_ko_roro](https://x.com/king_ko_roro/status/1842415160600010928)),
   [@jianhuazi_bot2](https://x.com/jianhuazi_bot2/status/1373547010536706048) (⿱一心) and
   [@Umihotarus](https://x.com/Umihotarus/status/1106526920378740736) /
-  [@Dodan_Tu_Tu_Ji](https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606) (⿰忄実).
+  [@Dodan_Tu_Tu_Ji](https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606) (⿰忄実), and
+  [@Utetamutete](https://x.com/Utetamutete/status/2083503199319912453) /
+  [@Utetamutete](https://x.com/Utetamutete/status/2084625411980530020) (品字様 of 里, 莫, 天 and 地).
 - [全学联汉字](https://zh.wikipedia.org/wiki/全学联汉字), Chinese Wikipedia, sections 通假, 楷化,
   记号, 字形省去, 隶定, 训读, 声旁, 假名声旁 and 西文字母 (read 2026-10-28): the Geba-ji examples
   in `demo/lib/examples.js`, one form per row. Left out: the word ligatures (コンクリート,
