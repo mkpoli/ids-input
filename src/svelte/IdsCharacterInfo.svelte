@@ -184,10 +184,23 @@
     if (hit && anchor.contains(hit) || panel?.matches(':hover')) position()
     else close()
   }
-  /** @param {PointerEvent} event */
+  /** Controls inside the card that keep their own press. @constant {string} */
+  const CONTROL = 'button, a, input, select, textarea, summary, label, [role="button"]'
+  /** @param {MouseEvent} event */
   function outside(event) {
-    const node = /** @type {Node} */ (event.target)
-    if (panel?.contains(node) || anchor?.contains(node)) return
+    const node = /** @type {HTMLElement} */ (event.target)
+    if (anchor?.contains(node)) return
+    if (panel?.contains(node) && !node.closest(CONTROL)) {
+      // The card's bare surface: dismiss it, then hand this click to whatever it was covering, so
+      // nothing behind the card costs a second click.
+      const { clientX: pointX, clientY: pointY } = event
+      close()
+      document.elementFromPoint(pointX, pointY)?.dispatchEvent(
+        new MouseEvent('click', { view: window, bubbles: true, cancelable: true, clientX: pointX, clientY: pointY }),
+      )
+      return
+    }
+    if (panel?.contains(node)) return
     // The caret sits in the input over the painted glyph the card describes.
     if (anchor && node instanceof HTMLInputElement && spanUnder(event, event.clientX, event.clientY) === anchor) return
     close()
@@ -210,7 +223,7 @@
     node.addEventListener('focusout', leave)
     node.addEventListener('dragstart', close)
     window.addEventListener('keydown', key, true)
-    window.addEventListener('pointerdown', outside, true)
+    window.addEventListener('click', outside, true)
     window.addEventListener('resize', close)
     window.addEventListener('scroll', scrolled, true)
     return () => {
@@ -219,7 +232,7 @@
       node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
       node.removeEventListener('dragstart', close); window.removeEventListener('keydown', key, true)
-      window.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', close)
+      window.removeEventListener('click', outside, true); window.removeEventListener('resize', close)
       window.removeEventListener('scroll', scrolled, true)
     }
   })
