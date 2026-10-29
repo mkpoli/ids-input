@@ -64,14 +64,14 @@
       <div class="ids-template-grid">
         {#each group.templates as template (template.id)}
           <button type="button" disabled={editor.disabled} data-template={template.id}
-            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${template.curated ? t('ids.templates.hangul') : t('ids.templates.usage', { count: template.count })}`}
+            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${template.label ? t(`ids.templates.${template.label}`) : t('ids.templates.usage', { count: template.count })}`}
             draggable={!editor.disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', template.sequence)}
             onclick={() => editor.take(template.sequence)}>
             <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
               {#each template.shapes as shape, i (i)}
                 {#if shape.kind === 'slot'}
                   <rect class:accent={shape.accent} x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
-                {:else}<path class:accent={shape.accent} d={shape.d} />{/if}
+                {:else}<path class:accent={shape.accent} class:decorative={shape.decorative} d={shape.d} />{/if}
               {/each}
             </svg>
           </button>
@@ -95,7 +95,7 @@
             {#each template.shapes as shape, i (i)}
               {#if shape.kind === 'slot'}
                 <rect class:accent={shape.accent} x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
-              {:else}<path class:accent={shape.accent} d={shape.d} />{/if}
+              {:else}<path class:accent={shape.accent} class:decorative={shape.decorative} d={shape.d} />{/if}
             {/each}
           </svg>
           <span class="ids-pyramid-size">{template.layers}</span>
@@ -143,5 +143,6 @@
   button:disabled{opacity:.55;cursor:default}
   path{fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
   .accent{color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
+  .decorative{stroke-dasharray:1 1;stroke-width:1}
   rect{fill:color-mix(in srgb,currentColor 10%,transparent);stroke:currentColor;stroke-width:1;stroke-dasharray:1.5 1.2}
 </style>

@@ -227,6 +227,7 @@
   "ids.templates.insert": "Insert layout {sequence}",
   "ids.templates.usage": "{count} characters",
   "ids.templates.hangul": "Hangul syllable layout",
+  "ids.templates.mirrored": "Mirrored pair",
   "ids.templates.pyramids": "Pyramids",
   "ids.templates.pyramidReverse": "Reverse",
   "ids.templates.pyramidInsertReverse": "Insert a {layers}-layer inverted pyramid of {part}",

@@ -223,6 +223,7 @@
   "ids.templates.insert": "插入構字式：{sequence}",
   "ids.templates.usage": "用於{count}字",
   "ids.templates.hangul": "諺文音節結構",
+  "ids.templates.mirrored": "鏡像對",
   "ids.templates.pyramids": "金字塔",
   "ids.templates.pyramidReverse": "倒置",
   "ids.templates.pyramidInsertReverse": "插入{part}的{layers}層倒金字塔",

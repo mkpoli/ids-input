@@ -1,7 +1,7 @@
 {
   "version": 1,
   "threshold": 50,
-  "method": "Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Curated layouts are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.",
+  "method": "Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from frequency additions. Curated layouts (the Hangul syllable and the mirrored pairs) are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.",
   "sources": [
     {
       "id": "babelstone",
@@ -39,11 +39,11 @@
     "eligibleCharacters": 100172,
     "previousTemplates": 17,
     "previousCoveredCharacters": 88719,
-    "curatedTemplates": 1,
+    "curatedTemplates": 3,
     "frequencyAdditions": 38,
-    "templates": 56,
-    "addedTemplates": 39,
-    "coveredCharacters": 98605
+    "templates": 58,
+    "addedTemplates": 41,
+    "coveredCharacters": 98610
   },
   "templates": [
     {
@@ -184,6 +184,31 @@
         "凷",
         "凼",
         "凿"
+      ]
+    },
+    {
+      "id": "mirroredRight",
+      "sequence": "⿰⬚⿾⬚",
+      "curated": true,
+      "label": "mirrored",
+      "slots": 2,
+      "count": 3,
+      "examples": [
+        "𦣩",
+        "𨺅",
+        "𫸪"
+      ]
+    },
+    {
+      "id": "mirroredLeft",
+      "sequence": "⿰⿾⬚⬚",
+      "curated": true,
+      "label": "mirrored",
+      "slots": 2,
+      "count": 2,
+      "examples": [
+        "卝",
+        "臦"
       ]
     },
     {
@@ -540,6 +565,7 @@
       "id": "hangulFinal",
       "sequence": "⿱⿽⬚⬚⬚",
       "curated": true,
+      "label": "hangul",
       "slots": 3,
       "count": 0,
       "examples": []
