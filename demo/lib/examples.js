@@ -90,9 +90,6 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳宀𭕄木', char: '𫳍' },
     { sequence: '⿰車卜', char: '𨊣' },
     { sequence: '⿰舟力', char: '𬜑' },
-    { sequence: '⿱加㇣', char: '㔔' },
-    { sequence: '⿱加𠃍', char: '㔖' },
-    { sequence: '⿱者𠃍', char: '䎞' },
     { sequence: '⿴口도', refs: [15,24], char: '' },
     { sequence: '⿰舟ラ', refs: [15,16,17], char: '' },
     { sequence: '⿰艦ツ', refs: [15,23], char: '' },
@@ -180,24 +177,51 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
   // Korean gukja. The readings come from the Wikipedia record; the forms are BabelStone's, all
-  // tagged K, nine as GKP. The characters write a Korean coda with a Chinese character or stroke of
-  // matching shape: 乙 for ㄹ, 巴 or 邑 for ㅂ, 𠃍 for ㄱ and 𠃊 for ㄴ. The article also gives 己
-  // for ㄹ.
+  // tagged K, nine as GKP. Each character writes a Korean coda with a Chinese character or stroke
+  // of matching shape; forms that share a reading sit together.
   { key: 'korean', refs: [1, 30], examples: [
+    // 乙 writes the coda ㄹ.
     { sequence: '⿱文乙', char: '㐎', reading: '글' },
     { sequence: '⿱石乙', char: '乭', reading: '돌' },
     { sequence: '⿱米乙', char: '㐘', reading: '쌀' },
     { sequence: '⿱加乙', char: '乫', reading: '갈' },
+    { sequence: '⿱可乙', char: '㐓', reading: '갈' },
     { sequence: '⿱巨乙', char: '乬', reading: '걸' },
     { sequence: '⿱沙乙', char: '乷', reading: '살' },
     { sequence: '⿱所乙', char: '乺', reading: '솔' },
+    { sequence: '⿱召乙', char: '㐒', reading: '솔' },
+    { sequence: '⿱爫乙', char: '㐍', reading: '졸' },
     { sequence: '⿱注乙', char: '乼', reading: '줄' },
     { sequence: '⿱者乙', char: '乽', reading: '잘' },
-    { sequence: '⿱斗乙', char: '乧', reading: '둘' },
     { sequence: '⿳亠口乙', char: '㐔', reading: '골' },
+    { sequence: '⿱斗乙', char: '乧', reading: '둘' },
+    { sequence: '⿱豆乙', char: '㐙', reading: '둘' },
+    // 𠃍 and ㇣ write the coda ㄱ; 𠃊 writes ㄴ.
+    { sequence: '⿱加㇣', char: '㔔', reading: '강' },
+    { sequence: '⿱加𠃍', char: '㔖', reading: '각' },
     { sequence: '⿱巨𠃍', char: '巪', reading: '걱' },
     { sequence: '⿱斗𠃍', char: '㪲', reading: '둑' },
+    { sequence: '⿱斗㇣', char: '㪳', reading: '둥' },
     { sequence: '⿱豆𠃊', char: '䜳', reading: '둔' },
+    { sequence: '⿱者𠃍', char: '䎞', reading: '작' },
+    // 叱 writes the codas ㅅ and ㅈ. 㖎 is a 동자; 㖜 and 㖯 are 약자.
+    { sequence: '⿱加𠮟', char: '㖙', reading: '갓' },
+    { sequence: '⿱介𠮟', char: '㖋', reading: '갯' },
+    { sequence: '⿱𠮟介', char: '㖎', reading: '갯' },
+    { sequence: '⿱仇𠮟', char: '㖌', reading: '굿' },
+    { sequence: '⿱斗𠮟', char: '㖍', reading: '둣' },
+    { sequence: '⿱付𠮟', char: '㖚', reading: '붓' },
+    { sequence: '⿱去𠮟', char: '唟', reading: '것' },
+    { sequence: '⿱外𠮟', char: '夞', reading: '욋' },
+    { sequence: '⿱於𠮟', char: '旕', reading: '엇' },
+    { sequence: '⿱直𠮟', char: '嗭', reading: '짓' },
+    { sequence: '⿸庫𠮟', char: '廤', reading: '곳' },
+    { sequence: '⿱花𠮟', char: '蒊', reading: '곳' },
+    { sequence: '⿳亠口𠮟', char: '㖜', reading: '곳' },
+    { sequence: '⿱同𠮟', char: '㖯', reading: '똥' },
+    // 口 writes the coda ㅁ.
+    { sequence: '⿱老口', char: '㖈', reading: '놈' },
+    // 巴 writes the coda ㅂ.
     { sequence: '⿱高巴', char: '䯩', reading: '곱' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
