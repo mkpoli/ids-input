@@ -369,6 +369,16 @@ from this source edition and the palette. Both data builders include Tangut thro
 
 The keys of the bundled Tangut outline records, used to browse the full Tangut palette without loading the outlines. Regenerate with `node scripts/build_tangut_parts.mjs` after updating the outline source.
 
+## `tangut-strokes.json.gz`
+
+The nominal stroke count of each Tangut ideograph, read from Unicode 18.0.0's
+`TangutSources.txt`: `kTGT_RSUnicode` gives the radical number and the total stroke count, so
+`1.6` is six strokes. 6,177 ideographs have one, from 4 to 22 strokes; the Tangut components in
+U+18800–U+18AFF are not ideographs and have none. Rebuild with
+`node scripts/build_tangut_strokes.mjs`, which pins the file's SHA-256
+(`ae440bd9bba89b2610cfe6b498ac462d2763dd32bfead8ac30d32988b5b67a27`). Unicode data is
+distributed under the Unicode License v3.
+
 ## `tangut-layers.json.gz`
 
 The largest character split of 2,408 Tangut descriptions, 16 KB gzipped. BabelStone describes every

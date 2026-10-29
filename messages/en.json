@@ -185,6 +185,8 @@
   "parts.script.next": "Next",
   "parts.script.page": "Page {page} of {pages} · {count} parts",
   "parts.tab.tangut": "Tangut",
+  "parts.tangut.strokes": "Strokes",
+  "parts.tangut.anyStrokes": "All strokes",
   "parts.tab.common": "Common",
   "parts.tab.components": "Components",
   "parts.tab.recent": "Recent",

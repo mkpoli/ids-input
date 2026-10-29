@@ -182,6 +182,8 @@
   "parts.script.next": "다음",
   "parts.script.page": "{page} / {pages} 페이지 · {count}개",
   "parts.tab.tangut": "서하",
+  "parts.tangut.strokes": "획수",
+  "parts.tangut.anyStrokes": "모든 획수",
   "parts.tab.common": "자주 쓰는",
   "parts.tab.components": "구성 요소",
   "parts.tab.recent": "최근",
