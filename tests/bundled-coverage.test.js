@@ -9,9 +9,10 @@ import host from '../data/host-glyph-coverage.json' with { type: 'json' }
 import { hasTangut } from '../src/composer/tangut.js'
 import { hasBopomofo } from '../src/composer/bopomofo.js'
 import { hasSmallSeal } from '../src/composer/small-seal.js'
+import { hasShuishu } from '../src/composer/shuishu.js'
 
 it('indexes the exact scalar outlines in each dedicated bundle', () => {
-  for (const name of ['tangut', 'bopomofo', 'small-seal']) {
+  for (const name of ['tangut', 'bopomofo', 'small-seal', 'shuishu']) {
     const { records } = JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}-outlines.json.gz`, import.meta.url))))
     const points = Object.entries(records).filter(([key, rec]) => [...key].length === 1 && rec.G?.p?.length).map(([key]) => key.codePointAt(0)).sort((a, b) => a - b)
     const ranges = []
@@ -31,7 +32,7 @@ it('indexes the exact scalar outlines in each dedicated bundle', () => {
 })
 
 it('does not claim missing Tangut, Small Seal or variation sequences work offline', () => {
-  for (const sequence of [String.fromCodePoint(0x18D09), String.fromCodePoint(0x18D80), String.fromCodePoint(0x3FC3F), '𗀀\u{E0100}']) {
+  for (const sequence of [String.fromCodePoint(0x18D09), String.fromCodePoint(0x18D80), String.fromCodePoint(0x3FC3F), String.fromCodePoint(0x1B4E6), '𗀀\u{E0100}']) {
     expect(onlyBundled(sequence)).toBe(false)
   }
   expect(onlyBundled('⿰𗀀𗀁')).toBe(true)
@@ -61,7 +62,7 @@ it('pins the host outline inventory to the default composer export', () => {
 })
 
 it('keeps every indexed bundle glyph inside its bundle matcher', () => {
-  const matchers = { tangut: hasTangut, bopomofo: hasBopomofo, 'small-seal': hasSmallSeal }
+  const matchers = { tangut: hasTangut, bopomofo: hasBopomofo, 'small-seal': hasSmallSeal, shuishu: hasShuishu }
   for (const [name, ranges] of Object.entries(coverage)) {
     for (const [first, last] of ranges) for (let cp = first; cp <= last; cp++) {
       expect(matchers[name](String.fromCodePoint(cp))).toBe(true)

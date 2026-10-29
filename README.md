@@ -48,6 +48,13 @@ editor. Syllable searches the 11,172 modern syllables by character, jamo,
 code point; the romanization is a syllable spelling without the assimilation rules that cross
 syllable boundaries.
 
+The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
+allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
+outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
+`IDS Shuishu` face, and the tab filters them by name, reading, meaning and code point. Its groups
+follow the dictionary the index comes from: the characters that dictionary numbers, the rest, and the
+radicals.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
   <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
@@ -186,7 +193,8 @@ forms one syllable is one component; the Hangul palette writes modern combinatio
 syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
-allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
+allocation U+3D000–U+3FC3F, the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE,
+and the proposed Shuishu block U+1B300–U+1B4E5 and U+1B500–U+1B52E.
 A combining mark fills an operand slot when one is due, and trails the whole description when the
 description is complete; only a variation selector attaches to the preceding component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 56,651 bundled font
@@ -999,6 +1007,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
   (些, 才, 命, 窖, 饒) are left out, and so is 媄, which the article notes is also a Chinese variant
   of 美. The descriptions are BabelStone's, tagged V.
+- [水族水书文字数据库](https://shuishu.ihanzi.net/shuishu) (Shui script character database), described in
+  孙治弘, 谢雨霏, 刘凌, 叶晨, [「水书文字数据库和智能识别平台构建」](http://dhr.ruc.edu.cn/CN/Y2026/V6/I1/94),
+  『数字人文研究』6(1), 2026, 94–109: the readings of the Shuishu characters in `demo/lib/examples.js`,
+  cross-checked against its 字形、音读检索 path (read 2026-10-29). Readings differ between texts; the
+  examples keep the one Shuishu.xlsx gives, which the database agrees on for the thirty-two. Its glyph
+  images are not bundled, and its readings come out through `POST /api/words/search` with a `prefix`.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -1190,7 +1204,7 @@ Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
   rendering and decompositions, and suggestions for component shortcuts, loose marks (濁點,
-  諺文聲調), small-seal decomposition and the New Korean Orthography letters.
+  諺文聲調), small-seal decomposition, the New Korean Orthography letters and Shuishu.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.

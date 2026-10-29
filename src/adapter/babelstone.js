@@ -4,6 +4,7 @@
 import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
+import { shuishuNames, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -22,8 +23,8 @@ const REGIONS = /\(([^)]*)\)$/
 /** A CJK or Tangut character, the characters a mixed query may name as components. */
 const IDEOGRAPH = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u31C0-\u31EF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\u{17000}-\u{18DFF}\u{20000}-\u{3FFFD}]/u
 const KANA = /[\u3041-\u30FF\u31F0-\u31FF\uFF66-\uFF9F\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}]/u
-/** The scripts a mixed query may name as components: ideographs, kana and Bopomofo. */
-const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}\u{20000}-\u{3FFFD}]/u
+/** The scripts a mixed query may name as components: ideographs, kana, Bopomofo and Shuishu. */
+const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u312F\u31A0-\u31BF\u31C0-\u31EF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\uFF66-\uFF9F\u{17000}-\u{18DFF}\u{1AFF0}-\u{1AFFF}\u{1B000}-\u{1B12F}\u{1B132}\u{1B150}-\u{1B152}\u{1B155}\u{1B164}-\u{1B168}\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}\u{20000}-\u{3FFFD}]/u
 
 /**
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
@@ -188,7 +189,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * same table and palette; its modern correspondences supply search labels and character information.
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
- * the page's fonts when it opens.
+ * the page's fonts when it opens. `shuishu` adds the Shuishu characters and radicals to the
+ * palette, and their names, readings and meanings to the search.
  * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
  *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
@@ -200,10 +202,11 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
+ *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -296,6 +299,16 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return doc
   })().catch(error => { seal = null; throw error })
 
+  /** @type {Promise<import('./shuishu-data.js').ShuishuData | null> | null} */
+  let shui = null
+  const readShuishu = () => shui ??= (async () => {
+    if (!shuishu) return null
+    const doc = typeof shuishu === 'string' || shuishu instanceof URL
+      ? /** @type {import('./shuishu-data.js').ShuishuData} */ (JSON.parse(await readText(await load(shuishu)))) : shuishu
+    shuishuTable(doc) // Validate the format before exposing any of its data.
+    return doc
+  })().catch(error => { shui = null; throw error })
+
   /** @type {Promise<Map<string, string>> | null} */
   let overwriteMap = null
   const overwrites = () => overwriteMap ??= (overwriteText !== undefined ? Promise.resolve(overwriteText) : overwrite ? load(overwrite).then(readText) : Promise.resolve(''))
@@ -315,7 +328,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
   const read = () => table ??= Promise.all([
     given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
-      : smallSeal ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+      : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
     ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
     componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
@@ -382,11 +395,12 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
-      : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
+      : smallSeal || shuishu ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
+    readShuishu(),
     formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
-  ]).then(([base, doc, text]) => {
-    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+  ]).then(([base, doc, shuiDoc, text]) => {
+    const rows = doc || shuiDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
     // Keep reviewed contextual search substitutions out of palette families.
     const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
     const variants = readForms(safe)
@@ -604,7 +618,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const singleIdeograph = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text) || KANA.test(text))
       // A lone kana stays the kana in a part search, but characters read as it: き finds 生 by name.
       const singleIdeographOnly = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text))
-      /** @type {{ char: string, label: string }[]} */
+      /** @type {{ char: string, label: string, rank?: number }[]} */
       let hits = direct
       /** The whole characters a name finds, after the components and their relations. @type {{ char: string, label: string }[]} */
       let vocabulary = []
@@ -637,7 +651,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         } catch { /* The vocabulary is a convenience; the components still stand. */ }
       }
       if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
-      else if (smallSeal) {
+      if (shuishu) {
+        const doc = await readShuishu()
+        // A typed character or chart name stands with the components; a reading or meaning ranks
+        // below the vocabulary, which knows the query better.
+        if (doc) hits = [...hits, ...shuishuNames(doc, text)]
+      }
+      if (!characterInfo && smallSeal) {
         const doc = await readSeal()
         if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }
@@ -654,8 +674,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
           if (!hits.length && !vocabulary.length) throw error
         }
       }
-      // Without relations to rank them, the vocabulary's characters follow what the search has.
-      if (!ranked) hits = [...hits, ...vocabulary]
+      // Without relations to rank them, the vocabulary's characters follow the components but stay
+      // ahead of the readings and meanings, which only name a character second hand.
+      if (!ranked) hits = [...hits.filter(hit => (hit.rank ?? 0) < 4), ...vocabulary, ...hits.filter(hit => (hit.rank ?? 0) >= 4)]
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
     },

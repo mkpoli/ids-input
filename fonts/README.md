@@ -85,6 +85,18 @@ licence, and [LICENSE-IDSNewKorean.txt](LICENSE-IDSNewKorean.txt) records the at
 The source SVGs, digests and letter names are in [`data/new-korean/`](../data/new-korean/).
 Rebuild the font and outlines with `uv run scripts/build_new_korean.py`.
 
+## IDS Shuishu
+
+`IDSShuishu.woff2` maps 533 proposed Shuishu characters and radicals at the tentative allocations of
+the amendment (U+1B300–U+1B4E5 and U+1B500–U+1B52E); `fonts.css` gives the face the matching
+`unicode-range`. Unicode 18.0.0 leaves both ranges unassigned.
+
+The outlines are the glyphs of `Uni1B300Shuishu`, the font embedded in the code charts of
+ISO/IEC 10646 Amendment 2.2 charts (PDAM 2.2), read through the PDF's own ToUnicode map. The charts state no separate
+glyph licence and neither does the spreadsheet that names the characters; the position is in
+[LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
+Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.
+
 ## Unicode fallback glyphs
 
 The composer draws 56,651 additional characters from font-derived outlines when the selected export
