@@ -373,9 +373,11 @@ share links still use the sequence alone.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
-builds it in one call; the preview must use `separate: true`. When the composer omits leaf ownership,
-the source infers it only from one non-cut part per component in reading order; anything else leaves
-the source incomplete. Storage and the editor binding are not part of these modules yet.
+builds it in one call; the preview must use `separate: true`. `documentView(document, drawing, sketch)`
+adds the scoped drawing, frames and combined issues in one pass, for a preview that needs both the
+picture and its handles. When the composer omits leaf ownership, the source infers it only from one
+non-cut part per component in reading order; anything else leaves the source incomplete. Storage and
+the editor binding are not part of these modules yet.
 
 ## Adapters
 

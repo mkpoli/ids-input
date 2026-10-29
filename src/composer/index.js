@@ -173,3 +173,4 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
 }
 
 export { composeDocumentSource, documentSource } from './document-source.js'
+export { documentView } from './document-view.js'
