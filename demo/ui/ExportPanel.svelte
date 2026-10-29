@@ -2,32 +2,33 @@
   // Saving the drawing as a file: SVG, or PNG at a pixel size; a background of none, white, black
   // or any colour; the ink black or white to suit it, or any colour; a margin; empty slots left out
   // unless asked for. The settings are kept for the next visit.
-  import { SIZES, backgroundOf, inkOf, keepSettings, pngOf, storedSettings, svgOf } from '../lib/exporting.js'
+  import { SIZES, backgroundOf, inkOf, keepSettings, pngOf, scopedPngOf, scopedSvgOf, storedSettings, svgOf } from '../lib/exporting.js'
   import { download, fileName } from '../lib/files.js'
   import Icon from './Icon.svelte'
 
-  /** @type {{ drawing: import('../../src/adapter/types.js').Drawing | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
-  let { drawing, sequence, t, onnote } = $props()
+  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
+  let { drawing = null, scopes = null, sequence, t, onnote } = $props()
   let s = $state(storedSettings())
   $effect(() => keepSettings($state.snapshot(s)))
-  const thumb = $derived(drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
+  const ready = $derived(Boolean(scopes ?? drawing))
+  const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
 
   /** @param {'svg' | 'png'} [format] */
   export async function save(format) {
-    if (!drawing) return
+    if (!ready) return
     // The click's drawing, name and settings: the export runs on after the page has moved on.
-    const drawn = drawing, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
+    const drawn = drawing, drawnScopes = scopes, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
-      if (settings.format === 'svg') download(new Blob([svgOf(drawn, settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
-      else download(await pngOf(drawn, settings), fileName(name, 'png'))
+      if (settings.format === 'svg') download(new Blob([drawnScopes ? scopedSvgOf(drawnScopes, settings) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
+      else download(drawnScopes ? await scopedPngOf(drawnScopes, settings) : await pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), fileName(name, 'png'))
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {
-    if (!drawing) return
-    const drawn = drawing, settings = $state.snapshot(s), format = settings.format.toUpperCase()
+    if (!ready) return
+    const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
     try {
-      if (settings.format === 'svg') await navigator.clipboard.writeText(svgOf(drawn, settings))
-      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngOf(drawn, settings) })])
+      if (settings.format === 'svg') await navigator.clipboard.writeText(drawnScopes ? scopedSvgOf(drawnScopes, settings) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings))
+      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': drawnScopes ? scopedPngOf(drawnScopes, settings) : pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings) })])
       onnote(t('app.export.copied', { format }))
     } catch { onnote(t('app.copyFailed')) }
   }
@@ -81,8 +82,8 @@
   </div>
   <div class="actions">
     <span class="thumb" class:none={!backgroundOf(s)} aria-hidden="true">{#if thumb}<img src={thumb} alt="" />{/if}</span>
-    <button type="button" class="primary" disabled={!drawing} title={drawing ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
-    <button type="button" disabled={!drawing} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy', { format: s.format.toUpperCase() })}</button>
+    <button type="button" class="primary" disabled={!ready} title={ready ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
+    <button type="button" disabled={!ready} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy', { format: s.format.toUpperCase() })}</button>
   </div>
 </section>
 

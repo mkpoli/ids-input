@@ -1,0 +1,57 @@
+// Run against a local devrun server with IDS_URL and optional IDS_ADJUST_SHOTS.
+import { chromium } from 'playwright-core'
+import { strict as assert } from 'node:assert'
+import { mkdirSync, readFileSync } from 'node:fs'
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
+try {
+  for (const scheme of ['light', 'dark']) {
+    const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
+    const errors = []
+    page.on('pageerror', error => errors.push(error.message))
+    await page.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+    const field = page.locator('.ids-field input')
+    await field.fill('⿰木口')
+    await field.press('Tab')
+    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
+    await page.getByRole('button', { name: 'Layers', exact: true }).click()
+    const dialog = page.getByRole('dialog')
+    await dialog.locator('img').waitFor({ timeout: 30000 })
+    await dialog.getByRole('treeitem').nth(1).click()
+    await page.keyboard.press('Escape')
+    await page.getByRole('button', { name: 'Adjust layout', exact: true }).click()
+    const handle = page.locator('.ids-preview .handle.move')
+    await handle.waitFor({ timeout: 10000 })
+    const grip = await handle.boundingBox()
+    assert.ok(grip, 'the main preview has a move handle')
+    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+    await page.mouse.down()
+    await page.mouse.move(grip.x + grip.width / 2 + 60, grip.y + grip.height / 2 + 10)
+    await page.mouse.up()
+    await page.waitForTimeout(500)
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
+    const matrix = stored?.root?.children?.[0]?.transform?.[0]?.matrix
+    assert.ok(Math.abs(matrix?.[4] ?? 0) > 1 || Math.abs(matrix?.[5] ?? 0) > 1, 'the main preview drag writes a document transform')
+    if (process.env.IDS_ADJUST_SHOTS) {
+      mkdirSync(process.env.IDS_ADJUST_SHOTS, { recursive: true })
+      await page.locator('.ids-preview').screenshot({ path: `${process.env.IDS_ADJUST_SHOTS}/adjust-${scheme}.png` })
+    }
+    // Export the scoped drawing, not the old merged drawing.
+    const downloadPromise = page.waitForEvent('download')
+    await page.getByRole('button', { name: /Save SVG/i }).click()
+    const download = await downloadPromise
+    const path = await download.path()
+    assert.ok(path, 'the SVG downloaded')
+    const svg = readFileSync(path, 'utf8')
+    assert.ok(svg.startsWith('<svg '), 'the export is an SVG')
+    assert.ok(svg.includes('<path'), 'the export contains the scoped ink')
+    await page.getByRole('button', { name: 'Reset part', exact: true }).click()
+    await page.waitForTimeout(300)
+    const reset = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.transform)
+    assert.equal(reset, undefined)
+    assert.deepEqual(errors, [])
+    console.log(`PASS ${scheme}: main preview drag, scoped export and reset`)
+    await page.close()
+  }
+} finally {
+  await browser.close()
+}

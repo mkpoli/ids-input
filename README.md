@@ -415,11 +415,11 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 (Preview, Approximate, Final, Could not compose, Too large), and the adapter's `drawing` in place of
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
-`IdsPreview` supports manual drawing adjustments through `editable`, `bind:adjustments` and
-`onchoose(path)`. Drag a part to move it, its corner square to scale it, or its circle to turn it.
-Arrow keys nudge; `+` and `-` scale; `[` and `]` turn; `0` resets the chosen part. Adjustments are
-keyed by leaf path. Use `composerPreview({ base, separate: true })` to draw each operand separately
-for adjustment. A drawing made with ㇯ keeps its cut mask and cannot be adjusted.
+`IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
+export. Drag the selected layer to move it, its corner square to scale it, or its circle to turn it;
+each gesture writes one coalesced document transform. Use `composerPreview({ base, separate: true })`
+so each operand arrives as its own part. When the document source is incomplete the preview falls
+back to the merged drawing, and editing is unavailable.
 
 A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
 each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
@@ -927,9 +927,9 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
-those adjustments stay with their tab while it is open. The Layers dialog edits the document's layer
-transforms, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
+for. Adjust layout moves, scales and turns document layers without changing the sequence; the changes
+stay with their tab and export through the scoped drawing. The Layers dialog edits the same layer
+document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
@@ -941,7 +941,7 @@ keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, imag
 commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
 the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
-selection, undo history and drawing adjustments, which can then be edited independently.
+selection, undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, examples (each with its
 character and code point, an abbreviated character, or marked when it has none), a share link with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the

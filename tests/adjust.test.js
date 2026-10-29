@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { groupParts, partTransform } from '../src/core/preview.js'
+import { groupParts } from '../src/core/preview.js'
 import { drawingSvg } from '../src/core/index.js'
 
 const left = { index: 0, box: [0, 0, 500, 1000], empty: false }
@@ -38,18 +38,6 @@ describe('grouping a drawing by leaf', () => {
   it('has nothing to group without parts or leaves', () => {
     expect(groupParts([], [left, right])).toBeNull()
     expect(groupParts([piece([0, 0, 10, 10])], [])).toBeNull()
-  })
-})
-
-describe('a part transform', () => {
-  it('turns, scales and moves about the part box centre', () => {
-    expect(partTransform({ dx: -5, dy: 10, scale: 0.8, rotate: 15 }, [0, 0, 100, 200]))
-      .toBe('translate(-5 10) translate(50 100) rotate(15) scale(0.8) translate(-50 -100)')
-  })
-  it('is empty when nothing changes, and ignores values that are not numbers', () => {
-    expect(partTransform({}, [0, 0, 100, 200])).toBe('')
-    expect(partTransform({ dx: 0, dy: 0, scale: 1, rotate: 0 }, [0, 0, 100, 200])).toBe('')
-    expect(partTransform({ dx: 'wide', scale: 'big' }, [0, 0, 100, 200])).toBe('')
   })
 })
 
