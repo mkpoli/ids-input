@@ -988,9 +988,9 @@ What this package offers that Mojidata, as far as its pages and repositories sho
 
 - A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
   by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of common and hard-to-type components by stroke count and first stroke, every Han
-  character the composer draws, a Marks tab for combining and tone marks, with font subsets for the
-  parts few fonts draw.
+- A parts palette of every component the IDS data names, by stroke count and first stroke, with the
+  most used parts first and font subsets for the parts few fonts draw, plus the composer's Han
+  characters and a Marks tab for combining and tone marks.
 - A keyboard-driven decomposition tree from which any part or node is taken into the editor.
 - Embeddable components behind an adapter interface, so a host keeps its own data and search.
 
