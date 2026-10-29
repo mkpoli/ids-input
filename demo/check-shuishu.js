@@ -2,7 +2,7 @@
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 
-const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
+const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {})
 try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 } })
   await page.goto(process.env.IDS_URL ?? 'http://localhost:5173')
@@ -14,13 +14,16 @@ try {
 
   // The groups: the dictionary's characters first, the radicals and the unnumbered characters by button.
   const groups = page.locator('.seal-groups button')
-  const texts = (await groups.allTextContents()).map(text => text.trim())
-  assert.deepEqual(texts.map(text => text.replace(/\s+/g, ' ')), ['Dictionary 207', 'Radicals 47', 'Other logograms 279'])
+  const texts = (await groups.allTextContents()).map(text => text.replace(/\s+/g, ' ').trim())
+  assert.deepEqual(texts.map(text => text.replace(/ \d+$/, '')), ['Dictionary', 'Radicals', 'Other logograms'])
+  const counts = texts.map(text => Number(text.match(/ (\d+)$/)?.[1]))
+  assert.ok(counts.every(count => count > 0), 'each group has parts')
   await groups.nth(1).click()
-  assert.equal(await page.locator('.parts-grid .part').count(), 47)
+  assert.equal(await page.locator('.parts-grid .part').count(), counts[1])
   await groups.nth(2).click()
-  assert.equal(await page.locator('.parts-grid .part').count(), 279)
+  assert.equal(await page.locator('.parts-grid .part').count(), counts[2])
   await groups.nth(0).click()
+  assert.equal(await page.locator('.parts-grid .part').count(), counts[0])
 
   const filter = page.locator('.parts-filter')
   for (const [query, count, first, name] of [

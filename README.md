@@ -925,6 +925,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
   disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- [水族水书文字数据库](https://shuishu.ihanzi.net/shuishu) (Shui script character database), described in
+  孙治弘, 谢雨霏, 刘凌, 叶晨, [「水书文字数据库和智能识别平台构建」](http://dhr.ruc.edu.cn/CN/Y2026/V6/I1/94),
+  『数字人文研究』6(1), 2026, 94–109: the readings of the Shuishu characters in `demo/lib/examples.js`,
+  cross-checked against its 字形、音读检索 path (read 2026-10-29). Readings differ between texts; the
+  examples keep the one Shuishu.xlsx gives, which the database agrees on for the thirty-two. Its glyph
+  images are not bundled, and its readings come out through `POST /api/words/search` with a `prefix`.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),

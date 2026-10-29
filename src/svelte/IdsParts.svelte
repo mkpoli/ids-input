@@ -12,6 +12,7 @@
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
+  import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
@@ -412,7 +413,8 @@
     if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
     if (tab === 'shuishu') {
-      const code = /^U\+([0-9a-f]{4,6})$/i.exec(query)
+      // A code point written U+1B300, or as bare hex when that is all there is.
+      const code = /^(?:U\+)?((?=.*\d)[0-9a-f]{4,6})$/i.exec(query)
       if (code) return shuiParts.filter(part => part.part.codePointAt(0) === parseInt(code[1], 16))
       const lowered = query.toLowerCase()
       return shuiParts.filter(part => part.part === query)
@@ -523,7 +525,6 @@
     selection?.removeAllRanges()
     selection?.addRange(range)
   }
-  /** @param {PalettePart} part */
   /** The name, reading and meaning a Shuishu part is found by, lowercased. @param {PalettePart} part */
   function shuiWords(part) {
     return [part.name, part.reading, part.meaning, part.meaningEn, ...(part.modern ?? [])]
@@ -531,15 +532,7 @@
   }
   /** @param {PalettePart} part */
   const title = part => {
-    if (part.kind === 'shui') {
-      return [
-        part.part,
-        `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
-        part.name,
-        part.reading,
-        part.meaning && part.meaningEn ? `${part.meaning} (${part.meaningEn})` : part.meaning ?? part.meaningEn,
-      ].filter(Boolean).join(' · ')
-    }
+    if (part.kind === 'shui') return shuishuLabel(/** @type {import('../adapter/shuishu-data.js').ShuishuPart} */ (part))
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
     // Tangut characters carry their count in the tab's own data, not in the palette rows.

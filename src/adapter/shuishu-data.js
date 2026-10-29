@@ -28,26 +28,36 @@ export const shuishuLabel = part => [
   `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
 ].filter(Boolean).join(' · ')
 
+/** The parts by character, built once per document. @type {WeakMap<ShuishuData, Map<string, ShuishuPart>>} */
+const indexes = new WeakMap()
+/** @param {ShuishuData} doc */
+function index(doc) {
+  let map = indexes.get(doc)
+  if (!map) indexes.set(doc, map = new Map(doc.parts.map(part => [part.part, part])))
+  return map
+}
+
 /**
- * The characters a name, reading or meaning names, and the character typed itself.
+ * The characters a query names: the Shuishu characters it contains, then the ones whose name,
+ * reading or meaning contains it (a single character ends the search there).
  * @param {ShuishuData} doc @param {string} query @param {number} [limit]
  * @returns {{ char: string, label: string }[]}
  */
 export function shuishuNames(doc, query, limit = 12) {
   const text = query.trim()
   if (!text) return []
-  if (isShuishu(text)) {
-    return [...text].filter(isShuishu)
-      .map(char => doc.parts.find(part => part.part === char))
-      .filter(part => part !== undefined)
-      .map(part => ({ char: part.part, label: shuishuLabel(part) }))
-  }
+  const parts = index(doc)
+  const typedChars = [...text].filter(isShuishu)
+  const typed = typedChars.map(char => parts.get(char)).filter(part => part !== undefined)
+  const hits = typed.map(part => ({ char: part.part, label: shuishuLabel(part) }))
+  if (typedChars.length === [...text].length && typedChars.length) return hits
+  const seen = new Set(typedChars)
   const lowered = text.toLowerCase()
-  const hits = []
   for (const part of doc.parts) {
+    if (hits.length >= limit) break
+    if (seen.has(part.part)) continue
     const names = [part.name, part.meaning, part.meaningEn, part.reading].filter(Boolean)
     if (names.some(name => /** @type {string} */ (name).toLowerCase().includes(lowered))) hits.push({ char: part.part, label: shuishuLabel(part) })
-    if (hits.length >= limit) break
   }
   return hits
 }

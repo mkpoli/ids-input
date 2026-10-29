@@ -450,6 +450,11 @@ meanings come from Andrew West's
 [`Shuishu.xlsx`](https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx) (BabelStone), which indexes them
 by the proposal's N4922 code point.
 
+The example readings are cross-checked against the
+[水族水书文字数据库](https://shuishu.ihanzi.net/shuishu) (孙治弘 et al., 『数字人文研究』6(1), 2026,
+94–109), through its `POST /api/words/search` with a `prefix` of the meaning. Readings vary from text
+to text there; the single reading kept here is the spreadsheet's. Its glyph images are not bundled.
+
 BabelStone's four private-use Shuishu fonts (WSF, WZL, ZJR and Nishida) draw many more entries than
 the proposal covers; their site marks them "Not currently explicitly licensed", so they are not the
 glyph source here. Neither the chart font nor the spreadsheet states a separate licence. The glyphs

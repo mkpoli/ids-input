@@ -406,7 +406,7 @@ export const EXAMPLE_GROUPS = [
   ] },
   // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
   // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
-  { key: 'shuishu', refs: [47], examples: [
+  { key: 'shuishu', refs: [47, 49], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers.
     { "sequence": "𛌀", "char": "𛌀", "modern": "一", "source": "data/shuishu.json.gz" },
