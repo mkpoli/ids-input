@@ -972,7 +972,8 @@
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
-  structure={char => adapter.structure(char)} onchange={layerChanged} onstructure={layerStructureChanged} />
+  chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
+  onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
     <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>

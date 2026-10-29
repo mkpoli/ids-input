@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '../../src/composer/index.js'
-  import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerFrames, renderScopes, scopesSvg } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -10,8 +10,8 @@
   /** @typedef {import('../../src/document/index.js').Node} Node */
   /** @typedef {import('../../src/adapter/types.js').Drawing} Drawing */
   /** @typedef {import('../../src/adapter/types.js').SketchLeaf} SketchLeaf */
-  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, structure?: ((char: string) => Promise<{ text: string }[]>) | null, onchange?: () => void, onstructure?: () => void }} */
-  let { open = $bindable(false), session, preview, sequence, t, structure = null, onchange = () => {}, onstructure = () => {} } = $props()
+  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void }} */
+  let { open = $bindable(false), session, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {} } = $props()
 
   let drawing = $state.raw(/** @type {Drawing | null} */ (null))
   let sketch = $state.raw(/** @type {SketchLeaf[] | null} */ (null))
@@ -54,6 +54,19 @@
     return out
   })
   const selected = $derived(doc && chosen ? findLayer(doc.root, chosen)?.node ?? null : null)
+
+  // Keep the editor's selected path and the inspector's selected layer on the same node.
+  $effect(() => {
+    const path = chosenPath
+    if (!open || !path || !session) return
+    const next = session.document
+    const node = layerAtPath(next.root, path)
+    if (!node || session.chosen === node.id) return
+    if (!session.choose(node.id)) return
+    chosen = session.chosen
+    doc = session.document
+    onchange()
+  })
 
   // Canvas frames for every layer, shared with the preview-side frame work.
   $effect(() => {
@@ -157,6 +170,8 @@
     if (!session.choose(id)) return
     chosen = session.chosen
     doc = session.document
+    const path = pathOfLayer(doc.root, id)
+    if (path && onchoose) onchoose(path)
     onchange()
   }
 

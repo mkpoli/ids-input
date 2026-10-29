@@ -630,8 +630,8 @@ bundled and loaded on demand. Han and mixed descriptions also read the static fi
 a manifest, the learned layout, and the records of every character and the host lists of every
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. An export that
-carries no host list — the compact Serif one is — has no part to cut; its descriptions are laid out by the
-composer's plain shares instead of the learned boxes, which are where cut parts go. Drawing runs in a Web Worker,
+carries no host list has no part to cut; its descriptions are laid out by the composer's plain shares
+instead of the learned boxes, which are where cut parts go. Drawing runs in a Web Worker,
 one sequence at a time; a newer sequence ends the drawing before it.
 
 ```js

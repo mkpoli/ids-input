@@ -10,11 +10,14 @@ import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
 import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
 import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
 import { onlyBundled } from '../../src/composer/local.js'
+import { bundledSource } from '../../src/composer/bundled.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
+// Examples whose parts are all bundled draw from a local source, not the export.
+const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
 const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
@@ -26,10 +29,7 @@ const failed = []
 for (const example of EXAMPLES) {
   try {
     const local = onlyBundled(example.sequence)
-    let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? null : source)
-    // A local Han form still needs the export for the manifest and layout.
-    // The Bopomofo and Small Seal sources keep their bundled outlines, without a fallback.
-    if (!selected && !hasBopomofo(example.sequence) && !hasSmallSeal(example.sequence)) selected = source
+    let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? bundled : source)
     if (hasBopomofo(example.sequence)) {
       if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
       selected = bopomofoSources.get(selected)
