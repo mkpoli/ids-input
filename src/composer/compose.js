@@ -507,6 +507,8 @@ export class Composer {
     const bottom = top - openH * 0.35
     const legs = componentPosition('儿:under-bar', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, top - bottom)
     if (!legs) return null
+    // The native cut is wound opposite the enclosure; without this the overlap cancels.
+    legs.reverse = true
     const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
     return [...outer, legs, ...lower]
   }

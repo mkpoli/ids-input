@@ -315,9 +315,9 @@ export function raster(group, size = 96) {
 const num = v => { const s = v.toFixed(1); return s === '-0.0' ? '0.0' : s }
 
 /** Whether a part's flips turn its contours the other way round: one mirror reverses their winding,
- *  a mirror in both axes does not. Left as they are, a reversed part cancels the ink it overlaps
- *  under the nonzero rule. */
-const turnsOver = p => (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
+ *  a mirror in both axes does not. `reverse` flips them explicitly, for native cuts whose winding
+ *  would otherwise cancel the ink of the bar they overlap. */
+const turnsOver = p => (p.reverse ?? false) !== (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
 
 /** A contour's segments drawn the other way round: the same outline, wound as the glyph was drawn. */
 function backwards(segs) {
