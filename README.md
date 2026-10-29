@@ -226,8 +226,9 @@ draws a pyramid of three or more rows as equal square cells in centred rows, so 
 given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
 may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
 composer draws up to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids
-of 3 to 24 rows. Its Component field starts with the selected component or 口; a typed value is kept
-for subsequent insertions. Enter one component, then choose a preset or enter a custom row count.
+of 3 to 24 rows. The shared Component field above the generators starts with the selected component
+or 口; a typed value is kept for all three. Enter one component, then choose a preset or a custom row
+count.
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
@@ -240,8 +241,8 @@ defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and t
 `⿱`. `repeatSequence('口', [2, 1, 2])` writes 2·1·2 as `⿳⿰口口口⿰口口`. `enclosedRepeatSequence(host, part)` puts four
 copies in a 2×2 grid inside an enclosure.
 
-The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with its own Component field, as
-Pyramids does. A second field, Bottom row, takes another component and falls back to the first when
+The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with the shared Component field. A
+second field, Bottom row, takes another component and falls back to the first when
 empty. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
 五同, 六同, 八同 and 二組 arrangements of [畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
