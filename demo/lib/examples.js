@@ -201,7 +201,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
-  // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
+  // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
   // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
   // thin band. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The
@@ -210,7 +210,9 @@ export const EXAMPLE_GROUPS = [
   // New Year 合文 share strokes between their characters, as 唯吾知足 does with one 口, and an IDS
   // tree cannot share a component, so they are not examples.
   { key: 'ligature', examples: [
-    { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
+    // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
+    // 辶's embrace, which is what the example draws.
+    { sequence: '⿺辶⿱宀⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
@@ -362,6 +364,34 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱丷𰆊', char: '兯', reading: '한' },
     { sequence: '⿱㇒丷', char: '乊', reading: '호' },
     { sequence: '⿱乊乙', char: '乥', reading: '홀' },
+  ] },
+  // Japanese kokuji (国字): characters first made in Japan, in reading order. The list follows the
+  // Wikipedia article's examples; readings are kana from that article or KANJIDIC2.
+  { key: 'kokuji', refs: [1, 48], examples: [
+    { sequence: '⿰魚弱', char: '鰯', reading: 'いわし' },
+    { sequence: '⿰木堅', char: '樫', reading: 'かし' },
+    { sequence: '⿺瓦千', char: '瓩', reading: 'キログラム' },
+    { sequence: '⿰米千', char: '粁', reading: 'キロメートル' },
+    { sequence: '⿰立千', char: '竏', reading: 'キロリットル' },
+    { sequence: '⿰魚康', char: '鱇', reading: 'コウ' },
+    { sequence: '⿺辶入', char: '込', reading: 'こむ' },
+    { sequence: '⿰木神', char: '榊', reading: 'さかき' },
+    { sequence: '⿰身美', char: '躾', reading: 'しつけ' },
+    { sequence: '⿰木昌', char: '椙', reading: 'すぎ' },
+    { sequence: '⿰月泉', char: '腺', reading: 'せん' },
+    { sequence: '⿰魚雪', char: '鱈', reading: 'たら' },
+    { sequence: '⿺辶十', char: '辻', reading: 'つじ' },
+    { sequence: '⿰山𠧗', char: '峠', reading: 'とうげ' },
+    { sequence: '⿹勹匕', char: '匂', reading: 'におう' },
+    { sequence: '⿰火田', char: '畑', reading: 'はたけ' },
+    { sequence: '⿰亻動', char: '働', reading: 'はたらく' },
+    { sequence: '⿰釒武', char: '錻', reading: 'ぶりき' },
+    { sequence: '⿰土屏', char: '塀', reading: 'へい' },
+    { sequence: '⿰木正', char: '柾', reading: 'まさき' },
+    { sequence: '⿰立毛', char: '竓', reading: 'ミリリットル' },
+    { sequence: '⿰木⿱艹⿰亻𠤎', char: '椛', reading: 'もみじ' },
+    { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
+    { sequence: '⿰木卆', char: '枠', reading: 'わく' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [

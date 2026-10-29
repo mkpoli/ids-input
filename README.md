@@ -27,8 +27,8 @@ The package has four layers, and an optional preview:
   character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, structure templates, a
-  "Take parts from" decomposition browser, a search over components and characters) and the
-  preview, each placeable on its own
+  "Take parts from" decomposition browser, a search over components and characters, and a pad to
+  find a part by drawing it) and the preview, each placeable on its own
   or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
@@ -154,7 +154,9 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. The Components panel shows the most used parts first, then every Han
+also work without an editor. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
+drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
+`--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
@@ -479,7 +481,8 @@ annotations are not included.
 ## Search
 
 `IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
-four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+four-part grids, repeated pairs and triples, the larger two-row repeats, mirrored pairs, matching
+outer parts, enclosures and overlays.
 The demo offers it beside the existing character search below the editor. Selecting a preset
 runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
 characters** copies the complete result, including hits beyond the visible page.
@@ -639,6 +642,23 @@ English meanings), the same search also offers whole characters after the compon
 characters the relations already know: roof finds 宀 and then 屋, silk finds 丝, 絲 and 糸 and then
 絹, and thuy finds 水 and then 始. Among equally close names the more common character comes first,
 by KANJIDIC2's newspaper frequency or Unihan's school grade.
+
+### Drawing a part
+
+The Find tab has a pen beside its field. Draw a part in the box, and the tab lists the palette
+parts whose shapes are closest; picking one puts it in the chosen slot, like a typed find. The
+strokes are compared with the glyphs of the page's own font stack, built once when the pad first
+opens and kept for the page: the palette's parts used in at least 50 descriptions (about 800 here)
+and the CJK strokes. A part a font draws as its missing-glyph box is left out. The host should have
+its CJK faces loaded, as the workshop does. Nothing is sent anywhere, and the pad needs no extra
+data.
+
+Parts within one stroke of the drawing's count, or two when the drawing has one or two strokes,
+come before the rest; within that, the closest shapes come first by how far each shape's ink lies
+from the other's and by a coarse histogram of stroke directions. The match is approximate: it looks at outlines, not stroke order, so simple
+parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
+similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison, and
+`sketchTemplates` in the Svelte layer builds the glyph shapes.
 
 ## Preview
 
@@ -876,10 +896,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   uncited there.
 - John H. Jenkins, Richard Cook and Ken Lunde, [Proposal to Add a Character to the UTR #45](https://www.unicode.org/L2/L2012/12032-one-add-utr45.pdf),
   2012-01-26: the 招財進寶 ligature for Chinese New Year decorations, with its CDL: 宀 at the top,
-  辶 around the lower left, and 王, 尔, 隹, 貝 and 招 inside.
+  a 辶 wrapping the square from the 宀's band, and 王, 尔, 隹, 貝 and 招 inside.
 - [U-source ideographs (UTR #45)](https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt),
   Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
-  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`.
+  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`, with the 宀 above the 辶. The proposal's glyph puts the 辶 around the
+  宀 and the rows, so the example follows the glyph: `⿺辶⿱宀⿱⿰王尔⿲隹貝招`.
 - [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
   oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
@@ -899,6 +920,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
   厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
   those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
+- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the Japanese-made
+  characters in `demo/lib/examples.js`, the jōyō, jinmeiyō and hyōgai examples and 鰯, 鱈, 樫, 椙,
+  椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
+  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
+  disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -983,7 +1009,8 @@ The toolbar holds Undo and Redo with the history of named steps, consuming the d
 transform steps before the editor’s structural steps. Examples come with their character and code
 point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
 with its QR code, the language. The address bar carries the document while a layer transform exists,
-so copying the location keeps the placement; a plain sequence stays in the hash.
+so copying the location keeps the placement; opening such a link keeps the token. A plain sequence
+stays in the hash.
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use

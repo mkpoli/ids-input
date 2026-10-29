@@ -39,6 +39,7 @@
   "app.examples.ligature": "合文",
   "app.examples.korean": "韩国国字",
   "app.examples.gugyeol": "韩国口诀字",
+  "app.examples.kokuji": "日本国字",
   "app.examples.filter": "按序列、读音或码位筛选",
   "app.examples.filterAll": "全部",
   "app.examples.encoded": "有码位",

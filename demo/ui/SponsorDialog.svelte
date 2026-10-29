@@ -1,5 +1,5 @@
 <script>
-  // Why the author needs help, then three steps that end at the Ko-fi button. Ko-fi handles the
+  // The author's portrait, why they need help, then three steps that end at the Ko-fi button. Ko-fi handles the
   // amount and the payment; companies can write in for an ad on the site. The header's Sponsor
   // button opens it.
   import Dialog from './Dialog.svelte'
@@ -11,10 +11,13 @@
 <Dialog bind:open title={t('app.sponsor.label')} closeLabel={t('app.close')}>
   <div class="sheet">
     <div class="hero" aria-hidden="true">
-      <svg class="heart" viewBox="0 0 24 24">
-        <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
-        <ellipse class="shine" cx="7.6" cy="9.6" rx="1.5" ry="2.1" transform="rotate(-30 7.6 9.6)" />
-      </svg>
+      <span class="portrait">
+        <img src="/sponsor-portrait.webp" alt="" width="112" height="112" decoding="async" />
+        <svg class="heart" viewBox="0 0 24 24">
+          <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
+          <ellipse class="shine" cx="7.6" cy="9.6" rx="1.5" ry="2.1" transform="rotate(-30 7.6 9.6)" />
+        </svg>
+      </span>
       <span class="spark s1">✦</span><span class="spark s2">✦</span><span class="spark s3">✦</span>
     </div>
     <p class="lead">{t('app.sponsor.lead')}</p>
@@ -43,15 +46,18 @@
 <style>
   .sheet{--sp-ink:light-dark(#c2185b,#ffb3cd);--sp-heart:light-dark(#ff4f88,#ff7aa6);--sp-soft:light-dark(#fff1f5,#2f1822);
     --sp-line:light-dark(#ffd0de,#5a2a3f);display:flex;flex-direction:column;gap:14px}
-  .hero{position:relative;display:grid;place-items:center;height:76px;margin:-4px -4px 0;border-radius:16px;
+  .hero{position:relative;display:grid;place-items:center;height:136px;margin:-4px -4px 0;border-radius:16px;
     background:radial-gradient(closest-side,light-dark(#ffd9e5,#4a1e31),transparent)}
-  .heart{width:48px;height:48px;fill:var(--sp-heart);transform-origin:50% 60%;animation:beat 2.8s ease-in-out infinite;
-    filter:drop-shadow(0 4px 8px rgb(255 79 136 / .35))}
+  .portrait{position:relative;width:112px;height:112px}
+  .portrait img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;
+    box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--sp-line),0 10px 24px rgb(255 79 136 / .3)}
+  .heart{position:absolute;right:-2px;bottom:2px;width:34px;height:34px;fill:var(--sp-heart);stroke:var(--surface);stroke-width:2;paint-order:stroke;
+    overflow:visible;transform-origin:50% 60%;animation:beat 2.8s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgb(255 79 136 / .35))}
   .heart .shine{fill:#fff;opacity:.6}
   .spark{position:absolute;color:var(--sp-heart);opacity:.75;animation:twinkle 2.4s ease-in-out infinite}
-  .s1{top:14px;left:calc(50% - 46px);font-size:12px}
-  .s2{top:10px;left:calc(50% + 34px);font-size:9px;animation-delay:.8s}
-  .s3{bottom:12px;left:calc(50% + 42px);font-size:11px;animation-delay:1.6s}
+  .s1{top:22px;left:calc(50% - 84px);font-size:14px}
+  .s2{top:12px;left:calc(50% + 66px);font-size:10px;animation-delay:.8s}
+  .s3{bottom:20px;left:calc(50% - 76px);font-size:11px;animation-delay:1.6s}
   @keyframes beat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.18)}86%{transform:scale(.96)}93%{transform:scale(1.1)}}
   @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:.9;transform:scale(1)}}
   .lead{margin:0;font-size:14px;line-height:1.65}
