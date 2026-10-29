@@ -79,7 +79,7 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
       }
       expect(runs).toBe(4)
       expect(openings).toHaveLength(3)
-      expect(Math.max(...openings) - Math.min(...openings)).toBeLessThanOrEqual(fontStyle === 'kaisho' ? 4 : 2)
+      expect(Math.max(...openings) - Math.min(...openings)).toBeLessThanOrEqual(2)
     }
     expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(4) // outside + three counters; both frame legs reach the hook
     expect(components(raster(parts, 512), 512)).toBe(5)
@@ -142,6 +142,38 @@ it('matches native Kaisho upright weight and a restrained frame slant', () => {
     for (let row = 0; row < 1000; row++) ink += mask[row * 1000 + 600]
     expect(ink).toBeGreaterThanOrEqual(35)
     expect(ink).toBeLessThanOrEqual(44)
+  }
+})
+
+it('seats the Kaisho feet inside the hook bar and keeps native dot scale', () => {
+  const [stem, frame, , , hook, dots] = componentParts(body, undefined, 'kaisho')
+  const runsAt = (part, x) => {
+    const mask = raster([part], 1000), runs = []
+    let start = -1
+    for (let y = 1000; y >= 0; y--) {
+      const ink = mask[(880 - y) * 1000 + x]
+      if (ink && start < 0) start = y
+      if (!ink && start >= 0) { runs.push([start, y + 1]); start = -1 }
+    }
+    return runs
+  }
+  for (const [part, x] of [[stem, 290], [frame, 430], [frame, 700]]) {
+    const foot = runsAt(part, x).at(-1), bar = runsAt(hook, x)[0]
+    expect(foot[1]).toBeGreaterThanOrEqual(bar[1] - 2)
+    expect(foot[1]).toBeLessThanOrEqual(bar[0] + 2)
+  }
+  expect(hook.source[1]).toBeLessThan(-60) // native 寫 depth, not the high cut
+  const boxes = dots.part.contours.map(contour => {
+    const xs = [], ys = []
+    for (let i = 0; i < contour.light.length; i += 2) { xs.push(contour.light[i]); ys.push(contour.light[i + 1]) }
+    return { cx: (Math.min(...xs) + Math.max(...xs)) / 2, cy: (Math.min(...ys) + Math.max(...ys)) / 2,
+      w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
+  })
+  expect(boxes).toHaveLength(4)
+  const targets = [[655, 145], [538.5, 125], [409.5, 105], [252, 85]]
+  for (const [i, box] of boxes.entries()) {
+    expect(Math.hypot(box.cx - targets[i][0], box.cy - targets[i][1])).toBeLessThan(3)
+    expect(Math.min(box.w, box.h)).toBeGreaterThan(75)
   }
 })
 

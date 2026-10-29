@@ -31,11 +31,12 @@ def _map(contour, transform):
 
 
 def _weighted(contour, amount=20):
-    """Restore native brush weight after fitting: 10 units per outline edge.
+    """Restore native brush weight after fitting: `amount` total, half per edge.
 
     Kureedo's 旧 and 目 stems measure about 47–56 units in the source em.
     Scaling to the roof's opening gives 25–29; a 20-unit boundary stroke
     restores 45–49 without changing the donor's slant or counter placement.
+    The smaller dots use 16, matching their reduced scale.
     """
     shape = pathops.Path()
     replayRecording(contour, shape.getPen())
@@ -84,7 +85,8 @@ def xie_kaisho(gs, cmap):
     upright = _map(old[0], lambda x, y: (x * .52 + 196,
                  270 + (y - donor_bottom) * (633 - 270) / (donor_top - donor_bottom)))
 
-    # Retain the roof, curved terminal and dots at their contextual placement.
+    # Retain the roof and curved terminal; the four dots are rescaled and
+    # re-centered under the body, then weighted for their reduced size.
     hook = [move(270,205)] + body[1:12] + [line(270,245), close]
     hook = _map(hook, lambda x, y: (x, y + 25))
     dots = []
