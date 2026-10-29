@@ -948,9 +948,22 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
 - [揮春上的合體字　你看懂幾多？ (新春篇)](https://hk.ulifestyle.com.hk/topic/detail/200474/), UHK 港生活,
   2015-02-12: photographs of 日日有見財, 日進斗金, 唯吾知足, 進寶財招, 黃金萬兩, 吉祥如意 and 學好孔孟.
-  The examples take the two forms' component order from the article. 日日有見財 draws in two rows,
-  有 beside 見財, so the composer does not squeeze 有 into a thin band. The other forms share strokes
-  between their characters, which IDS cannot express, so they stay out of the examples.
+  The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
+  見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
+  shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters, and no recorded description
+  writes the sharing, so they stay out.
+- [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
+  read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
+  description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
+  the arrangement the reference photograph shows, so the shared 子 is drawn once.
+- [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
+  福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
+  and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
+  written as an IDS tree without duplicating them.
+- 吴国升, [组合字的内外乾坤](https://epaper.gmw.cn/gmrb/html/2024-04/21/nw.D110000gmrb_20240421_2-05.htm),
+  光明日报, 2024-04-21: describes 招財進寶 sharing the 貝 of 財 and the 扌 of 招 inside 寶's frame,
+  with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
   readings and code points of the Korean gukja (國字) and gugyeol (口訣字) examples in
@@ -1222,8 +1235,10 @@ dictionary qualifiers; component occurrences and lookup aliases have separate la
 Meaning paths retain their matched sense and follow at most two links. Component
 usage is a terminal link, so shared components do not connect unrelated words.
 
-`IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
-the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+`IdsInput` shows these details on character hover, on keyboard focus, and on a click or
+tap. A click keeps the card in place while the pointer travels to it, so the parts in it
+can be used; Esc, its × or a click elsewhere dismisses it. Press F1 to move into the
+card. Related characters and emoji insert into the
 chosen slot, or replace the inspected character in the tree or sequence field. Custom
 layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
