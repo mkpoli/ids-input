@@ -16,13 +16,10 @@ export const SKETCH_VERSION = 1
 
 /** @param {string} text */
 function bytes(text) {
-  if (typeof atob === 'function') {
-    const binary = atob(text)
-    const out = new Uint8Array(binary.length)
-    for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i)
-    return out
-  }
-  return new Uint8Array(Buffer.from(text, 'base64'))
+  const binary = atob(text)
+  const out = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i)
+  return out
 }
 
 /** @param {string} packed @param {number} size */
