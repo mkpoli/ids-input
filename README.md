@@ -891,6 +891,16 @@ tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a li
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
 use the `ids-input:` prefix.
 
+### Comparison with KAGE
+
+`/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS for 32 of
+the 149 unencoded headword sequences taken from the HDIC KRM database. Each card gives the ink
+overlap (IoU), the geometry at a 4 px tolerance (F1@4) and the 3×3 layout distance, and links the
+sequence to the workshop and to zi.tools. The page explains how the three numbers are measured and
+why the heavier typeface lowers the first two. The drawings are a snapshot of the 2026-10-29 run in
+`demo/lib/comparison.json`; GlyphWiki's glyph data is free to use and the KAGE engine is GPL-3.0.
+The About dialog links the page.
+
 ## Inspired by
 
 Ideas the editor takes, each traced to the tool's own page as seen on 2026-10-25:
