@@ -109,9 +109,9 @@ export const EXAMPLE_GROUPS = [
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
   // with no code point; for an encoded character it names that character, which `encoded` reports.
-  // The entries cover the article's single-character tables, one form per row. Left out: the word
-  // ligatures (コンクリート, セメント, ムーブメント, 警察/憲法, 慶応), the ambiguous 广マ, the
-  // unrenderable 㐧, the duplicate variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ and Jo.
+  // The entries cover the article's single-character tables, one form per row. Left out: the
+  // ambiguous 广マ, the unrenderable 㐧, the duplicate variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ
+  // and Jo. The article's word ligatures are in the ligature group.
   { key: 'geba', refs: [20], examples: [
     // 西文字母
     { sequence: '⿱宀R', refs: [20,21,22], char: '', abbreviates: '寮' },
@@ -178,6 +178,20 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿺辶⿱𭕄共', char: '', abbreviates: '選' },
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
+  ] },
+  // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
+  // the Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji
+  // article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
+  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo).
+  { key: 'ligature', examples: [
+    { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [39,40], char: '' },
+    { sequence: '⿱艹⿰马尼', refs: [41], char: '' },
+    { sequence: '⿰⿳⿰SIR木阝', refs: [41], char: '' },
+    { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
+    { sequence: '⿱⿲ンメセ土', refs: [20], char: '' },
+    { sequence: '⿸广⿰KO', refs: [20], char: '' },
+    { sequence: '⿱宀K', refs: [20], char: '' },
+    { sequence: '⿻Mo', refs: [20], char: '' },
   ] },
   // Korean gukja. The readings come from the Wikipedia record; the forms are BabelStone's, all
   // tagged K, nine as GKP. The characters write a Korean coda with a Chinese character or stroke of

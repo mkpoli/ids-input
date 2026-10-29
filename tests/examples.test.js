@@ -82,6 +82,16 @@ describe('the demo examples', () => {
     expect(group.examples.every(example => example.abbreviates)).toBe(true)
     expect(group.examples).toHaveLength(60)
   })
+  it('keep the word ligatures with their sources', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
+    expect(group.examples.map(example => example.sequence)).toEqual([
+      '⿱宀⿺辶⿱⿰王尔⿲隹貝招', '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
+      '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
+    ])
+    expect(group.examples).toContainEqual({ sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [sourceNumber('l2-12-032'), sourceNumber('utr45')], char: '' })
+    expect(group.examples).toContainEqual({ sequence: '⿱艹⿰马尼', refs: [sourceNumber('zh-yue-hetizi')], char: '' })
+    for (const example of group.examples) expect(example.char).toBe('')
+  })
   it("writes out 龍's numbered right part", () => {
     expect(table.get('龍').map(entry => entry.text)).toContain('⿰𦚏⿷己三')
     expect(described.get('⿰𦚏⿷己三')).toContain('龍')
@@ -92,7 +102,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'korean', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
