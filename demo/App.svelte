@@ -164,8 +164,10 @@
       try {
         const drawn = await draw(sequence, options)
         // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
-        // description (术 is ⿺木丶), so the Kaisho face borrows the Serif drawing then.
-        if (style === 'kaisho' && !split && drawn?.missing?.length) {
+        // description (术 is ⿺木丶), and a description it cannot cut is assembled from unscaled whole
+        // operands. The Kaisho face borrows the Serif drawing in both cases.
+        const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
+        if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
           try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
