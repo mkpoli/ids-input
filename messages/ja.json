@@ -221,6 +221,7 @@
   "ids.templates.insert": "構造を挿入：{sequence}",
   "ids.templates.usage": "{count}字で使用",
   "ids.templates.hangul": "ハングルの音節構造",
+  "ids.templates.mirrored": "鏡像の対",
   "ids.templates.pyramids": "ピラミッド",
   "ids.templates.pyramidReverse": "逆向き",
   "ids.templates.pyramidInsertReverse": "{part}の{layers}段逆ピラミッドを挿入",

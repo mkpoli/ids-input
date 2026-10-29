@@ -221,6 +221,7 @@
   "ids.templates.insert": "Chèn bố cục {sequence}",
   "ids.templates.usage": "Dùng trong {count} chữ",
   "ids.templates.hangul": "Cấu trúc âm tiết Hangul",
+  "ids.templates.mirrored": "Cặp đối xứng gương",
   "ids.templates.pyramids": "Kim tự tháp",
   "ids.templates.pyramidReverse": "Đảo chiều",
   "ids.templates.pyramidInsertReverse": "Chèn kim tự tháp ngược {layers} tầng bằng {part}",

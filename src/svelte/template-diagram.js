@@ -3,7 +3,7 @@ import { parse } from '../core/ids.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { pyramidCells } from '../composer/pyramid.js'
 
-/** @typedef {{ kind: 'slot', x: number, y: number, width: number, height: number, accent: boolean } | { kind: 'frame', d: string, accent: boolean }} Shape */
+/** @typedef {{ kind: 'slot', x: number, y: number, width: number, height: number, accent: boolean } | { kind: 'frame', d: string, accent: boolean, decorative?: boolean }} Shape */
 const AXIS = new Map([['⿰', 0], ['⿲', 0], ['⿱', 1], ['⿳', 1]])
 /** @type {Record<string, { inside: number[], outline: number[][] }>} */
 const ENCLOSURES = {
@@ -39,14 +39,32 @@ export function templateDiagram(sequence) {
     }
     const axis = AXIS.get(node.op)
     if (axis !== undefined) {
+      /** @param {import('../core/ids.js').Part} part */
+      const mirrored = part => typeof part === 'object' && part !== null && part.op === '⿾'
+      const turned = node.parts.length === 2 && node.parts.filter(mirrored).length === 1 ? node.parts.findIndex(mirrored) : -1
       node.parts.forEach((part, i) => {
         const child = [...box], span = child[axis + 2] / node.parts.length
         child[axis] += i * span; child[axis + 2] = span
-        draw(part, child, accent)
+        draw(turned === i && part && typeof part === 'object' ? part.parts[0] : part, child, accent || turned === i)
       })
+      if (turned !== -1) {
+        // A mirrored pair reads as two slots with the axis between them; the unary operand's own
+        // axis would sit inside one slot and look like a split slot.
+        const path = axis === 0
+          ? `M${x + width / 2} ${y + 2}V${y + height - 2}`
+          : `M${x + 2} ${y + height / 2}H${x + width - 2}`
+        shapes.push({ kind: 'frame', d: path, accent: true, decorative: true })
+      }
     } else if (node.op === '⿻') {
       draw(node.parts[0], [x, y, width * .68, height * .68], accent)
       draw(node.parts[1], [x + width * .32, y + height * .32, width * .68, height * .68], true)
+    } else if (node.op === '⿾') {
+      draw(node.parts[0], box, accent)
+      // The reflected operand keeps one slot; a vertical line shows the axis it turns about.
+      shapes.push({ kind: 'frame', d: `M${x + width / 2} ${y + 2}V${y + height - 2}`, accent: true, decorative: true })
+    } else if (node.op === '⿿') {
+      // Half a turn has no reflection axis; the operand keeps its slot unmarked.
+      draw(node.parts[0], box, accent)
     } else if (ENCLOSURES[node.op]) {
       const { inside: [a, b, c, d], outline } = ENCLOSURES[node.op]
       const path = outline.map(([u, v], i) => `${i ? 'L' : 'M'}${x + .65 + u * (width - 1.3)} ${y + .65 + v * (height - 1.3)}`).join(' ')

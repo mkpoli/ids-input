@@ -14,8 +14,10 @@ const RETAINED = [
   ['topTriple', '⿱⿲⬚⬚⬚⬚'], ['bottomTriple', '⿱⬚⿲⬚⬚⬚'], ['leftTriple', '⿰⿳⬚⬚⬚⬚'], ['rightTriple', '⿰⬚⿳⬚⬚⬚'],
   ['middleColumn', '⿲⬚⿱⬚⬚⬚'], ['middleRow', '⿳⬚⿰⬚⬚⬚'],
 ]
-// Useful Hangul layout requested independently of the Han-only corpus audit.
-const CURATED = [['hangulFinal', '⿱⿽⬚⬚⬚']]
+// Useful layouts requested independently of the Han-only corpus audit: the Hangul syllable, and
+// the two mirrored pairs of 畳字's 対称 arrangement, which the frequency pass excludes with the
+// other unary transforms.
+const CURATED = [['hangulFinal', '⿱⿽⬚⬚⬚', 'hangul'], ['mirroredRight', '⿰⬚⿾⬚', 'mirrored'], ['mirroredLeft', '⿰⿾⬚⬚', 'mirrored']]
 const EXCLUDED_OPERATORS = new Set(['〾', '⿾', '⿿', '㇯'])
 const compare = (a, b) => a < b ? -1 : a > b ? 1 : 0
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
@@ -76,7 +78,7 @@ export function auditStructures(table) {
 export function buildCatalog(table, sources, threshold = MIN_CHARACTERS) {
   const { patterns, totals } = auditStructures(table)
   const retained = new Map(RETAINED.map(([id, sequence]) => [normalizeStructure(parse(sequence, { open: true }).tree), { id, sequence }]))
-  const curated = new Map(CURATED.map(([id, sequence]) => [normalizeStructure(parse(sequence, { open: true }).tree), { id, sequence, curated: true }]))
+  const curated = new Map(CURATED.map(([id, sequence, label]) => [normalizeStructure(parse(sequence, { open: true }).tree), { id, sequence, curated: true, label }]))
   const selected = new Map([...retained, ...curated]), previousCoverage = new Set(), coverage = new Set()
   for (const pattern of patterns.values()) {
     if (retained.has(pattern.key)) for (const char of pattern.characters) previousCoverage.add(char)
@@ -94,7 +96,7 @@ export function buildCatalog(table, sources, threshold = MIN_CHARACTERS) {
   return {
     version: 1,
     threshold,
-    method: 'Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from additions. Curated layouts are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.',
+    method: 'Unique Han characters per supplied whole-character IDS skeleton with two to four leaves; no lexical expansion. Same-axis nesting and both 2x2 grid orientations are normalized. Alternative descriptions may match multiple templates. Unary transforms and subtraction are excluded from frequency additions. Curated layouts (the Hangul syllable and the mirrored pairs) are retained independently of the Han-only frequency threshold. Counts describe corpus decompositions, not language-use frequency.',
     sources,
     statistics: { ...totals, previousTemplates: retained.size, previousCoveredCharacters: previousCoverage.size,
       curatedTemplates: curated.size, frequencyAdditions: templates.length - retained.size - curated.size,

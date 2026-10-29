@@ -43,7 +43,7 @@ test('every catalog template has one visible shape per component', async () => {
   const { STRUCTURE_TEMPLATES } = await import('../src/core/templates.js')
   for (const item of STRUCTURE_TEMPLATES) {
     const shapes = templateDiagram(item.sequence)
-    expect(shapes).toHaveLength(item.slots)
+    expect(shapes.filter(shape => !shape.decorative)).toHaveLength(item.slots)
     for (const shape of shapes) if (shape.kind === 'slot') {
       expect(shape.width).toBeGreaterThan(0)
       expect(shape.height).toBeGreaterThan(0)
@@ -55,6 +55,15 @@ test('every catalog template has one visible shape per component', async () => {
   }
 })
 
+test('mirrored layouts keep one slot and draw the axis they turn about', () => {
+  const [left, right, axis] = templateDiagram('⿰⬚⿾⬚')
+  expect([left.kind, right.kind, axis.kind]).toEqual(['slot', 'slot', 'frame'])
+  expect(right.x).toBeGreaterThan(left.x)
+  expect(axis.accent).toBe(true)
+  expect(axis.decorative).toBe(true)
+  expect(templateDiagram('⿿⬚')).toHaveLength(1)
+})
+
 test('Hangul template places the enclosure above its final slot', () => {
   const [frame, initial, final] = templateDiagram('⿱⿽⬚⬚⬚')
   expect(frame.kind).toBe('frame')
@@ -62,4 +71,10 @@ test('Hangul template places the enclosure above its final slot', () => {
   expect(final.kind).toBe('slot')
   expect(initial.y + initial.height).toBeLessThan(final.y)
   expect(initial.x + initial.width).toBeLessThan(final.x + final.width)
+})
+
+test('only one reflected half gets the pair axis', () => {
+  expect(templateDiagram('⿰⬚⿾⬚').filter(shape => shape.decorative)).toHaveLength(1)
+  expect(templateDiagram('⿰⿾⬚⬚').filter(shape => shape.decorative)).toHaveLength(1)
+  expect(templateDiagram('⿰⿾⬚⿾⬚').filter(shape => shape.decorative)).toHaveLength(2)
 })
