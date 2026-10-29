@@ -678,19 +678,23 @@
       note(t('app.file.openFailed', { name: file.name }))
     }
   }
-  /** Open a chosen .ids.json, SVG or PNG as a new tab. @param {Event} event */
+  /** Open several document files as tabs, in order. @param {Iterable<File>} files */
+  async function openFiles(files) {
+    for (const file of files) await openFile(file)
+  }
+  /** Open chosen .ids.json, SVG or PNG files as tabs. @param {Event} event */
   async function openDocument(event) {
     const input = /** @type {HTMLInputElement} */ (event.currentTarget)
-    const file = input.files?.[0]
+    const files = [...(input.files ?? [])]
     input.value = ''
-    if (file) await openFile(file)
+    await openFiles(files)
   }
   /** @param {DragEvent} event */
   function dropDocument(event) {
     const files = event.dataTransfer?.files
     if (!files?.length) return
     event.preventDefault()
-    openFile(files[0])
+    void openFiles(files)
   }
   /** @param {DragEvent} event */
   function dragFiles(event) {
@@ -1007,7 +1011,7 @@
 
 </div>
 
-<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,.png,application/json,image/svg+xml,image/png" hidden onchange={openDocument} />
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,.png,application/json,image/svg+xml,image/png" multiple hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">

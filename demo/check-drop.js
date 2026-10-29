@@ -13,13 +13,14 @@ try {
     const record = JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]
     const document = record.document.document
     const transfer = new DataTransfer()
-    transfer.items.add(new File([JSON.stringify(document)], 'dropped.ids.json', { type: 'application/json' }))
+    transfer.items.add(new File([JSON.stringify(document)], 'dropped-one.ids.json', { type: 'application/json' }))
+    transfer.items.add(new File([JSON.stringify(document)], 'dropped-two.ids.json', { type: 'application/json' }))
     window.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }))
   })
   await page.waitForTimeout(800)
-  assert.equal(await page.locator('.tabbar [role="tab"]').count(), before + 1)
+  assert.equal(await page.locator('.tabbar [role="tab"]').count(), before + 2)
   const record = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').at(-1))
   assert.equal(record?.document?.document?.format, 'ids-input/document')
   assert.deepEqual(errors, [])
-  console.log('PASS dropping an editable document opens a tab')
+  console.log('PASS dropping several documents opens a tab each')
 } finally { await browser.close() }
