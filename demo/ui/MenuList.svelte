@@ -3,6 +3,7 @@
   import Icon from './Icon.svelte'
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
   let { items, label, onpick, view = null } = $props()
+  /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
   /** @type {'all' | 'encoded' | 'unencoded'} */
   let mode = $state('all')
@@ -40,6 +41,13 @@
     if (next.has(heading)) next.delete(heading)
     else next.add(heading)
     collapsed = next
+  }
+  /** @param {string} heading */
+  function jump(heading) {
+    const list = groups.filter(group => group.heading)
+    const at = list.findIndex(group => group.heading === heading)
+    const buttons = root?.querySelectorAll('button.heading') ?? []
+    /** @type {HTMLElement | undefined} */ (buttons[at])?.scrollIntoView({ block: 'start' })
   }
 </script>
 
@@ -82,7 +90,7 @@
   </button>
 {/snippet}
 
-<div class="list" role="group" aria-label={label}>
+<div class="list" role="group" aria-label={label} bind:this={root}>
   <div class="title-row">
     <p class="title">{label}</p>
     {#if view}
@@ -100,6 +108,11 @@
           <button type="button" class="mode" aria-pressed={mode === key} onclick={() => { mode = key }}>{text}</button>
         {/each}
       </div>
+    </div>
+    <div class="jump" role="group" aria-label={label}>
+      {#each groups as group (group.heading)}
+        {#if group.heading}<button type="button" class="chip" onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+      {/each}
     </div>
   {/if}
   {#if view && !groups.length}
@@ -145,6 +158,10 @@
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .empty{margin:14px 10px;color:var(--muted);font-size:13px}
+  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px}
+  .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:var(--ink)}
+  .heading{scroll-margin-top:8px}
   .filter{display:flex;flex-direction:column;align-items:stretch;gap:5px;margin:0 0 4px}
   .filter-input{flex:1;min-width:0;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
   .modes{display:flex;align-self:flex-start;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}

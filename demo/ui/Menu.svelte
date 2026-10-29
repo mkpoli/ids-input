@@ -62,6 +62,14 @@
     else next.add(heading)
     collapsed = next
   }
+  /** @param {string} heading */
+  function jump(heading) {
+    const list = groups.filter(group => group.heading)
+    const at = list.findIndex(group => group.heading === heading)
+    const buttons = box?.querySelectorAll('button.heading') ?? []
+    const target = /** @type {HTMLElement | undefined} */ (buttons[at])
+    target?.scrollIntoView({ block: 'start' })
+  }
   /** @param {boolean} [focus] @param {boolean} [last] */
   async function show(focus = false, last = false) {
     query = ''
@@ -178,6 +186,11 @@
               {/each}
             </div>
           </div>
+          <div class="jump" role="group" aria-label={label}>
+            {#each groups as group (group.heading)}
+              {#if group.heading}<button type="button" class="chip" onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+            {/each}
+          </div>
         </div>
       {/if}
       {#if view && !groups.length}
@@ -232,12 +245,17 @@
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .sep{height:1px;margin:5px 4px;background:var(--line)}
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
+  .heading{scroll-margin-top:92px}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .heading:hover{color:var(--ink)}
   .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
+  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
+  .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:var(--ink)}
+  .chip:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--surface)}
   .views{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface)}
   .filter{display:flex;align-items:center;gap:6px}
