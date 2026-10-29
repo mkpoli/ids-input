@@ -97,7 +97,7 @@
   .view{display:flex;align-items:center;gap:4px;padding:3px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
   .view[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
   .view:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-  .cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:2px 2px 6px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:2px 2px 6px}
   .card{display:flex;align-items:center;gap:6px;min-width:0;min-height:48px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
   .card:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
