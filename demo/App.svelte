@@ -1036,7 +1036,7 @@
     .sponsor{padding:0 8px}
     .sponsor-label,.sponsor-glow{font-size:11px}
   }
-  @media (min-width:641px) and (max-width:1000px){
+  @media (min-width:641px) and (max-width:1024px){
     .end{margin-left:auto}
     .sponsor{order:1;margin-inline:0;margin-left:auto}
   }
