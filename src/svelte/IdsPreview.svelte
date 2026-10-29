@@ -11,7 +11,7 @@
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
   import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '../composer/index.js'
-  import { affineForChain, boxCorners, invertAffine, layerAtPath, multiplyAffine, scopesMarkup } from '../document/index.js'
+  import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
 
   /**
@@ -98,7 +98,13 @@
     slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
-  const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
+  const chosenLayer = $derived.by(() => {
+    if (!localDoc || !chosen) return null
+    const selected = session?.chosen ? findLayer(localDoc.root, session.chosen)?.node ?? null : null
+    const selectedPath = selected ? pathOfLayer(localDoc.root, selected.id) : null
+    if (selected && selectedPath && selectedPath.join('.') === chosen.join('.')) return selected
+    return layerAtPath(localDoc.root, chosen)
+  })
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
   const selectionBox = $derived(frame ? boxCorners(frame.canvas, frame.box) : null)
   const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
