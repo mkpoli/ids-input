@@ -40,6 +40,7 @@
   import { load, save } from './lib/storage.js'
   import { columnWidths, MIN_INPUT, MIN_OUTPUT, storedWidth } from './lib/panels.js'
   import AboutDialog from './ui/AboutDialog.svelte'
+  import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
@@ -731,7 +732,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -821,6 +822,13 @@
         <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
         <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
+      <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
+        <span class="sponsor-heart" aria-hidden="true">♥</span>
+        <span class="sponsor-word">
+          <span class="sponsor-glow" aria-hidden="true">{t('app.sponsor.label')}</span>
+          <span class="sponsor-label">{t('app.sponsor.label')}</span>
+        </span>
+      </button>
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
@@ -954,11 +962,13 @@
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
+      { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
     ]} />
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
@@ -999,6 +1009,28 @@
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
   .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:auto}
+  /* The sponsor button: a black sign whose border and lettering cycle through the spectrum, with a
+     halo that comes up at once on hover or focus. */
+  .sponsor{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 12px;
+    border:0;border-radius:9px;background:#08080d;color:#fff;font:inherit;cursor:pointer;white-space:nowrap;isolation:isolate;
+    box-shadow:0 0 0 1px rgb(255 255 255 / .12),0 0 10px rgb(255 61 113 / .22)}
+  .sponsor::before{content:"";position:absolute;inset:0;z-index:-1;padding:1px;border-radius:inherit;pointer-events:none;
+    background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+    animation:sponsor-hue 5s linear infinite}
+  .sponsor:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .sponsor:hover,.sponsor:focus-visible{box-shadow:0 0 0 1px rgb(255 255 255 / .35),0 0 10px #ff3d71,0 0 24px #33c6ffcc,0 0 44px #8b5cf699;animation:sponsor-light .4s ease-out}
+  @keyframes sponsor-light{from{filter:brightness(1.9) saturate(1.4)}to{filter:brightness(1)}}
+  .sponsor-heart{font-size:13px;line-height:1;background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
+    -webkit-background-clip:text;background-clip:text;color:transparent;animation:sponsor-hue 5s linear infinite}
+  .sponsor-word{position:relative;display:grid;animation:sponsor-hue 5s linear infinite}
+  .sponsor-label,.sponsor-glow{grid-area:1/1;font-size:12px;font-weight:750;line-height:1;letter-spacing:.04em;
+    background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sponsor-glow{filter:blur(6px) saturate(1.5);opacity:.7;pointer-events:none}
+  .sponsor:hover .sponsor-glow,.sponsor:focus-visible .sponsor-glow{opacity:1;filter:blur(8px) saturate(1.7)}
+  @keyframes sponsor-hue{to{filter:hue-rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.sponsor::before,.sponsor-heart,.sponsor-word,.sponsor:hover,.sponsor:focus-visible{animation:none}}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
@@ -1109,5 +1141,11 @@
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}
+    .sponsor{padding:0 10px}
+  }
+  @media (max-width:460px){
+    .sponsor{width:32px;padding:0}
+    .sponsor-word{display:none}
+    .sponsor-heart{font-size:15px}
   }
 </style>
