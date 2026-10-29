@@ -509,7 +509,8 @@ it('joins 儿 to a generic ⿸ enclosure bar, including 厃', async () => {
     await compose(source, text, { fontStyle })
     const parts = new Composer(source.store(), { fontStyle }).compose(text)
     const outer = parts.find(part => part.origin === 'glyph 厃')
-    const legs = parts.find(part => part.origin === `Noto ${fontStyle} 儿:zhan`)
+    const form = text.startsWith('⿰') ? '儿:dan' : '儿:zhan'
+    const legs = parts.find(part => part.origin === `Noto ${fontStyle} ${form}`)
     expect(outer).toBeDefined()
     expect(legs).toBeDefined()
     if (text.startsWith('⿸')) expect(collision([outer], [legs], constants.face, 512)).toBeGreaterThan(0)

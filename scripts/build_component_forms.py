@@ -98,6 +98,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
         # The legs under 厃 in 詹, cut from the 詹 glyph itself.
         '儿:zhan': zhan_legs,
+        '儿:dan': group([genzui_cs('擔')[3], genzui_cs('擔')[12]]),
         # Contract the already-shortened native 昌 while retaining its bars.
         '昌:stack': compress_chang(group(cs('菖')[:6] if style=='sans' else cs('菖')[1:]), style),
     }

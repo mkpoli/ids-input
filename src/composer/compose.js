@@ -501,14 +501,15 @@ export class Composer {
     // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
     // opening at roughly a third of its height. Lift the native cut so its
     // left leg joins the bar.
-    const box = componentPositionBox('儿:zhan', this.fontStyle)
+    const form = (opening[2] - opening[0]) < 550 ? '儿:dan' : '儿:zhan'
+    const box = componentPositionBox(form, this.fontStyle)
     if (!box) return null
     const openW = opening[2] - opening[0], openH = opening[3] - opening[1], cx = (opening[0] + opening[2]) / 2
     const width = openW * 0.88
     const height = width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1)
     const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 40
     const bottom = top - height
-    const legs = componentPosition('儿:zhan', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
+    const legs = componentPosition(form, [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
     if (!legs) return null
     const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
     return [...outer, legs, ...lower]
