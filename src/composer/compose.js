@@ -232,7 +232,11 @@ export class Composer {
     return node.slice(1).some(n => this.stroked(n))
   }
 
-  place(part, target, native, origin) { return placed(part, part.box, fitted(part.box, target, this.C.STRETCH), native, origin) }
+  place(part, target, native, origin) {
+    const p = placed(part, part.box, fitted(part.box, target, this.C.STRETCH), native, origin)
+    if (part.fixed) p.fixed = true
+    return p
+  }
 
   // ---------------------------------------------------------------- the composer's entry
   /** The parts drawing `sequence`, weighted, and the loose `marks` its text carries after it. */
