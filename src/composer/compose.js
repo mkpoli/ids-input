@@ -294,7 +294,7 @@ export class Composer {
         return
       }
       const op = node[0], kids = node.slice(1)
-      if (kids.length === 2 && this.hosted && this.layout && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+      if (kids.length === 2 && this.hosted && this.layout && this.hasHosts(op, kids) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
         let boxes = this.predict(op, kids.map(kid => this.normalizeRepeatedGrids(this.normalizeRequestedEnclosures(kid))))
         if (!atRoot) { const frame = union(boxes); boxes = boxes.map(b => mapped(b, frame, region)) }
         if (boxes.every(b => b[2] > b[0] && b[3] > b[1])) { kids.forEach((kid, i) => walk(kid, boxes[i], false)); return }
@@ -351,6 +351,16 @@ export class Composer {
     if (written.includes(EMPTY)) return []
     const list = this.data.hosts(written, place)
     return uncut ? list : list.filter(h => this.cutOf(h))
+  }
+
+  /** Whether the export lists a host for a node's operands in their places. An export that names
+   *  its host places (`files.hosts.places`) can carry some operands only; a node without a list
+   *  takes the plain shares. An export without the list is taken to cover what it carries. */
+  hasHosts(op, children) {
+    if (!this.hosted) return false
+    const places = this.data.manifest.files?.hosts?.places
+    if (!places) return true
+    return children.some((child, i) => places.includes(`${this.slot(op, i)}\t${keyOf(child)}`))
   }
 
   /** What a host entry's cut is known by before its outlines are read: its box and its contour
@@ -439,7 +449,7 @@ export class Composer {
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
-    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -906,7 +916,7 @@ export class Composer {
     // wide as the right one; a font draws it narrow instead. The learned boxes say how wide each
     // part is, so take the split from them, give both the full across-axis extent, and let each
     // glyph fill its share.
-    if (!this.hosted && this.layout && children.length === 2) {
+    if (!this.hasHosts(op, children) && this.layout && children.length === 2) {
       const boxes = this.predict(op, children), frame = union(boxes)
       if (frame[2] > frame[0] && frame[3] > frame[1] && boxes.every(b => b[2] > b[0] && b[3] > b[1])) {
         const [first, second] = boxes.map(b => mapped(b, frame, region))
