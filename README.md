@@ -774,6 +774,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Unicode 17.0.0, released 2025-09-09, CJK Extension J: `𳳳` (U+33473), a Vietnamese variant
   (VN-F0BEA) and `kStrange` of 龍. <https://www.unicode.org/versions/Unicode17.0.0/>; the code
   chart is <https://www.unicode.org/charts/PDF/U323B0.pdf>, p.55.
+- IRG Working Set 2021, [record UK-20565](https://hc.jsecs.org/irg/ws2021/app/index.php?find=UK-20565),
+  read 2026-10-29: 𲬺 (U+32B3A), the 品字様 of 無, as ⿱無⿰無無. Unicode 17.0 added the character in
+  CJK Extension J; BabelStone's Unicode 16.0 edition has no row for it.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.

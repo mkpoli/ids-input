@@ -50,6 +50,10 @@ describe('the demo examples', () => {
           } else if (example.sequence === '⿰𛂦方') {
             expect(example.refs).toContain(sourceNumber('irg-n2744'))
             expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
+          } else if (example.sequence === '⿱無⿰無無') {
+            // Unicode 17.0 encoded the character after the BabelStone edition, which has no row.
+            expect(example.refs).toContain(sourceNumber('irg-ws2021-uk-20565'))
+            expect(table.has(char)).toBe(false)
           } else expect(found).toContain(char)
         } else if (sequence === '⿱月朋') {
           // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
