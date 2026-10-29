@@ -942,8 +942,10 @@ commands. The Templates tab includes one-click pyramids of 3–24 rows. File →
 the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and layer transforms, which can then be edited independently.
-The toolbar holds Undo and Redo with the history of named steps, examples (each with its
-character and code point, an abbreviated character, or marked when it has none), a share link with its QR code, the language,
+The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
+transform steps before the editor’s structural steps. Examples come with their character and code
+point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
+with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
