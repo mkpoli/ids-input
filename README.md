@@ -907,8 +907,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   writes the sharing, so they stay out.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
-  description writes 女 and 孔 for 好 and 孔; the example writes 好 and 乚, so 好 stays whole and
-  乚 completes 孔 with the same shared 子.
+  description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
+  the arrangement the reference photograph shows, so the shared 子 is drawn once.
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
   and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
