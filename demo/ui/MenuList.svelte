@@ -3,11 +3,27 @@
   import Icon from './Icon.svelte'
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
   let { items, label, onpick, view = null } = $props()
+  let query = $state('')
+  /** @type {'all' | 'encoded' | 'unencoded'} */
+  let mode = $state('all')
+  /** @type {Set<string>} */
+  let collapsed = $state(new Set())
+  const filtering = $derived(query.trim().length > 0 || mode !== 'all')
+  /** @param {import('./Menu.svelte').Item} item */
+  function matches(item) {
+    if ('heading' in item || 'separator' in item) return true
+    if (mode === 'encoded' && item.unencoded) return false
+    if (mode === 'unencoded' && !item.unencoded) return false
+    const needle = query.trim().toLowerCase()
+    if (!needle) return true
+    return [item.sequence, item.label, item.leading, item.reading, item.note].filter(Boolean).join(' ').toLowerCase().includes(needle)
+  }
+  const visible = $derived(items.filter(matches))
   const groups = $derived.by(() => {
     /** @type {{ heading: string, items: import('./Menu.svelte').Item[] }[]} */
     const out = []
     let group = { heading: '', items: /** @type {import('./Menu.svelte').Item[]} */ ([]) }
-    for (const item of items) {
+    for (const item of visible) {
       if ('heading' in item) {
         if (group.items.length) out.push(group)
         group = { heading: item.heading, items: [] }
@@ -16,7 +32,55 @@
     if (group.items.length) out.push(group)
     return out
   })
+  /** @param {string} heading */
+  const expanded = heading => filtering || !collapsed.has(heading)
+  /** @param {string} heading */
+  function toggle(heading) {
+    const next = new Set(collapsed)
+    if (next.has(heading)) next.delete(heading)
+    else next.add(heading)
+    collapsed = next
+  }
 </script>
+
+{#snippet groupHeading(heading)}
+  <button type="button" class="heading" aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+    <Icon name="chevron" size={12} /><span>{heading}</span>
+  </button>
+{/snippet}
+
+{#snippet cardItem(item)}
+  <button type="button" class="card" disabled={item.disabled}
+    aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    {#if item.drawing?.d}
+      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
+    {:else}
+      <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
+    {/if}
+    <span class="card-text">
+      {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
+      <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
+      {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+    </span>
+  </button>
+{/snippet}
+
+{#snippet listRow(item)}
+  <button type="button" class="item" class:rich={item.sequence !== undefined}
+    disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    {#if item.leading !== undefined}
+      <span class="leading" lang={item.lang}>{item.leading}</span>
+    {:else if item.sequence !== undefined}
+      <span class="leading spacer" aria-hidden="true"></span>
+    {:else}
+      <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    {/if}
+    <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
+    {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+  </button>
+{/snippet}
 
 <div class="list" role="group" aria-label={label}>
   <div class="title-row">
@@ -28,47 +92,33 @@
       </div>
     {/if}
   </div>
-  {#if view?.cardsSelected}
-    {#each groups as group (group.heading)}
-      {#if group.heading}<p class="heading">{group.heading}</p>{/if}
-      <div class="cards">
-        {#each group.items as item (item.sequence ?? item.label)}
-          <button type="button" class="card" disabled={item.disabled}
-            aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-            title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
-            {#if item.drawing?.d}
-              <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
-            {:else}
-              <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
-            {/if}
-            <span class="card-text">
-                  {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
-              <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
-              {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-            </span>
-          </button>
+  {#if view}
+    <div class="filter">
+      <input class="filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query} />
+      <div class="modes" role="group" aria-label={view.filter.label}>
+        {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
+          <button type="button" class="mode" aria-pressed={mode === key} onclick={() => { mode = key }}>{text}</button>
         {/each}
       </div>
+    </div>
+  {/if}
+  {#if view && !groups.length}
+    <p class="empty">{view.filter.empty}</p>
+  {:else if view?.cardsSelected}
+    {#each groups as group (group.heading)}
+      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
+    {/each}
+  {:else if view}
+    {#each groups as group (group.heading)}
+      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
     {/each}
   {:else}
     {#each items as item, i (i)}
       {#if 'separator' in item}<div class="sep" role="separator"></div>
       {:else if 'heading' in item}<p class="heading">{item.heading}</p>
-      {:else}
-        <button type="button" class="item" class:rich={item.sequence !== undefined}
-          disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-          title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
-          {#if item.leading !== undefined}
-            <span class="leading" lang={item.lang}>{item.leading}</span>
-          {:else if item.sequence !== undefined}
-            <span class="leading spacer" aria-hidden="true"></span>
-          {:else}
-            <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
-          {/if}
-          <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
-          {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-        </button>
-      {/if}
+      {:else}{@render listRow(item)}{/if}
     {/each}
   {/if}
 </div>
@@ -91,7 +141,15 @@
   .note{flex:none;color:var(--muted);font:500 11px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:12px;font-style:italic}
   .sep{height:1px;margin:4px;background:var(--line)}
-  .heading{margin:9px 10px 3px;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
+  .heading svg{flex:none;transition:transform .12s}
+  .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
+  .empty{margin:14px 10px;color:var(--muted);font-size:13px}
+  .filter{display:flex;flex-direction:column;align-items:stretch;gap:5px;margin:0 0 4px}
+  .filter-input{flex:1;min-width:0;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
+  .modes{display:flex;align-self:flex-start;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}
+  .mode{padding:4px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .mode[aria-pressed="true"]{background:var(--surface);color:var(--ink)}
   .title-row + .heading{margin-top:4px}
   .views{display:flex;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}
   .view{display:flex;align-items:center;gap:4px;padding:3px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;cursor:pointer}
