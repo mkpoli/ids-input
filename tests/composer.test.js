@@ -214,6 +214,21 @@ describe('the composer', () => {
       expect(a).toEqual(b)
     }
   })
+  it('keeps loading files a drawing asks for across many rounds', async () => {
+    // A rare composition can ask for a new wave of host records for many rounds. The fake names
+    // stand for those waves; they read as empty shards, and the drawing itself needs only the fixture.
+    const base = sourceOf()
+    let rounds = 0
+    const source = Object.create(base)
+    source.store = () => {
+      const store = base.store()
+      if (rounds < 20) store.missing.add(`g/round-${rounds++}.json`)
+      return store
+    }
+    const drawn = await compose(source, '⿱木口')
+    expect(drawn).toEqual(await compose(sourceOf(), '⿱木口'))
+    expect(rounds).toBe(20)
+  })
   it('names the operators it draws beyond the composer, and credits KanjiVG only for its pieces', async () => {
     const source = sourceOf()
     expect((await compose(source, '⿾⿰木口')).approximate).toEqual(['⿾'])
