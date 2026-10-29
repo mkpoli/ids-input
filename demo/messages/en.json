@@ -4,6 +4,7 @@
   "app.about.licenses": "Licenses",
   "app.about.codeLicense": "Code: MIT",
   "app.about.dataLicense": "Data is provided under Creative Commons or the terms of its original sources; see the source credits and data notices for details.",
+  "app.about.exampleSources": "Example sources",
   "app.about.outputLicense": "Generated items are subject to the applicable terms of the original fonts. This site imposes no additional restrictions on their use.",
   "app.about.inspired": "Inspired by",
   "app.about.lead": "Build ideographic description sequences as trees and see them drawn.",

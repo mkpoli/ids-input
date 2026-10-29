@@ -688,25 +688,27 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, abbreviates?: string, modern?: string }} example @param {string} lang */
-  function exampleItem(example, lang) {
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string }} example @param {string} lang @param {number[]} [groupRefs] */
+  function exampleItem(example, lang, groupRefs = []) {
     const point = example.char ? cp(example.char) : ''
     const target = example.char || example.abbreviates || ''
+    const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
+    const note = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
     return {
       leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none'),
+      note: [note, citation].filter(Boolean).join(' '),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`,
+      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs)),
   ]))
   const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
   // The history, oldest first; a step undone is the next to redo.
