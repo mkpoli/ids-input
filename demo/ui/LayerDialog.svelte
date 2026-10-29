@@ -60,6 +60,8 @@
     const path = chosenPath
     if (!open || !path || !session) return
     const next = session.document
+    const selectedPath = session.chosen ? pathOfLayer(next.root, session.chosen) : null
+    if (selectedPath && selectedPath.join('.') === path.join('.')) return
     const node = layerAtPath(next.root, path)
     if (!node || session.chosen === node.id) return
     if (!session.choose(node.id)) return
