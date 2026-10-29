@@ -31,6 +31,7 @@
   import { createIconDrawings } from './lib/icons.js'
   import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
+  import exampleOutlines from './lib/example-outlines.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { linkTo, sequenceFrom } from './lib/share.js'
@@ -87,6 +88,9 @@
   }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
   const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
+  /** Source-drawn example outlines, used before the composer in every face. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
+  const outlined = new Map(Object.entries(exampleOutlines))
+  for (const [sequence, drawn] of outlined) prepared.set(sequence, drawn)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
   /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
@@ -137,6 +141,8 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
+      const source = outlined.get(sequence)
+      if (source) return source
       const adapted = split ? [] : await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
         if ([...char].length !== 1 || char === sequence) continue
@@ -179,6 +185,8 @@
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
     const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans' })
     return async (/** @type {string} */ sequence) => {
+      const source = outlined.get(sequence)
+      if (source) return source
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
         if ([...char].length !== 1 || char === sequence) continue

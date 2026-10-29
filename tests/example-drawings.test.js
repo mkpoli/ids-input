@@ -3,7 +3,15 @@ import { readFileSync } from 'node:fs'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
+const outlines = JSON.parse(readFileSync(new URL('../demo/lib/example-outlines.json', import.meta.url), 'utf8'))
+
 const data = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
+
+it('draws the 寫 variant from one source outline', () => {
+  const drawn = outlines['⿳宀⿰丨⿴⿻冂一一⿹𠃌灬']
+  expect(drawn.d.length).toBeGreaterThan(300)
+  expect(drawn.source).toContain('JYutnet')
+})
 
 describe('the prepared example drawings', () => {
   it('come from the composer export the demo uses', () => {
