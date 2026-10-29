@@ -20,7 +20,7 @@
     <button type="button" class="ids-apply" disabled={editor.disabled || !editor.piece.trim()} onclick={apply}>{t('ids.apply')}</button>
     <button type="button" class="ids-clear" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
       title={`${t('ids.clear')} (${shortcut('backspace')})`} onclick={() => editor.empty(editor.chosen)}><span class="ids-glyph" aria-hidden="true">⬚</span>{t('ids.clear')}{#if keyHints}<kbd aria-hidden="true">{shortcut('backspace', undefined, { compact: true })}</kbd>{/if}</button>
-    <button type="button" class="ids-remove" disabled={editor.disabled || !isNode(picked)} title={t('ids.unwrap')} onclick={() => editor.remove(editor.chosen)}>{t('ids.unwrap')}</button>
+    <button type="button" class="ids-remove" disabled={editor.disabled || !isNode(picked)} title={t('ids.unwrapHint')} onclick={() => editor.remove(editor.chosen)}>{t('ids.unwrap')}</button>
   </div>
   {#if status}
     {#if editor.problem}<p class="ids-problem" role="status">{editor.problem}</p>

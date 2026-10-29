@@ -127,6 +127,7 @@
   "ids.undo.label": "撤销",
   "ids.undo.named": "撤销：{step}",
   "ids.unwrap": "去掉这一层",
+  "ids.unwrapHint": "去掉这一层，把第一个非空部件留在原位",
   "ids.unwrapNode": "去掉{what}",
   "ids.view.label": "视图",
   "ids.view.shape": "结构图",

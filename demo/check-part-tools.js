@@ -48,6 +48,8 @@ try {
   await page.keyboard.press('?')
   assert.equal(await value(), '⿰⬚⿱七木', '? empties the chosen part')
 
+  await page.locator('.ids-op').first().click()
+  assert.equal(await page.locator('.ids-remove').getAttribute('title'), 'Remove this level; its first non-empty part takes its place', 'the tooltip says what the unwrap keeps')
   assert.deepEqual(errors, [], 'no page errors')
-  console.log('PASS Clear part carries ⬚ and the palette adds a ? empty slot')
+  console.log('PASS Clear part carries ⬚, the palette adds a ? empty slot, and the unwrap tooltip says what it keeps')
 } finally { await browser.close() }

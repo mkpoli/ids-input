@@ -127,6 +127,7 @@
   "ids.undo.label": "Hoàn tác",
   "ids.undo.named": "Hoàn tác: {step}",
   "ids.unwrap": "Bỏ cấp này",
+  "ids.unwrapHint": "Bỏ cấp này, giữ bộ phận đầu tiên không trống ở vị trí của nó",
   "ids.unwrapNode": "Bỏ {what}",
   "ids.view.label": "Hiển thị",
   "ids.view.shape": "Hình",
