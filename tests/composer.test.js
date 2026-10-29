@@ -500,6 +500,17 @@ describe('the cover bar', () => {
     expect(await compose(source, '⿱口王', { separate: true })).toEqual(stack)
   })
 
+  it('narrows 宇’s first lower bar under 宀', () => {
+    const cover = part([80, 700, 842, 900])
+    const lower = part([135, 564, 873, 636], [57, 336, 944, 408], [475, 408, 525, 636])
+    Composer.prototype.fitUnderCover.call(null, '⿱', ['宀', '于'], [[cover], [lower]])
+    const bar = lower.part.contours[0].light
+    let min = Infinity, max = -Infinity
+    for (let i = 0; i < bar.length; i += 2) { min = Math.min(min, bar[i]); max = Math.max(max, bar[i]) }
+    expect(max - min).toBeCloseTo(0.72 * 762)
+    expect((max + min) / 2).toBeCloseTo(461)
+  })
+
   it('keeps a mid-height bar under a cover', () => {
     const cover = part([100, 500, 900, 700])
     const lower = part([50, 200, 950, 280], [480, 0, 520, 480])
