@@ -30,7 +30,7 @@ def _map(contour, transform):
             for op, points in contour]
 
 
-def _weighted(contour):
+def _weighted(contour, amount=20):
     """Restore native brush weight after fitting: 10 units per outline edge.
 
     Kureedo's 旧 and 目 stems measure about 47–56 units in the source em.
@@ -40,7 +40,7 @@ def _weighted(contour):
     shape = pathops.Path()
     replayRecording(contour, shape.getPen())
     edge = pathops.Path(shape)
-    edge.stroke(20, pathops.LineCap.ROUND_CAP, pathops.LineJoin.ROUND_JOIN, 4)
+    edge.stroke(amount, pathops.LineCap.ROUND_CAP, pathops.LineJoin.ROUND_JOIN, 4)
     edge.convertConicsToQuads(.1)
     pen = RecordingPen()
     pathops.op(shape, edge, pathops.PathOp.UNION).draw(pen)
@@ -80,22 +80,23 @@ def xie_kaisho(gs, cmap):
     fit = lambda x, y: (x * .52 + 310, y * .45 + 301)
     # Extend only the four foot vertices into the hook; the native side edges
     # above the lowest counter retain their original direction.
-    frame = _map(frame, lambda x, y: (x * .52 + 310, 300 if y <= 74 else y * .45 + 301))
+    frame = _map(frame, lambda x, y: (x * .52 + 310, 270 if y <= 74 else y * .45 + 301))
     upright = _map(old[0], lambda x, y: (x * .52 + 196,
-                 300 + (y - donor_bottom) * (633 - 300) / (donor_top - donor_bottom)))
+                 270 + (y - donor_bottom) * (633 - 270) / (donor_top - donor_bottom)))
 
     # Retain the roof, curved terminal and dots at their contextual placement.
     hook = [move(270,205)] + body[1:12] + [line(270,245), close]
-    hook = _map(hook, lambda x, y: (x, y + 65))
+    hook = _map(hook, lambda x, y: (x, y + 25))
     dots = []
-    for contour, cx, cy, target_y in zip(
+    for contour, cx, cy, target_y, scale in zip(
             xie[2:], [655, 538.5, 409.5, 252], [125, 97.5, 72.5, 60],
-            [180, 175, 170, 165], strict=True):
-        dots.append(_map(contour, lambda x, y: (cx + (x - cx) * .65,
-                                                target_y + (y - cy) * .65)))
+            [145, 125, 105, 85], [.78, .82, .86, .90], strict=True):
+        dot = _map(contour, lambda x, y: (cx + (x - cx) * scale,
+                                          target_y + (y - cy) * scale))
+        dots.extend(_weighted(dot, 16))
     # Re-space the weighted bars vertically; translation preserves their native
     # rising angle while keeping the three clear openings optically equal.
-    lower = _map(_map(lower, fit), lambda x, y: (x, y - 16))
-    upper = _map(_map(upper, fit), lambda x, y: (x, y - 7))
+    lower = _map(_map(lower, fit), lambda x, y: (x, y - 42))
+    upper = _map(_map(upper, fit), lambda x, y: (x, y - 19))
     return [xie[:1], _weighted(upright), _weighted(frame),
             _weighted(lower), _weighted(upper), [hook], dots]
