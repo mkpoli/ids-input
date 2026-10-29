@@ -37,9 +37,8 @@ def xie_kaisho(gs, cmap):
     """Return groups: 宀, 丨, 冂, baseline 一, middle 一, 𠃌, 灬.
 
     日's counter boundaries define the shared seams of 冂 and the two 一.
-    The lower 一 closes the raised frame and extends left to 丨. The stem
-    continues below it to 寫's separate hook crossbar, leaving four visible
-    horizontal levels. No normalization is applied.
+    Both 一 stay inside the right frame. Its sides extend to 寫's hook
+    crossbar, which closes the third counter. No normalization is applied.
     """
     xie = _contours(gs, cmap[ord('寫')])
     day = _contours(gs, cmap[ord('日')])
@@ -68,14 +67,16 @@ def xie_kaisho(gs, cmap):
     middle = [('moveTo', ((300, 372),)), ('lineTo', ((693, 391),)),
               ('lineTo', ((691, 346),)), ('lineTo', ((302, 327),)),
               ('closePath', ())]
-    # Close the native lower bar under both uprights, extending only its left
-    # edge to the separate 丨. Its native right brush terminal is retained.
+    # Retain the native lower bar within the right frame.
     baseline = _map(outer[:4] + [('lineTo', ((679, 62),)),
                     ('lineTo', ((311, 50),)), ('closePath', ())], frame_map)
-    baseline = [baseline[0]] + baseline[1:-1] + [
+    baseline = baseline[:-1] + [
         ('lineTo', (frame_map(left_x, 50),)),
-        ('lineTo', ((300, 409),)), ('lineTo', ((300, 379),)),
+        ('lineTo', ((465, 409),)), ('lineTo', ((465, 379),)),
         ('closePath', ())]
+    frame = _map(frame, frame_map)
+    # Extend both frame legs into the hook bar, preserving their native width.
+    frame = _map(frame, lambda x, y: (x, 300 if y <= 430 else y))
 
     # Keep 丨's natural cap and slight taper; continue past the frame's lower
     # bar into the hook crossbar so the body remains one connected shape.
@@ -96,5 +97,5 @@ def xie_kaisho(gs, cmap):
             [180, 175, 170, 165], strict=True):
         dots.append(_map(contour, lambda x, y: (cx + (x - cx) * .65,
                                                 target_y + (y - cy) * .65)))
-    return [xie[:1], [upright], [_map(frame, frame_map)],
+    return [xie[:1], [upright], [frame],
             [baseline], [_map(middle, frame_map)], [hook], dots]

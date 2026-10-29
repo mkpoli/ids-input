@@ -73,11 +73,12 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
       }
       expect(runs).toBe(4)
     }
-    expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(3) // outside + two counters
+    expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(4) // outside + three counters; both frame legs reach the hook
     expect(components(raster(parts, 512), 512)).toBe(5)
     // The hook turns left locally; it must never become a full-width bottom bar.
     const [stem, , baseline, middleBar, hook] = parts
     expect(baseline.source[3]).toBeLessThan(middleBar.source[1])
+    expect(baseline.source[0]).toBeGreaterThan(stem.source[2]) // no bar across the left gap
     const lowerHookX = hook.part.contours.flatMap(contour => {
       const points = Array.from(contour.light), xs = []
       for (let i = 0; i < points.length; i += 2)
