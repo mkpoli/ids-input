@@ -19,6 +19,7 @@ import { EM_BOX, area, count, drawnBox, drawnContours, fill, fitted, grown, grou
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { isOutbound, markFace, markParts } from './marks.js'
@@ -242,7 +243,7 @@ export class Composer {
     const previous = this.face
     this.face = face
     try {
-      const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
+      let out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
       // Separated drawings retain reading order. Only publish ownership when every
       // rendered leaf produced exactly one piece (including empty placeholders).
       const ownership = this.separate ? this.leafOwners(tree) : null
@@ -250,6 +251,8 @@ export class Composer {
         out.forEach((part, i) => { part.leaf = ownership.owners[i] })
       }
       if (!this.partial && this.weighted) this.balance(out)
+      const construct = CONSTRUCTS[sequence]
+      if (construct && !this.excluded(construct.host)) out = constructParts(construct, out)
       // Loose marks annotate the whole drawing; they take no part in its layout or weight.
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
