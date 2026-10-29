@@ -844,8 +844,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
   readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`; the
-  article gives each character's radical and code point. The descriptions are BabelStone's, all
-  tagged K, nine as GKP.
+  article gives each character's radical and code point. The entries cover the 乙 coda ㄹ, 𠃍 and
+  ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ and 巴 for ㅂ, with the article's 약자 and 동자. The
+  descriptions are BabelStone's, all tagged K, nine as GKP.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -856,7 +857,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   舟 with ラ. ⿰艦ツ and ⿰掌キ come from the 通船 and 掌機長 images posted by @xWcvlUaljn96009, whose
   record says the images were not re-checked. ⿵门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
-  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone.
+  U+282A3 and U+2C711, with IDS from BabelStone; U+3514, U+3516 and U+439E, which the slide also
+  uses, are Korean gukja and sit in that group.
 - [@Utetamutete](https://x.com/Utetamutete/status/2115621598799770015), 2026-10: a dictionary
   entry with 月 above 朋, read さやけし, for `⿱月朋`.
 - Gen Kojitani, [Reply to N2741, IRG N2744](https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf),
