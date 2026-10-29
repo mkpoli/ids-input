@@ -509,7 +509,7 @@ it('joins 儿 to a generic ⿸ enclosure bar, including 厃', async () => {
     await compose(source, text, { fontStyle })
     const parts = new Composer(source.store(), { fontStyle }).compose(text)
     const outer = parts.find(part => part.origin === 'glyph 厃')
-    const legs = parts.find(part => part.origin === `Noto ${fontStyle} 儿:under-bar`)
+    const legs = parts.find(part => part.origin === `Noto ${fontStyle} 儿:zhan`)
     expect(outer).toBeDefined()
     expect(legs).toBeDefined()
     expect(legs.reverse).toBe(true)

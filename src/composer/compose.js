@@ -501,11 +501,14 @@ export class Composer {
     // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
     // opening at roughly a third of its height. Lift the native cut so its
     // left leg joins the bar.
-    const openW = opening[2] - opening[0], openH = opening[3] - opening[1]
-    const width = openW * 0.88, cx = (opening[0] + opening[2]) / 2
+    const box = componentPositionBox('儿:zhan', this.fontStyle)
+    if (!box) return null
+    const openW = opening[2] - opening[0], cx = (opening[0] + opening[2]) / 2
+    const width = openW * 0.88
+    const height = width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1)
     const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 60
-    const bottom = top - openH * 0.35
-    const legs = componentPosition('儿:under-bar', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, top - bottom)
+    const bottom = top - height
+    const legs = componentPosition('儿:zhan', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
     if (!legs) return null
     // The native cut is wound opposite the enclosure; without this the overlap cancels.
     legs.reverse = true

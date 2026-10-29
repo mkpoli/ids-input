@@ -84,6 +84,8 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     result['positions'][style] = {
         '朱:L': group([cs('鴸')[4]]),
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
+        # The legs under 厃 in 詹 are a native 八, not 元's under-bar cut.
+        '儿:zhan': group(cs('八')),
         # Contract the already-shortened native 昌 while retaining its bars.
         '昌:stack': compress_chang(group(cs('菖')[:6] if style=='sans' else cs('菖')[1:]), style),
     }
