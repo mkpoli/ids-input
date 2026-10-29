@@ -498,12 +498,13 @@ export class Composer {
     const outer = this.node(key, region)
     const opening = this.room('⿸', outer, region)
     if (!opening) return null
-    // The native 儿 sits about two thirds as wide and one third as tall as
-    // the opening (元, 兄, 克 and 見 in GenZui Sans and Noto Serif).
+    // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
+    // opening at roughly a third of its height. Lift the native cut so its
+    // left leg joins the bar.
     const openW = opening[2] - opening[0], openH = opening[3] - opening[1]
-    const width = openW * 0.62, cx = (opening[0] + opening[2]) / 2
-    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 20
-    const bottom = top - openH * 0.38
+    const width = openW * 0.88, cx = (opening[0] + opening[2]) / 2
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 60
+    const bottom = top - openH * 0.35
     const legs = componentPosition('儿:under-bar', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, top - bottom)
     if (!legs) return null
     const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
