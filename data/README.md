@@ -178,6 +178,30 @@ Notes on the columns:
   A CJK stroke counts 1 and is marked derived; other missing counts use the sum over the leaves
   of the first fully counted decomposition. All Han palette entries have a count.
 
+## `sketch-parts.json.gz`
+
+The drawing search's prepared glyph shapes: the palette's 803 parts, each fitted to the 40×40
+square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 104 KB
+gzipped. Format:
+
+```json
+{"format":"ids-input/sketch-parts","version":1,"size":40,"font":"…","fonts":{"file":"sha256"},
+ "parts":[["木",4,3348,"<base64 stretched>","<base64 kept>"]]}
+```
+
+Rebuild with `uv run scripts/build_sketch_parts.py` (or `bun run build:sketch-parts`). The script
+draws each part with Noto Sans CJK JP 2.004 at `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`
+(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3 and the Plangothic P1/P2
+palette subset. If none of those faces has a glyph, it uses the `IDS Fallback` shards in
+`fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and provenance are recorded in
+`fonts/unicode.json`; it skips a part drawn as the notdef box. The script checks Noto's SHA-256
+against the build it came from and records the primary font hashes and the `unicode.json` manifest
+hash in the file. The shapes derive from those fonts and fallback shards; their SIL OFL 1.1 terms
+apply (see `fonts/README.md`). `src/core/sketch-data.js` decodes the file and describes each mask for
+matching;
+`babelStoneAdapter({ sketches })` serves it, and the pad falls back to drawing the page's fonts when
+a host has no prepared file.
+
 ## component-forms.tsv
 
 Component forms that stand for another character (⺡ for 氵, 氵 for 水), which the description search

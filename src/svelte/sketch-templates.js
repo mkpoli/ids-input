@@ -1,7 +1,8 @@
 // @ts-check
-// Palette parts drawn once into small glyph masks for the sketch search. The glyphs come from the
-// page's own font stack, so a host that shows the parts already has what the search needs; the
-// templates are built when the Find tab opens and kept for the page.
+// Palette parts drawn into small glyph masks for the sketch search, when the adapter has no prepared
+// `sketches` file. The glyphs come from the page's own font stack, so a host that shows the parts
+// already has what the search needs; the templates are built when the Find tab opens and kept for
+// the page.
 import { describe, fitMask, SIZE } from '../core/sketch.js'
 
 /** The glyph is drawn at this size, then fitted down to `SIZE`. */
@@ -12,7 +13,7 @@ const FONT_SIZE = Math.round(RENDER * 0.86)
 
 /**
  * @typedef {import('../adapter/types.js').PalettePart} PalettePart
- * @typedef {{ part: string, strokes: number | null, uses: number, shapes: import('../core/sketch.js').Shape[] }} SketchTemplate
+ * @typedef {import('../core/sketch-data.js').SketchTemplate} SketchTemplate
  */
 
 /** @type {Map<string, SketchTemplate[]>} */
