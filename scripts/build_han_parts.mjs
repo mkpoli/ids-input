@@ -1,5 +1,5 @@
 // Build `data/han-parts.json.gz`: every Han-script character the composer can draw, with the stroke
-// count Unihan records for each. The export's records are sharded by hash, so those keys come from
+// count Unihan records for each, or the count of the unified form a radical stands for. The export's records are sharded by hash, so those keys come from
 // their stored entries; the bundled fallback outlines and the palette outlines add the characters the
 // export lacks. Unicode alone would claim glyphs no source draws.
 //
@@ -85,7 +85,15 @@ for (const char of Object.keys(palette)) {
 }
 
 const list = [...keys].sort((a, b) => Number(a.codePointAt(0)) - Number(b.codePointAt(0)))
-const strokes = list.map(key => total.get(key) ?? null)
+// A radical form Unihan does not list takes the count of the unified character the component forms
+// name; anything without an equivalent stays uncounted.
+const forms = new Map()
+for (const line of readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n')) {
+  if (!line || line.startsWith('#')) continue
+  const [form, char] = line.split('\t')
+  if (form && char && [...form].length === 1) forms.set(form, char)
+}
+const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? null)
 const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))
 console.log(`${list.length} Han characters, ${strokes.filter(count => count !== null).length} with stroke counts`)

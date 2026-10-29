@@ -874,8 +874,9 @@ catalog cannot be loaded. A configured composer export or font can have differen
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
-export's `base` and `commit` and the stroke count Unihan 18.0.0 records for each (`strokes`, one entry
-per key; 353 radicals and newer forms have none). The pinned export records 95,899 of them; the
+export's `base` and `commit` and the stroke count Unihan 18.0.0 records for each (`strokes`, one
+entry per key; 25 marks, numerals and newer radicals have none). A radical form Unihan does not list
+takes the count of the unified character `component-forms.tsv` names it stands for. The pinned export records 95,899 of them; the
 bundled fallback outlines add 7,434 and the palette's own fallback outlines 19, so the list matches
 what the preview can compose rather than what one export happens to hold. The Components tab offers
 it as **All characters**, beside the curated components and their stroke-count groups, paged at 120,
