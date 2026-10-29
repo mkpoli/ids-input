@@ -122,7 +122,10 @@ export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch } = {
   }) })
 }
 
-const ROUNDS = 16
+// A drawing asks for files as it needs them: each round loads those the pass before found missing.
+// Rare parts keep finding new hosts, so a deeply nested description can need many rounds; the cap
+// bounds how many rounds a drawing may take.
+const ROUNDS = 64
 /** The largest description drawn. Every sequence BabelStone lists fits: the deepest nest six levels
  *  (𰻞, 𦧄) and the largest holds 21 operators (𦧄). */
 export const LIMITS = { nodes: 24, depth: 8 }
