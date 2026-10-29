@@ -672,7 +672,7 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `1`–`9`, `0`, `-`, `=` | ⿰ ⿱ ⿲ ⿳ ⿴ ⿵ ⿶ ⿷ ⿸ ⿹ ⿺ ⿻ |
 | `q` `w` `e` `r` `t` `y` | ⿼ ⿽ ⿾ ⿿ ㇯ 〾 |
 | `Tab`, `Shift+Tab` | the next and previous part |
-| `Backspace`, `Delete` | empty the chosen part |
+| `Backspace`, `Delete`, `?` | empty the chosen part |
 | `Ctrl/⌘+Z`, `Ctrl/⌘+Shift+Z`, `Ctrl/⌘+Y` | undo, redo |
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
@@ -684,7 +684,7 @@ menus support arrow keys, Home/End and Escape.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
-Ctrl+Shift+Z elsewhere).
+Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear part does, and shows `?`.
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
