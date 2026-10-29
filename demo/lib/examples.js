@@ -68,6 +68,10 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱垚土', char: '㙓' },
     { sequence: '⿰木森', char: '𣛧' },
     { sequence: '⿱林⿰林林', char: '𣡕' },
+    { sequence: '⿱天𭑈', refs: [1, 40], char: '𡙎' },
+    { sequence: '⿱地⿰地地', refs: [40], char: '' },
+    { sequence: '⿱里⿰里里', refs: [39], char: '' },
+    { sequence: '⿱莫⿰莫莫', refs: [39], char: '' },
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', refs: [], char: '' },
   ] },
   { key: 'enclosures', refs: [1], examples: [

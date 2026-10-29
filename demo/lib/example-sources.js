@@ -46,6 +46,8 @@ export const EXAMPLE_SOURCES = [
   { id: 'x-privjj', title: '囗ｴﾝ and the simplified 囗元', author: '@priv_jj1xaw', date: '2022-11-02', url: 'https://x.com/priv_jj1xaw/status/1587731956372238337', status: 'checked', note: 'Contrasts 園 written 囗ｴﾝ with the simplified 囗元 (园).' },
   { id: 'x-dodan', title: '⿰忄実 for バーチャル', author: '@Dodan_Tu_Tu_Ji', date: '2025-02-12', url: 'https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606', status: 'checked', note: '「⿰忄実（バーチャル）をもっと使おう」' },
   { id: 'x-miho', title: 'Abbreviations 广+マ, 言+ギ, 囗+エン', author: '@miho_kivi', date: '2022-11-04', url: 'https://x.com/miho_kivi/status/1588333225583071232', status: 'checked', note: 'On 宮崎駿’s 園 written 囗+エン, and lists 魔 as 广+マ, 門, and 議 as 言+ギ.' },
+  { id: 'x-uteta-pinzi-ri-mo', title: '品字様 of 里 and 莫', author: '@Utetamutete', date: '2026-08-01', url: 'https://x.com/Utetamutete/status/2083503199319912453', status: 'checked', note: 'A dictionary page with 里 and 莫 each set three times in a 品 arrangement; the post finds both forms and notes that Unicode has neither.' },
+  { id: 'x-uteta-pinzi-ten-chi', title: '品字様 of 天 and 地', author: '@Utetamutete', date: '2026-08-04', url: 'https://x.com/Utetamutete/status/2084625411980530020', status: 'checked', note: 'A page the post sets beside 法海遺珠, with 天 and 地 each set three times in a 品 arrangement; it reads 品字様 there as carrying talismanic force in Daoism. 天’s form is 𡙎 (U+2164E), BabelStone’s ⿱天𭑈.' },
 ]
 
 /** The citation number of a source id, or 0 when the id is unknown. @param {string} id */
