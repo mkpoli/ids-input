@@ -41,7 +41,7 @@
 
 <style>
   .sheet{display:flex;flex-direction:column;gap:14px}
-  .lead{margin:0;font-size:14px;line-height:1.6}
+  .lead{margin:0;font-size:14px;line-height:1.6;text-wrap:balance}
   .ask{margin:0;font-size:14px;font-weight:600;line-height:1.5}
   h3{margin:2px 0 0;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
   .ways{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
@@ -56,6 +56,7 @@
   .company .mark{background:var(--ink);color:var(--bg);box-shadow:0 0 14px rgb(0 0 0 / .18)}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
   .copy strong{font-size:13.5px;font-weight:650}
-  .copy small{font-size:12px;line-height:1.4;color:var(--muted)}
+  .copy small{font-size:12px;line-height:1.4;color:var(--muted);text-wrap:balance}
+  .copy small:lang(ko){word-break:keep-all}
   .thanks{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
 </style>
