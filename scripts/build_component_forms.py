@@ -1,8 +1,11 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["fonttools==4.63.0", "skia-pathops==0.9.2"]
+# dependencies = ["fonttools==4.63.0", "skia-pathops==0.9.2", "brotli==1.2.0"]
 # ///
-"""Export selected Noto CJK forms. Run with uv; source TTC paths are arguments."""
+"""Export contextual forms from pinned Noto TTCs and the bundled Kureedo WOFF2.
+
+Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
+"""
 import hashlib, json, sys
 import pathops
 from pathlib import Path
@@ -10,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
+from xie_forms import xie_noto, register as register_xie, PROVENANCE as XIE_PROVENANCE
 
 class Contours(BasePen):
     def __init__(self):
@@ -217,7 +221,24 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
+    register_xie(forms, [group(part) for part in xie_noto(cs, style)])
     result['forms'][style]=forms
     result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
         'additionalFaces':[{'face':3,'name':tc['name'].getDebugName(4),'forms':['⿸尸氺','⿳卝罒冖']}]}
+# The brush variant uses its own native donor font; no Noto fallback is bundled.
+from xie_kaisho import xie_kaisho
+brush_path = Path('fonts/Kureedo-Regular.woff2')
+brush_sha = hashlib.sha256(brush_path.read_bytes()).hexdigest()
+if brush_sha != '678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430':
+    raise ValueError('Unexpected source font hash: kaisho')
+brush = TTFont(brush_path)
+result['forms']['kaisho'] = {}
+register_xie(result['forms']['kaisho'], [group(part) for part in xie_kaisho(brush.getGlyphSet(), brush.getBestCmap())])
+result['sources']['kaisho'] = {
+    'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
+    'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
+}
+result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
+    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '日', '丨'],
+}}}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

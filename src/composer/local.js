@@ -17,7 +17,7 @@ export function onlyBundled(sequence, separate = false, unicode = false, fontSty
   /** @param {import('../core/ids.js').Part} node */
   const local = node => {
     if (node === null) return true
-    if (fontStyle !== 'kaisho' && (separate ? isGroupedForm : isComponentForm)(write(node))) { filled = true; return true }
+    if ((separate ? isGroupedForm : isComponentForm)(write(node), fontStyle)) { filled = true; return true }
     if (isNode(node)) return node.parts.every(local)
     filled = true
     return (unicode && hasUnicodeGlyph(node)) || hasPaletteGlyph(node) || hasBundledGlyph('tangut', node) || hasBundledGlyph('bopomofo', node) || hasBundledGlyph('small-seal', node) || hasNewKorean(node)
