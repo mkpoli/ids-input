@@ -61,7 +61,7 @@
 <style>
   .inline-edit{display:inline-flex;position:relative;flex:1;min-width:0;pointer-events:auto}
   .inline-edit.leaf{width:100%;height:100%}
-  input{width:100%;min-width:0;box-sizing:border-box;padding:3px 5px;border:1px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));border-radius:5px;background:var(--ids-surface,light-dark(#fff,#202026));color:var(--ids-ink,light-dark(#1d1d21,#ececf1));font:16px var(--_font,var(--ids-font,sans-serif))}
+  input{width:100%;min-width:0;box-sizing:border-box;padding:3px 5px;border:1px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));border-radius:5px;background:var(--ids-surface,light-dark(#fff,#202026));color:var(--ids-ink,light-dark(#1d1d21,#ececf1));font:16px var(--_font,var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif))}
   .leaf input{text-align:center;font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
   input:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));outline-offset:0}
   .error{position:absolute;z-index:2;top:100%;left:0;min-width:max-content;max-width:240px;padding:3px 5px;border-radius:4px;background:var(--ids-surface,light-dark(#fff,#202026));color:var(--ids-fault,light-dark(#b42318,#ff8a80));font:12px system-ui,sans-serif;white-space:normal}

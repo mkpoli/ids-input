@@ -85,14 +85,27 @@ licence, and [LICENSE-IDSNewKorean.txt](LICENSE-IDSNewKorean.txt) records the at
 The source SVGs, digests and letter names are in [`data/new-korean/`](../data/new-korean/).
 Rebuild the font and outlines with `uv run scripts/build_new_korean.py`.
 
-## Unicode fallback outlines
+## Unicode fallback glyphs
 
-The composer uses font-derived outlines for 56,651 additional components when the selected export lacks
-a glyph. These are stored as sharded geometry rather than a webfont. Sources, rebuild instructions
-and coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
-[OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL 1.1. Extended sources use
-`LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`, `OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright notices
-are preserved in the outline metadata.
+The composer draws 56,651 additional characters from font-derived outlines when the selected export
+lacks a glyph, and the same outlines ship as a webfont for text. Sources, rebuild instructions and
+coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
+[OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL
+1.1. Extended sources use `LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`,
+`OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright
+notices are preserved in the outline metadata.
+
+`unicode/*.woff2` is the `IDS Fallback` family: one file per 256-code-point shard, each declared in
+`unicode.css` with its own `unicode-range`, so a browser fetches a shard only where the family is
+reached and no earlier font draws the character. The stacks list the reader's chosen face and the
+common CJK fonts first, then `--ids-glyph-fallback`, then this family. It comes before the generic
+family, so a character it covers is drawn from it even when an installed font the stack does not
+name could draw it; its coverage leaves out the Han, radical and Tangut ranges those fonts carry.
+The files total 8.7 MB, with a median of 3.5 KB; `unicode.json` records each one's glyph count, size
+and SHA-256. Rebuild with `uv run scripts/build_unicode_font.py`, which reads the outline shards and
+writes the webfont, the stylesheet and the record. Glyphs keep the composer's 1000-unit em and
+baseline, and each advance is the ink's width plus its side bearings. The files carry outlines only:
+without GSUB, GPOS or GDEF, Arabic joins, Indic clusters and mark attachment do not happen.
 
 ## Gongche supplement
 

@@ -1,7 +1,6 @@
 <script>
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
-  import TreeGlyph from './TreeGlyph.svelte'
   import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside a single host, or one over the other. Compound enclosure hosts
@@ -15,8 +14,8 @@
   import { nodeLayout, treeSizes } from './tree-layout.js'
 
   /** @typedef {import('../core/ids.js').Part} Part @typedef {import('../core/ids.js').Path} Path */
-  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, draw?: ((part: string) => Promise<import('../adapter/types.js').Drawing | null>) | null, fontStyle?: string }} */
-  let { editor, keyHints = true, draw = null, fontStyle = '' } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean }} */
+  let { editor, keyHints = true } = $props()
   const t = $derived(editor.t)
 
   const sizes = $derived(treeSizes(editor.tree))
@@ -161,7 +160,7 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{#if part}<TreeGlyph {part} {draw} {fontStyle} />{:else}⬚{/if}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
     {/if}
   {/if}
 {/snippet}
@@ -221,7 +220,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
     --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
     --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
     position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:16px;color:var(--_ink)}
   .ids-tree-root{display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0;container-type:size}
   .ids-tree-root > *{height:100%;min-height:0}

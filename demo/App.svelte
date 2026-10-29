@@ -29,7 +29,6 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
-  import { treeGlyph } from './lib/tree-glyph.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
@@ -203,19 +202,6 @@
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
-  /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
-  const treeDrawers = new Map()
-  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
-  function treeDrawer(at, style) {
-    const key = `${at}\0${style}`
-    if (!treeDrawers.has(key)) treeDrawers.set(key, createIconDrawings(drawerAt(at, style)))
-    return /** @type {ReturnType<typeof createIconDrawings>} */ (treeDrawers.get(key))
-  }
-  const treeDraw = $derived.by(() => {
-    const draw = treeDrawer(base, componentStyle)
-    return (/** @type {string} */ part) => treeGlyph(part).then(result => result ?? draw(part))
-  })
-
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
   // A browser asking for Traditional Chinese names its region or script, never the catalogue's code.
   const traditional = /^zh-(?:Hant|TW|HK|MO)\b/i
@@ -838,7 +824,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} draw={treeDraw} fontStyle={componentStyle} /></div>
+            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
@@ -863,7 +849,7 @@
           {:else if searchMode === 'structure'}
             <IdsStructuralSearch {adapter} {messages} {locale} onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {:else}
-          <h2 class="label">{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
+          <h2 class="label" class:label-glyph={componentLookup?.kind === 'parts' || Boolean(searchQuery)}>{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
           {/if}
@@ -977,6 +963,7 @@
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
   .block{display:flex;flex-direction:column;gap:6px;min-width:0}
   .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
+  .label-glyph{font-family:var(--ids-font)}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
