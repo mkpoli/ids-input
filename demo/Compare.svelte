@@ -182,7 +182,7 @@
   .drawings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   figure{margin:0;display:flex;flex-direction:column;gap:3px}
   figcaption{font-size:11px;color:var(--muted)}
-  svg{width:100%;height:auto;aspect-ratio:1;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;color:var(--ink)}
+  .drawings svg{width:100%;height:auto;aspect-ratio:1;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;color:var(--ink)}
   .meta{display:flex;flex-wrap:wrap;gap:4px 10px;margin:0;font-size:11.5px;color:var(--muted)}
   .meta .category{color:var(--ink)}
   .links{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px}
