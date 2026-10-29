@@ -500,9 +500,9 @@ export class Composer {
     if (!opening) return null
     // Lift the native bar under the enclosure's top by the room margin plus
     // 20 units, so both contours overlap rather than meeting on a hairline.
-    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 20
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 60
     // The legs take the upper part of the opening; the lower operand stays below.
-    const bottom = opening[1] + (opening[3] - opening[1]) * 0.55
+    const bottom = opening[1] + (opening[3] - opening[1]) * 0.45
     const legs = componentPosition('儿:under-bar', [opening[0], bottom, opening[2], top], this.fontStyle, top - bottom)
     if (!legs) return null
     const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
