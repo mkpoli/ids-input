@@ -7,7 +7,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 900 } })
   await page.goto(process.env.IDS_URL ?? 'http://localhost:5173')
   await page.getByRole('tab', { name: 'Parts', exact: true }).click()
-  await page.getByRole('tab', { name: 'Shui script', exact: true }).click()
+  await page.getByRole('tab', { name: 'Shuishu', exact: true }).click()
   await page.locator('.parts-grid .part').first().waitFor()
   await page.evaluate(async () => { await document.fonts.load('22px "IDS Shuishu"', '\u{1B300}') })
   assert.equal(await page.evaluate(() => document.fonts.check('22px "IDS Shuishu"', '\u{1B300}')), true)
