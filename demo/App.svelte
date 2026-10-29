@@ -44,6 +44,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
   import Menu from './ui/Menu.svelte'
@@ -658,15 +659,7 @@
     if (!tab) return
     keepTabSession(tab)
     const file = documentFile(sessionFor(tab).document, editor.whole)
-    const url = URL.createObjectURL(file)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = file.name
-    anchor.hidden = true
-    document.body.append(anchor)
-    anchor.click()
-    anchor.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 0)
+    download(file, file.name)
     note(t('app.file.saved', { name: file.name }))
   }
 

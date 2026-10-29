@@ -8,6 +8,11 @@ describe('document files', () => {
     expect(documentName('a/b\\c:d')).toBe('abcd.ids.json')
     expect(documentName('')).toBe('ids.ids.json')
   })
+  it('does not split a surrogate pair when shortening a name', () => {
+    const stem = documentName('𠀀'.repeat(50)).replace('.ids.json', '')
+    expect([...stem]).toHaveLength(40)
+    expect(stem).toBe('𠀀'.repeat(40))
+  })
   it('writes and reads a document file', async () => {
     const document = fromSequence('⿱木口')
     document.title = 'Example'

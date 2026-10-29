@@ -18,5 +18,8 @@ export function download(blob, name) {
   setTimeout(release, 60_000)
 }
 
+/** A stem safe for a download, cut by code points so surrogate pairs stay whole. @param {string} sequence @param {number} [length] */
+export const fileStem = (sequence, length = 40) => [...sequence].filter(char => !/[\\/:*?"<>|\p{Cc}]/u.test(char)).slice(0, length).join('').trim() || 'ids'
+
 /** A file name for `sequence` with `extension`: ⿰亻哥 → ⿰亻哥.svg. @param {string} sequence @param {string} extension */
-export const fileName = (sequence, extension) => `${(sequence.replace(/[\\/:*?"<>|\p{Cc}]/gu, '').trim() || 'ids').slice(0, 64)}.${extension}`
+export const fileName = (sequence, extension) => `${fileStem(sequence)}.${extension}`
