@@ -1,6 +1,7 @@
 <script>
   // What the workshop is, what it runs on, and what shaped it.
   import { INSPIRED, SOURCES } from '../lib/credits.js'
+  import { EXAMPLE_SOURCES } from '../lib/example-sources.js'
   import Dialog from './Dialog.svelte'
   /** @type {{ open: boolean, t: (key: string, params?: Record<string, string | number>) => string }} */
   let { open = $bindable(false), t } = $props()
@@ -27,6 +28,17 @@
     <p>{t('app.about.outputLicense')}</p>
     <h3>{t('app.footer.sources')}</h3>
     {@render list(SOURCES, key => t(`app.source.${key}`))}
+    <h3>{t('app.about.exampleSources')}</h3>
+    <ol class="bib">
+      {#each EXAMPLE_SOURCES as source, i (source.id)}
+        <li value={i + 1}>
+          {#if source.url}<a href={source.url} target="_blank" rel="noreferrer">{source.title}</a>{:else}{source.title}{/if}
+          {#if source.author}<span class="by">{source.author}</span>{/if}
+          {#if source.date}<span class="by">{source.date}</span>{/if}
+          <p>{source.note}</p>
+        </li>
+      {/each}
+    </ol>
     <h3>{t('app.about.inspired')}</h3>
     {@render list(INSPIRED, key => t(`app.inspired.${key}`))}
     <h3>{t('app.about.acknowledgments')}</h3>
@@ -46,4 +58,7 @@
   .by,.licence{margin-left:8px;font-size:12px;color:var(--muted)}
   .licence{padding:1px 6px;border-radius:999px;border:1px solid var(--line)}
   p{margin:2px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45}
+  .bib{margin:0;padding-left:1.6em}
+  .bib li{padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+  .bib li + li{margin-top:8px}
 </style>

@@ -828,11 +828,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
   2026-10-16, for the hybrid examples (slides: SCRIPT-HYBRID v19). ⿴口도 is the slide's proposed
-  図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
-  CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
-  L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
+  図; [@hado_study](https://x.com/hado_study/status/2115668238181056746) reads the same glyph as a
+  Korean variant of 圖 on a newspaper page. ⿰舟ラ follows CINCPAC-CINCPOA Bulletin 18-45 and
+  Japanese Military and Technical Terms (1945.07) p.217, L2/24-201 Fig.44, whose launch entry draws
+  舟 with ラ. ⿰艦ツ and ⿰掌キ come from the 通船 and 掌機長 images posted by @xWcvlUaljn96009, whose
+  record says the images were not re-checked. ⿵门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
   U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone.
+- [@Utetamutete](https://x.com/Utetamutete/status/2115621598799770015), 2026-10: a dictionary
+  entry with 月 above 朋, read さやけし, for `⿱月朋`.
 - Gen Kojitani, [Reply to N2741, IRG N2744](https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf),
   2024-10-20, p.7: 𭤪 (U+2D92A) contains hentaigana 𛂦 (U+1B0A6), represented in the examples as
   `⿰𛂦方`. BabelStone currently records `⿰？方`. The digit form `⿰扌3` approximates the Sawndip

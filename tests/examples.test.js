@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
+import { sourceNumber } from '../demo/lib/example-sources.js'
 import { expandNumberedComponents, parseIdsTable, readNumberedComponents } from '../src/adapter/babelstone.js'
 import { onlyTangut } from '../src/composer/tangut.js'
 import { size } from '../src/composer/loader.js'
@@ -34,8 +35,8 @@ describe('the demo examples', () => {
       for (const example of group.examples) {
         const { sequence, char } = example
         const found = described.get(sequence) ?? []
-        if (group.source) {
-          expect(group.source).toMatch(/^https:\/\//)
+        if (group.key === 'geba') {
+          expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
           const name = char || example.abbreviates
           expect(typeof name).toBe('string')
           expect([...name]).toHaveLength(1)
@@ -46,25 +47,38 @@ describe('the demo examples', () => {
             const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))
             expect(seal.table[char]).toContain(sequence)
             expect(seal.modern[char]).toContain(example.modern)
-          } else if ('source' in example) {
-            expect(example).toEqual({ sequence: '⿰𛂦方', char: '𭤪', source: 'https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf#page=7' })
+          } else if (example.sequence === '⿰𛂦方') {
+            expect(example.refs).toContain(sourceNumber('irg-n2744'))
             expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
           } else expect(found).toContain(char)
+        } else if (sequence === '⿱月朋') {
+          // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
+          // the example cites is a different, unencoded character.
+          expect(found).toEqual(['𦜳'])
         } else {
           expect(found).toEqual([])
         }
       }
     }
   })
+  it('draw the enclosure each source shows', () => {
+    const bySequence = new Map(EXAMPLE_GROUPS.flatMap(group => group.examples.map(example => [example.sequence, example])))
+    expect(bySequence.get('⿵门T')?.refs).toContain(sourceNumber('irg-n2744'))
+    expect(bySequence.has('⿰门T')).toBe(false)
+    expect(bySequence.get('⿺辶⿱𭕄共')?.abbreviates).toBe('選')
+    expect(bySequence.has('⿰辶⿱𭕄共')).toBe(false)
+    expect(bySequence.get('⿰舟ラ')?.refs).toContain(sourceNumber('ndl-jmtt'))
+    expect(bySequence.has('⿰艦ラ')).toBe(false)
+  })
   it('keep the Geba abbreviations in one cited group', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
-    expect(group.source).toBe('https://zh.wikipedia.org/wiki/全学联汉字')
-    expect(group.examples).toContainEqual({ sequence: '⿱宀R', char: '', abbreviates: '寮' })
-    expect(group.examples).toContainEqual({ sequence: '⿰言ギ', char: '', abbreviates: '議' })
-    expect(group.examples).toContainEqual({ sequence: '⿰木キ', char: '', abbreviates: '機' })
-    expect(group.examples).toContainEqual({ sequence: '⿵门日', char: '间', abbreviates: '間' })
-    expect(group.examples).toContainEqual({ sequence: '权', char: '权', abbreviates: '権' })
-    expect(group.examples).toContainEqual({ sequence: '战', char: '战', abbreviates: '戦' })
+    expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '⿱宀R', char: '', abbreviates: '寮' }))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '⿰言ギ', char: '', abbreviates: '議' }))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '⿰木キ', char: '', abbreviates: '機' }))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '⿵门日', char: '间', abbreviates: '間' }))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '权', char: '权', abbreviates: '権' }))
+    expect(group.examples).toContainEqual(expect.objectContaining({ sequence: '战', char: '战', abbreviates: '戦' }))
     expect(group.examples.every(example => example.abbreviates)).toBe(true)
     expect(group.examples).toHaveLength(60)
   })
