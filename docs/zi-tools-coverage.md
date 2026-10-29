@@ -14,6 +14,25 @@ The script fetches `ids_lv1.txt` from Yi Bai's dataset at the revision the bundl
 both description columns, and asks `parse` for a tree. It reports the readable count per notation;
 `--json` prints the same numbers for a script.
 
+## Cross-checking against zi.tools
+
+```sh
+bun scripts/check_zi_parity.mjs
+```
+
+The measurement above says what this package reads; this check says whether it answers the same
+character zi.tools does. It fetches the same pinned table, samples descriptions of every notation
+(`--sample N`, six by default), resolves each the way the workshop does — a stroke chain through
+`data/zi-tools-chains.tsv.gz`, anything else through the adapter's `encoded` — and asks
+`zi.tools/api/ids/lookupidsasync` for the character the service names. It exits non-zero when an
+answered description disagrees.
+
+Two limits are worth knowing. The service needs the network, so this check is run by hand, not in
+the test suite. And it resolves no note-bearing text: `⿻乚一(.,T)` comes back without a level-1
+entry, so those samples count as unanswered rather than disagreeing; this package resolves them by
+dropping the note. On 2026-10-29 at revision `da1e9f8a…`, 18 of 18 answered descriptions agreed and
+14 were unanswered.
+
 ## Notation and what reads it
 
 The published table writes four kinds of text. A sequence may carry more than one.
