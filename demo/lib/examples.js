@@ -217,7 +217,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿺辶⿱宀⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
-    { sequence: '⿳𦥯⿲女子乚皿', refs: [46,50], char: '' },
+    { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
@@ -370,7 +370,7 @@ export const EXAMPLE_GROUPS = [
   ] },
   // Japanese kokuji (国字): characters first made in Japan, in reading order. The list follows the
   // Wikipedia article's examples; readings are kana from that article or KANJIDIC2.
-  { key: 'kokuji', refs: [1, 48], examples: [
+  { key: 'kokuji', refs: [1, 47], examples: [
     { sequence: '⿰魚弱', char: '鰯', reading: 'いわし' },
     { sequence: '⿰木堅', char: '樫', reading: 'かし' },
     { sequence: '⿺瓦千', char: '瓩', reading: 'キログラム' },
@@ -423,7 +423,7 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
-  { key: 'shuishu', refs: [47, 53], examples: [
+  { key: 'shuishu', refs: [52, 53], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers. Names,
     // readings and meanings: Shuishu.xlsx; glyphs: the Amendment 2.2 code charts.
