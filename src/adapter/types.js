@@ -52,6 +52,7 @@
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
+ * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *
  * @typedef {import('../core/search.js').Hit} IdsHit A character a description query found: the description it matched in and the spans matched.
  *
