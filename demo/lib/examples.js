@@ -28,7 +28,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱投石', refs: [9], char: '' },
     { sequence: '⿲𠂤日千', refs: [10], char: '' },
     { sequence: '⿱一心', refs: [12], char: '' },
-    { sequence: '⿰忄実', refs: [13], char: '' },
+    { sequence: '⿰忄実', refs: [13,37], char: '' },
   ] },
   { key: 'complex', refs: [1], examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
@@ -101,7 +101,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿳ㄙㄨㄥ', refs: [26], char: '' },
     { sequence: '⿰木⿱ㄅㄞ', refs: [26], char: '' },
     { sequence: '⿰木き', refs: [26], char: '' },
-    { sequence: '⿴囗⿱エン', refs: [11], char: '' },
+    { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
@@ -126,7 +126,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿸广K', refs: [20,21], char: '', abbreviates: '慶' },
     { sequence: '⿸广O', refs: [20,21], char: '', abbreviates: '応' },
     // 假名声旁
-    { sequence: '⿰言ギ', char: '', abbreviates: '議' },
+    { sequence: '⿰言ギ', refs: [20,38], char: '', abbreviates: '議' },
     { sequence: '⿰木キ', char: '', abbreviates: '機' },
     { sequence: '⿺走キ', char: '', abbreviates: '起' },
     { sequence: '⿰木コ', char: '', abbreviates: '構' },

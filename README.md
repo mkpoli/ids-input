@@ -809,9 +809,21 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   not read yet.
 
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
-- X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
-  @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie
-  (⿴囗⿱エン), @jianhuazi_bot2 (⿱一心) and @Umihotarus (⿰忄実, 舘暲's character for ヴァーチャル).
+- X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13 and
+  30-37): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
+  [@Utetamutete](https://x.com/Utetamutete/status/2111106301044699557) (投+石, なげ and いしなとり),
+  [@ka_disco](https://x.com/ka_disco/status/2016902923863937473) (⿲𠂤日千), eight posts on
+  ⿴囗⿱エン ([@sc2rm](https://x.com/sc2rm/status/820172370186944512),
+  [@kechilee](https://x.com/kechilee/status/1485909692249690113),
+  [@vivanon_iemoto](https://x.com/vivanon_iemoto/status/1551420018248003584),
+  [@priv_jj1xaw](https://x.com/priv_jj1xaw/status/1587731956372238337),
+  [@miho_kivi](https://x.com/miho_kivi/status/1588333225583071232),
+  [@kygna](https://x.com/kygna/status/1753641413831758312),
+  [@ryakjiten](https://x.com/ryakjiten/status/1776877162689376525),
+  [@king_ko_roro](https://x.com/king_ko_roro/status/1842415160600010928)),
+  [@jianhuazi_bot2](https://x.com/jianhuazi_bot2/status/1373547010536706048) (⿱一心) and
+  [@Umihotarus](https://x.com/Umihotarus/status/1106526920378740736) /
+  [@Dodan_Tu_Tu_Ji](https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606) (⿰忄実).
 - [全学联汉字](https://zh.wikipedia.org/wiki/全学联汉字), Chinese Wikipedia, sections 通假, 楷化,
   记号, 字形省去, 隶定, 训读, 声旁, 假名声旁 and 西文字母 (read 2026-10-28): the Geba-ji examples
   in `demo/lib/examples.js`, one form per row. Left out: the word ligatures (コンクリート,
