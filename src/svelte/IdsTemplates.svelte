@@ -27,25 +27,28 @@
   const componentSupported = part => {
     try { repeatSequence(part, [2, 3]); return true } catch { return false }
   }
+  const target = $derived(editor.chosen ?? (editor.tree === null ? [] : nextEmpty(editor.tree)))
+  /** @param {import('../core/ids.js').Part} tree */
+  const fits = tree => {
+    if (target === null) return false
+    const next = place(editor.tree, target, tree).tree
+    if (next === null) return false
+    const text = write(next), draft = parse(text, { open: true })
+    return !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
+  }
   const pyramidPartSupported = $derived.by(() => {
     try {
       const tree = parse(pyramidSequence(generatorPart, 3), { open: true }).tree
       return tree !== undefined && sameTree(normalizeMarks(tree), tree)
     } catch { return false }
   })
-  const pyramidTarget = $derived(editor.chosen ?? (editor.tree === null ? [] : nextEmpty(editor.tree)))
   const availablePyramids = $derived.by(() => {
     const available = new Set()
-    if (pyramidTarget === null || !pyramidPartSupported) return available
+    if (target === null || !pyramidPartSupported) return available
     try {
       for (const layers of PYRAMID_ROWS) {
         const found = parse(pyramidSequence(generatorPart, layers, { reverse }), { open: true })
-        if (!found.tree) continue
-        const next = place(editor.tree, pyramidTarget, found.tree).tree
-        if (next === null) continue
-        const text = write(next), draft = parse(text, { open: true })
-        const fits = !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
-        if (fits) available.add(layers)
+        if (found.tree !== undefined && fits(found.tree)) available.add(layers)
       }
     } catch { /* the selected component cannot be a pyramid cell */ }
     return available
@@ -58,7 +61,7 @@
     if (editor.disabled || !availablePyramids.has(layers)) return
     const found = parse(pyramidSequence(generatorPart, layers, { reverse }), { open: true })
     if (!found.tree) return
-    editor.put(found.tree, pyramidTarget, pyramidLabel(layers))
+    editor.put(found.tree, target, pyramidLabel(layers))
   }
 
   const REPEATS = /** @type {[number, number][]} */ ([[2, 3], [3, 3], [2, 4], [4, 4]])
@@ -66,18 +69,9 @@
   let repeatBottomTyped = $state('')
   const repeatBottom = $derived(repeatBottomTyped.trim() || generatorPart)
   const repeatPartsSupported = $derived(componentSupported(generatorPart) && componentSupported(repeatBottom))
-  const repeatTarget = $derived(editor.chosen ?? (editor.tree === null ? [] : nextEmpty(editor.tree)))
-  /** @param {import('../core/ids.js').Part} tree */
-  const fits = tree => {
-    if (repeatTarget === null) return false
-    const next = place(editor.tree, repeatTarget, tree).tree
-    if (next === null) return false
-    const text = write(next), draft = parse(text, { open: true })
-    return !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
-  }
   const availableRepeats = $derived.by(() => {
     const available = new Set()
-    if (repeatTarget === null || !repeatPartsSupported) return available
+    if (target === null || !repeatPartsSupported) return available
     try {
       for (const rows of REPEATS) {
         const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
@@ -95,35 +89,35 @@
   }
   /** @param {[number, number]} rows */
   const repeatTitle = rows => !repeatPartsSupported
-    ? t('ids.templates.repeatUnsupported')
-    : repeatTarget === null ? t('ids.templates.repeatTarget')
-    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.repeatTooLong')
+    ? t('ids.templates.generatorUnsupported')
+    : target === null ? t('ids.templates.generatorTarget')
+    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.generatorTooLong')
   /** @param {[number, number]} rows */
   function addRepeat(rows) {
     if (editor.disabled || !availableRepeats.has(rows.join('+'))) return
     const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
     if (!found.tree) return
-    editor.put(found.tree, repeatTarget, repeatLabel(rows))
+    editor.put(found.tree, target, repeatLabel(rows))
   }
   let customRowsTyped = $state('')
   const customRows = $derived(parseRepeatRows(customRowsTyped))
   const customRepeatAvailable = $derived.by(() => {
-    if (!customRows || repeatTarget === null || !repeatPartsSupported) return false
+    if (!customRows || target === null || !repeatPartsSupported) return false
     try {
       const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
       return found.tree !== undefined && fits(found.tree)
     } catch { return false }
   })
   const customRepeatTitle = $derived(!repeatPartsSupported
-    ? t('ids.templates.repeatUnsupported')
+    ? t('ids.templates.generatorUnsupported')
     : !customRows ? (customRowsTyped.trim() ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint'))
-    : repeatTarget === null ? t('ids.templates.repeatTarget')
-    : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.repeatTooLong'))
+    : target === null ? t('ids.templates.generatorTarget')
+    : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.generatorTooLong'))
   function addCustomRepeat() {
     if (editor.disabled || !customRows || !customRepeatAvailable) return
     const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
     if (!found.tree) return
-    editor.put(found.tree, repeatTarget, repeatLabel(customRows))
+    editor.put(found.tree, target, repeatLabel(customRows))
   }
 
   const FIVE_ROWS = [2, 1, 2]
@@ -139,7 +133,7 @@
   })
   const availableFive = $derived.by(() => {
     const available = new Set()
-    if (repeatTarget === null || !fivePartSupported) return available
+    if (target === null || !fivePartSupported) return available
     try {
       const inner = parse(repeatSequence(generatorPart, FIVE_ROWS)).tree
       if (inner !== undefined && fits(inner)) available.add('212')
@@ -150,10 +144,10 @@
   })
   /** @param {'212' | 'enclosed'} key */
   const fiveTitle = key => !fivePartSupported
-    ? t('ids.templates.fiveUnsupported')
-    : repeatTarget === null ? t('ids.templates.fiveTarget')
+    ? t('ids.templates.generatorUnsupported')
+    : target === null ? t('ids.templates.generatorTarget')
     : key === 'enclosed' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported')
-    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
+    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.generatorTooLong')
   /** @param {'212' | 'enclosed'} key */
   const fiveLabel = key => key === '212'
     ? t('ids.templates.fiveInsert', { part: generatorPart })
@@ -164,7 +158,7 @@
     const sequence = key === '212' ? repeatSequence(generatorPart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, generatorPart)
     const found = parse(sequence, { open: true })
     if (!found.tree) return
-    editor.put(found.tree, repeatTarget, fiveLabel(key))
+    editor.put(found.tree, target, fiveLabel(key))
   }
 </script>
 
@@ -202,13 +196,13 @@
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-pyramids`}>{t('ids.templates.pyramids')}</span>
       <label class="ids-pyramid-reverse"><input type="checkbox" bind:checked={reverse} disabled={editor.disabled} />{t('ids.templates.pyramidReverse')}</label>
-      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : pyramidTarget === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : target === null ? t('ids.templates.generatorTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid">
       {#each pyramidTemplates as template (template.layers)}
         <button type="button" disabled={editor.disabled || !availablePyramids.has(template.layers)} data-pyramid={template.layers}
-          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
-          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
+          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.generatorTooLong')}
+          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.generatorTooLong')}
           onclick={() => addPyramid(template.layers)}>
           <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
             {#each template.shapes as shape, i (i)}
@@ -231,7 +225,7 @@
   <div class="ids-pyramid ids-repeat" role="group" aria-labelledby={`${uid}-repeats`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-repeats`}>{t('ids.templates.repeats')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.repeatUnsupported') : repeatTarget === null ? t('ids.templates.repeatTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.repeatTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.generatorUnsupported') : target === null ? t('ids.templates.generatorTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-repeat-grid">
       {#each repeatTemplates as template (template.key)}
@@ -270,7 +264,7 @@
   <div class="ids-pyramid ids-five" role="group" aria-labelledby={`${uid}-five`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-five`}>{t('ids.templates.five')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.fiveUnsupported') : repeatTarget === null ? t('ids.templates.fiveTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.fiveTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.generatorUnsupported') : target === null ? t('ids.templates.generatorTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-five-grid">
       {#each fiveTemplates as template (template.key)}

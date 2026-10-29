@@ -7,6 +7,15 @@ const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.j
 const en = catalogue('en')
 
 describe('the message catalogues', () => {
+  it('hold every literal template key the component uses', () => {
+    const source = readFileSync(new URL('../src/svelte/IdsTemplates.svelte', import.meta.url), 'utf8')
+    const keys = [...source.matchAll(/t\('(ids\.templates\.[^']+)'/g)].map(match => match[1])
+    expect(keys.length).toBeGreaterThan(20)
+    for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+      const messages = catalogue(name)
+      for (const key of keys) expect(key in messages, `${name}: ${key}`).toBe(true)
+    }
+  })
   it('hold the keys the components build at runtime', () => {
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
     for (const tab of ['find', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
@@ -14,7 +23,7 @@ describe('the message catalogues', () => {
     for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
       const messages = catalogue(name)
       for (const preset of STRUCTURAL_PRESETS) expect(`ids.structural.${preset.id}` in messages, `${name}: ${preset.id}`).toBe(true)
-      for (const key of ['generatorPart', 'generatorPartHint', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHint', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveUnsupported', 'fiveHostUnsupported', 'fiveTooLong', 'fiveTarget'])
+      for (const key of ['generatorPart', 'generatorPartHint', 'generatorUnsupported', 'generatorTooLong', 'generatorTarget', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHint', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveHostUnsupported'])
         expect(`ids.templates.${key}` in messages, `${name}: ${key}`).toBe(true)
     }
   })
