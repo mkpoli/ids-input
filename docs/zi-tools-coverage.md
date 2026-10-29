@@ -25,25 +25,22 @@ The published table writes four kinds of text. A sequence may carry more than on
 | operator modifier | `[1]`, `[1:]`, `[.,x]` after ⿻, an enclosure or ㇯ | `⿻[1:]丨日` |
 | stroke chain | `#(` strokes `)` | `#(-丨𠃍-一z)` |
 
-On `main` (2026-10-28, 117,044 sequences in total): 69,390 read, 47,654 unread — all 47,240 sequences that
-carry a note are unread, as are all 501 with a modifier and all 541 with a stroke chain (some
-sequences carry two kinds).
+On `main` (2026-10-29, 117,044 sequences in total): 116,503 read, 541 unread — every sequence
+carrying a note or a modifier reads, and the 541 that remain all carry a stroke chain (187 chain
+alone, 293 note and chain, 20 modifier and chain, 41 all three).
 
-Three open branches move these numbers:
+The two branches behind those numbers are merged:
 
-| branch | read | unread |
+| state | read | unread |
 | --- | --- | --- |
-| `main` | 69,390 | 47,654 |
-| entry notes (#184) | 116,063 | 981 |
-| operator modifiers (#192) | 69,597 | 47,447 |
-| stroke chains (#193) | 69,390 | 47,654 |
-| all three | 116,503 | 541 |
+| `main` before 2026-10-29 | 69,390 | 47,654 |
+| entry notes (#184, merged) | 116,063 | 981 |
+| `main` with #184 and operator modifiers (#192, merged) | 116,503 | 541 |
 
-The 541 which remain all carry a stroke chain. The chains the published grammar names (`#(H)` 一,
-`#(Wg)` ㇁, `#(-丨𠃍-一z)` 口) read as their character, but a description written as one of those
-chains alone is a lone component, which an ordinary description is not; inside another description
-the table's chains are mostly ones the grammar does not name, so no published row gains from the
-named ones.
+The chains the published grammar names (`#(H)` 一, `#(Wg)` ㇁, `#(-丨𠃍-一z)` 口) read as their
+character in #193, but a description written as one of those chains alone is a lone component,
+which an ordinary description is not; inside another description the table's chains are mostly ones
+the grammar does not name, so no published row gains from the named ones.
 
 Two more branches use the unread rows without reading them:
 
