@@ -856,10 +856,12 @@
       </div>
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
-        <svg class="sponsor-heart" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
-          <ellipse class="shine" cx="7.6" cy="9.6" rx="1.5" ry="2.1" transform="rotate(-30 7.6 9.6)" />
-        </svg>
+        <span class="sponsor-face" aria-hidden="true">
+          <img src="/sponsor-face.webp" alt="" width="24" height="24" decoding="async" />
+          <svg class="sponsor-heart" viewBox="0 0 24 24">
+            <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
+          </svg>
+        </span>
         <span class="sponsor-label">{t('app.sponsor.label')}</span>
       </button>
       <div class="end">
@@ -1049,18 +1051,21 @@
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
   .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:0}
-  /* The sponsor button: a soft pink pill with a heart that beats now and then, so it stands out
-     from the grey toolbar without shouting. Hovering makes the heart bounce and the pill lift. */
+  /* The sponsor button: a soft pink pill led by the author's face, with a small heart on it that beats
+     now and then, so it stands out from the grey toolbar without shouting. Hovering makes the heart
+     bounce and the pill lift. */
   .sponsor{--sp-from:light-dark(#ffe6ef,#3d1a2b);--sp-to:light-dark(#fff0e0,#3a2318);
     --sp-ink:light-dark(#c2185b,#ffb3cd);--sp-line:light-dark(#ffc2d6,#6b2c47);--sp-heart:light-dark(#ff4f88,#ff7aa6);
-    display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 14px 0 11px;margin-inline:auto;
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:none;height:32px;padding:0 14px 0 4px;margin-inline:auto;
     border:1px solid var(--sp-line);border-radius:999px;background:linear-gradient(135deg,var(--sp-from),var(--sp-to));color:var(--sp-ink);font:inherit;font-size:13px;font-weight:650;
     cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgb(194 24 91 / .12);transition:transform .18s ease,box-shadow .18s ease}
   .sponsor:hover,.sponsor:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgb(255 79 136 / .28)}
   .sponsor:active{transform:translateY(0) scale(.97)}
   .sponsor:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .sponsor-heart{width:16px;height:16px;flex:none;fill:var(--sp-heart);overflow:visible;transform-origin:50% 60%;animation:sponsor-beat 2.8s ease-in-out infinite}
-  .sponsor-heart .shine{fill:#fff;opacity:.55}
+  .sponsor-face{position:relative;flex:none;width:24px;height:24px}
+  .sponsor-face img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px light-dark(#fff,#3d1a2b),0 0 0 2.5px var(--sp-line)}
+  .sponsor-heart{position:absolute;right:-4px;bottom:-3px;width:12px;height:12px;fill:var(--sp-heart);stroke:light-dark(#fff,#3d1a2b);stroke-width:2.5;paint-order:stroke;
+    overflow:visible;transform-origin:50% 60%;animation:sponsor-beat 2.8s ease-in-out infinite}
   .sponsor:hover .sponsor-heart,.sponsor:focus-visible .sponsor-heart{animation:sponsor-bounce .6s ease-in-out infinite}
   .sponsor-label{line-height:1}
   @keyframes sponsor-beat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.22)}86%{transform:scale(.96)}93%{transform:scale(1.12)}}
@@ -1068,7 +1073,7 @@
   /* Below the full toolbar width the header already wraps; keep Sponsor with the right-hand
      controls there, and centre it in the free space only while the bar stays on one row. */
   @media (min-width:641px) and (max-width:1100px){
-    .sponsor{padding:0 11px 0 9px;font-size:12px}
+    .sponsor{padding:0 11px 0 4px;font-size:12px}
   }
   @media (min-width:641px) and (max-width:1024px){
     .end{margin-left:auto}
@@ -1185,11 +1190,11 @@
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}
-    .sponsor{padding:0 10px}
+    .sponsor{padding:0 12px 0 4px}
   }
   @media (max-width:460px){
     .sponsor{width:32px;padding:0}
     .sponsor-label{display:none}
-    .sponsor-heart{width:18px;height:18px}
+    .sponsor-face{width:26px;height:26px}
   }
 </style>
