@@ -204,15 +204,17 @@ export const EXAMPLE_GROUPS = [
   // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
   // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
-  // thin band. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The
-  // Geba-ji article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
-  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other
-  // New Year 合文 share strokes between their characters, as 唯吾知足 does with one 口, and an IDS
-  // tree cannot share a component, so they are not examples.
+  // thin band. 學好孔孟 follows the zi.tools description ⿳𦥯⿰女孔皿, which writes 孔 for 好 and 孔 so
+  // the shared 子 is drawn once. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their
+  // descriptions. The Geba-ji article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土),
+  // セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the
+  // example writes ⿻Mo). The other New Year 合文 share strokes between their characters, as 唯吾知足
+  // does with one 口, and no recorded description writes the sharing, so they are not examples.
   { key: 'ligature', examples: [
     { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
+    { sequence: '⿳𦥯⿰女孔皿', refs: [46,47], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
