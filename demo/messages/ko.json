@@ -93,6 +93,7 @@
   "app.menu": "메뉴",
   "app.more": "더 보기",
   "app.output": "출력",
+  "app.preview.large": "크게 보기",
   "app.panels.resize": "패널 크기 조절",
   "app.panels.resizeWidth": "{panel} 패널 너비 조절",
   "app.prefs.composer": "미리보기 자형 데이터",

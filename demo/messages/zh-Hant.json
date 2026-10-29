@@ -93,6 +93,7 @@
   "app.menu": "選單",
   "app.more": "更多",
   "app.output": "輸出",
+  "app.preview.large": "放大檢視",
   "app.panels.resize": "調整面板高度",
   "app.panels.resizeWidth": "調整{panel}面板寬度",
   "app.prefs.composer": "預覽字形資料來源",
