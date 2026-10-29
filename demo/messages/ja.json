@@ -237,5 +237,7 @@
   "compare.reviewNote": "レビュー用の字は以前のhan-composeレビュー資料の字で、まれな形や実験的な形を含みます。どちらもIDSから描いています。",
   "compare.set.review": "レビュー用",
   "compare.setTag.review": "レビュー",
-  "compare.showMore": "さらに表示"
+  "compare.showMore": "さらに表示",
+  "app.engines": "エンジン比較",
+  "compare.engines": "エンジン比較"
 }

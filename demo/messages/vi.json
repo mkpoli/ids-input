@@ -237,5 +237,7 @@
   "compare.reviewNote": "Chữ kiểm duyệt đến từ các bản duyệt han-compose trước đây; một số là dạng hiếm hoặc thử nghiệm. Cả hai bên đều vẽ từ IDS.",
   "compare.set.review": "chữ kiểm duyệt",
   "compare.setTag.review": "kiểm duyệt",
-  "compare.showMore": "Hiện thêm"
+  "compare.showMore": "Hiện thêm",
+  "app.engines": "So sánh động cơ",
+  "compare.engines": "So sánh công cụ"
 }

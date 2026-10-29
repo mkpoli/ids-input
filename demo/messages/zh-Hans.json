@@ -237,5 +237,7 @@
   "compare.reviewNote": "评审用字来自早期han-compose评审材料，其中有些是罕见或实验性字形。双方都从IDS绘制。",
   "compare.set.review": "评审用字",
   "compare.setTag.review": "评审",
-  "compare.showMore": "显示更多"
+  "compare.showMore": "显示更多",
+  "app.engines": "引擎比较",
+  "compare.engines": "引擎比较"
 }

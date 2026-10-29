@@ -904,6 +904,14 @@ and filters by set and structure. The drawings are a snapshot of the 2026-10-29 
 `demo/lib/comparison.json`; GlyphWiki's glyph data is free to use and the KAGE engine is GPL-3.0.
 The About dialog links the page.
 
+### Engine comparison
+
+`/engines.html` is a feature table for the engines this project is compared with: the workshop
+itself, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan and CHISE. It covers what each reads
+and writes, how it composes, which controls it has, coverage, deployment, measured cost and
+licences, with sources for every claim. Cells say "—" where no public source documents a value.
+The About dialog and the comparison page link it.
+
 ## Inspired by
 
 Ideas the editor takes, each traced to the tool's own page as seen on 2026-10-25:

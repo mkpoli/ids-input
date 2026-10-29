@@ -239,5 +239,7 @@
   "compare.reviewNote": "Review characters come from earlier han-compose review sheets; some are rare or experimental forms. Both sides draw them from the IDS.",
   "compare.set.review": "review characters",
   "compare.setTag.review": "review",
-  "compare.showMore": "Show more"
+  "compare.showMore": "Show more",
+  "app.engines": "Engine comparison",
+  "compare.engines": "Engine comparison"
 }

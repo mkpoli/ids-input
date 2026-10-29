@@ -237,5 +237,7 @@
   "compare.reviewNote": "검토용 글자는 이전 han-compose 검토 자료의 글자로, 희귀하거나 실험적인 자형이 포함됩니다. 양쪽 모두 IDS에서 그립니다.",
   "compare.set.review": "검토용 글자",
   "compare.setTag.review": "검토",
-  "compare.showMore": "더 보기"
+  "compare.showMore": "더 보기",
+  "app.engines": "엔진 비교",
+  "compare.engines": "엔진 비교"
 }
