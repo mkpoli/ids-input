@@ -513,7 +513,11 @@ export class Composer {
     if (!legs) return null
     const lowerBox = [opening[0], opening[1], opening[2], bottom - 25]
     const lowerKey = keyOf(contents[2])
-    if (lowerKey === '木') lowerBox[3] += openH * 0.08
+    if (lowerKey === '木') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[3] += openH * 0.03
+    }
     else if (lowerKey === '𢀛' || lowerKey === '⿱工口') {
       lowerBox[0] += openW * 0.10
       lowerBox[2] -= openW * 0.10
