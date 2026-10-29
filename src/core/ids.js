@@ -3,6 +3,7 @@ import { hangulClusterAt } from './hangul.js'
 import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from './emoji.js'
 import { isMark, normalizeMarks, marksOf, withMarks, withoutMarks } from './marks.js'
+import { strokeChain } from './strokes.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
 // Ideographic description sequences: reading, writing and editing them as trees.
@@ -211,6 +212,14 @@ export function parse(text, { open = false } = {}) {
       const char = emoji || chars[at]
       at += emoji ? [...emoji].length : 1
       if (char === undefined) { if (open) return null; throw 'missing' }
+      // A stroke chain that names a character stands for that character.
+      if (char === '#' && !emoji) {
+        const chain = strokeChain(chars, at - 1)
+        if (chain) {
+          at = chain.end
+          return isSelector(chars[at]) ? chain.char + chars[at++] : chain.char
+        }
+      }
       const n = arity(char)
       if (!n) {
         if (open && EMPTY_MARKS.includes(char)) return null
@@ -262,6 +271,8 @@ export const problemOf = text => parse(text).problem ?? null
 export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
+  const chain = strokeChain(chars, at)
+  if (chain) return chain.end
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1

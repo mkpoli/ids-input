@@ -38,6 +38,10 @@ describe('a character\'s descriptions', () => {
     const [found] = variants(ready(['⿹{22}一']))
     expect(found.tree).toBeNull()
     expect(tokens('⿹{22}一')).toEqual(['⿹', '{22}', '一'])
+    // A stroke chain reads as the character it names, its variation selector with it.
+    expect(tokens('⿰#(H)木')).toEqual(['⿰', '一', '木'])
+    expect(tokens('⿰#(H)\u{E0100}木')).toEqual(['⿰', '一\u{E0100}', '木'])
+    expect(tokens('⿰#(ZZZ)木')).toEqual(['⿰', '#', '(', 'Z', 'Z', 'Z', ')', '木'])
     expect(unencoded('{22}')).toBe('22')
     expect(unencoded('一')).toBeNull()
     expect(namedParts('⿱⿰{27}{27}一')).toEqual(['一'])

@@ -64,6 +64,22 @@ describe('a whole description', () => {
     expect(parse('⿸[1]厂人').problem).toBe('extra')
     // A note that is not a modifier is not written back.
     expect(write({ op: '⿴', note: 'x]y', parts: ['囗', '人'] })).toBe('⿴囗人')
+  })
+  it('reads a stroke chain that names a character as that character', () => {
+    expect(parse('⿰#(H)木', { open: true }).tree).toEqual({ op: '⿰', parts: ['一', '木'] })
+    expect(write(parse('⿰#(H)木').tree)).toBe('⿰一木')
+    expect(write(parse('⿰#(Wg)木').tree)).toBe('⿰㇁木')
+    expect(write(parse('⿰#(-丨𠃍-一z)木').tree)).toBe('⿰口木')
+    expect(parse('#(H)', { open: true }).tree).toBe('一')
+    expect(write(parse('⿰#(Qa)木').tree)).toBe('⿰◝木')
+    expect(write(parse('⿰#(SZ)木').tree)).toBe('⿰㇘木')
+    // A variation selector after the chain stays with the character.
+    expect(parse('⿰#(H)\u{E0100}木').tree.parts[0]).toBe('一\u{E0100}')
+    expect(descriptionEnd([...'⿰#(H)木'])).toBe(6)
+    // A chain that names no character stays as it is, to be read or rejected as usual.
+    expect(parse('⿰#(ZZZ)木').problem).toBe('extra')
+    expect(write(parse('⿰#木').tree)).toBe('⿰#木')
+
 
   })
   it('keeps a variation selector with its component', () => {

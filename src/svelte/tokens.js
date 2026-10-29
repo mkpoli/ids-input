@@ -2,6 +2,7 @@
 import { hangulClusterAt } from '../core/hangul.js'
 import { arity, isMark, isSelector, modifierLength, parse, takesModifier } from '../core/ids.js'
 import { emojiPrefix } from '../core/emoji.js'
+import { strokeChainLength } from '../core/strokes.js'
 
 /** @typedef {{path: number[], start: number, end: number, tokenEnd: number, text: string, noteStart?: number, noteEnd?: number}} Token */
 /** UTF-16 offsets match the native input, including supplementary characters and selectors.
@@ -15,6 +16,14 @@ export function tokens(text) {
   function read(path) {
     const start = at
     const char = emojiPrefix(text.slice(at)) || String.fromCodePoint(text.codePointAt(at) ?? 0)
+    // A stroke chain that names a character is one component, its text the chain as written.
+    const chain = char === '#' ? strokeChainLength(text, start) : 0
+    if (chain) {
+      at = start + chain
+      if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+      out.push({ path, start, tokenEnd: at, end: at, text: text.slice(start, at) })
+      return
+    }
     const n = arity(char)
     const cluster = hangulClusterAt([...text.slice(at)], 0)
     let noteStart = 0, noteEnd = 0
