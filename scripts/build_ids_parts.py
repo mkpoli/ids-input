@@ -4,14 +4,10 @@
 # ///
 """Build `data/ids-parts.json`, the parts palette (難輸入部件).
 
-A part is a component that the sequences of BabelStone IDS use and that a writer picks whole. That is one of:
-- a component hfhchan/ids leaves undecomposed (its entry has no description operator and names the
-  character itself, or a variant that is atomic in turn);
-- one BabelStone gives no sequence with an operator whose components are all known (⿻？乚 leaves 也
-  a part);
-- one whose every such sequence is strokes only, or strokes and one other component, a stroke being a
-  CJK stroke or a one-stroke ideograph (𠂉 ⿰㇒一, 𠂇 ⿻一丿, 䒑 ⿱丷一);
-- one at least `USE_THRESHOLD` (50) ideographs use, whatever its sequence (殳 門 髟 齒 䖵).
+A part is every component the sequences of BabelStone IDS name, so the palette indexes the whole
+corpus rather than a chosen subset; a component the written-out descriptions introduce is a part
+too. Each part counts the ideographs whose sequences use it, leaving out the sequences of ideographs
+that hfhchan/ids keeps whole.
 Each part counts the ideographs whose sequences use it, leaving out the sequences of ideographs that
 hfhchan/ids keeps whole. BabelStone's numbered components are written out first, as IDS.TXT note 6
 gives them, so 書 counts 聿 and 畫 counts 𤱪's own parts; a number the note leaves `？` stays unread and
@@ -30,7 +26,8 @@ Each part carries:
   The four-stroke grass radical ⻀ has an explicit 横 classification.
 - `kind`: s for a CJK stroke; c (common) for a part that is a 常用漢字 (Unihan kJoyoKanji, with the
   form a U+XXXX value points to) or in the first level of the 通用规范汉字表 (Unihan kTGH, positions
-  1–3500); d (difficult) for the rest. The palette's Common, Difficult and Strokes tabs list them.
+  1–3500); d (difficult) for the rest. The palette's Common view lists the parts 50 or more
+  ideographs use; its stroke groups list every c and d part.
 
     uv run scripts/build_ids_parts.py          # write data/ids-parts.json
     uv run scripts/build_ids_parts.py --font   # and the webfont subsets in fonts/
@@ -172,11 +169,6 @@ CLASS = {
     for stroke, name in zip(STROKES, STROKE_NAMES, strict=True)
     if _NAMED.get(name, "折")
 }
-# Parts that BabelStone splits into strokes still count as parts when each of their sequences is
-# strokes only, or strokes and one other component; every component this many ideographs use counts
-# as a part as well.
-USE_THRESHOLD = 50
-
 
 def components(ids: str) -> list[str]:
     """The components a sequence names, region tags, operators and unknown components dropped."""
@@ -241,14 +233,12 @@ def compound(sequence: str) -> bool:
     return any(char in OPERATORS for char in sequence)
 
 
-def parts(ids: dict[str, list[str]], written: dict[str, list[str]], atomic: set[str], single: set[str]) -> Counter:
+def parts(written: dict[str, list[str]], atomic: set[str]) -> Counter:
     """Each part → how many ideographs' sequences use it (once per ideograph).
 
-    `written` is the same table with BabelStone's numbered components written out, and the names and
-    the count both follow it, so a component the write-out introduces is a part too. `ids` is the
-    table as IDS.TXT gives it, which decides whether a sequence is read at all. `single` holds the
-    one-stroke ideographs (一 丨 丿 丶 乙 亅 …), which count as strokes when a sequence is read for
-    whether it is made of strokes.
+    `written` is the table with BabelStone's numbered components written out, and the names and the
+    count both follow it, so a component the write-out introduces is a part too. Ideographs hfhchan
+    keeps whole contribute no parts, as before.
     """
     uses: Counter = Counter()
     for char, sequences in written.items():
@@ -257,27 +247,7 @@ def parts(ids: dict[str, list[str]], written: dict[str, list[str]], atomic: set[
         named = {part for sequence in sequences if compound(sequence) for part in components(sequence)}
         named.discard(char)
         uses.update(named)
-    stroke = set(STROKES) | single
-
-    def known(part: str) -> list[str]:
-        return [
-            sequence for sequence in ids.get(part, []) if compound(sequence) and not UNKNOWN.search(sequence)
-        ]
-
-    def of_strokes(sequence: str) -> bool:
-        leaves = components(sequence)
-        return sum(leaf not in stroke for leaf in leaves) <= 1 and any(leaf in stroke for leaf in leaves)
-
-    def kept(part: str) -> bool:
-        sequences = known(part)
-        return (
-            part in atomic
-            or not sequences
-            or all(of_strokes(sequence) for sequence in sequences)
-            or uses[part] >= USE_THRESHOLD
-        )
-
-    return Counter({part: count for part, count in uses.items() if kept(part)})
+    return Counter(uses)
 
 
 def unihan_fields(path: Path) -> dict[str, dict[str, str]]:
@@ -365,7 +335,6 @@ def first_strokes(text: str, forms: str = "") -> dict[str, str]:
 
 
 def palette(
-    ids: dict[str, list[str]],
     written: dict[str, list[str]],
     atomic: set[str],
     unihan: dict[str, dict[str, str]],
@@ -373,8 +342,7 @@ def palette(
 ) -> list[list]:
     """Rows `[part, uses, strokes, derived, first, kind]`, most used first; kind is c(ommon),
     d(ifficult) or s(troke)."""
-    single = {char for char, value in unihan["kTotalStrokes"].items() if value.split()[0] == "1"}
-    uses = parts(ids, written, atomic, single)
+    uses = parts(written, atomic)
     strokes = STROKES
     names = sorted(set(uses) | set(strokes), key=lambda char: (-uses.get(char, 0), ord(char)))
     counts = stroke_counts(names, written, unihan["kTotalStrokes"])
@@ -467,7 +435,6 @@ def main(argv: list[str] | None = None) -> int:
 
     ids, written, ids_date = read_ids(ids_path)
     rows = palette(
-        ids,
         written,
         hfhchan_atomic(hfhchan_path.read_text(encoding="utf-8")),
         unihan_fields(unihan_path),

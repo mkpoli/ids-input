@@ -1,10 +1,9 @@
 <script>
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
-  // shows, by the choice above the grid, the parts that are 常用漢字 or in the first level of the
-  // 通用规范汉字表, plus frequent components and compound IDS, most used families first with related
-  // forms adjacent, or every Han component of one stroke count, grouped by the class of the first
-  // stroke (横 豎 撇 點 折, where recorded, unknown last). Tangut the Tangut components in code point
+  // shows, by the choice above the grid, the parts 50 or more ideographs use, most used families
+  // first with related forms adjacent, or every Han component of one stroke count, grouped by the
+  // class of the first stroke (横 豎 撇 點 折, where recorded, unknown last). Tangut the Tangut components in code point
   // order, Small Seal the seal forms, Bopomofo the bopomofo letters, Letters & numbers the Latin,
   // Cyrillic and ASCII parts, Hangul the Hangul letters, Gongche the gongche notation, Strokes the CJK
   // strokes, Recent the parts picked here before (kept in this browser under `recentKey`, none when
@@ -110,6 +109,8 @@
   // curated parts the panel opens on.
   /** @type {number | null | undefined} */
   let count = $state(undefined)
+  // The Components tail: every part from HAN_TAIL strokes up in one group.
+  let partTail = $state(false)
   /** @type {string[]} */
   let recent = $state([])
   $effect(() => {
@@ -303,12 +304,19 @@
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
-  // The Components panel: the curated set by use, with related forms adjacent, or every Han component
-  // of one stroke count. `chosen` drops a count the palette no longer holds, back to the curated set.
-  const commonParts = $derived(adjacentVariants((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd' && (part.uses ?? 0) >= 50)))
+  // The Components panel: the parts whose real IDS use is at least COMMON_USE, with related forms
+  // adjacent, or every Han component of one stroke count. A host part without a use count falls back
+  // to its c kind. `chosen` drops a count the palette no longer holds, back to the frequent set.
+  const COMMON_USE = 50
+  const commonParts = $derived(adjacentVariants((parts ?? []).filter(part =>
+    (part.kind === 'c' || part.kind === 'd') && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE))))
   const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
-  // The stroke counts the Han components hold, in order, null (not recorded) last.
+  // The stroke counts the Han components hold, in order, null (not recorded) last. Counts from
+  // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(strokeParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
+  const partChips = $derived(/** @type {number[]} */ (counts.filter(value => value != null && value < HAN_TAIL)))
+  const partTailCount = $derived(strokeParts.filter(part => (part.strokes ?? 0) >= HAN_TAIL).length)
+  const partUnknown = $derived(counts.includes(null))
   const chosen = $derived(count === undefined || counts.includes(count) ? count : undefined)
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
@@ -368,8 +376,8 @@
     if (tab === 'marks') return [{ cls: undefined, parts: markPalette }]
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
-    if (tab === 'components') return chosen === undefined ? [{ cls: undefined, parts: commonParts }]
-      : grouped(strokeParts.filter(part => (part.strokes ?? null) === chosen))
+    if (tab === 'components') return chosen === undefined && !partTail ? [{ cls: undefined, parts: commonParts }]
+      : grouped(strokeParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen))
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
@@ -595,8 +603,8 @@
   {/if}
   {#if tab === 'components'}
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
-      <button type="button" class:active={!characters && chosen === undefined} aria-pressed={!characters && chosen === undefined}
-        onclick={() => { count = undefined; characters = false }}>{t('parts.tab.common')}</button>
+      <button type="button" class:active={!characters && !partTail && chosen === undefined} aria-pressed={!characters && !partTail && chosen === undefined}
+        onclick={() => { count = undefined; partTail = false; characters = false }}>{t('parts.tab.common')}</button>
       {#if characters}
         {#each hanChips as value (value)}
           {@const label = t('parts.strokeCount', { count: value })}
@@ -615,12 +623,22 @@
             onclick={() => hanCount = 'unknown'}>?</button>
         {/if}
       {:else}
-        {#each counts as value (value ?? 'unknown')}
-          {@const label = value == null ? t('parts.unknownStrokes') : t('parts.strokeCount', { count: value })}
-          <button type="button" class:active={value === chosen} aria-pressed={value === chosen}
+        {#each partChips as value (value)}
+          {@const label = t('parts.strokeCount', { count: value })}
+          <button type="button" class:active={!partTail && value === chosen} aria-pressed={!partTail && value === chosen}
             title={label} aria-label={label}
-            onclick={() => count = value}>{value == null ? '?' : t('parts.strokeChip', { count: value })}</button>
+            onclick={() => { count = value; partTail = false }}>{t('parts.strokeChip', { count: value })}</button>
         {/each}
+        {#if partTailCount}
+          <button type="button" class:active={partTail} aria-pressed={partTail}
+            title={t('parts.characters.fromStrokes', { count: HAN_TAIL })} aria-label={t('parts.characters.fromStrokes', { count: HAN_TAIL })}
+            onclick={() => { partTail = true; count = undefined }}>{HAN_TAIL}+</button>
+        {/if}
+        {#if partUnknown}
+          <button type="button" class:active={!partTail && chosen === null} aria-pressed={!partTail && chosen === null}
+            title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
+            onclick={() => { count = null; partTail = false }}>?</button>
+        {/if}
       {/if}
       <button type="button" class:active={characters} aria-pressed={characters}
         onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters')}</button>

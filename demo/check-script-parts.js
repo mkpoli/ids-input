@@ -43,7 +43,7 @@ try {
   await page.locator('.parts-filter').fill('')
   await page.locator('.script-pages').waitFor()
   assert.equal(await page.locator('.parts-grid .part').count(), 120, 'symbols are paged')
-  assert.match(await page.locator('.script-pages').innerText(), /9,421/)
+  assert.match(await page.locator('.script-pages').innerText(), /9,422/)
   await selector.selectOption('mixed')
   assert.equal(await page.locator('.parts-grid .part').count(), 1, 'a mixed description is listed')
   assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), '⿱㇒⿻日丿')
