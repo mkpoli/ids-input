@@ -7,16 +7,22 @@ import { compose, createSource, sketch } from '../src/composer/loader.js'
 import { groupParts } from '../src/core/preview.js'
 import { files, shards } from './fixtures/composer-export.js'
 
+const built = new Map()
+/** The export with every glyph but the ones `missing` names; one per distinct set, since building it
+ *  hashes and gzips two hundred records. */
 const fixture = (missing = '') => {
+  if (built.has(missing)) return built.get(missing)
   const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
   const extra = shards('g', [...new Set(CHARS)].filter(ch => !missing.includes(ch)).map((ch, i) => [ch, {
     k: ch, G: { v: 1, b: [100, 0, 300 + i, 800], p: [['MLLL', int16([400, 0, 1200 + 4 * i, 0, 1200 + 4 * i, 3200, 400, 3200]), int16(Array(8).fill(0))]] },
     ink: 2000, nl: 1, o: 1,
   }]))
-  return createSource(async name => {
+  const source = createSource(async name => {
     const body = extra[name] ?? files[name]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
+  built.set(missing, source)
+  return source
 }
 const inkOnly = drawing => ({ ...drawing, parts: drawing.parts.map(({ leaf, ...part }) => part) })
 
@@ -34,10 +40,10 @@ it('uses designed whole glyphs for attested expanded forms without changing thei
   }
 })
 it('falls back to operands for unavailable or excluded whole glyphs', async () => {
+  const available = fixture()
   for (const [text, char] of cases) {
     const source = fixture(char)
     expect((await compose(source, text, { separate: true })).parts.length).toBeGreaterThan(1)
-    const available = fixture()
     await compose(available, text)
     const c = new Composer(available.store(), { exclude: [char], separate: true })
     expect(c.compose(text).every(p => p.origin !== `glyph ${char}`)).toBe(true)
