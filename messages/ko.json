@@ -120,6 +120,8 @@
   "ids.redo.named": "다시 실행: {step}",
   "ids.replace": "{part}을(를) 바꾸기",
   "ids.search.label": "부품이나 글자 찾기",
+  "ids.search.strokes": "획수",
+  "ids.search.strokesAny": "전체",
   "ids.search.none": "맞는 부품이나 글자가 없습니다.",
   "ids.search.containing": "‘{sequence}’을 포함하는 글자",
   "ids.search.similarTo": "“{sequence}”와 일부가 같은 구조",

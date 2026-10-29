@@ -120,6 +120,8 @@
   "ids.redo.named": "重做：{step}",
   "ids.replace": "将{part}换成",
   "ids.search.label": "查找部件或字",
+  "ids.search.strokes": "笔画数",
+  "ids.search.strokesAny": "不限",
   "ids.search.none": "没有匹配的部件或字。",
   "ids.search.containing": "含“{sequence}”的字",
   "ids.search.similarTo": "与“{sequence}”部分相同的结构",

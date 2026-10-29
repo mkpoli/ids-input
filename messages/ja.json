@@ -120,6 +120,8 @@
   "ids.redo.named": "やり直す：{step}",
   "ids.replace": "{part}を置き換える",
   "ids.search.label": "部品や字を探す",
+  "ids.search.strokes": "画数",
+  "ids.search.strokesAny": "指定なし",
   "ids.search.none": "一致する部品や字がありません。",
   "ids.search.containing": "「{sequence}」を含む字",
   "ids.search.similarTo": "「{sequence}」と一部が共通する字",

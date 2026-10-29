@@ -120,6 +120,8 @@
   "ids.redo.named": "Làm lại: {step}",
   "ids.replace": "Thay {part} bằng",
   "ids.search.label": "Tìm bộ phận hoặc chữ",
+  "ids.search.strokes": "Số nét",
+  "ids.search.strokesAny": "Tất cả",
   "ids.search.none": "Không có bộ phận hoặc chữ phù hợp.",
   "ids.search.containing": "Các chữ chứa “{sequence}”",
   "ids.search.similarTo": "Cấu trúc tương tự “{sequence}”",

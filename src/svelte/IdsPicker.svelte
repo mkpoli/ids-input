@@ -10,6 +10,7 @@
   import IdsParts from './IdsParts.svelte'
   import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
+  import { loadStrokes } from './strokes.js'
 
   /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
   /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
@@ -48,12 +49,28 @@
   }
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let found = $state({ status: 'idle', items: [] })
+  // A stroke count narrows the found characters; the palette's counts load on first use.
+  let strokeLimit = $state('')
+  /** @type {Map<string, number | null> | null} */
+  let strokeCounts = $state.raw(null)
+  let strokeLoading = false
   $effect(() => {
-    const asked = query.trim(), search = adapter.search
+    if (strokeLimit === '' || strokeCounts || strokeLoading) return
+    strokeLoading = true
+    loadStrokes().then(counts => { strokeCounts = counts }).catch(() => { strokeCounts = new Map() })
+  })
+  const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
+  const foundItems = $derived.by(() => {
+    const counts = strokeCounts, wanted = wantedStrokes
+    if (wanted === null || !counts) return found.items
+    return found.items.filter(item => counts.get(item.char) === wanted)
+  })
+  $effect(() => {
+    const asked = query.trim(), search = adapter.search, stroke = strokeLimit
     if (!asked || !search) { found = { status: 'idle', items: [] }; return }
     const controller = new AbortController()
     found = { status: 'loading', items: [] }
-    const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: 24 }).then(
+    const timer = setTimeout(() => search(asked, { signal: controller.signal, limit: stroke === '' ? 24 : 120 }).then(
       items => { if (!controller.signal.aborted) found = { status: 'ready', items: items ?? [] } },
       () => { if (!controller.signal.aborted) found = { status: 'failed', items: [] } }), 150)
     return () => { clearTimeout(timer); controller.abort() }
@@ -84,6 +101,9 @@
                 <div class="ids-find-row">
                   <input bind:this={field} type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
                     aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
+                  <input class="ids-strokes" type="number" min="1" max="40" inputmode="numeric" autocomplete="off"
+                    aria-label={t('ids.search.strokes')} placeholder={t('ids.search.strokesAny')} value={strokeLimit}
+                    oninput={event => { strokeLimit = event.currentTarget.value }} />
                   {#if adapter.parts}
                     <button type="button" class="ids-draw-toggle" disabled={editor.disabled} title={t('ids.draw.open')} aria-label={t('ids.draw.open')}
                       onclick={() => { drawing = true; query = '' }}>
@@ -93,10 +113,10 @@
                 </div>
                 {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
                 {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
-                {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('ids.search.none')}</p>
-                {:else if found.items.length}
+                {:else if found.status === 'ready' && !foundItems.length}<p class="ids-note">{t('ids.search.none')}</p>
+                {:else if foundItems.length}
                   <div class="ids-found">
-                    {#each found.items as item (item.char)}
+                    {#each foundItems as item (item.char)}
                       <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
                         draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                         onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
@@ -136,6 +156,7 @@
   .ids-find{display:flex;flex-direction:column;gap:6px}
   .ids-find-row{display:flex;gap:6px;align-items:stretch}
   .ids-find input{flex:1;min-width:0;font-size:14px;padding:7px 10px}
+  .ids-find input.ids-strokes{flex:0 0 58px;text-align:center}
   .ids-draw-toggle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;padding:0;color:var(--_muted)}
   .ids-draw-toggle:hover{color:var(--_accent)}
   .ids-draw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
