@@ -93,7 +93,14 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
   const [form, char] = line.split('\t')
   if (form && char && [...form].length === 1) forms.set(form, char)
 }
-const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? null)
+// Stroke counts for the marks and numerals Unihan does not cover, supplied by the project: ⺀ two,
+// 々 three, 〇 and 〡 one, and so on, read from the shapes.
+const MARK_COUNTS = new Map([
+  ['⺀', 2], ['々', 3], ['〇', 1], ['〡', 1], ['〢', 2], ['〣', 3], ['〤', 2], ['〥', 1],
+  ['〦', 2], ['〧', 3], ['〨', 4], ['〩', 3], ['〸', 2], ['〹', 3], ['〺', 4], ['〻', 2],
+  ['𖿢', 1], ['𖿣', 2], ['𖿰', 3], ['𖿱', 1], ['𖿲', 2], ['𖿳', 7], ['𖿴', 3], ['𖿵', 4], ['𖿶', 2],
+])
+const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? MARK_COUNTS.get(key) ?? null)
 const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))
 console.log(`${list.length} Han characters, ${strokes.filter(count => count !== null).length} with stroke counts`)

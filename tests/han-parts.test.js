@@ -20,10 +20,10 @@ it('lists the Han characters the pinned composer export draws', () => {
 it('carries the stroke count Unihan records for each character', () => {
   const data = read(), keys = data.keys, strokes = data.strokes
   expect(strokes).toHaveLength(keys.length)
-  expect(strokes.filter(count => count === null).length).toBeLessThan(30)
+  expect(strokes.filter(count => count === null)).toEqual([])
   const count = key => strokes[keys.indexOf(key)]
   for (const [key, value] of [['一', 1], ['𠀁', 2], ['鬱', 29], ['麤', 33], ['龘', 48]]) expect([key, count(key)]).toEqual([key, value])
   // A radical form takes the count of the unified character it stands for.
-  for (const [key, value] of [['⺊', 2], ['⺌', 3], ['⺗', 4]]) expect([key, count(key)]).toEqual([key, value])
+  for (const [key, value] of [['⺊', 2], ['⺌', 3], ['⺗', 4], ['⺀', 2], ['〣', 3], ['𖿳', 7]]) expect([key, count(key)]).toEqual([key, value])
   expect(Math.max(...strokes.filter(count => count !== null))).toBe(84)
 })
