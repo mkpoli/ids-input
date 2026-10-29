@@ -88,8 +88,13 @@ describe('the demo examples', () => {
       '⿱宀⿺辶⿱⿰王尔⿲隹貝招', '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
-    expect(group.examples).toContainEqual({ sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [sourceNumber('l2-12-032'), sourceNumber('utr45')], char: '' })
-    expect(group.examples).toContainEqual({ sequence: '⿱艹⿰马尼', refs: [sourceNumber('zh-yue-hetizi')], char: '' })
+    const refs = new Map(group.examples.map(example => [example.sequence, example.refs]))
+    expect(refs.get('⿱宀⿺辶⿱⿰王尔⿲隹貝招')).toEqual([sourceNumber('l2-12-032'), sourceNumber('utr45')])
+    expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
+    expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])
+    for (const sequence of ['⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo']) {
+      expect(refs.get(sequence)).toEqual([sourceNumber('geba-wp')])
+    }
     for (const example of group.examples) expect(example.char).toBe('')
   })
   it("writes out 龍's numbered right part", () => {
