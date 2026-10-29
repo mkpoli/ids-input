@@ -1,0 +1,46 @@
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    # The demo's checks type into the workshop, so they need a server that answers /fixtures as well:
+    # the built demo in dist/ does not carry those pages, and running them against it reports
+    # failures that are not in the app.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run check
+      - run: bun test tests
+      - name: Install Chromium
+        run: |
+          bunx playwright-core install --with-deps chromium
+          echo "CHROMIUM_PATH=$(ls -d "$HOME"/.cache/ms-playwright/chromium-*/chrome-linux/chrome | head -1)" >> "$GITHUB_ENV"
+      - name: Run the checks
+        env:
+          IDS_URL: http://localhost:5186
+        run: |
+          set -e
+          bun run dev -- --port 5186 --strictPort > /tmp/dev.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for _ in $(seq 90); do
+            curl -sf "$IDS_URL/" > /dev/null && break
+            sleep 1
+          done
+          curl -sf "$IDS_URL/" > /dev/null || { cat /tmp/dev.log; exit 1; }
+          for file in demo/check-*.js; do
+            echo "::group::$file"
+            bun "$file"
+            echo "::endgroup::"
+          done
