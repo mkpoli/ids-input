@@ -129,9 +129,12 @@ changing the tree or rendering recipe does.
 
 A local translation of 100 units in a half-width child placement moves it 50
 parent units before the parent's edits. Handles report canvas positions, then
-convert the intended operation into the layer's local frame. Rotation about a
-chosen point is stored with its compensating translations in the matrix or
-operation chain; no implicit bounding-box pivot is read from the file.
+convert the intended operation into the layer's local frame. A canvas rotation
+generally becomes a shear in an anisotropic local frame, so the editor exposes
+a six-coefficient affine matrix mode for transforms the simpler fields cannot
+represent. Rotation about a chosen point is stored with its compensating
+translations in the matrix or operation chain; no implicit bounding-box pivot
+is read from the file.
 
 This requires a renderer interface beyond the current `Drawing.parts`, whose
 paths and boxes are already positioned in canvas coordinates. A document renderer

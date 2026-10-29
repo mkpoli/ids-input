@@ -171,6 +171,8 @@
   "app.layers.kind.slot": "빈칸",
   "app.layers.kind.group": "그룹",
   "app.layers.mode": "변형 종류",
+  "app.layers.matrix": "행렬",
+  "app.layers.matrixHint": "로컬 좌표의 여섯 계수(a b / c d, 이동 e f).",
   "app.layers.affine": "아핀",
   "app.layers.mobius": "뫼비우스",
   "app.layers.real": "실수부",

@@ -69,6 +69,17 @@ try {
     assert.ok(Math.abs(rotatedMatrix?.[1] ?? 0) > 0.01, 'the rotate handle turned the layer')
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
 
+    await dialog.getByRole('button', { name: 'Matrix', exact: true }).click()
+    const matrixFields = dialog.locator('input[type=number]')
+    await matrixFields.nth(1).fill('0.2')
+    await matrixFields.nth(1).press('Tab')
+    await page.waitForTimeout(500)
+    const matrixStored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
+    assert.deepEqual(matrixStored?.root?.children?.[0]?.transform?.[0]?.matrix, [1, 0.2, 0, 1, 0, 0])
+    await page.evaluate(() => { const element = document.querySelector('dialog .body'); if (element) element.scrollTop = 0 })
+    if (process.env.IDS_LAYER_SHOTS) await dialog.locator('fieldset.transform').screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/matrix-${scheme}.png` })
+    await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
+
     await dialog.getByRole('button', { name: 'Möbius', exact: true }).click()
     const fields = dialog.locator('input[type=number]')
     await fields.nth(4).fill('0.001')

@@ -171,6 +171,8 @@
   "app.layers.kind.slot": "空位",
   "app.layers.kind.group": "组",
   "app.layers.mode": "变换类型",
+  "app.layers.matrix": "矩阵",
+  "app.layers.matrixHint": "局部坐标中的六个仿射系数（a b / c d，平移 e f）。",
   "app.layers.affine": "仿射",
   "app.layers.mobius": "莫比乌斯",
   "app.layers.real": "实部",
