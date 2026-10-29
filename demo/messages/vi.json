@@ -264,5 +264,6 @@
   "app.layers.oncanvas": "Chỉnh trên khung vẽ",
   "app.layers.history": "Lịch sử",
   "app.export.incomplete": "Hình vẽ này chưa hoàn chỉnh. Xuất có thể làm mất phép biến đổi hoặc thành phần.",
-  "app.export.partial": "Xuất hình chưa hoàn chỉnh"
+  "app.export.partial": "Xuất hình chưa hoàn chỉnh",
+  "app.file.drop": "Thả tài liệu để mở"
 }

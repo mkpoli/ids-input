@@ -264,5 +264,6 @@
   "app.layers.oncanvas": "在畫布上編輯",
   "app.layers.history": "歷史",
   "app.export.incomplete": "此繪圖不完整。匯出可能遺失變換或部件。",
-  "app.export.partial": "匯出不完整繪圖"
+  "app.export.partial": "匯出不完整繪圖",
+  "app.file.drop": "拖放文件以開啟"
 }

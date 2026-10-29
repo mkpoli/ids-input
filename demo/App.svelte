@@ -690,9 +690,11 @@
     input.value = ''
     await openFiles(files)
   }
+  let dropping = $state(false)
   /** @param {DragEvent} event */
   function dropDocument(event) {
     const files = event.dataTransfer?.files
+    dropping = false
     if (!files?.length) return
     event.preventDefault()
     void openFiles(files)
@@ -702,6 +704,11 @@
     if (!event.dataTransfer?.types.includes('Files')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
+    dropping = true
+  }
+  /** @param {DragEvent} event */
+  function leaveFiles(event) {
+    if (!event.relatedTarget) dropping = false
   }
 
   const fileItems = $derived([
@@ -850,7 +857,7 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} ondragover={dragFiles} ondrop={dropDocument} />
+<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
@@ -1033,6 +1040,7 @@
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
+<div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
@@ -1203,6 +1211,9 @@
     .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
   }
+  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
+  .drop-overlay.show{opacity:1}
+  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--accent);border-radius:18px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:600;box-shadow:var(--shadow-pop)}
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
