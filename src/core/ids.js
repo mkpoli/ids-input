@@ -16,7 +16,8 @@ export * from './marks.js'
 /**
  * @typedef {string} Component A component's text, with its variation selector, any loose marks it
  * carries, or its Hangul jamo run.
- * @typedef {{ op: string, parts: Part[], marks?: string }} Node An operator with its parts, and the loose marks written after them.
+ * @typedef {{ op: string, parts: Part[], marks?: string, note?: string }} Node An operator with its parts, the loose marks written after them, and the zi.tools modifier written after the operator (`[1:]`, `[1]`).
+
  * @typedef {Component | Node | null} Part A part of a tree; null is a slot still to fill.
  * @typedef {number[]} Path The part indices from the root down to a part.
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
@@ -143,6 +144,38 @@ export const entryDescription = text => entryBody(text).text
  * @param {string | null | undefined} text */
 export const isSequence = text => arity([...(entryDescription(text))][0]) > 0
 
+/** The operators zi.tools writes a modifier after: an overlay's crossing matrix, an enclosure's
+ * index, a subtraction's index. */
+const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
+/** Whether `op` takes a zi.tools modifier. @param {string} op */
+export const takesModifier = op => MODIFIABLE.has(op)
+
+/** The characters a zi.tools modifier holds between its brackets: a crossing matrix or an index. */
+const MODIFIER = /^[0-9:,._xabcdlr|-]+$/u
+/** Whether `text` is a zi.tools modifier's contents. @param {string} text */
+export const isModifier = text => MODIFIER.test(text)
+
+/**
+ * The modifier after an operator at `chars[at]`, `[...]`, or '' where none starts there. The
+ * brackets stand after the operator and before its parts: ⿻[1:]丨日, ⿴[1]囗人, ㇯[2]王一.
+ * @param {string[]} chars @param {number} at @returns {string} */
+export function modifierAt(chars, at) {
+  if (chars[at] !== '[') return ''
+  const end = chars.indexOf(']', at + 1)
+  if (end < 0 || end - at > 65) return ''
+  const text = chars.slice(at + 1, end).join('')
+  return isModifier(text) ? text : ''
+}
+
+/** How many UTF-16 units the modifier at `text[at]` takes, 0 where none starts there.
+ * @param {string} text @param {number} at @returns {number} */
+export function modifierLength(text, at) {
+  if (text[at] !== '[') return 0
+  const end = text.indexOf(']', at + 1)
+  if (end < 0 || end - at > 65) return 0
+  return isModifier(text.slice(at + 1, end)) ? end - at + 1 : 0
+}
+
 /**
  * A description as a tree. Answers `{ tree }`, or `{ problem }` naming what is wrong: `component`
  * (a part no description may name), `missing` (an operator short of descriptions), `extra` (more
@@ -188,8 +221,12 @@ export function parse(text, { open = false } = {}) {
         if (cluster) { at = cluster.end; return cluster.text }
         return !emoji && isSelector(chars[at]) ? char + chars[at++] : char
       }
-      return { op: char, parts: Array.from({ length: n }, read) }
+      const note = takesModifier(char) ? modifierAt(chars, at) : ''
+      if (note) at += [...note].length + 2
+      const parts = Array.from({ length: n }, read)
+      return note ? { op: char, parts, note } : { op: char, parts }
     } finally { depth-- }
+
   }
   try {
     let tree = read()
@@ -235,6 +272,8 @@ export function descriptionEnd(chars, at = 0) {
     return isSelector(chars[at + 1]) ? at + 2 : at + 1
   }
   let end = at + 1
+  const note = takesModifier(char) ? modifierAt(chars, end) : ''
+  if (note) end += [...note].length + 2
   for (let k = 0; k < n && end >= 0; k++) end = descriptionEnd(chars, end)
   return end
 }
@@ -248,7 +287,9 @@ export const sameTree = (a, b) => a === b || isNode(a) && isNode(b) && a.op === 
   && a.parts.length === b.parts.length && a.parts.every((part, i) => sameTree(part, b.parts[i]))
 
 /** A tree written back as a description, an empty slot as ⬚, loose marks after their part. @param {Part} tree @returns {string} */
-export const write = tree => tree === null ? EMPTY : isNode(tree) ? tree.op + tree.parts.map(write).join('') + (tree.marks ?? '') : tree
+export const write = tree => tree === null ? EMPTY
+  : isNode(tree) ? tree.op + (tree.note && isModifier(tree.note) ? `[${tree.note}]` : '') + tree.parts.map(write).join('') + (tree.marks ?? '') : tree
+
 
 /**
  * Every component of a tree with its path, in reading order; an empty slot has the `char` null.

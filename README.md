@@ -253,9 +253,12 @@ PNG. The test suite draws them from the bundled Bopomofo and Unicode outlines.
 
 A zi.tools entry reads as its description: the unique separator before it (`{士}⿱十一`) and the
 glyph-variant definition after it (`⿻乚一(.,T)`) say which glyph the entry is for, so `parse`
-leaves them out and `write` does not put them back. This package draws one glyph per description
-and carries no variant data; stroke chains (`#(H)`) and the bracket modifiers (`⿻[1:]`, `⿴[1]`)
-are not read yet.
+leaves them out and `write` does not put them back; this package draws one glyph per character and
+carries no variant data. A modifier after an operator (`⿻[1:]丨日`, `⿴[1]囗人`, `㇯[2]王一`)
+stays with that operator and is written back with it: overlays, the enclosures and subtraction take
+one, other operators keep a bracket as a component, and its matrix or index narrows where a part
+sits or which occurrence an operator acts on. The layout draws the description as it does without
+one, so previewing such a description is approximate. Stroke chains (`#(H)`) are not read yet.
 
 
 ### Small Seal (小篆)
@@ -779,8 +782,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - 字統网 (zi.tools), IDS search, <https://zi.tools/?secondary=ids>: the ASCII operator names, read from
   its page script (`action_abbr_map`) on 2026-10-24, and ideas for typing sequences.
 - NightFurySL2001 (夜煞之乐), [（白式）IDS 延展语法导论](https://nightfurysl2001.github.io/bai-ids/),
-  MIT, updated 2026-09-30: the unique separator and glyph-variant definition `parse` reads, and the
-  stroke chains, overlap matrices and index modifiers it does not yet read.
+  MIT, updated 2026-09-30: the unique separator and glyph-variant definition `parse` reads, the
+  overlap and index modifiers a description keeps with its operators, and the stroke chains it does
+  not read yet.
+
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
 - X posts seen on 2026-10-26 (JST), for the forms in `demo/lib/examples.js` with no code point:
   @JUMANJIKYO (⿱艹堀, ホキ), @dmnefkt (⿱投石, さかなげ), @ka_disco (⿲𠂤日千), @qvarie

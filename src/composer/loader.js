@@ -158,6 +158,13 @@ function keysOf(tree, out = [], separate = false, root = true) {
   return out
 }
 
+// The operators `sequence` writes with a zi.tools modifier, which the layout does not apply.
+const MODIFIER = /([\u2FF4-\u2FF7\u2FFB\u2FFC\u31EF])\[[0-9:,._xabcdlr|-]+\]/gu
+/** @param {string} sequence */
+function modifiedOperators(sequence) {
+  return [...sequence.matchAll(MODIFIER)].map(match => match[1])
+}
+
 // A dedicated form consumes its internal operators, including the mirrored spelling.
 function extraOperators(tree, { fontStyle, separate, nativeEnclosures }) {
   if (typeof tree === 'string') return []
@@ -223,7 +230,8 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
-      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv), approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate])] }
+      kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv),
+      approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate, ...modifiedOperators(sequence)])] }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

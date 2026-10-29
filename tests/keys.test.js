@@ -10,6 +10,9 @@ describe('ASCII operator names', () => {
   it('are written as their operators, read from the left', () => {
     expect(unalias('LR亻UD匕失')).toBe('⿰亻⿱匕失')
     expect(unalias('LLR')).toBe('⿲R')
+    // A zi.tools modifier keeps its letters, which are an index or a matrix rather than a name.
+    expect(unalias('⿴[lr]囗人')).toBe('⿴[lr]囗人')
+    expect(unalias('LR[1:]木口')).toBe('⿰[1:]木口')
     expect(unalias('RDOCXXMIROSU')).toBe('⿸⿴⿻⿾⿿㇯')
   })
   it('are read in lower case when the whole run is names', () => {

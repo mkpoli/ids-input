@@ -6,8 +6,7 @@
 // are separate; nothing here reaches into the current canvas-space Drawing or the positional core
 // tree beyond the IDS projection boundary.
 import { hangulClusterAt } from '../core/hangul.js'
-import { arity, isComponent, isMark, isSelector, parse, splitMarks } from '../core/ids.js'
-
+import { arity, isComponent, isMark, isModifier, isSelector, parse, splitMarks } from '../core/ids.js'
 import { inspectJson } from './json.js'
 
 export const FORMAT = 'ids-input/document'
@@ -33,11 +32,11 @@ const SLOT = '⬚'
 /** @typedef {Record<string, unknown>} Extensions */
 /** @typedef {{ id: string, name?: string, transform?: Chain, extensions?: Extensions }} Layer */
 /** @typedef {Layer & { kind: 'component', char: string }} Component */
-/** @typedef {Layer & { kind: 'operator', op: string, children: Node[], marks?: string }} OperatorNode */
+/** @typedef {Layer & { kind: 'operator', op: string, children: Node[], marks?: string, note?: string }} OperatorNode */
 /** @typedef {Layer & { kind: 'slot' }} Slot */
 /** @typedef {Layer & { kind: 'group', child: Node }} Group */
 /** @typedef {Component | OperatorNode | Slot | Group} Node */
-/** @typedef {{ kind: 'component', char: string } | { kind: 'operator', op: string, children: Content[], marks?: string } | { kind: 'slot' } | { kind: 'group', child: Content }} Content */
+/** @typedef {{ kind: 'component', char: string } | { kind: 'operator', op: string, children: Content[], marks?: string, note?: string } | { kind: 'slot' } | { kind: 'group', child: Content }} Content */
 /** @typedef {{ mode: 'unbound', extensions?: Extensions } | { mode: 'pinned', engine: string, revision: string, options: Record<string, unknown>, assets: { role: string, sha256: string, uri?: string }[], extensions?: Extensions }} Render */
 /** @typedef {{ kind: 'contour', piece: number, contour: number } | { kind: 'stroke', id: string }} Target */
 /** @typedef {{ id: string, node: string, geometry: string, target: Target, transform: Chain, extensions?: Extensions }} GeometryEdit */
@@ -106,8 +105,9 @@ function nodeFromTree(id, sequence, allocator) {
   const read = part => {
     if (part === null) return { id: allocator.next(), kind: 'slot' }
     if (typeof part === 'string') return { id: allocator.next(), kind: 'component', char: part }
-    return { id: allocator.next(), kind: 'operator', op: part.op, children: part.parts.map(read),
-      ...(part.marks ? { marks: part.marks } : {}) }
+    /** @type {OperatorNode} */
+    const node = { id: allocator.next(), kind: 'operator', op: part.op, children: part.parts.map(read) }
+    return { ...node, ...(part.note ? { note: part.note } : {}), ...(part.marks ? { marks: part.marks } : {}) }
   }
   if (sequence === '') return { id, kind: 'slot' }
   const found = parse(sequence, { open: true })
@@ -131,7 +131,7 @@ export function toSequence(node) {
   if (node.kind === 'component') return node.char
   if (node.kind === 'slot') return SLOT
   if (node.kind === 'group') return toSequence(node.child)
-  return node.op + node.children.map(toSequence).join('') + (node.marks ?? '')
+  return node.op + (node.note ? `[${node.note}]` : '') + node.children.map(toSequence).join('') + (node.marks ?? '')
 }
 
 /** `node` carrying `marks` after it, on its component text, operator or group child. A slot has no
@@ -328,12 +328,15 @@ function validateNode(value, path, depth, ids, issues, end = true) {
     return
   }
   if (value.kind === 'operator') {
-    closedFields(value, ['id', 'kind', 'op', 'children', 'marks', 'name', 'transform', 'extensions'], path, issues)
+    closedFields(value, ['id', 'kind', 'op', 'children', 'marks', 'note', 'name', 'transform', 'extensions'], path, issues)
     const op = value.op
     if (typeof op !== 'string' || arity(op) === 0) issues.push({ path: `${path}/op`, message: 'unknown operator' })
     if (value.marks !== undefined) {
       if (!end) issues.push({ path: `${path}/marks`, message: 'loose marks end the description' })
       else validateMarks(value.marks, `${path}/marks`, issues)
+    }
+    if (value.note !== undefined && (typeof value.note !== 'string' || !isModifier(value.note))) {
+      issues.push({ path: `${path}/note`, message: 'a note is a zi.tools modifier' })
     }
     if (!array(value.children) || value.children.length !== (typeof op === 'string' ? arity(op) : 0)) {
       issues.push({ path: `${path}/children`, message: 'wrong number of operands' })

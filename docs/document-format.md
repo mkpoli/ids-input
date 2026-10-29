@@ -34,7 +34,7 @@ reactivate an old geometry edit by reusing its removed target ID. Labels use an 
 | `kind` | required content | IDS projection |
 | --- | --- | --- |
 | `component` | `char`: one core component, optionally followed by one variation selector and loose marks, or one conjoining Hangul jamo run | `char` |
-| `operator` | `op`, `children` in operand order, optional `marks` | `op`, each child's projection, then `marks` |
+| `operator` | `op`, `children` in operand order, optional `marks`, optional `note` | `op`, its `note` in brackets if it has one, each child's projection, then `marks` |
 | `slot` | none | `⬚` |
 | `group` | one `child` | child's projection |
 
@@ -44,7 +44,10 @@ therefore belong where the projection ends—the root, the last child of its las
 a root group—and an edit that would carry them inside the tree hoists them back to the root, in
 reading order. A slot cannot carry them.
 
-An operator has exactly the arity defined by `src/core/ids.js`. A group has an
+A `note` holds a zi.tools modifier (`1`, `1:`, `.,x`) written after the operator, before its parts; the
+projection prints it in brackets, and the composer draws the description's parts as it does without
+one. A group has an
+
 identity layout and carries an authored transform independently of an IDS
 operator. Groups can be nested and remain in the document even when their
 transforms are identity. Their IDs can be selected and named in a layer view.
