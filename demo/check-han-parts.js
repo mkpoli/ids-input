@@ -27,6 +27,8 @@ try {
   await page.locator('.parts-filter').fill('U+9EA4')
   assert.equal(await page.locator('.parts-grid button[data-character="麤"]').count(), 1, '23 and up holds 麤')
   await page.locator('.parts-filter').fill('')
+  await page.getByRole('button', { name: 'Stroke count not recorded', exact: true }).click()
+  assert.equal(await page.locator('.parts-grid .part').count(), 25, 'the uncounted marks share one group')
   await page.getByRole('button', { name: 'All characters', exact: true }).click()
   assert.match(await page.locator('.script-pages').innerText(), /103,352/)
   await page.getByRole('button', { name: 'Common', exact: true }).click()
