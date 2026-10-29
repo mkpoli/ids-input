@@ -253,5 +253,6 @@
   "compare.setTag.review": "評審",
   "compare.showMore": "顯示更多",
   "app.engines": "引擎比較",
-  "compare.engines": "引擎比較"
+  "compare.engines": "引擎比較",
+  "app.layers.oncanvas": "在畫布上編輯"
 }
