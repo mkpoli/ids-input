@@ -69,8 +69,8 @@
     "test": "bun test --timeout 15000 tests",
     "audit:zi": "bun scripts/audit_zi_ids.mjs",
     "check:zi-parity": "bun scripts/check_zi_parity.mjs",
-    "types": "tsc -p tsconfig.json",
-    "check": "tsc -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
+    "types": "tsrs -p tsconfig.json",
+    "check": "tsrs -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "i18n": "x18n check",
     "verify": "bun run test && bun run check && bun run i18n",
     "dev": "vite demo",
@@ -78,7 +78,7 @@
     "build:demo": "vite build demo",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "preview": "vite preview demo",
-    "prepack": "tsc -p tsconfig.json",
+    "prepack": "tsrs -p tsconfig.json",
     "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
   },
   "devDependencies": {
@@ -88,6 +88,7 @@
     "qrcode-generator": "1.4.4",
     "svelte": "5.57.0",
     "svelte-check": "4.7.7",
+    "tsrs": "0.20.1-ts7.1.0-beta",
     "typescript": "5.9.3",
     "vite": "7.3.6"
   },

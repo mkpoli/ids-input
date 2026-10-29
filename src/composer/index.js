@@ -104,7 +104,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
     if (!drawer) drawer = createDrawer(worker, root)
     return drawer
   }
-  const preview = /** @type {ComposerPreview} */ (async (sequence, { signal, onSketch } = {}) => {
+  const preview = /** @type {ComposerPreview} */ (async (sequence, /** @type {PreviewOptions} */ { signal, onSketch } = {}) => {
     if (tooLarge(parse(sequence, { open: true }).tree ?? null)) throw new TooLargeError(`${sequence} is larger than ${LIMITS.nodes} operators, ${LIMITS.depth} levels, or ${PYRAMID_LAYERS} pyramid rows.`)
     signal?.throwIfAborted()
     const cached = drawings.get(sequence)

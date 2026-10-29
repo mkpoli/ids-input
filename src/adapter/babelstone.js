@@ -554,6 +554,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       signal?.throwIfAborted()
       return info
     } } : {}),
+    /** @param {string} char @param {import('./types.js').Options} [options] */
     async structure(char, { signal } = {}) {
       const found = (await readSearch()).get(char) ?? []
       signal?.throwIfAborted()
@@ -567,6 +568,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         (/^[\u{17000}-\u{187FF}\u{18D00}-\u{18D7F}]$/u.test(char) &&
          /^[\u{18800}-\u{18AFF}\u{18D80}-\u{18DFF}]$/u.test(sequence.text)))
     },
+    /** @param {string} query @param {import('./types.js').Options} [options] */
     async search(query, { limit = 24, signal } = {}) {
       if (limit <= 0) return []
       signal?.throwIfAborted()
@@ -638,6 +640,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const char = (await overwrites()).get(sequence.trim())
       return char ? [char] : []
     },
+    /** @param {string} sequence @param {import('./types.js').Options & { exact?: boolean }} [options] */
     async encoded(sequence, { exact: onlyTagged = false, signal } = {}) {
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
       // again on the next call, and the source index serves until then.
@@ -700,22 +703,26 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         ? part : { op: part.op, parts: part.parts.map(plain) }
       return [...new Set([...exact, ...resolve(plain(tree))])]
     },
+    /** @param {string} query @param {import('./types.js').Options} [options] */
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
       const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
       signal?.throwIfAborted()
       return result
     },
+    /** @param {string} query @param {import('./types.js').Options & { componentLookup?: boolean }} [options] */
     async findByIds(query, { limit = 60, signal, componentLookup = true } = {}) {
       const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
     },
+    /** @param {string} text @param {import('./types.js').Options} [options] */
     async chainCharacter(text, { signal } = {}) {
       const entries = await loadChains(signal)
       signal?.throwIfAborted()
       return entries ? chainName(entries, text) : null
     },
+    /** @param {string} query @param {import('./types.js').Options} [options] */
     async findSimilar(query, { limit = 60, signal } = {}) {
       const result = worker && !given ? await inWorker(query, limit, 'similar') : (await localSearch()).similar(query, { limit })
       signal?.throwIfAborted()
