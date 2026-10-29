@@ -2,17 +2,26 @@
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 
-/** The ink paths the preview draws for a sequence typed into the field. */
+/** The ink paths the preview draws for a sequence typed into the field. A drawing is the `ink`
+ *  path of the composed branch, or the paths inside the document group the layer view draws. */
 async function drawing(page, sequence) {
   const field = page.locator('.ids-field input')
+  const paths = () => page.locator('.ids-preview-large svg path').evaluateAll(nodes => nodes.map(node => node.getAttribute('d') ?? '').filter(Boolean))
   await field.fill(sequence)
   await page.waitForFunction(() => !/Composing/.test(document.querySelector('.ids-preview-meta')?.textContent ?? ''))
-  await page.waitForTimeout(400)
-  return {
-    badge: (await page.locator('.ids-preview-meta').textContent())?.trim() ?? '',
-    ink: await page.locator('.ids-preview .ink').evaluateAll(nodes => nodes.map(node => node.getAttribute('d'))),
+  let last = '', ink = []
+  for (let i = 0; i < 40; i++) {
+    await page.waitForTimeout(300)
+    ink = await paths()
+    const seen = JSON.stringify(ink)
+    if (seen !== '[]' && seen === last) break
+    last = seen
   }
+  return { badge: (await page.locator('.ids-preview-meta').textContent())?.trim() ?? '', ink }
 }
+
+/** Paths as geometry: the two drawing sources write the same numbers with and without `.0`. */
+const shape = ink => ink.map(d => d.replace(/-?\d*\.\d+/g, number => String(Number(number))))
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
@@ -24,7 +33,7 @@ try {
   const tagged = await drawing(page, '⿻[1:]丨日')
   assert.ok(!/Approximate/.test(tagged.badge), `still approximate: ${tagged.badge}`)
   const plain = await drawing(page, '甲')
-  assert.deepEqual(tagged.ink, plain.ink, 'the tagged description draws 甲')
+  assert.deepEqual(shape(tagged.ink), shape(plain.ink), 'the tagged description draws 甲')
   // Every face draws it: the serif face keeps its own composer.
   await page.locator('.font-choice').nth(1).click()
   const serif = await drawing(page, '⿻[:-1]〢日')
