@@ -33,8 +33,8 @@ Licence: MIT, Copyright (c) 2021 Yi Bai; see `data/licences/yi-bai-ids-MIT.txt`.
 
 BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by Andrew West (魏安),
 <https://www.babelstone.co.uk/CJK/IDS.TXT>, File Date 2025-06-27 (Unicode 16.0 edition), SHA-256
-`cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1`. 97,680 ideographs, 777 KB
-gzipped, 2.2 MB as text.
+`cc2a0a97e6a51ed6ebe59870ef2af66e83f3c3c27387d79b4441bb2d791d78b1`. 97,680 ideographs and the
+6,145 Tangut records (103,825 lines), 798 KB gzipped, 2.2 MB as text.
 
 - Licence: public domain. Note 2 of the file's header states that IDS sequences are facts not
   eligible for copyright and that "anyone is free to make use of the IDS data provided in this file

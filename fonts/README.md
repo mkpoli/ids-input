@@ -15,7 +15,7 @@ Plane, Extension A included, comes from the reader's own CJK font.
   400, SHA-256 `240c9b83bf7b386edbae39995ae7e068ed4583f484d92e4a74c34158b5f27b1a`), © 2014-2021
   Adobe, SIL Open Font License 1.1 (`OFL-NotoSansCJK.txt`). The Reserved Font Name is `Source`, which
   the family name does not use.
-- `Plangothic-ids-parts.woff2` (55 KB, 503 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
+- `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one
   subset, SIL Open Font License 1.1 (`OFL-Plangothic.txt`). The font declares no Reserved Font Name.
