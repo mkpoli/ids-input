@@ -229,6 +229,61 @@ describe('the composer', () => {
     expect(drawn).toEqual(await compose(sourceOf(), '⿱木口'))
     expect(rounds).toBe(20)
   })
+  it('draws a dense description no character spells as spaced parts', async () => {
+    const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
+    const drawn = await compose(sourceOf(), sequence)
+    expect(drawn.spaced).toBe(true)
+    expect(drawn.parts).toHaveLength(8)
+    expect(drawn.parts.map(part => part.leaf)).toEqual([0, 1, 2, 3, 4, 5, 6, 7])
+    expect(drawn.parts.every(part => part.origin.startsWith('spaced '))).toBe(true)
+    // Each part sits in its own cell: positive sizes, inside the face, and no two boxes overlap.
+    for (const [x, y, width, height] of drawn.parts.map(part => part.box)) {
+      expect(width).toBeGreaterThan(0)
+      expect(height).toBeGreaterThan(0)
+      expect(x).toBeGreaterThanOrEqual(0)
+      expect(y).toBeGreaterThanOrEqual(0)
+      expect(x + width).toBeLessThanOrEqual(1000)
+      expect(y + height).toBeLessThanOrEqual(1000)
+    }
+    for (let i = 0; i < drawn.parts.length; i++) {
+      for (let j = i + 1; j < drawn.parts.length; j++) {
+        const [x, y, width, height] = drawn.parts[i].box, [u, v, w, h] = drawn.parts[j].box
+        expect(Math.max(0, Math.min(x + width, u + w) - Math.max(x, u))
+          * Math.max(0, Math.min(y + height, v + h) - Math.max(y, v))).toBe(0)
+      }
+    }
+    // Reading order places the top operand above the bottom one.
+    const top = drawn.parts.find(part => part.leaf === 0), bottom = drawn.parts.find(part => part.leaf === 4)
+    expect(top.box[1] + top.box[3]).toBeLessThanOrEqual(bottom.box[1])
+    expect((await compose(sourceOf(), sequence, { layout: 'composed' })).spaced).toBeUndefined()
+    expect((await compose(sourceOf(), '⿰木口')).spaced).toBeUndefined()
+  })
+  it('spaces at eight leaves, and reads across and down in tree order', async () => {
+    const chain = n => '⿱木' + '⿰木'.repeat(n - 2) + '口'
+    expect((await compose(sourceOf(), chain(7))).spaced).toBeUndefined()
+    expect((await compose(sourceOf(), chain(8))).spaced).toBe(true)
+    const across = await compose(sourceOf(), '⿰木口', { layout: 'spaced' })
+    expect(across.parts[0].box[0] + across.parts[0].box[2]).toBeLessThanOrEqual(across.parts[1].box[0])
+    for (const sequence of ['⿲木口木', '⿳木口木', '⿹木口']) {
+      const spaced = await compose(sourceOf(), sequence, { layout: 'spaced' })
+      expect(spaced.parts).toHaveLength(sequence === '⿲木口木' || sequence === '⿳木口木' ? 3 : 2)
+    }
+  })
+  it('keeps the composer for marks, exclusions and approximate operators, and forces spaced only when asked', async () => {
+    const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
+    expect((await compose(sourceOf(), `${sequence}ˊ`)).spaced).toBeUndefined()
+    expect((await compose(sourceOf(), sequence, { exclude: ['永'] })).spaced).toBeUndefined()
+    const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
+    expect((await compose(sourceOf(), modified)).spaced).toBeUndefined()
+    await expect(compose(sourceOf(), `${sequence}ˊ`, { layout: 'spaced' })).rejects.toThrow('loose marks')
+  })
+  it('keeps the reading order of spaced leaves around an empty slot', async () => {
+    const drawn = await compose(sourceOf(), '⿱⿰⿰木⬚⿰木口⿰⿰木口⿰木口')
+    expect(drawn.spaced).toBe(true)
+    expect(drawn.parts.map(part => part.leaf)).toEqual([0, 2, 3, 4, 5, 6, 7])
+    expect(drawn.slots).toHaveLength(1)
+    expect(drawn.slots[0].index).toBe(0)
+  })
   it('names the operators it draws beyond the composer, and credits KanjiVG only for its pieces', async () => {
     const source = sourceOf()
     expect((await compose(source, '⿾⿰木口')).approximate).toEqual(['⿾'])
@@ -331,6 +386,8 @@ describe('the preview badge', () => {
     expect(badge('failed')).toEqual({ label: 'failed', params: {} })
     expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })
     expect(badge('composed', { approximate: ['⿾', '㇯'] })).toEqual({ label: 'approximate', params: { ops: '⿾ ㇯' } })
+    expect(badge('composed', { spaced: true })).toEqual({ label: 'spaced', params: {} })
+    expect(badge('composed', { spaced: true, approximate: ['⿼'] })).toEqual({ label: 'approximate', params: { ops: '⿼' } })
     expect(badge('final')).toEqual({ label: 'final', params: {} })
   })
 })

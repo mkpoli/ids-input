@@ -93,6 +93,8 @@
   "ids.preview.failedNote": "無法組合此序列。",
   "ids.preview.final": "定稿",
   "ids.preview.loading": "組字中…",
+  "ids.preview.spaced": "分離顯示",
+  "ids.preview.spacedNote": "每個部件分開畫在自己的框內；這條描述沒有可參照字形的字。",
   "ids.preview.tooLarge": "過大",
   "ids.preview.tooLargeNote": "過大，未組字，框線顯示佈局。",
   "ids.problem.character": "請以⿰、⿱等結構符開頭。",

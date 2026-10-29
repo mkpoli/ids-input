@@ -196,6 +196,19 @@ supplies the `IDS New Korean` face, and their outlines are bundled for previews 
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+### Spaced parts
+
+A description of eight or more leaves (an empty slot counts as one) is drawn **spaced** when no
+character spells it as a whole, it uses only alignment and exact enclosure operators, and every leaf
+has a glyph. Each part then takes its own cell, in the tree's reading order, so no two parts
+overlap. The composer's host cuts put parts where a designer drew them in a character. An invented
+description this dense has no such places, so composing it overlaps the parts. The preview badges a
+spaced drawing **Spaced**.
+`compose(source, sequence, { layout: 'composed' })` forces the composer, and `'spaced'` forces cells
+and rejects loose marks; the default, `'auto'`, spaces only such dense descriptions. Pyramids,
+grouped forms, excluded characters and descriptions with loose marks or approximate operators keep
+the composer.
+
 ### Pyramids
 
 `pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an

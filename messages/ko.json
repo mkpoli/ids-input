@@ -93,6 +93,8 @@
   "ids.preview.failedNote": "이 기술은 조합하지 못했습니다.",
   "ids.preview.final": "확정",
   "ids.preview.loading": "조합 중…",
+  "ids.preview.spaced": "분리 표시",
+  "ids.preview.spacedNote": "부품을 각자의 칸에 따로 그립니다. 이 설명에는 참고할 글자가 없습니다.",
   "ids.preview.tooLarge": "너무 큼",
   "ids.preview.tooLargeNote": "너무 커서 조합하지 않습니다. 틀은 배치를 보여 줍니다.",
   "ids.problem.character": "⿰, ⿱ 같은 연산자로 시작하세요.",

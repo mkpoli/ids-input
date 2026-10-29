@@ -93,6 +93,8 @@
   "ids.preview.failedNote": "无法组合此序列。",
   "ids.preview.final": "定稿",
   "ids.preview.loading": "组字中…",
+  "ids.preview.spaced": "分离显示",
+  "ids.preview.spacedNote": "每个部件分开画在自己的框内；这条描述没有可参照字形的字。",
   "ids.preview.tooLarge": "过大",
   "ids.preview.tooLargeNote": "过大，未组字，框线显示布局。",
   "ids.problem.character": "请以⿰、⿱等结构符开头。",

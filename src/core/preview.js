@@ -32,6 +32,7 @@ export function badge(step, drawn = null) {
   if (step === 'failed') return { label: 'failed', params: {} }
   if (step === 'capped') return { label: 'tooLarge', params: {} }
   if (step === 'composed' && drawn?.approximate?.length) return { label: 'approximate', params: { ops: drawn.approximate.join(' ') } }
+  if (step === 'composed' && drawn?.spaced) return { label: 'spaced', params: {} }
   return { label: 'draft', params: {} }
 }
 

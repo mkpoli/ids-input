@@ -49,6 +49,18 @@ const COVERS = new Set(['宀', '冖', '穴', '雨'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
 
+/** A description with this many leaves and no character to follow is drawn as spaced parts, each in
+ *  its own cell: the composer's host cuts fit a character's positions, and a dense invented
+ *  description has none, so its parts overlap. */
+const SPACED_LEAVES = 8
+/** The gap between cells, and the margin inside one, as shares of the cell's box. */
+const SPACED_GAP = 0.012
+const SPACED_INSET = 0.06
+/** The axis an enclosure's two parts take when they are drawn apart: down for the top and bottom
+ *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
+ *  enclosure would put them on, since they no longer surround each other. */
+const SPACED_AXIS = { '⿵': 1, '⿶': 1 }
+
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
 export function parseTree(sequence, arity) {
@@ -254,6 +266,104 @@ export class Composer {
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
     } finally { this.face = previous }
+  }
+
+  /** Whether `tree` is drawn as spaced parts (`compose`'s `layout: 'auto'`): no character spells it
+   *  as a whole, it has at least `SPACED_LEAVES` leaves, every leaf is a glyph or an empty slot, and
+   *  every node is an axis or an enclosure this layout splits without approximation. A description
+   *  this dense has no designed host forms; drawn in place, its parts overlap each other, while
+   *  apart each stays readable. */
+  spacedFor(tree, marks = '') {
+    if (marks || this.exclude.size) return false
+    const key = keyOf(tree)
+    if (this.bySequence(key) || this.spelled.has(key)) return false
+    if (this.pyramid(tree)) return false
+    if (isGroupedForm(key, this.fontStyle) || isComponentForm(key, this.fontStyle)) return false
+    let leaves = 0, supported = true
+    const walk = node => {
+      if (!Array.isArray(node)) {
+        leaves++
+        if (!isEmpty(node) && !this.glyph(node)) supported = false
+        return
+      }
+      const op = node[0]
+      if (APPROXIMATE.includes(op) || (!(op in this.AXIS) && !(op in this.ENCLOSE))) { supported = false; return }
+      node.slice(1).forEach(walk)
+    }
+    walk(tree)
+    return supported && leaves >= SPACED_LEAVES
+  }
+
+  /** The parts of `tree` drawn apart: one glyph (or empty slot) per leaf, in a cell its operator
+   *  gives it. Cells are weighted by each subtree's leaf count below the top; an enclosure's parts
+   *  keep the tree's reading order on an axis chosen for the cell's shape, so no cell overlaps
+   *  another. */
+  spaced(tree) {
+    let slots = 0
+    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
+    const numbered = number(tree)
+    const out = []
+    let leaf = 0
+    const f = this.face, width = f[2] - f[0], height = f[3] - f[1]
+    const target = box => [f[0] + box[0] * width, f[1] + (1 - box[3]) * height, f[0] + box[2] * width, f[1] + (1 - box[1]) * height]
+    const inset = box => {
+      const w = box[2] - box[0], h = box[3] - box[1]
+      return [box[0] + w * SPACED_INSET, box[1] + h * SPACED_INSET, box[2] - w * SPACED_INSET, box[3] - h * SPACED_INSET]
+    }
+    const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
+    const split = (kids, axis, box, equal) => {
+      const weights = kids.map(kid => equal ? 1 : Math.sqrt(leaves(kid)))
+      const sum = weights.reduce((a, b) => a + b, 0)
+      const lo = box[axis], span = box[axis + 2] - lo
+      let at = lo
+      return kids.map((kid, i) => {
+        const size = span * weights[i] / sum
+        const b = box.slice()
+        b[axis] = at + (i ? SPACED_GAP / 2 : 0)
+        b[axis + 2] = at + size - (i < kids.length - 1 ? SPACED_GAP / 2 : 0)
+        at += size
+        return b
+      })
+    }
+    const walk = (node, box, depth) => {
+      if (isEmpty(node)) {
+        const part = this.placeholder(node, inset(target(box)))
+        part.leaf = leaf++
+        out.push(part)
+        return
+      }
+      if (typeof node === 'string') {
+        const glyph = this.glyph(node)
+        if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
+        // A narrow cell keeps the glyph's proportions: it narrows inside the cell rather than
+        // stretching a tall part into a sliver.
+        const cell = inset(target(box))
+        const part = placed(glyph, glyph.box, fitted(glyph.box, cell, this.C.STRETCH), this.ink(node), `spaced ${node}`)
+        part.leaf = leaf++
+        out.push(part)
+        return
+      }
+      const op = node[0], kids = node.slice(1)
+      if (op in this.AXIS) {
+        const boxes = split(kids, this.AXIS[op], box, depth === 0)
+        kids.forEach((kid, i) => walk(kid, boxes[i], depth + 1))
+        return
+      }
+      if (op in this.ENCLOSE) {
+        const namedAxis = SPACED_AXIS[op] ?? 0
+        // A cell much taller than it is wide reads better with its parts stacked, and a much wider
+        // one side by side, whatever the enclosure's own direction.
+        const across = box[2] - box[0], down = box[3] - box[1]
+        const axis = namedAxis === 0 && across < down * 0.8 ? 1 : namedAxis === 1 && down < across * 0.8 ? 0 : namedAxis
+        const boxes = split(kids, axis, box, false)
+        walk(kids[0], boxes[0], depth + 1)
+        walk(kids[1], boxes[1], depth + 1)
+        return
+      }
+      throw new LookupError(`${op} is not laid out.`)
+    }
+    walk(numbered, [0, 0, 1, 1], 0)
+    return out
   }
 
   /**
