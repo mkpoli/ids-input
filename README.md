@@ -473,7 +473,8 @@ annotations are not included.
 ## Search
 
 `IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
-four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+four-part grids, repeated pairs and triples, the larger two-row repeats, mirrored pairs, matching
+outer parts, enclosures and overlays.
 The demo offers it beside the existing character search below the editor. Selecting a preset
 runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
 characters** copies the complete result, including hits beyond the visible page.
