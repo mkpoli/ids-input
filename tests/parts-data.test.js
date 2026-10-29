@@ -8,9 +8,9 @@ const parts = paletteRows(document)
 const byPart = new Map(parts.map(part => [part.part, part]))
 
 describe('palette stroke metadata', () => {
-  it('counts all twelve radical forms missing from Unihan', () => {
-    const chars = [...'⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀']
-    const counts = [2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4]
+  it('counts all fourteen radical forms missing from Unihan', () => {
+    const chars = [...'⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕']
+    const counts = [2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3]
     expect(chars.map(char => byPart.get(char)?.strokes)).toEqual(counts)
     expect(parts.filter(part => part.kind !== 't' && part.strokes == null)).toEqual([])
   })
@@ -18,7 +18,7 @@ describe('palette stroke metadata', () => {
   it('classifies every Han component while leaving the circle stroke outside the five classes', () => {
     const classes = new Set(['横', '豎', '撇', '點', '折'])
     const han = parts.filter(part => [...part.part].length === 1 && (part.kind === 'c' || part.kind === 'd'))
-    expect(han).toHaveLength(1644)
+    expect(han).toHaveLength(1647)
     expect(han.filter(part => !classes.has(part.first))).toEqual([])
     expect(['山', '月', '宀', '弓', '⺝', '⺀', '⺆', '⺻', '⻀'].map(char => byPart.get(char).first))
       .toEqual(['豎', '撇', '點', '折', '豎', '點', '撇', '折', '横'])
@@ -34,8 +34,8 @@ sys.path.insert(0, "scripts")
 from build_ids_parts import first_strokes, stroke_counts, RADICAL_COUNTS
 sample = "# header\\n山\\tshs\\n小\\tznp\\n小\\tsnp\\n⺊\\tsh\\n坏\\ts?\\n词组\\thh\\n空\\t\\n"
 first = first_strokes(sample)
-assert first == {"山": "豎", "小": "豎", "⺊": "豎", "⻀": "横"}, first
-assert first_strokes("𠃍\\ths\\n乀\\tz", "㇕\\t𠃍\\tunicode-ucd\\tEquivalentUnifiedIdeograph\\n㇏\\t乀\\tunicode-ucd\\tEquivalentUnifiedIdeograph") == {"𠃍": "折", "乀": "點", "⻀": "横"}
+assert first == {"山": "豎", "小": "豎", "⺊": "豎", "⻀": "横", "⺂": "折"}, first
+assert first_strokes("𠃍\\ths\\n乀\\tz", "㇕\\t𠃍\\tunicode-ucd\\tEquivalentUnifiedIdeograph\\n㇏\\t乀\\tunicode-ucd\\tEquivalentUnifiedIdeograph") == {"𠃍": "折", "乀": "點", "⻀": "横", "⺂": "折"}
 counts = stroke_counts(list(RADICAL_COUNTS) + ["木", "㇐", "？"], {}, {"木": "4"})
 assert all(counts[c] == (n, False) for c, n in RADICAL_COUNTS.items()), counts
 assert counts["木"] == (4, False)
