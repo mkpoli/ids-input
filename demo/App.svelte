@@ -666,12 +666,8 @@
     note(t('app.file.saved', { name: file.name }))
   }
 
-  /** Open a chosen .ids.json as a new tab. @param {Event} event */
-  async function openDocument(event) {
-    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
-    const file = input.files?.[0]
-    input.value = ''
-    if (!file) return
+  /** Open a document file as a new tab. @param {File} file */
+  async function openFile(file) {
     try {
       const document = await readDocumentFile(file)
       const session = createDocumentSession(document)
@@ -681,6 +677,26 @@
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
     }
+  }
+  /** Open a chosen .ids.json, SVG or PNG as a new tab. @param {Event} event */
+  async function openDocument(event) {
+    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
+    const file = input.files?.[0]
+    input.value = ''
+    if (file) await openFile(file)
+  }
+  /** @param {DragEvent} event */
+  function dropDocument(event) {
+    const files = event.dataTransfer?.files
+    if (!files?.length) return
+    event.preventDefault()
+    openFile(files[0])
+  }
+  /** @param {DragEvent} event */
+  function dragFiles(event) {
+    if (!event.dataTransfer?.types.includes('Files')) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
   }
 
   const fileItems = $derived([
@@ -829,7 +845,7 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} />
+<svelte:window onkeydown={keys} ondragover={dragFiles} ondrop={dropDocument} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
