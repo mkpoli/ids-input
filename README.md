@@ -871,10 +871,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   uncited there.
 - John H. Jenkins, Richard Cook and Ken Lunde, [Proposal to Add a Character to the UTR #45](https://www.unicode.org/L2/L2012/12032-one-add-utr45.pdf),
   2012-01-26: the 招財進寶 ligature for Chinese New Year decorations, with its CDL: 宀 at the top,
-  辶 around the lower left, and 王, 尔, 隹, 貝 and 招 inside.
+  a 辶 wrapping the square from the 宀's band, and 王, 尔, 隹, 貝 and 招 inside.
 - [U-source ideographs (UTR #45)](https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt),
   Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
-  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`.
+  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`, with the 宀 above the 辶. The proposal's glyph puts the 辶 around the
+  宀 and the rows, so the example follows the glyph: `⿺辶⿱宀⿱⿰王尔⿲隹貝招`.
 - [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
   oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
