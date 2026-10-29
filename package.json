@@ -67,6 +67,7 @@
   ],
   "scripts": {
     "test": "bun test tests",
+    "audit:zi": "bun scripts/audit_zi_ids.mjs",
     "types": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "i18n": "x18n check",

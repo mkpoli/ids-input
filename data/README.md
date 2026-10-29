@@ -11,7 +11,8 @@ The compiled table contains 63,905 entries, in the same format as `babelstone-id
 without region tags. Rebuild it with `bun scripts/build_yi_bai_ids.mjs`.
 
 Descriptions containing extended syntax or variant annotations are excluded entirely: their
-meaning cannot yet be represented by the editor. Both primary and alternative unannotated
+meaning cannot yet be represented by the editor. What the parser reads of that notation is measured
+by `bun scripts/audit_zi_ids.mjs` and recorded in [the coverage note](../docs/zi-tools-coverage.md). Both primary and alternative unannotated
 descriptions are retained. The workshop adds them after BabelStone's descriptions, keeping
 existing descriptions and their region tags when the two sources agree.
 
