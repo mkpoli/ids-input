@@ -29,6 +29,7 @@
  * @property {'c' | 't' | 'seal' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
+ * @typedef {{ x: number, y: number }} DrawingPoint
  *
  * @typedef {import('../core/sketch-data.js').SketchTemplate} SketchTemplate A palette part as a drawing search sees it.
  *
@@ -76,6 +77,7 @@
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
+ * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.
  * @property {(options?: Options) => Promise<SketchTemplate[]>} [sketchTemplates] The palette's glyph shapes for drawing search, prepared or built from the page's fonts.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.

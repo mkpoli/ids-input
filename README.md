@@ -426,6 +426,7 @@ interface IdsAdapter {
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   sketchTemplates?(options?): Promise<SketchTemplate[]>   // glyph shapes for the drawing search
+  recognizeDrawing?(strokes: { x: number, y: number }[][], options?): Promise<string[]>  // whole characters, in percentage coordinates
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
   icon?(sequence, options?): Promise<Drawing | null>    // concurrent palette icons, separate from preview
   preview?(sequence, options?): Promise<Drawing>          // rejects when it cannot draw
@@ -677,11 +678,12 @@ characters the relations already know: roof finds 宀 and then 屋, silk finds �
 絹, and thuy finds 水 and then 始. Among equally close names the more common character comes first,
 by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
-### Drawing a part
+### Drawing a part or character
 
-The Find tab has a pen beside its field. Draw a part in the box, and the tab lists the palette
-parts whose shapes are closest; picking one puts it in the chosen slot, like a typed find. The
-strokes are compared with 803 palette parts and the CJK strokes, each fitted to a square twice.
+The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
+characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
+it in the chosen slot, like a typed find. The parts are compared with 803 palette parts and the CJK
+strokes, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
 the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
@@ -696,6 +698,16 @@ parts such as 口, 木 and 氵 work best, and a part drawn with unusual proporti
 similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison,
 `readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
 the fallback from the page's fonts.
+
+`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first, from strokes
+in percentage coordinates. The workshop implements it with DaKanji's 6,507-class Japanese
+classifier (MIT; trained on ETL and KanjiVG; `demo/model/`), served with ONNX Runtime Web and
+loaded on the first drawing: 2.2 MB of model and 12 MB of WebAssembly, outside the package. On
+the 20 synthetic stroke drawings in `demo/model/benchmark.json`, 19 put the drawn character in the
+top 24 and 18 in the top 10.
+Chinese-only forms are not in the model's labels; the palette parts remain their fallback. A host
+without `recognizeDrawing` gets the parts alone, and a failed or empty recognition falls back to
+them.
 
 ## Preview
 

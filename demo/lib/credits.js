@@ -24,6 +24,9 @@ export const SOURCES = [
   { name: 'hfhchan/ids', by: 'Henry Chan', licence: 'MIT', url: 'https://github.com/hfhchan/ids', key: 'hfhchan' },
   { name: 'Unihan', by: 'Unicode, Inc.', licence: 'Unicode License v3', url: 'https://www.unicode.org/reports/tr38/', key: 'unihan' },
   { name: 'qrcode-generator', by: 'Kazuhiko Arase', licence: 'MIT', url: 'https://github.com/kazuhikoarase/qrcode-generator', key: 'qrcode' },
+  { name: 'DaKanji', by: 'Dariyooo (DaAppLab)', licence: 'MIT', url: 'https://github.com/dariyooo/DaKanji-Single-Kanji-Recognition', key: 'daKanji' },
+  { name: 'ONNX Runtime', by: 'Microsoft', licence: 'MIT', url: 'https://github.com/microsoft/onnxruntime', key: 'onnxRuntime' },
+  { name: 'ETL Character Database', by: 'AIST', url: 'http://etlcdb.db.aist.go.jp/', key: 'etl' },
 ]
 
 /** @type {Credit[]} Tools whose ideas the workshop takes. */
