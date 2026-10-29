@@ -829,6 +829,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (2006), and a 1991 NAVI photograph
   ([Commons](https://commons.wikimedia.org/wiki/File:NAVI_hansen_shukai.jpg)), among others; 争 is
   uncited there.
+- [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
+  Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
+  readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`; the
+  article gives each character's radical and code point. The descriptions are BabelStone's, all
+  tagged K, nine as GKP.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),

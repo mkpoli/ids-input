@@ -92,7 +92,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'korean', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -109,6 +109,19 @@ it('keeps all Tangut examples in a separate section', () => {
   expect(trees.filter(tree => size(tree).depth >= 4).length).toBeGreaterThanOrEqual(3)
   expect(trees.filter(tree => leaves(tree).length >= 6).length).toBeGreaterThanOrEqual(3)
   for (const operator of ['⿲', '⿳', '⿸', '⿵', '⿺']) expect(tangut.some(example => example.sequence.includes(operator))).toBe(true)
+})
+
+it('reads the Korean gukja as the source does', () => {
+  const korean = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
+  // 국자의 음역자와 구결자, oldid 42393816: the first reading the article gives for each character.
+  const readings = {
+    '㐎': '글', '乭': '돌', '㐘': '쌀', '乫': '갈', '乬': '걸', '乷': '살', '乺': '솔', '乼': '줄',
+    '乽': '잘', '乧': '둘', '㐔': '골', '巪': '걱', '㪲': '둑', '䜳': '둔', '䯩': '곱',
+  }
+  expect(korean.map(example => example.char).sort()).toEqual(Object.keys(readings).sort())
+  for (const example of korean) expect(example.reading).toBe(readings[example.char])
+  expect(korean.some(example => example.sequence.includes('𠃍'))).toBe(true)
+  expect(korean.some(example => example.sequence.includes('𠃊'))).toBe(true)
 })
 
 it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {

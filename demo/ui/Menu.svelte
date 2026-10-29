@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void } | { heading: string } | { separator: true }} Item */
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void } | { heading: string } | { separator: true }} Item */
 </script>
 
 <script>
@@ -103,7 +103,7 @@
           <div class="cards">
             {#each group.items as item (item.sequence ?? item.label)}
               <button type="button" role="menuitem" class="card" disabled={item.disabled}
-                aria-label={item.sequence !== undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+                aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
                 title={item.hint} onclick={() => { hide(); item.run?.() }}>
                 {#if item.drawing?.d}
                   <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
@@ -111,8 +111,9 @@
                   <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
                 {/if}
                 <span class="card-text">
+                  {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
                   <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
-                  {#if item.note !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{item.note}</span>{/if}
+                  {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
                 </span>
               </button>
             {/each}
@@ -125,7 +126,7 @@
           {:else}
             <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
               class:rich={item.sequence !== undefined} disabled={item.disabled}
-              aria-label={item.sequence !== undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+              aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
               title={item.hint} onclick={() => { hide(); item.run?.() }}>
               {#if item.leading !== undefined}
                 <span class="leading" lang={item.lang}>{item.leading}</span>
@@ -135,7 +136,7 @@
                 <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
               {/if}
               <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
-              {#if item.note !== undefined}<span class="note" class:unencoded={item.unencoded}>{item.note}</span>{/if}
+              {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
               {#if item.shortcut && keyHints}<kbd>{item.shortcut}</kbd>{/if}
             </button>
           {/if}
@@ -191,4 +192,5 @@
   .card-note{color:var(--muted);font:500 9.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note.unencoded{font:inherit;font-size:10px;font-style:italic}
   @media (max-width:600px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 </style>

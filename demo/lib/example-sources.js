@@ -37,6 +37,7 @@ export const EXAMPLE_SOURCES = [
   { id: 'small-seal', title: 'CHISE Jiguge small-seal records', url: 'https://www.chise.org/', status: 'reported', note: 'Read from data/small-seal.json.gz; the modern labels are correspondences.' },
   { id: 'tangut-ids', title: 'BabelStone Tangut IDS', author: 'Andrew West', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', status: 'checked', note: 'The Tangut descriptions, also bundled as data/babelstone-ids.tsv.gz.' },
   { id: 'x-uteta', title: '月 above 朋, read さやけし', author: '@Utetamutete', date: '2026-10', url: 'https://x.com/Utetamutete/status/2115621598799770015', status: 'checked', note: 'A woodblock dictionary entry with 月 above 朋 and the reading サヤケシ. BabelStone gives the same description to 𦜳 (U+26733), a 肉-radical character read ショウ, so this entry stays unencoded.' },
+  { id: 'ko-wp-gukja', title: '국자의 음역자와 구결자', date: '2026-08-28', url: 'https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816', status: 'checked', note: 'The characters, Hangul readings and code points of the fifteen Korean gukja examples, read 2026-10-29. The article gives the radical and code point of each; its stroke-count column is blank for some entries.' },
 ]
 
 /** The citation number of a source id, or 0 when the id is unknown. @param {string} id */
