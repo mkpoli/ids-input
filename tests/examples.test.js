@@ -114,7 +114,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -188,6 +188,23 @@ it('reads the Korean gugyeol as the source does', () => {
   }
   expect(gugyeol.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
   for (const example of gugyeol) expect(example.reading).toBe(readings[example.sequence])
+})
+
+it('reads the Japanese kokuji in kana', () => {
+  const kokuji = EXAMPLE_GROUPS.find(group => group.key === 'kokuji').examples
+  const readings = {
+    '⿰亻動': 'はたらく', '⿺辶入': 'こむ', '⿹勹匕': 'におう', '⿰火田': 'はたけ', '⿰月泉': 'せん',
+    '⿰山𠧗': 'とうげ', '⿰木卆': 'わく', '⿰土屏': 'へい', '⿰木神': 'さかき', '⿺辶十': 'つじ',
+    '⿻勹乂': 'もんめ', '⿰身美': 'しつけ', '⿰魚弱': 'いわし', '⿰魚雪': 'たら', '⿰木堅': 'かし',
+    '⿰木昌': 'すぎ', '⿰木⿱艹⿰亻𠤎': 'もみじ', '⿰木正': 'まさき', '⿰米千': 'キロメートル',
+    '⿰立千': 'キロリットル', '⿺瓦千': 'キログラム', '⿰立毛': 'ミリリットル', '⿰魚康': 'コウ',
+    '⿰釒武': 'ぶりき',
+  }
+  expect(kokuji.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
+  for (const example of kokuji) {
+    expect(example.reading).toBe(readings[example.sequence])
+    expect(example.reading).toMatch(/^[\u3040-\u30FFー]+$/)
+  }
 })
 
 it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {
