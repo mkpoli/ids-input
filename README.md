@@ -821,7 +821,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
   2026-10-16, for the hybrid examples (slides: SCRIPT-HYBRID v19). ⿴口도 is the slide's proposed
-  図. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
+  図; [@hado_study](https://x.com/hado_study/status/2115668238181056746) reads the same glyph as a
+  Korean variant of 圖 on a 1941 newspaper page. ⿰艦ラ, ⿰艦ツ and ⿰掌キ follow
   CINCPAC-CINCPOA Bulletin 18-45 and Japanese Military and Technical Terms (1945-07-30) p.217,
   L2/24-201 Fig.44; the 通船 and 掌機長 images are from @xWcvlUaljn96009. ⿰门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,

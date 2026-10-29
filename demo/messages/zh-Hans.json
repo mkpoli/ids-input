@@ -4,6 +4,7 @@
   "app.about.licenses": "许可",
   "app.about.codeLicense": "代码：MIT",
   "app.about.dataLicense": "数据采用 Creative Commons 许可或遵循原始来源的使用条款，详情见来源署名及数据许可说明。",
+  "app.about.exampleSources": "示例来源",
   "app.about.outputLicense": "生成内容须遵循原始字体中适用于该内容的许可条款。本站不附加任何使用限制。",
   "app.about.inspired": "灵感来源",
   "app.about.lead": "以树形组建表意文字描述序列，并即时查看字形。",
