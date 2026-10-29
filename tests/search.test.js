@@ -19,6 +19,10 @@ describe('a query', () => {
     expect(terms[2].tree).toEqual({ op: '⿰', parts: ['氵', null] })
     expect(parseQuery('  ').problem).toBe('empty')
   })
+  it('reads a zi.tools entry as its description', () => {
+    expect(parseQuery('{士}⿱十一').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿱', parts: ['十', '一'] } })])
+    expect(parseQuery('⿻乚一(.,T)').terms).toEqual([expect.objectContaining({ kind: 'structure', tree: { op: '⿻', parts: ['乚', '一'] } })])
+  })
 })
 
 describe('the search', () => {

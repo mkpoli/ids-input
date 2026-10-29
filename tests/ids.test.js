@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
+import { EMPTY, LONGEST, OPERATORS, OPERATOR_GROUPS, applyOperator, arity, clear, descriptionEnd, entryBody, entryDescription, isComponent, isDescription, isLetter, isSequence, leaves, nextEmpty,
   parse, partAt, paths, place, problemOf, replaceAt, samePath, swapOp, unwrap, wrap, write } from '../src/core/index.js'
 
 const tree = text => parse(text, { open: true }).tree
@@ -20,6 +20,31 @@ describe('a whole description', () => {
     expect(parse('⿰' + '口'.repeat(LONGEST)).problem).toBe('character')
     expect(problemOf('⿰亻木')).toBeNull()
     expect(problemOf('⿰亻')).toBe('missing')
+  })
+  it('reads a zi.tools entry as its description, without the notes around it', () => {
+    expect(parse('⿻乚一(.,T)').tree).toEqual({ op: '⿻', parts: ['乚', '一'] })
+    expect(write(parse('{士}⿱十一').tree)).toBe('⿱十一')
+    expect(write(parse('{?0丗}⿻⿺𠃊〢一(P)').tree)).toBe('⿻⿺𠃊〢一')
+    expect(write(parse('{丗}⿱卅一(T)').tree)).toBe('⿱卅一')
+    expect(parse('{士}⿱十一', { open: true }).tree).toEqual({ op: '⿱', parts: ['十', '一'] })
+    expect(isSequence('{士}⿱十一')).toBe(true)
+    expect(isDescription('⿻乚一(.,T)')).toBe(true)
+    expect(entryDescription('{一}一')).toBe('一')
+    expect(entryBody('{一}一')).toEqual({ text: '一', start: 3 })
+    // Notes that do not name variants, or name no character, stay in the text.
+    expect(parse('⿱十一(士)').problem).toBe('extra')
+    expect(parse('{士,士}⿱十一').problem).toBe('character')
+    expect(parse('{22}⿱十一').problem).toBe('character')
+    expect(parse('{、}⿱十一').problem).toBe('character')
+    expect(parse('{😀}⿱十一').problem).toBe('character')
+    expect(parse('(.)').problem).toBe('character')
+    expect(parse('{士}', { open: true }).problem).toBe('extra')
+    // A definition follows a complete description; (d) can also be a description's own components.
+    expect(parse('⿲(d)').tree).toEqual({ op: '⿲', parts: ['(', 'd', ')'] })
+    expect(parse('#(H)').problem).toBe('character')
+    expect(write(parse('{㇈}⿱十一').tree)).toBe('⿱十一')
+    // A parenthesis is a component as it was before, not a definition.
+    expect(write(parse('⿰木(').tree)).toBe('⿰木(')
   })
   it('keeps a variation selector with its component', () => {
     expect(parse('⿱艹曷\u{E0100}').tree.parts[1]).toBe('曷\u{E0100}')
