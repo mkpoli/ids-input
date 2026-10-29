@@ -147,14 +147,14 @@ export const tooLarge = tree => {
 }
 
 /** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot. */
-function keysOf(tree, out = [], separate = false, root = true) {
+function keysOf(tree, out = [], separate = false, fontStyle = 'sans', root = true) {
   if (root) {
     const pyramid = pyramidRows(tree)
     if (pyramid) { out.push(pyramid.part); return out }
   }
-  if ((separate ? isGroupedForm : isComponentForm)(keyOf(tree))) return out
+  if ((separate ? isGroupedForm : isComponentForm)(keyOf(tree), fontStyle)) return out
   if (!keyOf(tree).includes(EMPTY)) out.push(keyOf(tree))
-  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out, separate, false))
+  if (Array.isArray(tree)) tree.slice(1).forEach(n => keysOf(n, out, separate, fontStyle, false))
   return out
 }
 
@@ -169,7 +169,7 @@ function modifiedOperators(sequence) {
 function extraOperators(tree, { fontStyle, separate, nativeEnclosures }) {
   if (typeof tree === 'string') return []
   const key = keyOf(tree)
-  if (fontStyle !== 'kaisho' && (separate ? isGroupedForm(key) : isComponentForm(key))) return []
+  if ((separate ? isGroupedForm : isComponentForm)(key, fontStyle)) return []
   const op = nativeEnclosures.has(key) ? [] : [tree[0]]
   return [...op, ...tree.slice(1).flatMap(child => extraOperators(child, { fontStyle, separate, nativeEnclosures }))].filter(op => APPROXIMATE.includes(op))
 }
@@ -210,7 +210,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
   const tree = parseTree(base, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
   // A mark's outline loads like a component's.
-  await source.load(source.filesOf([...keysOf(tree, [], separate), ...marks]))
+  await source.load(source.filesOf([...keysOf(tree, [], separate, fontStyle), ...marks]))
   for (let round = 0; round < ROUNDS; round++) {
     const store = source.store()
     let drawn = null, failure = null, composer = null

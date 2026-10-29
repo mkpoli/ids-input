@@ -264,7 +264,7 @@ export class Composer {
         for (const box of pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })) out.push({ index: out.length, box, empty: false })
         return
       }
-      const repeated = isGroupedForm(keyOf(node)) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
+      const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
       if (repeated) {
         for (const part of repeated) out.push({ index: out.length, box: part.target, empty: false })
         return
@@ -392,10 +392,10 @@ export class Composer {
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
-    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key))
+    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key, this.fontStyle))
       ? componentParts(key, region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
-    const hasRepetition = containsComponentForm(keyOf(node))
+    const hasRepetition = containsComponentForm(keyOf(node), this.fontStyle)
     const C = this.C
     let encoded = typeof node === 'string' ? node : hasRepetition ? null : this.spelled.has(keyOf(node)) ? null : this.bySequence(keyOf(node))
     if (atRoot && typeof node !== 'string') {
@@ -677,7 +677,7 @@ export class Composer {
   // ---------------------------------------------------------------- hosts
   /** The drawn part closest to what `node` needs at `index` of `op` inside `box`, as [record, piece]. */
   host(op, index, node, siblings, box, isPlaced = false) {
-    if (containsComponentForm(keyOf(node))) return null
+    if (containsComponentForm(keyOf(node), this.fontStyle)) return null
     // A cut of an entire repeated row can include strokes belonging to its host.
     // Draw the row from its own glyph or its operands instead.
     if (isRepeatedRow(node)) return null
@@ -1065,7 +1065,7 @@ export class Composer {
       const box = mapped(shares[j], [0, 0, 1, 1], region)
       const donor = chosen.find(t => t.written[j] === keys[j])
       // A separated drawing unfolds a sequence operand rather than taking a teacher's piece for it.
-      if (donor && !containsComponentForm(keyOf(child)) && !(this.separate && Array.isArray(child))) {
+      if (donor && !containsComponentForm(keyOf(child), this.fontStyle) && !(this.separate && Array.isArray(child))) {
         const piece = this.pieceOf(donor.pieces[j])
         return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)]
       }
@@ -1075,7 +1075,7 @@ export class Composer {
 
   /** A side-by-side pair in the two cells a stroke down the middle of an opening makes (山's in 幽). */
   cells(op, outer, region, inner) {
-    if (isComponentForm(keyOf(inner))) return null
+    if (isComponentForm(keyOf(inner), this.fontStyle)) return null
     const C = this.C
     let tree = Array.isArray(inner) ? inner : null
     if (!tree && this.sequenceOf(inner)) { try { tree = this.parse(this.sequenceOf(inner)) } catch { tree = null } }
