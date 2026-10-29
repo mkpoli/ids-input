@@ -4,8 +4,8 @@
 // ⿰言⿱⿰幺幺⿰幺幺.
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
-// with no code point, and names the character for an encoded one.
-
+// with no code point, and names the character for an encoded one. `reading` holds a Korean
+// gukja's reading in Hangul.
 export const EXAMPLE_GROUPS = [
   { key: 'basic', refs: [1], examples: [
     { sequence: '⿾正', refs: [1,2], char: '𣥄' },
@@ -175,6 +175,27 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿺辶⿱𭕄共', char: '', abbreviates: '選' },
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
+  ] },
+  // Korean gukja. The readings come from the Wikipedia record; the forms are BabelStone's, all
+  // tagged K, nine as GKP. The characters write a Korean coda with a Chinese character or stroke of
+  // matching shape: 乙 for ㄹ, 巴 or 邑 for ㅂ, 𠃍 for ㄱ and 𠃊 for ㄴ. The article also gives 己
+  // for ㄹ.
+  { key: 'korean', refs: [1, 30], examples: [
+    { sequence: '⿱文乙', char: '㐎', reading: '글' },
+    { sequence: '⿱石乙', char: '乭', reading: '돌' },
+    { sequence: '⿱米乙', char: '㐘', reading: '쌀' },
+    { sequence: '⿱加乙', char: '乫', reading: '갈' },
+    { sequence: '⿱巨乙', char: '乬', reading: '걸' },
+    { sequence: '⿱沙乙', char: '乷', reading: '살' },
+    { sequence: '⿱所乙', char: '乺', reading: '솔' },
+    { sequence: '⿱注乙', char: '乼', reading: '줄' },
+    { sequence: '⿱者乙', char: '乽', reading: '잘' },
+    { sequence: '⿱斗乙', char: '乧', reading: '둘' },
+    { sequence: '⿳亠口乙', char: '㐔', reading: '골' },
+    { sequence: '⿱巨𠃍', char: '巪', reading: '걱' },
+    { sequence: '⿱斗𠃍', char: '㪲', reading: '둑' },
+    { sequence: '⿱豆𠃊', char: '䜳', reading: '둔' },
+    { sequence: '⿱高巴', char: '䯩', reading: '곱' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [

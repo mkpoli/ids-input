@@ -696,7 +696,7 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string }} example @param {string} lang @param {number[]} [groupRefs] */
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] */
   function exampleItem(example, lang, groupRefs = []) {
     const point = example.char ? cp(example.char) : ''
     const target = example.char || example.abbreviates || ''
@@ -707,6 +707,7 @@
       label: example.sequence,
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
+      reading: example.reading,
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),

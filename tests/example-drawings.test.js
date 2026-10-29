@@ -103,3 +103,14 @@ it('prepares the Geba examples and their letters', () => {
   }
   expect(data.drawings['⿰言ギ'].drawn.origins).toContain('glyph ギ')
 })
+
+it('prepares the Korean gukja examples', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
+  for (const { sequence, char } of examples) {
+    const drawn = data.drawings[sequence]?.drawn
+    expect(drawn?.d.length).toBeGreaterThan(100)
+    expect(drawn.d).not.toMatch(/NaN|Infinity/)
+    // Each character is encoded, so the composer draws its own glyph.
+    expect(drawn.origins).toEqual([`glyph ${char}`])
+  }
+})
