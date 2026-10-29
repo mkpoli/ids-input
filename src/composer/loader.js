@@ -201,26 +201,37 @@ export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
  * composer itself does not draw. `exclude` lists characters nothing is taken from, `face` the box a
  * whole character fills without them, and `separate` draws operands as individual pieces where possible,
  * including cuts from a matching whole glyph (falling back to the whole glyph when the operands cannot be drawn).
+ * `layout` is `'composed'`, `'cells'`, or `'auto'`: cells lays each leaf out in its own cell and
+ * rejects loose marks, while auto uses cells for a description of eight or more leaves that names no
+ * character as a whole, since the composer's host cuts then overlap its parts. A cell drawing has
+ * `cells: true` and its parts' `origin` reads `cells <char>`.
  * Throws LookupError when a part can be drawn no way or the sequence is larger than `LIMITS`.
  */
-export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
+export async function compose(source, sequence, { exclude = [], face = null, separate = false, fontStyle = 'sans', layout = 'auto' } = {}) {
   await source.ready()
   const arity = ch => {
     const c = source.manifest.constants
     return c.BINARY.includes(ch) ? 2 : c.TERNARY.includes(ch) ? 3 : c.UNARY.includes(ch) ? 1 : 0
   }
   const { base, marks } = splitDescription(sequence)
+  if (layout === 'cells' && marks) throw new LookupError('Cells layout does not draw loose marks.')
+  if (layout === 'cells' && modifiedOperators(sequence).length) throw new LookupError('Cells layout does not draw modified operators.')
   const tree = parseTree(base, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
   // A mark's outline loads like a component's.
   await source.load(source.filesOf([...keysOf(tree, [], separate, fontStyle), ...marks]))
   for (let round = 0; round < ROUNDS; round++) {
     const store = source.store()
-    let drawn = null, failure = null, composer = null
-    try { composer = new Composer(store, { exclude, face, separate, fontStyle }); drawn = composer.compose(base, marks) } catch (error) {
+    let drawn = null, failure = null, composer = null, cells = false
+    try {
+      composer = new Composer(store, { exclude, face, separate, fontStyle })
+      cells = !marks && !modifiedOperators(sequence).length
+        && (layout === 'cells' || (layout === 'auto' && composer.cellsFor(tree, marks)))
+      drawn = cells ? composer.cellLayout(tree) : composer.compose(base, marks)
+    } catch (error) {
       // A separated drawing can fail where the whole glyph exists. Keep the glyph rather than fail
       // the preview: a view then finds one piece and leaves it alone.
-      if (separate && !store.missing.size && error instanceof LookupError) {
+      if (separate && !cells && !store.missing.size && error instanceof LookupError) {
         try { composer = new Composer(store, { exclude, face, fontStyle }); drawn = composer.compose(base, marks) } catch (again) { failure = again }
       } else failure = error
     }
@@ -235,7 +246,8 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
       kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv),
-      approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate, ...modifiedOperators(sequence)])] }
+      approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate, ...modifiedOperators(sequence)])],
+      ...(cells ? { cells: true } : {}) }
   }
   throw new LookupError(`${sequence} needs more data than ${ROUNDS} rounds load.`)
 }

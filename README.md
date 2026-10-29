@@ -200,6 +200,22 @@ supplies the `IDS New Korean` face, and their outlines are bundled for previews 
 The [Unicode IDS grammar](https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-18/)
 supplies the ideographic operands; the other graphic categories are this editor's extension. In a draft, `⬚` (or a part missing at the end) is an empty slot; a pasted `＋`, as earlier drafts and links have it, reads as one too, and is written back as `⬚`.
 
+### Cells
+
+A description of eight or more leaves (an empty slot counts as one) is drawn **in cells** when no
+character spells it as a whole, it uses only alignment and exact enclosure operators, and every leaf
+has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
+cell layout gives the top of a stacked description less than half the height, weights each cell by
+its subtree's leaf count, and lets parts fill their cells, so a dense description reads as one
+character rather than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
+puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
+
+The preview badges a cell drawing **Cells**. `compose(source, sequence, { layout: 'composed' })`
+forces the composer, and `'cells'` forces cells and rejects loose marks and modified operators; the default, `'auto'`, uses
+cells only for such dense descriptions. Pyramids, grouped forms, excluded characters and descriptions
+with loose marks or approximate operators keep the composer.
+
 ### Pyramids
 
 `pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an

@@ -69,7 +69,7 @@
 
   const said = $derived(badge(step, shown?.drawn))
   /** @type {Record<string, string>} */
-  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', tooLarge: 'ids.preview.tooLargeNote' }
+  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', cells: 'ids.preview.cellsNote', tooLarge: 'ids.preview.tooLargeNote' }
   const NAMES = /** @type {Record<string, string>} */ ({ '⿼': 'fromRight', '⿽': 'fromLowerRight', '⿾': 'mirrored', '⿿': 'rotated', '㇯': 'subtracted', '〾': 'variant' })
   // The operators named in words: their characters are too new for most fonts to show.
   const named = $derived(/** @type {Record<string, string>} */ (said.params.ops ? { ops: said.params.ops.split(' ').map((/** @type {string} */ op) => NAMES[op] ? t(`ids.op.${NAMES[op]}`) : op).join(' · ') } : {}))
