@@ -202,8 +202,8 @@ equivalent tree back, whichever way its rows use `⿰`/`⿲` and its stack uses 
 draws a pyramid of three or more rows as equal square cells in centred rows, so the 4-row spellings
 given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
 may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
-composer draws up to 64 rows (2,080 cells). The workshop's File → Pyramid dialog makes up to 24 rows,
-where the editor tree is still comfortable.
+composer draws up to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids
+of 3 to 24 rows, using the selected component or 口.
 
 ### Loose marks
 
@@ -876,8 +876,8 @@ column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
 columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
-commands. File → Pyramid opens a generator for a triangle of one component; File → Duplicate tab
-copies the active document; right-clicking a tab or pressing
+commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
+the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and drawing adjustments, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, examples (each with its

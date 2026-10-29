@@ -23,6 +23,20 @@ describe('a pyramid sequence', () => {
     expect(pyramidCount(64)).toBe(2080)
   })
 
+  it('keeps letter components literal', () => {
+    const text = pyramidSequence('L', 3)
+    expect(pyramidRows(parse(text).tree)).toEqual({ part: 'L', layers: 3, count: 6 })
+    expect([...text].filter(char => char === 'L')).toHaveLength(6)
+  })
+
+  it('keeps emoji and Hangul components whole', () => {
+    for (const part of ['👍🏽', '가']) {
+      const text = pyramidSequence(part, 3)
+      expect(pyramidRows(parse(text).tree)?.part).toBe(part)
+    }
+    expect(() => pyramidSequence('木ˊ', 3)).toThrow(TypeError)
+  })
+
   it('refuses something that is not one component or one layer', () => {
     expect(() => pyramidSequence('', 3)).toThrow(TypeError)
     expect(() => pyramidSequence('⿰木口', 3)).toThrow(TypeError)

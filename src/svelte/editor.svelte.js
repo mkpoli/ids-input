@@ -194,15 +194,15 @@ export function createEditor(options) {
 
   // Where a part goes when nothing is chosen: the first empty slot.
   const target = () => chosen ?? (tree === null ? [] : nextEmpty(tree))
-  /** @param {Part} part @param {string} [op] */
-  function insert(part, op) {
+  /** @param {Part} part @param {string} [op] @param {string} [label] */
+  function insert(part, op, label) {
     if (disabled() || caret === null || typed.problem) return
     const next = insertAt(tree, draft, caret, part, op)
     const valid = parse(write(next.tree), {open:true})
     if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
-    const label = op ? t('ids.do.split', { part: '⬚', op }) : t('ids.do.put', { part: text(part) })
+    const change = op ? t('ids.do.split', { part: '⬚', op }) : t('ids.do.put', { part: text(part) })
     const gap = !op && isNode(part) ? nextEmpty(part) : null
-    apply(next.tree, next.operator ? next.path : gap ? [...next.path, ...gap] : null, label)
+    apply(next.tree, next.operator ? next.path : gap ? [...next.path, ...gap] : null, label ?? change)
     if (!next.operator && !gap) {
       const token = tokens(draft).find(token => samePath(token.path, next.path))
       caret = token?.end ?? draft.length
@@ -219,16 +219,16 @@ export function createEditor(options) {
     const label = at === null && tree !== null ? t('ids.do.wrap', { op }) : isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '⬚', op })
     apply(done.tree, done.chosen, label)
   }
-  /** `part` in the chosen slot (or the first empty one), or at `at`. @param {Part} part @param {Path | null} [at] */
-  function put(part, at) {
-    if (at === undefined && caret !== null && !typed.problem) { insert(part); return }
+  /** `part` in the chosen slot (or the first empty one), or at `at`. @param {Part} part @param {Path | null} [at] @param {string} [label] */
+  function put(part, at, label) {
+    if (at === undefined && caret !== null && !typed.problem) { insert(part, undefined, label); return }
     at = at === undefined ? target() : at
     if (disabled()) return
     if (!at) { note = t('ids.chooseFirst'); return }
     const before = partAt(tree, at)
     const next = placed(tree, at, part)
-    apply(next.tree, next.chosen, before === null || before === undefined ? t('ids.do.put', { part: text(part) })
-      : t('ids.do.replace', { from: text(before), part: text(part) }), { destructive: isNode(before) })
+    apply(next.tree, next.chosen, label ?? (before === null || before === undefined ? t('ids.do.put', { part: text(part) })
+      : t('ids.do.replace', { from: text(before), part: text(part) })), { destructive: isNode(before) })
   }
   /**
    * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
