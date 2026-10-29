@@ -934,8 +934,9 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Adjust layout moves, scales and turns document layers without changing the sequence; the changes
-stay with their tab and export through the scoped drawing. The Layers dialog edits the same layer
+for. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
+through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
