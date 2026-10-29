@@ -732,7 +732,14 @@
     { heading: t(`app.examples.${group.key}`) },
     ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs)),
   ]))
-  const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
+  const exampleView = $derived({
+    list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
+    onchange: (/** @type {boolean} */ cards) => exampleCards = cards,
+    filter: {
+      label: t('app.examples.filter'), all: t('app.examples.filterAll'), encoded: t('app.examples.encoded'),
+      unencoded: t('app.examples.unencoded'), empty: t('app.examples.noMatch'),
+    },
+  })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps

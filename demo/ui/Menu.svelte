@@ -21,12 +21,30 @@
   /** @param {boolean} next */
   function setOpen(next) { open = next; onopenchange?.(next) }
   const enabled = () => /** @type {HTMLElement[]} */ ([...(box?.querySelectorAll(':is([role="menuitem"],[role="menuitemradio"]):not([disabled])') ?? [])])
+  // The examples menu filters by a query and by the code-point state, and folds whole sections
+  // away; menus without a `view` keep the plain list.
+  let query = $state('')
+  /** @type {'all' | 'encoded' | 'unencoded'} */
+  let mode = $state('all')
+  /** @type {Set<string>} */
+  let collapsed = $state(new Set())
+  const filtering = $derived(query.trim().length > 0 || mode !== 'all')
+  /** @param {Item} item */
+  function matches(item) {
+    if ('heading' in item || 'separator' in item) return true
+    if (mode === 'encoded' && item.unencoded) return false
+    if (mode === 'unencoded' && !item.unencoded) return false
+    const needle = query.trim().toLowerCase()
+    if (!needle) return true
+    return [item.sequence, item.label, item.leading, item.reading, item.note].filter(Boolean).join(' ').toLowerCase().includes(needle)
+  }
+  const visible = $derived(items.filter(matches))
   // Cards keep the headings of the list; separators have no place in a grid.
   const groups = $derived.by(() => {
     /** @type {{ heading: string, items: Item[] }[]} */
     const out = []
     let group = { heading: '', items: /** @type {Item[]} */ ([]) }
-    for (const item of items) {
+    for (const item of visible) {
       if ('heading' in item) {
         if (group.items.length) out.push(group)
         group = { heading: item.heading, items: [] }
@@ -35,8 +53,20 @@
     if (group.items.length) out.push(group)
     return out
   })
+  /** @param {string} heading */
+  const expanded = heading => filtering || !collapsed.has(heading)
+  /** @param {string} heading */
+  function toggle(heading) {
+    const next = new Set(collapsed)
+    if (next.has(heading)) next.delete(heading)
+    else next.add(heading)
+    collapsed = next
+  }
   /** @param {boolean} [focus] @param {boolean} [last] */
   async function show(focus = false, last = false) {
+    query = ''
+    mode = 'all'
+    collapsed = new Set()
     setOpen(true)
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
@@ -64,6 +94,7 @@
   })
   /** @param {KeyboardEvent} event */
   function key(event) {
+    if (event.target instanceof HTMLInputElement && event.key !== 'Escape') return
     const all = enabled()
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
     if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
@@ -77,6 +108,47 @@
 
 <svelte:window onpointerdown={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }}
   onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
+
+{#snippet groupHeading(heading)}
+  <button type="button" class="heading" aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+    <Icon name="chevron" size={12} /><span>{heading}</span>
+  </button>
+{/snippet}
+
+{#snippet cardItem(item)}
+  <button type="button" role="menuitem" class="card" disabled={item.disabled}
+    aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+    title={item.hint} onclick={() => { hide(); item.run?.() }}>
+    {#if item.drawing?.d}
+      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
+    {:else}
+      <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
+    {/if}
+    <span class="card-text">
+      {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
+      <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
+      {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+    </span>
+  </button>
+{/snippet}
+
+{#snippet listRow(item)}
+  <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
+    class:rich={item.sequence !== undefined} disabled={item.disabled}
+    aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
+    title={item.hint} onclick={() => { hide(); item.run?.() }}>
+    {#if item.leading !== undefined}
+      <span class="leading" lang={item.lang}>{item.leading}</span>
+    {:else if item.sequence !== undefined}
+      <span class="leading spacer" aria-hidden="true"></span>
+    {:else}
+      <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    {/if}
+    <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
+    {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
+    {#if item.shortcut && keyHints}<kbd>{item.shortcut}</kbd>{/if}
+  </button>
+{/snippet}
 
 <div class="menu-wrap">
   <button type="button" class="tool" class:menubar class:on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} role={menubar ? 'menuitem' : undefined} tabindex={tabIndex} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? `${uid}-menu` : undefined}
@@ -92,54 +164,39 @@
   {#if open}
     <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
       {#if view}
-        <div class="views" role="group" aria-label={label}>
-          <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
-          <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
+        <div class="menu-head">
+          <div class="views" role="group" aria-label={label}>
+            <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
+            <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
+          </div>
+          <div class="filter">
+            <input class="filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query}
+              onkeydown={event => { if (event.key !== 'Escape') event.stopPropagation() }} />
+            <div class="modes" role="group" aria-label={view.filter.label}>
+              {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
+                <button type="button" class="mode" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
+              {/each}
+            </div>
+          </div>
         </div>
       {/if}
-      {#if view?.cardsSelected}
+      {#if view && !groups.length}
+        <p class="empty">{view.filter.empty}</p>
+      {:else if view?.cardsSelected}
         {#each groups as group (group.heading)}
-          {#if group.heading}<p class="heading">{group.heading}</p>{/if}
-          <div class="cards">
-            {#each group.items as item (item.sequence ?? item.label)}
-              <button type="button" role="menuitem" class="card" disabled={item.disabled}
-                aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-                title={item.hint} onclick={() => { hide(); item.run?.() }}>
-                {#if item.drawing?.d}
-                  <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
-                {:else}
-                  <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
-                {/if}
-                <span class="card-text">
-                  {#if item.reading !== undefined && item.leading !== undefined}<span class="sr" lang={item.lang}>{item.leading}</span>{/if}
-                  <span class="card-label" lang={item.lang}>{item.sequence ?? item.label}</span>
-                  {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-                </span>
-              </button>
-            {/each}
-          </div>
+          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
+        {/each}
+      {:else if view}
+        {#each groups as group (group.heading)}
+          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
         {/each}
       {:else}
         {#each items as item, i (i)}
           {#if 'separator' in item}<div class="sep" role="separator"></div>
           {:else if 'heading' in item}<p class="heading">{item.heading}</p>
-          {:else}
-            <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
-              class:rich={item.sequence !== undefined} disabled={item.disabled}
-              aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-              title={item.hint} onclick={() => { hide(); item.run?.() }}>
-              {#if item.leading !== undefined}
-                <span class="leading" lang={item.lang}>{item.leading}</span>
-              {:else if item.sequence !== undefined}
-                <span class="leading spacer" aria-hidden="true"></span>
-              {:else}
-                <span class="mark">{#if item.checked}<Icon name="check" size={14} />{:else if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
-              {/if}
-              <span class="label" lang={item.lang}>{item.sequence ?? item.label}</span>
-              {#if item.note !== undefined || item.reading !== undefined}<span class="note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang="ko">{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
-              {#if item.shortcut && keyHints}<kbd>{item.shortcut}</kbd>{/if}
-            </button>
-          {/if}
+          {:else}{@render listRow(item)}{/if}
         {/each}
       {/if}
     </div>
@@ -174,9 +231,22 @@
   .note.unencoded{font:inherit;font-size:12px;font-style:italic}
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .sep{height:1px;margin:5px 4px;background:var(--line)}
-  .heading{margin:9px 10px 3px;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+  .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
+  .heading svg{flex:none;transition:transform .12s}
+  .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
+  .heading:hover{color:var(--ink)}
+  .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
-  .views{position:sticky;top:-6px;z-index:1;display:flex;gap:2px;margin:0 0 5px;padding:3px;border-radius:9px;background:var(--surface)}
+  .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--surface)}
+  .views{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface)}
+  .filter{display:flex;align-items:center;gap:6px}
+  .filter-input{flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px}
+  .filter-input:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
+  .modes{display:flex;flex:none;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}
+  .mode{padding:4px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .mode[aria-checked="true"]{background:var(--surface);color:var(--ink)}
+  .mode:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .view{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;padding:4px 8px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .view[aria-checked="true"]{background:var(--hover);color:var(--ink)}
   .view:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
