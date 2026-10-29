@@ -172,6 +172,8 @@
   "app.layers.kind.slot": "Slot",
   "app.layers.kind.group": "Group",
   "app.layers.mode": "Transform type",
+  "app.layers.matrix": "Matrix",
+  "app.layers.matrixHint": "Six affine coefficients in local coordinates: a b / c d, translation e f.",
   "app.layers.affine": "Affine",
   "app.layers.mobius": "Möbius",
   "app.layers.real": "Real",

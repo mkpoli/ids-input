@@ -30,7 +30,9 @@
   let gesture = 0
 
   let x = $state(0), y = $state(0), scaleX = $state(1), scaleY = $state(1), rotate = $state(0)
-  let mode = $state(/** @type {'affine' | 'mobius'} */ ('affine'))
+  let mode = $state(/** @type {'affine' | 'matrix' | 'mobius'} */ ('affine'))
+  let matrix = $state([1, 0, 0, 1, 0, 0])
+  let simple = $state(true)
   let mobius = $state({ a: [1, 0], b: [0, 0], c: [0, 0], d: [1, 0] })
   let nonlinear = $state(false)
   let applyError = $state('')
@@ -127,17 +129,27 @@
       mobius = { a: [...op.a], b: [...op.b], c: [...op.c], d: [...op.d] }
       return
     }
-    const matrix = affineForChain(chain)
-    if (!matrix) { nonlinear = chain.length > 0; return }
-    mode = 'affine'
+    const flat = affineForChain(chain)
+    if (!flat) { nonlinear = chain.length > 0; return }
     nonlinear = false
-    const [a, b, c, d, e, f] = matrix
+    matrix = flat
+    const [a, b, c, d, e, f] = flat
     const cx = 500, cy = 500
-    x = Math.round((e - cx + a * cx + c * cy) * 100) / 100
-    y = Math.round((f - cy + b * cx + d * cy) * 100) / 100
-    scaleX = Math.round(Math.hypot(a, b) * 1000) / 1000
-    scaleY = Math.round(Math.hypot(c, d) * 1000) / 1000
-    rotate = Math.round(Math.atan2(b, a) * 1800 / Math.PI) / 10
+    const nextX = Math.round((e - cx + a * cx + c * cy) * 100) / 100
+    const nextY = Math.round((f - cy + b * cx + d * cy) * 100) / 100
+    const nextScaleX = Math.round(Math.hypot(a, b) * 1000) / 1000
+    const nextScaleY = Math.round(Math.hypot(c, d) * 1000) / 1000
+    const nextRotate = Math.round(Math.atan2(b, a) * 1800 / Math.PI) / 10
+    x = nextX
+    y = nextY
+    scaleX = nextScaleX
+    scaleY = nextScaleY
+    rotate = nextRotate
+    const radians = nextRotate * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
+    const expected = [cos * nextScaleX, sin * nextScaleX, -sin * nextScaleY, cos * nextScaleY, nextX, nextY]
+    const isSimple = expected.every((value, index) => Math.abs(value - flat[index]) < 0.002)
+    simple = isSimple
+    mode = isSimple ? 'affine' : 'matrix'
   })
 
   function select(id) {
@@ -156,6 +168,10 @@
     try {
       if (mode === 'mobius') {
         session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, coalesce ? { coalesce } : {})
+      } else if (mode === 'matrix') {
+        const flat = matrix.map(Number)
+        if (flat.every((value, index) => value === [1, 0, 0, 1, 0, 0][index])) session.clearTransform(selected.id)
+        else session.setTransform([{ type: 'affine', matrix: flat }], selected.id, coalesce ? { coalesce } : {})
       } else {
         const radians = rotate * Math.PI / 180
         const a = Math.cos(radians) * scaleX, b = Math.sin(radians) * scaleX
@@ -181,11 +197,13 @@
     onchange()
   }
 
-  /** @param {'affine' | 'mobius'} next */
+  /** @param {'affine' | 'matrix' | 'mobius'} next */
   function setMode(next) {
-    if (mode === next) return
+    if (mode === next || !selected) return
+    if (next === 'matrix') {
+      matrix = affineForChain(selected.transform ?? []) ?? [1, 0, 0, 1, 0, 0]
+    }
     mode = next
-    apply()
   }
 
   /** Ask for the chosen component's decompositions. @param {Node} node */
@@ -354,7 +372,8 @@
       <fieldset class="transform" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
         <div class="modes" role="group" aria-label={t('app.layers.mode')}>
-          <button type="button" aria-pressed={mode === 'affine'} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+          <button type="button" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+          <button type="button" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
           <button type="button" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
         </div>
         {#if mode === 'affine'}
@@ -365,6 +384,13 @@
             <label class="field">{t('app.layers.scaleY')}<span class="control"><input class="num" type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} onchange={apply} /><span class="unit">×</span></span></label>
             <label class="field rotate">{t('app.layers.rotate')}<span class="control"><input class="num" type="number" step="1" bind:value={rotate} onchange={apply} /><span class="unit">°</span></span></label>
           </div>
+        {:else if mode === 'matrix'}
+          <div class="matrix">
+            {#each ['a', 'b', 'c', 'd', 'e', 'f'] as name, index (name)}
+              <label class="field">{name}<span class="control"><input class="num" aria-label={`${t('app.layers.matrix')} ${name}`} type="number" step="0.001" bind:value={matrix[index]} onchange={apply} /></span></label>
+            {/each}
+          </div>
+          <p class="note">{t('app.layers.matrixHint')}</p>
         {:else}
           <div class="mobius">
             {#each ['a', 'b', 'c', 'd'] as name (name)}
@@ -417,6 +443,7 @@
   .num{width:100%;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:12.5px ui-monospace,"SF Mono",Menlo,Consolas,monospace;text-align:right;appearance:textfield;-moz-appearance:textfield}
   .num::-webkit-inner-spin-button,.num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
   .unit{flex:none;font-size:11px;color:var(--muted)}
+  .matrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
   .mobius{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
   .coef{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);align-items:end;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
   .coef-name{font:italic 600 15px ui-serif,serif;color:var(--muted);align-self:center;padding-bottom:2px}
@@ -429,5 +456,5 @@
   .hint{grid-column:1/-1}
   .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--muted) 30%,transparent);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(1turn)}}
-  @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.mobius{grid-template-columns:1fr}}
+  @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.mobius{grid-template-columns:1fr}}
 </style>

@@ -916,7 +916,8 @@ at the start; the Shape or indented Tree view and the search under it; and at th
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
-those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand
+those adjustments stay with their tab while it is open. The Layers dialog edits the document's layer
+transforms, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
