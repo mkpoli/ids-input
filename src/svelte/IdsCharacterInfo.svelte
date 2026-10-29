@@ -19,13 +19,17 @@
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
   let pinned = false
   let generation = 0
+  let copied = $state(false), copyFailed = $state(false)
+  /** @type {ReturnType<typeof setTimeout> | undefined} */ let copyTimer
+  let copyToken = 0
   /** @type {string | null} */ let savedTitle = null
   /** @type {string | null} */ let savedDetails = null
   const kinds = /** @type {const} */ (['han', 'tangut', 'seal', 'modern', 'usage'])
   const code = $derived(char ? `U+${char.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : '')
 
   function close() {
-    clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); controller?.abort(); generation++
+    clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); clearTimeout(copyTimer); copyTimer = undefined
+    copied = false; copyFailed = false; controller?.abort(); generation++
     if (anchor) {
       if (savedTitle !== null && anchor.dataset.character === char && !anchor.hasAttribute('title')) anchor.setAttribute('title', savedTitle)
       if (savedDetails !== null) anchor.setAttribute('aria-details', savedDetails)
@@ -52,6 +56,17 @@
     return between() || boxes.some(box => pointerX >= box.left - 16 && pointerX <= box.right + 16
       && pointerY >= box.top - 16 && pointerY <= box.bottom + 16)
   }
+  async function copy() {
+    clearTimeout(copyTimer); copyTimer = undefined
+    const id = generation, token = ++copyToken
+    let done = false
+    try {
+      if (navigator.clipboard) { await navigator.clipboard.writeText(char); done = true }
+    } catch { done = false }
+    if (id !== generation || token !== copyToken) return
+    copied = done; copyFailed = !done
+    copyTimer = setTimeout(() => { copied = false; copyFailed = false }, 1600)
+  }
   function leave() {
     if (pinned || anchor === document.activeElement || panel?.contains(document.activeElement)) { keep(); return }
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer)
@@ -63,6 +78,8 @@
     }, 220)
   }
   function keep() { clearTimeout(hideTimer) }
+  // A focusout caused by the card emptying is not focus leaving it.
+  function cardFocusOut() { if (open) leave() }
   function position() {
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
@@ -227,11 +244,14 @@
 
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 <div class="ids-character-info" id={uid} popover="manual" role="dialog" tabindex="-1" aria-label={t('info.title')} bind:this={panel}
-  style:left={`${x}px`} style:top={`${y}px`} onpointerenter={keep} onpointerleave={leave} onfocusin={keep} onfocusout={leave}>
+  style:left={`${x}px`} style:top={`${y}px`} onpointerenter={keep} onpointerleave={leave} onfocusin={keep} onfocusout={cardFocusOut}>
   {#if open}
     <header>
       <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
-      <div><span class="script">{t(`info.script.${info?.script ?? characterScript(char)}`)}</span><code>{code}</code></div>
+      <div>
+        <span class="script">{t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
+        <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
+      </div>
       <button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>
     </header>
     {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
@@ -254,6 +274,7 @@
 <style>
   .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#d8d8de,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#696973,#b4b4c0));--info-font:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
+  .code{display:flex;align-items:center;gap:4px;min-height:24px}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
   p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
   .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}

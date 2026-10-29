@@ -322,5 +322,8 @@
   "parts.gongche.staccato": "광둥극 스타카토",
   "parts.gongche.rhythm": "박자 기호",
   "parts.gongche.beiguanSource": "북관 음표 · 추훠룽",
-  "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루"
+  "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루",
+  "info.copy": "{char} 복사",
+  "info.copied": "복사됨",
+  "info.copyFailed": "복사 실패"
 }
