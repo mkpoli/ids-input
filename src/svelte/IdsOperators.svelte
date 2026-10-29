@@ -1,9 +1,9 @@
 <script>
-  // The operator palette, grouped by how many parts each operator takes. A button puts its operator on
-  // the chosen part of `editor`, or wraps the whole tree if none is chosen; each shows its key unless
-  // `keyHints` is off, and names itself with its key on hover.
+  // The operator palette, grouped by how many parts each operator takes, with a key for an empty slot
+  // after them. A button puts its operator on the chosen part of `editor`, or wraps the whole tree if
+  // none is chosen; each shows its key unless `keyHints` is off, and names itself with its key on hover.
   import { OPERATOR_GROUPS } from '../core/ids.js'
-  import { KEY_OF } from '../core/keys.js'
+  import { EMPTY_KEY, KEY_OF } from '../core/keys.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
 
@@ -11,23 +11,38 @@
   let { editor, keyHints = true, size = 24 } = $props()
   const t = $derived(editor.t)
   const uid = $props.id()
-  // The short groups side by side first, then the long one across.
-  const groups = [1, 3, 2].map(n => /** @type {typeof OPERATOR_GROUPS[number]} */ (OPERATOR_GROUPS.find(group => group.arity === n)))
+  const picked = $derived(editor.picked)
+  // The short groups side by side first, the empty slot's key after them, then the long group across.
+  const groups = [1, 3, 'empty', 2].map(n => n === 'empty' ? 'empty'
+    : /** @type {typeof OPERATOR_GROUPS[number]} */ (OPERATOR_GROUPS.find(group => group.arity === n)))
 </script>
 
 <div class="ids-operators" role="group" aria-label={t('ids.operators')}>
-  {#each groups as group (group.arity)}
-    <div class="ids-op-group" data-arity={group.arity} role="group" aria-labelledby={`${uid}-ops-${group.arity}`}>
-      <span class="ids-op-label" id={`${uid}-ops-${group.arity}`}>{t(`ids.group.${group.arity}`)}</span>
-      <div class="ids-op-keys">
-        {#each group.ops as op (op)}
-          <button type="button" class="ids-key" data-op={op} disabled={editor.disabled} aria-label={editor.name(op)} aria-keyshortcuts={KEY_OF[op]}
-            title={t('ids.operatorTitle', { op, name: editor.name(op), key: shortcut(KEY_OF[op]) })} onclick={() => editor.operator(op)}>
-            <OperatorIcon {op} {size} />{#if keyHints}<kbd class="ids-kbd" aria-hidden="true">{shortcut(KEY_OF[op])}</kbd>{/if}
+  {#each groups as item (typeof item === 'string' ? item : item.arity)}
+    {#if item === 'empty'}
+      <div class="ids-op-group" data-arity="0" role="group" aria-labelledby={`${uid}-ops-empty`}>
+        <span class="ids-op-label" id={`${uid}-ops-empty`}>{t('ids.empty')}</span>
+        <div class="ids-op-keys">
+          <button type="button" class="ids-key ids-key-empty" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
+            aria-label={t('ids.empty')} aria-keyshortcuts={EMPTY_KEY} title={`${t('ids.empty')} (${shortcut(EMPTY_KEY)})`}
+            onclick={() => editor.empty(editor.chosen)}>
+            <span class="ids-empty-glyph" aria-hidden="true">⬚</span>{#if keyHints}<kbd class="ids-kbd" aria-hidden="true">{shortcut(EMPTY_KEY)}</kbd>{/if}
           </button>
-        {/each}
+        </div>
       </div>
-    </div>
+    {:else}
+      <div class="ids-op-group" data-arity={item.arity} role="group" aria-labelledby={`${uid}-ops-${item.arity}`}>
+        <span class="ids-op-label" id={`${uid}-ops-${item.arity}`}>{t(`ids.group.${item.arity}`)}</span>
+        <div class="ids-op-keys">
+          {#each item.ops as op (op)}
+            <button type="button" class="ids-key" data-op={op} disabled={editor.disabled} aria-label={editor.name(op)} aria-keyshortcuts={KEY_OF[op]}
+              title={t('ids.operatorTitle', { op, name: editor.name(op), key: shortcut(KEY_OF[op]) })} onclick={() => editor.operator(op)}>
+              <OperatorIcon {op} {size} />{#if keyHints}<kbd class="ids-kbd" aria-hidden="true">{shortcut(KEY_OF[op])}</kbd>{/if}
+            </button>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/each}
 </div>
 
@@ -47,6 +62,8 @@
   .ids-op-keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:4px}
   .ids-op-group:not([data-arity="2"]) .ids-op-keys{grid-template-columns:repeat(3,40px)}
   .ids-op-group[data-arity="3"] .ids-op-keys{grid-template-columns:repeat(2,40px)}
+  .ids-op-group[data-arity="0"] .ids-op-keys{grid-template-columns:40px}
+  .ids-empty-glyph{font-family:var(--_font);font-size:20px;line-height:1}
   .ids-key{position:relative;display:grid;place-items:center;height:40px;padding:0;font:inherit;color:inherit;cursor:pointer;
     border:1px solid var(--_line);border-radius:8px;background:var(--_surface);transition:border-color .12s,background-color .12s}
   .ids-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}

@@ -390,7 +390,7 @@ export function createEditor(options) {
       focusChosen(root)
       return
     }
-    if (command.command === 'clear' && el.closest('.ids-tree, .ids-operators')) { event.preventDefault(); empty(target()); focusChosen(root); return }
+    if ((command.command === 'clear' || command.command === 'empty') && el.closest('.ids-tree, .ids-operators')) { event.preventDefault(); empty(target()); focusChosen(root); return }
     // Any other character typed on the tree goes to the part field.
     if (command.command === 'type' && slot && el.closest('.ids-tree')) {
       event.preventDefault(); slot.focus(); piece = event.key

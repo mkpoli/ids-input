@@ -13,16 +13,19 @@ export const CODES = Object.fromEntries(['Digit1', 'Digit2', 'Digit3', 'Digit4',
 /** Each operator's key, for showing beside it. */
 export const KEY_OF = Object.fromEntries(Object.entries(KEYS).map(([key, op]) => [op, key]))
 
+/** The key that empties a part, as the operator palette shows it: ? (Shift+/ on a US layout). */
+export const EMPTY_KEY = '?'
+
 /**
  * @typedef {{ key: string, code?: string, shiftKey?: boolean, ctrlKey?: boolean, metaKey?: boolean, altKey?: boolean, isComposing?: boolean }} KeyLike
- * @typedef {{ command: 'undo' | 'redo' | 'clear' | 'next' | 'previous' | 'type' } | { command: 'operator', op: string }} Command
+ * @typedef {{ command: 'undo' | 'redo' | 'clear' | 'empty' | 'next' | 'previous' | 'type' } | { command: 'operator', op: string }} Command
  */
 
 /**
  * What a key does in the editor's tree: `operator` (with `op`), `undo`, `redo`, `clear` (Backspace
- * or Delete), `next` and `previous` (Tab and Shift+Tab), `type` (a printable character, which goes
- * to the part field), or null for a key the editor leaves alone. Keys during an input method's
- * composition are left alone.
+ * or Delete), `empty` (?, for the empty slot the operator palette offers), `next` and `previous`
+ * (Tab and Shift+Tab), `type` (a printable character, which goes to the part field), or null for a
+ * key the editor leaves alone. Keys during an input method's composition are left alone.
  * @param {KeyLike} event
  * @returns {Command | null}
  */
@@ -34,6 +37,7 @@ export function commandFor(event) {
   if (command || event.altKey) return null
   const op = event.shiftKey ? undefined : (event.code && CODES[event.code]) ?? KEYS[event.key]
   if (op) return { command: 'operator', op }
+  if (event.key === EMPTY_KEY) return { command: 'empty' }
   if (event.key === 'Tab') return { command: event.shiftKey ? 'previous' : 'next' }
   if (event.key === 'Backspace' || event.key === 'Delete') return { command: 'clear' }
   if ([...event.key].length === 1 && event.key !== ' ') return { command: 'type' }

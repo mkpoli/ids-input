@@ -127,6 +127,7 @@
   "ids.undo.label": "元に戻す",
   "ids.undo.named": "元に戻す：{step}",
   "ids.unwrap": "この階層を外す",
+  "ids.unwrapHint": "この階層を外し、空でない最初の部品をその位置に残す",
   "ids.unwrapNode": "{what}を外す",
   "ids.view.label": "表示",
   "ids.view.shape": "図",

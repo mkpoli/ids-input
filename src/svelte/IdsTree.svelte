@@ -142,7 +142,7 @@
         {:else}
           <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         {/if}
-        <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrap')}
+        <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrapHint')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
       <div class="ids-parts">

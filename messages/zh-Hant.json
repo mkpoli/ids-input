@@ -127,6 +127,7 @@
   "ids.undo.label": "復原",
   "ids.undo.named": "復原：{step}",
   "ids.unwrap": "去掉這一層",
+  "ids.unwrapHint": "去掉這一層，把第一個非空部件留在原位",
   "ids.unwrapNode": "去掉{what}",
   "ids.view.label": "檢視",
   "ids.view.shape": "結構圖",

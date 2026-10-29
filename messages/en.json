@@ -129,6 +129,7 @@
   "ids.undo.label": "Undo",
   "ids.undo.named": "Undo: {step}",
   "ids.unwrap": "Remove this level",
+  "ids.unwrapHint": "Remove this level; its first non-empty part takes its place",
   "ids.unwrapNode": "Remove {what}",
   "ids.view.label": "View",
   "ids.view.shape": "Shape",

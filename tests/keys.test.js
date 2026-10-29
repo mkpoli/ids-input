@@ -55,11 +55,12 @@ describe('what a key does', () => {
     expect(commandFor({ key: 'Z', metaKey: true, shiftKey: true })).toEqual({ command: 'redo' })
     expect(commandFor({ key: 'y', ctrlKey: true })).toEqual({ command: 'redo' })
   })
-  it('steps with Tab, clears with Backspace, and sends other characters to the part field', () => {
+  it('steps with Tab, clears with Backspace or ?, and sends other characters to the part field', () => {
     expect(commandFor({ key: 'Tab' })).toEqual({ command: 'next' })
     expect(commandFor({ key: 'Tab', shiftKey: true })).toEqual({ command: 'previous' })
     expect(commandFor({ key: 'Backspace' })).toEqual({ command: 'clear' })
     expect(commandFor({ key: 'Delete' })).toEqual({ command: 'clear' })
+    expect(commandFor({ key: '?', code: 'Slash', shiftKey: true })).toEqual({ command: 'empty' })
     expect(commandFor({ key: '木' })).toEqual({ command: 'type' })
     expect(commandFor({ key: '!', code: 'Digit1', shiftKey: true })).toEqual({ command: 'type' })
   })
