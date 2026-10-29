@@ -121,6 +121,8 @@
   })
 
   const PAGE_SIZE = 120
+  // The stroke count where the single character chips stop.
+  const HAN_TAIL = 23
   let hangulGroup = $state(/** @type {'jamo' | 'compose' | 'syllable'} */ ('jamo')), hangulPage = $state(0)
   $effect(() => { tab; hangulGroup; filter; hangulPage = 0 })
   const hangulKeys = $derived.by(() => {
@@ -157,6 +159,49 @@
   const hangulPages = $derived(Math.max(1, Math.ceil(hangulMatches.length / PAGE_SIZE)))
   const hangulShown = $derived(hangulMatches.slice(hangulPage * PAGE_SIZE, (hangulPage + 1) * PAGE_SIZE)
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
+
+  // The composer's whole Han repertoire, beside the components: a paged list of the characters its
+  // export draws, indexed by the stroke count Unihan records. Loaded only when the view is opened.
+  let characters = $state(false), hanPage = $state(0)
+  /** @type {number | 'tail' | 'unknown' | undefined} */
+  let hanCount = $state(undefined)
+  /** @type {string[] | null} */
+  let hanKeys = $state.raw(null)
+  /** @type {(number | null)[] | null} */
+  let hanStrokesData = $state.raw(null)
+  let hanFailed = $state(false), hanLoading = false
+  $effect(() => {
+    if (tab !== 'components' || !characters || hanKeys || hanLoading || hanFailed) return
+    hanLoading = true
+    fetch(new URL('../../data/han-parts.json.gz', import.meta.url))
+      .then(response => { if (!response.ok) throw new Error('Han characters'); return response.arrayBuffer() })
+      .then(unpack).then(JSON.parse).then(data => { hanKeys = data.keys; hanStrokesData = data.strokes })
+      .catch(() => { hanLoading = false; hanFailed = true })
+  })
+  function retryHan() { hanLoading = false; hanFailed = false }
+  $effect(() => { tab; characters; hanCount; filter; hanPage = 0 })
+  /** @type {Map<string, number | null>} */
+  const hanStrokes = $derived(new Map((hanKeys ?? []).map((key, index) => [key, hanStrokesData?.[index] ?? null])))
+  const hanCounts = $derived([...new Set([...hanStrokes.values()].filter(count => count != null))].sort((a, b) => /** @type {number} */ (a) - /** @type {number} */ (b)))
+  // Counts below the tail stay single chips; everything from 23 strokes up shares one.
+  const hanChips = $derived(hanCounts.filter(count => count < HAN_TAIL))
+  const hanTail = $derived(hanCounts.some(count => count >= HAN_TAIL))
+  const hanUnknown = $derived([...hanStrokes.values()].some(count => count == null))
+  const hanMatches = $derived.by(() => {
+    const keys = hanKeys ?? []
+    const picked = hanCount === undefined ? keys
+      : hanCount === 'unknown' ? keys.filter(key => hanStrokes.get(key) == null)
+      : hanCount === 'tail' ? keys.filter(key => (hanStrokes.get(key) ?? 0) >= HAN_TAIL)
+      : keys.filter(key => hanStrokes.get(key) === hanCount)
+    const term = filter.trim()
+    if (!term) return picked
+    const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
+    const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
+    return matchScriptParts(picked, text, Boolean(code))
+  })
+  const hanPages = $derived(Math.max(1, Math.ceil(hanMatches.length / PAGE_SIZE)))
+  const hanShown = $derived(hanMatches.slice(hanPage * PAGE_SIZE, (hanPage + 1) * PAGE_SIZE)
+    .map(part => ({ part, kind: /** @type {const} */ ('extra'), strokes: hanStrokes.get(part) })))
 
   // The jamo keyboard composes in the order the letters are clicked: initial, medial, final.
   let initial = $state(''), medial = $state(''), final = $state('')
@@ -203,7 +248,7 @@
     clearCompose()
     pick(text)
   }
-  const filterLabel = $derived(t(tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
+  const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -421,9 +466,11 @@
   const title = part => {
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
+    // The composer's character list has no first-stroke class; its code point identifies the character.
+    const composerCharacters = tab === 'components' && characters
     return [
       isNewKorean(part.part) ? null : part.part,
-      (tab === 'gongche' && !isSequence(part.part) || tab === 'marks') ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
+      (tab === 'gongche' && !isSequence(part.part) || tab === 'marks' || composerCharacters) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       romanization,
       ...(part.aliases ?? []),
@@ -546,6 +593,39 @@
   {#if tab === 'seal' && (filtered ?? selectedSealGroup?.parts ?? []).some(part => part.sealBasis === 'cjk-ids')}
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
+  {#if tab === 'components'}
+    <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
+      <button type="button" class:active={!characters && chosen === undefined} aria-pressed={!characters && chosen === undefined}
+        onclick={() => { count = undefined; characters = false }}>{t('parts.tab.common')}</button>
+      {#if characters}
+        {#each hanChips as value (value)}
+          {@const label = t('parts.strokeCount', { count: value })}
+          <button type="button" class:active={hanCount === value} aria-pressed={hanCount === value}
+            title={label} aria-label={label}
+            onclick={() => hanCount = value}>{t('parts.strokeChip', { count: value })}</button>
+        {/each}
+        {#if hanTail}
+          <button type="button" class:active={hanCount === 'tail'} aria-pressed={hanCount === 'tail'}
+            title={t('parts.characters.fromStrokes', { count: HAN_TAIL })} aria-label={t('parts.characters.fromStrokes', { count: HAN_TAIL })}
+            onclick={() => hanCount = 'tail'}>{HAN_TAIL}+</button>
+        {/if}
+        {#if hanUnknown}
+          <button type="button" class:active={hanCount === 'unknown'} aria-pressed={hanCount === 'unknown'}
+            title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
+            onclick={() => hanCount = 'unknown'}>?</button>
+        {/if}
+      {:else}
+        {#each counts as value (value ?? 'unknown')}
+          {@const label = value == null ? t('parts.unknownStrokes') : t('parts.strokeCount', { count: value })}
+          <button type="button" class:active={value === chosen} aria-pressed={value === chosen}
+            title={label} aria-label={label}
+            onclick={() => count = value}>{value == null ? '?' : t('parts.strokeChip', { count: value })}</button>
+        {/each}
+      {/if}
+      <button type="button" class:active={characters} aria-pressed={characters}
+        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters')}</button>
+    </div>
+  {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
     {#if tab === 'tangut' && parts}
       {#if !tangutData && !tangutFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
@@ -624,21 +704,24 @@
         {/if}
         {@render grid(alphabetShown)}
       {:else}<p class="parts-note">{t('parts.none')}</p>{/if}
+    {:else if tab === 'components' && characters}
+      {#if !hanKeys && !hanFailed}<p class="parts-note" role="status">{t('parts.loading')}</p>{/if}
+      {#if hanFailed}<p class="parts-note" role="status">{t('parts.characters.unavailable')} <button type="button" onclick={retryHan}>{t('parts.script.retry')}</button></p>{/if}
+      {#if hanMatches.length}
+        {#if hanPages > 1}
+          <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
+            <button type="button" disabled={hanPage === 0} onclick={() => hanPage--}>{t('parts.script.previous')}</button>
+            <input type="number" min="1" max={hanPages} value={hanPage + 1} aria-label={t('parts.script.pages')}
+              onchange={event => { const value = event.currentTarget.valueAsNumber; if (Number.isFinite(value)) hanPage = Math.max(0, Math.min(hanPages - 1, Math.floor(value) - 1)) }} />
+            <span>{t('parts.script.page', { page: hanPage + 1, pages: hanPages, count: hanMatches.length })}</span>
+            <button type="button" disabled={hanPage + 1 >= hanPages} onclick={() => hanPage++}>{t('parts.script.next')}</button>
+          </div>
+        {/if}
+        {@render grid(hanShown)}
+      {:else if hanKeys}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
       {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else}
-      {#if tab === 'components'}
-        <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
-          <button type="button" class:active={chosen === undefined} aria-pressed={chosen === undefined}
-            onclick={() => count = undefined}>{t('parts.tab.common')}</button>
-          {#each counts as value (value ?? 'unknown')}
-            {@const label = value == null ? t('parts.unknownStrokes') : t('parts.strokeCount', { count: value })}
-            <button type="button" class:active={value === chosen} aria-pressed={value === chosen}
-              title={label} aria-label={label}
-              onclick={() => count = value}>{value == null ? '?' : t('parts.strokeChip', { count: value })}</button>
-          {/each}
-        </div>
-      {/if}
       {#if tab === 'recent' && !recent.length}
         <p class="parts-note">{t('parts.noRecent')}</p>
       {/if}
