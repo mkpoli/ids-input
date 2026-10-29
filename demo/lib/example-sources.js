@@ -52,6 +52,7 @@ export const EXAMPLE_SOURCES = [
   { id: 'utr45', title: 'U-source ideographs (UTR #45)', date: '2026-07-30', url: 'https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt', status: 'checked', note: 'UTC-00949 records the 招財進寶 ligature as ⿱宀⿺辶⿱⿰王尔⿲隹貝招, status NoAction.' },
   { id: 'zh-yue-hetizi', title: '合成字', date: '2026-01-03', url: 'https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560', status: 'checked', note: 'Lists 招財進寶, 孔孟好學, 草泥馬, 阿Sir and 動L; gives 草泥馬 as ⿱艹⿰马尼, 阿Sir as ⿰⿳⿰SIR木阝, and 動L as ⿱成龍. The 招財進寶 image is named ⿱𡩧⿺進⿰貝招. Read 2026-10-29.' },
   { id: 'myriadrevery-jouji', title: '畳字', author: 'にぅま', date: '2026-06-28', url: 'https://wikiwiki.jp/myriadrevery/畳字', status: 'checked', note: 'Read 2026-10-29. Its 実例 groups repeated forms as 二同系, 三同系, 四同系 and 過畳系; the Repeated components entries follow those groups. The 概要 cites 山口翔平 (関西大学国文学会) on 理義字 and 『童子字尽安見』「理義字集」, but the page gives no source for its own examples. Each character is encoded and its description is BabelStone’s.' },
+  { id: 'uhk-hetizi', title: '揮春上的合體字　你看懂幾多？ (新春篇)', author: 'UHK 港生活', date: '2015-02-12', url: 'https://hk.ulifestyle.com.hk/topic/detail/200474/', status: 'checked', note: 'Photographs 日日有見財, 日進斗金, 唯吾知足 and 進寶財招, then 黃金萬兩, 吉祥如意 and 學好孔孟. 日日有見財 sets 日日 above 有 above 見財; 日進斗金 uses the bottom of 進 as a cart. The article describes the shared 口 of 唯吾知足, the shared 子 of 學好孔孟, and the borrowed strokes of 黃金萬兩 and 吉祥如意. Read 2026-10-29.' },
 ]
 
 /** The citation number of a source id, or 0 when the id is unknown. @param {string} id */

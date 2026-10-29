@@ -201,11 +201,16 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
   // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
-  // the Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji
-  // article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
-  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo).
+  // 日日有見財 and 日進斗金 follow the arrangements in the UHK article's photographs; the Cantonese
+  // Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji article gives the
+  // remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO),
+  // 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other New Year 合文
+  // share strokes between their characters, as 唯吾知足 does with one 口, and an IDS tree cannot
+  // share a component, so they are not examples.
   { key: 'ligature', examples: [
     { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
+    { sequence: '⿳⿰日日有⿰見財', refs: [45], char: '' },
+    { sequence: '⿰⿱日斗⿱進金', refs: [45], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
