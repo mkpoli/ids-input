@@ -90,3 +90,32 @@ export function syncDocument(document, tree, { allocator = allocatorFor(document
 export function documentFromTree(tree, { id = 'root', allocator } = {}) {
   return fromSequence(project(tree), { id, ...(allocator ? { allocator } : {}) })
 }
+
+
+/** The non-group layer at an editor path. Groups forward to their child and consume no path step.
+ * @param {Node} root @param {number[]} path @returns {Node | null} */
+export function layerAtPath(root, path) {
+  let node = root
+  let at = 0
+  while (true) {
+    if (node.kind === 'group') { node = node.child; continue }
+    if (at === path.length) return node
+    if (node.kind !== 'operator') return null
+    const next = node.children[path[at++]]
+    if (!next) return null
+    node = next
+  }
+}
+
+/** The editor path of a layer ID; a group has its child's path. @param {Node} root @param {string} id * @param {number[]} [path] @returns {number[] | null} */
+export function pathOfLayer(root, id, path = []) {
+  if (root.id === id) return path
+  if (root.kind === 'group') return pathOfLayer(root.child, id, path)
+  if (root.kind === 'operator') {
+    for (let i = 0; i < root.children.length; i++) {
+      const found = pathOfLayer(root.children[i], id, [...path, i])
+      if (found) return found
+    }
+  }
+  return null
+}
