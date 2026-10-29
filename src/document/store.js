@@ -2,7 +2,7 @@
 // Persisted editing sessions. A tab or draft keeps the current document, the chosen layer and every
 // ID the session has issued, so a reload keeps identity without keeping the in-memory undo history.
 // The file format is the document itself (`writeDocument`); this envelope is for host storage.
-import { DocumentError, assertDocument, createDocumentSession } from './index.js'
+import { DocumentError, assertDocument, createDocumentSession, readDocument, writeDocument } from './index.js'
 import { inspectJson } from './json.js'
 
 export const SESSION_FORMAT = 'ids-input/session'
@@ -80,4 +80,20 @@ export function readSession(text) {
   const [number] = inspected.numbers
   if (number) throw new SessionRecordError(`number outside finite binary64: ${number}`)
   return sessionFromRecord(parsed)
+}
+
+
+/** Base64url for a document, for a share link. @param {Document} document */
+export function shareDocument(document) {
+  const bytes = new TextEncoder().encode(writeDocument(document))
+  let binary = ''
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+/** A document from a share token. @param {string} token @returns {Document} */
+export function readShareDocument(token) {
+  const padded = token.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - token.length % 4) % 4)
+  const bytes = Uint8Array.from(atob(padded), char => char.charCodeAt(0))
+  return readDocument(new TextDecoder().decode(bytes))
 }
