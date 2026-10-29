@@ -26,10 +26,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], editable?: boolean, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
   // Serif outlines carry tiny self-overlap and open joins; a hairline stroke of the same ink
   // seals them without changing the drawn weight.
@@ -107,6 +107,12 @@
   })
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
   const selectionBox = $derived(frame ? boxCorners(frame.canvas, frame.box) : null)
+  const hits = $derived.by(() => {
+    if (!view || !editable) return []
+    return [...view.frames.values()]
+      .filter(item => item.node.kind !== 'slot')
+      .sort((a, b) => b.box[2] * b.box[3] - a.box[2] * a.box[3])
+  })
   const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
   const rotationValue = $derived(flat ? Math.round(Math.atan2(flat[1], flat[0]) * 1800 / Math.PI) / 10 : 0)
   const scaleValue = $derived(flat ? Math.round(Math.hypot(flat[0], flat[1]) * 1000) / 1000 : 1)
@@ -169,6 +175,15 @@
       operation = [cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy]
     }
     applyCanvas(operation, [{ type: 'affine', matrix: flat }], chosenLayer.id, frame.frame, `key-${key}`)
+  }
+  /** @param {string} id */
+  function chooseLayer(id) {
+    if (!session || !localDoc) return
+    if (!session.choose(id)) return
+    localDoc = session.document
+    const path = pathOfLayer(localDoc.root, id)
+    if (path) onchoose?.(path)
+    onedit?.()
   }
   /** @param {PointerEvent} event @param {'move' | 'scale' | 'rotate'} kind */
   function startDrag(event, kind) {
@@ -278,6 +293,15 @@
               {#each drawn.slots ?? [] as s (s.index)}
                 {@render slot(s.box, drawn.stroke?.[0] ?? STROKE, inChosen(slotLeaf(s.index)), false)}
               {/each}
+              {#if interactive}
+                {#each hits as hit (hit.node.id)}
+                  {@const [x, y, width, height] = boxCorners(hit.canvas, hit.box)}
+                  <rect class="layer-hit" x={x} y={y} width={width} height={height} fill="transparent" pointer-events="all"
+                    role="button" tabindex="-1" aria-label={hit.node.kind === 'component' ? hit.node.char : hit.node.id}
+                    onclick={() => chooseLayer(hit.node.id)}
+                    onkeydown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); chooseLayer(hit.node.id) } }} />
+                {/each}
+              {/if}
               {#if interactive && selectionBox && frame?.supported}
                 {@const [x, y, width, height] = selectionBox}
                 {@const size = 26}

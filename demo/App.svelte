@@ -965,7 +965,7 @@
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
               document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-              editable={adjusting} onedit={layerChanged} bind:drawing>
+              editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
               {#snippet detailContent()}
                 {#each encoded as ch (ch)}
                   <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
