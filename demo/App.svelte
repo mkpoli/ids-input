@@ -7,6 +7,7 @@
   import { tick, untrack } from 'svelte'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
+  import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
@@ -136,6 +137,7 @@
     const serif = previewAt(COMPOSER_BASES.serif, split, 'serif')
     const sans = sansPreviewAt(split)
     const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
+    const draw = defaultFace ? sans : composed
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -151,16 +153,16 @@
         if ([...char].length !== 1 || char === sequence) continue
         try { return await composed(char, options) } catch { /* compose the sequence */ }
       }
-      // A description that names a character draws that character: a sequence the composer does not
-      // know would otherwise be laid out by a guess of its own. A description with an operator
-      // modifier is left to the exact answer above, since the modifier-free reading is only a guess.
-      if (!split && !sequence.includes('[')) {
+      // A description built on an operator the composer only approximates draws the character it
+      // names: the layout has no crossing, subtraction or mirror to place. Descriptions of ordinary
+      // parts keep the layout, and a modifier is left to the exact answer above, since the
+      // modifier-free reading is only a guess.
+      if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         const [named] = await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
-          try { return await composed(named, { signal: options?.signal }) } catch { /* compose it */ }
+          try { return await draw(named, options) } catch { /* compose it */ }
         }
       }
-      const draw = defaultFace ? sans : composed
       try {
         const drawn = await draw(sequence, options)
         // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude

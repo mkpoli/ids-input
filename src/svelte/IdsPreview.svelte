@@ -92,7 +92,7 @@
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
     scopes = view?.scopes ?? null
-    drawing = view ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
+    drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
   const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
