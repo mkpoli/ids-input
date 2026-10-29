@@ -9,6 +9,7 @@ import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
+import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -185,14 +186,17 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
+ *   chains?: string | URL,
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
+
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
   let table = null
@@ -209,6 +213,18 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   /** @type {Promise<ReturnType<typeof createSearch>> | null} */
   let local = null
   let localGeneration = -1
+  /** @type {Promise<Map<string, string>> | null} */
+  let chainEntries = null
+  /** The descriptions with a stroke chain and the characters they name, loaded once.
+   * @returns {Promise<Map<string, string>> | null} */
+  /** @param {AbortSignal} [signal] */
+  const loadChains = signal => {
+    if (chains === undefined) return null
+    chainEntries ??= (async () => readChainEntries(await readText(await load(chains, { signal }))))()
+      .catch(error => { chainEntries = null; throw error })
+    return chainEntries
+  }
+
   /** @type {Worker | null} */
   let searcher = null
   /** @type {Map<number, { resolve: (value: any) => void, reject: (error: Error) => void }>} */
@@ -256,8 +272,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   }
 
   /** @param {string | URL} url */
-  const load = async url => {
-    const response = await get(url)
+  /** @param {string | URL} url @param {{ signal?: AbortSignal }} [options] */
+  const load = async (url, options) => {
+    const response = await get(url, options)
     if (!response.ok) throw new Error(`${url}: ${response.status}`)
     return response
   }
@@ -647,6 +664,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const result = worker && !given ? await inWorker(query, limit, 'ids', componentLookup) : (await localSearch()).search(query, { limit, componentLookup })
       signal?.throwIfAborted()
       return result
+    },
+    async chainCharacter(text, { signal } = {}) {
+      const entries = await loadChains(signal)
+      signal?.throwIfAborted()
+      return entries ? chainName(entries, text) : null
     },
     ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
       /** @param {string} query @param {import('./types.js').Options} [options] */

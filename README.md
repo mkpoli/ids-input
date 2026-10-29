@@ -268,6 +268,11 @@ A zi.tools stroke chain that names a stroke or a character reads as that charact
 `#(Wg)` is ㇁, and `#(-丨𠃍-一z)` is 口. Chains that name no character the published grammar lists
 stay in the text, to be read as their parts or rejected as usual.
 
+A zi.tools description that carries a stroke chain this package cannot draw resolves to the
+character the published table gives it: pasting `⿱丿⿹#(-𠃌㇉)一` gives 乌. The host supplies that
+table as `chains` (the workshop's `data/zi-tools-chains.tsv.gz`); without it the text stays.
+
+
 
 ### Small Seal (小篆)
 
@@ -903,13 +908,26 @@ use the `ids-input:` prefix.
 
 ### Comparison with KAGE
 
-`/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS for 32 of
-the 149 unencoded headword sequences taken from the HDIC KRM database. Each card gives the ink
-overlap (IoU), the geometry at a 4 px tolerance (F1@4) and the 3×3 layout distance, and links the
-sequence to the workshop and to zi.tools. The page explains how the three numbers are measured and
-why the heavier typeface lowers the first two. The drawings are a snapshot of the 2026-10-29 run in
+`/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS in three
+sets: 168 unencoded headword sequences taken from the HDIC KRM database, 20 common-use kanji, and
+27 review characters from earlier han-compose review sheets. Each card gives the ink overlap (IoU),
+the geometry at a 4 px tolerance (F1@4) and the 3×3 layout distance, and links the sequence to the
+workshop and to zi.tools. The unencoded and review characters are composed by both sides (some are
+reused as whole glyphs); 17 of the common kanji are whole glyphs on both sides; three (海, 急, 曜) are
+composed by this site, so their scores include composition. The rest compare type style and
+variant choice. The page explains how the three numbers are measured and why the heavier
+typeface lowers the first two. The gallery shows 48 cards at a time, with Show more for the rest,
+and filters by set and structure. The drawings are a snapshot of the 2026-10-29 run in
 `demo/lib/comparison.json`; GlyphWiki's glyph data is free to use and the KAGE engine is GPL-3.0.
 The About dialog links the page.
+
+### Engine comparison
+
+`/engines.html` is a feature table for the engines this project is compared with: the workshop
+itself, KAGE, GlyphWiki, zi.tools, yedict, Mojidata, MetaHan and CHISE. It covers what each reads
+and writes, how it composes, which controls it has, coverage, deployment, measured cost and
+licences, with sources for every claim. Cells say "—" where no public source documents a value.
+The About dialog and the comparison page link it.
 
 ## Inspired by
 
