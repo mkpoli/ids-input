@@ -173,7 +173,7 @@
   "app.file.saved": "{name}を保存しました",
   "app.file.openFailed": "{name}を開けませんでした。",
   "app.layers.label": "レイヤー",
-  "app.layers.hint": "レイヤーを選び、移動・拡大縮小・回転できます。部品をダブルクリックすると分割できます。",
+  "app.layers.hint": "レイヤーを選び、数値で編集します。メイン表示でドラッグでき、部品をダブルクリックすると分割します。",
   "app.layers.none": "描けるレイヤーがまだありません。",
   "app.layers.incomplete": "この描画はレイヤーに分けられません。",
   "app.layers.prepare": "レイヤーを準備しています…",

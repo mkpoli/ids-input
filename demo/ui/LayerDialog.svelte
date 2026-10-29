@@ -25,10 +25,6 @@
   let source = $state.raw(null)
   /** @type {Map<string, import('../../src/document/frames.js').LayerFrame>} */
   let layout = $state.raw(new Map())
-  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
-  let drag = $state.raw(null)
-  let gesture = 0
-
   let x = $state(0), y = $state(0), scaleX = $state(1), scaleY = $state(1), rotate = $state(0)
   let mode = $state(/** @type {'affine' | 'matrix' | 'mobius'} */ ('affine'))
   let matrix = $state([1, 0, 0, 1, 0, 0])
@@ -252,79 +248,6 @@
     }
   }
 
-  /** @param {SVGSVGElement} svg @param {PointerEvent} event */
-  function pointAt(svg, event) {
-    const matrix = svg.getScreenCTM()
-    if (!matrix) return null
-    const point = svg.createSVGPoint()
-    point.x = event.clientX
-    point.y = event.clientY
-    return point.matrixTransform(matrix.inverse())
-  }
-
-  /** @param {PointerEvent} event @param {'move' | 'scale' | 'rotate'} kind */
-  function startDrag(event, kind) {
-    if (!selection || !selection.entry.supported) return
-    event.preventDefault()
-    event.stopPropagation()
-    const target = /** @type {SVGElement} */ (event.currentTarget)
-    const svg = target instanceof SVGSVGElement ? target : target.ownerSVGElement
-    if (!svg) return
-    const point = pointAt(svg, event)
-    if (!point) return
-    const [x, y, width, height] = selection.box
-    const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
-    drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
-      d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
-      local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
-      a0: Math.atan2(point.y - center[1], point.x - center[0]), frame: selection.entry.frame }
-    svg.setPointerCapture?.(event.pointerId)
-  }
-
-  let lastApply = 0
-  /** @param {PointerEvent} event */
-  function moveDrag(event) {
-    if (!drag || !selection) return
-    const target = /** @type {SVGElement} */ (event.currentTarget)
-    const svg = target instanceof SVGSVGElement ? target : target.ownerSVGElement
-    if (!svg) return
-    const point = pointAt(svg, event)
-    if (!point) return
-    if (drag.kind === 'move') {
-      const inverse = invertAffine(drag.frame)
-      if (!inverse) return
-      const origin = applyAffine(inverse, [0, 0])
-      const local = applyAffine(inverse, [point.x - drag.p0.x, point.y - drag.p0.y])
-      x = Math.round((drag.start.x + local[0] - origin[0]) * 100) / 100
-      y = Math.round((drag.start.y + local[1] - origin[1]) * 100) / 100
-    } else if (drag.kind === 'scale') {
-      const inverse = invertAffine(drag.frame)
-      if (!inverse) return
-      const local = applyAffine(inverse, [point.x, point.y])
-      const ratioX = Math.abs(drag.local0[0] - 500) < 1 ? 1 : (local[0] - 500) / (drag.local0[0] - 500)
-      const ratioY = Math.abs(drag.local0[1] - 500) < 1 ? 1 : (local[1] - 500) / (drag.local0[1] - 500)
-      scaleX = Math.round(Math.min(20, Math.max(0.05, drag.start.scaleX * ratioX)) * 1000) / 1000
-      scaleY = Math.round(Math.min(20, Math.max(0.05, drag.start.scaleY * ratioY)) * 1000) / 1000
-    } else {
-      const angle = Math.atan2(point.y - drag.center[1], point.x - drag.center[0])
-      let next = drag.start.rotate + (angle - drag.a0) * 180 / Math.PI
-      if (event.shiftKey) next = Math.round(next / 15) * 15
-      rotate = Math.round(((next + 180) % 360 + 360) % 360 - 180)
-    }
-    const now = performance.now()
-    if (now - lastApply > 90) { lastApply = now; apply(String(drag.gesture)) }
-  }
-
-  /** @param {PointerEvent} event */
-  function endDrag(event) {
-    if (!drag) return
-    const target = /** @type {SVGElement} */ (event.currentTarget)
-    const svg = target instanceof SVGSVGElement ? target : target.ownerSVGElement
-    if (svg?.hasPointerCapture?.(event.pointerId)) svg.releasePointerCapture(event.pointerId)
-    const finishing = String(drag.gesture)
-    drag = null
-    apply(finishing)
-  }
 </script>
 
 <Dialog bind:open title={t('app.layers.label')} closeLabel={t('app.close')} wide>
@@ -343,18 +266,8 @@
             <img src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} alt="" />
             {#if selection?.entry.supported}
               {@const [x, y, width, height] = selection.box}
-              <svg class="handles" viewBox="0 0 1000 1000"
-                onpointermove={moveDrag} onpointerup={endDrag} onpointercancel={endDrag}>
+              <svg class="handles" viewBox="0 0 1000 1000" aria-hidden="true">
                 <rect class="select-box" x={x} y={y} width={width} height={height} />
-                <circle class="handle move" cx={x + width / 2} cy={y + height / 2} r="26"
-                  role="button" tabindex="-1" aria-label={t('app.layers.transform')}
-                  onpointerdown={event => startDrag(event, 'move')} />
-                <circle class="handle rotate" cx={x + width / 2} cy={y - 48} r="18"
-                  role="button" tabindex="-1" aria-label={t('app.layers.rotate')}
-                  onpointerdown={event => startDrag(event, 'rotate')} />
-                <rect class="handle scale" x={x + width - 18} y={y + height - 18} width="36" height="36"
-                  role="button" tabindex="-1" aria-label={t('app.layers.scale')}
-                  onpointerdown={event => startDrag(event, 'scale')} />
               </svg>
             {/if}
           {:else}
@@ -431,12 +344,10 @@
   .figure{display:grid;place-items:center;min-height:220px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
   .canvas{position:relative;width:min(100%,48vh);aspect-ratio:1}
   .canvas img{display:block;width:100%;height:100%;object-fit:contain}
-  .handles{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:all;touch-action:none}
+  .handles{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
   .select-box{fill:none;stroke:#2f5fd0;stroke-width:3;vector-effect:non-scaling-stroke}
   .handle{fill:#fff;stroke:#2f5fd0;stroke-width:3;vector-effect:non-scaling-stroke;pointer-events:all;cursor:grab}
-  .handle.move{cursor:move}
   .handle.rotate{cursor:crosshair}
-  .handle.scale{cursor:nwse-resize}
   .list{display:flex;flex-direction:column;gap:2px;max-height:48vh;overflow:auto}
   .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:6px;align-items:center;width:100%;padding:5px 6px;border:0;border-radius:6px;background:transparent;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
   .list button:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}

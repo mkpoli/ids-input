@@ -966,8 +966,9 @@ the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a tr
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
-through the scoped drawing. The Layers dialog edits the same layer
-document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
+through the scoped drawing. The Layers dialog is a read-only preview and inspector over the same layer
+document, including a six-coefficient matrix mode for shears and reflections;
+drag on the main preview to move, scale or turn a layer. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete

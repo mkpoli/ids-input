@@ -174,7 +174,7 @@
   "app.file.saved": "Saved {name}",
   "app.file.openFailed": "Could not open {name}.",
   "app.layers.label": "Layers",
-  "app.layers.hint": "Select a layer, then move, scale or turn it. Double-click a component to split it.",
+  "app.layers.hint": "Select a layer, then edit its fields. Drag on the main preview; double-click a component to split it.",
   "app.layers.none": "No drawable layers yet.",
   "app.layers.incomplete": "This drawing cannot be split into layers.",
   "app.layers.prepare": "Preparing layers…",

@@ -173,7 +173,7 @@
   "app.file.saved": "{name} 저장됨",
   "app.file.openFailed": "{name}을 열 수 없습니다.",
   "app.layers.label": "레이어",
-  "app.layers.hint": "레이어를 선택한 뒤 이동, 크기 조절, 회전할 수 있습니다. 구성 요소를 두 번 클릭하면 분할됩니다.",
+  "app.layers.hint": "레이어를 선택한 뒤 값을 편집하세요. 메인 화면에서 끌 수 있고, 구성 요소를 두 번 클릭하면 나눕니다.",
   "app.layers.none": "아직 그릴 수 있는 레이어가 없습니다.",
   "app.layers.incomplete": "이 그림은 레이어로 나눌 수 없습니다.",
   "app.layers.prepare": "레이어를 준비하는 중…",

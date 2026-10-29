@@ -173,7 +173,7 @@
   "app.file.saved": "已保存 {name}",
   "app.file.openFailed": "无法打开 {name}。",
   "app.layers.label": "图层",
-  "app.layers.hint": "选择图层，然后移动、缩放或旋转。双击部件可拆分。",
+  "app.layers.hint": "选择图层后编辑数值。在主预览中拖动；双击部件可拆分。",
   "app.layers.none": "尚无可用图层。",
   "app.layers.incomplete": "此绘制无法拆分为图层。",
   "app.layers.prepare": "正在准备图层…",

@@ -173,7 +173,7 @@
   "app.file.saved": "Đã lưu {name}",
   "app.file.openFailed": "Không thể mở {name}.",
   "app.layers.label": "Lớp",
-  "app.layers.hint": "Chọn một lớp, rồi di chuyển, thu phóng hoặc xoay. Nhấp đúp vào thành phần để tách.",
+  "app.layers.hint": "Chọn một lớp rồi sửa các trường. Kéo trên khung xem chính; nhấp đúp một thành phần để tách.",
   "app.layers.none": "Chưa có lớp nào có thể vẽ.",
   "app.layers.incomplete": "Không thể tách hình vẽ này thành các lớp.",
   "app.layers.prepare": "Đang chuẩn bị các lớp…",
