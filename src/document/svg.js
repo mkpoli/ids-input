@@ -16,14 +16,18 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string }} SvgOptions */
+/** @typedef {{ defs: string, body: string, background: string, width: number }} ScopedMarkup */
+
 /**
- * Write a scoped drawing as one SVG document. `ink` and `background` are `#rgb`/`#rrggbb` colours;
- * `size` is the pixel width and height of the 1000-unit canvas. `idPrefix` keeps mask IDs distinct
- * when several drawings share a page.
- * @param {ScopeTree} drawing @param {{ ink?: string, background?: string | null, size?: number, idPrefix?: string }} [options]
- * @returns {string}
+ * Build the defs and body of a scoped drawing without the wrapping `<svg>`. A preview can inject
+ * these into its own canvas SVG; `scopesSvg` wraps them for a standalone file. `ink` and
+ * `background` are `#rgb`/`#rrggbb` colours; `size` is the pixel width and height of the 1000-unit
+ * canvas. `idPrefix` keeps mask IDs distinct when several drawings share a page.
+ * @param {ScopeTree} drawing @param {SvgOptions} [options]
+ * @returns {ScopedMarkup}
  */
-export function scopesSvg(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids' } = {}) {
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids' } = {}) {
   const fill = colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
   const prefix = identifier(idPrefix)
@@ -82,5 +86,14 @@ export function scopesSvg(drawing, { ink = '#000000', background = null, size = 
 
   const body = drawing.root ? render(drawing.root) : ''
   const backgroundRect = back ? `<rect x="0" y="0" width="1000" height="1000" fill="${back}"/>` : ''
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="${width}" height="${width}">${backgroundRect}${defs.length ? `<defs>${defs.join('')}</defs>` : ''}${body}</svg>`
+  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}`, background: back ?? '', width }
+}
+
+/**
+ * Write a scoped drawing as one SVG document. @param {ScopeTree} drawing @param {SvgOptions} [options]
+ * @returns {string}
+ */
+export function scopesSvg(drawing, options = {}) {
+  const { defs, body, width } = scopesMarkup(drawing, options)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="${width}" height="${width}">${defs}${body}</svg>`
 }

@@ -25,7 +25,7 @@ export {
   transformPath,
 } from './transform.js'
 export { renderLayers, renderScopes } from './render.js'
-export { scopesSvg } from './svg.js'
+export { scopesMarkup, scopesSvg } from './svg.js'
 export { createDocumentSession } from './session.js'
 export { SESSION_FORMAT, SESSION_VERSION, SessionRecordError, readSession, sessionFromRecord, sessionRecord, writeSession } from './store.js'
 export { documentFromTree, layerAtPath, pathOfLayer, syncDocument, treeFromDocument } from './project.js'
