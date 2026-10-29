@@ -30,8 +30,10 @@ answered description disagrees.
 Two limits are worth knowing. The service needs the network, so this check is run by hand, not in
 the test suite. And it resolves no note-bearing text: `⿻乚一(.,T)` comes back without a level-1
 entry, so those samples count as unanswered rather than disagreeing; this package resolves them by
-dropping the note. On 2026-10-29 at revision `da1e9f8a…`, 18 of 18 answered descriptions agreed and
-14 were unanswered.
+dropping the note. A description the service cannot resolve comes back with the description itself
+as its id and empty match lists, which is counted unanswered too. On 2026-10-29 at revision
+`da1e9f8a…`, six descriptions per notation gave 18 of 18 answered agreements with 14 unanswered,
+and ten per notation gave 41 of 41 with 39 unanswered.
 
 ## Notation and what reads it
 

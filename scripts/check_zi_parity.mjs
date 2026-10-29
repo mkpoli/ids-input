@@ -50,7 +50,11 @@ const theirs = async text => {
   const value = (await response.json())[text]
   const level = value?.lv1
   if (!level) return null
-  return [level.id, ...(level.match_u_list ?? level.match_list ?? [])].filter(Boolean)
+  // A description the service cannot resolve comes back with the description itself as its id and
+  // empty match lists, so only a single character counts as an answer.
+  const answers = [level.id, ...(level.match_u_list ?? level.match_list ?? [])]
+    .filter(answer => typeof answer === 'string' && [...answer].length === 1)
+  return answers.length ? answers : null
 }
 
 /** Every `sample`-th description of a notation, so one run compares the same texts each time.
