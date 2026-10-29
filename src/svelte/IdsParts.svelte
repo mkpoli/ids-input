@@ -378,12 +378,17 @@
   $effect(() => { tab; filter; tangutStroke; tangutPage = 0 })
   const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
   const tangutCounts = $derived([...new Set(Object.values(tangutStrokes ?? {}))].sort((a, b) => a - b))
+  const tangutUncounted = $derived(tangutKeys.filter(key => tangutStrokes?.[key] == null).length)
   const tangutMatches = $derived.by(() => {
     const keys = tangutStroke === undefined ? tangutKeys
       : tangutStroke === null ? tangutKeys.filter(key => tangutStrokes?.[key] == null)
       : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
     const term = filter.trim()
     if (!term) return keys
+    if (/^\d+$/.test(term)) {
+      const count = Number(term)
+      return keys.filter(key => (byPart.get(key)?.strokes ?? tangutStrokes?.[key]) === count)
+    }
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
     const matches = matchScriptParts(keys, text, Boolean(code))
@@ -565,7 +570,7 @@
   }
   // A stroke outside the five classes (㇣) is another kind of stroke; any other part lacks the record.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
@@ -653,7 +658,7 @@
         placeholder={filterLabel} aria-label={filterLabel} />
     {/if}
   </div>
-  {#if tab === 'tangut' && tangutData}
+  {#if tab === 'tangut' && tangutData && tangutStrokes}
     <div class="parts-counts" role="group" aria-label={t('parts.tangut.strokes')}>
       <button type="button" class:active={tangutStroke === undefined} aria-pressed={tangutStroke === undefined}
         onclick={() => { tangutStroke = undefined }}>{t('parts.tangut.anyStrokes')}</button>
@@ -663,9 +668,11 @@
           title={label} aria-label={label}
           onclick={() => { tangutStroke = value }}>{t('parts.strokeChip', { count: value })}</button>
       {/each}
-      <button type="button" class:active={tangutStroke === null} aria-pressed={tangutStroke === null}
-        title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
-        onclick={() => { tangutStroke = null }}>?</button>
+      {#if tangutUncounted}
+        <button type="button" class:active={tangutStroke === null} aria-pressed={tangutStroke === null}
+          title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
+          onclick={() => { tangutStroke = null }}>?</button>
+      {/if}
     </div>
   {/if}
   {#if tab === 'seal' && !query && sealGroups.length}

@@ -10,8 +10,8 @@
   /** @typedef {import('../../src/document/index.js').Node} Node */
   /** @typedef {import('../../src/adapter/types.js').Drawing} Drawing */
   /** @typedef {import('../../src/adapter/types.js').SketchLeaf} SketchLeaf */
-  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void }} */
-  let { open = $bindable(false), session, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {} } = $props()
+  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void, oncanvas?: (() => void) | null }} */
+  let { open = $bindable(false), session, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {}, oncanvas = null } = $props()
 
   let drawing = $state.raw(/** @type {Drawing | null} */ (null))
   let sketch = $state.raw(/** @type {SketchLeaf[] | null} */ (null))
@@ -60,6 +60,8 @@
     const path = chosenPath
     if (!open || !path || !session) return
     const next = session.document
+    const selectedPath = session.chosen ? pathOfLayer(next.root, session.chosen) : null
+    if (selectedPath && selectedPath.join('.') === path.join('.')) return
     const node = layerAtPath(next.root, path)
     if (!node || session.chosen === node.id) return
     if (!session.choose(node.id)) return
@@ -207,6 +209,14 @@
   function reset() {
     if (!session || !selected) return
     session.clearTransform(selected.id)
+    doc = session.document
+    chosen = session.chosen
+    onchange()
+  }
+  /** @param {number} count @param {boolean} undo */
+  function travel(count, undo) {
+    if (!session) return
+    for (let i = 0; i < count; i++) { if (!(undo ? session.undo() : session.redo())) break }
     doc = session.document
     chosen = session.chosen
     onchange()
@@ -420,7 +430,27 @@
       </fieldset>
       {#if nonlinear}<p class="note">{t('app.layers.nonlinear')}</p>{/if}
       {#if applyError}<p class="note" role="alert">{applyError}</p>{/if}
-      <button type="button" class="reset" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
+      {@const history = doc && session ? { done: [...session.steps.done], undone: [...session.steps.undone] } : { done: [], undone: [] }}
+      <div class="actions">
+        <button type="button" class="reset" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
+        <button type="button" class="reset canvas" onclick={() => { open = false; oncanvas?.() }}>{t('app.layers.oncanvas')}</button>
+      </div>
+      {#if history.done.length || history.undone.length}
+        <details class="history">
+          <summary>{t('app.layers.history')} <span>{history.done.length + history.undone.length}</span></summary>
+          <div class="history-list">
+            {#each history.done as label, i (i)}
+              <button type="button" onclick={() => travel(history.done.length - i, true)}>{label}</button>
+            {/each}
+            {#if history.undone.length}
+              <p>{t('app.history.undone')}</p>
+              {#each history.undone.slice().reverse() as label, i (i)}
+                <button type="button" onclick={() => travel(i + 1, false)}>{label}</button>
+              {/each}
+            {/if}
+          </div>
+        </details>
+      {/if}
       <p class="hint">{t('app.layers.hint')}</p>
     {/if}
   {/if}
@@ -466,7 +496,15 @@
   .splits span{font-size:12px;color:var(--muted)}
   .splits button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);color:var(--ink);font-family:var(--cjk);font-size:13px;cursor:pointer}
   .splits button:hover{background:var(--hover)}
-  .reset{margin-top:12px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .actions{display:flex;gap:8px;margin-top:12px}
+  .history{margin-top:10px;font-size:12px;color:var(--muted)}
+  .history summary{cursor:pointer}
+  .history summary span{margin-left:4px;color:var(--muted)}
+  .history-list{display:flex;flex-direction:column;gap:2px;margin-top:6px;max-height:140px;overflow:auto}
+  .history-list button{padding:4px 8px;border:0;border-radius:6px;background:none;color:var(--ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+  .history-list button:hover{background:var(--hover)}
+  .history-list p{margin:6px 0 0;font-size:11px;color:var(--muted)}
+  .reset{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
   .note,.hint{margin:8px 0 0;color:var(--muted);font-size:12px}
   .hint{grid-column:1/-1}
   .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--muted) 30%,transparent);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}

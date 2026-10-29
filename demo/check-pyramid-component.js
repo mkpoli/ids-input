@@ -27,7 +27,8 @@ try {
       await page.close()
       continue
     }
-    const part = group.getByRole('textbox', { name: 'Component', exact: true })
+    // The repeat layout beside it labels its own input the same way; the pyramid's is the one ending here.
+    const part = group.locator('input[id$="-pyramid-part"]')
     const rows = group.locator('input[type=number]')
     const insert = group.getByRole('button', { name: 'Insert', exact: true })
     const preset = group.locator('[data-pyramid="3"]')

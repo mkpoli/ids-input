@@ -7,7 +7,7 @@
   // or a heading between groups. A rich item leads with a character or a root operator and ends
   // with a note, as the examples menu does with a code point; its sequence keeps the IDS written
   // with the IDC characters. Arrow keys move, Escape closes and gives the focus back.
-  import { tick } from 'svelte'
+  import { tick, untrack } from 'svelte'
   import Icon from './Icon.svelte'
   import KeyHint from './KeyHint.svelte'
   /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean,
@@ -28,6 +28,7 @@
   let mode = $state('all')
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
+  let active = $state('')
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {Item} item */
   function matches(item) {
@@ -62,6 +63,51 @@
     else next.add(heading)
     collapsed = next
   }
+  /** @param {string} heading */
+  function jump(heading) {
+    const list = groups.filter(group => group.heading)
+    const at = list.findIndex(group => group.heading === heading)
+    const buttons = box?.querySelectorAll('button.heading') ?? []
+    const target = /** @type {HTMLElement | undefined} */ (buttons[at])
+    target?.scrollIntoView({ block: 'start' })
+    active = heading
+  }
+  // The chip of the section at the top of the scrollport is marked, and kept in view in its row.
+  $effect(() => {
+    const menu = box
+    if (!open || !menu || !view) return
+    const update = () => {
+      const headings = [...menu.querySelectorAll('button.heading')]
+      const head = menu.querySelector('.menu-head')
+      const top = menu.getBoundingClientRect().top + (head?.getBoundingClientRect().height ?? 0) + 4
+      let current = ''
+      if (menu.scrollHeight > menu.clientHeight + 4 && menu.scrollTop + menu.clientHeight >= menu.scrollHeight - 4) {
+        current = /** @type {HTMLElement | undefined} */ (headings.at(-1))?.dataset.heading ?? ''
+      }
+      if (!current) {
+        for (const button of headings) {
+          if (button.getBoundingClientRect().top <= top) current = /** @type {HTMLElement} */ (button).dataset.heading ?? current
+        }
+      }
+      if (!current) current = groups.find(group => group.heading)?.heading ?? ''
+      if (current === untrack(() => active)) return
+      active = current
+      const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
+      const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.chip')[at])
+      const row = chip?.parentElement
+      if (chip && row) {
+        const chipRect = chip.getBoundingClientRect()
+        const rowRect = row.getBoundingClientRect()
+        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
+        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
+      }
+    }
+    update()
+    menu.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(menu)
+    return () => { menu.removeEventListener('scroll', update); observer.disconnect() }
+  })
   /** @param {boolean} [focus] @param {boolean} [last] */
   async function show(focus = false, last = false) {
     query = ''
@@ -110,7 +156,7 @@
   onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
 
 {#snippet groupHeading(heading)}
-  <button type="button" class="heading" aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
     <Icon name="chevron" size={12} /><span>{heading}</span>
   </button>
 {/snippet}
@@ -178,6 +224,11 @@
               {/each}
             </div>
           </div>
+          <div class="jump" role="group" aria-label={label}>
+            {#each groups as group (group.heading)}
+              {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+            {/each}
+          </div>
         </div>
       {/if}
       {#if view && !groups.length}
@@ -232,12 +283,18 @@
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
   .sep{height:1px;margin:5px 4px;background:var(--line)}
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
+  .heading{scroll-margin-top:92px}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .heading:hover{color:var(--ink)}
   .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
+  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
+  .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:var(--ink)}
+  .chip[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+  .chip:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--surface)}
   .views{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface)}
   .filter{display:flex;align-items:center;gap:6px}

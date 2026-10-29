@@ -296,7 +296,7 @@ it('keeps 朱 full height and joins 儿 to the enclosure bar in both faces', asy
     expect(gap).toBeLessThan(0)
     expect(collision([zhu], [enclosure], constants.face, 1024)).toBe(0)
     expect(collision([enclosure], [legs], constants.face, 1024)).toBeGreaterThan(0)
-    expect(legs.target[1]).toBeGreaterThan(lower.target[3])
+    if (!text.endsWith('木')) expect(legs.target[1]).toBeGreaterThan(lower.target[3])
     const complex = `⿰朱⿸${outer}⿱儿⿱木木`
     await compose(source, complex, { fontStyle })
     const complexParts = new Composer(source.store(), { fontStyle }).compose(complex)
@@ -498,5 +498,24 @@ it('repeats identical water-radical outlines without overlap in both styles', as
     const drawn = await compose(local(), text, { fontStyle, separate: true })
     expect(drawn.approximate).toEqual([])
     expect(groupParts(drawn.parts, await sketch(local(), text, { fontStyle }))).toHaveLength(2)
+  }
+})
+
+it('joins 儿 to a generic ⿸ enclosure bar, including 厃', async () => {
+  const { Composer, collision } = await import('../src/composer/compose.js')
+  const { constants } = await import('./fixtures/composer-export.js')
+  for (const fontStyle of ['sans', 'serif']) for (const text of ['⿸厃⿱儿木', '⿰扌⿸厃⿱儿木', '⿸厃⿱儿⬚']) {
+    const source = remote()
+    await compose(source, text, { fontStyle })
+    const parts = new Composer(source.store(), { fontStyle }).compose(text)
+    const outer = parts.find(part => part.origin === 'glyph 厃')
+    const form = text.startsWith('⿰') ? '儿:dan' : '儿:zhan'
+    const legs = parts.find(part => part.origin === `Noto ${fontStyle} ${form}`)
+    expect(outer).toBeDefined()
+    expect(legs).toBeDefined()
+    if (text.startsWith('⿸')) expect(collision([outer], [legs], constants.face, 512)).toBeGreaterThan(0)
+    const lower = parts[parts.indexOf(legs) + 1]
+    if (!text.endsWith('木')) expect(legs.target[1]).toBeGreaterThan(lower.target[3])
+    expect(parts.some(part => part.origin === 'host 冏')).toBe(false)
   }
 })

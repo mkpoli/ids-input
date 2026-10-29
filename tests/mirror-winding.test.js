@@ -41,6 +41,11 @@ describe('a mirrored part', () => {
     expect(winding(pathRings(svgPath([left, right])), 450, 400)).toBe(2)
     expect(winding(pathRings(svgPath([left, { ...right, flips: [mirror([650, 400])] }])), 450, 400)).toBe(2)
   })
+  it('is wound the way the parts it is drawn with are when its source runs the other way', () => {
+    const left = square(0, 0, 500, 800)
+    const right = part('MLLL', [400, 0, 400, 800, 900, 800, 900, 0])
+    expect(winding(pathRings(svgPath([left, right])), 450, 400)).toBe(2)
+  })
   it('is left wound as it was by a half turn', () => {
     const right = square(400, 0, 900, 800)
     expect(area(pathRings(svgPath([{ ...right, flips: [turn([650, 400])] }]))[0])).toBeGreaterThan(0)

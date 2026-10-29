@@ -24,9 +24,18 @@ try {
     await field.dispatchEvent('input')
     await page.waitForFunction(text => (document.querySelector('.ids-preview-meta')?.textContent ?? '').includes(text), expect, { timeout: 30000 })
     await page.waitForTimeout(300)
+    // The drawing is one `ink` path, or the paths of the document group the layer view draws it in.
+    let last = '', ink = []
+    for (let i = 0; i < 40; i++) {
+      await page.waitForTimeout(300)
+      ink = await page.locator('.ids-preview-large svg path').evaluateAll(nodes => nodes.map(node => node.getAttribute('d') ?? '').filter(Boolean))
+      const seen = JSON.stringify(ink)
+      if (seen !== '[]' && seen === last) break
+      last = seen
+    }
     return {
       meta: (await page.locator('.ids-preview-meta').textContent())?.trim().replace(/\s+/g, ' ') ?? '',
-      ink: await page.locator('.ids-preview .ink').evaluateAll(nodes => nodes.map(node => node.getAttribute('d')).join('|')),
+      ink: ink.map(d => d.replace(/-?\d*\.\d+/g, number => String(Number(number)))).join('|'),
     }
   }
   // A description the composer does not know draws the character it names, not its own layout.

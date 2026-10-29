@@ -35,6 +35,8 @@
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  *
+ * @typedef {import('../core/sketch-data.js').SketchTemplate} SketchTemplate A palette part as a drawing search sees it.
+ *
  * @typedef {object} SketchLeaf Where the layout puts one leaf of a sequence, before it is drawn.
  * @property {number} index The leaf's place in reading order.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
@@ -42,7 +44,7 @@
  *
  * @typedef {object} DrawingPart One part of a drawing: a piece the composer placed.
  * @property {number} [leaf] Original IDS leaf index when the composer can preserve ownership through a rewrite.
- * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村` or `mark ˊ` for a loose mark.
+ * @property {string} origin What the piece was drawn from, such as `glyph 木`, `learned 村`, `cells 木` or `mark ˊ` for a loose mark.
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
@@ -56,6 +58,7 @@
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
+ * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
  * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *
@@ -78,6 +81,7 @@
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
+ * @property {(options?: Options) => Promise<SketchTemplate[]>} [sketchTemplates] The palette's glyph shapes for drawing search, prepared or built from the page's fonts.
  * @property {(sequence: string, options?: Options) => Promise<Drawing | null>} [icon] A compound palette icon. Must support concurrent requests independently of the editor preview; null leaves a font-based layout.
  * @property {(sequence: string, options?: Options) => Promise<string | null>} [drawing] The URL of a final image of a whole description, or null; it is shown in place of the preview.
  * @property {((sequence: string, options?: PreviewOptions) => Promise<Drawing>) & { warm?: (sequence?: string) => void }} [preview] A description drawn, empty slots (⬚) and all; `onSketch` hears where each part goes before the drawing is done. It rejects when it cannot draw, with an Error named `TooLargeError` for a description larger than it draws. `warm` starts the export's manifest and layout before the first drawing; it may be told the sequence being previewed.

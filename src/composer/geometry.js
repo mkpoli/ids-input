@@ -301,14 +301,21 @@ export function drawnContours(p) {
   })
 }
 
-/** The rings of a group of placed parts, for masks. */
-export const groupRings = (group, steps = 6) => group.flatMap(p => rings(p.part.contours, drawnContours(p), steps))
+/** The rings of a group of placed parts, for masks, wound as `svgPath` draws them. */
+export const groupRings = (group, steps = 6) => group.flatMap(p => {
+  const ring_ = rings(p.part.contours, drawnContours(p), steps)
+  return turnsOver(p) ? ring_.map(ring => {
+    const reversed = []
+    for (let i = ring.length - 2; i >= 0; i -= 2) reversed.push(ring[i], ring[i + 1])
+    return reversed
+  }) : ring_
+})
 
 /** A size × size mask of the em, the parts filled and joined (`compose.raster`). */
 export function raster(group, size = 96) {
   const mask = new Uint8Array(size * size)
   for (const p of group) {
-    const m = fill(rings(p.part.contours, drawnContours(p)), size, EM_BOX)
+    const m = fill(groupRings([p]), size, EM_BOX)
     for (let i = 0; i < m.length; i++) mask[i] |= m[i]
   }
   return mask
@@ -317,9 +324,28 @@ export function raster(group, size = 96) {
 const num = v => { const s = v.toFixed(1); return s === '-0.0' ? '0.0' : s }
 
 /** Whether a part's flips turn its contours the other way round: one mirror reverses their winding,
- *  a mirror in both axes does not. Left as they are, a reversed part cancels the ink it overlaps
- *  under the nonzero rule. */
+ *  a mirror in both axes does not. */
 const turnsOver = p => (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
+
+/** A contour's signed area, y up; its sign is its winding. */
+const signedArea = flat => {
+  let sum = 0
+  for (let i = 0, n = flat.length; i < n; i += 2) {
+    const j = (i + 2) % n
+    sum += flat[i] * flat[j + 1] - flat[j] * flat[i + 1]
+  }
+  return sum / 2
+}
+
+/** The winding of a part's outermost contour: the contour enclosing the most ink decides. */
+const windingOf = contours => {
+  let best = 0, sign = 0
+  for (const flat of contours) {
+    const a = Math.abs(signedArea(flat))
+    if (a > best) { best = a; sign = Math.sign(signedArea(flat)) }
+  }
+  return sign
+}
 
 /** A contour's segments drawn the other way round: the same outline, wound as the glyph was drawn. */
 function backwards(segs) {
@@ -336,8 +362,15 @@ function backwards(segs) {
  *  fill it with the nonzero rule. A mirrored part's contours are wound the way the others are. */
 export function svgPath(group) {
   const out = []
+  // Parts cut from different fonts can be wound either way; under the nonzero rule an opposite
+  // part cancels the ink it overlaps. One reference winding, from the first part, keeps them all
+  // adding up, while each part's counters stay opposite its own outline.
+  let reference = 0
   for (const p of group) {
-    const drawn = drawnContours(p), over = turnsOver(p)
+    const drawn = drawnContours(p)
+    const sign = windingOf(drawn)
+    if (reference === 0) reference = windingOf(p.part.contours.map(c => c.light))
+    const over = sign !== 0 && sign !== reference
     p.part.contours.forEach((contour, k) => {
       const segs = segments(contour.ops, drawn[k])
       for (const [kind, pts] of over ? backwards(segs) : segs) out.push(kind + pts.map(q => `${num(q[0])} ${num(ASCENT - q[1])}`).join(' '))

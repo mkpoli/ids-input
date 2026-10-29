@@ -7,6 +7,7 @@
   import { tick, untrack } from 'svelte'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
+  import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
@@ -22,6 +23,7 @@
   import shuishuData from '../data/shuishu.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
+  import sketches from '../data/sketch-parts.json.gz?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
@@ -67,7 +69,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
@@ -78,6 +80,7 @@
   let adjusting = $state(false)
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
+  let slots = $state(/** @type {number[][]} */ ([]))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
@@ -137,6 +140,7 @@
     const serif = previewAt(COMPOSER_BASES.serif, split, 'serif')
     const sans = sansPreviewAt(split)
     const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
+    const draw = defaultFace ? sans : composed
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -152,16 +156,16 @@
         if ([...char].length !== 1 || char === sequence) continue
         try { return await composed(char, options) } catch { /* compose the sequence */ }
       }
-      // A description that names a character draws that character: a sequence the composer does not
-      // know would otherwise be laid out by a guess of its own. A description with an operator
-      // modifier is left to the exact answer above, since the modifier-free reading is only a guess.
-      if (!split && !sequence.includes('[')) {
+      // A description built on an operator the composer only approximates draws the character it
+      // names: the layout has no crossing, subtraction or mirror to place. Descriptions of ordinary
+      // parts keep the layout, and a modifier is left to the exact answer above, since the
+      // modifier-free reading is only a guess.
+      if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         const [named] = await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
-          try { return await composed(named, { signal: options?.signal }) } catch { /* compose it */ }
+          try { return await draw(named, options) } catch { /* compose it */ }
         }
       }
-      const draw = defaultFace ? sans : composed
       try {
         const drawn = await draw(sequence, options)
         // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
@@ -744,7 +748,7 @@
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
@@ -961,8 +965,8 @@
         <div class="preview">
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes
-              editable={adjusting} onedit={layerChanged} bind:drawing>
+              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
+              editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
               {#snippet detailContent()}
                 {#each encoded as ch (ch)}
                   <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
@@ -983,7 +987,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -1016,7 +1020,8 @@
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
-  onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged} />
+  onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
+  oncanvas={() => { layerOpen = false; adjusting = true }} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
     <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>

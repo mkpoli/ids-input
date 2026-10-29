@@ -2,12 +2,15 @@
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
+  import { untrack } from 'svelte'
   let { items, label, onpick, view = null } = $props()
+  /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
   /** @type {'all' | 'encoded' | 'unencoded'} */
   let mode = $state('all')
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
+  let active = $state('')
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -41,10 +44,61 @@
     else next.add(heading)
     collapsed = next
   }
+  /** @param {string} heading */
+  function jump(heading) {
+    const list = groups.filter(group => group.heading)
+    const at = list.findIndex(group => group.heading === heading)
+    const buttons = root?.querySelectorAll('button.heading') ?? []
+    /** @type {HTMLElement | undefined} */ (buttons[at])?.scrollIntoView({ block: 'start' })
+    active = heading
+  }
+  /** @param {HTMLElement | null} el */
+  function scrollParent(el) {
+    for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
+      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) return node
+    }
+    return null
+  }
+  $effect(() => {
+    const list = root
+    if (!list || !view) return
+    const scroller = scrollParent(list) ?? window
+    const update = () => {
+      const top = scroller === window ? 8 : /** @type {HTMLElement} */ (scroller).getBoundingClientRect().top + 8
+      const headings = [...list.querySelectorAll('button.heading')]
+      const box = scroller === window ? document.documentElement : /** @type {HTMLElement} */ (scroller)
+      let current = ''
+      if (box.scrollHeight > box.clientHeight + 4 && box.scrollTop + box.clientHeight >= box.scrollHeight - 4) {
+        current = /** @type {HTMLElement | undefined} */ (headings.at(-1))?.dataset.heading ?? ''
+      }
+      if (!current) {
+        for (const button of headings) {
+          if (button.getBoundingClientRect().top <= top) current = /** @type {HTMLElement} */ (button).dataset.heading ?? current
+        }
+      }
+      if (!current) current = groups.find(group => group.heading)?.heading ?? ''
+      if (current === untrack(() => active)) return
+      active = current
+      const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
+      const chip = /** @type {HTMLElement | undefined} */ (list.querySelectorAll('.chip')[at])
+      const row = chip?.parentElement
+      if (chip && row) {
+        const chipRect = chip.getBoundingClientRect()
+        const rowRect = row.getBoundingClientRect()
+        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
+        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
+      }
+    }
+    const frame = requestAnimationFrame(update)
+    scroller.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(list)
+    return () => { cancelAnimationFrame(frame); scroller.removeEventListener('scroll', update); observer.disconnect() }
+  })
 </script>
 
 {#snippet groupHeading(heading)}
-  <button type="button" class="heading" aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
     <Icon name="chevron" size={12} /><span>{heading}</span>
   </button>
 {/snippet}
@@ -82,7 +136,7 @@
   </button>
 {/snippet}
 
-<div class="list" role="group" aria-label={label}>
+<div class="list" role="group" aria-label={label} bind:this={root}>
   <div class="title-row">
     <p class="title">{label}</p>
     {#if view}
@@ -100,6 +154,11 @@
           <button type="button" class="mode" aria-pressed={mode === key} onclick={() => { mode = key }}>{text}</button>
         {/each}
       </div>
+    </div>
+    <div class="jump" role="group" aria-label={label}>
+      {#each groups as group (group.heading)}
+        {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+      {/each}
     </div>
   {/if}
   {#if view && !groups.length}
@@ -145,6 +204,11 @@
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .empty{margin:14px 10px;color:var(--muted);font-size:13px}
+  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px}
+  .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ink);border-color:var(--ink)}
+  .chip[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
+  .heading{scroll-margin-top:8px}
   .filter{display:flex;flex-direction:column;align-items:stretch;gap:5px;margin:0 0 4px}
   .filter-input{flex:1;min-width:0;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px}
   .modes{display:flex;align-self:flex-start;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}

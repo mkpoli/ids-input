@@ -70,6 +70,18 @@ def compress_chang(outlines, style):
 
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
 result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
+genzui_path = Path('fonts/GenZuiSans-Regular.woff2')
+genzui_sha = hashlib.sha256(genzui_path.read_bytes()).hexdigest()
+if genzui_sha != 'efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a':
+    raise ValueError('Unexpected GenZui source hash')
+genzui = TTFont(genzui_path)
+genzui_gs, genzui_cmap = genzui.getGlyphSet(), genzui.getBestCmap()
+genzui_cs = lambda ch: contours(genzui_gs, genzui_cmap[ord(ch)])
+zhan_legs = group([genzui_cs('詹')[4], genzui_cs('詹')[5]])
+result['sources']['genzui'] = {
+    'name': genzui['name'].getDebugName(4), 'version': genzui['name'].getDebugName(5),
+    'sha256': genzui_sha, 'license': 'SIL OFL 1.1',
+}
 for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     path = Path(filename)
     sha = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -84,6 +96,9 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     result['positions'][style] = {
         '朱:L': group([cs('鴸')[4]]),
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
+        # The legs under 厃 in 詹, cut from the 詹 glyph itself.
+        '儿:zhan': zhan_legs,
+        '儿:dan': group([genzui_cs('擔')[3], genzui_cs('擔')[12]]),
         # Contract the already-shortened native 昌 while retaining its bars.
         '昌:stack': compress_chang(group(cs('菖')[:6] if style=='sans' else cs('菖')[1:]), style),
     }

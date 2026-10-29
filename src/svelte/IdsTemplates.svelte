@@ -2,7 +2,7 @@
   import { LONGEST, isDescription, nextEmpty, parse, place, sameTree, write } from '../core/ids.js'
   import { normalizeMarks } from '../core/marks.js'
   import { pyramidSequence } from '../core/pyramid.js'
-  import { repeatSequence } from '../core/repeat.js'
+  import { enclosedRepeatSequence, repeatSequence } from '../core/repeat.js'
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
   import { templateDiagram } from './template-diagram.js'
 
@@ -69,18 +69,21 @@
   }
   const repeatPartsSupported = $derived(repeatSupported(repeatPart) && repeatSupported(repeatBottom))
   const repeatTarget = $derived(editor.chosen ?? (editor.tree === null ? [] : nextEmpty(editor.tree)))
+  /** @param {import('../core/ids.js').Part} tree */
+  const fits = tree => {
+    if (repeatTarget === null) return false
+    const next = place(editor.tree, repeatTarget, tree).tree
+    if (next === null) return false
+    const text = write(next), draft = parse(text, { open: true })
+    return !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
+  }
   const availableRepeats = $derived.by(() => {
     const available = new Set()
     if (repeatTarget === null || !repeatPartsSupported) return available
     try {
       for (const rows of REPEATS) {
         const found = parse(repeatSequence(repeatPart, rows, { bottom: repeatBottom }), { open: true })
-        if (!found.tree) continue
-        const next = place(editor.tree, repeatTarget, found.tree).tree
-        if (next === null) continue
-        const text = write(next), draft = parse(text, { open: true })
-        const fits = !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
-        if (fits) available.add(rows.join('+'))
+        if (found.tree && fits(found.tree)) available.add(rows.join('+'))
       }
     } catch { /* the selected component cannot fill a repeat cell */ }
     return available
@@ -103,6 +106,51 @@
     const found = parse(repeatSequence(repeatPart, rows, { bottom: repeatBottom }), { open: true })
     if (!found.tree) return
     editor.put(found.tree, repeatTarget, repeatLabel(rows))
+  }
+
+  const FIVE_ROWS = [2, 1, 2]
+  const fiveTemplates = /** @type {{ key: '212' | 'enclosed', shapes: ReturnType<typeof templateDiagram> }[]} */ ([
+    { key: '212', shapes: templateDiagram(repeatSequence('口', FIVE_ROWS)) },
+    { key: 'enclosed', shapes: templateDiagram(enclosedRepeatSequence('囗', '口')) },
+  ])
+  let fiveTop = $state(/** @type {string | null} */ (null))
+  let fiveHostTyped = $state('')
+  const fivePart = $derived(fiveTop ?? (typeof editor.picked === 'string' ? editor.picked : '口'))
+  const fiveHost = $derived(fiveHostTyped.trim() || '囗')
+  const fivePartSupported = $derived.by(() => {
+    try { repeatSequence(fivePart, FIVE_ROWS); return true } catch { return false }
+  })
+  const fiveHostSupported = $derived.by(() => {
+    try { enclosedRepeatSequence(fiveHost, fivePart); return true } catch { return false }
+  })
+  const availableFive = $derived.by(() => {
+    const available = new Set()
+    if (repeatTarget === null || !fivePartSupported) return available
+    try {
+      const inner = parse(repeatSequence(fivePart, FIVE_ROWS)).tree
+      if (inner !== undefined && fits(inner)) available.add('212')
+      const enclosed = parse(enclosedRepeatSequence(fiveHost, fivePart)).tree
+      if (fiveHostSupported && enclosed !== undefined && fits(enclosed)) available.add('enclosed')
+    } catch { /* the selected component cannot fill a five-copy layout */ }
+    return available
+  })
+  /** @param {'212' | 'enclosed'} key */
+  const fiveTitle = key => !fivePartSupported
+    ? t('ids.templates.fiveUnsupported')
+    : repeatTarget === null ? t('ids.templates.fiveTarget')
+    : key === 'enclosed' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported')
+    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
+  /** @param {'212' | 'enclosed'} key */
+  const fiveLabel = key => key === '212'
+    ? t('ids.templates.fiveInsert', { part: fivePart })
+    : t('ids.templates.fiveInsertEnclosed', { part: fivePart, host: fiveHost })
+  /** @param {'212' | 'enclosed'} key */
+  function addFive(key) {
+    if (editor.disabled || !availableFive.has(key)) return
+    const sequence = key === '212' ? repeatSequence(fivePart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, fivePart)
+    const found = parse(sequence, { open: true })
+    if (!found.tree) return
+    editor.put(found.tree, repeatTarget, fiveLabel(key))
   }
 </script>
 
@@ -197,6 +245,40 @@
         aria-describedby={`${uid}-repeat-hint`} spellcheck="false" autocomplete="off" />
     </div>
   </div>
+  <div class="ids-pyramid ids-five" role="group" aria-labelledby={`${uid}-five`}>
+    <div class="ids-pyramid-head">
+      <span class="ids-template-label" id={`${uid}-five`}>{t('ids.templates.five')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.fiveUnsupported') : repeatTarget === null ? t('ids.templates.fiveTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.fiveTooLong')}</span>
+    </div>
+    <div class="ids-pyramid-grid ids-five-grid">
+      {#each fiveTemplates as template (template.key)}
+        <button type="button" disabled={editor.disabled || !availableFive.has(template.key)} data-five={template.key}
+          aria-label={fiveTitle(template.key)} title={fiveTitle(template.key)} onclick={() => addFive(template.key)}>
+          <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+            {#each template.shapes as shape, i (i)}
+              {#if shape.kind === 'slot'}
+                <rect class:accent={shape.accent} x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
+              {:else}<path class:accent={shape.accent} class:decorative={shape.decorative} d={shape.d} />{/if}
+            {/each}
+          </svg>
+          <span class="ids-pyramid-size">{template.key === '212' ? '2 · 1 · 2' : '1 + 2 × 2'}</span>
+        </button>
+      {/each}
+    </div>
+    <div class="ids-pyramid-custom">
+      <label class="ids-pyramid-custom-label" for={`${uid}-five-part`}>{t('ids.templates.fivePart')}</label>
+      <input id={`${uid}-five-part`} class="ids-pyramid-part" type="text" value={fivePart}
+        oninput={event => fiveTop = event.currentTarget.value} disabled={editor.disabled}
+        aria-invalid={!fivePartSupported} aria-describedby={`${uid}-five-hint`}
+        spellcheck="false" autocomplete="off" />
+      <label class="ids-pyramid-custom-label" for={`${uid}-five-host`}>{t('ids.templates.fiveHost')}</label>
+      <input id={`${uid}-five-host`} class="ids-pyramid-part" type="text" value={fiveHostTyped} placeholder="囗"
+        oninput={event => fiveHostTyped = event.currentTarget.value} disabled={editor.disabled}
+        title={t('ids.templates.fiveHostHint')}
+        aria-invalid={fiveHostTyped.trim() !== '' && fivePartSupported && !fiveHostSupported}
+        aria-describedby={`${uid}-five-hint`} spellcheck="false" autocomplete="off" />
+    </div>
+  </div>
 </div>
 
 <style>
@@ -209,6 +291,7 @@
   .ids-pyramid-hint{font-size:11px;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .ids-repeat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ids-five-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ids-pyramid-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}
   .ids-pyramid-size{font-size:10px;line-height:1;color:var(--ids-muted,light-dark(#696973,#9c9ca8));font-variant-numeric:tabular-nums}
   .ids-pyramid-custom{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}

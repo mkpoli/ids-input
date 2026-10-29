@@ -147,6 +147,7 @@
   "app.examples.korean": "Quốc tự Triều Tiên",
   "app.examples.gugyeol": "Khẩu quyết Triều Tiên",
   "app.examples.kokuji": "Quốc tự Nhật Bản",
+  "app.examples.nom": "Chữ Nôm",
   "app.examples.filter": "Lọc theo chuỗi, cách đọc hoặc điểm mã",
   "app.examples.filterAll": "Tất cả",
   "app.examples.encoded": "Có điểm mã",
@@ -256,5 +257,7 @@
   "compare.setTag.review": "kiểm duyệt",
   "compare.showMore": "Hiện thêm",
   "app.engines": "So sánh động cơ",
-  "compare.engines": "So sánh công cụ"
+  "compare.engines": "So sánh công cụ",
+  "app.layers.oncanvas": "Chỉnh trên khung vẽ",
+  "app.layers.history": "Lịch sử"
 }
