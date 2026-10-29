@@ -1,7 +1,7 @@
 // Starter sequences. A `refs` list holds citation numbers into EXAMPLE_SOURCES in
 // ./example-sources.js. An example without its own `refs` cites its group's, and a group's `refs`
-// names the record its entries fall back on. Two sequences carry none: no source is recorded for
-// them.
+// names the record its entries fall back on. One sequence carries none: no source is recorded for
+// ⿰言⿱⿰幺幺⿰幺幺.
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one.
@@ -32,7 +32,7 @@ export const EXAMPLE_GROUPS = [
   ] },
   { key: 'complex', refs: [1], examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
-    { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', refs: [], char: '' },
+    { sequence: '⿳宀⿰丨⿴⿻冂一一⿹𠃌灬', refs: [4], char: '' },
     { sequence: '⿰𦚏𳑳', refs: [4], char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', refs: [4], char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', refs: [26], char: '' },
@@ -100,7 +100,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰扌3', refs: [18], char: '' },
     { sequence: '⿰木⿳ㄙㄨㄥ', refs: [26], char: '' },
     { sequence: '⿰木⿱ㄅㄞ', refs: [26], char: '' },
-    { sequence: '⿰木き', refs: [26,18], char: '' },
+    { sequence: '⿰木き', refs: [26], char: '' },
     { sequence: '⿴囗⿱エン', refs: [11], char: '' },
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
