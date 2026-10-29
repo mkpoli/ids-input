@@ -503,9 +503,9 @@ export class Composer {
     // left leg joins the bar.
     const box = componentPositionBox('儿:zhan', this.fontStyle)
     if (!box) return null
-    const openW = opening[2] - opening[0], cx = (opening[0] + opening[2]) / 2
+    const openW = opening[2] - opening[0], openH = opening[3] - opening[1], cx = (opening[0] + opening[2]) / 2
     const width = openW * 0.88
-    const height = width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1)
+    const height = Math.min(width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1), openH * 0.35)
     const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 60
     const bottom = top - height
     const legs = componentPosition('儿:zhan', [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
