@@ -230,9 +230,14 @@ describe('drawing a pyramid', () => {
   })
 
   it('loads the repeated part once instead of every node', async () => {
+    // The cell layout draws every leaf from the same glyph record, fetched once.
+    const alone = []
+    await compose(sourceOf(alone), '口')
+    const record = alone.find(name => name.startsWith('g/'))
     const fetched = [], text = pyramidSequence('口', 12)
     await compose(sourceOf(fetched), text)
-    expect(fetched.filter(name => name.startsWith('g/'))).toHaveLength(1)
+    expect(record).toBeDefined()
+    expect(fetched.filter(name => name === record)).toHaveLength(1)
     expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
   })
 
@@ -240,7 +245,7 @@ describe('drawing a pyramid', () => {
     const source = sourceOf(), text = `⿱木${pyramidSequence('口', 4)}`
     const drawn = await compose(source, text, { separate: true })
     expect(drawn.parts).toHaveLength(11)
-    expect(drawn.parts.at(-1)?.origin).toBe('glyph 口')
+    expect(drawn.parts.at(-1)?.origin).toBe('cells 口')
     const groups = groupParts(drawn.parts, await sketch(source, text))
     expect(groups).toHaveLength(11)
   })
