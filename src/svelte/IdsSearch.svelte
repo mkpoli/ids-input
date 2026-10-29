@@ -97,10 +97,10 @@
 
 <style>
   .ids-search-results{
-    --_ink:var(--ids-ink,light-dark(#1d1d21,#ececf1));--_muted:var(--ids-muted,light-dark(#696973,#9c9ca8));
-    --_line:var(--ids-line,light-dark(#d8d8de,#3a3a43));--_surface:var(--ids-surface,light-dark(#fff,#202026));
-    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
-    --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
+    --_ink:var(--ids-ink,light-dark(#1c1c22,#ececf2));--_muted:var(--ids-muted,light-dark(#686874,#9d9daa));
+    --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
+    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
+    --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}

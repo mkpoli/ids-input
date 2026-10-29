@@ -36,6 +36,6 @@ export default defineConfig({
   plugins: [svelte(), ortAssets()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html` } } },
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
   server: { fs: { allow: ['..'] } },
 })

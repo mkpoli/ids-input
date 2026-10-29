@@ -24,6 +24,6 @@
 </main>
 
 <style>
-  main{max-width:720px;margin:24px auto;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+  main{max-width:720px;margin:24px auto;padding:16px;border-radius:var(--ui-radius-2xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-1)}
   .used{display:block;margin-top:8px;font-family:var(--cjk);font-size:20px}
 </style>

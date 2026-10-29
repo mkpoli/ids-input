@@ -68,23 +68,20 @@
   onclick={event => { if (event.target === dialog) open = false }}>
   <header>
     <h2 id="{uid}-title">{title}</h2>
-    <button type="button" class="close" aria-label={closeLabel} title={closeLabel} onclick={() => open = false}><Icon name="close" /></button>
+    <button type="button" class="ui-button close" data-size="icon" data-variant="quiet" aria-label={closeLabel} title={closeLabel} onclick={() => open = false}><Icon name="close" /></button>
   </header>
   <div class="body">{@render children()}</div>
 </dialog>
 
 <style>
-  dialog{width:min(480px,calc(100vw - 32px));max-height:min(86vh,760px);padding:0;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);box-shadow:var(--shadow-pop)}
+  dialog{width:min(480px,calc(100vw - 32px));max-height:min(86vh,760px);padding:0;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
   dialog.wide{width:min(680px,calc(100vw - 32px))}
-  dialog.popover{position:fixed;inset:var(--top) var(--right) auto auto;margin:0;width:min(380px,calc(100vw - 16px));max-height:calc(100dvh - var(--top) - 12px);z-index:60;border-radius:12px}
-  dialog::backdrop{background:rgb(10 10 20 / .35);backdrop-filter:blur(2px)}
-  header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px 10px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
-  h2{margin:0;font-size:16px;font-weight:650}
-  .close{display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
-  .close:hover{background:var(--hover);color:var(--ink)}
-  .close:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  dialog.popover{position:fixed;inset:var(--top) var(--right) auto auto;margin:0;width:min(380px,calc(100vw - 16px));max-height:calc(100dvh - var(--top) - 12px);z-index:var(--ui-z-modal);border-radius:var(--ui-radius-xl)}
+  dialog::backdrop{background:var(--ui-color-overlay);backdrop-filter:blur(2px)}
+  header{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-lg);padding:14px 16px 10px 20px;background:var(--ui-color-surface);border-bottom:1px solid var(--ui-color-border)}
+  h2{margin:0;font-size:var(--ui-text-lg);font-weight:var(--ui-weight-bold)}
   .body{padding:16px 20px 20px;overflow:auto}
   @media (max-width:640px){
-    dialog.drawer{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:85dvh;border-radius:18px 18px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+    dialog.drawer{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:85dvh;border-radius:var(--ui-radius-3xl) var(--ui-radius-3xl) 0 0;padding-bottom:env(safe-area-inset-bottom)}
   }
 </style>

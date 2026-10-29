@@ -27,25 +27,21 @@
   <div class="share">
     <p class="seq" lang="ja">{sequence}</p>
     <div class="link">
-      <input readonly value={link} aria-label={t('app.share.link')} onfocus={event => event.currentTarget.select()} />
-      <button type="button" onclick={copy}><Icon name="copy" size={16} />{t('app.copy')}</button>
+      <input class="ui-input" data-mono readonly value={link} aria-label={t('app.share.link')} onfocus={event => event.currentTarget.select()} />
+      <button type="button" class="ui-button" onclick={copy}><Icon name="copy" size={16} />{t('app.copy')}</button>
     </div>
     {#if code}
       <svg class="qr" viewBox="-2 -2 {code.n + 4} {code.n + 4}" role="img" aria-label={t('app.share.qr')}>
         <rect x="-2" y="-2" width={code.n + 4} height={code.n + 4} fill="#fff" /><path d={code.d} fill="#000" />
       </svg>
-    {:else if open}<p class="long">{t('app.share.tooLong')}</p>{/if}
+    {:else if open}<p class="ui-hint">{t('app.share.tooLong')}</p>{/if}
   </div>
 </Dialog>
 
 <style>
-  .share{display:flex;flex-direction:column;align-items:center;gap:14px}
-  .seq{margin:0;font-size:28px;font-family:var(--cjk)}
-  .link{display:flex;gap:6px;width:100%}
-  input{flex:1;min-width:0;height:36px;padding:0 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:12.5px ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-  button{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
-  button:hover{background:var(--hover)}
-  :is(button,input):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  .long{margin:0;font-size:12px;color:var(--muted)}
-  .qr{width:min(240px,70vw);height:auto;border-radius:12px;box-shadow:0 0 0 1px var(--line)}
+  .share{display:flex;flex-direction:column;align-items:center;gap:var(--ui-space-lg)}
+  .seq{margin:0;font-family:var(--cjk);font-size:var(--ui-text-2xl)}
+  .link{display:flex;gap:var(--ui-space-xs);width:100%}
+  .link input{flex:1;min-width:0}
+  .qr{width:min(240px,70vw);height:auto;border-radius:var(--ui-radius-xl);box-shadow:0 0 0 1px var(--ui-color-border)}
 </style>
