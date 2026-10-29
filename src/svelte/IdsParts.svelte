@@ -401,8 +401,8 @@
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
   const sealGroups = $derived(SEAL_GROUPS.map(group => ({ ...group, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === group.name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
-  const SHUI_GROUPS = /** @type {const} */ ([{ name: 'common', message: 'common' }, { name: 'radical', message: 'radical' }, { name: 'logogram', message: 'logogram' }])
-  let shuiGroup = $state(/** @type {(typeof SHUI_GROUPS)[number]['name']} */ ('common'))
+  const SHUI_GROUPS = /** @type {const} */ ([{ name: 'dictionary', message: 'dictionary' }, { name: 'radical', message: 'radical' }, { name: 'logogram', message: 'logogram' }])
+  let shuiGroup = $state(/** @type {(typeof SHUI_GROUPS)[number]['name']} */ ('dictionary'))
   const shuiParts = $derived((parts ?? []).filter(part => part.kind === 'shui'))
   const shuiGroups = $derived(SHUI_GROUPS.map(group => ({ ...group, parts: shuiParts.filter(part => part.shuiGroup === group.name) })).filter(group => group.parts.length))
   const selectedShuiGroup = $derived(shuiGroups.find(group => group.name === shuiGroup) ?? shuiGroups[0])
@@ -527,7 +527,7 @@
   }
   /** The name, reading and meaning a Shuishu part is found by, lowercased. @param {PalettePart} part */
   function shuiWords(part) {
-    return [part.name, part.reading, part.meaning, part.meaningEn, ...(part.modern ?? [])]
+    return [part.shuiName, part.shuiReading, part.shuiMeaning, part.shuiGloss, ...(part.modern ?? [])]
       .filter(Boolean).map(word => /** @type {string} */ (word).toLowerCase())
   }
   /** @param {PalettePart} part */
@@ -571,7 +571,7 @@
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
     {#each list as part (part.part)}
-      <button type="button" class="part" data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -669,7 +669,7 @@
     </div>
   {/if}
   {#if tab === 'seal' && !query && sealGroups.length}
-    <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
+    <div class="script-groups" role="group" aria-label={t('parts.seal.groups')}>
       {#each sealGroups as group (group.name)}
         <button type="button" class:active={selectedSealGroup?.name === group.name} aria-pressed={selectedSealGroup?.name === group.name}
           onclick={() => sealGroup = group.name}>{t(`parts.seal.${group.message}`)} <span>{group.parts.length}</span></button>
@@ -680,7 +680,7 @@
     <p class="parts-note">{t('parts.seal.estimate')}</p>
   {/if}
   {#if tab === 'shuishu' && !query && shuiGroups.length}
-    <div class="seal-groups" role="group" aria-label={t('parts.shuishu.groups')}>
+    <div class="script-groups" role="group" aria-label={t('parts.shuishu.groups')}>
       {#each shuiGroups as group (group.name)}
         <button type="button" class:active={selectedShuiGroup?.name === group.name} aria-pressed={selectedShuiGroup?.name === group.name}
           onclick={() => shuiGroup = group.name}>{t(`parts.shuishu.${group.message}`)} <span>{group.parts.length}</span></button>
@@ -913,10 +913,10 @@
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
     font:8px/1 var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);color:var(--_ink);background:var(--_surface)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
-  .seal-groups{display:flex;flex-wrap:wrap;gap:4px}
-  .seal-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
-  .seal-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
-  .seal-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
+  .script-groups{display:flex;flex-wrap:wrap;gap:4px}
+  .script-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
+  .script-groups button.active{background:var(--_surface-selected);color:var(--_ink)}
+  .script-groups span{font-size:10px;font-variant-numeric:tabular-nums;margin-inline-start:4px}
   .part{position:relative}
   /* A mark over a dotted circle: the subset faces have no marks, and the page's own font stacks
      place them over a Latin base the way the standard dotted-circle notation expects. */

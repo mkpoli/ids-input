@@ -20,27 +20,28 @@ describe('Shuishu', () => {
     expect(data.format).toBe(1)
     expect(chars).toHaveLength(533)
     expect(new Set(chars).size).toBe(533)
-    const groups = { common: 0, logogram: 0, radical: 0 }
+    const groups = { dictionary: 0, logogram: 0, radical: 0 }
     for (const part of data.parts) {
       const cp = /** @type {number} */ (part.part.codePointAt(0))
       expect(part.kind).toBe('shui')
       expect(cp >= 0x1b300 && cp <= 0x1b4e5 || cp >= 0x1b500 && cp <= 0x1b52e).toBe(true)
       expect(part.strokes).toBeNull()
-      expect(part.name.length).toBeGreaterThan(0)
-      expect(part.shuiGroup === 'radical' || part.meaning || part.meaningEn).toBeTruthy()
+      expect(part.shuiName.length).toBeGreaterThan(0)
+      expect(part.shuiGroup === 'radical' || part.shuiMeaning || part.shuiGloss).toBeTruthy()
       groups[part.shuiGroup] += 1
     }
     // Characters with a WSF dictionary number, the rest, and the radicals the spreadsheet omits.
-    expect(groups).toEqual({ common: 207, logogram: 279, radical: 47 })
-    const radicalNames = data.parts.filter(part => part.shuiGroup === 'radical').map(part => part.name)
+    expect(groups).toEqual({ dictionary: 207, logogram: 279, radical: 47 })
+    const radicalNames = data.parts.filter(part => part.shuiGroup === 'radical').map(part => part.shuiName)
     expect(radicalNames.every(name => /^\d\d(-A)?$/.test(name))).toBe(true)
     expect(new Set(radicalNames).size).toBe(47)
   })
 
-  it('accepts the tentative code points as components and letters', () => {
+  it('accepts the tentative code points as components', () => {
     for (const char of [chars[0], chars[486], chars.at(-1)]) {
       expect(isComponent(char)).toBe(true)
-      expect(isLetter(char)).toBe(true)
+      // A logogram or radical, not a letter: the README has `isLetter` exclude both.
+      expect(isLetter(char)).toBe(false)
       expect(characterScript(char)).toBe('shuishu')
       expect(isShuishu(char)).toBe(true)
       expect(write(parse(`⿰${char}木`).tree)).toBe(`⿰${char}木`)
@@ -78,24 +79,34 @@ describe('Shuishu', () => {
     const adapter = babelStoneAdapter({ palette: [], shuishu: data })
     const parts = await adapter.parts()
     expect(parts).toHaveLength(533)
-    expect(parts.find(part => part.part === chars[0])?.shuiGroup).toBe('common')
+    expect(parts.find(part => part.part === chars[0])?.shuiGroup).toBe('dictionary')
     const labelled = shuishuLabel(data.parts[0])
     expect(labelled).toContain('水書')
     expect(labelled).toContain('U+1B300')
     const viaAdapter = await shuishuAdapter({ data, palette: [] }).parts()
     expect(viaAdapter).toHaveLength(533)
+    // The table stands on its own, without an ids table behind it.
+    expect(await adapter.table()).toBeInstanceOf(Map)
   })
 
   it('finds the parts by name, reading, meaning and character', () => {
-    const one = data.parts.find(part => part.meaning === '一')
-    const two = data.parts.find(part => part.meaning === '二')
+    const one = data.parts.find(part => part.shuiMeaning === '一')
+    const two = data.parts.find(part => part.shuiMeaning === '二')
     expect(shuishuNames(data, one.part)[0].char).toBe(one.part)
-    expect(shuishuNames(data, one.name)[0].char).toBe(one.part)
-    expect(shuishuNames(data, one.reading)[0].char).toBe(one.part)
+    expect(shuishuNames(data, one.shuiName)[0].char).toBe(one.part)
+    expect(shuishuNames(data, one.shuiReading)[0].char).toBe(one.part)
     expect(shuishuNames(data, '一')[0].char).toBe(one.part)
     expect(shuishuNames(data, '二')[0].char).toBe(two.part)
     expect(shuishuNames(data, '')).toEqual([])
     expect(shuishuNames(data, 'zzzz')).toEqual([])
+    // A reading or a meaning ranks below the vocabulary; a typed character or name does not.
+    expect(shuishuNames(data, '一')[0].rank).toBe(5)
+    expect(shuishuNames(data, one.part)[0].rank).toBeUndefined()
+    // A whole sense, not a fragment of one.
+    const glossed = data.parts.find(part => part.shuiGloss?.includes(' ') && part.shuiGloss?.includes('('))
+    expect(shuishuNames(data, glossed.shuiGloss.split(' ')[0]).length).toBeLessThanOrEqual(12)
+    // One of 一's gloss senses is "one", which the whole-sense match finds.
+    expect(shuishuNames(data, 'one')[0].char).toBe(one.part)
   })
 
   it('keeps the pinned sources in step with their digests', () => {

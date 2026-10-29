@@ -42,5 +42,5 @@
     "note": "Readings read from POST https://ocr.ihanzi.net/api/words/search with a `prefix` of the meaning; the glyph images are the database's and are not bundled. The readings vary by text, so the single reading per character here follows Shuishu.xlsx.",
     "checked": "2026-10-29"
   },
-"roadmap": "http://www.unicode.org/roadmaps/smp/"
+"roadmap": "https://www.unicode.org/roadmaps/smp/"
 }

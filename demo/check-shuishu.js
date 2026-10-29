@@ -13,7 +13,7 @@ try {
   assert.equal(await page.evaluate(() => document.fonts.check('22px "IDS Shuishu"', '\u{1B300}')), true)
 
   // The groups: the dictionary's characters first, the radicals and the unnumbered characters by button.
-  const groups = page.locator('.seal-groups button')
+  const groups = page.locator('.script-groups button')
   const texts = (await groups.allTextContents()).map(text => text.replace(/\s+/g, ' ').trim())
   assert.deepEqual(texts.map(text => text.replace(/ \d+$/, '')), ['Dictionary', 'Radicals', 'Other logograms'])
   const counts = texts.map(text => Number(text.match(/ (\d+)$/)?.[1]))
@@ -37,13 +37,19 @@ try {
     assert.equal(await page.locator('.parts-grid .part').count(), count, query)
     const part = page.locator('.parts-grid .part').first()
     assert.equal(await part.getAttribute('data-character'), first, query)
-    assert.match(await part.getAttribute('title'), new RegExp(name), query)
+    assert.match(await part.getAttribute('title'), new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), query)
   }
 
   await filter.fill('')
-  await page.locator('.parts-grid .part').first().click()
+  const firstPart = page.locator('.parts-grid .part').first()
+  await firstPart.click()
   const field = page.locator('.ids-field input')
+  // The palette inserts after a short delay; wait for the part rather than race it.
+  const clicked = await page.locator('.parts-grid .part').first().getAttribute('data-character')
+  assert.ok(clicked, 'the first part carries its character')
+  await page.waitForFunction(char => document.querySelector('.ids-field input')?.value.includes(char), clicked)
   const pieces = (await field.inputValue()).length
+  assert.ok(pieces > 0, 'the part lands in the field')
   await field.fill('')
   await field.fill('⿰\u{1B300}\u{1B31A}')
   await page.waitForFunction(() => !document.querySelector('.ids-preview[aria-busy="true"]'))

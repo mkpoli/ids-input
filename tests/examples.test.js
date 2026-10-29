@@ -53,7 +53,7 @@ describe('the demo examples', () => {
           } else if ('source' in example && example.source === 'data/shuishu.json.gz') {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
-            expect(shui.parts.find(part => part.part === char)?.meaning).toBe(example.modern)
+            expect(shui.parts.find(part => part.part === char)?.shuiMeaning).toBe(example.modern)
           } else if (example.sequence === '⿱無⿰無無') {
             // Unicode 17.0 encoded the character after the BabelStone edition, which has no row.
             expect(example.refs).toContain(sourceNumber('irg-ws2021-uk-20565'))

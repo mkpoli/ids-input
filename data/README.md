@@ -431,8 +431,8 @@ listed in `fonts/README.md`. Outlines use the same packed records as Tangut.
 
 `shuishu.json.gz` is the palette index for the Shuishu (水書) characters and radicals, and
 `shuishu-outlines.json.gz` holds their 533 outlines. Both sit at the tentative allocations of the
-proposed block in ISO/IEC 10646 FPDAM 2.2: logograms U+1B300–U+1B4E5 (486) and radicals
-U+1B500–U+1B52E (47). Unicode 18.0.0 leaves the block unassigned, so the text is not claimed to be
+proposed block in the ISO/IEC 10646 Amendment 2.2 charts (PDAM 2.2, WG2 N4922, 2017-11-22): logograms
+U+1B300–U+1B4E5 (486) and radicals U+1B500–U+1B52E (47). Unicode 18.0.0 leaves the block unassigned, so the text is not claimed to be
 assigned Unicode, and the code points can still move with the amendment.
 
 | Coverage | Count |
@@ -444,11 +444,12 @@ assigned Unicode, and the code points can still move with the amendment.
 | Rows in `Shuishu.xlsx` | 772 |
 
 The outline of each entry is the glyph of `Uni1B300Shuishu`, the font the amendment's code charts
-embed, reached through the PDF's own ToUnicode map. The name of each entry is the chart's, with its `SHUISHU LOGOGRAM` or `SHUISHU RADICAL` prefix
-dropped; the `-A` names are the chart's variants. Readings and
-meanings come from Andrew West's
-[`Shuishu.xlsx`](https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx) (BabelStone), which indexes them
-by the proposal's N4922 code point.
+embed, reached through the PDF's own ToUnicode map. Logogram names come from the spreadsheet's name
+column with its `SHUISHU LOGOGRAM` prefix dropped, radical names from the chart's with `SHUISHU
+RADICAL` dropped, and the `-A` names are the chart's variants. The readings, meanings and English
+glosses are from Andrew West's
+[`Shuishu.xlsx`](https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx) (BabelStone), which indexes the
+characters by the proposal's N4922 code point.
 
 The example readings are cross-checked against the
 [水族水书文字数据库](https://shuishu.ihanzi.net/shuishu) (孙治弘 et al., 『数字人文研究』6(1), 2026,
@@ -462,16 +463,17 @@ are used as an aid inside the amendment's own outline set, the names, readings a
 facts, and `fonts/LICENSE-IDSShuishu.txt` records the position in the font.
 
 Sources are pinned with SHA-256 digests in [`shuishu/sources.json`](shuishu/sources.json); they are
-the 2026-10-29 charts PDF, its extracted glyph subset (`Uni1B300Shuishu-subset.ttf`), the PDF's
-`cid-map.json` and `radical-names.json`, and the spreadsheet. Rebuild `shuishu/` from them with
+the charts PDF (read 2026-10-29), its extracted glyph subset (`Uni1B300Shuishu-subset.ttf`), the
+PDF's `cid-map.json` and `radical-names.json`, and the spreadsheet. Rebuild `shuishu/` from them with
 `uv run --python 3.12 scripts/build_shuishu_sources.py`, then the index, outlines and font with
 `uv run --python 3.12 scripts/build_shuishu.py`.
 
-JSON format 1 has `parts`, each with `part`, `kind` (`shui`), `shuiGroup`, `name`, `reading`,
-`meaning`, `meaningEn`, `modern` and `strokes` (always null, since no source counts them). `shuiGroup`
-is `common` for the 207 logograms the WSF dictionary numbers, `logogram` for the other 279 and
-`radical` for the 47 radicals. The groups follow dictionary coverage, not frequency; the
-spreadsheet also lists 286 further forms that the proposal does not cover.
+JSON format 1 has `parts`, each with `part`, `kind` (`shui`), `shuiGroup` (`dictionary`, `logogram`
+or `radical`), `shuiName`, `shuiReading`, `shuiMeaning`, `shuiGloss`, `modern` and `strokes` (always
+null, since no source counts them). `shuiGroup` is `dictionary` for the 207 logograms the WSF
+dictionary numbers, `logogram` for the other 279 and `radical` for the 47 radicals. The groups follow
+dictionary coverage, not frequency; the spreadsheet also lists 286 further forms that the proposal
+does not cover.
 
 ## New Korean Orthography outlines
 

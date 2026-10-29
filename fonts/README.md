@@ -92,7 +92,7 @@ the amendment (U+1B300–U+1B4E5 and U+1B500–U+1B52E); `fonts.css` gives the f
 `unicode-range`. Unicode 18.0.0 leaves both ranges unassigned.
 
 The outlines are the glyphs of `Uni1B300Shuishu`, the font embedded in the code charts of
-ISO/IEC 10646 FPDAM 2.2, read through the PDF's own ToUnicode map. The charts state no separate
+ISO/IEC 10646 Amendment 2.2 charts (PDAM 2.2), read through the PDF's own ToUnicode map. The charts state no separate
 glyph licence and neither does the spreadsheet that names the characters; the position is in
 [LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
 Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.

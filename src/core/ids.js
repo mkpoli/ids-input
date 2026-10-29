@@ -97,7 +97,8 @@ export const isComponent = char => {
 /** Whether `char` is an alphabetic/syllabic letter or decimal digit. @param {string | undefined | null} char */
 export const isLetter = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
-  return Boolean(first && isComponent(first) && (unicodeProperty('letters', first) || NEW_KOREAN.test(first) || SHUISHU.test(first)))
+  // The New Korean letters are letters; Shuishu logograms and radicals are ideographs like Han.
+  return Boolean(first && isComponent(first) && (unicodeProperty('letters', first) || NEW_KOREAN.test(first)))
 }
 
 /** How many descriptions an operator takes; 0 for anything else. @param {string | undefined} char */

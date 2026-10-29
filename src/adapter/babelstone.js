@@ -629,6 +629,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
       if (shuishu) {
         const doc = await readShuishu()
+        // A typed character or chart name stands with the components; a reading or meaning ranks
+        // below the vocabulary, which knows the query better.
         if (doc) hits = [...hits, ...shuishuNames(doc, text)]
       }
       if (!characterInfo && smallSeal) {

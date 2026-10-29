@@ -404,11 +404,10 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
-  // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
-  // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
   { key: 'shuishu', refs: [47, 49], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
-    // block's tentative code points; `modern` names the Han character each one covers.
+    // block's tentative code points; `modern` names the Han character each one covers. Names,
+    // readings and meanings: Shuishu.xlsx; glyphs: the Amendment 2.2 code charts.
     { "sequence": "𛌀", "char": "𛌀", "modern": "一", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌚", "char": "𛌚", "modern": "二", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌝", "char": "𛌝", "modern": "三", "source": "data/shuishu.json.gz" },
@@ -442,6 +441,8 @@ export const EXAMPLE_GROUPS = [
     { "sequence": "𛌉", "char": "𛌉", "modern": "戌", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌶", "char": "𛌶", "modern": "亥", "source": "data/shuishu.json.gz" },
   ] },
+  // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
+  // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
   { key: 'tangut', refs: [28], examples: [
     { sequence: '⿱𘠀⿰𘣣𘠐', char: '𗀃' },
     { sequence: '⿱𘠀𘨐', char: '𗀇' },

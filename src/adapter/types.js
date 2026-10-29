@@ -20,11 +20,11 @@
  * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'crosswalk' | 'unknown'} [sealBasis] Evidence for the palette grouping.
  * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
  * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
- * @property {'common' | 'logogram' | 'radical'} [shuiGroup] Shuishu palette group.
- * @property {string} [name] The proposed character's name, for Shuishu.
- * @property {string | null} [reading] The proposed reading, for Shuishu.
- * @property {string | null} [meaning] The dictionaries' meaning, for Shuishu.
- * @property {string | null} [meaningEn] The English gloss, for Shuishu.
+ * @property {'dictionary' | 'logogram' | 'radical'} [shuiGroup] Shuishu palette group.
+ * @property {string} [shuiName] The proposed character's name, for Shuishu.
+ * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
+ * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
+ * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.

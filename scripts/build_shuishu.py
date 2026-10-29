@@ -12,7 +12,7 @@ not an encoding claim.
 
 Sources, pinned in `data/shuishu/sources.json` with SHA-256 digests:
 
-- the glyphs of `Uni1B300Shuishu`, the font embedded in the ISO/IEC 10646 FPDAM 2.2 code charts,
+- the glyphs of `Uni1B300Shuishu`, the font embedded in the ISO/IEC 10646 Amendment 2.2 code charts,
   read through the PDF's own ToUnicode map;
 - `Shuishu.xlsx` (Andrew West) for the proposed names, the N4758 readings and the meanings.
 
@@ -103,11 +103,13 @@ def read_spreadsheet():
             continue
         english = text(english)
         rows[code] = {
-            'name': re.sub(r'^SHUISHU LOGOGRAM ', '', text(name)),
-            'reading': text(reading) or None,
-            'meaning': text(meaning) or None,
-            'meaningEn': english.split(';')[0].strip() or None,
-            'common': bool(wsf),
+            'shuiName': re.sub(r'^SHUISHU LOGOGRAM ', '', text(name)),
+            'shuiReading': text(reading) or None,
+            'shuiMeaning': text(meaning) or None,
+            'shuiGloss': english or None,
+            # A WSF dictionary number marks the characters the dictionary indexes; the cell holds
+            # the number, and "0" means unnumbered.
+            'dictionary': bool(wsf) and text(wsf) != '0',
         }
     return rows
 
@@ -181,24 +183,24 @@ def main():
         parts.append({
             'part': chr(point),
             'kind': 'shui',
-            'shuiGroup': 'common' if row['common'] else 'logogram',
-            'name': row['name'],
-            'reading': row['reading'],
-            'meaning': row['meaning'],
-            'meaningEn': row['meaningEn'],
-            'modern': [row['meaning']] if row['meaning'] and len(row['meaning']) == 1 else [],
+            'shuiGroup': 'dictionary' if row['dictionary'] else 'logogram',
+            'shuiName': row['shuiName'],
+            'shuiReading': row['shuiReading'],
+            'shuiMeaning': row['shuiMeaning'],
+            'shuiGloss': row['shuiGloss'],
+            'modern': [row['shuiMeaning']] if row['shuiMeaning'] and len(row['shuiMeaning']) == 1 else [],
         })
     for point in RADICALS:
         parts.append({
             'part': chr(point),
             'kind': 'shui',
             'shuiGroup': 'radical',
-            'name': re.sub(r'^SHUISHU RADICAL-', '', radicals[f'{point:X}']),
+            'shuiName': re.sub(r'^SHUISHU RADICAL-', '', radicals[f'{point:X}']),
         })
     for part in parts:
-        part.setdefault('reading', None)
-        part.setdefault('meaning', None)
-        part.setdefault('meaningEn', None)
+        part.setdefault('shuiReading', None)
+        part.setdefault('shuiMeaning', None)
+        part.setdefault('shuiGloss', None)
         part.setdefault('modern', [])
         part['strokes'] = None
 

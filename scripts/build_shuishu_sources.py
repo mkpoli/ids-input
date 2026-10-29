@@ -4,11 +4,13 @@
 # ///
 """Pin the Shuishu sources: the chart glyphs, their code point map and the character index.
 
-uv run scripts/build_shuishu_sources.py CHART_PDF [--chart-url URL]
+uv run scripts/build_shuishu_sources.py CHART_PDF
 `data/shuishu/` is written here and rewritten by `scripts/build_shuishu.py` afterwards. The chart
-is ISO/IEC 10646 FPDAM 2.2's code chart document, whose embedded `Uni1B300Shuishu` font draws the
-proposed characters at their tentative code points. Only that font, the PDF's ToUnicode map and
-the radical names are kept, not the 6 MB document.
+is the code chart document of ISO/IEC 10646 Amendment 2.2 (PDAM 2.2, N4922), whose embedded
+`Uni1B300Shuishu` font draws the proposed characters at their tentative code points. Only that
+font, the PDF's ToUnicode map and the radical names are kept, not the 6 MB document; the radical
+names come out of `pdftotext -layout`, which poppler-utils provides, so that binary has to be on
+PATH. Download the chart from CHART_URL below and check its SHA-256 first.
 """
 import hashlib
 import json
@@ -30,7 +32,7 @@ DOCUMENTS = [
     {
         'file': 'Uni1B300Shuishu-subset.ttf',
         'kind': 'font subset',
-        'title': 'Uni1B300Shuishu, the font embedded in the ISO/IEC 10646 FPDAM 2.2 code charts',
+        'title': 'Uni1B300Shuishu, the font embedded in the ISO/IEC 10646 Amendment 2.2 code charts',
         'chartUrl': CHART_URL,
         'chartSha256': CHART_SHA256,
         'note': 'The chart font draws the proposed characters at their tentative code points. The '
@@ -112,7 +114,11 @@ def scalar(value):
 
 
 def main():
-    chart = sys.argv[1]
+    if len(sys.argv) != 2:
+        raise SystemExit('usage: build_shuishu_sources.py CHART_PDF')
+    chart = Path(sys.argv[1])
+    if digest(chart) != CHART_SHA256:
+        raise SystemExit(f'{chart} is not chart {CHART_SHA256}')
     program, cmap, radicals = charts(chart)
     mapping = points(cmap)
     expected = [*range(0x1B300, 0x1B4E6), *range(0x1B500, 0x1B52F)]

@@ -51,7 +51,9 @@ syllable boundaries.
 The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
 allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
 outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
-`IDS Shuishu` face, and the tab filters them by name, reading and meaning.
+`IDS Shuishu` face, and the tab filters them by name, reading, meaning and code point. Its groups
+follow the dictionary the index comes from: the characters that dictionary numbers, the rest, and the
+radicals.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">

@@ -5,27 +5,31 @@ import { isShuishu } from '../core/ids.js'
 export { isShuishu }
 
 /**
- * A Shuishu palette part: `name` is the proposed character's name, without the `SHUISHU LOGOGRAM`
- * prefix, `reading` its N4758 reading, `meaning` the dictionaries' meaning, usually one Han
- * character, and `meaningEn` the English gloss.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'common' | 'logogram' | 'radical', name: string }} ShuishuPart
+ * A Shuishu palette part: `shuiName` is the proposed character's name, without the `SHUISHU
+ * LOGOGRAM` prefix, `shuiReading` the reading the spreadsheet gives, `shuiMeaning` the dictionaries'
+ * meaning, usually one Han character, and `shuiGloss` its English gloss.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'dictionary' | 'logogram' | 'radical', shuiName: string }} ShuishuPart
  *
  * @typedef {{ format: number, parts: ShuishuPart[], proposal?: unknown }} ShuishuData
  */
 
 /** @param {ShuishuData} doc @returns {ShuishuPart[]} */
 export function shuishuTable(doc) {
-  if (doc.format !== 1) throw new Error('Unsupported Shuishu data format')
+  if (doc.format !== 1 || !Array.isArray(doc.parts)) throw new Error('Unsupported Shuishu data format')
   return doc.parts
 }
 
-/** What a part is called wherever the editor names one. @param {ShuishuPart} part */
+/**
+ * What a part is called wherever the editor names one. The code point carries 暫定, since the
+ * block is a proposal and a bare `U+1B300` would read as an assignment.
+ * @param {ShuishuPart} part
+ */
 export const shuishuLabel = part => [
   `水書 ${part.shuiGroup === 'radical' ? '部件' : '字'}`,
-  part.name,
-  part.reading,
-  part.meaning && part.meaningEn ? `${part.meaning} (${part.meaningEn})` : part.meaning ?? part.meaningEn,
-  `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
+  part.shuiName,
+  part.shuiReading,
+  part.shuiMeaning && part.shuiGloss ? `${part.shuiMeaning} (${part.shuiGloss})` : part.shuiMeaning ?? part.shuiGloss,
+  `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}（暫定）`,
 ].filter(Boolean).join(' · ')
 
 /** The parts by character, built once per document. @type {WeakMap<ShuishuData, Map<string, ShuishuPart>>} */
@@ -38,26 +42,30 @@ function index(doc) {
 }
 
 /**
- * The characters a query names: the Shuishu characters it contains, then the ones whose name,
- * reading or meaning contains it (a single character ends the search there).
+ * The characters a query names: the Shuishu characters it contains, then the ones a whole name,
+ * reading or meaning equals. A typed character or chart name stands on its own; a reading or a
+ * meaning ranks below the vocabulary, since it says little about which character is meant.
  * @param {ShuishuData} doc @param {string} query @param {number} [limit]
- * @returns {{ char: string, label: string }[]}
+ * @returns {{ char: string, label: string, rank?: number }[]}
  */
 export function shuishuNames(doc, query, limit = 12) {
   const text = query.trim()
   if (!text) return []
-  const parts = index(doc)
-  const typedChars = [...text].filter(isShuishu)
-  const typed = typedChars.map(char => parts.get(char)).filter(part => part !== undefined)
-  const hits = typed.map(part => ({ char: part.part, label: shuishuLabel(part) }))
-  if (typedChars.length === [...text].length && typedChars.length) return hits
-  const seen = new Set(typedChars)
+  if (!text.includes(' ')) {
+    const parts = index(doc)
+    const typed = [...text].filter(isShuishu).map(char => parts.get(char)).filter(part => part !== undefined)
+    if (typed.length) return typed.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part) }))
+    const named = text.toLowerCase()
+    const exact = doc.parts.filter(part => part.shuiName.toLowerCase() === named)
+    if (exact.length) return exact.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part) }))
+  }
   const lowered = text.toLowerCase()
+  const hits = []
   for (const part of doc.parts) {
     if (hits.length >= limit) break
-    if (seen.has(part.part)) continue
-    const names = [part.name, part.meaning, part.meaningEn, part.reading].filter(Boolean)
-    if (names.some(name => /** @type {string} */ (name).toLowerCase().includes(lowered))) hits.push({ char: part.part, label: shuishuLabel(part) })
+    const senses = [part.shuiReading, part.shuiMeaning, part.shuiGloss]
+      .filter(Boolean).flatMap(value => String(value).split(';')).map(sense => sense.trim().toLowerCase())
+    if (senses.includes(lowered)) hits.push({ char: part.part, label: shuishuLabel(part), rank: 5 })
   }
   return hits
 }
