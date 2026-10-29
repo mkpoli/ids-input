@@ -691,12 +691,12 @@
     const point = example.char ? cp(example.char) : ''
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
-    const note = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
+    const noteText = example.abbreviates ? `${example.abbreviates} · ${t('app.examples.abbreviation')}` : example.char ? [example.modern, point].filter(Boolean).join(' · ') : t('app.examples.none')
     return {
       leading: target || undefined,
       label: example.sequence,
       sequence: example.sequence,
-      note: [note, citation].filter(Boolean).join(' '),
+      note: [noteText, citation].filter(Boolean).join(' '),
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
