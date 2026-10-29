@@ -241,6 +241,27 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱老口', char: '㖈', reading: '놈' },
     // 巴 writes the coda ㅂ.
     { sequence: '⿱高巴', char: '䯩', reading: '곱' },
+    // The article gives these twenty without a code point, as the decomposition alone.
+    { sequence: '⿱介乙', char: '', reading: '갤' },
+    { sequence: '⿱古乙', char: '', reading: '골' },
+    { sequence: '⿱句乙', char: '', reading: '굴' },
+    { sequence: '⿱月乙', char: '', reading: '달' },
+    { sequence: '⿱代乙', char: '', reading: '댈' },
+    { sequence: '⿱付乙', char: '', reading: '댈' },
+    { sequence: '⿱叱乙', char: '', reading: '뜰' },
+    { sequence: '⿱馬乙', char: '', reading: '말' },
+    { sequence: '⿱未乙', char: '', reading: '밀' },
+    { sequence: '⿱夫乙', char: '', reading: '불' },
+    { sequence: '⿱火乙', char: '', reading: '불' },
+    { sequence: '⿱角乙', char: '', reading: '뿔' },
+    { sequence: '⿱松乙', char: '', reading: '솔' },
+    { sequence: '⿱小乙', char: '', reading: '솔' },
+    { sequence: '⿱少乙', char: '', reading: '솔' },
+    { sequence: '⿱菸叱', char: '', reading: '엇' },
+    { sequence: '⿱右乙', char: '', reading: '울' },
+    { sequence: '⿱吐乙', char: '', reading: '톨' },
+    { sequence: '⿱坪乙', char: '', reading: '펼' },
+    { sequence: '⿱呼乙', char: '', reading: '홀' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [
