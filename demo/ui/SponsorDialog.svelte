@@ -15,14 +15,14 @@
     <ul class="ways">
       <li>
         <a class="way kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer">
-          <span class="mark" aria-hidden="true">K</span>
+          <span class="mark" aria-hidden="true"><Icon name="coffee" size={18} /></span>
           <span class="copy"><strong>Ko-fi</strong><small>{t('app.sponsor.kofi')}</small></span>
           <Icon name="arrow-right" />
         </a>
       </li>
       <li>
         <a class="way paypal" href="https://paypal.me/mkpoli" target="_blank" rel="noreferrer">
-          <span class="mark" aria-hidden="true">P</span>
+          <span class="mark" aria-hidden="true"><Icon name="card" size={18} /></span>
           <span class="copy"><strong>PayPal</strong><small>{t('app.sponsor.paypal')}</small></span>
           <Icon name="arrow-right" />
         </a>
@@ -50,7 +50,8 @@
   .way:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .way :global(.icon){flex:none;color:var(--muted)}
   .way:hover :global(.icon){color:var(--ink)}
-  .mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;font-size:15px;font-weight:800;color:#fff}
+  .mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;color:#fff}
+  .mark :global(.icon){color:inherit}
   .kofi .mark{background:#ff5e5b;box-shadow:0 0 14px #ff5e5b66}
   .paypal .mark{background:#0070ba;box-shadow:0 0 14px #0070ba66}
   .company .mark{background:var(--ink);color:var(--bg);box-shadow:0 0 14px rgb(0 0 0 / .18)}
