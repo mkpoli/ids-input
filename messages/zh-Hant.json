@@ -182,6 +182,8 @@
   "parts.script.next": "下一頁",
   "parts.script.page": "第 {page} / {pages} 頁 · {count} 個部件",
   "parts.tab.tangut": "西夏",
+  "parts.tangut.strokes": "筆畫數",
+  "parts.tangut.anyStrokes": "不限筆畫",
   "parts.tab.common": "常用",
   "parts.tab.components": "部件",
   "parts.tab.recent": "最近",

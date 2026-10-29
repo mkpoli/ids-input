@@ -181,6 +181,8 @@
   "parts.script.next": "Sau",
   "parts.script.page": "Trang {page} / {pages} · {count} bộ phận",
   "parts.tab.tangut": "Tây Hạ",
+  "parts.tangut.strokes": "Số nét",
+  "parts.tangut.anyStrokes": "Mọi số nét",
   "parts.tab.common": "Thường dùng",
   "parts.tab.components": "Bộ phận",
   "parts.tab.recent": "Gần đây",
