@@ -39,6 +39,7 @@
   "app.examples.geba": "Geba-ji",
   "app.examples.ligature": "Word ligatures",
   "app.examples.korean": "Korean gukja",
+  "app.examples.gugyeol": "Korean gugyeol",
   "app.examples.filter": "Filter by sequence, reading or code point",
   "app.examples.filterAll": "All",
   "app.examples.encoded": "Code point",

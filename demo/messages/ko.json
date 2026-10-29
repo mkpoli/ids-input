@@ -38,6 +38,7 @@
   "app.examples.geba": "게바자",
   "app.examples.ligature": "합자",
   "app.examples.korean": "한국 국자",
+  "app.examples.gugyeol": "한국 구결자",
   "app.examples.filter": "수열·읽기·코드 포인트로 거르기",
   "app.examples.filterAll": "전체",
   "app.examples.encoded": "코드 포인트 있음",

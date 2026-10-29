@@ -114,7 +114,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'seal', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -176,6 +176,18 @@ it('reads the Korean gukja as the source does', () => {
   expect(korean.filter(example => example.reading === '갈')).toHaveLength(3)
   expect(korean.filter(example => example.reading === '솔')).toHaveLength(5)
   expect(korean.filter(example => example.reading === '곳')).toHaveLength(4)
+})
+
+it('reads the Korean gugyeol as the source does', () => {
+  const gugyeol = EXAMPLE_GROUPS.find(group => group.key === 'gugyeol').examples
+  // 국자의 음역자와 구결자, oldid 42393816: the second table, whose first reading each entry uses.
+  const readings = {
+    '⿱𠆢丶': '나', '⿱亦乁': '란', '⿱爲了': '료', '⿱厶小': '며', '⿰弓厼': '며', '⿱一丿': '면',
+    '⿱斜𰆊': '산', '⿱士𰆊': '산', '乛': '야', '𠃌': '야', '⿱𠆢⺀': '어', '⿰丶㇒': '하',
+    '⿱丷𰆊': '한', '⿱㇒丷': '호', '⿱乊乙': '홀',
+  }
+  expect(gugyeol.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
+  for (const example of gugyeol) expect(example.reading).toBe(readings[example.sequence])
 })
 
 it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {
