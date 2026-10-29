@@ -78,10 +78,8 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
         previous = ink
       }
       expect(runs).toBe(4)
-      if (fontStyle !== 'kaisho') {
-        expect(openings).toHaveLength(3)
-        expect(Math.max(...openings) - Math.min(...openings)).toBeLessThanOrEqual(2)
-      }
+      expect(openings).toHaveLength(3)
+      expect(Math.max(...openings) - Math.min(...openings)).toBeLessThanOrEqual(fontStyle === 'kaisho' ? 4 : 2)
     }
     expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(4) // outside + three counters; both frame legs reach the hook
     expect(components(raster(parts, 512), 512)).toBe(5)
@@ -111,6 +109,40 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
     }
   })
 }
+
+it('matches native Kaisho upright weight and a restrained frame slant', () => {
+  const [upright, frame, lower, upper] = componentParts(body, undefined, 'kaisho')
+  const uprightMask = raster([upright], 1000), frameMask = raster([frame], 1000)
+  const runsAt = (mask, y) => {
+    const runs = []
+    let start = -1
+    for (let x = 0; x <= 1000; x++) {
+      const ink = x < 1000 && mask[(880 - y) * 1000 + x]
+      if (ink && start < 0) start = x
+      if (!ink && start >= 0) { runs.push([start, x]); start = -1 }
+    }
+    return runs
+  }
+  for (const y of [400, 450, 550]) {
+    const stems = runsAt(frameMask, y), [left] = runsAt(uprightMask, y)
+    expect(stems).toHaveLength(2)
+    const width = left[1] - left[0]
+    for (const [a, b] of stems) {
+      expect(b - a).toBeGreaterThanOrEqual(width * .85)
+      expect(b - a).toBeLessThanOrEqual(width * 1.2)
+    }
+  }
+  const low = runsAt(frameMask, 400)[1], high = runsAt(frameMask, 550)[1]
+  expect(high[1] - low[1]).toBeGreaterThan(0)
+  expect(high[1] - low[1]).toBeLessThanOrEqual(7)
+  for (const bar of [lower, upper]) {
+    const mask = raster([bar], 1000)
+    let ink = 0
+    for (let row = 0; row < 1000; row++) ink += mask[row * 1000 + 600]
+    expect(ink).toBeGreaterThanOrEqual(35)
+    expect(ink).toBeLessThanOrEqual(44)
+  }
+})
 
 it('uses distinct font-derived faces and a current prepared example', async () => {
   expect(new Set(['sans','serif','kaisho'].map(style => componentDrawing(full, style).d)).size).toBe(3)

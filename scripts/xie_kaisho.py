@@ -2,18 +2,22 @@
 
 Shape reference: https://jyutnet.github.io/unencoded-characters/#JYN00003
 Witness: https://jyutnet.github.io/unencoded-characters/evidences/CSK1939/0072.png
-Exact IDS:
-⿳宀⿰丨⿴⿻冂一一⿹𠃌灬. Donors: bundled Kureedo-Regular.woff2,
-寫 U+5BEB, 日 U+65E5, 丨 U+4E28. The caller owns source metadata.
+Exact IDS: ⿳宀⿰丨⿴⿻冂一一⿹𠃌灬.
+Donors: bundled Kureedo-Regular.woff2, 寫 U+5BEB, 旧 U+65E7, 目 U+76EE.
 """
-from fontTools.pens.recordingPen import RecordingPen
+import pathops
+from fontTools.pens.recordingPen import RecordingPen, replayRecording
 
 
 def _contours(gs, name):
     pen = RecordingPen()
     gs[name].draw(pen)
+    return _split(pen.value)
+
+
+def _split(commands):
     result, contour = [], []
-    for op in pen.value:
+    for op in commands:
         contour.append(op)
         if op[0] in ('closePath', 'endPath'):
             result.append(contour)
@@ -26,81 +30,68 @@ def _map(contour, transform):
             for op, points in contour]
 
 
-def _piecewise(value, knots):
-    i = next((i for i in range(len(knots) - 1)
-              if value <= knots[i + 1][0]), len(knots) - 2)
-    a, b = knots[i], knots[i + 1]
-    return a[1] + (value - a[0]) * (b[1] - a[1]) / (b[0] - a[0])
+def _weighted(contour):
+    """Restore native brush weight after fitting: 10 units per outline edge.
+
+    Kureedo's 旧 and 目 stems measure about 47–56 units in the source em.
+    Scaling to the roof's opening gives 25–29; a 20-unit boundary stroke
+    restores 45–49 without changing the donor's slant or counter placement.
+    """
+    shape = pathops.Path()
+    replayRecording(contour, shape.getPen())
+    edge = pathops.Path(shape)
+    edge.stroke(20, pathops.LineCap.ROUND_CAP, pathops.LineJoin.ROUND_JOIN, 4)
+    edge.convertConicsToQuads(.1)
+    pen = RecordingPen()
+    pathops.op(shape, edge, pathops.PathOp.UNION).draw(pen)
+    return _split(pen.value)
 
 
 def xie_kaisho(gs, cmap):
-    """Return groups: 宀, 丨, 冂, baseline 一, middle 一, 𠃌, 灬.
+    """Return groups: 宀, 丨, 冂, lower 一, upper 一, 𠃌, 灬.
 
-    日's counter boundaries define the shared seams of 冂 and the two 一.
-    Both 一 stay inside the right frame. Its sides extend to 寫's hook
-    crossbar, which closes the third counter. No normalization is applied.
+    Native 目 supplies the frame and both interior bars; its bottom bar is
+    supplied by 寫's hook crossbar. Native 旧 supplies the separate upright.
+    The middle uses one near-uniform transform and one common brush weight.
     """
     xie = _contours(gs, cmap[ord('寫')])
-    day = _contours(gs, cmap[ord('日')])
-    stem = _contours(gs, cmap[ord('丨')])[0]
-    assert len(xie) == 6 and len(day) == 3
-    body, outer = xie[1], day[0]
-    # These splice points belong to the bundled font's original outlines.
+    eye = _contours(gs, cmap[ord('目')])
+    old = _contours(gs, cmap[ord('旧')])
+    assert len(xie) == 6 and len(eye) == 4 and len(old) == 4
+    body, outer = xie[1], eye[0]
     assert body[1] == ('lineTo', ((790, 226),))
-    assert outer[4] == ('lineTo', ((759, 650),))
+    assert outer[4] == ('lineTo', ((777, 657),))
 
-    def frame_map(x, y):
-        # Contract counters more than brush strokes and preserve sloping bars.
-        return (_piecewise(x, [(227, 450), (314, 495), (679, 630), (765, 675)]),
-                _piecewise(y, [(5, 390), (50, 420), (327, 495),
-                               (391, 525), (633, 595), (699, 625)]))
+    move = lambda x, y: ('moveTo', ((x, y),))
+    line = lambda x, y: ('lineTo', ((x, y),))
+    close = ('closePath', ())
+    # The outer top and both inner edges follow 目's three native counters.
+    frame = [move(756,74)] + outer[4:14] + [
+        line(295,51), line(290,234), line(289,277), line(284,436),
+        line(283,481), line(278,649), line(720,673), line(716,504),
+        line(715,458), line(711,296), line(710,253), line(706,66), close]
+    upper = [move(283,481), line(716,504), line(715,458), line(284,436), close]
+    lower = [move(289,277), line(711,296), line(710,253), line(290,234), close]
+    upright = [move(163,0), line(218,0)] + old[0][5:11] + [line(171,0), close]
 
-    # Inverted U: native outer top and terminals, native inner counter edge.
-    # Intersect the straight outer-left edge with the lower counter's y=50.
-    left_x = 245 + (625 - 50) * 17 / (625 - 26)
-    frame = [('moveTo', ((729, 64),))] + outer[4:13] + [
-        ('lineTo', ((left_x, 50),)), ('lineTo', ((311, 50),)),
-        ('lineTo', ((302, 327),)), ('lineTo', ((300, 372),)),
-        ('lineTo', ((293, 633),)), ('lineTo', ((705, 655),)),
-        ('lineTo', ((693, 391),)), ('lineTo', ((691, 346),)),
-        ('lineTo', ((679, 62),)), ('closePath', ())]
-    middle = [('moveTo', ((300, 372),)), ('lineTo', ((693, 391),)),
-              ('lineTo', ((691, 346),)), ('lineTo', ((302, 327),)),
-              ('closePath', ())]
-    # Retain the native lower bar within the right frame.
-    baseline = _map(outer[:4] + [('lineTo', ((679, 62),)),
-                    ('lineTo', ((311, 50),)), ('closePath', ())], frame_map)
-    baseline = baseline[:-1] + [
-        ('lineTo', (frame_map(left_x, 50),)),
-        ('lineTo', ((465, 409),)), ('lineTo', ((465, 379),)),
-        ('closePath', ())]
-    frame = _map(frame, frame_map)
-    # Extend both frame legs into the hook bar, preserving their native width.
-    frame = _map(frame, lambda x, y: (x, 300 if y <= 430 else y))
+    fit = lambda x, y: (x * .52 + 310, y * .45 + 301)
+    # Extend only the four foot vertices into the hook; the native side edges
+    # above the lowest counter retain their original direction.
+    frame = _map(frame, lambda x, y: (x * .52 + 310, 300 if y <= 74 else y * .45 + 301))
+    upright = _map(upright, lambda x, y: (x * .52 + 196, y * .45 + 301))
 
-    # Keep 丨's natural cap and slight taper; continue past the frame's lower
-    # bar into the hook crossbar so the body remains one connected shape.
-    upright = [('moveTo', ((465, 0),)), ('lineTo', ((525, 0),))] + stem[4:9] + [
-        ('lineTo', ((471, 0),)), ('closePath', ())]
-    upright = _map(upright, lambda x, y: (300 + (x - 465) * .8,
-                                         300 + y * (310 / 783)))
-
-    # 寫's native hook follows the first edge of its fused body. Drop the
-    # left-falling sweep and all 臼 material, retaining every hook curve.
-    hook = [('moveTo', ((300, 205),))] + body[1:12] + [
-        ('lineTo', ((300, 245),)), ('closePath', ())]
+    # Retain the roof, curved terminal and dots at their contextual placement.
+    hook = [move(270,205)] + body[1:12] + [line(270,245), close]
     hook = _map(hook, lambda x, y: (x, y + 65))
-    # Retain all four native brush gestures as small, independent dots.
     dots = []
     for contour, cx, cy, target_y in zip(
             xie[2:], [655, 538.5, 409.5, 252], [125, 97.5, 72.5, 60],
             [180, 175, 170, 165], strict=True):
         dots.append(_map(contour, lambda x, y: (cx + (x - cx) * .65,
                                                 target_y + (y - cy) * .65)))
-    # Expand the counter space without widening the native brush stems.
-    wider = lambda x, y: (x - 15 + 55 * max(0, min(1, (x - 500) / 125)), y)
-    frame, baseline, middle = [_map(p, wider) for p in (frame, baseline, _map(middle, frame_map))]
-    upright = _map(upright, lambda x, y: (x - 30, y))
-    hook[0] = ('moveTo', ((270, hook[0][1][0][1]),))
-    hook[-2] = ('lineTo', ((270, hook[-2][1][0][1]),))
-    return [xie[:1], [upright], [frame], [baseline], [middle], [hook], dots]
+    # Re-space the weighted bars vertically; translation preserves their native
+    # rising angle while keeping the three clear openings optically equal.
+    lower = _map(_map(lower, fit), lambda x, y: (x, y - 16))
+    upper = _map(_map(upper, fit), lambda x, y: (x, y - 7))
+    return [xie[:1], _weighted(upright), _weighted(frame),
+            _weighted(lower), _weighted(upper), [hook], dots]

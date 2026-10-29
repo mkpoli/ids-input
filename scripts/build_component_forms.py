@@ -239,6 +239,6 @@ result['sources']['kaisho'] = {
     'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
 }
 result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
-    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '日', '丨'],
+    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
 }}}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
