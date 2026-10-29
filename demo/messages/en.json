@@ -256,5 +256,7 @@
   "app.engines": "Engine comparison",
   "compare.engines": "Engine comparison",
   "app.layers.oncanvas": "Edit on canvas",
-  "app.layers.history": "History"
+  "app.layers.history": "History",
+  "app.export.incomplete": "This drawing is incomplete. Exporting it can drop transforms or pieces.",
+  "app.export.partial": "Export partial drawing"
 }

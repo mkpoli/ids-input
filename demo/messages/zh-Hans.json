@@ -255,5 +255,7 @@
   "app.engines": "引擎比较",
   "compare.engines": "引擎比较",
   "app.layers.oncanvas": "在画布上编辑",
-  "app.layers.history": "历史"
+  "app.layers.history": "历史",
+  "app.export.incomplete": "此绘图不完整。导出可能丢失变换或部件。",
+  "app.export.partial": "导出不完整绘图"
 }
