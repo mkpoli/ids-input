@@ -35,18 +35,30 @@
     open = false; char = ''; info = null; status = 'idle'
     panel?.hidePopover()
   }
-  // The pointer on its way from the anchor to the card, or anywhere on either.
-  function nearAnchor() {
+  // The band between the anchor and the card: crossing the gap goes through neighbouring tiles,
+  // which must not take the card over until the pointer leaves the band.
+  function between() {
     if (!anchor || !panel) return false
-    const slack = 16, boxes = [anchor.getBoundingClientRect(), panel.getBoundingClientRect()]
-    return boxes.some(box => pointerX >= box.left - slack && pointerX <= box.right + slack
-      && pointerY >= box.top - slack && pointerY <= box.bottom + slack)
+    const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
+    if (pointerX < Math.min(box.left, card.left) - 16 || pointerX > Math.max(box.right, card.right) + 16) return false
+    return card.bottom <= box.top
+      ? pointerY >= card.bottom - 16 && pointerY <= box.top + 16
+      : pointerY >= box.bottom - 16 && pointerY <= card.top + 16
+  }
+  // The pointer on the anchor, on the card, or on the way between them.
+  function nearAnchor() {
+    if (!open || !anchor || !panel) return false
+    const boxes = [anchor.getBoundingClientRect(), panel.getBoundingClientRect()]
+    return between() || boxes.some(box => pointerX >= box.left - 16 && pointerX <= box.right + 16
+      && pointerY >= box.top - 16 && pointerY <= box.bottom + 16)
   }
   function leave() {
     if (pinned || anchor === document.activeElement || panel?.contains(document.activeElement)) { keep(); return }
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer)
-    hideTimer = setTimeout(() => {
-      if (pinned || nearAnchor() || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+    // Keep waiting while the pointer is still on its way to the card, and give up once it is gone.
+    hideTimer = setTimeout(function look() {
+      if (pinned || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+      if (nearAnchor()) { hideTimer = setTimeout(look, 200); return }
       close()
     }, 220)
   }
@@ -87,12 +99,12 @@
     return element.closest('[data-character]')
   }
   /** The input's transparent text sits over individually measured paint spans.
-   * @param {Event} event @param {number} x @param {number} y */
-  function spanUnder(event, x, y) {
+   * @param {Event} event @param {number} pointX @param {number} pointY */
+  function spanUnder(event, pointX, pointY) {
     if (target(event) || !(event.target instanceof HTMLInputElement)) return null
     return [...(event.target.closest('.sequence-wrap')?.querySelectorAll('[data-character]') ?? [])].find(node => {
       const box = node.getBoundingClientRect()
-      return x >= box.left && x < box.right && y >= box.top && y < box.bottom
+      return pointX >= box.left && pointX < box.right && pointY >= box.top && pointY < box.bottom
     }) ?? null
   }
   /** @param {PointerEvent} event */
@@ -100,23 +112,28 @@
     if (event.pointerType === 'touch') return
     pointerX = event.clientX; pointerY = event.clientY
     const element = target(event) ?? spanUnder(event, event.clientX, event.clientY)
-    if (element instanceof HTMLElement && root?.contains(element)) schedule(element, element.dataset.character ?? '', 350)
-    else if (nearAnchor()) keep()
-    else leave()
+    if (!(element instanceof HTMLElement) || !root?.contains(element)) { if (nearAnchor()) keep(); else leave(); return }
+    // On the way to the card the pointer passes over other parts; the open card stays until it leaves.
+    if (open && nearAnchor()) keep()
+    else schedule(element, element.dataset.character ?? '', 350)
+  }
+  /** The pointer leaving the window leaves no position behind. @param {PointerEvent} event */
+  function gone(event) {
+    if (event.relatedTarget === null) { pointerX = NaN; pointerY = NaN }
   }
   /** A click keeps the card open while the pointer travels to its buttons, opening it at once.
    * @param {MouseEvent} event */
   function pin(event) {
-    if (pinned) return
-    const element = target(event) ?? spanUnder(event, pointerX, pointerY)
+    const element = target(event) ?? spanUnder(event, event.clientX || pointerX, event.clientY || pointerY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) return
     const value = element.dataset.character ?? ''
-    if (!value) return
+    if (!value || pinned && anchor === element && open) return
     if (!open || anchor !== element) {
+      // Drop a hover's pending delay so the card is up before the pointer leaves.
       clearTimeout(showTimer); showTimer = undefined
       schedule(element, value, 0)
     }
-    pinned = true
+    pinned = anchor === element
     keep()
   }
   /** @param {FocusEvent} event */
@@ -160,17 +177,19 @@
   /** @param {Event} event */
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
-    // A queued scroll can follow pointermove after a palette tile scrolls into view.
-    const hit = Number.isFinite(pointerX) ? document.elementFromPoint(pointerX, pointerY) : null
-    const held = pinned || anchor === document.activeElement || anchor?.matches(':hover') && hit && anchor.contains(hit)
-    if (!held) { close(); return }
-    if (anchor && panel && anchor.getBoundingClientRect().bottom > 0 && anchor.getBoundingClientRect().top < innerHeight) position()
+    if (!anchor) return
+    // A scroll that clips the anchor out of its own box takes the card with it.
+    const box = anchor.getBoundingClientRect()
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
+    if (hit && anchor.contains(hit) || panel?.matches(':hover')) position()
     else close()
   }
   /** @param {PointerEvent} event */
   function outside(event) {
     const node = /** @type {Node} */ (event.target)
     if (panel?.contains(node) || anchor?.contains(node)) return
+    // The caret sits in the input over the painted glyph the card describes.
+    if (anchor && node instanceof HTMLInputElement && spanUnder(event, event.clientX, event.clientY) === anchor) return
     close()
   }
   $effect(() => {
@@ -182,7 +201,9 @@
     changed.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-character'] })
     const resized = new ResizeObserver(position)
     if (panel) resized.observe(panel)
-    node.addEventListener('pointermove', pointer)
+    // The card sits outside `root`, so the pointer position is read from the window.
+    window.addEventListener('pointermove', pointer)
+    window.addEventListener('pointerout', gone)
     node.addEventListener('click', pin, true)
     node.addEventListener('pointerleave', leave)
     node.addEventListener('focusin', focus)
@@ -194,7 +215,8 @@
     window.addEventListener('scroll', scrolled, true)
     return () => {
       changed.disconnect(); resized.disconnect(); close()
-      node.removeEventListener('pointermove', pointer); node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
+      window.removeEventListener('pointermove', pointer); window.removeEventListener('pointerout', gone)
+      node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
       node.removeEventListener('dragstart', close); window.removeEventListener('keydown', key, true)
       window.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', close)
