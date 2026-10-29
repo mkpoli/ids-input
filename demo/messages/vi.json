@@ -172,6 +172,8 @@
   "app.layers.kind.slot": "Ô trống",
   "app.layers.kind.group": "Nhóm",
   "app.layers.mode": "Kiểu biến đổi",
+  "app.layers.matrix": "Ma trận",
+  "app.layers.matrixHint": "Sáu hệ số affine trong tọa độ cục bộ: a b / c d, dịch chuyển e f.",
   "app.layers.affine": "Affine",
   "app.layers.mobius": "Möbius",
   "app.layers.real": "Phần thực",

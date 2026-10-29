@@ -31,21 +31,30 @@ describe('the character vocabulary', () => {
   })
 })
 
-describe('the adapter character search', () => {
+describe('the adapter search over the character vocabulary', () => {
   const adapter = babelStoneAdapter({ table: new Map(), charactersText: TEXT, foldsText: FOLDS, palette: PALETTE })
-  const found = async query => (await adapter.searchCharacters(query)).map(item => item.char)
+  const found = async (query, options) => (await adapter.search(query, options)).map(item => item.char)
 
-  it('returns the character named, without opening it into component forms', async () => {
+  it('finds the character a reading or meaning names, beside the parts it knows', async () => {
     expect((await found('water'))[0]).toBe('水')
     expect((await found('mizu'))[0]).toBe('水')
     expect(await found('수')).toContain('水')
     expect((await found('thuy'))[0]).toBe('水')
     expect((await found('silk'))[0]).toBe('糸')
+    expect((await found('roof'))).toContain('屋')
+  }, 20_000)
+  it('keeps a single ideograph typed as that component, without names', async () => {
+    expect(await found('木')).toEqual(['木'])
+  })
+  it('searches a lone kana as a reading and keeps the kana first', async () => {
+    const hits = await found('き')
+    expect(hits[0]).toBe('き')
+    expect(hits).toContain('生')
   })
   it('takes a limit, an empty query and no character data', async () => {
-    expect(await adapter.searchCharacters('water', { limit: 0 })).toEqual([])
-    expect(await adapter.searchCharacters('')).toEqual([])
+    expect(await adapter.search('water', { limit: 0 })).toEqual([])
+    expect(await adapter.search('')).toEqual([])
     const plain = babelStoneAdapter({ table: new Map() })
-    expect(plain.searchCharacters).toBeUndefined()
+    expect(await plain.search('water')).toEqual([])
   })
 })

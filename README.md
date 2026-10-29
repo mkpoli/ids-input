@@ -26,8 +26,9 @@ The package has four layers, and an optional preview:
   adapter reads BabelStone IDS, the parts palette, component forms, names, script folds and the
   character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
-  the tree, the chosen part's tools, the part pickers (a parts palette, a "Take parts from"
-  decomposition browser, a search, a character search) and the preview, each placeable on its own
+  the tree, the chosen part's tools, the part pickers (a parts palette, structure templates, a
+  "Take parts from" decomposition browser, a search over components and characters) and the
+  preview, each placeable on its own
   or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
@@ -100,7 +101,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'characters', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
+| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -386,7 +387,6 @@ interface IdsAdapter {
   structure(char, options?): Promise<{ text: string, regions?: string }[]>   // required
   variants?(part, options?): Promise<{ char: string, count?: number }[]>
   search?(query, options?): Promise<{ char: string, label?: string }[]>
-  searchCharacters?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
@@ -428,9 +428,9 @@ component in reading order is inferred. Other drawings report themselves incompl
 
 `babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
-such as water or のぶん when `names` is given), `searchCharacters` (a character by a reading or
-meaning when `characters` is given), `containing` and `parts`
-from the files in `data/`. `components` writes out BabelStone's numbered components (`{12}`, the
+such as water or のぶん when `names` is given, and the whole characters those names belong to when
+`characters` is given), `containing` and `parts` from the files in `data/`. `components` writes
+out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
@@ -611,18 +611,16 @@ and 攴; ノ木, の木, ノギ and のぎ offer 禾; 宝盖 and 寶蓋 offer �
 and 龍部, 龙部 and 竜部 all give the forms of 龍. Readings, pinyin, romaji, Korean, Vietnamese and
 English senses work the same way: water, silk, roof, thread, person, みず, mizu, sui, shui,
 jiaosipang, baogaitou, sandianshui, nobun, nogi, ukanmuri, 수, thủy and Bộ Thủy lead to their
-components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph or kana typed on
-its own stays the character it is; a lone Hangul syllable also searches names, so 수 finds 水. Without `names` the search takes
-characters and code points only.
+components; `radical 120` and `Kangxi radical 120` lead to 糸. A single ideograph typed on its own
+stays the character it is; a lone kana also searches names, so き finds 生, as does a lone Hangul
+syllable, so 수 finds 水. Without `names` the search takes characters and code points only.
 
-### Characters
-
-The Characters tab asks `searchCharacters`, over `data/character-vocabulary.tsv.gz`: every IDS
-character with a Unihan or KANJIDIC2 name (48,966), with 214,533 readings, pinyin, romanizations,
-Korean, Vietnamese and English meanings. water, shui, mizu, みず, 수 and thủy find 水; person finds
-人; silk finds 糸. Results are characters, not the forms the Find tab opens; among equally close
-names the more common character comes first, by KANJIDIC2's newspaper frequency or Unihan's school
-grade. Without `characters` the tab is not shown.
+With `characters` (`data/character-vocabulary.tsv.gz`, every IDS character with a Unihan or
+KANJIDIC2 name: 48,966 characters, 214,533 readings, pinyin, romanizations, Korean, Vietnamese and
+English meanings), the same search also offers whole characters after the components and the
+characters the relations already know: roof finds 宀 and then 屋, silk finds 丝, 絲 and 糸 and then
+絹, and thuy finds 水 and then 始. Among equally close names the more common character comes first,
+by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 ## Preview
 
@@ -815,8 +813,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   not read yet.
 
 - 字海网 (yedict.com), IDS search, <http://www.yedict.com/search/ids>: ideas for searching by parts.
-- X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13 and
-  30-37): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
+- X posts, cited with URL, date and a note in `demo/lib/example-sources.js` (records 8-13, 30-37
+  and 39-40): [@sarasvati635](https://x.com/sarasvati635/status/2054123491889488005) (⿱艹堀, ホキ),
   [@Utetamutete](https://x.com/Utetamutete/status/2111106301044699557) (投+石, なげ and いしなとり),
   [@ka_disco](https://x.com/ka_disco/status/2016902923863937473) (⿲𠂤日千), eight posts on
   ⿴囗⿱エン ([@sc2rm](https://x.com/sc2rm/status/820172370186944512),
@@ -829,7 +827,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   [@king_ko_roro](https://x.com/king_ko_roro/status/1842415160600010928)),
   [@jianhuazi_bot2](https://x.com/jianhuazi_bot2/status/1373547010536706048) (⿱一心) and
   [@Umihotarus](https://x.com/Umihotarus/status/1106526920378740736) /
-  [@Dodan_Tu_Tu_Ji](https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606) (⿰忄実).
+  [@Dodan_Tu_Tu_Ji](https://x.com/Dodan_Tu_Tu_Ji/status/1889694369923334606) (⿰忄実), and
+  [@Utetamutete](https://x.com/Utetamutete/status/2083503199319912453) /
+  [@Utetamutete](https://x.com/Utetamutete/status/2084625411980530020) (品字様 of 里, 莫, 天 and 地).
 - [全学联汉字](https://zh.wikipedia.org/wiki/全学联汉字), Chinese Wikipedia, sections 通假, 楷化,
   记号, 字形省去, 隶定, 训读, 声旁, 假名声旁 and 西文字母 (read 2026-10-28): the Geba-ji examples
   in `demo/lib/examples.js`, one form per row. Left out: the ambiguous 广マ, the unrenderable 㐧,
@@ -860,8 +860,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
   readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`; the
-  article gives each character's radical and code point. The descriptions are BabelStone's, all
-  tagged K, nine as GKP.
+  article gives each character's radical and code point. The entries cover the 乙 coda ㄹ, 𠃍 and
+  ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ and 巴 for ㅂ, with the article's 약자 and 동자. The
+  descriptions are BabelStone's, all tagged K, nine as GKP.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -872,7 +873,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   舟 with ラ. ⿰艦ツ and ⿰掌キ come from the 通船 and 掌機長 images posted by @xWcvlUaljn96009, whose
   record says the images were not re-checked. ⿵门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
-  U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone.
+  U+282A3 and U+2C711, with IDS from BabelStone; U+3514, U+3516 and U+439E, which the slide also
+  uses, are Korean gukja and sit in that group.
 - [@Utetamutete](https://x.com/Utetamutete/status/2115621598799770015), 2026-10: a dictionary
   entry with 月 above 朋, read さやけし, for `⿱月朋`.
 - Gen Kojitani, [Reply to N2741, IRG N2744](https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf),
@@ -926,7 +928,8 @@ at the start; the Shape or indented Tree view and the search under it; and at th
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Adjust layout moves, scales and turns drawing parts before export without changing the sequence;
-those adjustments stay with their tab while it is open. Rows in the Tree view select parts, expand
+those adjustments stay with their tab while it is open. The Layers dialog edits the document's layer
+transforms, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
 `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
@@ -1084,7 +1087,7 @@ associations, editorial Han translations and emoji mnemonics, and direct Small S
 correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
 describe the limits of each relationship.
 
-With `characterInfo`, both `search` and `searchCharacters` accept English glosses,
+With `characterInfo`, `search` accepts English glosses,
 emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
 directions, alongside existing names, readings, and component forms. Results keep
 dictionary qualifiers; component occurrences and lookup aliases have separate labels.

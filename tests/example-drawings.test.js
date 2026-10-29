@@ -19,11 +19,17 @@ describe('the prepared example drawings', () => {
       const drawn = data.drawings[sequence]?.drawn
       expect(drawn?.d.length).toBeGreaterThan(100)
       expect(drawn.d).not.toMatch(/NaN|Infinity/)
-      const expected = { '⿰扌3': 2, '⿰𛂦方': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄥ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
+      const encoded = { '⿰𛂦方': '𭤪' }
+      if (encoded[sequence]) {
+        expect(drawn.parts).toHaveLength(1)
+        expect(drawn.origins).toEqual([`glyph ${encoded[sequence]}`])
+        continue
+      }
+      const expected = { '⿰扌3': 2, '⿰亻A': 2, '⿰木⿳ㄙㄨㄥ': 4, '⿰木⿱ㄅㄞ': 3, '⿰木き': 2 }
       expect(drawn.parts).toHaveLength(expected[sequence])
     }
     expect(data.drawings['⿰扌3'].drawn.origins).toContain('glyph 3')
-    expect(data.drawings['⿰𛂦方'].drawn.origins).toContain('glyph 𛂦')
+    expect(data.drawings['⿰𛂦方'].drawn.origins).toEqual(['glyph 𭤪'])
     expect(data.drawings['⿰亻A'].drawn.origins).toContain('glyph A')
     expect(data.drawings['⿰木⿳ㄙㄨㄥ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄙ', 'glyph ㄨ', 'glyph ㄥ']))
     expect(data.drawings['⿰木⿱ㄅㄞ'].drawn.origins).toEqual(expect.arrayContaining(['glyph ㄅ', 'glyph ㄞ']))
@@ -106,11 +112,15 @@ it('prepares the Geba examples and their letters', () => {
 
 it('prepares the Korean gukja examples', () => {
   const examples = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
-  for (const { sequence, char } of examples) {
+  for (const { sequence } of examples) {
     const drawn = data.drawings[sequence]?.drawn
     expect(drawn?.d.length).toBeGreaterThan(100)
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
-    // Each character is encoded, so the composer draws its own glyph.
-    expect(drawn.origins).toEqual([`glyph ${char}`])
+    expect(drawn.origins.length).toBeGreaterThan(0)
   }
+  // The composer draws the encoded glyph for these; the 叱 forms without one fall back to shapes
+  // it learns from the components.
+  expect(data.drawings['⿱文乙'].drawn.origins).toEqual(['glyph 㐎'])
+  expect(data.drawings['⿱加𠮟'].drawn.origins).toEqual(['glyph 㖙'])
+  expect(data.drawings['⿱加㇣'].drawn.origins).toEqual(['glyph 㔔'])
 })

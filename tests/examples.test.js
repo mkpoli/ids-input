@@ -130,13 +130,20 @@ it('reads the Korean gukja as the source does', () => {
   const korean = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
   // 국자의 음역자와 구결자, oldid 42393816: the first reading the article gives for each character.
   const readings = {
-    '㐎': '글', '乭': '돌', '㐘': '쌀', '乫': '갈', '乬': '걸', '乷': '살', '乺': '솔', '乼': '줄',
-    '乽': '잘', '乧': '둘', '㐔': '골', '巪': '걱', '㪲': '둑', '䜳': '둔', '䯩': '곱',
+    '㐎': '글', '乭': '돌', '㐘': '쌀', '乫': '갈', '㐓': '갈', '乬': '걸', '乷': '살', '乺': '솔',
+    '㐒': '솔', '㐍': '졸', '乼': '줄', '乽': '잘', '㐔': '골', '乧': '둘', '㐙': '둘',
+    '㔔': '강', '㔖': '각', '巪': '걱', '㪲': '둑', '㪳': '둥', '䜳': '둔', '䎞': '작',
+    '㖙': '갓', '㖋': '갯', '㖎': '갯', '㖌': '굿', '㖍': '둣', '㖚': '붓', '唟': '것', '夞': '욋',
+    '旕': '엇', '嗭': '짓', '廤': '곳', '蒊': '곳', '㖜': '곳', '㖯': '똥', '㖈': '놈', '䯩': '곱',
   }
   expect(korean.map(example => example.char).sort()).toEqual(Object.keys(readings).sort())
   for (const example of korean) expect(example.reading).toBe(readings[example.char])
-  expect(korean.some(example => example.sequence.includes('𠃍'))).toBe(true)
-  expect(korean.some(example => example.sequence.includes('𠃊'))).toBe(true)
+  for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
+    expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
+  }
+  expect(korean.filter(example => example.reading === '갈')).toHaveLength(2)
+  expect(korean.filter(example => example.reading === '솔')).toHaveLength(2)
+  expect(korean.filter(example => example.reading === '곳')).toHaveLength(3)
 })
 
 it('preserves digits, hentaigana, Latin and nested Bopomofo in the examples', () => {

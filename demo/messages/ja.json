@@ -172,6 +172,8 @@
   "app.layers.kind.slot": "空き",
   "app.layers.kind.group": "グループ",
   "app.layers.mode": "変形の種類",
+  "app.layers.matrix": "行列",
+  "app.layers.matrixHint": "ローカル座標の六つの係数（a b / c d、移動 e f）。",
   "app.layers.affine": "アフィン",
   "app.layers.mobius": "メビウス",
   "app.layers.real": "実部",

@@ -8,7 +8,8 @@ const en = catalogue('en')
 describe('the message catalogues', () => {
   it('hold the keys the components build at runtime', () => {
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
-    for (const tab of ['find', 'characters', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
+    for (const tab of ['find', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
+    for (const key of ['ids.search.label', 'ids.search.none']) expect(key in en).toBe(true)
   })
 })
 

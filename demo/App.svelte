@@ -150,6 +150,15 @@
         if ([...char].length !== 1 || char === sequence) continue
         try { return await composed(char, options) } catch { /* compose the sequence */ }
       }
+      // A description that names a character draws that character: a sequence the composer does not
+      // know would otherwise be laid out by a guess of its own. A description with an operator
+      // modifier is left to the exact answer above, since the modifier-free reading is only a guess.
+      if (!split && !sequence.includes('[')) {
+        const [named] = await babel.encoded(sequence).catch(() => [])
+        if (named !== undefined && [...named].length === 1 && named !== sequence) {
+          try { return await composed(named, { signal: options?.signal }) } catch { /* compose it */ }
+        }
+      }
       const draw = defaultFace ? sans : composed
       try { return await draw(sequence, options) } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
@@ -848,7 +857,7 @@
           {:else if editor.pending}<p class="status" role="status">{wholeComponentLookup ? t('ids.search.emptyHint') : editor.pending}</p>{/if}
         </div>
         <div class="block"><IdsOperators {editor} {keyHints} /></div>
-        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find', 'characters']} bind:fromText={fromText_} title={false} /></div>
+        <div class="block grow"><IdsPicker {editor} pickers={['parts', 'templates', 'from', 'find']} bind:fromText={fromText_} title={false} /></div>
       </section>
 
       <div class="column-gap input-gap">

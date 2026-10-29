@@ -35,7 +35,7 @@ for (const example of EXAMPLES) {
       selected = bopomofoSources.get(selected)
     }
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
-    const drawn = await compose(selected, example.sequence)
+    const drawn = await compose(selected, example.char || example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
   } catch (error) {
