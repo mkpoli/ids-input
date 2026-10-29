@@ -377,6 +377,7 @@
   $effect(() => { tab; filter; tangutStroke; tangutPage = 0 })
   const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
   const tangutCounts = $derived([...new Set(Object.values(tangutStrokes ?? {}))].sort((a, b) => a - b))
+  const tangutUncounted = $derived(tangutKeys.filter(key => tangutStrokes?.[key] == null).length)
   const tangutMatches = $derived.by(() => {
     const keys = tangutStroke === undefined ? tangutKeys
       : tangutStroke === null ? tangutKeys.filter(key => tangutStrokes?.[key] == null)
@@ -632,7 +633,7 @@
         placeholder={filterLabel} aria-label={filterLabel} />
     {/if}
   </div>
-  {#if tab === 'tangut' && tangutData}
+  {#if tab === 'tangut' && tangutData && tangutStrokes}
     <div class="parts-counts" role="group" aria-label={t('parts.tangut.strokes')}>
       <button type="button" class:active={tangutStroke === undefined} aria-pressed={tangutStroke === undefined}
         onclick={() => { tangutStroke = undefined }}>{t('parts.tangut.anyStrokes')}</button>
@@ -642,9 +643,11 @@
           title={label} aria-label={label}
           onclick={() => { tangutStroke = value }}>{t('parts.strokeChip', { count: value })}</button>
       {/each}
-      <button type="button" class:active={tangutStroke === null} aria-pressed={tangutStroke === null}
-        title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
-        onclick={() => { tangutStroke = null }}>?</button>
+      {#if tangutUncounted}
+        <button type="button" class:active={tangutStroke === null} aria-pressed={tangutStroke === null}
+          title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
+          onclick={() => { tangutStroke = null }}>?</button>
+      {/if}
     </div>
   {/if}
   {#if tab === 'seal' && !query && sealGroups.length}
