@@ -21,13 +21,6 @@
         </a>
       </li>
       <li>
-        <a class="way paypal" href="https://paypal.me/mkpoli" target="_blank" rel="noreferrer">
-          <span class="mark" aria-hidden="true"><Icon name="card" size={18} /></span>
-          <span class="copy"><strong>PayPal</strong><small>{t('app.sponsor.paypal')}</small></span>
-          <Icon name="arrow-right" />
-        </a>
-      </li>
-      <li>
         <a class="way company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20ids.mkpo.li">
           <span class="mark" aria-hidden="true"><Icon name="mail" size={17} /></span>
           <span class="copy"><strong>{t('app.sponsor.company')}</strong><small>{t('app.sponsor.companyHint')}</small></span>
@@ -53,7 +46,6 @@
   .mark{display:grid;place-items:center;flex:none;width:34px;height:34px;border-radius:10px;color:#fff}
   .mark :global(.icon){color:inherit}
   .kofi .mark{background:#ff5e5b;box-shadow:0 0 14px #ff5e5b66}
-  .paypal .mark{background:#0070ba;box-shadow:0 0 14px #0070ba66}
   .company .mark{background:var(--ink);color:var(--bg);box-shadow:0 0 14px rgb(0 0 0 / .18)}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
   .copy strong{font-size:13.5px;font-weight:650}
