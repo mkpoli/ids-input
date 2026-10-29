@@ -224,8 +224,8 @@ puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/
 
 The preview badges a cell drawing **Cells**. `compose(source, sequence, { layout: 'composed' })`
 forces the composer, and `'cells'` forces cells and rejects loose marks and modified operators; the default, `'auto'`, uses
-cells only for such dense descriptions. Pyramids, grouped forms, excluded characters and descriptions
-with loose marks or approximate operators keep the composer.
+cells only for such dense descriptions. A description that is itself a pyramid, a grouped form or
+an excluded character, or that carries loose marks or approximate operators, keeps the composer.
 
 ### Pyramids
 

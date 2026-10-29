@@ -232,7 +232,10 @@ describe('drawing a pyramid', () => {
   it('loads each repeated part asset once instead of once per node', async () => {
     const fetched = [], text = pyramidSequence('口', 12)
     await compose(sourceOf(fetched), text)
+    // The part's own record is read, and the whole-sequence key adds a second file; the source
+    // caches by name, so a fetch per node would show up near the 78 leaves.
     const glyphs = fetched.filter(name => name.startsWith('g/'))
+    expect(glyphs).toContain('g/037.json')
     expect(glyphs.length).toBeLessThanOrEqual(2)
     expect(new Set(glyphs).size).toBe(glyphs.length)
     expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
@@ -242,7 +245,8 @@ describe('drawing a pyramid', () => {
     const source = sourceOf(), text = `⿱木${pyramidSequence('口', 4)}`
     const drawn = await compose(source, text, { separate: true })
     expect(drawn.parts).toHaveLength(11)
-    expect(drawn.parts.at(-1)?.origin).toMatch(/口$/)
+    // Dense as a whole, so the top description is laid out in cells and its parts say so.
+    expect(drawn.parts.at(-1)?.origin).toBe('cells 口')
     const groups = groupParts(drawn.parts, await sketch(source, text))
     expect(groups).toHaveLength(11)
   })
