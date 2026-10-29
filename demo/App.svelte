@@ -816,12 +816,6 @@
         <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
       </div>
       </nav>
-      <div class="end">
-        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
-        <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
-        <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
-        <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
-      </div>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-heart" aria-hidden="true">♥</span>
         <span class="sponsor-word">
@@ -829,6 +823,12 @@
           <span class="sponsor-label">{t('app.sponsor.label')}</span>
         </span>
       </button>
+      <div class="end">
+        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
+        <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
+        <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
+        <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
+      </div>
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
@@ -1008,10 +1008,10 @@
   .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
   .group :global(.tool:focus-visible){outline-offset:-2px}
-  .end{margin-left:auto}
+  .end{margin-left:0}
   /* The sponsor button: a black sign whose border and lettering cycle through the spectrum, with a
      halo that comes up at once on hover or focus. */
-  .sponsor{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 12px;
+  .sponsor{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 12px;margin-inline:auto;
     border:0;border-radius:9px;background:#08080d;color:#fff;font:inherit;cursor:pointer;white-space:nowrap;isolation:isolate;
     box-shadow:0 0 0 1px rgb(255 255 255 / .12),0 0 10px rgb(255 61 113 / .22)}
   .sponsor::before{content:"";position:absolute;inset:0;z-index:-1;padding:1px;border-radius:inherit;pointer-events:none;
@@ -1030,6 +1030,16 @@
   .sponsor-glow{filter:blur(6px) saturate(1.5);opacity:.7;pointer-events:none}
   .sponsor:hover .sponsor-glow,.sponsor:focus-visible .sponsor-glow{opacity:1;filter:blur(8px) saturate(1.7)}
   @keyframes sponsor-hue{to{filter:hue-rotate(360deg)}}
+  /* Below the full toolbar width the header already wraps; keep Sponsor with the right-hand
+     controls there, and centre it in the free space only while the bar stays on one row. */
+  @media (min-width:641px) and (max-width:1100px){
+    .sponsor{padding:0 8px}
+    .sponsor-label,.sponsor-glow{font-size:11px}
+  }
+  @media (min-width:641px) and (max-width:1000px){
+    .end{margin-left:auto}
+    .sponsor{order:1;margin-inline:0;margin-left:auto}
+  }
   @media (prefers-reduced-motion:reduce){.sponsor::before,.sponsor-heart,.sponsor-word,.sponsor:hover,.sponsor:focus-visible{animation:none}}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
