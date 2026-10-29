@@ -372,13 +372,15 @@
       .then(unpack).then(JSON.parse).then(data => { tangutStrokes = data.values })
       .catch(() => { /* Counts stay unknown. */ })
   })
-  /** @type {number | undefined} */
+  /** @type {number | null | undefined} */
   let tangutStroke = $state(undefined)
   $effect(() => { tab; filter; tangutStroke; tangutPage = 0 })
   const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
   const tangutCounts = $derived([...new Set(Object.values(tangutStrokes ?? {}))].sort((a, b) => a - b))
   const tangutMatches = $derived.by(() => {
-    const keys = tangutStroke === undefined ? tangutKeys : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
+    const keys = tangutStroke === undefined ? tangutKeys
+      : tangutStroke === null ? tangutKeys.filter(key => tangutStrokes?.[key] == null)
+      : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
     const term = filter.trim()
     if (!term) return keys
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
@@ -633,13 +635,16 @@
   {#if tab === 'tangut' && tangutData}
     <div class="parts-counts" role="group" aria-label={t('parts.tangut.strokes')}>
       <button type="button" class:active={tangutStroke === undefined} aria-pressed={tangutStroke === undefined}
-        onclick={() => { tangutStroke = undefined; filter = '' }}>{t('parts.tangut.anyStrokes')}</button>
+        onclick={() => { tangutStroke = undefined }}>{t('parts.tangut.anyStrokes')}</button>
       {#each tangutCounts as value (value)}
         {@const label = t('parts.strokeCount', { count: value })}
         <button type="button" class:active={tangutStroke === value} aria-pressed={tangutStroke === value}
           title={label} aria-label={label}
-          onclick={() => { tangutStroke = value; filter = '' }}>{t('parts.strokeChip', { count: value })}</button>
+          onclick={() => { tangutStroke = value }}>{t('parts.strokeChip', { count: value })}</button>
       {/each}
+      <button type="button" class:active={tangutStroke === null} aria-pressed={tangutStroke === null}
+        title={t('parts.unknownStrokes')} aria-label={t('parts.unknownStrokes')}
+        onclick={() => { tangutStroke = null }}>?</button>
     </div>
   {/if}
   {#if tab === 'seal' && !query && sealGroups.length}
