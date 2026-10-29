@@ -1076,10 +1076,13 @@ bun install
 bun test tests          # core, adapter, composer and catalogue tests
 COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against han-compose's own drawings
 bun run check           # tsc and svelte-check
+bun run verify          # tests, tsc and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 ```
+
+CI only builds the demo and deploys it; the checks above stay local.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and

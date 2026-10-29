@@ -71,7 +71,7 @@
     "types": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "i18n": "x18n check",
-    "verify": "bun test tests && bun run check && bun run i18n",
+    "verify": "bun run test && bun run check && bun run i18n",
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
