@@ -7,7 +7,7 @@ describe('composer faces', () => {
     expect(COMPOSER_BASES.sans).toBe(COMPOSER_BASE)
     expect(Object.keys(COMPOSER_BASES).sort()).toEqual(['klee', 'sans', 'serif'])
     expect(new Set(Object.values(COMPOSER_BASES)).size).toBe(3)
-    expect(COMPOSER_BASES.serif).toContain('serif-bmp-compose-layout-v4-serif-f5')
+    expect(COMPOSER_BASES.serif).toContain('62af8c26f961-serif-compose-layout-v4-serif-f5')
     expect(COMPOSER_BASES.klee).toContain('kaisho-compose-layout-v4-kaisho-f5')
   })
 })
