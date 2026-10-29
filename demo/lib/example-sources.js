@@ -48,7 +48,7 @@ export const EXAMPLE_SOURCES = [
   { id: 'x-miho', title: 'Abbreviations 广+マ, 言+ギ, 囗+エン', author: '@miho_kivi', date: '2022-11-04', url: 'https://x.com/miho_kivi/status/1588333225583071232', status: 'checked', note: 'On 宮崎駿’s 園 written 囗+エン, and lists 魔 as 广+マ, 門, and 議 as 言+ギ.' },
   { id: 'l2-12-032', title: 'Proposal to Add a Character to the UTR #45', author: 'John H. Jenkins, Richard Cook, Ken Lunde', date: '2012-01-26', url: 'https://www.unicode.org/L2/L2012/12032-one-add-utr45.pdf', status: 'checked', note: 'Proposes the 招財進寶 ligature as a U-source character and gives its CDL: 宀 at the top, 辶 around the lower left, and 王, 尔, 隹, 貝 and 招 inside. It cites Chinese New Year decorations as the attestations.' },
   { id: 'utr45', title: 'U-source ideographs (UTR #45)', date: '2026-07-30', url: 'https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt', status: 'checked', note: 'UTC-00949 records the 招財進寶 ligature as ⿱宀⿺辶⿱⿰王尔⿲隹貝招, status NoAction.' },
-  { id: 'zh-yue-hetizi', title: '合成字', date: '2026-01-03', url: 'https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560', status: 'checked', note: 'Lists 招財進寶, 孔孟好學, 草泥馬 as ⿱艹⿰马尼, 阿Sir as ⿰⿳⿰SIR木阝, and 動L as ⿱成龍. The 招財進寶 line names its image ⿱𡩧⿺進⿰貝招. Read 2026-10-29.' },
+  { id: 'zh-yue-hetizi', title: '合成字', date: '2026-01-03', url: 'https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560', status: 'checked', note: 'Lists 招財進寶, 孔孟好學, 草泥馬, 阿Sir and 動L; gives 草泥馬 as ⿱艹⿰马尼, 阿Sir as ⿰⿳⿰SIR木阝, and 動L as ⿱成龍. The 招財進寶 image is named ⿱𡩧⿺進⿰貝招. Read 2026-10-29.' },
 ]
 
 /** The citation number of a source id, or 0 when the id is unknown. @param {string} id */

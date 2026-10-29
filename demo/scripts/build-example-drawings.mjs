@@ -27,7 +27,7 @@ for (const example of EXAMPLES) {
   try {
     const local = onlyBundled(example.sequence)
     let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? null : source)
-    // A local Han form with no bundled source of its own still draws its parts from the export.
+    // A local Han form still needs the export for the manifest and layout.
     // The Bopomofo and Small Seal sources keep their bundled outlines, without a fallback.
     if (!selected && !hasBopomofo(example.sequence) && !hasSmallSeal(example.sequence)) selected = source
     if (hasBopomofo(example.sequence)) {
