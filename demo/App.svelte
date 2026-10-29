@@ -80,6 +80,8 @@
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
   let slots = $state(/** @type {number[][]} */ ([]))
+  const exportIncomplete = $derived(Boolean((addressDocument(currentSession()?.document) && !scopes) || (scopes && !scopes.complete)))
+  const canExport = $derived(Boolean(!exportIncomplete && (scopes ?? drawing)))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
@@ -695,7 +697,7 @@
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
-    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
+    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !canExport, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
@@ -986,7 +988,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
