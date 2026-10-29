@@ -125,6 +125,7 @@
   "ids.split": "Split {part} into its parts",
   "ids.structure": "Structure",
   "ids.swaps": "In place of {part}",
+  "ids.swaps.close": "Hide the replacements",
   "ids.undo.label": "Undo",
   "ids.undo.named": "Undo: {step}",
   "ids.unwrap": "Remove this level",

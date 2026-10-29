@@ -123,6 +123,7 @@
   "ids.split": "{part}을(를) 구성 요소로 나누기",
   "ids.structure": "구성",
   "ids.swaps": "{part} 대신",
+  "ids.swaps.close": "바꿀 항목 닫기",
   "ids.undo.label": "실행 취소",
   "ids.undo.named": "실행 취소: {step}",
   "ids.unwrap": "이 단계 없애기",

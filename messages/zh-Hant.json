@@ -123,6 +123,7 @@
   "ids.split": "把{part}拆成部件",
   "ids.structure": "結構",
   "ids.swaps": "替換{part}",
+  "ids.swaps.close": "收合替換項",
   "ids.undo.label": "復原",
   "ids.undo.named": "復原：{step}",
   "ids.unwrap": "去掉這一層",
