@@ -16,6 +16,8 @@
   /** @type {AbortController | null} */ let controller = null
   let restoringFocus = false
   let pointerX = NaN, pointerY = NaN
+  // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
+  let pinned = false
   let generation = 0
   /** @type {string | null} */ let savedTitle = null
   /** @type {string | null} */ let savedDetails = null
@@ -29,15 +31,22 @@
       if (savedDetails !== null) anchor.setAttribute('aria-details', savedDetails)
       else anchor.removeAttribute('aria-details')
     }
-    anchor = null; savedTitle = null; savedDetails = null
+    anchor = null; savedTitle = null; savedDetails = null; pinned = false
     open = false; char = ''; info = null; status = 'idle'
     panel?.hidePopover()
   }
+  // The pointer on its way from the anchor to the card, or anywhere on either.
+  function nearAnchor() {
+    if (!anchor || !panel) return false
+    const slack = 16, boxes = [anchor.getBoundingClientRect(), panel.getBoundingClientRect()]
+    return boxes.some(box => pointerX >= box.left - slack && pointerX <= box.right + slack
+      && pointerY >= box.top - slack && pointerY <= box.bottom + slack)
+  }
   function leave() {
-    if (anchor === document.activeElement || panel?.contains(document.activeElement)) { keep(); return }
+    if (pinned || anchor === document.activeElement || panel?.contains(document.activeElement)) { keep(); return }
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer)
     hideTimer = setTimeout(() => {
-      if (panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+      if (pinned || nearAnchor() || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
       close()
     }, 220)
   }
@@ -46,7 +55,7 @@
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     x = Math.max(8, Math.min(box.left, innerWidth - card.width - 8))
-    y = box.bottom + 8 + card.height <= innerHeight ? box.bottom + 8 : Math.max(8, box.top - card.height - 8)
+    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : Math.max(8, box.top - card.height - 4)
   }
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
@@ -77,20 +86,38 @@
     const element = /** @type {HTMLElement} */ (event.target)
     return element.closest('[data-character]')
   }
+  /** The input's transparent text sits over individually measured paint spans.
+   * @param {Event} event @param {number} x @param {number} y */
+  function spanUnder(event, x, y) {
+    if (target(event) || !(event.target instanceof HTMLInputElement)) return null
+    return [...(event.target.closest('.sequence-wrap')?.querySelectorAll('[data-character]') ?? [])].find(node => {
+      const box = node.getBoundingClientRect()
+      return x >= box.left && x < box.right && y >= box.top && y < box.bottom
+    }) ?? null
+  }
   /** @param {PointerEvent} event */
   function pointer(event) {
     if (event.pointerType === 'touch') return
     pointerX = event.clientX; pointerY = event.clientY
-    let element = target(event)
-    // The input's transparent text sits over individually measured paint spans.
-    if (!element && event.target instanceof HTMLInputElement) {
-      element = [...(event.target.closest('.sequence-wrap')?.querySelectorAll('[data-character]') ?? [])].find(node => {
-        const box = node.getBoundingClientRect()
-        return event.clientX >= box.left && event.clientX < box.right && event.clientY >= box.top && event.clientY < box.bottom
-      }) ?? null
-    }
+    const element = target(event) ?? spanUnder(event, event.clientX, event.clientY)
     if (element instanceof HTMLElement && root?.contains(element)) schedule(element, element.dataset.character ?? '', 350)
+    else if (nearAnchor()) keep()
     else leave()
+  }
+  /** A click keeps the card open while the pointer travels to its buttons, opening it at once.
+   * @param {MouseEvent} event */
+  function pin(event) {
+    if (pinned) return
+    const element = target(event) ?? spanUnder(event, pointerX, pointerY)
+    if (!(element instanceof HTMLElement) || !root?.contains(element)) return
+    const value = element.dataset.character ?? ''
+    if (!value) return
+    if (!open || anchor !== element) {
+      clearTimeout(showTimer); showTimer = undefined
+      schedule(element, value, 0)
+    }
+    pinned = true
+    keep()
   }
   /** @param {FocusEvent} event */
   function focus(event) {
@@ -135,12 +162,16 @@
     if (panel?.contains(/** @type {Node} */ (event.target))) return
     // A queued scroll can follow pointermove after a palette tile scrolls into view.
     const hit = Number.isFinite(pointerX) ? document.elementFromPoint(pointerX, pointerY) : null
-    if (anchor === document.activeElement || anchor?.matches(':hover') && hit && anchor.contains(hit)) position()
+    const held = pinned || anchor === document.activeElement || anchor?.matches(':hover') && hit && anchor.contains(hit)
+    if (!held) { close(); return }
+    if (anchor && panel && anchor.getBoundingClientRect().bottom > 0 && anchor.getBoundingClientRect().top < innerHeight) position()
     else close()
   }
   /** @param {PointerEvent} event */
   function outside(event) {
-    if (!panel?.contains(/** @type {Node} */ (event.target))) close()
+    const node = /** @type {Node} */ (event.target)
+    if (panel?.contains(node) || anchor?.contains(node)) return
+    close()
   }
   $effect(() => {
     const node = root, read = adapter.characterInfo
@@ -152,6 +183,7 @@
     const resized = new ResizeObserver(position)
     if (panel) resized.observe(panel)
     node.addEventListener('pointermove', pointer)
+    node.addEventListener('click', pin, true)
     node.addEventListener('pointerleave', leave)
     node.addEventListener('focusin', focus)
     node.addEventListener('focusout', leave)
@@ -162,7 +194,7 @@
     window.addEventListener('scroll', scrolled, true)
     return () => {
       changed.disconnect(); resized.disconnect(); close()
-      node.removeEventListener('pointermove', pointer); node.removeEventListener('pointerleave', leave)
+      node.removeEventListener('pointermove', pointer); node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
       node.removeEventListener('dragstart', close); window.removeEventListener('keydown', key, true)
       window.removeEventListener('pointerdown', outside, true); window.removeEventListener('resize', close)

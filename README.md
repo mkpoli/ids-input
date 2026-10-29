@@ -1107,8 +1107,10 @@ dictionary qualifiers; component occurrences and lookup aliases have separate la
 Meaning paths retain their matched sense and follow at most two links. Component
 usage is a terminal link, so shared components do not connect unrelated words.
 
-`IdsInput` shows these details on character hover or keyboard focus. Press F1 to enter
-the floating panel and Esc to dismiss it. Related characters and emoji insert into the
+`IdsInput` shows these details on character hover, on keyboard focus, and on a click or
+tap. A click keeps the card in place while the pointer travels to it, so the parts in it
+can be used; Esc, its × or a click elsewhere dismisses it. Press F1 to move into the
+card. Related characters and emoji insert into the
 chosen slot, or replace the inspected character in the tree or sequence field. Custom
 layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
