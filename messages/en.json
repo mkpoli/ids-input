@@ -206,7 +206,6 @@
   "parts.tab.common": "Common",
   "parts.tab.components": "Components",
   "parts.tab.recent": "Recent",
-  "parts.tab.strokes": "Strokes",
   "parts.unknownStrokes": "Stroke count not recorded",
   "parts.uses.one": "used in {count} character",
   "parts.uses.other": "used in {count} characters",

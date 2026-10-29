@@ -49,8 +49,8 @@ export function groupPaletteParts(parts) {
 }
 
 // These groups already have palette views: Han, Latin and Cyrillic tabs, Hangul, Bopomofo, Tangut,
-// Small Seal, Shuishu and the CJK strokes. Symbols and mixed-script descriptions have none, so the Other
-// scripts selector carries them too.
+// Small Seal, Shuishu and the one-stroke Components group. Symbols and mixed-script descriptions have
+// none, so the Other scripts selector carries them too.
 const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'shuishu', 'strokes'])
 /** @param {string | null | undefined} group */
 export const isOtherScript = group => Boolean(group && !EXISTING_GROUPS.has(group))

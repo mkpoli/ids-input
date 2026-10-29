@@ -2,13 +2,14 @@
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
   // shows, by the choice above the grid, the parts 50 or more ideographs use, most used families
-  // first with related forms adjacent, or every Han component of one stroke count, grouped by the
-  // class of the first stroke (横 豎 撇 點 折, where recorded, unknown last). Tangut the Tangut components in code point
-  // order, Small Seal the seal forms, Bopomofo the bopomofo letters, Letters & numbers the Latin,
-  // Cyrillic and ASCII parts, Hangul the Hangul letters, Gongche the gongche notation, Strokes the CJK
-  // strokes, Recent the parts picked here before (kept in this browser under `recentKey`, none when
-  // it is null), and Other scripts the rest. A filter of characters finds those parts or matching
-  // compound IDS, a number the parts of that many strokes. Picking a part calls `onpick(part)`.
+  // first with related forms adjacent, or every part of one stroke count, the Han components and CJK
+  // strokes together, grouped by the class of the first stroke (横 豎 撇 點 折, where recorded,
+  // unknown last). Tangut the Tangut components in code point order, Small Seal the seal forms,
+  // Bopomofo the bopomofo letters, Letters & numbers the Latin, Cyrillic and ASCII parts, Hangul the
+  // Hangul letters, Gongche the gongche notation, Recent the parts picked here before (kept in this
+  // browser under `recentKey`, none when it is null), and Other scripts the rest. A filter of
+  // characters finds those parts or matching compound IDS, a number the parts of that many strokes.
+  // Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
@@ -35,8 +36,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'strokes' | 'recent' | 'other')[]} */
-  const TABS = ['components', 'gongche', 'tangut', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'strokes', 'recent', 'other']
+  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'recent' | 'other')[]} */
+  const TABS = ['components', 'gongche', 'tangut', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -306,15 +307,16 @@
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
   // The Components panel: the parts whose real IDS use is at least COMMON_USE, with related forms
-  // adjacent, or every Han component of one stroke count. A host part without a use count falls back
-  // to its c kind. `chosen` drops a count the palette no longer holds, back to the frequent set.
+  // adjacent, or every part of one stroke count, Han components and CJK strokes together. A host part
+  // without a use count falls back to its c kind. `chosen` drops a count the palette no longer holds,
+  // back to the frequent set.
   const COMMON_USE = 50
   const commonParts = $derived(adjacentVariants((parts ?? []).filter(part =>
     (part.kind === 'c' || part.kind === 'd') && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE))))
-  const strokeParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd'))
-  // The stroke counts the Han components hold, in order, null (not recorded) last. Counts from
+  const countedParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd' || part.kind === 's'))
+  // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
-  const counts = $derived([...new Set(strokeParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
+  const counts = $derived([...new Set(countedParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
   const partChips = $derived(/** @type {number[]} */ (counts.filter(value => value != null && value < HAN_TAIL)))
   // The Components views page like the character list: the frequent set, or one count, in
   // first-stroke order, 120 at a time.
@@ -328,7 +330,7 @@
       for (const part of commonParts) list.push({ part, cls: undefined })
       return list
     }
-    const chosenParts = strokeParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen)
+    const chosenParts = countedParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen)
     for (const group of grouped(chosenParts)) for (const part of group.parts) list.push({ part, cls: group.cls })
     return list
   })
@@ -343,7 +345,7 @@
     }
     return groups
   })
-  const partTailCount = $derived(strokeParts.filter(part => (part.strokes ?? 0) >= HAN_TAIL).length)
+  const partTailCount = $derived(countedParts.filter(part => (part.strokes ?? 0) >= HAN_TAIL).length)
   const partUnknown = $derived(counts.includes(null))
   const chosen = $derived(count === undefined || counts.includes(count) ? count : undefined)
   /** @param {PalettePart[]} list */
@@ -440,7 +442,6 @@
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'shuishu') return [{ cls: undefined, parts: selectedShuiGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
-    if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
 
@@ -568,9 +569,10 @@
     tab = TABS[to]
     tabButtons[to]?.focus()
   }
-  // A stroke outside the five classes (㇣) is another kind of stroke; any other part lacks the record.
+  // In the one-stroke group, a part without a first-stroke class is ㇣, a stroke outside the five;
+  // in every other group it is a part whose first stroke was never recorded.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && chosen === 1 ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
