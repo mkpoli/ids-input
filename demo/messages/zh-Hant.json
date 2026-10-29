@@ -38,6 +38,8 @@
   "app.examples.geba": "全學聯漢字",
   "app.examples.ligature": "合文",
   "app.examples.korean": "韓國國字",
+  "app.examples.gugyeol": "韓國口訣字",
+  "app.examples.kokuji": "日本國字",
   "app.examples.filter": "依序列、讀音或碼位篩選",
   "app.examples.filterAll": "全部",
   "app.examples.encoded": "有碼位",

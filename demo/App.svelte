@@ -390,7 +390,7 @@
     layerChanged()
   }
   // The address starts on the tab shown, as it does after every change.
-  history.replaceState(null, '', linkTo(editor.draft, location))
+  history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
@@ -453,6 +453,7 @@
     const tab = current()
     if (!tab) return
     tab.document = sessionRecord(sessionFor(tab))
+    documentTick++
     store()
     syncAddress()
   }
@@ -463,6 +464,7 @@
     const session = sessionFor(tab)
     editor.open(toSequence(session.document.root))
     tab.document = sessionRecord(session)
+    documentTick++
     store()
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
@@ -719,8 +721,8 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] */
-  function exampleItem(example, lang, groupRefs = []) {
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] */
+  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja') {
     const point = example.char ? cp(example.char) : ''
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
@@ -731,6 +733,7 @@
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
       reading: example.reading,
+      readingLang,
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
@@ -740,7 +743,7 @@
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs)),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,

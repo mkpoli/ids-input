@@ -371,11 +371,12 @@ The keys of the bundled Tangut outline records, used to browse the full Tangut p
 
 ## `tangut-strokes.json.gz`
 
-The nominal stroke count of each Tangut ideograph, read from Unicode 18.0.0's
-`TangutSources.txt`: `kTGT_RSUnicode` gives the radical number and the total stroke count, so
-`1.6` is six strokes. 6,177 ideographs have one, from 4 to 22 strokes; the Tangut components in
-U+18800–U+18AFF are not ideographs and have none. Rebuild with
-`node scripts/build_tangut_strokes.mjs`, which pins the file's SHA-256
+The nominal stroke count of every Tangut character in the list. The ideographs come from Unicode
+18.0.0's `TangutSources.txt`: `kTGT_RSUnicode` gives the radical number and the total stroke
+count, so `1.6` is six strokes, and 6,177 ideographs have one, from 4 to 22 strokes. The 768 Tangut
+components in U+18800–U+18AFF were counted from their glyphs and live in
+`tangut-component-strokes.tsv`, one `U+18800<TAB>1` line per component, 1 to 13 strokes. Rebuild with
+`node scripts/build_tangut_strokes.mjs`, which pins the Unicode file's SHA-256
 (`ae440bd9bba89b2610cfe6b498ac462d2763dd32bfead8ac30d32988b5b67a27`). Unicode data is
 distributed under the Unicode License v3.
 

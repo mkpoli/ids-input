@@ -101,7 +101,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
+| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts and two-row repeats |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -161,7 +161,7 @@ use `light-dark()`, so the page needs `color-scheme: light dark` for its dark sc
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -172,6 +172,8 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10, reverse: false }
+repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
+repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -209,6 +211,16 @@ for subsequent insertions. Enter one component, then choose a preset or enter a 
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
+
+### Repeats
+
+`repeatSequence(part, [top, bottom], { bottom })` writes two rows of repeated components:
+`top` copies of `part` above `bottom` copies of the second component, which defaults to `part`.
+Each row holds two to four copies; rows of two and three use `⿰` and `⿲`, a row of four splits in
+half, and the rows stack with `⿱`. The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns
+with its own Component field, as Pyramids does. A second field, Bottom row, takes another component and
+falls back to the first when empty. These cover the 五同, 六同, 八同 and 二組 arrangements of
+[畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
 ### Loose marks
 
@@ -461,7 +473,8 @@ annotations are not included.
 ## Search
 
 `IdsStructuralSearch` provides whole-character structural search with examples for pyramids,
-four-part grids, repeated pairs and triples, matching outer parts, enclosures and overlays.
+four-part grids, repeated pairs and triples, the larger two-row repeats, mirrored pairs, matching
+outer parts, enclosures and overlays.
 The demo offers it beside the existing character search below the editor. Selecting a preset
 runs the search; the pattern can then be edited. Results open in the editor, and **Copy all
 characters** copies the complete result, including hits beyond the visible page.
@@ -858,10 +871,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   uncited there.
 - John H. Jenkins, Richard Cook and Ken Lunde, [Proposal to Add a Character to the UTR #45](https://www.unicode.org/L2/L2012/12032-one-add-utr45.pdf),
   2012-01-26: the 招財進寶 ligature for Chinese New Year decorations, with its CDL: 宀 at the top,
-  辶 around the lower left, and 王, 尔, 隹, 貝 and 招 inside.
+  a 辶 wrapping the square from the 宀's band, and 王, 尔, 隹, 貝 and 招 inside.
 - [U-source ideographs (UTR #45)](https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt),
   Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
-  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`.
+  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`, with the 宀 above the 辶. The proposal's glyph puts the 辶 around the
+  宀 and the rows, so the example follows the glyph: `⿺辶⿱宀⿱⿰王尔⿲隹貝招`.
 - [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
   oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
@@ -874,7 +888,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   writes the sharing, so they stay out.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
-  description writes 女 and 孔 for 好 and 孔, so the 子 of 孔 stands for the 子 both share.
+  description writes 女 and 孔 for 好 and 孔; the example writes 好 and 乚, so 好 stays whole and
+  乚 completes 孔 with the same shared 子.
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
   and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
@@ -884,12 +899,20 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
-  readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`. The group
-  holds the article's complete 음역자 table, ninety-four encoded forms and twenty decompositions,
-  ordered by reading. The article gives each character's radical and code point. Its codas are 乙
-  and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ, and 巴 and 邑 for ㅂ. The encoded
-  descriptions are BabelStone's, all tagged K, fourteen as GKP; the twenty without a code point
-  stand last, as the article writes them.
+  readings and code points of the Korean gukja (國字) and gugyeol (口訣字) examples in
+  `demo/lib/examples.js`. The gukja group holds the article's complete 음역자 table, ninety-four
+  encoded forms and twenty decompositions, ordered by reading. The article gives each character's
+  radical and code point. Its codas are 乙 and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口
+  for ㅁ, and 巴 and 邑 for ㅂ. The encoded descriptions are BabelStone's, all tagged K, fourteen as
+  GKP; the twenty without a code point stand last, as the article writes them.
+  The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
+  厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
+  those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
+- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the Japanese-made
+  characters in `demo/lib/examples.js`, the jōyō, jinmeiyō and hyōgai examples and 鰯, 鱈, 樫, 椙,
+  椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
+  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
+  disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -974,7 +997,8 @@ The toolbar holds Undo and Redo with the history of named steps, consuming the d
 transform steps before the editor’s structural steps. Examples come with their character and code
 point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
 with its QR code, the language. The address bar carries the document while a layer transform exists,
-so copying the location keeps the placement; a plain sequence stays in the hash.
+so copying the location keeps the placement; opening such a link keeps the token. A plain sequence
+stays in the hash.
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use

@@ -2,6 +2,7 @@
   import { LONGEST, isDescription, nextEmpty, parse, place, sameTree, write } from '../core/ids.js'
   import { normalizeMarks } from '../core/marks.js'
   import { pyramidSequence } from '../core/pyramid.js'
+  import { repeatSequence } from '../core/repeat.js'
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
   import { templateDiagram } from './template-diagram.js'
 
@@ -54,6 +55,54 @@
     const found = parse(pyramidSequence(pyramidPart, layers, { reverse }), { open: true })
     if (!found.tree) return
     editor.put(found.tree, pyramidTarget, pyramidLabel(layers))
+  }
+
+  const REPEATS = /** @type {[number, number][]} */ ([[2, 3], [3, 3], [2, 4], [4, 4]])
+  const repeatTemplates = REPEATS.map(rows => ({ rows, key: rows.join('+'), shapes: templateDiagram(repeatSequence('口', rows)) }))
+  let repeatTop = $state(/** @type {string | null} */ (null))
+  let repeatBottomTyped = $state('')
+  const repeatPart = $derived(repeatTop ?? (typeof editor.picked === 'string' ? editor.picked : '口'))
+  const repeatBottom = $derived(repeatBottomTyped.trim() || repeatPart)
+  /** @param {string} part */
+  const repeatSupported = part => {
+    try { repeatSequence(part, [2, 3]); return true } catch { return false }
+  }
+  const repeatPartsSupported = $derived(repeatSupported(repeatPart) && repeatSupported(repeatBottom))
+  const repeatTarget = $derived(editor.chosen ?? (editor.tree === null ? [] : nextEmpty(editor.tree)))
+  const availableRepeats = $derived.by(() => {
+    const available = new Set()
+    if (repeatTarget === null || !repeatPartsSupported) return available
+    try {
+      for (const rows of REPEATS) {
+        const found = parse(repeatSequence(repeatPart, rows, { bottom: repeatBottom }), { open: true })
+        if (!found.tree) continue
+        const next = place(editor.tree, repeatTarget, found.tree).tree
+        if (next === null) continue
+        const text = write(next), draft = parse(text, { open: true })
+        const fits = !draft.problem && (nextEmpty(next) === null ? isDescription(text) : [...text].length <= LONGEST)
+        if (fits) available.add(rows.join('+'))
+      }
+    } catch { /* the selected component cannot fill a repeat cell */ }
+    return available
+  })
+  /** @param {[number, number]} rows */
+  const repeatLabel = rows => {
+    const text = rows.join(' + ')
+    return repeatBottom === repeatPart
+      ? t('ids.templates.repeatInsert', { rows: text, part: repeatPart })
+      : t('ids.templates.repeatInsertTwo', { rows: text, top: repeatPart, bottom: repeatBottom })
+  }
+  /** @param {[number, number]} rows */
+  const repeatTitle = rows => !repeatPartsSupported
+    ? t('ids.templates.repeatUnsupported')
+    : repeatTarget === null ? t('ids.templates.repeatTarget')
+    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.repeatTooLong')
+  /** @param {[number, number]} rows */
+  function addRepeat(rows) {
+    if (editor.disabled || !availableRepeats.has(rows.join('+'))) return
+    const found = parse(repeatSequence(repeatPart, rows, { bottom: repeatBottom }), { open: true })
+    if (!found.tree) return
+    editor.put(found.tree, repeatTarget, repeatLabel(rows))
   }
 </script>
 
@@ -114,6 +163,40 @@
       <button type="submit" disabled={editor.disabled || !customValid}>{t('ids.templates.pyramidAdd')}</button>
     </form>
   </div>
+  <div class="ids-pyramid ids-repeat" role="group" aria-labelledby={`${uid}-repeats`}>
+    <div class="ids-pyramid-head">
+      <span class="ids-template-label" id={`${uid}-repeats`}>{t('ids.templates.repeats')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.repeatUnsupported') : repeatTarget === null ? t('ids.templates.repeatTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.repeatTooLong')}</span>
+    </div>
+    <div class="ids-pyramid-grid ids-repeat-grid">
+      {#each repeatTemplates as template (template.key)}
+        <button type="button" disabled={editor.disabled || !availableRepeats.has(template.key)} data-repeat={template.key}
+          aria-label={repeatTitle(template.rows)} title={repeatTitle(template.rows)}
+          onclick={() => addRepeat(template.rows)}>
+          <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
+            {#each template.shapes as shape, i (i)}
+              {#if shape.kind === 'slot'}
+                <rect class:accent={shape.accent} x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
+              {:else}<path class:accent={shape.accent} class:decorative={shape.decorative} d={shape.d} />{/if}
+            {/each}
+          </svg>
+          <span class="ids-pyramid-size">{template.key.replace('+', ' + ')}</span>
+        </button>
+      {/each}
+    </div>
+    <div class="ids-pyramid-custom">
+      <label class="ids-pyramid-custom-label" for={`${uid}-repeat-part`}>{t('ids.templates.repeatPart')}</label>
+      <input id={`${uid}-repeat-part`} class="ids-pyramid-part" type="text" value={repeatPart}
+        oninput={event => repeatTop = event.currentTarget.value} disabled={editor.disabled}
+        aria-invalid={!repeatSupported(repeatPart)} aria-describedby={`${uid}-repeat-hint`}
+        spellcheck="false" autocomplete="off" />
+      <label class="ids-pyramid-custom-label" for={`${uid}-repeat-bottom`}>{t('ids.templates.repeatBottom')}</label>
+      <input id={`${uid}-repeat-bottom`} class="ids-pyramid-part" type="text" value={repeatBottomTyped} placeholder={repeatPart}
+        oninput={event => repeatBottomTyped = event.currentTarget.value} disabled={editor.disabled}
+        title={t('ids.templates.repeatBottomHint')} aria-invalid={repeatBottomTyped.trim() !== '' && !repeatSupported(repeatBottom)}
+        aria-describedby={`${uid}-repeat-hint`} spellcheck="false" autocomplete="off" />
+    </div>
+  </div>
 </div>
 
 <style>
@@ -125,6 +208,7 @@
   .ids-pyramid-reverse input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:2px}
   .ids-pyramid-hint{font-size:11px;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+  .ids-repeat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .ids-pyramid-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}
   .ids-pyramid-size{font-size:10px;line-height:1;color:var(--ids-muted,light-dark(#696973,#9c9ca8));font-variant-numeric:tabular-nums}
   .ids-pyramid-custom{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}
