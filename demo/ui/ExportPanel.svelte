@@ -6,16 +6,18 @@
   import { download, fileName } from '../lib/files.js'
   import Icon from './Icon.svelte'
 
-  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][], sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
-  let { drawing = null, scopes = null, slots = [], sequence, t, onnote } = $props()
+  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][], incomplete?: boolean, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
+  let { drawing = null, scopes = null, slots = [], incomplete = false, sequence, t, onnote } = $props()
+  let partial = $state(false)
   let s = $state(storedSettings())
   $effect(() => keepSettings($state.snapshot(s)))
   const ready = $derived(Boolean(scopes ?? drawing))
+  const canExport = $derived(ready && (!incomplete || partial))
   const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
 
   /** @param {'svg' | 'png'} [format] */
   export async function save(format) {
-    if (!ready) return
+    if (!canExport) return
     // The click's drawing, name and settings: the export runs on after the page has moved on.
     const drawn = drawing, drawnScopes = scopes, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
@@ -24,7 +26,7 @@
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {
-    if (!ready) return
+    if (!canExport) return
     const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
     try {
       if (settings.format === 'svg') await navigator.clipboard.writeText(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings))
@@ -80,10 +82,14 @@
       <span>{t('app.export.placeholders')}</span>
     </label>
   </div>
+  {#if incomplete}
+    <p class="incomplete" role="status">{t('app.export.incomplete')}</p>
+    <label class="row check"><input type="checkbox" bind:checked={partial} /><span>{t('app.export.partial')}</span></label>
+  {/if}
   <div class="actions">
     <span class="thumb" class:none={!backgroundOf(s)} aria-hidden="true">{#if thumb}<img src={thumb} alt="" />{/if}</span>
-    <button type="button" class="primary" disabled={!ready} title={ready ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
-    <button type="button" disabled={!ready} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy', { format: s.format.toUpperCase() })}</button>
+    <button type="button" class="primary" disabled={!canExport} title={ready ? undefined : t('app.export.nothing')} onclick={() => save()}><Icon name="download" size={16} />{t('app.export.save', { format: s.format.toUpperCase() })}</button>
+    <button type="button" disabled={!canExport} onclick={copy}><Icon name="copy" size={16} />{t('app.export.copy', { format: s.format.toUpperCase() })}</button>
   </div>
 </section>
 
@@ -118,5 +124,6 @@
   .actions .primary{border-color:var(--accent);background:var(--accent);color:var(--on-accent)}
   .actions .primary:not(:disabled):hover{background:color-mix(in srgb,var(--accent) 88%,#000)}
   .actions button:disabled{opacity:.45;cursor:default}
+  .incomplete{margin:8px 0;color:var(--fault,#b3261e);font-size:12px;line-height:1.4}
   :is(button,select,input):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
 </style>

@@ -45,6 +45,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
   import Menu from './ui/Menu.svelte'
@@ -81,6 +82,8 @@
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
   let slots = $state(/** @type {number[][]} */ ([]))
+  const exportIncomplete = $derived(Boolean((addressDocument(currentSession()?.document) && !scopes) || (scopes && !scopes.complete)))
+  const canExport = $derived(Boolean(!exportIncomplete && (scopes ?? drawing)))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
@@ -659,15 +662,7 @@
     if (!tab) return
     keepTabSession(tab)
     const file = documentFile(sessionFor(tab).document, editor.whole)
-    const url = URL.createObjectURL(file)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = file.name
-    anchor.hidden = true
-    document.body.append(anchor)
-    anchor.click()
-    anchor.remove()
-    setTimeout(() => URL.revokeObjectURL(url), 0)
+    download(file, file.name)
     note(t('app.file.saved', { name: file.name }))
   }
 
@@ -696,7 +691,7 @@
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
-    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !drawing, run: () => { exportPanel?.save(format) } })),
+    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !canExport, run: () => { exportPanel?.save(format) } })),
     ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
@@ -987,7 +982,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>

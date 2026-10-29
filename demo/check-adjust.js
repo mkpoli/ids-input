@@ -32,6 +32,10 @@ try {
     const matrix = stored?.root?.children?.[0]?.transform?.[0]?.matrix
     assert.ok(Math.abs(matrix?.[4] ?? 0) > 1 || Math.abs(matrix?.[5] ?? 0) > 1, 'the main preview drag writes a document transform')
     assert.ok(new URL(page.url()).searchParams.has('doc'), 'the address bar carries the transformed document')
+    await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+    await page.getByRole('menuitem', { name: /Export SVG/ }).waitFor({ timeout: 5000 })
+    assert.equal(await page.getByRole('menuitem', { name: /Export SVG/ }).isDisabled(), false, 'the File export is enabled with a scoped drawing')
+    await page.keyboard.press('Escape')
     const linked = await browser.newContext({ colorScheme: scheme })
     const restoredPage = await linked.newPage()
     await restoredPage.goto(page.url(), { waitUntil: 'domcontentloaded' })

@@ -15,6 +15,7 @@ import { hasNewKorean, newKoreanSource } from './new-korean.js'
 import { hasShuishu, shuishuSource } from './shuishu.js'
 import { bundledSource } from './bundled.js'
 import { onlyBundled } from './local.js'
+import serifPatch from './serif-glyph-patch.json' with { type: 'json' }
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { unicodeSource } from './unicode.js'
 import { leaves, parse, splitDescription } from '../core/ids.js'

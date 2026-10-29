@@ -39,7 +39,7 @@ const int16 = text => { const b = bytes(text); return new Int16Array(b.buffer, b
  *  closes on an implied point (`Q<n>*`). */
 export function commands(text) {
   const out = []
-  for (const [, op, n, star] of text.matchAll(/([MLQ])(\d*)(\*?)/g)) out.push([op, op === 'Q' ? Number(n) : 1, star === '*'])
+  for (const [, op, n, star] of text.matchAll(/([MLQC])(\d*)(\*?)/g)) out.push([op, op === 'C' ? 3 : op === 'Q' ? Number(n) : 1, star === '*'])
   return out
 }
 
@@ -79,6 +79,7 @@ export function partOf(record, quant = 4) {
     return { ops: commands(ops), light: l, heavy: h, width }
   })
   const part = makePart(contours, record.b.slice())
+  if (record.fixed) part.fixed = true
   if (record.sg) part.strokes = record.sg
   Object.defineProperty(record, '_part', { value: part, enumerable: false })
   return part
@@ -95,6 +96,7 @@ export function segments(ops, points) {
     at += n
     if (op === 'M') out.push(['M', [pts[0]]])
     else if (op === 'L') out.push(['L', [pts[0]]])
+    else if (op === 'C') out.push(['C', pts])
     else {
       if (implied) {
         const start = [(pts.at(-1)[0] + pts[0][0]) / 2, (pts.at(-1)[1] + pts[0][1]) / 2]
@@ -392,11 +394,20 @@ export function pathRings(d, steps = 6) {
     if (kind === 'M') { close(); last = [v[0], ASCENT - v[1]]; ring.push(...last); continue }
     if (kind === 'L') { last = [v[0], ASCENT - v[1]]; ring.push(...last); continue }
     const off = [v[0], ASCENT - v[1]], on = [v[2], ASCENT - v[3]]
-    for (let s = 1; s <= steps; s++) {
-      const t = s / steps, u = 1 - t
-      ring.push(u * u * last[0] + 2 * u * t * off[0] + t * t * on[0], u * u * last[1] + 2 * u * t * off[1] + t * t * on[1])
+    if (kind === 'C') {
+      const c2 = [v[4], ASCENT - v[5]], end = [v[6], ASCENT - v[7]]
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps, u = 1 - t
+        ring.push(u*u*u*last[0] + 3*u*u*t*off[0] + 3*u*t*t*c2[0] + t*t*t*end[0], u*u*u*last[1] + 3*u*u*t*off[1] + 3*u*t*t*c2[1] + t*t*t*end[1])
+      }
+      last = end
+    } else {
+      for (let s = 1; s <= steps; s++) {
+        const t = s / steps, u = 1 - t
+        ring.push(u * u * last[0] + 2 * u * t * off[0] + t * t * on[0], u * u * last[1] + 2 * u * t * off[1] + t * t * on[1])
+      }
+      last = on
     }
-    last = on
   }
   close()
   return out
