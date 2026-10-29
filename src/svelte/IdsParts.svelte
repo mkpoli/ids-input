@@ -666,7 +666,7 @@
         {/if}
       {/if}
       <button type="button" class:active={characters} aria-pressed={characters}
-        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters')}</button>
+        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters.label')}</button>
     </div>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>

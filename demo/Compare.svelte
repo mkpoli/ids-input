@@ -85,14 +85,14 @@
     <p class="hint">{t('compare.operators')}</p>
 
     <details class="method">
-      <summary>{t('compare.method')}</summary>
+      <summary>{t('compare.method.label')}</summary>
       <p>{t('compare.method.body', { krm: data.sets.krm.shown, joyo: data.sets.joyo.shown, review: data.sets.review.shown })}</p>
       <p class="caveat">{t('compare.method.caveat')}</p>
     </details>
 
     <div class="controls">
       <label class="select">
-        <span>{t('compare.set')}</span>
+        <span>{t('compare.set.label')}</span>
         <select bind:value={set}>
           <option value="all">{t('compare.set.all')}</option>
           <option value="krm">{t('compare.set.krm')}</option>
@@ -100,13 +100,13 @@
           <option value="review">{t('compare.set.review')}</option>
         </select>
       </label>
-      <div class="filters" role="group" aria-label={t('compare.filter')}>
+      <div class="filters" role="group" aria-label={t('compare.filter.label')}>
         {#each filters as [key, label] (key)}
           <button type="button" aria-pressed={filter === key} onclick={() => filter = key}>{label}</button>
         {/each}
       </div>
       <label class="order">
-        <span>{t('compare.sort')}</span>
+        <span>{t('compare.sort.label')}</span>
         <select bind:value={order}>
           <option value="weakest">{t('compare.sort.weakest')}</option>
           <option value="best">{t('compare.sort.best')}</option>

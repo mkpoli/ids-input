@@ -213,7 +213,7 @@
     if ('toggle' in move) toggle(rows[move.toggle])
     else if ('swap' in move) {
       swapAt = move.swap
-      if (swapAt !== null) live = `${row.swaps[swapAt].char}, ${t('ids.swaps', { part: row.part ?? '' })}`
+      if (swapAt !== null) live = `${row.swaps[swapAt].char}, ${t('ids.swaps.label', { part: row.part ?? '' })}`
     } else if (move.focus !== index) focusRow(rows[move.focus].key)
   }
   // A click on the row takes it; on its toggle, opens or closes it; on a swap beside it, takes that.
@@ -313,7 +313,7 @@
             {#if row.regions}<span class="from-regions" aria-hidden="true" title={regionsTitle(row.regions)}>{row.regions}</span>{/if}
             {#if row.note && (row.note !== 'atomic' || row.level === 1)}<span class="from-note" aria-hidden="true">{t(`ids.from.${row.note}`)}</span>{/if}
             {#if row.swaps.length}
-              <span class="from-swaps" aria-hidden="true" title={t('ids.swaps', { part: row.part ?? '' })}>
+              <span class="from-swaps" aria-hidden="true" title={t('ids.swaps.label', { part: row.part ?? '' })}>
                 <span class="from-approx">≈</span>
                 {#each row.swaps as item, k (item.char)}
                   <span class="from-swap" class:active={current === k} data-swap={k} lang="ja" title={item.count ? `${row.part} → ${item.char} · ${item.count}` : `${row.part} → ${item.char}`}>{item.char}</span>

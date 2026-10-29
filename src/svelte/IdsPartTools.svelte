@@ -141,9 +141,9 @@
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={t('ids.swaps', { part })} style:top="{top}px" style:left="{left}px">
+    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={t('ids.swaps.label', { part })} style:top="{top}px" style:left="{left}px">
       <div class="ids-swaps-head">
-        <span class="ids-title">{t('ids.swaps', { part })}</span>
+        <span class="ids-title">{t('ids.swaps.label', { part })}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
       </div>
       <div class="ids-options">
