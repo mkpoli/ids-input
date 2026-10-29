@@ -12,9 +12,10 @@
   import KeyHint from './KeyHint.svelte'
   /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean,
    * open?: boolean, menubar?: boolean, tabIndex?: number, onopenchange?: (open: boolean) => void, onfocus?: () => void, onhover?: () => void, onmove?: (key: string) => void,
-   * view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
+   * view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null,
+   * templates?: { heading: string, items: Item[] } | null }} */
   let { label, icon, items, align = 'start', text = true, keyHints = true, keys, ariaLabel, wide = false, compact = false,
-    open = $bindable(false), menubar = false, tabIndex, onopenchange, onfocus, onhover, onmove, view = null } = $props()
+    open = $bindable(false), menubar = false, tabIndex, onopenchange, onfocus, onhover, onmove, view = null, templates = null } = $props()
   /** @type {HTMLElement | null} */ let box = $state(null)
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
   const uid = $props.id()
@@ -280,6 +281,16 @@
         const group = box?.querySelector('.submenu')
         if (parent !== event.target && !group?.contains(/** @type {Node} */ (event.target))) openSubmenu = -1
       }}>
+      {#if templates}
+        <p class="heading">{templates.heading}</p>
+        <div class="templates" role="group" aria-label={templates.heading}>
+          {#each templates.items as item (item.label)}
+            <button type="button" role="menuitem" class="template" title={item.hint ?? item.label} aria-label={item.label}
+              onclick={() => { hide(); item.run?.() }}><span aria-hidden="true">{item.leading ?? item.label}</span></button>
+          {/each}
+        </div>
+        <div class="sep" role="separator"></div>
+      {/if}
       {#if view}
         <div class="menu-head">
           <div class="views" role="group" aria-label={label}>
@@ -366,6 +377,10 @@
   .heading:hover{color:var(--ink)}
   .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
+  .templates{display:flex;flex-wrap:wrap;gap:4px;padding:0 6px 2px}
+  .template{display:grid;place-items:center;width:42px;height:36px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-family:var(--cjk);font-size:20px;line-height:1;cursor:pointer}
+  .template:hover{background:var(--hover)}
+  .template:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .heading:first-child{margin-top:4px}
   .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
   .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}

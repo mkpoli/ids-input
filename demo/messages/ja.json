@@ -163,6 +163,8 @@
   "app.tabs.menu": "タブの操作",
   "app.tabs.new": "新しいタブ",
   "app.tabs.reopen": "閉じたタブを開き直す",
+  "app.tabs.start": "テンプレートと例",
+  "app.tabs.templates": "テンプレート",
   "app.tabs.untitled": "無題",
   "app.theme.dark": "ダーク",
   "app.theme.light": "ライト",
