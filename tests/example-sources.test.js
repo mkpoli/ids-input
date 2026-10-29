@@ -37,6 +37,7 @@ describe('example sources', () => {
     expect(ids.get('⿰舟ラ')).toEqual(['script-hybrid', 'l2-24-201', 'ndl-jmtt'])
     expect(ids.get('⿵门T')).toEqual(['l2-24-201', 'irg-n2744'])
     expect(ids.get('⿴口도')).toEqual(['script-hybrid', 'x-hado'])
+    expect(ids.get('⿱月朋')).toEqual(['x-uteta'])
     expect(groupRefs('seal')).toEqual(['small-seal'])
     expect(groupRefs('tangut')).toEqual(['tangut-ids'])
     expect(groupRefs('geba')).toEqual(['geba-wp'])
