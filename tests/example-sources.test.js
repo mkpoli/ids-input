@@ -55,6 +55,7 @@ describe('example sources', () => {
     expect(groupRefs('geba')).toEqual(['geba-wp'])
     // The examples come from the spreadsheet and the charts, and their readings from the database.
     expect(groupRefs('shuishu')).toEqual(['shuishu', 'shuishu-db'])
+    expect(groupRefs('nom')).toEqual(['babelstone', 'en-wp-kokuji'])
   })
 
   test('every example is cited or listed as unrecorded', () => {

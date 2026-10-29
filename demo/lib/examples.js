@@ -420,7 +420,7 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
-  { key: 'shuishu', refs: [47, 49], examples: [
+  { key: 'shuishu', refs: [47, 50], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers. Names,
     // readings and meanings: Shuishu.xlsx; glyphs: the Amendment 2.2 code charts.
