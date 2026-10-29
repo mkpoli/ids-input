@@ -33,6 +33,7 @@ it('derives stroke estimates while retaining unknown and cyclic counts', () => {
 })
 
 it('ships all frequencies and selectable common compound parts with strokes', () => {
+  const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
   const report = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-subtrees.json.gz', import.meta.url))))
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
   expect(report.characters).toBe(103825)
@@ -42,7 +43,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
-    if (MANUAL_PARTS.includes(text)) expect(uses).toBe(manualUses(parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString()), text))
+    if (MANUAL_PARTS.includes(text)) expect(uses).toBe(manualUses(table, text))
     else expect(uses).toBeGreaterThanOrEqual(30)
     expect(strokes).toBeGreaterThan(0)
     expect(derived).toBe(1)
