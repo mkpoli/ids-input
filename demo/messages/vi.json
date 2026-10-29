@@ -254,5 +254,6 @@
   "compare.showMore": "Hiện thêm",
   "app.engines": "So sánh động cơ",
   "compare.engines": "So sánh công cụ",
-  "app.layers.oncanvas": "Chỉnh trên khung vẽ"
+  "app.layers.oncanvas": "Chỉnh trên khung vẽ",
+  "app.layers.history": "Lịch sử"
 }

@@ -254,5 +254,6 @@
   "compare.showMore": "显示更多",
   "app.engines": "引擎比较",
   "compare.engines": "引擎比较",
-  "app.layers.oncanvas": "在画布上编辑"
+  "app.layers.oncanvas": "在画布上编辑",
+  "app.layers.history": "历史"
 }

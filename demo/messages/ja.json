@@ -254,5 +254,6 @@
   "compare.showMore": "さらに表示",
   "app.engines": "エンジン比較",
   "compare.engines": "エンジン比較",
-  "app.layers.oncanvas": "キャンバスで編集"
+  "app.layers.oncanvas": "キャンバスで編集",
+  "app.layers.history": "履歴"
 }
