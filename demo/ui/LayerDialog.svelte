@@ -327,7 +327,7 @@
   }
 </script>
 
-<Dialog bind:open title={t('app.layers')} closeLabel={t('app.close')} wide>
+<Dialog bind:open title={t('app.layers.label')} closeLabel={t('app.close')} wide>
   {#if !session}
     <p class="note">{t('app.layers.none')}</p>
   {:else}
@@ -362,7 +362,7 @@
           {/if}
         </div>
       </div>
-      <div class="list" role="tree" aria-label={t('app.layers')}>
+      <div class="list" role="tree" aria-label={t('app.layers.label')}>
         {#each layers as row (row.node.id)}
           <button type="button" class:chosen={row.node.id === chosen} style:--depth={row.depth}
             role="treeitem" aria-selected={row.node.id === chosen} aria-level={row.depth + 1}
