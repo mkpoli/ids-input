@@ -893,6 +893,13 @@
           <h2 class="label" class:label-glyph={componentLookup?.kind === 'parts' || Boolean(searchQuery)}>{componentLookup?.kind === 'parts' ? t('ids.search.partsOf', { char: componentLookup.char }) : searchQuery ? t('ids.search.containing', { sequence: componentLookup?.char ?? searchQuery }) : t('ids.search.title')}</h2>
           <IdsSearch {adapter} query={searchQuery} {messages} {locale}
             onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+          {#if searchQuery}
+            <section class="similar" aria-labelledby="similar-heading">
+              <h3 class="label" id="similar-heading">{t('ids.search.similarTo', { sequence: componentLookup?.char ?? searchQuery })}</h3>
+              <IdsSearch {adapter} query={searchQuery} mode="similar" limit={12} {messages} {locale}
+                onopen={hit => openSequence(hit.sequence)} ontake={hit => { fromText_ = hit.char }} />
+            </section>
+          {/if}
           {/if}
         </section>
       </div>
@@ -966,6 +973,7 @@
 
 <style>
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+  .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--line)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
   .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
 
@@ -1057,7 +1065,10 @@
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}
   .split{display:none}
-  .results{gap:6px}
+  .results{gap:6px;overflow:auto;min-height:0}
+  /* The matches and the similar ones both keep their height; the pane scrolls instead. */
+  .results :global(.ids-search-results){flex:none}
+  .results :global(.hits){flex:none;overflow:visible}
   .results.structural{overflow:auto}
   .results.structural :global(.hits){overflow:visible;flex:none}
   /* Two columns: input beside the tree and its own search panel; the output under both. */
@@ -1083,9 +1094,10 @@
     .tree{flex:none;justify-content:flex-start;container-type:size}
     .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
-    .results{flex:none;min-height:0;max-height:none;overflow:hidden}
-    .results :global(.ids-search-results){flex:1;min-height:0}
-    .results :global(.hits){flex:1;min-height:0;overflow:auto}
+    .results{flex:none;min-height:0;max-height:none;overflow:auto}
+    /* The structure's matches and the similar ones both keep their height; the pane scrolls. */
+    .results :global(.ids-search-results){flex:none;min-height:auto}
+    .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
   }
   @media (max-width:640px){

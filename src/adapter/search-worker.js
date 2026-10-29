@@ -44,6 +44,6 @@ self.onmessage = async ({ data: { id, ids, additionalIds, components, components
   try {
     ready ??= load(ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal).catch(error => { ready = null; throw error })
     const search = await ready
-    self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit }) : search.search(query, { limit, componentLookup }) })
+    self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit }) : mode === 'similar' ? search.similar(query, { limit }) : search.search(query, { limit, componentLookup }) })
   } catch (error) { self.postMessage({ id, error: String(/** @type {Error} */ (error)?.message ?? error) }) }
 }

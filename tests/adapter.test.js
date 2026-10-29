@@ -228,6 +228,11 @@ describe('an encoded character', () => {
     expect(await exact.encoded('⿻[1:]丨日')).toEqual(['甲', '申'])
     expect(await exact.encoded('⿻[:-1]丨日')).toEqual(['由', '申'])
     expect(await exact.encoded('⿻丨日')).toEqual(['申'])
+    // The characters sharing a description's top-level shape, one operand free.
+    const similar = babelStoneAdapter({ ids: 'similar', fetch: async () => new Response('杏\t⿱木口\n森\t⿱木林\n霖\t⿱雨林\n'), worker: null })
+    // Only 森 keeps an operand (木); 霖 shares neither with ⿱木口.
+    expect((await similar.findSimilar('⿱木口')).hits.map(hit => hit.char)).toEqual(['森'])
+    expect(await similar.findSimilar('木')).toEqual({ hits: [], total: 0 })
 
     expect(await adapter.encoded('⿳𭁟冖⺼')).toEqual(['骨'])
     expect(await adapter.encoded('⿰木口')).toEqual([])
