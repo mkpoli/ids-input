@@ -118,6 +118,7 @@
   "app.source.newKoreanLetters": "Bốn hình chữ cái chưa được mã hoá của chính tả tiếng Triều Tiên mới, theo vị trí đề nghị trong L2/19-230R.",
   "app.source.shuishuGlyphs": "486 chữ và 47 bộ thủ được đề nghị, tại các vị trí mã tạm thời.",
   "app.source.shuishuIndex": "Tên, cách đọc và nghĩa của các chữ được đề nghị.",
+  "app.source.shuishuReadings": "Cách đọc của các chữ ví dụ, đối chiếu với mục tra chữ hình·âm độc của cơ sở dữ liệu; đọc ngày 2026-10-29.",
   "app.source.qrcode": "Mã QR trong mục Chia sẻ.",
   "app.source.rime": "Phân loại nét đầu trong bảng chọn bộ phận.",
   "app.source.unihan": "Số nét và khu vực nguồn.",

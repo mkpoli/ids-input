@@ -53,6 +53,8 @@ describe('example sources', () => {
     expect(groupRefs('seal')).toEqual(['small-seal'])
     expect(groupRefs('tangut')).toEqual(['tangut-ids'])
     expect(groupRefs('geba')).toEqual(['geba-wp'])
+    // The examples come from the spreadsheet and the charts, and their readings from the database.
+    expect(groupRefs('shuishu')).toEqual(['shuishu', 'shuishu-db'])
   })
 
   test('every example is cited or listed as unrecorded', () => {

@@ -1,6 +1,6 @@
 // @ts-check
 import { babelStoneAdapter } from './babelstone.js'
-export { isShuishu, shuishuLabel, shuishuNames } from './shuishu-data.js'
+export { isShuishu, shuishuLabel, shuishuNames, shuishuTable } from './shuishu-data.js'
 
 /**
  * Shuishu characters over the default adapter: the proposed block as palette parts, findable by

@@ -18,8 +18,8 @@ credited to their sources.
 
 The names, the readings and the meanings in the accompanying data are from Andrew West's
 `Shuishu.xlsx`, <https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx>, which indexes the proposed
-characters for his Shuishu fonts. That file states no licence either; the readings and meanings are
-facts and are credited.
+characters for his Shuishu fonts; the radical names are the chart's. That file states no licence
+either; the names, readings and meanings are facts and are credited.
 
 Rebuild the font and the outline records with `uv run scripts/build_shuishu.py`. `data/shuishu/`
 holds the pinned sources and their digests.

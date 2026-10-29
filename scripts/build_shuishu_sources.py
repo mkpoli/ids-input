@@ -32,7 +32,7 @@ DOCUMENTS = [
     {
         'file': 'Uni1B300Shuishu-subset.ttf',
         'kind': 'font subset',
-        'title': 'Uni1B300Shuishu, the font embedded in the ISO/IEC 10646 Amendment 2.2 code charts',
+        'title': 'Uni1B300Shuishu, the font embedded in the ISO/IEC 10646 Amendment 2.2 code charts (PDAM 2.2)',
         'chartUrl': CHART_URL,
         'chartSha256': CHART_SHA256,
         'note': 'The chart font draws the proposed characters at their tentative code points. The '
@@ -64,6 +64,16 @@ DOCUMENTS = [
 PROPOSAL = {
     'title': 'Proposal for encoding Shuishu (WG2 N4758, L2/18-193, N4922)',
     'url': 'https://www.unicode.org/wg2/docs/n4758-Proposal%20for%20encoding%20Shuishu2016Sep3.pdf',
+}
+# Not a pinned file: the readings stay the spreadsheet's, and the examples' readings are checked here.
+READING_CHECK = {
+    'title': '水族水书文字数据库 (Shui script character database), 水书数据库检索',
+    'url': 'https://shuishu.ihanzi.net/shuishu',
+    'paper': '孙治弘, 谢雨霏, 刘凌, 叶晨. 水书文字数据库和智能识别平台构建[J]. 数字人文研究, 2026, 6(01): 94–109.',
+    'note': "Readings read from POST https://ocr.ihanzi.net/api/words/search with a `prefix` of the meaning; "
+            "the glyph images are the database's and are not bundled. The readings vary by text, so the single "
+            'reading per character here follows Shuishu.xlsx.',
+    'checked': '2026-10-29',
 }
 
 
@@ -137,7 +147,8 @@ def main():
     (SOURCE / 'sources.json').write_text(json.dumps({
         'documents': [dict(row, sha256=digest(SOURCE / row['file'])) for row in DOCUMENTS],
         'proposal': PROPOSAL,
-        'roadmap': 'http://www.unicode.org/roadmaps/smp/',
+        'readingCheck': READING_CHECK,
+        'roadmap': 'https://www.unicode.org/roadmaps/smp/',
     }, indent=2, ensure_ascii=False) + '\n')
     print(f'{len(mapping)} code points, {len(radicals)} radical names')
 

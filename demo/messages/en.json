@@ -134,6 +134,7 @@
   "app.source.newKoreanLetters": "Four letter drawings for the unencoded New Korean Orthography letters, at the code points proposed in L2/19-230R.",
   "app.source.shuishuGlyphs": "The 486 proposed characters and 47 radicals, at the amendment's tentative code points.",
   "app.source.shuishuIndex": "Names, readings and meanings for the proposed characters.",
+  "app.source.shuishuReadings": "The readings of the example characters, cross-checked against the database's 字形、音讀檢索; read 2026-10-29.",
   "app.source.tangut": "Tangut text and composition outlines.",
   "app.source.noto": "The outlines han-compose moves, and the parts font.",
   "app.source.plangothic": "Outlines for parts Noto Sans CJK lacks.",

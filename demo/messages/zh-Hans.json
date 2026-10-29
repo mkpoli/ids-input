@@ -133,6 +133,7 @@
   "app.source.newKoreanLetters": "朝鲜语新缀字法四个未编码字母的图形，置于L2/19-230R提议的码位。",
   "app.source.shuishuGlyphs": "置于暂定码位的提案字486字和部首47个。",
   "app.source.shuishuIndex": "提案字的名称、读音和意义。",
+  "app.source.shuishuReadings": "示例字的读音，已与数据库的字形、音读检索核对，2026-10-29 读取。",
   "app.source.tangut": "西夏文显示与组字所用的字形。",
   "app.source.noto": "han-compose所用的字形轮廓及部件字体。",
   "app.source.plangothic": "Noto Sans CJK所缺部件的字形。",

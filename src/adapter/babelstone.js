@@ -594,7 +594,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const singleIdeograph = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text) || KANA.test(text))
       // A lone kana stays the kana in a part search, but characters read as it: き finds 生 by name.
       const singleIdeographOnly = single && (unicodeProperty('ideographic', text) || IDEOGRAPH.test(text))
-      /** @type {{ char: string, label: string }[]} */
+      /** @type {{ char: string, label: string, rank?: number }[]} */
       let hits = direct
       /** The whole characters a name finds, after the components and their relations. @type {{ char: string, label: string }[]} */
       let vocabulary = []
@@ -650,8 +650,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
           if (!hits.length && !vocabulary.length) throw error
         }
       }
-      // Without relations to rank them, the vocabulary's characters follow what the search has.
-      if (!ranked) hits = [...hits, ...vocabulary]
+      // Without relations to rank them, the vocabulary's characters follow the components but stay
+      // ahead of the readings and meanings, which only name a character second hand.
+      if (!ranked) hits = [...hits.filter(hit => (hit.rank ?? 0) < 4), ...vocabulary, ...hits.filter(hit => (hit.rank ?? 0) >= 4)]
       signal?.throwIfAborted()
       return uniqueHits(hits, limit)
     },

@@ -15,7 +15,7 @@ export const SOURCES = [
   { name: 'IDS Seal / Kaiyuan Small Seal', by: 'Kaiyuan Small Seal Font Contributors', licence: 'Kaiyuan font license', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/OFL.txt', key: 'sealFont' },
   { name: 'Shuishu glyphs, Amendment 2.2 code charts', by: 'ISO/IEC JTC 1/SC 2/WG 2; Unicode, Inc.', licence: 'chart glyphs, no separate licence stated', url: 'https://www.unicode.org/wg2/docs/n4922-5theditionPdam2-2-charts.pdf', key: 'shuishuGlyphs' },
   { name: 'Shuishu.xlsx', by: 'Andrew West', licence: 'no licence stated', url: 'https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx', key: 'shuishuIndex' },
-  { name: '水族水书文字数据库', by: '孙治弘, 谢雨霏, 刘凌, 叶晨', licence: 'readings, checked', url: 'https://shuishu.ihanzi.net/shuishu', key: 'shuishuReadings' },
+  { name: '水族水书文字数据库', by: '孙治弘, 谢雨霏, 刘凌, 叶晨', licence: 'no licence stated', url: 'https://shuishu.ihanzi.net/shuishu', key: 'shuishuReadings' },
   { name: 'New Korean Orthography letters', by: 'Nanuun-saram', licence: 'CC BY-SA 4.0', url: 'https://commons.wikimedia.org/wiki/File:Nkchar-l.svg', key: 'newKoreanLetters' },
   { name: 'BabelStone IDS', by: 'Andrew West', licence: 'Public domain', url: 'https://www.babelstone.co.uk/CJK/IDS.TXT', key: 'babelstone' },
   { name: 'han-compose', by: 'mkpoli', licence: 'MIT', url: 'https://github.com/mkpoli/han-compose', key: 'hanCompose' },
