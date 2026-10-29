@@ -835,6 +835,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   record says the images were not re-checked. ⿵门T follows N2744 Fig.8
   and N2741 p.10 (唐蘭『古文字学導論』p.134). The encoded hybrid characters are U+2B9AB, U+2BCCD,
   U+282A3, U+2C711, U+3514, U+3516 and U+439E, with IDS from BabelStone.
+- [@Utetamutete](https://x.com/Utetamutete/status/2115621598799770015), 2026-10: a dictionary
+  entry with 月 above 朋, read さやけし, for `⿱月朋`.
 - Gen Kojitani, [Reply to N2741, IRG N2744](https://www.unicode.org/irg/docs/n2744-IRGN2741Response.pdf),
   2024-10-20, p.7: 𭤪 (U+2D92A) contains hentaigana 𛂦 (U+1B0A6), represented in the examples as
   `⿰𛂦方`. BabelStone currently records `⿰？方`. The digit form `⿰扌3` approximates the Sawndip

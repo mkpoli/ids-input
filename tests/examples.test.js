@@ -51,6 +51,10 @@ describe('the demo examples', () => {
             expect(example.refs).toContain(sourceNumber('irg-n2744'))
             expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
           } else expect(found).toContain(char)
+        } else if (sequence === '⿱月朋') {
+          // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
+          // the example cites is a different, unencoded character.
+          expect(found).toEqual(['𦜳'])
         } else {
           expect(found).toEqual([])
         }
