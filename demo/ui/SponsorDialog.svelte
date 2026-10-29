@@ -21,7 +21,7 @@
     <p class="ask">{t('app.sponsor.ask')}</p>
     <section class="how">
       <h3>{t('app.sponsor.howTo')}</h3>
-      <ol class="steps">
+      <ol class="steps" role="list">
         <li>{t('app.sponsor.step1')}</li>
         <li>{t('app.sponsor.step2')}</li>
         <li>{t('app.sponsor.step3')}</li>
@@ -62,16 +62,16 @@
   .steps{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;counter-reset:step}
   .steps li{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.45;counter-increment:step}
   .steps li::before{content:counter(step);display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;
-    background:var(--sp-heart);color:#fff;font-size:11px;font-weight:700;line-height:1;transform:translateY(-1px)}
+    background:var(--sp-ink);color:var(--sp-soft);font-size:11px;font-weight:700;line-height:1;transform:translateY(-1px)}
   .kofi{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:999px;
-    background:linear-gradient(135deg,#ff5e5b,#ff4f88);color:#fff;text-decoration:none;box-shadow:0 6px 16px rgb(255 79 136 / .32);
+    background:linear-gradient(135deg,#d81b60,#b0124f);color:#fff;text-decoration:none;box-shadow:0 6px 16px rgb(216 27 96 / .32);
     transition:transform .18s ease,box-shadow .18s ease}
-  .kofi:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgb(255 79 136 / .42)}
+  .kofi:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgb(216 27 96 / .42)}
   .kofi:active{transform:scale(.98)}
   .kofi:focus-visible,.company:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .kofi .mark{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:rgb(255 255 255 / .22)}
   .kofi .copy strong{font-size:15px}
-  .kofi .copy small{color:rgb(255 255 255 / .88)}
+  .kofi .copy small{color:#fff}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
   .copy strong{font-size:13.5px;font-weight:700}
   .copy small{font-size:12px;line-height:1.4}
