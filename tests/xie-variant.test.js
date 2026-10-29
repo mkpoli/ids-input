@@ -65,18 +65,30 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
     // 冂 top, inner 一, closing 一 and 𠃌 crossbar are four distinct strokes.
     // Count ink runs through the counter centres, excluding dots and hook tip.
     for (const x of [580, 600, 620]) {
-      let runs = 0, previous = 0
+      let runs = 0, previous = 0, gap = 0
+      const openings = []
       for (let row = Math.floor((880 - 680) * .512); row < (880 - 180) * .512; row++) {
         const ink = frame[row * 512 + Math.floor(x * .512)]
-        if (ink && !previous) runs++
+        if (ink && !previous) {
+          if (runs) openings.push(gap)
+          runs++
+          gap = 0
+        }
+        if (!ink && runs) gap++
         previous = ink
       }
       expect(runs).toBe(4)
+      if (fontStyle !== 'kaisho') {
+        expect(openings).toHaveLength(3)
+        expect(Math.max(...openings) - Math.min(...openings)).toBeLessThanOrEqual(2)
+      }
     }
     expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(4) // outside + three counters; both frame legs reach the hook
     expect(components(raster(parts, 512), 512)).toBe(5)
     // The hook turns left locally; it must never become a full-width bottom bar.
-    const [stem, , baseline, middleBar, hook] = parts
+    const [stem, enclosure, baseline, middleBar, hook] = parts
+    expect(enclosure.source[2] - stem.source[0]).toBeGreaterThan(440)
+    expect(stem.source[2] - stem.source[0]).toBeLessThan(55)
     expect(baseline.source[3]).toBeLessThan(middleBar.source[1])
     expect(baseline.source[0]).toBeGreaterThan(stem.source[2]) // no bar across the left gap
     const lowerHookX = hook.part.contours.flatMap(contour => {

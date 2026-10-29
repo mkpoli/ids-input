@@ -41,8 +41,11 @@ def xie_noto(cs, style):
         stem = polygon([(280,246),(347,246),(347,611),(280,611)])
         enclosure = polygon([(465,246),(532,246),(532,556),(738,556),
                              (738,246),(808,246),(808,611),(465,611)])
-        middle = polygon([(532,415),(738,415),(738,470),(532,470)])
-        upper, lower, right = 330, 275, 808
+        opening = (556 - 246 - 2 * 55) / 3
+        lower, upper = 246 + opening, 246 + opening + 55
+        mid_low = upper + opening
+        middle = polygon([(532,mid_low),(738,mid_low),(738,mid_low+55),(532,mid_low+55)])
+        right, inner_left, inner_right = 808, 532, 738
     else:
         frame = c[4]
         # The Serif roof and body share one contour; reconnect the roof at its
@@ -54,8 +57,11 @@ def xie_noto(cs, style):
         enclosure = ([move(465,241),line(529,241),line(529,583),line(722,583),
                       line(722,241),line(786,241)] + frame[58:60] +
                      [line(748,652),line(712,613),line(529,613),line(465,636),CLOSE])
-        middle = polygon([(529,439),(722,439),(722,469),(529,469)])
-        upper, lower, right = 325, 295, 786
+        opening = (583 - 241 - 2 * 30) / 3
+        lower, upper = 241 + opening, 241 + opening + 30
+        mid_low = upper + opening
+        middle = polygon([(529,mid_low),(722,mid_low),(722,mid_low+30),(529,mid_low+30)])
+        right, inner_left, inner_right = 786, 529, 722
     narrow = lambda x: 300 + (x - 280) * 400 / (right - 280)
     bottom_x = lambda x: 300 + (x - 280) * 550 / 617
     stem, enclosure, middle = [transform(p, narrow) for p in (stem, enclosure, middle)]
@@ -63,6 +69,13 @@ def xie_noto(cs, style):
     # The lower interior bar ends at the frame; its sides continue to the hook.
     baseline = polygon([(narrow(465),lower),(700,lower),(700,upper),(narrow(465),upper)])
     dots = [transform(p, bottom_x, lambda y: 20 + y * .8) for p in dots]
+    # Widen the counters while translating, rather than stretching, the stems.
+    a, b = narrow(inner_left), narrow(inner_right)
+    wider = lambda x: x - 15 + 55 * max(0, min(1, (x - a) / (b - a)))
+    enclosure, baseline, middle = [transform(p, wider) for p in (enclosure, baseline, middle)]
+    stem = transform(stem, lambda x: x - 30)
+    hook[0] = move(270, hook[0][1][0][1])
+    hook[-2] = line(270, hook[-2][1][0][1])
     return [[roof], [stem], [enclosure], [baseline], [middle], [hook], dots]
 
 

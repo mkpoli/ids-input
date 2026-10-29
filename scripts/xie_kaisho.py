@@ -97,5 +97,10 @@ def xie_kaisho(gs, cmap):
             [180, 175, 170, 165], strict=True):
         dots.append(_map(contour, lambda x, y: (cx + (x - cx) * .65,
                                                 target_y + (y - cy) * .65)))
-    return [xie[:1], [upright], [frame],
-            [baseline], [_map(middle, frame_map)], [hook], dots]
+    # Expand the counter space without widening the native brush stems.
+    wider = lambda x, y: (x - 15 + 55 * max(0, min(1, (x - 500) / 125)), y)
+    frame, baseline, middle = [_map(p, wider) for p in (frame, baseline, _map(middle, frame_map))]
+    upright = _map(upright, lambda x, y: (x - 30, y))
+    hook[0] = ('moveTo', ((270, hook[0][1][0][1]),))
+    hook[-2] = ('lineTo', ((270, hook[-2][1][0][1]),))
+    return [xie[:1], [upright], [frame], [baseline], [middle], [hook], dots]
