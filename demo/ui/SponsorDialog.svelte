@@ -28,7 +28,7 @@
         </a>
       </li>
       <li>
-        <a class="way company" href="mailto:git@mkpo.li?subject=Sponsorship%20on%20ids.mkpo.li">
+        <a class="way company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20ids.mkpo.li">
           <span class="mark" aria-hidden="true"><Icon name="mail" size={17} /></span>
           <span class="copy"><strong>{t('app.sponsor.company')}</strong><small>{t('app.sponsor.companyHint')}</small></span>
           <Icon name="arrow-right" />
