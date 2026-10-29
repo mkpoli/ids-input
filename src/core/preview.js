@@ -142,7 +142,7 @@ export function runPreview(text, { preview, drawing, signal }, update) {
 
 /** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
 const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
-/** A transform list with nothing but the functions `partTransform` writes: its letters, numbers, spaces, commas and brackets. */
+/** A transform list with nothing but SVG transform functions: its letters, numbers, spaces, commas and brackets. */
 const transformData = t => String(t ?? '').slice(0, 500).replace(/[^a-zA-Z0-9()., \-]/g, '')
 /** A colour as an SVG attribute takes it: `#rgb`, `#rrggbb` or `#rrggbbaa`; anything else is refused. */
 const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value ?? '') ? value : fallback
@@ -299,23 +299,3 @@ export function groupParts(pieces, leaves) {
   return out
 }
 
-/**
- * The SVG transform that moves, scales and turns a part about the centre of `box`: `translate(dx dy)`
- * first, then scale and rotation about the centre. Empty when the adjustment changes nothing.
- * @param {{ dx?: number, dy?: number, scale?: number, rotate?: number } | null | undefined} adjustment
- * @param {number[]} box [x, y, width, height]
- */
-export function partTransform(adjustment, box) {
-  const num = (value, fallback = 0) => Number.isFinite(Number(value)) ? Math.round(Number(value) * 1000) / 1000 : fallback
-  const dx = num(adjustment?.dx), dy = num(adjustment?.dy), scale = num(adjustment?.scale, 1), rotate = num(adjustment?.rotate)
-  if (!dx && !dy && scale === 1 && !rotate) return ''
-  const [x, y, width, height] = (Array.isArray(box) ? box : []).slice(0, 4).map(value => num(value))
-  const cx = num(x + width / 2), cy = num(y + height / 2)
-  const out = []
-  if (dx || dy) out.push(`translate(${dx} ${dy})`)
-  out.push(`translate(${cx} ${cy})`)
-  if (rotate) out.push(`rotate(${rotate})`)
-  if (scale !== 1) out.push(`scale(${scale})`)
-  out.push(`translate(${-cx} ${-cy})`)
-  return out.join(' ')
-}

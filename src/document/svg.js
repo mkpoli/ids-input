@@ -16,8 +16,8 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
-/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string }} SvgOptions */
-/** @typedef {{ defs: string, body: string, background: string, width: number }} ScopedMarkup */
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number }} SvgOptions */
+/** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
 /**
  * Build the defs and body of a scoped drawing without the wrapping `<svg>`. A preview can inject
@@ -27,9 +27,11 @@ const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fil
  * @param {ScopeTree} drawing @param {SvgOptions} [options]
  * @returns {ScopedMarkup}
  */
-export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids' } = {}) {
-  const fill = colour(ink), back = background === null ? null : colour(background)
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0 } = {}) {
+  const fill = ink === 'currentColor' ? 'currentColor' : colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
+  const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
+  const span = 1000 + 2 * pad
   const prefix = identifier(idPrefix)
   /** @type {string[]} */
   const defs = []
@@ -85,8 +87,8 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   }
 
   const body = drawing.root ? render(drawing.root) : ''
-  const backgroundRect = back ? `<rect x="0" y="0" width="1000" height="1000" fill="${back}"/>` : ''
-  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}`, background: back ?? '', width }
+  const backgroundRect = back ? `<rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="${back}"/>` : ''
+  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}`, background: back ?? '', width, padding: pad, span }
 }
 
 /**
@@ -94,6 +96,6 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
  * @returns {string}
  */
 export function scopesSvg(drawing, options = {}) {
-  const { defs, body, width } = scopesMarkup(drawing, options)
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="${width}" height="${width}">${defs}${body}</svg>`
+  const { defs, body, width, padding, span } = scopesMarkup(drawing, options)
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-padding} ${-padding} ${span} ${span}" width="${width}" height="${width}">${defs}${body}</svg>`
 }

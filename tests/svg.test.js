@@ -86,6 +86,11 @@ describe('compositing SVG', () => {
     expect(svg).not.toContain('<path')
     expect(svg).toContain('viewBox="0 0 1000 1000"')
   })
+  it('writes currentColor ink and a padded viewBox', () => {
+    const svg = scopesSvg(renderScopes(fromSequence('木'), source([square()])), { ink: 'currentColor', padding: 0.05 })
+    expect(svg).toContain('viewBox="-50 -50 1100 1100"')
+    expect(svg).toContain('fill="currentColor"')
+  })
   it('accepts a background, ink colour and size, and rejects unsafe values', () => {
     const svg = scopesSvg(renderScopes(fromSequence('木'), source([square()])), { background: '#fafafa', ink: '#123456', size: 640, idPrefix: 'x' })
     expect(svg).toContain('width="640" height="640"')

@@ -10,7 +10,7 @@
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
-  import { createDocumentSession, sessionRecord, toSequence } from '../src/document/index.js'
+  import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import layers from '../data/tangut-layers.json.gz?url'
@@ -73,12 +73,11 @@
     const seen = new Set(curated.map(part => part.part))
     return [...curated, ...sealExtraParts.filter(part => !seen.has(part)).map(part => ({ part, kind: /** @type {const} */ ('seal'), sealGroup: /** @type {const} */ ('other') }))]
   } }
-  // Manual changes to the preview belong to the active document tab.
+  // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
-  /** @type {Record<string, { dx?: number, dy?: number, scale?: number, rotate?: number }>} */
-  let adjustments = $state({})
-  const adjustmentCount = $derived(Object.keys(adjustments).length)
-  const separate = $derived(adjusting || adjustmentCount > 0)
+  let documentTick = $state(0)
+  let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
+  const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
@@ -375,25 +374,18 @@
   }
   /** Reconcile the active editor tree into `tab`'s document. @param {import('./lib/tabs.js').Tab} tab */
   function keepTabSession(tab) {
-    try { tab.document = syncTabSession(sessionFor(tab), editor.tree ?? null) } catch { /* A malformed tree keeps the last document. */ }
+    try { tab.document = syncTabSession(sessionFor(tab), editor.tree ?? null); documentTick++ } catch { /* A malformed tree keeps the last document. */ }
   }
   editor.reset(initial.sequence)
   keepTabSession(initial)
-  const pathKey = (/** @type {number[]} */ path) => path.join('.')
-  let knownSequence = editor.whole
-  $effect(() => {
-    const sequence = editor.whole
-    untrack(() => {
-      if (sequence === knownSequence) return
-      knownSequence = sequence
-      adjustments = {}
-    })
-  })
   function resetChosen() {
-    const at = editor.chosen
-    if (!at) return
-    const key = pathKey(at)
-    adjustments = Object.fromEntries(Object.entries(adjustments).filter(([name]) => name !== key && !name.startsWith(`${key}.`)))
+    const tab = current()
+    if (!tab || !editor.chosen) return
+    const session = sessionFor(tab)
+    const node = layerAtPath(session.document.root, editor.chosen)
+    if (!node) return
+    session.clearTransform(node.id)
+    layerChanged()
   }
   // The address starts on the tab shown, as it does after every change.
   history.replaceState(null, '', linkTo(editor.draft, location))
@@ -475,17 +467,6 @@
     const tab = current()
     return tab ? sessionFor(tab).document : null
   }
-  /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
-  /** @type {Map<string, AdjustState>} */
-  const adjustedStates = new Map()
-  const currentAdjustments = () => ({ adjustments: structuredClone($state.snapshot(adjustments)), adjusting })
-  /** @param {string} id */
-  function restoreAdjustments(id) {
-    const kept = adjustedStates.get(id)
-    adjustments = kept?.adjustments ?? {}
-    adjusting = kept?.adjusting ?? false
-    knownSequence = editor.whole
-  }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
@@ -493,7 +474,6 @@
     const tab = current()
     if (tab) {
       states.set(tab.id, editor.snapshot())
-      adjustedStates.set(tab.id, currentAdjustments())
       keepTabSession(tab)
     }
   }
@@ -509,7 +489,6 @@
     states.delete(id)
     if (kept) editor.restore(kept)
     else editor.reset(tab.sequence)
-    restoreAdjustments(id)
     store()
   }
   /** A new empty tab, or one over `sequence`, shown at once. @param {string} [sequence] */
@@ -520,13 +499,11 @@
     activeId = tab.id
     toast = null
     editor.reset(sequence)
-    adjustments = {}
     adjusting = false
-    knownSequence = editor.whole
     store()
     return tab
   }
-  /** Copy a document beside its source, including its editor history and drawing adjustments. @param {string} id */
+  /** Copy a document beside its source, including its editor history and layer transforms. @param {string} id */
   function duplicateTab(id) {
     const source = tabs.find(tab => tab.id === id)
     if (!source) return
@@ -534,8 +511,6 @@
     const tab = makeTab(source.sequence, source.saved, source.document ? JSON.parse(JSON.stringify(source.document)) : undefined)
     const state = states.get(id)
     if (state) states.set(tab.id, structuredClone($state.snapshot(state)))
-    const adjusted = adjustedStates.get(id)
-    if (adjusted) adjustedStates.set(tab.id, structuredClone(adjusted))
     tabs.splice(tabs.indexOf(source) + 1, 0, tab)
     activate(tab.id)
   }
@@ -549,9 +524,7 @@
     if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
       toast = null
       editor.reset(text)
-      adjustments = {}
       adjusting = false
-      knownSequence = editor.whole
       if (editor.draft === editor.whole) tab.saved = tab.sequence
       store()
       return
@@ -571,9 +544,7 @@
     if (at < 0) return
     const tab = tabs[at]
     const state = id === activeId ? editor.snapshot() : states.get(id)
-    const adjusted = id === activeId ? currentAdjustments() : adjustedStates.get(id)
     states.delete(id)
-    adjustedStates.delete(id)
     sessions.delete(id)
     tabs.splice(at, 1)
     /** @type {import('./lib/tabs.js').Tab | undefined} */
@@ -586,41 +557,35 @@
         states.delete(next.id)
         if (saved) editor.restore(saved)
         else editor.reset(next.sequence)
-        restoreAdjustments(next.id)
       } else {
         // One tab always stays open: closing the last one leaves a new empty tab in its place.
         fresh = makeTab()
         tabs.push(fresh)
         activeId = fresh.id
         editor.reset('')
-        adjustments = {}
         adjusting = false
-        knownSequence = editor.whole
       }
     }
     toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
-      run: () => reopen(tab, state, adjusted, at, fresh?.id) }
+      run: () => reopen(tab, state, at, fresh?.id) }
     store()
   }
   /**
    * Put a closed tab back where it was, taking back the empty tab that replaced it.
    * @param {import('./lib/tabs.js').Tab} tab
    * @param {ReturnType<typeof editor.snapshot> | undefined} state
-   * @param {AdjustState | undefined} adjusted
    * @param {number} at
    * @param {string} [replacement]
    */
-  function reopen(tab, state, adjusted, at, replacement) {
+  function reopen(tab, state, at, replacement) {
     if (tabs.some(kept => kept.id === tab.id)) return
     const fresh = tabs.find(kept => kept.id === replacement)
     if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
-      adjustedStates.delete(fresh.id)
     }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
-    if (adjusted) adjustedStates.set(tab.id, adjusted)
     activate(tab.id)
   }
   /** Show the tab `step` places on, round the strip. @param {number} step */
@@ -937,7 +902,8 @@
         <div class="preview">
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              editable={adjusting} bind:adjustments onchoose={path => editor.choose(path, { toggle: false })} bind:drawing>
+              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes
+              editable={adjusting} onedit={layerChanged} bind:drawing>
               {#snippet detailContent()}
                 {#each encoded as ch (ch)}
                   <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
@@ -948,18 +914,17 @@
           <div class="adjust">
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers')}</button>
-            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
+            <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
-              <button type="button" disabled={!adjustmentCount} onclick={() => { adjustments = {} }}>{t('ids.adjust.resetAll')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>
             {/if}
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>

@@ -9,7 +9,9 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, groupParts, partTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { documentView } from '../composer/index.js'
+  import { affineForChain, boxCorners, invertAffine, layerAtPath, multiplyAffine, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
 
   /**
@@ -20,12 +22,14 @@
    * @typedef {import('../core/ids.js').Path} Path
    */
 
-  /** @typedef {{ dx?: number, dy?: number, scale?: number, rotate?: number }} PartAdjustment */
+  /** @typedef {import('../document/index.js').Document} Document */
+  /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
+  /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, editable?: boolean, adjustments?: Record<string, PartAdjustment>, onchoose?: ((path: Path) => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, editable?: boolean, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    editable = false, adjustments = $bindable({}), onchoose = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), editable = false, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -77,78 +81,28 @@
   /** An empty slot of a drawing, by its number, as the leaf it is. @param {number} number */
   const slotLeaf = number => parts.map((leaf, index) => ({ leaf, index })).filter(({ leaf }) => leaf.char === null)[number]?.index
 
-  // ---------------------------------------------------------------- adjusting the drawing
-  // The drawing can be changed one leaf at a time: the composer's parts are grouped by the sketch
-  // boxes, each group moved, scaled and turned about its own centre. The adjustments are keyed by
-  // the leaf's path, so changing a part's character keeps them and changing the tree lets them go.
-  /** @param {Path} path */
-  const pathKey = path => path.join('.')
-  /** @param {number[]} a @param {number[]} b */
-  const overlapArea = (a, b) => {
-    const width = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])
-    const height = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1])
-    return width > 0 && height > 0 ? width * height : 0
-  }
-  /** Whether two boxes cover nearly the same area, as an overlay's operands do. @param {number[]} a @param {number[]} b */
-  const sameBox = (a, b) => {
-    const smaller = Math.min(a[2] * a[3], b[2] * b[3])
-    return smaller > 0 && overlapArea(a, b) >= smaller * 0.9
-  }
-  /** @param {DOMPoint} point @param {number[]} box */
-  const insideBox = (point, box) => point.x >= box[0] && point.x <= box[0] + box[2] && point.y >= box[1] && point.y <= box[1] + box[3]
-  /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
-  const emojiBox = item => {
-    const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
-    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
-  }
-  const saved = $derived(adjustments ?? {})
-  const hasAdjustments = $derived(Object.keys(saved).length > 0)
-  const groups = $derived.by(() => {
+  // ---------------------------------------------------------------- document transforms
+  let localDoc = $state(/** @type {Document | null} */ (null))
+  $effect(() => { version; localDoc = session?.document ?? document })
+  const view = $derived.by(() => {
     const drawn = shown?.drawn
-    if (!drawn?.parts?.length || drawn.cut || drawn.emoji?.some(item => item.cut) || !sketched || sketched.text !== sequence) return null
-    return groupParts(drawn.parts, sketched.leaves)
+    if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
+    return documentView(localDoc, drawn, sketched.leaves)
   })
-  // Parts are drawn one by one while a host edits them, or while an adjustment needs applying.
-  const useParts = $derived(Boolean(groups?.length && (editable || hasAdjustments || shown?.drawn?.emoji?.length)))
-  const adjustable = $derived(Boolean(editable && groups?.length))
-  const chosenIndex = $derived(chosen ? parts.findIndex(leaf => samePath(leaf.path, chosen)) : -1)
-  const selection = $derived(chosenIndex >= 0 && groups ? groups.find(group => group.index === chosenIndex) ?? null : null)
-  // An overlay's operands cover one box, so a move grip on the selection keeps the chosen one movable.
-  const overlappingSelection = $derived(Boolean(selection && groups?.some(group => group.index !== selection.index && sameBox(group.box, selection.box))))
-  const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !groups ? t('ids.adjust.unavailable') : '')
-  /** The character of the leaf at `index`, for a handle's name. @param {number} index */
-  const partName = index => {
-    const part = parts[index]?.char
-    return typeof part === 'string' ? part : ''
-  }
-  /** The transform of the leaf at `index`, or ''. @param {number} index */
-  function transformOf(index) {
-    const leaf = parts[index], group = groups?.find(candidate => candidate.index === index)
-    return leaf && group ? partTransform(saved[pathKey(leaf.path)], group.box) : ''
-  }
-  const partTransforms = $derived.by(() => {
-    if (!useParts || !groups || !shown?.drawn?.parts) return null
-    const out = new Array(shown.drawn.parts.length).fill(null)
-    let any = false
-    for (const group of groups) {
-      const leaf = parts[group.index]
-      const transform = leaf ? partTransform(saved[pathKey(leaf.path)], group.box) : ''
-      if (!transform) continue
-      any = true
-      for (const index of group.parts) out[index] = transform
-    }
-    return any ? out : null
-  })
-  // The drawing shown, for a host to export; none while it is out of date or failed. A drawing with
-  // adjusted parts carries the transforms, which `drawingSvg` writes with each part's own path.
+  const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
-    const raw = step === 'composed' && shown?.drawn ? shown.drawn : null
-    const transforms = partTransforms
-    drawing = raw ? (transforms ? { ...raw, transforms } : raw) : null
+    scopes = view?.scopes ?? null
+    drawing = view ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
-
-  /** @type {{ kind: 'move' | 'scale' | 'rotate', index: number, svg: SVGSVGElement, p0: { x: number, y: number }, start: Required<PartAdjustment>, center: [number, number], d0: number, a0: number } | null} */
-  let drag = $state.raw(null)
+  const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
+  const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
+  const selectionBox = $derived(frame ? boxCorners(frame.canvas, frame.box) : null)
+  const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
+  const rotationValue = $derived(flat ? Math.round(Math.atan2(flat[1], flat[0]) * 1800 / Math.PI) / 10 : 0)
+  const scaleValue = $derived(flat ? Math.round(Math.hypot(flat[0], flat[1]) * 1000) / 1000 : 1)
+  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', id: string, svg: SVGSVGElement, p0: { x: number, y: number }, center: [number, number], frame: number[], base: import('../document/index.js').Chain, d0: number, a0: number } | null} */
+  let docDrag = $state.raw(null)
+  let gesture = 0
   /** A pointer in the drawing's own coordinates. @param {SVGSVGElement} svg @param {PointerEvent} event */
   function pointAt(svg, event) {
     const matrix = svg.getScreenCTM()
@@ -158,22 +112,18 @@
     point.y = event.clientY
     return point.matrixTransform(matrix.inverse())
   }
+  /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
+  const emojiBox = item => {
+    const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
+  }
   /** @param {number} value */
   const round = value => Math.round(value * 100) / 100
   /** @param {number} value @param {number} low @param {number} high */
   const clamp = (value, low, high) => Math.min(high, Math.max(low, value))
-  /** Put `next` on the leaf at `index`, or take its adjustment away when it changes nothing. @param {number} index @param {PartAdjustment} next */
-  function adjust(index, next) {
-    const leaf = parts[index]
-    if (!leaf) return
-    const key = pathKey(leaf.path), copy = { ...saved }
-    if (!next.dx && !next.dy && (next.scale ?? 1) === 1 && !next.rotate) delete copy[key]
-    else copy[key] = next
-    adjustments = copy
-  }
-  /** @param {PointerEvent} event @param {{ index: number, box: number[] }} group @param {'move' | 'scale' | 'rotate'} kind */
-  function startDrag(event, group, kind) {
-    if (!adjustable) return
+  /** @param {PointerEvent} event @param {'move' | 'scale' | 'rotate'} kind */
+  function startDrag(event, kind) {
+    if (!editable || !session || !chosenLayer || !frame?.supported || !selectionBox) return
     event.preventDefault()
     event.stopPropagation()
     const element = /** @type {SVGElement | null} */ (event.currentTarget)
@@ -181,71 +131,43 @@
     if (!svg) return
     const p = pointAt(svg, event)
     if (!p) return
-    // A click on one of several parts sharing a box steps to the next of them, so both are reachable.
-    let picked = group
-    if (kind === 'move' && group.index === chosenIndex && groups && element?.classList.contains('part')) {
-      const stacked = groups.filter(candidate => insideBox(p, candidate.box) && sameBox(candidate.box, group.box))
-      if (stacked.length > 1) picked = stacked[(stacked.findIndex(candidate => candidate.index === group.index) + 1) % stacked.length]
-    }
-    const leaf = parts[picked.index]
-    if (!leaf) return
-    onchoose?.(leaf.path)
-    const [x, y, width, height] = picked.box
-    const current = saved[pathKey(leaf.path)] ?? {}
-    const start = { dx: current.dx ?? 0, dy: current.dy ?? 0, scale: current.scale ?? 1, rotate: current.rotate ?? 0 }
-    const center = /** @type {[number, number]} */ ([x + width / 2 + start.dx, y + height / 2 + start.dy])
-    drag = { kind, index: picked.index, svg, p0: p, start, center, d0: Math.hypot(p.x - center[0], p.y - center[1]), a0: Math.atan2(p.y - center[1], p.x - center[0]) }
+    const base = chosenLayer.transform ?? []
+    if (!affineForChain(base)) return
+    const [x, y, width, height] = selectionBox
+    const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
+    docDrag = { gesture: ++gesture, kind, id: chosenLayer.id, svg, p0: p, center, frame: frame.frame, base, d0: Math.max(1, Math.hypot(p.x - center[0], p.y - center[1])), a0: Math.atan2(p.y - center[1], p.x - center[0]) }
     svg.setPointerCapture?.(event.pointerId)
     svg.focus?.({ preventScroll: true })
   }
   /** @param {PointerEvent} event */
   function moveDrag(event) {
-    if (!drag) return
-    const p = pointAt(drag.svg, event)
+    if (!docDrag) return
+    const p = pointAt(docDrag.svg, event)
     if (!p) return
-    const start = drag.start
-    const next = { ...start }
-    if (drag.kind === 'move') {
-      next.dx = round(start.dx + p.x - drag.p0.x)
-      next.dy = round(start.dy + p.y - drag.p0.y)
-    } else if (drag.kind === 'scale') {
-      const distance = Math.hypot(p.x - drag.center[0], p.y - drag.center[1])
-      next.scale = Math.round(clamp(start.scale * distance / Math.max(drag.d0, 1), 0.25, 4) * 1000) / 1000
+    const inverse = invertAffine(docDrag.frame)
+    if (!inverse) return
+    const [cx, cy] = docDrag.center
+    let operation = [1, 0, 0, 1, 0, 0]
+    if (docDrag.kind === 'move') operation = [1, 0, 0, 1, p.x - docDrag.p0.x, p.y - docDrag.p0.y]
+    else if (docDrag.kind === 'scale') {
+      const scale = clamp(Math.hypot(p.x - cx, p.y - cy) / docDrag.d0, 0.25, 4)
+      operation = [scale, 0, 0, scale, cx * (1 - scale), cy * (1 - scale)]
     } else {
-      const angle = Math.atan2(p.y - drag.center[1], p.x - drag.center[0])
-      let rotate = start.rotate + (angle - drag.a0) * 180 / Math.PI
-      if (event.shiftKey) rotate = Math.round(rotate / 15) * 15
-      next.rotate = round(((rotate + 180) % 360 + 360) % 360 - 180)
+      let angle = (Math.atan2(p.y - cy, p.x - cx) - docDrag.a0) * 180 / Math.PI
+      if (event.shiftKey) angle = Math.round(angle / 15) * 15
+      const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
+      operation = [cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy]
     }
-    adjust(drag.index, next)
+    const local = multiplyAffine(inverse, multiplyAffine(operation, docDrag.frame))
+    session?.setTransform([...docDrag.base, { type: 'affine', matrix: local }], docDrag.id, { coalesce: `drag-${docDrag.gesture}` })
+    localDoc = session?.document ?? localDoc
+    onedit?.()
   }
   /** @param {PointerEvent} event */
   function endDrag(event) {
-    if (!drag) return
-    if (drag.svg.hasPointerCapture?.(event.pointerId)) drag.svg.releasePointerCapture(event.pointerId)
-    drag = null
-  }
-  /** The keys that adjust the selected part; the tree keeps its own keys. @param {KeyboardEvent} event */
-  function adjustKey(event) {
-    if (!selection) return
-    const leaf = parts[selection.index]
-    if (!leaf) return
-    const current = saved[pathKey(leaf.path)] ?? {}
-    const next = { dx: current.dx ?? 0, dy: current.dy ?? 0, scale: current.scale ?? 1, rotate: current.rotate ?? 0 }
-    const step = event.shiftKey ? 10 : 1
-    if (event.key === 'ArrowLeft') next.dx -= step
-    else if (event.key === 'ArrowRight') next.dx += step
-    else if (event.key === 'ArrowUp') next.dy -= step
-    else if (event.key === 'ArrowDown') next.dy += step
-    else if (event.key === '+' || event.key === '=') next.scale = Math.round(clamp(next.scale * 1.05, 0.25, 4) * 1000) / 1000
-    else if (event.key === '-') next.scale = Math.round(clamp(next.scale / 1.05, 0.25, 4) * 1000) / 1000
-    else if (event.key === '[') next.rotate = round(next.rotate - (event.shiftKey ? 15 : 5))
-    else if (event.key === ']') next.rotate = round(next.rotate + (event.shiftKey ? 15 : 5))
-    else if (event.key === '0') { adjust(selection.index, {}); event.preventDefault(); event.stopPropagation(); return }
-    else return
-    event.preventDefault()
-    event.stopPropagation()
-    adjust(selection.index, next)
+    if (!docDrag) return
+    if (docDrag.svg.hasPointerCapture?.(event.pointerId)) docDrag.svg.releasePointerCapture(event.pointerId)
+    docDrag = null
   }
 </script>
 
@@ -277,42 +199,30 @@
               onpointermove={interactive ? moveDrag : undefined}
               onpointerup={interactive ? endDrag : undefined}
               onpointercancel={interactive ? endDrag : undefined}
-              onkeydown={interactive ? adjustKey : undefined}>
-              {#if hasCut}
-                {#if drawn.emoji?.some(item => item.cut)}
-                  <filter id="{uid}-{name}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
-                {/if}
-                <mask id="{uid}-{name}">
-                  <rect width="1000" height="1000" fill="#fff" />
-                  {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
-                  {#each drawn.emoji ?? [] as item}
-                    {#if item.cut}
-                      {@const box = emojiBox(item)}
-                      <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
-                    {/if}
-                  {/each}
-                </mask>
-              {/if}
-              {#if useParts && groups}
-                {#each groups as group (group.index)}
-                  <g class="part" class:adjusting={interactive} data-leaf={group.index} transform={transformOf(group.index) || undefined}
-                    role={interactive ? 'button' : undefined} tabindex={interactive ? -1 : undefined}
-                    aria-label={interactive ? t('ids.adjust.move', { part: partName(group.index) }) : undefined}
-                    onpointerdown={interactive ? event => startDrag(event, group, 'move') : undefined}>
-                    {#if interactive}<rect x={group.box[0]} y={group.box[1]} width={group.box[2]} height={group.box[3]} fill="transparent" pointer-events="all" />{/if}
-                    {#each group.parts as index (index)}
-                      {@const item = drawn.emoji?.find(item => item.part === index)}
-                      {#if item}
-                        {@const box = emojiBox(item)}
-                        <text transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
-                      {:else}<path class="ink" d={drawn.parts?.[index]?.d} />{/if}
-                    {/each}
-                  </g>
-                {/each}
+>
+              {#if view?.scopes}
+                {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}` })}
+                <g class="document" style:color="var(--_ink)">
+                  {@html markup.defs}
+                  {@html markup.body}
+                </g>
               {:else}
+                {#if hasCut}
+                  {#if drawn.emoji?.some(item => item.cut)}
+                    <filter id="{uid}-{name}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
+                  {/if}
+                  <mask id="{uid}-{name}">
+                    <rect width="1000" height="1000" fill="#fff" />
+                    {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
+                    {#each drawn.emoji ?? [] as item}
+                      {#if item.cut}
+                        {@const box = emojiBox(item)}
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                      {/if}
+                    {/each}
+                  </mask>
+                {/if}
                 <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
-              {/if}
-              {#if !useParts}
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
@@ -323,29 +233,23 @@
               {#each drawn.slots ?? [] as s (s.index)}
                 {@render slot(s.box, drawn.stroke?.[0] ?? STROKE, inChosen(slotLeaf(s.index)), false)}
               {/each}
-              {#if interactive && selection}
-                {@const [x, y, width, height] = selection.box}
-                {@const scale = saved[pathKey(parts[selection.index].path)]?.scale ?? 1}
-                {@const size = 26 / Math.max(scale, 0.05)}
-                <g class="selection" transform={transformOf(selection.index) || undefined}>
+              {#if interactive && selectionBox && frame?.supported}
+                {@const [x, y, width, height] = selectionBox}
+                {@const size = 26}
+                <g class="selection">
                   <rect class="select-box" x={x} y={y} width={width} height={height} rx={6} />
-                  {#if overlappingSelection}
-                    {@const grip = Math.min(size * 0.45, Math.min(width, height) * 0.22)}
-                    <circle class="handle move" cx={x + width / 2} cy={y + height / 2} r={grip}
-                      role="button" tabindex="-1" aria-label={t('ids.adjust.move', { part: partName(selection.index) })}
-                      onpointerdown={event => startDrag(event, selection, 'move')} />
-                    <path class="grip-cross" pointer-events="none"
-                      d={`M${x + width / 2 - grip * 0.5} ${y + height / 2}H${x + width / 2 + grip * 0.5}M${x + width / 2} ${y + height / 2 - grip * 0.5}V${y + height / 2 + grip * 0.5}`} />
-                  {/if}
+                  <circle class="handle move" cx={x + width / 2} cy={y + height / 2} r={size * 0.45}
+                    role="button" tabindex="-1" aria-label={t('ids.adjust.move', { part: chosenLayer?.kind === 'component' ? chosenLayer.char : '' })}
+                    onpointerdown={event => startDrag(event, 'move')} />
                   <line class="turn-line" x1={x + width / 2} y1={y} x2={x + width / 2} y2={y - size * 1.35} />
                   <circle class="handle rotate" cx={x + width / 2} cy={y - size * 1.9} r={size * 0.55}
-                    role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part: partName(selection.index) })}
-                    aria-valuemin="-180" aria-valuemax="180" aria-valuenow={saved[pathKey(parts[selection.index].path)]?.rotate ?? 0}
-                    onpointerdown={event => startDrag(event, selection, 'rotate')} />
+                    role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part: chosenLayer?.kind === 'component' ? chosenLayer.char : '' })}
+                    aria-valuemin="-180" aria-valuemax="180" aria-valuenow={rotationValue}
+                    onpointerdown={event => startDrag(event, 'rotate')} />
                   <rect class="handle scale" x={x + width - size / 2} y={y + height - size / 2} width={size} height={size} rx={size / 5}
-                    role="slider" tabindex="-1" aria-label={t('ids.adjust.scale', { part: partName(selection.index) })}
-                    aria-valuemin="0.25" aria-valuemax="4" aria-valuenow={scale}
-                    onpointerdown={event => startDrag(event, selection, 'scale')} />
+                    role="slider" tabindex="-1" aria-label={t('ids.adjust.scale', { part: chosenLayer?.kind === 'component' ? chosenLayer.char : '' })}
+                    aria-valuemin="0.25" aria-valuemax="4" aria-valuenow={scaleValue}
+                    onpointerdown={event => startDrag(event, 'scale')} />
                 </g>
               {/if}
             </svg>
@@ -367,7 +271,7 @@
 <figure class="ids-preview" data-step={step} data-label={said.label} data-adjusting={editable ? 'true' : undefined}
   aria-busy={step === 'loading'} aria-label={t('ids.preview.drawing', { sequence })}>
   <div class="ids-preview-large">
-    {@render picture('large', adjustable)}
+    {@render picture('large', editable)}
     {#if step === 'loading'}<span class="ids-preview-progress" aria-hidden="true"></span>{/if}
   </div>
   {#if small || !quiet}
@@ -407,8 +311,6 @@
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}
-  .adjusting .part{cursor:grab}
-  .adjusting .part:active{cursor:grabbing}
   .selection{pointer-events:none}
   .select-box{fill:none;stroke:var(--_accent);stroke-width:1.5;stroke-dasharray:6 5;vector-effect:non-scaling-stroke}
   .turn-line{stroke:var(--_accent);stroke-width:1.5;vector-effect:non-scaling-stroke}
@@ -416,7 +318,6 @@
   .handle.scale{cursor:nwse-resize}
   .handle.rotate{cursor:grab}
   .handle.move{cursor:move}
-  .grip-cross{stroke:var(--_accent);stroke-width:1.5;vector-effect:non-scaling-stroke}
   @media (forced-colors: active){.handle{fill:Canvas;stroke:CanvasText}.select-box,.turn-line{stroke:CanvasText}}
   .slot-fill{fill:color-mix(in srgb,var(--_accent) 6%,transparent)}
   .slot-line{fill:none;stroke:color-mix(in srgb,var(--_accent) 50%,var(--_muted));stroke-linecap:round}

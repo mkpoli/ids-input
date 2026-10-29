@@ -1,6 +1,7 @@
 // The drawing in the output as a file: SVG, or PNG at a pixel size, on a background, in an ink, with
 // a margin; the last settings kept per viewer.
 import { drawingSvg } from '../../src/core/index.js'
+import { scopesSvg } from '../../src/document/index.js'
 import { load, save } from './storage.js'
 
 /** @typedef {{ format: 'svg' | 'png', size: number, background: 'none' | 'white' | 'black' | 'custom', custom: string, ink: 'auto' | 'custom', inkColour: string, padding: number, placeholders: boolean }} ExportSettings */
@@ -29,16 +30,25 @@ export function inkOf(s) {
 /** @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @param {number} [size] */
 export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, placeholders: s.placeholders })
 
-/** The drawing as a PNG blob at its pixel size. @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @returns {Promise<Blob>} */
-export async function pngOf(drawing, s) {
-  const svg = new Blob([svgOf(drawing, s)], { type: 'image/svg+xml' })
-  const url = URL.createObjectURL(svg)
+/** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] */
+export const scopedSvgOf = (scopes, s, size = s.size) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size })
+
+/** The SVG string as a PNG blob at its pixel size. @param {string} svg @param {number} size @returns {Promise<Blob>} */
+async function pngOfSvg(svg, size) {
+  const blob = new Blob([svg], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
   try {
     const image = new Image()
     image.src = url
     await image.decode()
-    const canvas = Object.assign(document.createElement('canvas'), { width: s.size, height: s.size })
-    canvas.getContext('2d')?.drawImage(image, 0, 0, s.size, s.size)
+    const canvas = Object.assign(document.createElement('canvas'), { width: size, height: size })
+    canvas.getContext('2d')?.drawImage(image, 0, 0, size, size)
     return await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG failed')), 'image/png'))
   } finally { URL.revokeObjectURL(url) }
 }
+
+/** The drawing as a PNG blob at its pixel size. @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @returns {Promise<Blob>} */
+export const pngOf = (drawing, s) => pngOfSvg(svgOf(drawing, s), s.size)
+
+/** The scoped drawing as a PNG blob at its pixel size. @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @returns {Promise<Blob>} */
+export const scopedPngOf = (scopes, s) => pngOfSvg(scopedSvgOf(scopes, s), s.size)
