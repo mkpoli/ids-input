@@ -191,7 +191,7 @@
   "app.layers.noSplit": "Không có cách phân tách cho thành phần này.",
   "app.layers.splitFailed": "Không thể tách thành phần này.",
   "compare.title": "So sánh",
-  "compare.lead": "Hình do bộ tổng hợp của trang này vẽ cạnh hình KAGE tổng hợp từ cùng một IDS. Các tự hình đầu mục chưa mã hoá thật từ cơ sở dữ liệu HDIC KRM, xếp theo mức khớp thấp nhất trước.",
+  "compare.lead": "Hình do bộ tổng hợp của trang này vẽ cạnh hình KAGE tổng hợp từ cùng một IDS. Các tự hình đầu mục chưa mã hoá thật từ cơ sở dữ liệu HDIC KRM.",
   "compare.dataset": "HDIC KRM · {shown} trong {total} tự hình · đo ngày {date}",
   "compare.method": "Cách đo",
   "compare.method.body": "Mỗi IDS được vẽ hai lần: bằng bộ tổng hợp chạy trong trình duyệt của trang này, và bằng KAGE từ mô tả do zi.tools trả về. Cả hai được raster hoá ở 256 px. F1@4 là trung bình điều hoà của tỉ lệ mực mỗi hình nằm trong 4 px của hình kia; IoU đếm phần mực trùng khít; bố cục là khoảng cách L1 giữa hai lưới tỉ lệ mực 3×3. Lần đo đầy đủ gồm {total} tự hình; trang này hiển thị {shown}.",

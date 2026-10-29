@@ -191,7 +191,7 @@
   "app.layers.noSplit": "此部件没有可用的分解。",
   "app.layers.splitFailed": "无法拆分此部件。",
   "compare.title": "比较",
-  "compare.lead": "同一个IDS，本网站的合成结果与KAGE的合成结果并排展示。取自HDIC KRM中真实的未编码字头，按一致度从低到高排列。",
+  "compare.lead": "同一个IDS，本网站的合成结果与KAGE的合成结果并排展示。取自HDIC KRM中真实的未编码字头。",
   "compare.dataset": "HDIC KRM · 共{total}字，显示{shown}字 · {date}测量",
   "compare.method": "测量方法",
   "compare.method.body": "每个IDS分别由本网站的浏览器合成器绘制，以及由zi.tools返回的描述经KAGE绘制。两者都栅格化为256px。F1@4是双方墨迹落在对方4px范围内的比例的调和平均；IoU按墨迹完全重合计算；布局是三乘三墨迹分布的L1距离。完整测量覆盖{total}字，本页展示{shown}字。",

@@ -191,7 +191,7 @@
   "app.layers.noSplit": "이 구성 요소에 사용할 수 있는 분해가 없습니다.",
   "app.layers.splitFailed": "이 구성 요소를 분할할 수 없습니다.",
   "compare.title": "비교",
-  "compare.lead": "같은 IDS를 이 사이트의 합성기와 KAGE가 그린 결과를 나란히 놓았습니다. HDIC KRM의 실제 미부호화 표제자이며, 일치도가 낮은 순서입니다.",
+  "compare.lead": "같은 IDS를 이 사이트의 합성기와 KAGE가 그린 결과를 나란히 놓았습니다. HDIC KRM의 실제 미부호화 표제자입니다.",
   "compare.dataset": "HDIC KRM · 전체 {total}자 중 {shown}자 · {date} 측정",
   "compare.method": "측정 방법",
   "compare.method.body": "각 IDS를 이 사이트의 브라우저 합성기로 그린 것과, zi.tools가 반환한 설명을 KAGE로 그린 것 두 가지로 비교했습니다. 둘 다 256px로 래스터화했습니다. F1@4는 서로의 잉크가 4px 이내에 있는 비율의 조화 평균, IoU는 잉크의 정확한 겹침, 레이아웃은 3×3 잉크 분포의 L1 거리입니다. 전체 {total}자 중 {shown}자를 보여 줍니다.",
