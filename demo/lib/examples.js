@@ -115,6 +115,13 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱鹿𱋁', char: '麤' },
     { sequence: '⿱雷⿰雷雷', char: '靐' },
     { sequence: '⿱⿰鏡鏡⿰鏡鏡', char: '𰽔' },
+    { sequence: '⿱𡥦𡥦', char: '𡦪' },
+    { sequence: '⿱巛巛', char: '𡿭' },
+    { sequence: '⿱⿰林林⿰林林', char: '𣡽' },
+    { sequence: '⿱吅品', char: '𠾅' },
+    { sequence: '⿱垚土', char: '㙓' },
+    { sequence: '⿰木森', char: '𣛧' },
+    { sequence: '⿱林⿰林林', char: '𣡕' },
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', char: '' },
   ] },
   { key: 'enclosures', examples: [
