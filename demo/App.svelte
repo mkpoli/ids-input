@@ -835,11 +835,11 @@
       </div>
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
-        <span class="sponsor-heart" aria-hidden="true">♥</span>
-        <span class="sponsor-word">
-          <span class="sponsor-glow" aria-hidden="true">{t('app.sponsor.label')}</span>
-          <span class="sponsor-label">{t('app.sponsor.label')}</span>
-        </span>
+        <svg class="sponsor-heart" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
+          <ellipse class="shine" cx="7.6" cy="9.6" rx="1.5" ry="2.1" transform="rotate(-30 7.6 9.6)" />
+        </svg>
+        <span class="sponsor-label">{t('app.sponsor.label')}</span>
       </button>
       <div class="end">
         <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
@@ -1028,38 +1028,32 @@
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
   .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:0}
-  /* The sponsor button: a black sign whose border and lettering cycle through the spectrum, with a
-     halo that comes up at once on hover or focus. */
-  .sponsor{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 12px;margin-inline:auto;
-    border:0;border-radius:9px;background:#08080d;color:#fff;font:inherit;cursor:pointer;white-space:nowrap;isolation:isolate;
-    box-shadow:0 0 0 1px rgb(255 255 255 / .12),0 0 10px rgb(255 61 113 / .22)}
-  .sponsor::before{content:"";position:absolute;inset:0;z-index:-1;padding:1px;border-radius:inherit;pointer-events:none;
-    background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
-    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
-    animation:sponsor-hue 5s linear infinite}
+  /* The sponsor button: a soft pink pill with a heart that beats now and then, so it stands out
+     from the grey toolbar without shouting. Hovering makes the heart bounce and the pill lift. */
+  .sponsor{--sp-from:light-dark(#ffe6ef,#3d1a2b);--sp-to:light-dark(#fff0e0,#3a2318);
+    --sp-ink:light-dark(#c2185b,#ffb3cd);--sp-line:light-dark(#ffc2d6,#6b2c47);--sp-heart:light-dark(#ff4f88,#ff7aa6);
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 14px 0 11px;margin-inline:auto;
+    border:1px solid var(--sp-line);border-radius:999px;background:linear-gradient(135deg,var(--sp-from),var(--sp-to));color:var(--sp-ink);font:inherit;font-size:13px;font-weight:650;
+    cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgb(194 24 91 / .12);transition:transform .18s ease,box-shadow .18s ease}
+  .sponsor:hover,.sponsor:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgb(255 79 136 / .28)}
+  .sponsor:active{transform:translateY(0) scale(.97)}
   .sponsor:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .sponsor:hover,.sponsor:focus-visible{box-shadow:0 0 0 1px rgb(255 255 255 / .35),0 0 10px #ff3d71,0 0 24px #33c6ffcc,0 0 44px #8b5cf699;animation:sponsor-light .4s ease-out}
-  @keyframes sponsor-light{from{filter:brightness(1.9) saturate(1.4)}to{filter:brightness(1)}}
-  .sponsor-heart{font-size:13px;line-height:1;background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
-    -webkit-background-clip:text;background-clip:text;color:transparent;animation:sponsor-hue 5s linear infinite}
-  .sponsor-word{position:relative;display:grid;animation:sponsor-hue 5s linear infinite}
-  .sponsor-label,.sponsor-glow{grid-area:1/1;font-size:12px;font-weight:750;line-height:1;letter-spacing:.04em;
-    background:linear-gradient(90deg,#ff3d71,#ffb020,#ffe14d,#42d392,#33c6ff,#8b5cf6,#ff3d71);
-    -webkit-background-clip:text;background-clip:text;color:transparent}
-  .sponsor-glow{filter:blur(6px) saturate(1.5);opacity:.7;pointer-events:none}
-  .sponsor:hover .sponsor-glow,.sponsor:focus-visible .sponsor-glow{opacity:1;filter:blur(8px) saturate(1.7)}
-  @keyframes sponsor-hue{to{filter:hue-rotate(360deg)}}
+  .sponsor-heart{width:16px;height:16px;flex:none;fill:var(--sp-heart);overflow:visible;transform-origin:50% 60%;animation:sponsor-beat 2.8s ease-in-out infinite}
+  .sponsor-heart .shine{fill:#fff;opacity:.55}
+  .sponsor:hover .sponsor-heart,.sponsor:focus-visible .sponsor-heart{animation:sponsor-bounce .6s ease-in-out infinite}
+  .sponsor-label{line-height:1}
+  @keyframes sponsor-beat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.22)}86%{transform:scale(.96)}93%{transform:scale(1.12)}}
+  @keyframes sponsor-bounce{0%,100%{transform:translateY(0) scale(1)}40%{transform:translateY(-2px) scale(1.18) rotate(-8deg)}}
   /* Below the full toolbar width the header already wraps; keep Sponsor with the right-hand
      controls there, and centre it in the free space only while the bar stays on one row. */
   @media (min-width:641px) and (max-width:1100px){
-    .sponsor{padding:0 8px}
-    .sponsor-label,.sponsor-glow{font-size:11px}
+    .sponsor{padding:0 11px 0 9px;font-size:12px}
   }
   @media (min-width:641px) and (max-width:1024px){
     .end{margin-left:auto}
     .sponsor{order:1;margin-inline:0;margin-left:auto}
   }
-  @media (prefers-reduced-motion:reduce){.sponsor::before,.sponsor-heart,.sponsor-word,.sponsor:hover,.sponsor:focus-visible{animation:none}}
+  @media (prefers-reduced-motion:reduce){.sponsor,.sponsor-heart{animation:none!important;transition:none}}
   :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
     color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
   :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
@@ -1174,7 +1168,7 @@
   }
   @media (max-width:460px){
     .sponsor{width:32px;padding:0}
-    .sponsor-word{display:none}
-    .sponsor-heart{font-size:15px}
+    .sponsor-label{display:none}
+    .sponsor-heart{width:18px;height:18px}
   }
 </style>
