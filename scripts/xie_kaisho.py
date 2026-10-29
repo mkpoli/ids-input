@@ -72,16 +72,17 @@ def xie_kaisho(gs, cmap):
         line(715,458), line(711,296), line(710,253), line(706,66), close]
     upper = [move(283,481), line(716,504), line(715,458), line(284,436), close]
     lower = [move(289,277), line(711,296), line(710,253), line(290,234), close]
-    # Keep 旧's native tapered foot: the separate upright reaches the hook
-    # crossbar, as in the donor, without a horizontal bridge into the frame.
-    upright = old[0]
+    # Keep 旧's complete upright, including the tapered foot that sits below
+    # its frame; the top aligns with this composition's frame.
+    ys = [y for _, points in old[0] for _, y in points]
+    donor_bottom, donor_top = min(ys), max(ys)
 
     fit = lambda x, y: (x * .52 + 310, y * .45 + 301)
     # Extend only the four foot vertices into the hook; the native side edges
     # above the lowest counter retain their original direction.
     frame = _map(frame, lambda x, y: (x * .52 + 310, 300 if y <= 74 else y * .45 + 301))
-    upright = _map(upright, lambda x, y: (x * .52 + 196,
-                 300 + (y + 55) * 333 / 770))
+    upright = _map(old[0], lambda x, y: (x * .52 + 196,
+                 300 + (y - donor_bottom) * (633 - 300) / (donor_top - donor_bottom)))
 
     # Retain the roof, curved terminal and dots at their contextual placement.
     hook = [move(270,205)] + body[1:12] + [line(270,245), close]

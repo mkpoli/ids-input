@@ -86,7 +86,7 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
     // The hook turns left locally; it must never become a full-width bottom bar.
     const [stem, enclosure, baseline, middleBar, hook] = parts
     expect(enclosure.source[2] - stem.source[0]).toBeGreaterThan(440)
-    if (fontStyle === 'kaisho') expect(stem.source[1]).toBeLessThan(hook.source[3]) // the native foot reaches the hook
+    if (fontStyle === 'kaisho') expect(components(raster([stem, hook], 512), 512)).toBe(1) // foot joins the hook
     expect(stem.source[2] - stem.source[0]).toBeLessThan(55)
     expect(baseline.source[3]).toBeLessThan(middleBar.source[1])
     expect(baseline.source[0]).toBeGreaterThan(stem.source[2]) // no bar across the left gap
@@ -141,7 +141,7 @@ it('matches native Kaisho upright weight and a restrained frame slant', () => {
     let ink = 0
     for (let row = 0; row < 1000; row++) ink += mask[row * 1000 + 600]
     expect(ink).toBeGreaterThanOrEqual(35)
-    expect(ink).toBeLessThanOrEqual(49)
+    expect(ink).toBeLessThanOrEqual(44)
   }
 })
 
