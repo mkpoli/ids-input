@@ -40,22 +40,22 @@ try {
     assert.match(await part.getAttribute('title'), new RegExp(name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), query)
   }
 
+  // Clicking a part inserts it into the empty field; the palette waits for a double click, so wait
+  // for the part to arrive rather than race the delay.
   await filter.fill('')
   const firstPart = page.locator('.parts-grid .part').first()
-  await firstPart.click()
-  const field = page.locator('.ids-field input')
-  // The palette inserts after a short delay; wait for the part rather than race it.
-  const clicked = await page.locator('.parts-grid .part').first().getAttribute('data-character')
+  const clicked = await firstPart.getAttribute('data-character')
   assert.ok(clicked, 'the first part carries its character')
-  await page.waitForFunction(char => document.querySelector('.ids-field input')?.value.includes(char), clicked)
-  const pieces = (await field.inputValue()).length
-  assert.ok(pieces > 0, 'the part lands in the field')
+  const field = page.locator('.ids-field input')
+  await field.click()
   await field.fill('')
+  await firstPart.click()
+  await page.waitForFunction(char => document.querySelector('.ids-field input')?.value === char, clicked)
+  assert.equal(await field.inputValue(), clicked)
   await field.fill('⿰\u{1B300}\u{1B31A}')
   await page.waitForFunction(() => !document.querySelector('.ids-preview[aria-busy="true"]'))
   assert.notEqual(await field.getAttribute('aria-invalid'), 'true')
   assert.equal(await field.inputValue(), '⿰\u{1B300}\u{1B31A}')
   assert.ok(await page.locator('.ids-preview-large img, .ids-preview-large svg').count() > 0)
-  assert.ok(pieces > 0)
   console.log('PASS Shuishu parts in the palette, filter and preview')
 } finally { await browser.close() }
