@@ -138,6 +138,13 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
+      // A description whose operator modifier narrows it to one character draws that character: the
+      // layout ignores the crossing the modifier names.
+      if (sequence.includes('[')) {
+        const exact = await babel.encoded(sequence, { exact: true, signal: options?.signal }).catch(() => [])
+        const [char] = exact
+        if (exact.length === 1 && char !== undefined) return composed(char, { signal: options?.signal })
+      }
       const adapted = split ? [] : await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
         if ([...char].length !== 1 || char === sequence) continue
@@ -163,6 +170,7 @@
         if (defaultFace) throw error
         return sans(sequence, options)
       }
+
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
         if (split || sequence === undefined || !defaultFace || !prepared.has(sequence)) composed.warm()
