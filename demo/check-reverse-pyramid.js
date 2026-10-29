@@ -38,7 +38,7 @@ try {
     }
     await field.fill('')
     await field.press('Tab')
-    await page.locator('.ids-pyramid-custom input').fill('24')
+    await page.locator('.ids-pyramid-custom input[type=number]').fill('24')
     await page.locator('.ids-pyramid-custom button').click()
     assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.layers, 24)
     assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.reverse, true)

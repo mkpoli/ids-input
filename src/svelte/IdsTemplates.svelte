@@ -20,7 +20,8 @@
   const pyramidLabel = layers => reverse
     ? t('ids.templates.pyramidInsertReverse', { layers, part: pyramidPart })
     : t('ids.templates.pyramidInsert', { layers, part: pyramidPart })
-  const pyramidPart = $derived(typeof editor.picked === 'string' ? editor.picked : '口')
+  let typedPart = $state(/** @type {string | null} */ (null))
+  const pyramidPart = $derived(typedPart ?? (typeof editor.picked === 'string' ? editor.picked : '口'))
   const pyramidPartSupported = $derived.by(() => {
     try {
       const tree = parse(pyramidSequence(pyramidPart, 3), { open: true }).tree
@@ -49,7 +50,7 @@
   const customValid = $derived(Number.isInteger(Number(customLayers)) && customNumber >= MIN_PYRAMID && customNumber <= MAX_PYRAMID && availablePyramids.has(customNumber))
   /** @param {number} layers */
   function addPyramid(layers) {
-    if (!availablePyramids.has(layers)) return
+    if (editor.disabled || !availablePyramids.has(layers)) return
     const found = parse(pyramidSequence(pyramidPart, layers, { reverse }), { open: true })
     if (!found.tree) return
     editor.put(found.tree, pyramidTarget, pyramidLabel(layers))
@@ -81,9 +82,8 @@
   <div class="ids-pyramid" role="group" aria-labelledby={`${uid}-pyramids`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-pyramids`}>{t('ids.templates.pyramids')}</span>
-      <span class="ids-pyramid-part" lang="ja">{pyramidPart}</span>
       <label class="ids-pyramid-reverse"><input type="checkbox" bind:checked={reverse} disabled={editor.disabled} />{t('ids.templates.pyramidReverse')}</label>
-      <span class="ids-pyramid-hint">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : pyramidTarget === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : pyramidTarget === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid">
       {#each pyramidTemplates as template (template.layers)}
@@ -103,8 +103,13 @@
       {/each}
     </div>
     <form class="ids-pyramid-custom" onsubmit={event => { event.preventDefault(); if (customValid) addPyramid(customNumber) }}>
+      <label class="ids-pyramid-custom-label" for={`${uid}-pyramid-part`}>{t('ids.templates.pyramidPart')}</label>
+      <input id={`${uid}-pyramid-part`} class="ids-pyramid-part" type="text" value={pyramidPart}
+        oninput={event => typedPart = event.currentTarget.value} disabled={editor.disabled}
+        aria-invalid={!pyramidPartSupported} aria-describedby={`${uid}-pyramid-hint`}
+        spellcheck="false" autocomplete="off" />
       <label class="ids-pyramid-custom-label" for={`${uid}-pyramid-rows`}>{t('ids.templates.pyramidCustom')}</label>
-      <input id={`${uid}-pyramid-rows`} type="number" min={MIN_PYRAMID} max={MAX_PYRAMID} step="1" bind:value={customLayers}
+      <input id={`${uid}-pyramid-rows`} type="number" min={MIN_PYRAMID} max={MAX_PYRAMID} step="1" bind:value={customLayers} disabled={editor.disabled}
         aria-invalid={!customValid} placeholder={`${MIN_PYRAMID}–${MAX_PYRAMID}`} />
       <button type="submit" disabled={editor.disabled || !customValid}>{t('ids.templates.pyramidAdd')}</button>
     </form>
@@ -115,7 +120,6 @@
   .ids-templates{display:flex;flex-direction:column;gap:12px;padding:4px 0;color:var(--ids-ink,light-dark(#1d1d21,#ececf1))}
   .ids-pyramid{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:10px;border-top:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43))}
   .ids-pyramid-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px}
-  .ids-pyramid-part{display:grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:6px;font-family:var(--ids-font,serif);font-size:15px;line-height:1}
   .ids-pyramid-reverse{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer}
   .ids-pyramid-reverse input{margin:0;accent-color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
   .ids-pyramid-reverse input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:2px}
@@ -123,7 +127,8 @@
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .ids-pyramid-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}
   .ids-pyramid-size{font-size:10px;line-height:1;color:var(--ids-muted,light-dark(#696973,#9c9ca8));font-variant-numeric:tabular-nums}
-  .ids-pyramid-custom{display:flex;align-items:center;gap:5px;min-width:0}
+  .ids-pyramid-custom{display:flex;align-items:center;flex-wrap:wrap;gap:5px;min-width:0}
+  .ids-pyramid-custom input.ids-pyramid-part{font-family:var(--ids-font,serif);font-size:18px;text-align:center}
   .ids-pyramid-custom-label{font-size:11px;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
   .ids-pyramid-custom input{width:64px;height:30px;padding:0 6px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:8px;background:var(--ids-surface,light-dark(#fff,#202026));font:inherit;font-size:12px;color:inherit;font-variant-numeric:tabular-nums}
   .ids-pyramid-custom input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:1px}

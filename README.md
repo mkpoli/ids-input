@@ -203,7 +203,9 @@ draws a pyramid of three or more rows as equal square cells in centred rows, so 
 given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
 may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
 composer draws up to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids
-of 3 to 24 rows, using the selected component or 口. Its Reverse toggle arranges rows from widest
+of 3 to 24 rows. Its Component field starts with the selected component or 口; a typed value is kept
+for subsequent insertions. Enter one component, then choose a preset or enter a custom row count.
+Its Reverse toggle arranges rows from widest
 to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
 
