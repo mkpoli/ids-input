@@ -394,6 +394,22 @@ describe('a host-less export', () => {
   })
 })
 
+describe('a character the export has no glyph for', () => {
+  it('is drawn from its sequence and reported as missing', async () => {
+    const hex = text => createHash('sha256').update(text).digest('hex')
+    const extra = { [hex('甲')]: { k: '甲', s: '⿰木口' } }
+    const name = `g/${hex('甲').slice(0, 3)}.json`
+    const source = createSource(async file => {
+      if (file === name) return new Uint8Array(gzipSync(JSON.stringify(extra))).buffer
+      const body = files[file]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const drawn = await compose(source, '⿰甲木')
+    expect(drawn.missing).toEqual(['甲'])
+    expect(drawn.origins).toContain('glyph 口')
+  })
+})
+
 describe('an empty slot', () => {
   it('composes: the filled parts as the whole sequence draws them, the slot a placeholder in its box', async () => {
     const source = fixedSource()

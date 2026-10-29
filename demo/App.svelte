@@ -133,6 +133,7 @@
     const known = previewsWithExamples.get(key)
     if (known) return known
     const composed = previewAt(at, split, style)
+    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif')
     const sans = sansPreviewAt(split)
     const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
     /** @type {ReturnType<typeof composerPreview>} */
@@ -151,7 +152,15 @@
         try { return await composed(char, options) } catch { /* compose the sequence */ }
       }
       const draw = defaultFace ? sans : composed
-      try { return await draw(sequence, options) } catch (error) {
+      try {
+        const drawn = await draw(sequence, options)
+        // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
+        // description (术 is ⿺木丶), so the Kaisho face borrows the Serif drawing then.
+        if (style === 'kaisho' && !split && drawn?.missing?.length) {
+          try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
+        }
+        return drawn
+      } catch (error) {
         if (options?.signal?.aborted || stopping(error)) throw error
         // A description of an encoded character draws that character when the face has its glyph.
         const found = split ? [] : await babel.encoded(sequence).catch(() => [])

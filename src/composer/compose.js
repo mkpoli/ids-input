@@ -145,6 +145,8 @@ export class Composer {
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
     this.approximate = new Set()
+    // Characters whose glyph the export lacks and whose sequence stands in for it.
+    this.missingGlyphs = new Set()
     this.pyramids = new WeakMap()
     this.nativeEnclosures = new Set()
   }
@@ -426,6 +428,7 @@ export class Composer {
       if (tree && (this.stroked(tree) || this.atomic(encoded))) squeezed = false
       if (glyph && !(squeezed && tree)) return [this.place(glyph, region, this.ink(encoded), `glyph ${encoded}`)]
       if (!tree) throw new LookupError(`No glyph or sequence draws ${encoded}.`)
+      if (!glyph) this.missingGlyphs.add(encoded)
       this.expanding.add(encoded)
       try { return this.node(tree, region, atRoot) } catch (error) {
         if (!glyph || !(error instanceof LookupError)) throw error
