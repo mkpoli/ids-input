@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { EXAMPLES, EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
+import { onlyBundled } from '../src/composer/local.js'
 
 const data = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
 
@@ -96,6 +97,17 @@ it('prepares the Small Seal examples with bundled outlines', () => {
     const drawn = data.drawings[sequence]?.drawn
     expect(drawn?.d.length).toBeGreaterThan(100)
     expect(drawn.d).not.toMatch(/NaN|Infinity/)
+  }
+})
+
+it('prepares every example whose parts are all bundled', () => {
+  const bundled = EXAMPLES.filter(example => onlyBundled(example.sequence))
+  expect(bundled.length).toBeGreaterThan(0)
+  for (const { sequence, char } of bundled) {
+    expect(data.failed.some(entry => entry.sequence === sequence)).toBe(false)
+    const entry = data.drawings[sequence]
+    expect(entry?.char).toBe(char)
+    expect(entry?.drawn.d.length).toBeGreaterThan(10)
   }
 })
 
