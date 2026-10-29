@@ -1,8 +1,8 @@
 <script>
   // Find a part by drawing it. The pad keeps the strokes in its own square; on the first pause it
-  // compares them with the palette's shapes, built from the page's fonts, and lists the closest as
-  // the Find tab's own buttons. A part picked is handed to `onpick`, and the pad is cleared for the
-  // next drawing.
+  // compares them with the palette's shapes, prepared with the palette or built from the page's
+  // fonts, and lists the closest as the Find tab's own buttons. A part picked is handed to `onpick`,
+  // and the pad is cleared for the next drawing.
   import { onMount, untrack } from 'svelte'
   import { SIZE, rank, shapesOf } from '../core/sketch.js'
   import { sketchTemplates } from './sketch-templates.js'
@@ -67,22 +67,32 @@
   })
 
   $effect(() => {
-    // The palette and its shapes wait until the pad is open, then stay for this page.
-    const read = adapter.parts, family = font
-    if (!read) { preparing = false; failed = true; return }
-    if (!family) return
+    // Shapes prepared with the palette are used first; otherwise the page's fonts are drawn when
+    // the pad opens. Either way the result stays for this page.
+    const prepared = adapter.sketchTemplates, read = adapter.parts, family = font
+    if ((!prepared && !read) || !family) {
+      if (!prepared && !read) { preparing = false; failed = true }
+      return
+    }
     let live = true
     untrack(() => { preparing = true; failed = false; progress = { done: 0, total: 0 } })
-    read().then(parts => sketchTemplates(parts, {
-      font: family,
-      onProgress: (done, total) => { if (live) progress = { done, total } },
-    })).then(found => {
+    /** @param {import('./sketch-templates.js').SketchTemplate[]} found */
+    const done = found => {
       if (!live) return
       templates = found
       preparing = false
       failed = !found.length
       if (found.length) recognize()
-    }, () => { if (live) { preparing = false; failed = true } })
+    }
+    const build = () => {
+      if (!read) { done([]); return }
+      read().then(parts => sketchTemplates(parts, {
+        font: family,
+        onProgress: (count, total) => { if (live) progress = { done: count, total } },
+      })).then(done, () => done([]))
+    }
+    if (prepared) prepared().then(found => { if (live) found.length ? done(found) : build() }, () => { if (live) build() })
+    else build()
     return () => { live = false }
   })
 

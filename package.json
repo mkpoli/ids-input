@@ -77,6 +77,7 @@
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
+    "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
     "prepack": "tsc -p tsconfig.json",
     "build:tangut-layers": "node scripts/build_tangut_layers.mjs"

@@ -403,9 +403,25 @@ interface IdsAdapter {
   search?(query, options?): Promise<{ char: string, label?: string }[]>
   containing?(parts, options?): Promise<{ items: string[], more?: boolean }>
   parts?(options?): Promise<PalettePart[]>
+  sketchTemplates?(options?): Promise<SketchTemplate[]>   // glyph shapes for the drawing search
   drawing?(sequence, options?): Promise<string | null>   // a final image's URL
   icon?(sequence, options?): Promise<Drawing | null>    // concurrent palette icons, separate from preview
   preview?(sequence, options?): Promise<Drawing>          // rejects when it cannot draw
+}
+
+interface SketchTemplate {   // a palette part as the drawing search sees it
+  part: string
+  strokes: number | null
+  uses: number
+  shapes: Shape[]            // the glyph stretched and at its own proportions
+}
+
+interface Shape {            // 40×40; see src/core/sketch.js
+  mask: Uint8Array
+  distance: Uint8Array       // distance from each cell to the ink
+  gradient: Float32Array     // 5×5 cells of 8 stroke directions
+  ink: number
+  points: Uint16Array        // the ink cells
 }
 
 interface Drawing {          // in a 1000-unit box, y down
@@ -440,10 +456,12 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters })` answers
+`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given, and the whole characters those names belong to when
-`characters` is given), `containing` and `parts` from the files in `data/`. `components` writes
+`characters` is given), `containing`, `parts` and `sketchTemplates` from the files in `data/`.
+`sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared masks
+the Find tab's drawing search uses. `components` writes
 out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
@@ -641,18 +659,21 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part in the box, and the tab lists the palette
 parts whose shapes are closest; picking one puts it in the chosen slot, like a typed find. The
-strokes are compared with the glyphs of the page's own font stack, built once when the pad first
-opens and kept for the page: the palette's parts used in at least 50 descriptions (about 800 here)
-and the CJK strokes. A part a font draws as its missing-glyph box is left out. The host should have
-its CJK faces loaded, as the workshop does. Nothing is sent anywhere, and the pad needs no extra
-data.
+strokes are compared with 803 palette parts and the CJK strokes, each fitted to a square twice.
+
+`babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
+the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
+fonts the page has loaded. Without `sketches`, the same shapes are drawn from the page's
+`--ids-font` when the pad opens, which needs its CJK faces loaded; a part a font draws as its
+missing-glyph box is left out either way. Nothing is sent anywhere.
 
 Parts within one stroke of the drawing's count, or two when the drawing has one or two strokes,
 come before the rest; within that, the closest shapes come first by how far each shape's ink lies
 from the other's and by a coarse histogram of stroke directions. The match is approximate: it looks at outlines, not stroke order, so simple
 parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
-similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison, and
-`sketchTemplates` in the Svelte layer builds the glyph shapes.
+similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison,
+`readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
+the fallback from the page's fonts.
 
 ## Preview
 
@@ -1139,6 +1160,7 @@ bun run verify          # tests, tsc and svelte-check, and the i18n check; run b
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
+bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
 CI only builds the demo and deploys it; the checks above stay local.
@@ -1146,6 +1168,10 @@ CI only builds the demo and deploys it; the checks above stay local.
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
+
+`data/sketch-parts.json.gz` is built by `scripts/build_sketch_parts.py` from the bundled faces and
+the system Noto Sans CJK JP (`NOTO_SANS_CJK` overrides its path). `tests/sketch-data.test.js` reads
+it, checks its format, and looks up drawings of 日, 木 and 口.
 
 ### Character information
 
