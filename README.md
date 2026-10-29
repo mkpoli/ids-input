@@ -900,6 +900,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
   disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- [Chữ Nôm](https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m), Wikipedia, read 2026-10-30: the
+  invented Nôm characters in `demo/lib/examples.js` and their readings, from the Tale of Kiều table
+  and the account of locally invented characters. Borrowed Chinese characters used phonetically
+  (些, 才, 命, 窖, 饒) are left out, and so is 媄, which the article notes is also a Chinese variant
+  of 美. The descriptions are BabelStone's, tagged V.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
