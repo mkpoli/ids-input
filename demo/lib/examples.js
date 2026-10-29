@@ -72,6 +72,26 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱地⿰地地', refs: [40], char: '' },
     { sequence: '⿱里⿰里里', refs: [39], char: '' },
     { sequence: '⿱莫⿰莫莫', refs: [39], char: '' },
+    // 二同系: stacked, side by side, mirrored and covered pairs.
+    { sequence: '⿱火火', refs: [1,44], char: '炎' },
+    { sequence: '⿱土土', refs: [1,44], char: '圭' },
+    { sequence: '⿰木木', refs: [1,44], char: '林' },
+    { sequence: '⿰竞竞', refs: [1,44], char: '競' },
+    { sequence: '⿰𠃛𠁣', refs: [1,44], char: '𨳈' },
+    { sequence: '⿸尸尸', refs: [1,44], char: '𡰲' },
+    { sequence: '⿵門門', refs: [1,44], char: '闁' },
+    // 三同系: three in a row, in a pyramid, beside a pair or above one.
+    { sequence: '⿲水水水', refs: [1,44], char: '㴇' },
+    { sequence: '⿱口吅', refs: [1,44], char: '品' },
+    { sequence: '⿱日昍', refs: [1,44], char: '晶' },
+    { sequence: '⿰火炎', refs: [1,44], char: '㷋' },
+    { sequence: '⿰日昌', refs: [1,44], char: '晿' },
+    { sequence: '⿱㼌瓜', refs: [1,44], char: '𤬑' },
+    // 四同系 and 過畳系.
+    { sequence: '⿱朋朋', refs: [1,44], char: '朤' },
+    { sequence: '⿱炏炏', refs: [1,44], char: '燚' },
+    { sequence: '⿴囗㗊', refs: [1,44], char: '𡈨' },
+    { sequence: '⿱⿰竹竹⿰竹竹', refs: [1,44], char: '𥷹' },
     { sequence: '⿰言⿱⿰幺幺⿰幺幺', refs: [], char: '' },
   ] },
   { key: 'enclosures', refs: [1], examples: [
