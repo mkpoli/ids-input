@@ -33,7 +33,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { documentFrom, linkTo, sequenceFrom } from './lib/share.js'
+  import { addressDocument, documentFrom, linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -401,7 +401,7 @@
       keepTabSession(tab)
     }
     store()
-    history.replaceState(null, '', linkTo(text, location))
+    syncAddress()
   }))
   untrack(store)
 
@@ -454,6 +454,7 @@
     if (!tab) return
     tab.document = sessionRecord(sessionFor(tab))
     store()
+    syncAddress()
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -489,10 +490,16 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    syncAddress()
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
+  /** Keep the address on the active tab, including transforms when they carry state. */
+  function syncAddress() {
+    const tab = current()
+    history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
+  }
   /** The active tab's complete document, for sharing. */
   function currentDocument() {
     const tab = current()
@@ -521,6 +528,7 @@
     if (kept) editor.restore(kept)
     else editor.reset(tab.sequence)
     store()
+    syncAddress()
   }
   /** A new empty tab, or one over `sequence`, shown at once. @param {string} [sequence] */
   function addTab(sequence = '') {

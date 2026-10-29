@@ -22,6 +22,20 @@ export function linkTo(sequence, where, document = null) {
 }
 
 
+/** Whether any layer carries an authored transform. @param {import('../../src/document/index.js').Node} root */
+function transformed(root) {
+  if (root.transform?.length) return true
+  if (root.kind === 'operator') return root.children.some(transformed)
+  if (root.kind === 'group') return transformed(root.child)
+  return false
+}
+
+/** The document to put in the address bar: only when it carries transforms worth preserving.
+ *  Structure and sequence already travel in the hash. @param {import('../../src/document/index.js').Document | null} document */
+export function addressDocument(document) {
+  return document && transformed(document.root) ? document : null
+}
+
 /** The document a link carries, or null. @param {Location | URL} where */
 export function documentFrom(where) {
   const token = new URLSearchParams(where.search).get('doc')
