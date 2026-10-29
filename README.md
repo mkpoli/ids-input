@@ -895,6 +895,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
   `⿱宀⿺辶⿱⿰王尔⿲隹貝招`, with the 宀 above the 辶. The proposal's glyph puts the 辶 around the
   宀 and the rows, so the example follows the glyph: `⿺辶⿱宀⿱⿰王尔⿲隹貝招`.
+
+  ![The reference glyph for the 招財進寶 ligature, from L2/12-032](docs/images/utc-00949-reference.png)
+
+  The example's drawing approximates this hand-set glyph rather than copying it. The CDL's boxes put
+  the 宀 bar at the top and the 辶 around the square; the export's 宀 carries longer side strokes
+  than the reference, so placing the parts by the CDL's boxes merges those strokes with 王 and 尔.
 - [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
   oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
