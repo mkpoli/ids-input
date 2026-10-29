@@ -49,6 +49,18 @@ function checked(sequence, expected) {
 }
 
 /**
+ * The row counts in a text field: two or three numbers from 1 to 4, separated by whitespace, a
+ * comma or a plus sign. Full-width digits and separators are accepted.
+ * @param {string} text
+ * @returns {number[] | null}
+ */
+export function parseRepeatRows(text) {
+  const parts = String(text ?? '').normalize('NFKC').trim().split(/[\s,，、+·]+/u).filter(Boolean)
+  if (parts.length < 2 || parts.length > 3 || !parts.every(part => /^[1-4]$/.test(part))) return null
+  return parts.map(Number)
+}
+
+/**
  * Two or three rows of repeated components, as an IDS sequence. The first rows hold `part`; the
  * last row holds `bottom`, which defaults to `part`. The 2+3 sequence is `⿱⿰口口⿲口口口`;
  * 2·1·2 is `⿳⿰口口口⿰口口`.

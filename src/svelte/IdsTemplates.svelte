@@ -2,7 +2,7 @@
   import { LONGEST, isDescription, nextEmpty, parse, place, sameTree, write } from '../core/ids.js'
   import { normalizeMarks } from '../core/marks.js'
   import { pyramidSequence } from '../core/pyramid.js'
-  import { enclosedRepeatSequence, repeatSequence } from '../core/repeat.js'
+  import { enclosedRepeatSequence, parseRepeatRows, repeatSequence } from '../core/repeat.js'
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
   import { templateDiagram } from './template-diagram.js'
 
@@ -86,7 +86,7 @@
     } catch { /* the selected component cannot fill a repeat cell */ }
     return available
   })
-  /** @param {[number, number]} rows */
+  /** @param {number[]} rows */
   const repeatLabel = rows => {
     const text = rows.join(' + ')
     return repeatBottom === generatorPart
@@ -104,6 +104,26 @@
     const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
     if (!found.tree) return
     editor.put(found.tree, repeatTarget, repeatLabel(rows))
+  }
+  let customRowsTyped = $state('')
+  const customRows = $derived(parseRepeatRows(customRowsTyped))
+  const customRepeatAvailable = $derived.by(() => {
+    if (!customRows || repeatTarget === null || !repeatPartsSupported) return false
+    try {
+      const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
+      return found.tree !== undefined && fits(found.tree)
+    } catch { return false }
+  })
+  const customRepeatTitle = $derived(!repeatPartsSupported
+    ? t('ids.templates.repeatUnsupported')
+    : !customRows ? (customRowsTyped.trim() ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint'))
+    : repeatTarget === null ? t('ids.templates.repeatTarget')
+    : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.repeatTooLong'))
+  function addCustomRepeat() {
+    if (editor.disabled || !customRows || !customRepeatAvailable) return
+    const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
+    if (!found.tree) return
+    editor.put(found.tree, repeatTarget, repeatLabel(customRows))
   }
 
   const FIVE_ROWS = [2, 1, 2]
@@ -236,6 +256,16 @@
         title={t('ids.templates.repeatBottomHint')} aria-invalid={repeatBottomTyped.trim() !== '' && !componentSupported(repeatBottom)}
         aria-describedby={`${uid}-repeat-hint`} spellcheck="false" autocomplete="off" />
     </div>
+    <form class="ids-pyramid-custom ids-repeat-custom" onsubmit={event => { event.preventDefault(); addCustomRepeat() }}>
+      <label class="ids-pyramid-custom-label" for={`${uid}-repeat-rows`}>{t('ids.templates.repeatCustom')}</label>
+      <input id={`${uid}-repeat-rows`} type="text" value={customRowsTyped} placeholder="2 3"
+        oninput={event => customRowsTyped = event.currentTarget.value} disabled={editor.disabled}
+        aria-invalid={customRowsTyped.trim() !== '' && !customRows}
+        aria-describedby={`${uid}-repeat-rows-hint`} spellcheck="false" autocomplete="off" />
+      <button type="submit" data-repeat-custom disabled={editor.disabled || !customRepeatAvailable}
+        title={customRepeatTitle} aria-label={customRepeatTitle}>{t('ids.templates.repeatAdd')}</button>
+      <span class="ids-pyramid-hint ids-repeat-rows-hint" id={`${uid}-repeat-rows-hint`}>{customRowsTyped.trim() && !customRows ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint')}</span>
+    </form>
   </div>
   <div class="ids-pyramid ids-five" role="group" aria-labelledby={`${uid}-five`}>
     <div class="ids-pyramid-head">
@@ -279,6 +309,8 @@
   .ids-pyramid-hint{font-size:11px;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .ids-repeat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .ids-repeat-custom input{width:84px;text-align:center;font-variant-numeric:tabular-nums}
+  .ids-repeat-rows-hint{flex-basis:100%}
   .ids-five-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ids-pyramid-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}
   .ids-pyramid-size{font-size:10px;line-height:1;color:var(--ids-muted,light-dark(#696973,#9c9ca8));font-variant-numeric:tabular-nums}

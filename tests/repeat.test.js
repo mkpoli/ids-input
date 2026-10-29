@@ -1,5 +1,20 @@
 import { describe, expect, it } from 'bun:test'
-import { enclosedRepeatSequence, leaves, parse, place, repeatSequence, write } from '../src/core/index.js'
+import { enclosedRepeatSequence, leaves, parse, parseRepeatRows, place, repeatSequence, write } from '../src/core/index.js'
+
+describe('row counts', () => {
+  it('reads two or three counts, half-width or full-width', () => {
+    expect(parseRepeatRows('3 4')).toEqual([3, 4])
+    expect(parseRepeatRows('2,3')).toEqual([2, 3])
+    expect(parseRepeatRows('2＋3')).toEqual([2, 3])
+    expect(parseRepeatRows('２ ３')).toEqual([2, 3])
+    expect(parseRepeatRows('2、3')).toEqual([2, 3])
+    expect(parseRepeatRows('2·3')).toEqual([2, 3])
+    expect(parseRepeatRows('2 1 2')).toEqual([2, 1, 2])
+  })
+  it('rejects other numbers and shapes', () => {
+    for (const text of ['', '2', '2 5', '0 3', '2 1 2 3', '0x2 3', '2.0 3', '1e0 4', 'a b']) expect(parseRepeatRows(text)).toBeNull()
+  })
+})
 
 describe('repeated rows', () => {
   it('writes rows of one to four', () => {
@@ -8,6 +23,7 @@ describe('repeated rows', () => {
     expect(repeatSequence('口', [3, 3])).toBe('⿱⿲口口口⿲口口口')
     expect(repeatSequence('口', [2, 4])).toBe('⿱⿰口口⿰⿰口口⿰口口')
     expect(repeatSequence('口', [4, 4])).toBe('⿱⿰⿰口口⿰口口⿰⿰口口⿰口口')
+    expect(repeatSequence('口', [3, 4])).toBe('⿱⿲口口口⿰⿰口口⿰口口')
   })
 
   it('writes a middle row of one', () => {
