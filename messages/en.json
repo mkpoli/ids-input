@@ -314,5 +314,8 @@
   "parts.gongche.staccato": "Cantonese staccato",
   "parts.gongche.rhythm": "Rhythm marks",
   "parts.gongche.beiguanSource": "Beiguan note forms · Chiu Huo-Jung",
-  "parts.gongche.seirakuSource": "Seiraku rhythm marks · Toru Kato"
+  "parts.gongche.seirakuSource": "Seiraku rhythm marks · Toru Kato",
+  "info.copy": "Copy {char}",
+  "info.copied": "Copied",
+  "info.copyFailed": "Copy failed"
 }

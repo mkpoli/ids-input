@@ -310,5 +310,8 @@
   "parts.gongche.staccato": "Staccato trong nhạc Quảng Đông",
   "parts.gongche.rhythm": "Ký hiệu phách",
   "parts.gongche.beiguanSource": "Chữ nhạc Bắc quản · Khâu Hỏa Vinh",
-  "parts.gongche.seirakuSource": "Ký hiệu phách Thanh nhạc · Toru Kato"
+  "parts.gongche.seirakuSource": "Ký hiệu phách Thanh nhạc · Toru Kato",
+  "info.copy": "Sao chép {char}",
+  "info.copied": "Đã sao chép",
+  "info.copyFailed": "Lỗi sao chép"
 }

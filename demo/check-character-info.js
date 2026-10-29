@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs'
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
   for (const scheme of ['light', 'dark']) {
-    const page = await browser.newPage({ viewport: { width:1440, height:1000 }, deviceScaleFactor:2, colorScheme:scheme })
+    const page = await browser.newPage({ viewport: { width:1440, height:1000 }, deviceScaleFactor:2, colorScheme:scheme, permissions:['clipboard-read','clipboard-write'] })
     const errors=[]
     page.on('pageerror',e=>errors.push(e.message))
     await page.route('https://glyphatlas.org/**',r=>r.abort())
@@ -20,13 +20,28 @@ try {
     // Keep the card open while entering it; explanatory/source sections stay absent.
     await panel.hover();await page.waitForTimeout(300);assert.ok(await panel.isVisible())
     assert.equal(await panel.locator('details, footer').count(),0)
+    // The header copies the character it shows and says so.
+    await panel.getByRole('button',{name:'Copy 𘥇'}).click()
+    await panel.getByText('Copied',{exact:true}).waitFor()
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'𘥇')
+    await panel.getByText('Copied',{exact:true}).waitFor({state:'hidden',timeout:3000})
     if(process.env.IDS_INFO_SHOTS){mkdirSync(process.env.IDS_INFO_SHOTS,{recursive:true});await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-tangut-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})}
+    // A write that lands after the card moved must not label the new character.
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>new Promise(resolve=>{window.__resolveCopy=resolve})}}))
+    await panel.getByRole('button',{name:'Copy 𘥇'}).click()
+    await horse.hover();await panel.locator('header .glyph').filter({hasText:'馬'}).waitFor()
+    await page.evaluate(()=>window.__resolveCopy());await page.waitForTimeout(150)
+    assert.equal(await panel.locator('.copy-note').innerText(),'')
+    await page.evaluate(()=>{delete navigator.clipboard})
     await page.keyboard.press('Escape'); await page.waitForTimeout(400);assert.ok(await panel.isHidden())
     // Focus opens details without changing the editor; F1 enters, Escape restores focus.
     await horse.focus(); await panel.waitFor({state:'visible'}); await panel.getByText('Small seal',{exact:true}).waitFor()
     assert.match(await panel.innerText(),/horse/)
     const before=await field.inputValue()
-    await horse.press('F1'); assert.equal(await panel.locator('.close').evaluate(el=>el===document.activeElement),true)
+    await horse.press('F1'); assert.equal(await panel.locator('.copy').evaluate(el=>el===document.activeElement),true)
+    await page.keyboard.press('Enter')
+    await panel.getByText('Copied',{exact:true}).waitFor()
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'馬')
     assert.equal(await field.inputValue(),before)
     await page.keyboard.press('Escape'); await page.waitForTimeout(400);assert.ok(await panel.isHidden())
     assert.ok(await horse.evaluate(el=>el===document.activeElement))
@@ -173,8 +188,16 @@ try {
     assert.equal(await field.inputValue(),'⿰𘆽木')
     await page.keyboard.press('Control+z');assert.equal(await field.inputValue(),'⿰馬木')
     assert.ok(await page.locator('.ids-treelist [data-path=""]').evaluate(el=>el===document.activeElement))
+    // A refused write says so, and the target keeps its full size.
+    await page.locator('.view-tabs').getByRole('tab',{name:'Shape',exact:true}).click()
+    await horse.hover();await panel.getByText('Small seal',{exact:true}).waitFor()
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(new Error('denied'))}}))
+    await panel.getByRole('button',{name:'Copy 馬'}).click()
+    await panel.getByText('Copy failed',{exact:true}).waitFor()
+    const copyBox=await panel.locator('.copy').boundingBox()
+    assert.ok(copyBox.width>=24&&copyBox.height>=24)
     assert.deepEqual(errors,[])
-    await page.close();console.log(`PASS ${scheme}: meanings, actions, pinned card, hover persistence, keyboard, stale targets, insertion`)
+    await page.close();console.log(`PASS ${scheme}: meanings, copying, actions, pinned card, hover persistence, keyboard, stale targets, insertion`)
   }
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
   await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:120000})

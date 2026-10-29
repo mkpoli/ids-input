@@ -310,5 +310,8 @@
   "parts.gongche.staccato": "粤曲のスタッカート",
   "parts.gongche.rhythm": "拍節記号",
   "parts.gongche.beiguanSource": "北管の譜字 · 邱火榮",
-  "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹"
+  "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹",
+  "info.copy": "{char}をコピー",
+  "info.copied": "コピーしました",
+  "info.copyFailed": "コピー失敗"
 }

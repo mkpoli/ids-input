@@ -310,5 +310,8 @@
   "parts.gongche.staccato": "粤曲顿音",
   "parts.gongche.rhythm": "板眼符号",
   "parts.gongche.beiguanSource": "北管谱字 · 邱火荣",
-  "parts.gongche.seirakuSource": "清乐板眼符号 · 加藤彻"
+  "parts.gongche.seirakuSource": "清乐板眼符号 · 加藤彻",
+  "info.copy": "复制{char}",
+  "info.copied": "已复制",
+  "info.copyFailed": "复制失败"
 }
