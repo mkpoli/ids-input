@@ -83,6 +83,12 @@ describe('a document session', () => {
     expect(session.sequence).toBe('⿰木⬚')
     expect(findLayer(session.document.root, target.id)?.node).toMatchObject({ id: target.id, kind: 'slot', transform })
   })
+  it('names a transform by its layer', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    session.choose(layer(session, 0).id)
+    session.setTransform(transform)
+    expect(session.steps.done.at(-1)).toBe('Transform 木')
+  })
   it('coalesces one gesture into one undo step', () => {
     const session = createDocumentSession(fromSequence('⿰木口'))
     const target = layer(session, 0).id
