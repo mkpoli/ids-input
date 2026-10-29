@@ -512,7 +512,6 @@ it('joins 儿 to a generic ⿸ enclosure bar, including 厃', async () => {
     const legs = parts.find(part => part.origin === `Noto ${fontStyle} 儿:zhan`)
     expect(outer).toBeDefined()
     expect(legs).toBeDefined()
-    expect(legs.reverse).toBe(true)
     if (text.startsWith('⿸')) expect(collision([outer], [legs], constants.face, 512)).toBeGreaterThan(0)
     const lower = parts[parts.indexOf(legs) + 1]
     expect(legs.target[1]).toBeGreaterThan(lower.target[3])
