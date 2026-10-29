@@ -982,7 +982,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -991,7 +991,7 @@
 
 </div>
 
-<input bind:this={documentInput} type="file" accept=".json,.ids.json,application/json" hidden onchange={openDocument} />
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,application/json,image/svg+xml" hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
