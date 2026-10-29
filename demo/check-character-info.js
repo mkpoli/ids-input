@@ -123,6 +123,14 @@ try {
     await page.mouse.up()
     assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
     assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    await page.evaluate(()=>getSelection().removeAllRanges())
+    // A press that starts on a card button and ends on a tile below stays the button's press.
+    const pressButton=await panel.locator('header button').last().boundingBox(),beforePress=await field.inputValue()
+    await page.mouse.move(pressButton.x+pressButton.width/2,pressButton.y+pressButton.height/2);await page.mouse.down()
+    await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
+    await page.waitForTimeout(500)
+    assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
+    await panel.waitFor({state:'hidden'})
     await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
     await page.waitForTimeout(600)
     // A pinned card goes when its tile is scrolled out of the grid.

@@ -18,6 +18,8 @@
   let pointerX = NaN, pointerY = NaN
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
   let pinned = false
+  /** @type {Element | null} */
+  let press = null
   let generation = 0
   /** @type {string | null} */ let savedTitle = null
   /** @type {string | null} */ let savedDetails = null
@@ -186,6 +188,13 @@
   }
   /** Controls inside the card that keep their own press. @constant {string} */
   const CONTROL = 'button, a, input, select, textarea, summary, label, [role="button"]'
+  /** The element the press started on, so a control's press is not mistaken for a surface click.
+   * @param {PointerEvent} event */
+  function pressed(event) { press = /** @type {Element} */ (event.target) }
+  /** A right or middle click dismisses the card it lands outside of. @param {MouseEvent} event */
+  function context(event) {
+    if (!panel?.contains(/** @type {Node} */ (event.target))) close()
+  }
   /** @param {MouseEvent} event */
   function outside(event) {
     const node = /** @type {HTMLElement} */ (event.target)
@@ -199,7 +208,11 @@
       // Otherwise the press was meant for whatever the card covers: dismiss it and hand the click
       // over, so nothing behind the card costs a second click.
       const { clientX: pointX, clientY: pointY, detail, pointerType } = /** @type {PointerEvent} */ (event)
-      close()
+      // A press that started on a control and ended on the surface is that control's press, not a
+      // click meant for anything below the card.
+      const fromSurface = !(press instanceof Element) || !press.closest(CONTROL)
+      press = null; close()
+      if (!fromSurface) return
       const under = document.elementFromPoint(pointX, pointY)
       if (!under || !root?.contains(under)) return
       under.dispatchEvent(new PointerEvent('click', {
@@ -230,7 +243,10 @@
     node.addEventListener('focusout', leave)
     node.addEventListener('dragstart', close)
     window.addEventListener('keydown', key, true)
+    window.addEventListener('pointerdown', pressed, true)
     window.addEventListener('click', outside, true)
+    window.addEventListener('contextmenu', context, true)
+    window.addEventListener('auxclick', context, true)
     window.addEventListener('resize', close)
     window.addEventListener('scroll', scrolled, true)
     return () => {
@@ -239,7 +255,9 @@
       node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
       node.removeEventListener('dragstart', close); window.removeEventListener('keydown', key, true)
-      window.removeEventListener('click', outside, true); window.removeEventListener('resize', close)
+      window.removeEventListener('pointerdown', pressed, true); window.removeEventListener('click', outside, true)
+      window.removeEventListener('contextmenu', context, true); window.removeEventListener('auxclick', context, true)
+      window.removeEventListener('resize', close)
       window.removeEventListener('scroll', scrolled, true)
     }
   })
