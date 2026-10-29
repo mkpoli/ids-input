@@ -29,6 +29,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿲𠂤日千', refs: [10], char: '' },
     { sequence: '⿱一心', refs: [12], char: '' },
     { sequence: '⿰忄実', refs: [13,37], char: '' },
+    { sequence: '⿰忄實', refs: [13], char: '' },
   ] },
   { key: 'complex', refs: [1], examples: [
     { sequence: '⿱⿰虎⿿虎貝', char: '𧹂' },
@@ -36,6 +37,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰𦚏𳑳', refs: [4], char: '' },
     { sequence: '⿰扌⿸厃⿱儿𢀛', refs: [4], char: '' },
     { sequence: '〾⿱⿰大⿱七六⿵勹五', refs: [26], char: '' },
+    { sequence: '⿱苦⿲⿰⿹耳舌鼻⿳⿸⿹平惡意眼⿰淨𭰏⿰⿱女子身', refs: [13], char: '' },
     { sequence: '⿳⿲木缶木冖⿰鬯彡', char: '鬱' },
     { sequence: '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', char: '𰻞' },
     { sequence: '⿱䨺龘', char: '𱁬' },
@@ -78,6 +80,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿺辶說', refs: [26], char: '' },
     { sequence: '⿺克千', char: '兛' },
     { sequence: '⿴囗或', char: '國' },
+    { sequence: '⿴囗元', refs: [36], char: '园' },
     { sequence: '⿴囗書', char: '圕' },
   ] },
   { key: 'mixed', refs: [1], examples: [
