@@ -14,7 +14,12 @@
   const MIN_PYRAMID = 3, MAX_PYRAMID = 24
   const COMMON_PYRAMIDS = [3, 4, 5, 6, 8]
   const PYRAMID_ROWS = Array.from({ length: MAX_PYRAMID - MIN_PYRAMID + 1 }, (_, i) => i + MIN_PYRAMID)
-  const pyramidTemplates = COMMON_PYRAMIDS.map(layers => ({ layers, shapes: templateDiagram(pyramidSequence('口', layers)) }))
+  let reverse = $state(false)
+  const pyramidTemplates = $derived(COMMON_PYRAMIDS.map(layers => ({ layers, shapes: templateDiagram(pyramidSequence('口', layers, { reverse })) })))
+  /** @param {number} layers */
+  const pyramidLabel = layers => reverse
+    ? t('ids.templates.pyramidInsertReverse', { layers, part: pyramidPart })
+    : t('ids.templates.pyramidInsert', { layers, part: pyramidPart })
   const pyramidPart = $derived(typeof editor.picked === 'string' ? editor.picked : '口')
   const pyramidPartSupported = $derived.by(() => {
     try {
@@ -28,7 +33,7 @@
     if (pyramidTarget === null || !pyramidPartSupported) return available
     try {
       for (const layers of PYRAMID_ROWS) {
-        const found = parse(pyramidSequence(pyramidPart, layers), { open: true })
+        const found = parse(pyramidSequence(pyramidPart, layers, { reverse }), { open: true })
         if (!found.tree) continue
         const next = place(editor.tree, pyramidTarget, found.tree).tree
         if (next === null) continue
@@ -45,9 +50,9 @@
   /** @param {number} layers */
   function addPyramid(layers) {
     if (!availablePyramids.has(layers)) return
-    const found = parse(pyramidSequence(pyramidPart, layers), { open: true })
+    const found = parse(pyramidSequence(pyramidPart, layers, { reverse }), { open: true })
     if (!found.tree) return
-    editor.put(found.tree, pyramidTarget, t('ids.templates.pyramidInsert', { layers, part: pyramidPart }))
+    editor.put(found.tree, pyramidTarget, pyramidLabel(layers))
   }
 </script>
 
@@ -77,13 +82,14 @@
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-pyramids`}>{t('ids.templates.pyramids')}</span>
       <span class="ids-pyramid-part" lang="ja">{pyramidPart}</span>
+      <label class="ids-pyramid-reverse"><input type="checkbox" bind:checked={reverse} disabled={editor.disabled} />{t('ids.templates.pyramidReverse')}</label>
       <span class="ids-pyramid-hint">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : pyramidTarget === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid">
       {#each pyramidTemplates as template (template.layers)}
         <button type="button" disabled={editor.disabled || !availablePyramids.has(template.layers)} data-pyramid={template.layers}
-          aria-label={availablePyramids.has(template.layers) ? t('ids.templates.pyramidInsert', { layers: template.layers, part: pyramidPart }) : t('ids.templates.pyramidTooLong')}
-          title={availablePyramids.has(template.layers) ? t('ids.templates.pyramidInsert', { layers: template.layers, part: pyramidPart }) : t('ids.templates.pyramidTooLong')}
+          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
+          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
           onclick={() => addPyramid(template.layers)}>
           <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
             {#each template.shapes as shape, i (i)}
@@ -110,6 +116,9 @@
   .ids-pyramid{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:10px;border-top:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43))}
   .ids-pyramid-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px}
   .ids-pyramid-part{display:grid;place-items:center;min-width:22px;height:22px;padding:0 4px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:6px;font-family:var(--ids-font,serif);font-size:15px;line-height:1}
+  .ids-pyramid-reverse{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer}
+  .ids-pyramid-reverse input{margin:0;accent-color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
+  .ids-pyramid-reverse input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:2px}
   .ids-pyramid-hint{font-size:11px;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .ids-pyramid-grid button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}

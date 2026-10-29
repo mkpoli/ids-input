@@ -1,5 +1,7 @@
 // @ts-check
 import { parse } from '../core/ids.js'
+import { pyramidRows } from '../core/pyramid.js'
+import { pyramidCells } from '../composer/pyramid.js'
 
 /** @typedef {{ kind: 'slot', x: number, y: number, width: number, height: number, accent: boolean } | { kind: 'frame', d: string, accent: boolean }} Shape */
 const AXIS = new Map([['⿰', 0], ['⿲', 0], ['⿱', 1], ['⿳', 1]])
@@ -23,6 +25,9 @@ const ENCLOSURES = {
 export function templateDiagram(sequence) {
   const parsed = parse(sequence, { open: true })
   if (parsed.problem || parsed.tree === undefined) return []
+  const pyramid = pyramidRows(parsed.tree)
+  if (pyramid) return pyramidCells([2, 2, 22, 22], pyramid.layers, { reverse: pyramid.reverse })
+    .map(([x0, y0, x1, y1]) => ({ kind: 'slot', x: x0, y: 24 - y1, width: x1 - x0, height: y1 - y0, accent: false }))
   /** @type {Shape[]} */
   const shapes = []
   /** @param {import('../core/ids.js').Part} node @param {number[]} box @param {boolean} accent */
