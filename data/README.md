@@ -873,19 +873,21 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `han-parts.json.gz`
 
-The Han characters the pinned default composer export draws: 95,899 keys in code-point order, with
-the export's `base` and `commit`, and the stroke count Unihan 18.0.0 records for each (`strokes`, one
-entry per key; 11 radicals have none). The Components tab offers this list as **All characters**,
-beside the curated components and their stroke-count groups, paged at 120, searchable by character
-or `U+` code point and filterable by stroke count: single counts up to 22, then one 23+ group. The export has no drawing for every
-Han character, so the list records what it can compose; a different configured export can have
-different coverage.
+Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
+export's `base` and `commit` and the stroke count Unihan 18.0.0 records for each (`strokes`, one entry
+per key; 353 radicals and newer forms have none). The pinned export records 95,899 of them; the
+bundled fallback outlines add 7,434 and the palette's own fallback outlines 19, so the list matches
+what the preview can compose rather than what one export happens to hold. The Components tab offers
+it as **All characters**, beside the curated components and their stroke-count groups, paged at 120,
+searchable by character or `U+` code point and filterable by stroke count: single counts up to 22,
+then one 23+ group.
 
 Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip]`. It reads all 4,096 record shards from
-the export and the pinned Unihan archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`,
-SHA-256 `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`); pass a local copy to
-skip the download. The export's outlines come from Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and
-its records from han-compose (MIT). Unihan is distributed under the Unicode License v3.
+the export, the bundled outline index and palette outlines, and the pinned Unihan archive
+(`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
+`4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`); pass a local copy to skip the
+download. The export's outlines come from Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and its
+records from han-compose (MIT). Unihan is distributed under the Unicode License v3.
 
 
 ## Preview coverage audit
