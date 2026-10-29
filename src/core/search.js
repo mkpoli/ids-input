@@ -14,7 +14,8 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isSequence, splitDescription } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isNode, isSequence, nextEmpty, parse, splitDescription, write } from './ids.js'
+
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
 import { createStructuralSearch } from './structural-search.js'
@@ -46,6 +47,19 @@ export function componentQuery(text) {
   if (wildcard(left) && !wildcard(right) && isComponent(right)) return { kind: 'containing', char: right }
   if (wildcard(right) && !wildcard(left) && isComponent(left)) return { kind: 'parts', char: left }
   return null
+}
+
+/**
+ * The descriptions similar to `text`: its operator with one operand replaced by ？ and the other
+ * operands kept, one description for each operand. A description with no operator has no similar
+ * structure; nested operands stay whole, since a similar character shares the top-level shape.
+ * @param {string | null | undefined} text @returns {string[]} */
+export function similarStructures(text) {
+  const parsed = parse(text, { open: true })
+  if (parsed.problem || !isNode(parsed.tree) || parsed.tree.parts.length < 2 || nextEmpty(parsed.tree) !== null) return []
+  const tree = parsed.tree
+  return tree.parts.map((_, index) => tree.op
+    + tree.parts.map((part, i) => i === index ? UNKNOWN : write(part)).join(''))
 }
 
 /** A description's tokens as a tree; a token short of its operands reads as ？. @param {string[]} list @param {{ at: number }} cursor @returns {Tree} */
@@ -737,5 +751,32 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return { hits, total: found.length }
   }
   const structural = createStructuralSearch(table, { forms: structuralForms })
-  return { search, structure: structural.search, index: () => { index() }, fold }
+  /** Characters whose description shares the top-level shape of `text` with one operand free,
+   * best matches first; a character described by `text` itself stays out.
+   * @param {string} text @param {{ limit?: number }} [options] */
+  function similar(text, { limit = 60 } = {}) {
+    const parsed = parse(text, { open: true })
+    if (parsed.problem || !isNode(parsed.tree) || nextEmpty(parsed.tree) !== null) return { hits: [], total: 0 }
+    const wanted = write(parsed.tree)
+    /** @param {string} char */
+    const exactly = char => (table.get(char) ?? []).some(sequence => sequence === wanted)
+    /** Each character once, with the best score any operand pattern gave it. @type {Map<string, Hit>} */
+    const byChar = new Map()
+    for (const pattern of similarStructures(text)) {
+      for (const hit of search(pattern, { limit }).hits) {
+        if (exactly(hit.char)) continue
+        const prior = byChar.get(hit.char)
+        if (!prior || hit.score < prior.score) byChar.set(hit.char, hit)
+      }
+    }
+    // The common ideographs first, then the rarer, then by code point: a similar list reads better
+    // than two operand patterns each keeping their own order.
+    const hits = [...byChar.values()]
+      .sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char)
+        || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
+      .slice(0, limit)
+    return { hits, total: byChar.size }
+  }
+
+  return { search, similar, structure: structural.search, index: () => { index() }, fold }
 }

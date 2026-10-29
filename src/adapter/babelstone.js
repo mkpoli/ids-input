@@ -239,7 +239,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     }).catch(error => { local = null; throw error })
     return local
   }
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure'} [mode] @param {boolean} [componentLookup] */
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
@@ -688,6 +688,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const entries = await loadChains(signal)
       signal?.throwIfAborted()
       return entries ? chainName(entries, text) : null
+    },
+    async findSimilar(query, { limit = 60, signal } = {}) {
+      const result = worker && !given ? await inWorker(query, limit, 'similar') : (await localSearch()).similar(query, { limit })
+      signal?.throwIfAborted()
+      return result
     },
     ...(characters !== undefined || charactersText !== undefined || characterInfo ? {
       /** @param {string} query @param {import('./types.js').Options} [options] */
