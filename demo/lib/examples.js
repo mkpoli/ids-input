@@ -204,17 +204,20 @@ export const EXAMPLE_GROUPS = [
   // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
   // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
-  // thin band. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The
-  // Geba-ji article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
-  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other
-  // New Year 合文 share strokes between their characters, as 唯吾知足 does with one 口, and an IDS
-  // tree cannot share a component, so they are not examples.
+  // thin band. 學好孔孟 follows the shared 子 of the zi.tools description, written ⿳𦥯⿲女子乚皿 so
+  // 女, 子 and 乚 sit in one row as the reference photograph shows. The Cantonese Wikipedia article
+  // gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji article gives the remaining forms:
+  // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
+  // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other New Year 合文 share strokes between
+  // their characters, as 唯吾知足 does with one 口, and no recorded description writes the sharing,
+  // so they are not examples.
   { key: 'ligature', examples: [
     // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
     // 辶's embrace, which is what the example draws.
     { sequence: '⿺辶⿱宀⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
+    { sequence: '⿳𦥯⿲女子乚皿', refs: [46,50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
@@ -420,7 +423,7 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
-  { key: 'shuishu', refs: [47, 50], examples: [
+  { key: 'shuishu', refs: [47, 53], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers. Names,
     // readings and meanings: Shuishu.xlsx; glyphs: the Amendment 2.2 code charts.
