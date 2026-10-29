@@ -991,7 +991,7 @@
 
 </div>
 
-<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,application/json,image/svg+xml" hidden onchange={openDocument} />
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,.png,application/json,image/svg+xml,image/png" hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">

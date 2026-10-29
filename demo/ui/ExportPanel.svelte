@@ -4,6 +4,7 @@
   // unless asked for. The settings are kept for the next visit.
   import { SIZES, backgroundOf, inkOf, keepSettings, pngOf, scopedPngOf, scopedSvgOf, storedSettings, svgOf } from '../lib/exporting.js'
   import { embedSvgDocument } from '../lib/documents.js'
+  import { embedPngDocument } from '../lib/png-document.js'
   import { download, fileName } from '../lib/files.js'
   import Icon from './Icon.svelte'
 
@@ -16,6 +17,12 @@
   const canExport = $derived(ready && (!incomplete || partial))
   const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
 
+  /** @param {import('../../src/adapter/types.js').Drawing | null} drawing @param {import('../../src/document/index.js').ScopeTree | null} scopes @param {ExportSettings} settings @param {import('../../src/document/index.js').Document | null} document */
+  async function pngOutput(drawing, scopes, settings, document) {
+    const blob = scopes ? await scopedPngOf(scopes, settings, slots) : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings)
+    return document ? new Blob([embedPngDocument(await blob.arrayBuffer(), document)], { type: 'image/png' }) : blob
+  }
+
   /** @param {'svg' | 'png'} [format] */
   export async function save(format) {
     if (!canExport) return
@@ -23,7 +30,7 @@
     const drawn = drawing, drawnScopes = scopes, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
       if (settings.format === 'svg') download(new Blob([embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
-      else download(drawnScopes ? await scopedPngOf(drawnScopes, settings, slots) : await pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), fileName(name, 'png'))
+      else download(await pngOutput(drawn, drawnScopes, settings, document), fileName(name, 'png'))
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {
@@ -31,7 +38,7 @@
     const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
     try {
       if (settings.format === 'svg') await navigator.clipboard.writeText(embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document))
-      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': drawnScopes ? scopedPngOf(drawnScopes, settings, slots) : pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings) })])
+      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': await pngOutput(drawn, drawnScopes, settings, document) })])
       onnote(t('app.export.copied', { format }))
     } catch { onnote(t('app.copyFailed')) }
   }
