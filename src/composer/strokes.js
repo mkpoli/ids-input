@@ -17,7 +17,7 @@ import { drawnContours, makePart, placed } from './geometry.js'
  * @returns {{ stroke: any, rest: any } | null}
  */
 export function splitStroke(item, strokeId) {
-  const groups = item.part.strokes
+  const groups = /** @type {[number, number[]][] | undefined} */ (item.part.strokes)
   if (!groups) return null
   const target = groups.find(([id]) => id === strokeId)
   if (!target) return null
@@ -25,7 +25,7 @@ export function splitStroke(item, strokeId) {
   if (target[1].some(contour => others.has(contour))) return null
 
   const points = drawnContours(item)
-  const contours = item.part.contours.map((contour, index) => ({
+  const contours = /** @type {{ ops: any, width?: number | null }[]} */ (item.part.contours).map((contour, index) => ({
     ops: contour.ops,
     light: points[index],
     heavy: points[index],
@@ -35,6 +35,7 @@ export function splitStroke(item, strokeId) {
   const strokePart = makePart(contours.filter((_, index) => keep.has(index)))
   const restPart = makePart(contours.filter((_, index) => !keep.has(index)))
   if (!strokePart.contours.length || !restPart.contours.length) return null
+  /** @param {any} part */
   const at = part => placed(part, part.box, part.box, item.native ?? 0, `${item.origin ?? 'part'} stroke ${strokeId}`, [0, 0])
   return { stroke: at(strokePart), rest: at(restPart) }
 }
