@@ -55,13 +55,17 @@ const COVER_BAR = 0.72
  *  its parts overlap. */
 const CELL_LEAVES = 8
 /** The gap between cells and the margin inside one, as shares of the cell's box. */
-const CELL_GAP = 0.006
-const CELL_INSET = 0.012
+const CELL_GAP = 0.01
+const CELL_INSET = 0.018
 /** A single top part takes this share of a stacked description's height; the reference design for
  *  the 108-stroke 「ぼんのう」 gives 苦 about a quarter above a much taller bottom. */
 const CELL_TOP = 0.28
 /** A part may stretch this much to fill its cell, more than the composer allows a placed part. */
-const CELL_STRETCH = 2.4
+const CELL_STRETCH = 4
+/** An inner part of a side enclosure sits inside its outer: it takes less than the cell's height.
+ *  The middle row of a three-row description is inset across, as in the reference. */
+const CELL_INNER_INSET = 0.15
+const CELL_MIDDLE_INSET = 0.08
 /** The axis an enclosure's two parts take when they are drawn apart: down for the top and bottom
  *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
  *  enclosure would put them on, since they no longer surround each other. */
@@ -302,9 +306,9 @@ export class Composer {
   }
 
   /** The parts of `tree` drawn in cells: one glyph (or empty slot) per leaf, in a cell its operator
-   *  gives it. Cells are weighted by each subtree's leaf count below the top; an enclosure's parts
-   *  keep the tree's reading order on an axis chosen for the cell's shape, so no cell overlaps
-   *  another. */
+   *  gives it. An alignment axis below the top shares its cells by the ink of its parts, or by leaf
+   *  count when it holds an empty slot; an enclosure always shares by leaf count. Parts keep the
+   *  tree's reading order on an axis chosen for the cell's shape, so no cell overlaps another. */
   cellLayout(tree) {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
@@ -318,8 +322,18 @@ export class Composer {
       return [box[0] + w * CELL_INSET, box[1] + h * CELL_INSET, box[2] - w * CELL_INSET, box[3] - h * CELL_INSET]
     }
     const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
-    const split = (kids, axis, box, equal, override = null) => {
-      const weights = override ?? kids.map(kid => equal ? 1 : Math.sqrt(leaves(kid)))
+    // Fit the ink, not the glyph's placement box: a designed glyph's strokes can reach past it,
+    // and inside a cell that overflow runs into the next cell.
+    const tight = part => {
+      const box = part.contours.reduce((b, c) => union([b, pointsBox(c.light)]), [Infinity, Infinity, -Infinity, -Infinity])
+      return Number.isFinite(box[0]) ? box : part.box
+    }
+    const hasEmpty = node => isEmpty(node) || (Array.isArray(node) && node.slice(1).some(hasEmpty))
+    const split = (kids, axis, box, equal, override = null, dense = false) => {
+      // An axis takes its shares from the ink of its parts: a column of six dense parts needs more
+      // width than one tall 身. A placeholder has no ink, so an axis holding one keeps leaf shares.
+      const fallback = !dense || kids.some(hasEmpty)
+      const weights = override ?? kids.map(kid => equal ? 1 : fallback ? Math.sqrt(leaves(kid)) : Math.max(this.ink(kid), 1) ** 0.8)
       const sum = weights.reduce((a, b) => a + b, 0)
       const lo = box[axis], span = box[axis + 2] - lo
       let at = lo
@@ -344,8 +358,8 @@ export class Composer {
         if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
         // A cell allows a little more stretch than a composed part, so the glyph fills it; a
         // narrow cell still keeps the glyph's proportions instead of turning it into a sliver.
-        const cell = inset(target(box))
-        const part = placed(glyph, glyph.box, fitted(glyph.box, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
+        const cell = inset(target(box)), inkBox = tight(glyph)
+        const part = placed(glyph, inkBox, fitted(inkBox, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
         part.leaf = leaf++
         out.push(part)
         return
@@ -353,9 +367,15 @@ export class Composer {
       const op = node[0], kids = node.slice(1)
       if (op in this.AXIS) {
         // The top of a stacked description is one part over many; the reference design gives it
-        // less than half the height.
+        // less than a third of the height.
         const topShare = depth === 0 && this.AXIS[op] === 1 && kids.length === 2 && leaves(kids[0]) === 1 ? [CELL_TOP, 1 - CELL_TOP] : null
-        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare)
+        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare, true)
+        // The middle row of a three-row description is inset across, as in the reference.
+        if (op === '⿳' && kids.length === 3) {
+          const b = boxes[1], w = b[2] - b[0]
+          b[0] += w * CELL_MIDDLE_INSET
+          b[2] -= w * CELL_MIDDLE_INSET
+        }
         kids.forEach((kid, i) => walk(kid, boxes[i], depth + 1))
         return
       }
@@ -366,6 +386,13 @@ export class Composer {
         const across = box[2] - box[0], down = box[3] - box[1]
         const axis = namedAxis === 0 && across < down * 0.9 ? 1 : namedAxis === 1 && down < across * 0.8 ? 0 : namedAxis
         const boxes = split(kids, axis, box, false)
+        // A side-split enclosure's inner part sits inside its outer, so it takes less of the cell's
+        // height; the reference puts 意 to the right of 平/惡, not from top to bottom.
+        if (axis === 0) {
+          const b = boxes[1], h = b[3] - b[1]
+          b[1] += h * CELL_INNER_INSET
+          b[3] -= h * CELL_INNER_INSET
+        }
         walk(kids[0], boxes[0], depth + 1)
         walk(kids[1], boxes[1], depth + 1)
         return

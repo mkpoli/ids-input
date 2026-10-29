@@ -274,6 +274,7 @@ describe('the composer', () => {
     const tall = await compose(sourceOf(), chain(8))
     const top = tall.parts.find(part => part.leaf === 0)
     expect(top.box[3]).toBeLessThan(350)
+    expect(top.box[2]).toBeGreaterThan(750)
     expect(Array.isArray(tall.stroke)).toBe(true)
     expect(tall.stroke).toHaveLength(2)
     // A top subtree of several leaves keeps half the height.
@@ -285,6 +286,15 @@ describe('the composer', () => {
     const narrow = await compose(sourceOf(), '⿰木⿹木口', { layout: 'cells' })
     const outer = narrow.parts.find(part => part.leaf === 1), inner = narrow.parts.find(part => part.leaf === 2)
     expect(outer.box[1] + outer.box[3]).toBeLessThanOrEqual(inner.box[1])
+    // A side enclosure's inner part is shorter, and a three-row middle is narrower.
+    const side = await compose(sourceOf(), '⿸木口', { layout: 'cells' })
+    expect(side.parts[1].box[3]).toBeLessThan(side.parts[0].box[3] * 0.8)
+    const rows = await compose(sourceOf(), '⿳木口木', { layout: 'cells' })
+    expect(rows.parts[1].box[2]).toBeLessThan(rows.parts[0].box[2] * 0.9)
+    // An empty slot has no ink to weigh with, so its axis keeps even leaf shares.
+    const slots = await compose(sourceOf(), '⿱木⿲⬚木⬚', { layout: 'cells' })
+    expect(slots.parts.find(part => part.leaf === 2).box[2]).toBeLessThan(400)
+    expect(slots.slots.every(slot => slot.box[2] < 400)).toBe(true)
     const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
     await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
   })
