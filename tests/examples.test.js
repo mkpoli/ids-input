@@ -128,21 +128,30 @@ it('keeps all Tangut examples in a separate section', () => {
 
 it('reads the Korean gukja as the source does', () => {
   const korean = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
-  // 국자의 음역자와 구결자, oldid 42393816: the first reading the article gives for each character.
+  // 국자의 음역자와 구결자, oldid 42393816: the first reading the article gives for each form.
   const readings = {
-    '㐎': '글', '乭': '돌', '㐘': '쌀', '乫': '갈', '㐓': '갈', '乬': '걸', '乷': '살', '乺': '솔',
-    '㐒': '솔', '㐍': '졸', '乼': '줄', '乽': '잘', '㐔': '골', '乧': '둘', '㐙': '둘',
-    '㔔': '강', '㔖': '각', '巪': '걱', '㪲': '둑', '㪳': '둥', '䜳': '둔', '䎞': '작',
-    '㖙': '갓', '㖋': '갯', '㖎': '갯', '㖌': '굿', '㖍': '둣', '㖚': '붓', '唟': '것', '夞': '욋',
-    '旕': '엇', '嗭': '짓', '廤': '곳', '蒊': '곳', '㖜': '곳', '㖯': '똥', '㖈': '놈', '䯩': '곱',
+    '⿱文乙': '글', '⿱石乙': '돌', '⿱米乙': '쌀', '⿱加乙': '갈', '⿱可乙': '갈', '⿱巨乙': '걸',
+    '⿱沙乙': '살', '⿱所乙': '솔', '⿱召乙': '솔', '⿱爫乙': '졸', '⿱注乙': '줄', '⿱者乙': '잘',
+    '⿳亠口乙': '골', '⿱斗乙': '둘', '⿱豆乙': '둘',
+    '⿱加㇣': '강', '⿱加𠃍': '각', '⿱巨𠃍': '걱', '⿱斗𠃍': '둑', '⿱斗㇣': '둥', '⿱豆𠃊': '둔',
+    '⿱者𠃍': '작',
+    '⿱加𠮟': '갓', '⿱介𠮟': '갯', '⿱𠮟介': '갯', '⿱仇𠮟': '굿', '⿱斗𠮟': '둣', '⿱付𠮟': '붓',
+    '⿱去𠮟': '것', '⿱外𠮟': '욋', '⿱於𠮟': '엇', '⿱直𠮟': '짓', '⿸庫𠮟': '곳', '⿱花𠮟': '곳',
+    '⿳亠口𠮟': '곳', '⿱同𠮟': '똥',
+    '⿱老口': '놈', '⿱高巴': '곱',
+    '⿱介乙': '갤', '⿱古乙': '골', '⿱句乙': '굴', '⿱月乙': '달', '⿱代乙': '댈', '⿱付乙': '댈',
+    '⿱叱乙': '뜰', '⿱馬乙': '말', '⿱未乙': '밀', '⿱夫乙': '불', '⿱火乙': '불', '⿱角乙': '뿔',
+    '⿱松乙': '솔', '⿱小乙': '솔', '⿱少乙': '솔', '⿱菸叱': '엇', '⿱右乙': '울', '⿱吐乙': '톨',
+    '⿱坪乙': '펼', '⿱呼乙': '홀',
   }
-  expect(korean.map(example => example.char).sort()).toEqual(Object.keys(readings).sort())
-  for (const example of korean) expect(example.reading).toBe(readings[example.char])
+  expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
+  for (const example of korean) expect(example.reading).toBe(readings[example.sequence])
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
+  expect(korean.filter(example => !example.char)).toHaveLength(20)
   expect(korean.filter(example => example.reading === '갈')).toHaveLength(2)
-  expect(korean.filter(example => example.reading === '솔')).toHaveLength(2)
+  expect(korean.filter(example => example.reading === '솔')).toHaveLength(5)
   expect(korean.filter(example => example.reading === '곳')).toHaveLength(3)
 })
 
