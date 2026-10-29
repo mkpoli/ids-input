@@ -22,7 +22,7 @@ Each part carries:
 - `strokes`: Unihan's kTotalStrokes (its first value, which Unihan gives for the zh-Hans form where
   the forms differ). A part Unihan lacks gets the sum over the leaves of its first compound sequence
   whose leaves all have counts, marked derived; a CJK stroke counts 1 and is marked derived.
-  The twelve radical forms absent from Unihan use explicit counts; anything else stays null.
+  The fourteen radical forms absent from Unihan use explicit counts; anything else stays null.
 - `first`: the first stroke in Rime's five-stroke dictionary, using its first listed code when
   it lists alternatives, except that an s/z-only choice uses s (vertical hooks count as 豎).
   h/s/p/n/z map to 横/豎/撇/點/折. Unicode equivalents of CJK strokes use CLASS directly.
@@ -103,7 +103,7 @@ RIME_URL = f"https://raw.githubusercontent.com/rime/rime-stroke/{RIME_REVISION}/
 RIME_SHA256 = "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791"
 RIME_SOURCE = f"Rime five-stroke dictionary, {RIME_REVISION}, LGPL-3.0, {RIME_URL}"
 # CJK Radicals Supplement forms absent from Unihan kTotalStrokes.
-RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4), strict=True))
+RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3), strict=True))
 
 # Binary and ternary description characters, and the unary ones (〾 ⿾ ⿿); ㇯ subtracts.
 OPERATORS = set("⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽⿾⿿㇯〾")
@@ -244,19 +244,16 @@ def compound(sequence: str) -> bool:
 def parts(ids: dict[str, list[str]], written: dict[str, list[str]], atomic: set[str], single: set[str]) -> Counter:
     """Each part → how many ideographs' sequences use it (once per ideograph).
 
-    `written` is the same table with BabelStone's numbered components written out, and the count
-    follows it; `ids` is the table as IDS.TXT gives it, whose components are the ones the palette
-    lists. `single` holds the one-stroke ideographs (一 丨 丿 丶 乙 亅 …), which count as strokes when
-    a sequence is read for whether it is made of strokes.
+    `written` is the same table with BabelStone's numbered components written out, and the names and
+    the count both follow it, so a component the write-out introduces is a part too. `ids` is the
+    table as IDS.TXT gives it, which decides whether a sequence is read at all. `single` holds the
+    one-stroke ideographs (一 丨 丿 丶 乙 亅 …), which count as strokes when a sequence is read for
+    whether it is made of strokes.
     """
     uses: Counter = Counter()
-    named_source: set[str] = set()
     for char, sequences in written.items():
         if char in atomic:
             continue
-        named_source.update(
-            part for sequence in ids.get(char, []) if compound(sequence) for part in components(sequence)
-        )
         named = {part for sequence in sequences if compound(sequence) for part in components(sequence)}
         named.discard(char)
         uses.update(named)
@@ -280,7 +277,7 @@ def parts(ids: dict[str, list[str]], written: dict[str, list[str]], atomic: set[
             or uses[part] >= USE_THRESHOLD
         )
 
-    return Counter({part: count for part, count in uses.items() if part in named_source and kept(part)})
+    return Counter({part: count for part, count in uses.items() if kept(part)})
 
 
 def unihan_fields(path: Path) -> dict[str, dict[str, str]]:
@@ -362,6 +359,8 @@ def first_strokes(text: str, forms: str = "") -> dict[str, str]:
                 first[char] = CLASS[form]
     # CJK RADICAL GRASS THREE: the four-stroke 艹 form begins with a horizontal.
     first["⻀"] = "横"
+    # CJK RADICAL SECOND ONE is a single horizontal-fold stroke, which the five classes call 折.
+    first["⺂"] = "折"
     return first
 
 

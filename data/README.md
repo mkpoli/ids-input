@@ -104,8 +104,8 @@ overwrites the operands with 𳳳's own outline, so the composition does not inv
 
 The parts palette (難輸入部件): the components of BabelStone IDS that a writer picks whole, with how
 many ideographs use each, its stroke count, the class of its first stroke, and whether it is common,
-hard to type or a CJK stroke. 1,714 Han entries (709 common, 967 hard to type, 38 strokes),
-plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
+hard to type or a CJK stroke. 1,717 Han entries (709 common, 970 hard to type, 38 strokes),
+plus 768 Tangut components; 65 KB, 15 KB gzipped. Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
@@ -114,7 +114,7 @@ plus 768 Tangut components; 65 KB, 14 KB gzipped. Built by `scripts/build_ids_pa
   first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
 - `uses`: the ideographs whose descriptions name the part, counted from the descriptions with
   BabelStone's numbered components written out as `data/ids-components.tsv` gives them, so 書 counts
-  聿. The parts listed stay the components IDS.TXT names itself.
+  聿. The parts listed include the three components only the write-out names: ⺂, ⺕ and 彐.
 
 The displayed Common palette places traditional, simplified and positional forms
 from `component-forms.tsv` next to one another. Each family starts where its
@@ -149,11 +149,11 @@ Notes on the columns:
   Unicode equivalents of individual CJK strokes use that table directly, including
   亅 → 豎, 乀 → 點 and 𠃍/𠃎 → 折. The equivalents come from `component-forms.tsv` below.
   Other stroke-order differences follow the first Rime code and can differ from Japanese order.
-  All 1,641 Han components have a first-stroke class. ⻀, the four-stroke grass radical, starts 横.
+  All 1,647 Han components have a first-stroke class. ⻀, the four-stroke grass radical, starts 横.
   Circular ㇣ appears under “Other stroke”.
 - A stroke count is Unihan's first `kTotalStrokes` value, which Unihan gives for the zh-Hans form
   where forms differ. The radical forms absent from Unihan have explicit counts:
-  ⺊ 2, ⺌ 3, ⺗ 4, ⺼ 4, ⺈ 2, ⺶ 6, ⺄ 1, ⺝ 4, ⺀ 2, ⺆ 2, ⺻ 5, ⻀ 4.
+  ⺊ 2, ⺌ 3, ⺗ 4, ⺼ 4, ⺈ 2, ⺶ 6, ⺄ 1, ⺝ 4, ⺀ 2, ⺆ 2, ⺻ 5, ⻀ 4, ⺂ 1, ⺕ 3.
   A CJK stroke counts 1 and is marked derived; other missing counts use the sum over the leaves
   of the first fully counted decomposition. All Han palette entries have a count.
 
@@ -438,7 +438,7 @@ records malformed sequences under `rejected`; the current corpus has eight, all
 Tangut.
 
 Common also shows hard-to-type components used by at least 50 characters
-(286 in this corpus), while keeping them available in their stroke groups.
+(287 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
 and twelve normalize to ten encoded characters. The sixteen manual entries
@@ -770,7 +770,7 @@ code points, transcriptions and limits.
 
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 76 glyphs whose palette entries are missing from the
+`palette-outlines.json.gz` contains 79 glyphs whose palette entries are missing from the
 pinned default composer export. `palette-fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
