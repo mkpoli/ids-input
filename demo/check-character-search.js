@@ -7,7 +7,8 @@ try {
   for (const scheme of ['light', 'dark']) {
     const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
     await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`, { waitUntil: 'networkidle' })
-    await page.getByRole('tab', { name: 'Characters' }).click()
+    await page.getByRole('tab', { name: 'Find', exact: true }).click()
+    assert.equal(await page.getByRole('tab', { name: 'Characters', exact: true }).count(), 0, 'the character search lives in Find')
     const input = page.locator('.ids-pick-panel:not([hidden]) .ids-find input[type="search"]')
     await input.fill('hillock or mound')
     await page.waitForFunction(() => [...document.querySelectorAll('.ids-pick-panel:not([hidden]) .ids-hit-char')].some(el => el.textContent === '㐀'), null, { timeout: 20000 })

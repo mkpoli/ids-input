@@ -47,7 +47,7 @@ try {
     await part.press('Enter')
     assert.equal(await field.inputValue(), '', 'invalid row count cannot submit')
     await rows.fill('5')
-    await page.getByRole('tab', { name: 'Characters', exact: true }).click()
+    await page.getByRole('tab', { name: 'Parts', exact: true }).click()
     await page.getByRole('tab', { name: 'Templates', exact: true }).click()
     assert.equal(await part.inputValue(), '木')
     await preset.click()

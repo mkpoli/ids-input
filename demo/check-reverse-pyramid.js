@@ -25,7 +25,7 @@ try {
     assert.notEqual(await page.locator('[data-pyramid="3"] svg').innerHTML(), normalIcon)
     assert.match(await page.locator('[data-pyramid="3"]').getAttribute('aria-label'), /inverted pyramid/)
     assert.match(await page.locator('[data-pyramid="3"]').getAttribute('title'), /inverted pyramid/)
-    await page.getByRole('tab', { name: 'Characters', exact: true }).click()
+    await page.getByRole('tab', { name: 'Parts', exact: true }).click()
     await page.getByRole('tab', { name: 'Templates', exact: true }).click()
     assert.equal(await toggle.isChecked(), true, 'direction survives tab switches')
     await page.locator('[data-pyramid="3"]').click()
