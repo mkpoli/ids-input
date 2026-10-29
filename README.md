@@ -832,10 +832,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   [@Utetamutete](https://x.com/Utetamutete/status/2084625411980530020) (品字様 of 里, 莫, 天 and 地).
 - [全学联汉字](https://zh.wikipedia.org/wiki/全学联汉字), Chinese Wikipedia, sections 通假, 楷化,
   记号, 字形省去, 隶定, 训读, 声旁, 假名声旁 and 西文字母 (read 2026-10-28): the Geba-ji examples
-  in `demo/lib/examples.js`, one form per row. Left out: the word ligatures (コンクリート,
-  セメント, ムーブメント, 警察/憲法, 慶応), the ambiguous 广マ, the unrenderable 㐧, the duplicate
-  variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ and Jo. The table writes the letters full width
-  (Ｒ, Ｋ); the examples use ASCII.
+  in `demo/lib/examples.js`, one form per row. Left out: the ambiguous 广マ, the unrenderable 㐧,
+  the duplicate variants 𫟉, 彳ヱ and ⿰言仑, and the bare Ｑ and Jo. Its word ligatures are
+  examples of their own: コンクリート (`⿱⿰⿱コン⿱クリ土`), セメント (`⿱⿲ンメセ土`), 慶応
+  (`⿸广⿰KO`), 警察 and 憲法 (`⿱宀K`) and ムーブメント (`⿻Ｍｏ`, written `⿻Mo` in the examples).
+  The table writes the letters full width (Ｒ, Ｋ); the examples use ASCII.
   The eleven letter forms are the HAN-LATIN entries in Gen Kojitani, [Proposal to add a new CJK
   Abbreviations block, L2/24-125](https://www.unicode.org/L2/L2024/24125-cjk-abbrev-block.pdf),
   2024-04-24. Its Fig. 11 reproduces 蜂矢真郷「一九六五～一九七五年度頃の略字」, 『国語文字史の研究』8,
@@ -847,6 +848,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (2006), and a 1991 NAVI photograph
   ([Commons](https://commons.wikimedia.org/wiki/File:NAVI_hansen_shukai.jpg)), among others; 争 is
   uncited there.
+- John H. Jenkins, Richard Cook and Ken Lunde, [Proposal to Add a Character to the UTR #45](https://www.unicode.org/L2/L2012/12032-one-add-utr45.pdf),
+  2012-01-26: the 招財進寶 ligature for Chinese New Year decorations, with its CDL: 宀 at the top,
+  辶 around the lower left, and 王, 尔, 隹, 貝 and 招 inside.
+- [U-source ideographs (UTR #45)](https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt),
+  Unicode 18.0.0, 2026-07-30: UTC-00949 records the same character as
+  `⿱宀⿺辶⿱⿰王尔⿲隹貝招`.
+- [合成字](https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560), Cantonese Wikipedia,
+  oldid 2365560 (2026-01-03; read 2026-10-29): 招財進寶, 孔孟好學, 草泥馬 (`⿱艹⿰马尼`), 阿Sir
+  (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
   readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`; the

@@ -36,6 +36,7 @@
   "app.examples.enclosures": "囲み構造",
   "app.examples.mixed": "文字種の混在",
   "app.examples.geba": "ゲバ字",
+  "app.examples.ligature": "合字",
   "app.examples.korean": "韓国国字",
   "app.examples.abbreviation": "略字",
   "app.examples.cards": "カード",
