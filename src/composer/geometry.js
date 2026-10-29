@@ -323,6 +323,10 @@ export function raster(group, size = 96) {
 
 const num = v => { const s = v.toFixed(1); return s === '-0.0' ? '0.0' : s }
 
+/** Whether a part's flips turn its contours the other way round: one mirror reverses their winding,
+ *  a mirror in both axes does not. */
+const turnsOver = p => (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
+
 /** A contour's signed area, y up; its sign is its winding. */
 const signedArea = flat => {
   let sum = 0
