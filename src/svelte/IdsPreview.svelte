@@ -31,6 +31,9 @@
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
     document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
+  // Serif outlines carry tiny self-overlap and open joins; a hairline stroke of the same ink
+  // seals them without changing the drawn weight.
+  const seal = $derived(adapter.fontStyle === 'serif')
 
   const uid = $props.id()
   const sequence = $derived(write(tree))
@@ -258,7 +261,7 @@
                     {/each}
                   </mask>
                 {/if}
-                <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
+                <path class="ink" class:seal d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
@@ -344,6 +347,7 @@
   .final{background:currentColor;-webkit-mask:var(--drawing) center/100% 100% no-repeat;mask:var(--drawing) center/100% 100% no-repeat}
   @media (forced-colors: active){.final{forced-color-adjust:none;background:CanvasText}.ink{fill:CanvasText}}
   .ink{fill:currentColor}
+  .ink.seal{stroke:currentColor;stroke-width:2;stroke-linejoin:round}
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}
