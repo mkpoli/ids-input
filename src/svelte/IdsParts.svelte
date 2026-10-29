@@ -549,7 +549,7 @@
   }
   // A stroke outside the five classes (㇣) is another kind of stroke; any other part lacks the record.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : tab === 'strokes' && !query ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
