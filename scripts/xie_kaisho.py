@@ -116,5 +116,8 @@ def xie_kaisho(gs, cmap):
     # edge, avoiding both the roof join and a tapered blob inside the bar.
     upright = [_clip(_map(contour, lambda x, y: (x, y - 23)), 270)
                for contour in _weighted(upright)]
-    return [xie[:1], upright, _weighted(frame),
-            _weighted(lower), _weighted(upper), [hook], dots]
+    # The native lower body sits lower under 宀 than the first fit; dropping the
+    # whole assembly opens the roof gap and reaches 寫's native descender.
+    drop = lambda contour: _map(contour, lambda x, y: (x, y - 20))
+    groups = [upright, _weighted(frame), _weighted(lower), _weighted(upper), [hook], dots]
+    return [xie[:1]] + [[drop(contour) for contour in group] for group in groups]

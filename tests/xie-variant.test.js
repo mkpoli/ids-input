@@ -173,7 +173,7 @@ it('seats the Kaisho feet inside the hook bar and keeps native dot scale', () =>
       w: Math.max(...xs) - Math.min(...xs), h: Math.max(...ys) - Math.min(...ys) }
   })
   expect(boxes).toHaveLength(4)
-  const targets = [[655, 145], [538.5, 125], [409.5, 105], [252, 85]]
+  const targets = [[655, 125], [538.5, 105], [409.5, 85], [252, 65]]
   for (const [i, box] of boxes.entries()) {
     expect(Math.hypot(box.cx - targets[i][0], box.cy - targets[i][1])).toBeLessThan(3)
     expect(Math.min(box.w, box.h)).toBeGreaterThan(75)
