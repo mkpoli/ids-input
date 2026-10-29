@@ -9,6 +9,7 @@ import {
 import {
   changeOperator, decompose, deleteLayer, replaceNode, replaceWithSequence, unwrapNode, wrapNode,
 } from './edits.js'
+import { syncDocument } from './project.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -16,7 +17,7 @@ import {
 /** @typedef {import('./model.js').Allocator} Allocator */
 /** @typedef {import('./model.js').Issue} Issue */
 /** @typedef {import('./model.js').Content} Content */
-/** @typedef {{ document: Document, chosen: string | null, label: string }} Step */
+/** @typedef {{ document: Document, chosen: string | null, label: string, key?: string }} Step */
 /** @typedef {{ done: string[], undone: string[] }} Steps */
 /** @typedef {{ document: Document, chosen: string | null, done: Step[], undone: Step[], ids: string[] }} Snapshot */
 /** @typedef {{ reserved?: Iterable<string>, label?: string, onListenerError?: (error: unknown, session: DocumentSession) => void }} SessionOptions */
@@ -35,6 +36,7 @@ import {
  * @property {(id: string | null) => boolean} choose
  * @property {(sequence: string) => void} reset
  * @property {(next: Document) => void} open
+ * @property {(tree: import('../core/ids.js').Part) => boolean} sync
  * @property {() => boolean} undo
  * @property {() => boolean} redo
  * @property {() => Snapshot} snapshot
@@ -47,7 +49,7 @@ import {
  * @property {(op: string, id?: string) => string} changeOperator
  * @property {(id?: string) => string | null} remove
  * @property {(id?: string) => string} clear
- * @property {(chain: Chain, id?: string) => string} setTransform
+ * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
  * @property {(id?: string) => string} clearTransform
  * @property {(listener: (session: DocumentSession) => void) => () => void} listen
  */
@@ -92,11 +94,18 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       try { listener(session) } catch (error) { reportListenerError(error) }
     }
   }
-  /** @param {Document} next @param {string | null} nextChosen @param {string} action */
-  function commit(next, nextChosen, action) {
+  /** @param {Document} next @param {string | null} nextChosen @param {string} action @param {string} [key] */
+  function commit(next, nextChosen, action, key) {
     assertDocument(next)
     for (const id of documentIds(next)) allocator.reserve(id)
-    done.push({ document, chosen, label: action })
+    const last = done.at(-1)
+    if (key && last?.key === key) {
+      document = next
+      chosen = nextChosen && findLayer(document.root, nextChosen) ? nextChosen : null
+      notify()
+      return
+    }
+    done.push({ document, chosen, label: action, ...(key ? { key } : {}) })
     if (done.length > 100) done.shift()
     undone = []
     document = next
@@ -148,6 +157,18 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       chosen = null
       done = []; undone = []
       notify()
+    },
+    /** Reconcile an editor tree into the document. An unchanged tree is a no-op and keeps the
+     *  session history; a structural change updates the projection and clears that history because
+     *  the editor owns undo for structure. @param {import('../core/ids.js').Part} tree */
+    sync(tree) {
+      const next = syncDocument(document, tree, { allocator })
+      if (JSON.stringify(next) === JSON.stringify(document)) return false
+      document = /** @type {Document} */ (structuredClone(next))
+      if (chosen && !findLayer(document.root, chosen)) chosen = null
+      done = []; undone = []
+      notify()
+      return true
     },
     undo() {
       const step = done.pop()
@@ -243,8 +264,8 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       commit(replaceNode(document, at, { kind: 'slot' }, { allocator }), at, action(name(at).clear))
       return at
     },
-    /** @param {Chain} chain @param {string} [id] */
-    setTransform(chain, id) {
+    /** @param {Chain} chain @param {string} [id] @param {{ coalesce?: string }} [options] */
+    setTransform(chain, id, { coalesce } = {}) {
       const at = requireId(id ?? null)
       /** @type {Issue[]} */
       const issues = []
@@ -255,7 +276,7 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       if (!found) throw new DocumentError([{ path: '', message: `no layer ${at}` }])
       if (chain.length) found.node.transform = /** @type {Chain} */ (structuredClone(chain))
       else delete found.node.transform
-      commit(next, at, action(name(at).transform))
+      commit(next, at, action(name(at).transform), coalesce)
       return at
     },
     /** @param {string} [id] */

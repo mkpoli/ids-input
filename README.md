@@ -351,7 +351,10 @@ apart; `scopesSvg` writes that tree with scoped masks, including ㇯ subtraction
 `createDocumentSession(document)` holds a document, the chosen layer ID and an allocator that never
 reuses an ID. Its edits (`replace`, `decompose`, `wrap`, `unwrap`, `changeOperator`, `remove`,
 `clear`, `setTransform`) keep the selected identity, and `undo`/`redo`, `snapshot`/`restore` work over
-whole documents. `session.document` returns a detached copy; use session edits to change it.
+whole documents. `sync(tree)` reconciles an editor tree without clearing history when the tree is
+unchanged; a structural change updates the document and clears the session history because the
+editor owns structural undo. `setTransform` accepts a coalesce key, so one drag is one step.
+`session.document` returns a detached copy; use session edits to change it.
 `listen` tells a host when to redraw; a throwing listener is reported through
 `onListenerError` (or `reportError`) and does not undo the committed edit.
 

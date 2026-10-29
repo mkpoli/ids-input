@@ -1,6 +1,6 @@
 // A document session per open tab. The core editor tree stays the projection the controls edit;
 // `syncDocument` reconciles it into the session after every change, keeping layer IDs and transforms.
-import { DocumentError, createDocumentSession, emptyDocument, fromSequence, sessionFromRecord, sessionRecord, syncDocument } from '../../src/document/index.js'
+import { DocumentError, createDocumentSession, emptyDocument, fromSequence, sessionFromRecord, sessionRecord } from '../../src/document/index.js'
 
 /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
 /** @typedef {import('./tabs.js').Tab} Tab */
@@ -25,9 +25,6 @@ export function openTabSession(tab) {
  *  @param {DocumentSession} session @param {import('../../src/core/ids.js').Part} tree
  *  @returns {import('../../src/document/index.js').SessionRecord} */
 export function syncTabSession(session, tree) {
-  const chosen = session.chosen
-  const next = syncDocument(session.document, tree, { allocator: session.allocator })
-  session.open(next)
-  if (chosen) session.choose(chosen)
+  session.sync(tree)
   return sessionRecord(session)
 }

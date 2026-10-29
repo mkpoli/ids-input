@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { DocumentError, createDocumentSession, documentIds, findLayer, fromSequence, toSequence, validateDocument } from '../src/document/index.js'
+import { parse } from '../src/core/ids.js'
+import { DocumentError, createDocumentSession, documentIds, findLayer, fromSequence, toSequence, treeFromDocument, validateDocument } from '../src/document/index.js'
 
 const transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, -3] }]
+const tree = sequence => parse(sequence, { open: true }).tree
 const layer = (session, index) => session.document.root.children[index]
 
 describe('a document session', () => {
@@ -80,6 +82,31 @@ describe('a document session', () => {
     session.clear()
     expect(session.sequence).toBe('⿰木⬚')
     expect(findLayer(session.document.root, target.id)?.node).toMatchObject({ id: target.id, kind: 'slot', transform })
+  })
+  it('coalesces one gesture into one undo step', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    const target = layer(session, 0).id
+    session.choose(target)
+    session.setTransform([{ type: 'affine', matrix: [1, 0, 0, 1, 1, 0] }], target, { coalesce: 'drag-1' })
+    session.setTransform([{ type: 'affine', matrix: [1, 0, 0, 1, 2, 0] }], target, { coalesce: 'drag-1' })
+    expect(session.steps.done).toHaveLength(1)
+    session.undo()
+    expect(findLayer(session.document.root, target)?.node.transform).toBeUndefined()
+  })
+  it('keeps history across an unchanged editor sync', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    session.choose(layer(session, 0).id)
+    session.setTransform(transform)
+    expect(session.sync(treeFromDocument(session.document))).toBe(false)
+    expect(session.canUndo).toBe(true)
+  })
+  it('clears history when an editor sync changes the structure', () => {
+    const session = createDocumentSession(fromSequence('⿰木口'))
+    session.choose(layer(session, 0).id)
+    session.setTransform(transform)
+    expect(session.sync(tree('⿰水口'))).toBe(true)
+    expect(session.sequence).toBe('⿰水口')
+    expect(session.canUndo).toBe(false)
   })
   it('rejects an invalid transform without touching the document or history', () => {
     const session = createDocumentSession(fromSequence('⿰木口'))
