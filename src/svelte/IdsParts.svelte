@@ -384,6 +384,10 @@
       : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
     const term = filter.trim()
     if (!term) return keys
+    if (/^\d+$/.test(term)) {
+      const count = Number(term)
+      return keys.filter(key => (byPart.get(key)?.strokes ?? tangutStrokes?.[key]) === count)
+    }
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
     const matches = matchScriptParts(keys, text, Boolean(code))
