@@ -91,6 +91,12 @@ describe('compositing SVG', () => {
     expect(svg).toContain('viewBox="-50 -50 1100 1100"')
     expect(svg).toContain('fill="currentColor"')
   })
+  it('clips the drawing once at the document canvas', () => {
+    const svg = scopesSvg(renderScopes(fromSequence('木'), source([square()])), { padding: 0.05 })
+    expect(svg).toContain('clipPath id="ids-clip"')
+    expect(svg).toContain('clip-path="url(#ids-clip)"')
+    expect(svg).toContain('viewBox="-50 -50 1100 1100"')
+  })
   it('draws optional empty-slot boxes with a dashed outline', () => {
     const svg = scopesSvg(renderScopes(fromSequence('⬚'), source([square()])), { slots: [[100, 100, 300, 500]] })
     expect(svg).toContain('stroke-dasharray="12 8"')
