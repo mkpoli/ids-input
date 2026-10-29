@@ -393,6 +393,22 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
     { sequence: '⿰木卆', char: '枠', reading: 'わく' },
   ] },
+  // Vietnamese Nôm: characters invented to write Vietnamese, in reading order. The forms and their
+  // readings follow the Wikipedia article's Tale of Kiều example and its account of invented characters.
+  { key: 'nom', refs: [1, 48], examples: [
+    { sequence: '⿺巴三', char: '𠀧', reading: 'ba' },
+    { sequence: '⿰宁字', char: '𡨸', reading: 'chữ' },
+    { sequence: '⿰土癸', char: '𡎝', reading: 'cõi' },
+    { sequence: '⿰忄吉', char: '恄', reading: 'ghét' },
+    { sequence: '⿱罒𪜀', char: '𱺵', reading: 'là' },
+    { sequence: '⿴𰀪⺀', char: '𫜵', reading: 'làm' },
+    { sequence: '⿱丷又', char: '𠬠', reading: 'một' },
+    { sequence: '⿰南年', char: '𢆥', reading: 'năm' },
+    { sequence: '⿰㝵人', char: '𠊛', reading: 'người' },
+    { sequence: '⿱百林', char: '𤾓', reading: 'trăm' },
+    { sequence: '⿺竜内', char: '𥪞', reading: 'trong' },
+    { sequence: '⿱天上', char: '𡗶', reading: 'trời' },
+  ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [
     {"sequence": "⿰𽁭𽁭", "char": "𽄌", "modern": "玨", "source": "data/small-seal.json.gz"},
