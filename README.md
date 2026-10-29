@@ -953,7 +953,8 @@ selection, undo history and layer transforms, which can then be edited independe
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. Examples come with their character and code
 point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
-with its QR code, the language,
+with its QR code, the language. The address bar carries the document while a layer transform exists,
+so copying the location keeps the placement; a plain sequence stays in the hash.
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
