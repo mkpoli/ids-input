@@ -33,8 +33,8 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
   const span = 1000 + 2 * pad
   const prefix = identifier(idPrefix)
-  /** @type {string[]} */
-  const defs = []
+  const clipId = `${prefix}-clip`
+  const defs = [`<clipPath id="${clipId}" clipPathUnits="userSpaceOnUse"><rect x="0" y="0" width="1000" height="1000"/></clipPath>`]
   let count = 0
   /** @param {string} id */
   const mask = id => `mask="url(#${id})"`
@@ -95,7 +95,8 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
     return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="18" fill="none" stroke="${fill}" stroke-width="5" stroke-dasharray="12 8" opacity="0.55"/>`
   }
   const slotsMarkup = slots.map(slotRect).join('')
-  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}${slotsMarkup}`, background: back ?? '', width, padding: pad, span }
+  const clipped = `<g clip-path="url(#${clipId})">${body}${slotsMarkup}</g>`
+  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${clipped}`, background: back ?? '', width, padding: pad, span }
 }
 
 /**
