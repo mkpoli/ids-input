@@ -78,8 +78,10 @@ export function partOf(record, quant = 4) {
     for (let i = 0; i < lo.length; i++) { l[i] = lo[i] / quant; h[i] = (lo[i] + d[i]) / quant }
     return { ops: commands(ops), light: l, heavy: h, width }
   })
-  Object.defineProperty(record, '_part', { value: makePart(contours, record.b.slice()), enumerable: false })
-  return record._part
+  const part = makePart(contours, record.b.slice())
+  if (record.sg) part.strokes = record.sg
+  Object.defineProperty(record, '_part', { value: part, enumerable: false })
+  return part
 }
 
 /** A contour as `['M' | 'L' | 'Q', points]` segments, TrueType's implied on-curve points made explicit
