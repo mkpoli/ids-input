@@ -2,6 +2,7 @@
 // format's own validator.
 import { readDocument, writeDocument } from '../../src/document/index.js'
 import { fileStem } from './files.js'
+import { readPngDocument } from './png-document.js'
 
 /** @param {string} value */
 const escapeXml = value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -37,5 +38,6 @@ export function documentFile(document, sequence) {
 export async function readDocumentFile(file) {
   const text = await file.text()
   if (file.name.toLowerCase().endsWith('.svg') || file.type === 'image/svg+xml') return readSvgDocument(text)
+  if (file.name.toLowerCase().endsWith('.png') || file.type === 'image/png') return readPngDocument(await file.arrayBuffer())
   return readDocument(text)
 }

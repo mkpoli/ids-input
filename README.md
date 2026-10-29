@@ -405,16 +405,17 @@ structural edits. Pass the long-lived session allocator so removed IDs do not re
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
-keeps a session with each tab and saved draft, so the document survives reloads; the preview and
-share links still use the sequence alone.
+keeps a session with each tab and saved draft, so the document survives reloads. The preview,
+Adjust layout, export and share links all use that document.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
 builds it in one call; the preview must use `separate: true`. `documentView(document, drawing, sketch)`
 adds the scoped drawing, frames and combined issues in one pass, for a preview that needs both the
 picture and its handles. When the composer omits leaf ownership, the source infers it only from one
-non-cut part per component in reading order; anything else leaves the source incomplete. Storage and
-the editor binding are not part of these modules yet.
+non-cut part per component in reading order; anything else leaves the source incomplete. Session
+records live in [`src/document/store.js`](src/document/store.js); file bindings live in
+[`demo/lib/documents.js`](demo/lib/documents.js).
 
 ## Adapters
 
@@ -1062,7 +1063,7 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand

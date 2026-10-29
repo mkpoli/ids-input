@@ -1,7 +1,8 @@
 # IDS document format
 
 Status: draft, version 1 (2026-10-26). This is a proposed storage and rendering
-contract. The editor does not yet read or write it.
+contract. The workshop reads and writes `.ids.json`, and embeds the document in
+exported SVG and PNG files.
 
 A `.ids.json` file holds one editable character: a tree of identified layers,
 their transforms, and a rendering recipe. IDS text is derived from the tree.
@@ -233,9 +234,11 @@ it as unavailable. A user can explicitly rebind to another recipe as one undoabl
 edit; the host must not silently choose a newer export or fallback font.
 
 Version 1 stores references rather than embedding fonts or outline snapshots.
-SVG/PNG exports carry their rendered appearance; reopening an editable pinned
-document requires its rendering resources. An unbound document can be pinned
-once the host can record its complete effective recipe.
+SVG exports embed the document in `<metadata>` and PNG exports in an `iTXt`
+chunk, alongside the rendered appearance. Reopening restores the tree, IDs and
+transforms; a pinned document still needs its rendering resources, and an
+unbound document can be pinned once the host records its complete effective
+recipe.
 
 ## Geometry-specific edits
 
@@ -398,8 +401,9 @@ keeps the chosen layer, an allocator and undo/redo over whole documents. A
 separated composer drawing supplies the base layout through
 [`src/composer/document-source.js`](../src/composer/document-source.js); it
 uses leaf ownership when present and otherwise infers one non-cut part per
-component in reading order. Storage and the editor binding are not part of that
-module yet.
+component in reading order. Session records and file bindings live in
+[`src/document/store.js`](../src/document/store.js) and
+[`demo/lib/documents.js`](../demo/lib/documents.js).
 
 Before implementing import/export, the conformance cases must cover identity
 through replace/decompose/wrap/unwrap/move/duplicate; duplicate IDs; empty roots;
