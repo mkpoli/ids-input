@@ -9,7 +9,11 @@ try {
   await page.getByRole('tab', { name: 'Letters & numbers', exact: true }).click()
   await page.locator('.parts-grid .part').first().waitFor()
   assert.equal(await page.locator('.parts-grid .part').count(), 120)
-  assert.match(await page.locator('.script-pages').innerText(), /2,122/)
+  // The script palette grows with the bundled data; its page label is what is promised.
+  const pages = await page.locator('.script-pages').innerText()
+  assert.match(pages, /Page 1 of \d+ · [\d,]+ parts/)
+  const total = Number(/([\d,]+) parts/.exec(pages)?.[1]?.replace(/,/g, ''))
+  assert.ok(total > 2000, `unexpected palette size: ${pages}`)
   for (const [query, part] of [['A', 'A'], ['3', '3'], ['Ḁ', 'Ḁ'], ['ꙮ', 'ꙮ'], ['U+A66E', 'ꙮ']]) {
     await page.locator('.parts-filter').fill(query)
     assert.equal(await page.locator('.parts-grid .part').count(), 1, query)
