@@ -20,6 +20,13 @@ describe('a tab document session', () => {
     expect(toSequence(record.document.root)).toBe('⿰水口')
     expect(findLayer(record.document.root, left.id)?.node).toMatchObject({ char: '水', transform: [{ type: 'affine', matrix: [1, 0, 0, 1, 6, 7] }] })
   })
+  it('does not clear session history when the editor tree is unchanged', () => {
+    const session = openTabSession(tab('⿰木口'))
+    session.choose(session.document.root.children[0].id)
+    session.setTransform([{ type: 'affine', matrix: [1, 0, 0, 1, 6, 7] }])
+    syncTabSession(session, tree('⿰木口'))
+    expect(session.canUndo).toBe(true)
+  })
   it('reopens the record with its chosen layer and IDs', () => {
     const session = openTabSession(tab('⿰木口'))
     const chosen = session.document.root.children[0].id

@@ -25,8 +25,9 @@
   let source = $state.raw(null)
   /** @type {Map<string, import('../../src/document/frames.js').LayerFrame>} */
   let layout = $state.raw(new Map())
-  /** @type {{ kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
+  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
   let drag = $state.raw(null)
+  let gesture = 0
 
   let x = $state(0), y = $state(0), scaleX = $state(1), scaleY = $state(1), rotate = $state(0)
   let mode = $state(/** @type {'affine' | 'mobius'} */ ('affine'))
@@ -147,12 +148,14 @@
     onchange()
   }
 
-  function apply() {
+  /** @param {string} [coalesce] */
+  function apply(coalesce = '') {
     if (!session || !selected) return
+    if (typeof coalesce !== 'string') coalesce = ''
     applyError = ''
     try {
       if (mode === 'mobius') {
-        session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id)
+        session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, coalesce ? { coalesce } : {})
       } else {
         const radians = rotate * Math.PI / 180
         const a = Math.cos(radians) * scaleX, b = Math.sin(radians) * scaleX
@@ -160,7 +163,7 @@
         const cx = 500, cy = 500
         const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
         if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) session.clearTransform(selected.id)
-        else session.setTransform([{ type: 'affine', matrix }], selected.id)
+        else session.setTransform([{ type: 'affine', matrix }], selected.id, coalesce ? { coalesce } : {})
       }
       doc = session.document
       chosen = session.chosen
@@ -238,7 +241,7 @@
     if (!point) return
     const [x, y, width, height] = selection.box
     const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
-    drag = { kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
+    drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
       local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
       a0: Math.atan2(point.y - center[1], point.x - center[0]), frame: selection.entry.frame }
@@ -276,7 +279,7 @@
       rotate = Math.round(((next + 180) % 360 + 360) % 360 - 180)
     }
     const now = performance.now()
-    if (now - lastApply > 90) { lastApply = now; apply() }
+    if (now - lastApply > 90) { lastApply = now; apply(String(drag.gesture)) }
   }
 
   /** @param {PointerEvent} event */
@@ -285,8 +288,9 @@
     const target = /** @type {SVGElement} */ (event.currentTarget)
     const svg = target instanceof SVGSVGElement ? target : target.ownerSVGElement
     if (svg?.hasPointerCapture?.(event.pointerId)) svg.releasePointerCapture(event.pointerId)
+    const finishing = String(drag.gesture)
     drag = null
-    apply()
+    apply(finishing)
   }
 </script>
 
