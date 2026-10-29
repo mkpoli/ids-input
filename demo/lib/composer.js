@@ -6,5 +6,5 @@ export const COMPOSER_BASE = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://glyphatlas.org/atlas/composer/62af8c26f961-serif-compose-layout-v4-serif-f5/',
-  klee: 'https://glyphatlas.org/atlas/composer/6bf8919-kaisho-compose-layout-v4-kaisho-f5+ownhosts/',
+  klee: 'https://glyphatlas.org/atlas/composer/e1e0af4b94e6-kaisho-compose-layout-v4-kaisho-f5/',
 }
