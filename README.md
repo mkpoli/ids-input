@@ -27,8 +27,8 @@ The package has four layers, and an optional preview:
   character readings from static files, so nothing needs a server.
 - **svelte**: Svelte 5 components over one editor model: the sequence field, the operator palette,
   the tree, the chosen part's tools, the part pickers (a parts palette, structure templates, a
-  "Take parts from" decomposition browser, a search over components and characters) and the
-  preview, each placeable on its own
+  "Take parts from" decomposition browser, a search over components and characters, and a pad to
+  find a part by drawing it) and the preview, each placeable on its own
   or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese, Korean and Vietnamese.
 - **composer** (optional): a preview that draws a sequence, empty slots included, with
@@ -149,7 +149,9 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. The Components panel shows the most used parts first, then every Han
+also work without an editor. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
+drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
+`--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
@@ -621,6 +623,23 @@ English meanings), the same search also offers whole characters after the compon
 characters the relations already know: roof finds 宀 and then 屋, silk finds 丝, 絲 and 糸 and then
 絹, and thuy finds 水 and then 始. Among equally close names the more common character comes first,
 by KANJIDIC2's newspaper frequency or Unihan's school grade.
+
+### Drawing a part
+
+The Find tab has a pen beside its field. Draw a part in the box, and the tab lists the palette
+parts whose shapes are closest; picking one puts it in the chosen slot, like a typed find. The
+strokes are compared with the glyphs of the page's own font stack, built once when the pad first
+opens and kept for the page: the palette's parts used in at least 50 descriptions (about 800 here)
+and the CJK strokes. A part a font draws as its missing-glyph box is left out. The host should have
+its CJK faces loaded, as the workshop does. Nothing is sent anywhere, and the pad needs no extra
+data.
+
+Parts within one stroke of the drawing's count, or two when the drawing has one or two strokes,
+come before the rest; within that, the closest shapes come first by how far each shape's ink lies
+from the other's and by a coarse histogram of stroke directions. The match is approximate: it looks at outlines, not stroke order, so simple
+parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
+similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison, and
+`sketchTemplates` in the Svelte layer builds the glyph shapes.
 
 ## Preview
 
