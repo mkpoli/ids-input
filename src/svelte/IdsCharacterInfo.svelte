@@ -190,17 +190,24 @@
   function outside(event) {
     const node = /** @type {HTMLElement} */ (event.target)
     if (anchor?.contains(node)) return
-    if (panel?.contains(node) && !node.closest(CONTROL)) {
-      // The card's bare surface: dismiss it, then hand this click to whatever it was covering, so
-      // nothing behind the card costs a second click.
-      const { clientX: pointX, clientY: pointY } = event
+    if (panel?.contains(node)) {
+      // The card's own controls, its scrollbar and a text selection are all about the card.
+      if (node.closest(CONTROL)) return
+      if (panel === node && (event.offsetX >= panel.clientWidth || event.offsetY >= panel.clientHeight)) return
+      const selection = getSelection()
+      if (selection && !selection.isCollapsed && selection.anchorNode && panel.contains(selection.anchorNode)) return
+      // Otherwise the press was meant for whatever the card covers: dismiss it and hand the click
+      // over, so nothing behind the card costs a second click.
+      const { clientX: pointX, clientY: pointY, detail, pointerType } = /** @type {PointerEvent} */ (event)
       close()
-      document.elementFromPoint(pointX, pointY)?.dispatchEvent(
-        new MouseEvent('click', { view: window, bubbles: true, cancelable: true, clientX: pointX, clientY: pointY }),
-      )
+      const under = document.elementFromPoint(pointX, pointY)
+      if (!under || !root?.contains(under)) return
+      under.dispatchEvent(new PointerEvent('click', {
+        view: window, bubbles: true, cancelable: true, detail, button: 0, buttons: 0,
+        pointerType: pointerType ?? 'mouse', isPrimary: true, clientX: pointX, clientY: pointY,
+      }))
       return
     }
-    if (panel?.contains(node)) return
     // The caret sits in the input over the painted glyph the card describes.
     if (anchor && node instanceof HTMLInputElement && spanUnder(event, event.clientX, event.clientY) === anchor) return
     close()

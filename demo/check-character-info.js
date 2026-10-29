@@ -113,12 +113,17 @@ try {
       return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
     })
     assert.ok(covered,'the card covers a tile')
-    if(covered){
-      await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
-      assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
-      assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
-      await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
-    }
+    await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
+    assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    // Selecting text inside the card keeps it, and passes nothing through.
+    const line1=await panel.locator('header .glyph').first().boundingBox(),line2=await panel.locator('.glosses li').first().boundingBox()
+    await page.mouse.move(line1.x+2,line1.y+line1.height/2);await page.mouse.down()
+    await page.mouse.move(line2.x+line2.width-4,line2.y+line2.height/2,{steps:12})
+    await page.mouse.up()
+    assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
     await page.waitForTimeout(600)
     // A pinned card goes when its tile is scrolled out of the grid.
     await paletteHorse.click();await panel.waitFor({state:'visible'})
