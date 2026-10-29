@@ -462,6 +462,35 @@
     tab.document = sessionRecord(session)
     store()
   }
+  /** Undo or redo the latest layer transform before falling back to the editor history. */
+  /** @param {boolean} undo */
+  function layerLabel(undo) {
+    const tick = documentTick
+    const tab = current()
+    if (!tab) return ''
+    const session = sessionFor(tab)
+    const label = undo ? session.steps.done.at(-1) : session.steps.undone[0]
+    return tick >= 0 && (undo ? session.canUndo : session.canRedo) ? label ?? '' : ''
+  }
+  const undoLayerLabel = $derived(layerLabel(true))
+  const redoLayerLabel = $derived(layerLabel(false))
+  const canUndoLayer = $derived(Boolean(undoLayerLabel))
+  const canRedoLayer = $derived(Boolean(redoLayerLabel))
+  const canUndo = $derived(editor.canUndo || canUndoLayer)
+  const canRedo = $derived(editor.canRedo || canRedoLayer)
+  /** @param {boolean} undo */
+  function travelLayer(undo) {
+    const tab = current()
+    if (!tab) return false
+    const session = sessionFor(tab)
+    if (!(undo ? session.undo() : session.redo())) return false
+    tab.document = sessionRecord(session)
+    documentTick++
+    store()
+    return true
+  }
+  function undoAction() { if (!travelLayer(true)) editor.undo() }
+  function redoAction() { if (!travelLayer(false)) editor.redo() }
   /** The active tab's complete document, for sharing. */
   function currentDocument() {
     const tab = current()
@@ -752,13 +781,20 @@
       else copySelection(event.key.toLowerCase() === 'x')
       return
     }
+    const key = event.key.toLowerCase()
+    if (mod && key === 'z' && (event.shiftKey ? canRedoLayer : canUndoLayer)) {
+      event.preventDefault()
+      if (event.shiftKey) travelLayer(false); else travelLayer(true)
+      return
+    }
+    if (mod && key === 'y' && canRedoLayer) { event.preventDefault(); travelLayer(false); return }
     editor.keydown(event, { root: work, slot })
   }
-  const undoTitle = $derived(editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label'))
-  const redoTitle = $derived(editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label'))
+  const undoTitle = $derived(canUndoLayer ? t('ids.undo.named', { step: undoLayerLabel }) : editor.steps.done.at(-1) ? t('ids.undo.named', { step: editor.steps.done.at(-1) ?? '' }) : t('ids.undo.label'))
+  const redoTitle = $derived(canRedoLayer ? t('ids.redo.named', { step: redoLayerLabel }) : editor.steps.undone[0] ? t('ids.redo.named', { step: editor.steps.undone[0] }) : t('ids.redo.label'))
   const editItems = $derived([
-    { label: undoTitle, icon: 'undo', shortcut: shortcut('mod+z'), disabled: !editor.canUndo, run: () => editor.undo() },
-    { label: redoTitle, icon: 'redo', shortcut: shortcut('mod+shift+z'), disabled: !editor.canRedo, run: () => editor.redo() },
+    { label: undoTitle, icon: 'undo', shortcut: shortcut('mod+z'), disabled: !canUndo, run: undoAction },
+    { label: redoTitle, icon: 'redo', shortcut: shortcut('mod+shift+z'), disabled: !canRedo, run: redoAction },
     { separator: /** @type {const} */ (true) },
     { label: t('app.edit.cut'), icon: 'cut', shortcut: shortcut('mod+x'), disabled: !canCopy, run: () => { copySelection(true) } },
     { label: t('app.copy'), icon: 'copy', shortcut: shortcut('mod+c'), disabled: !canCopy, run: () => { copySelection() } },
@@ -786,9 +822,9 @@
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
-          <button type="button" class="tool key-hint" disabled={!editor.canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={() => editor.undo()}>
+          <button type="button" class="tool key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
-          <button type="button" class="tool key-hint" disabled={!editor.canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={() => editor.redo()}>
+          <button type="button" class="tool key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
