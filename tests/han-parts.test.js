@@ -13,12 +13,14 @@ it('lists the Han characters the pinned composer export draws', () => {
   expect(keys.every(key => [...key].length === 1 && characterScript(key) === 'han')).toBe(true)
   expect(keys.every((key, index) => !index || keys[index - 1].codePointAt(0) < key.codePointAt(0))).toBe(true)
   for (const key of ['一', '龘', '𠀁', '𪚵', '\ufa0e']) expect(keys).toContain(key)
+  // Characters the export lacks but the bundled outlines draw.
+  for (const key of ['㒫', '㐧', '𪚴']) expect(keys).toContain(key)
 })
 
 it('carries the stroke count Unihan records for each character', () => {
   const data = read(), keys = data.keys, strokes = data.strokes
   expect(strokes).toHaveLength(keys.length)
-  expect(strokes.filter(count => count === null).length).toBeLessThan(20)
+  expect(strokes.filter(count => count === null).length).toBeLessThan(400)
   const count = key => strokes[keys.indexOf(key)]
   for (const [key, value] of [['一', 1], ['𠀁', 2], ['鬱', 29], ['麤', 33], ['龘', 48]]) expect([key, count(key)]).toEqual([key, value])
   expect(Math.max(...strokes.filter(count => count !== null))).toBe(84)

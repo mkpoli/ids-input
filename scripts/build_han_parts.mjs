@@ -1,6 +1,7 @@
-// Build `data/han-parts.json.gz`: the Han characters the pinned composer export draws, with the
-// stroke count Unihan records for each. Records are sharded by hash, so the keys come from their
-// stored entries; inferring them from Unicode would claim glyphs the export cannot draw.
+// Build `data/han-parts.json.gz`: every Han-script character the composer can draw, with the stroke
+// count Unihan records for each. The export's records are sharded by hash, so those keys come from
+// their stored entries; the bundled fallback outlines and the palette outlines add the characters the
+// export lacks. Unicode alone would claim glyphs no source draws.
 //
 //   node scripts/build_han_parts.mjs [Unihan.zip]   # a local copy skips the download
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -67,6 +68,20 @@ for (const line of unzipEntry(archive, 'Unihan_IRGSources.txt').toString().split
   if (!line.startsWith('U+')) continue
   const [point, field, value] = line.split('\t')
   if (field === 'kTotalStrokes' && value) total.set(String.fromCodePoint(parseInt(point.slice(2), 16)), Number(value.split(' ')[0]))
+}
+
+// The bundled fallback outlines, then the palette's own fallback outlines, cover characters the
+// export does not record; both are sources the composer draws from.
+const coverage = JSON.parse(readFileSync(new URL('../data/unicode-coverage.json', import.meta.url)))
+for (const [first, last] of coverage) {
+  for (let point = first; point <= last; point++) {
+    const char = String.fromCodePoint(point)
+    if (characterScript(char) === 'han') keys.add(char)
+  }
+}
+const palette = JSON.parse(gunzipSync(readFileSync(new URL('../data/palette-outlines.json.gz', import.meta.url)))).records
+for (const char of Object.keys(palette)) {
+  if ([...char].length === 1 && characterScript(char) === 'han') keys.add(char)
 }
 
 const list = [...keys].sort((a, b) => Number(a.codePointAt(0)) - Number(b.codePointAt(0)))
