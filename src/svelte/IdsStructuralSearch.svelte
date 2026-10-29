@@ -35,13 +35,13 @@
 <style>
   .structural-search{display:flex;flex-direction:column;gap:8px;min-width:0}
   .presets{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-  button,select,input{font:inherit;color:inherit;background:var(--ids-surface,light-dark(#fff,#202026));border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:7px}
+  button,select,input{font:inherit;color:inherit;background:var(--ids-surface,light-dark(#fff,#1b1b20));border:1px solid var(--ids-control-border,light-dark(#8a8a96,#6f6f7e));border-radius:7px}
   button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;font-size:11px;cursor:pointer}
-  button[aria-pressed=true]{border-color:var(--ids-accent,#4465d6);background:var(--ids-accent-light,light-dark(#e7edfc,#24304f))}
+  button[aria-pressed=true]{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));background:var(--ids-accent-light,light-dark(#e9edfd,#232c4c))}
   .glyphs{font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);font-size:23px;line-height:1.3}
   .other,.pattern{display:flex;align-items:center;gap:8px;font-size:12px}
   select,input{min-width:0;flex:1;padding:6px 8px}
   input{font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);font-size:16px}
-  .help{margin:0;color:var(--ids-muted,light-dark(#696973,#aaa));font-size:11px;line-height:1.5}
-  button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ids-accent,#4465d6);outline-offset:2px}
+  .help{margin:0;color:var(--ids-muted,light-dark(#686874,#9d9daa));font-size:11px;line-height:1.5}
+  button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2944c7,#8ea8ff));outline-offset:2px}
 </style>

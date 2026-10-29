@@ -28,13 +28,13 @@
 
 <style>
   .title-form{display:grid;gap:10px}
-  label{display:grid;gap:5px;font-size:12px;color:var(--muted)}
-  input{height:36px;padding:0 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:14px}
-  p{margin:0;font-size:12px;color:var(--muted);line-height:1.4}
+  label{display:grid;gap:5px;font-size:12px;color:var(--ui-color-ink-muted)}
+  input{height:36px;padding:0 10px;border:1px solid var(--ui-color-control-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font:inherit;font-size:14px}
+  p{margin:0;font-size:12px;color:var(--ui-color-ink-muted);line-height:1.4}
   .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
-  button{height:34px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
-  button:hover{background:var(--hover)}
-  .primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-  .primary:hover{background:color-mix(in srgb,var(--accent) 88%,#000)}
-  :is(button,input):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  button{height:34px;padding:0 12px;border:1px solid var(--ui-color-control-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
+  button:hover{background:var(--ui-color-surface-hover)}
+  .primary{background:var(--ui-color-accent);border-color:var(--ui-color-accent);color:var(--ui-color-on-accent)}
+  .primary:hover{background:color-mix(in srgb,var(--ui-color-accent) 88%,#000)}
+  :is(button,input):focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
 </style>

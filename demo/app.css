@@ -1,59 +1,106 @@
-/* The workshop's colours, for the system's scheme or the one chosen (data-theme on the root). Every
-   token is a light-dark() pair, so color-scheme alone picks the side. */
-:root{color-scheme:light dark}
-:root[data-theme="light"]{color-scheme:light}
-:root[data-theme="dark"]{color-scheme:dark}
-:root{
-  --bg:light-dark(#f3f3f6,#111114);
-  --surface:light-dark(#ffffff,#1b1b20);
-  --surface-2:light-dark(#f6f6f9,#16161a);
-  --hover:light-dark(#eeeef3,#26262d);
-  --ink:light-dark(#1c1c22,#ececf2);
-  --muted:light-dark(#686874,#9d9daa);
-  --line:light-dark(#e1e1e8,#2e2e36);
-  --line-strong:light-dark(#c2c2cc,#4a4a55);
-  --accent:light-dark(#2944c7,#8ea8ff);
-  --accent-soft:light-dark(#e9edfd,#232c4c);
-  --on-accent:light-dark(#ffffff,#0e1330);
-  --focus:light-dark(#2944c7,#8ea8ff);
-  --fault:light-dark(#b42318,#ff8a80);
-  --shadow:light-dark(0 1px 3px rgb(0 0 0 / .12),0 1px 3px rgb(0 0 0 / .5));
-  --shadow-pop:light-dark(0 12px 32px rgb(20 20 40 / .18),0 12px 32px rgb(0 0 0 / .55));
-  --toast-bg:light-dark(#1c1c22,#ececf2);
-  --toast-ink:light-dark(#ffffff,#111114);
-  --cjk-sans:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
-  --cjk-serif:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",var(--ids-glyph-fallback,"IDS Fallback"),serif;
-  --cjk-klee:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Kureedo","GenZui Sans","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
-  --cjk:var(--cjk-sans);--ids-font:var(--cjk-sans);
+@import '../design/index.css';
+
+/* The workshop's own additions to IDS UI: its glyph faces and the key hints under toolbar
+   controls. Colours and control styling live in design/. */
+
+:root {
+  --ui-font-sans: 'IDS New Korean', 'IDS Shuishu', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --cjk-sans: 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Project', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', var(--ids-glyph-fallback, 'IDS Fallback'), sans-serif;
+  --cjk-serif: 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Project', 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Songti SC', 'SimSun', var(--ids-glyph-fallback, 'IDS Fallback'), serif;
+  --cjk-klee: 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Project', 'Kureedo', 'GenZui Sans', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', var(--ids-glyph-fallback, 'IDS Fallback'), sans-serif;
+  --cjk: var(--cjk-sans);
+  --ids-font: var(--cjk-sans);
   /* After the reader's fonts and installed broad-coverage ones, before the bundled fallback. */
-  --ids-glyph-fallback:"Jigmo","Jigmo2","Jigmo3","Plangothic P1","Plangothic P2","IDS Fallback";
+  --ids-glyph-fallback: 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', 'IDS Fallback';
   /* The components' tokens, from the workshop's. */
-  --ids-ink:var(--ink);--ids-muted:var(--muted);--ids-line:var(--line);--ids-line-strong:var(--line-strong);
-  --ids-surface:var(--surface);--ids-surface-subtle:var(--surface-2);--ids-surface-selected:var(--hover);
-  --ids-accent:var(--accent);--ids-accent-light:var(--accent-soft);--ids-focus:var(--focus);--ids-fault:var(--fault);
+  --ids-ink: var(--ui-color-ink);
+  --ids-ink-soft: var(--ui-color-ink-soft);
+  --ids-muted: var(--ui-color-ink-muted);
+  --ids-line: var(--ui-color-border);
+  --ids-control-border: var(--ui-color-control-border);
+  --ids-line-strong: var(--ui-color-border-strong);
+  --ids-surface: var(--ui-color-surface);
+  --ids-surface-subtle: var(--ui-color-surface-sunken);
+  --ids-surface-selected: var(--ui-color-surface-hover);
+  --ids-accent: var(--ui-color-accent);
+  --ids-accent-light: var(--ui-color-accent-soft);
+  --ids-focus: var(--ui-color-focus);
+  --ids-fault: var(--ui-color-danger);
 }
-*,*::before,*::after{box-sizing:border-box}
-html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:14px/1.5 "IDS New Korean","IDS Shuishu",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-/* Scrollbars follow the theme instead of the browser's bright default. */
-*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
-*::-webkit-scrollbar{width:10px;height:10px}
-*::-webkit-scrollbar-track,*::-webkit-scrollbar-corner{background:transparent}
-*::-webkit-scrollbar-thumb{background:var(--line-strong);border:2px solid transparent;border-radius:999px;background-clip:padding-box}
-*::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:padding-box}
 /* A key hint under a toolbar control: one cap per key, on hover or focus. */
-.key-hint{position:relative}
-.key-hint-pop{display:none;position:absolute;z-index:50;top:calc(100% + 7px);left:50%;align-items:center;gap:8px;
-  padding:5px 8px;border:1px solid var(--line);border-radius:9px;background:var(--surface);box-shadow:var(--shadow-pop);
-  white-space:nowrap;pointer-events:none;transform:translateX(-50%)}
-.key-hint:hover .key-hint-pop,.key-hint:focus-visible .key-hint-pop,.key-hint:focus-within .key-hint-pop{display:flex}
-.key-hint .combo{display:flex;align-items:center;gap:4px}
-.key-hint kbd{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:1px solid var(--line-strong);border-bottom-width:2px;
-  border-radius:5px;background:var(--surface-2);color:var(--ink);font:600 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;box-shadow:0 1px 0 var(--line)}
-.key-hint .plus{color:var(--muted);font:500 10px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace}
-.key-hint .alt{color:var(--muted);font-size:11px;padding:0 2px}
-.end .key-hint .key-hint-pop{left:auto;right:0;transform:none}
+.key-hint {
+  position: relative;
+}
+
+.key-hint-pop {
+  position: absolute;
+  z-index: var(--ui-z-hint);
+  top: calc(100% + 7px);
+  left: 50%;
+  display: none;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-color-surface);
+  box-shadow: var(--ui-shadow-2);
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.key-hint:hover .key-hint-pop,
+.key-hint:focus-visible .key-hint-pop,
+.key-hint:focus-within .key-hint-pop {
+  display: flex;
+}
+
+.key-hint .combo {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.key-hint kbd {
+  display: grid;
+  place-items: center;
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+  border: 1px solid var(--ui-color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--ui-color-surface-sunken);
+  color: var(--ui-color-ink);
+  font: 600 10px/1 var(--ui-font-mono);
+  box-shadow: 0 1px 0 var(--ui-color-border);
+}
+
+.key-hint .plus {
+  color: var(--ui-color-ink-muted);
+  font: 500 10px/1 var(--ui-font-mono);
+}
+
+.key-hint .alt {
+  padding: 0 2px;
+  color: var(--ui-color-ink-muted);
+  font-size: 11px;
+}
+
+.end .key-hint .key-hint-pop {
+  left: auto;
+  right: 0;
+  transform: none;
+}
 
 /* The glyph font the reader chooses, leaving the interface in its sans face. */
-:root[data-font="serif"]{--cjk:var(--cjk-serif);--ids-font:var(--cjk-serif)}
-:root[data-font="klee"]{--cjk:var(--cjk-klee);--ids-font:var(--cjk-klee)}
+:root[data-font='serif'] {
+  --cjk: var(--cjk-serif);
+  --ids-font: var(--cjk-serif);
+}
+
+:root[data-font='klee'] {
+  --cjk: var(--cjk-klee);
+  --ids-font: var(--cjk-klee);
+}

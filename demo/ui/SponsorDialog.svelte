@@ -51,12 +51,12 @@
 <style>
   .sheet{--sp-ink:light-dark(#c2185b,#ffb3cd);--sp-heart:light-dark(#ff4f88,#ff7aa6);--sp-soft:light-dark(#fff1f5,#2f1822);
     --sp-line:light-dark(#ffd0de,#5a2a3f);display:flex;flex-direction:column;gap:14px}
-  .hero{position:relative;display:grid;place-items:center;height:136px;margin:-4px -4px 0;border-radius:16px;
+  .hero{position:relative;display:grid;place-items:center;height:136px;margin:-4px -4px 0;border-radius:var(--ui-radius-3xl);
     background:radial-gradient(closest-side,light-dark(#ffd9e5,#4a1e31),transparent)}
   .portrait{position:relative;width:112px;height:112px}
   .portrait img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;
-    box-shadow:0 0 0 4px var(--surface),0 0 0 6px var(--sp-line),0 10px 24px rgb(255 79 136 / .3)}
-  .heart{position:absolute;right:-2px;bottom:2px;width:34px;height:34px;fill:var(--sp-heart);stroke:var(--surface);stroke-width:2;paint-order:stroke;
+    box-shadow:0 0 0 4px var(--ui-color-surface),0 0 0 6px var(--sp-line),0 10px 24px rgb(255 79 136 / .3)}
+  .heart{position:absolute;right:-2px;bottom:2px;width:34px;height:34px;fill:var(--sp-heart);stroke:var(--ui-color-surface);stroke-width:2;paint-order:stroke;
     overflow:visible;transform-origin:50% 60%;animation:beat 2.8s ease-in-out infinite;filter:drop-shadow(0 3px 6px rgb(255 79 136 / .35))}
   .heart .shine{fill:#fff;opacity:.6}
   .spark{position:absolute;color:var(--sp-heart);opacity:.75;animation:twinkle 2.4s ease-in-out infinite}
@@ -68,29 +68,29 @@
   .lead{margin:0;font-size:14px;line-height:1.65}
   .ask{margin:0;font-size:14.5px;font-weight:650;line-height:1.5;color:var(--sp-ink)}
   .lead:lang(ko),.ask:lang(ko),.steps:lang(ko),.company small:lang(ko),.thanks:lang(ko){word-break:keep-all}
-  .how{padding:12px 14px;border:1px dashed var(--sp-line);border-radius:14px;background:var(--sp-soft)}
+  .how{padding:12px 14px;border:1px dashed var(--sp-line);border-radius:var(--ui-radius-2xl);background:var(--sp-soft)}
   h3{margin:0 0 8px;font-size:12px;font-weight:700;color:var(--sp-ink)}
   .steps{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;counter-reset:step}
   .steps li{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.45;counter-increment:step}
   .steps li::before{content:counter(step);display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;
     background:var(--sp-ink);color:var(--sp-soft);font-size:11px;font-weight:700;line-height:1;transform:translateY(-1px)}
-  .kofi{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:999px;
+  .kofi{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
     background:linear-gradient(135deg,#d81b60,#b0124f);color:#fff;text-decoration:none;box-shadow:0 6px 16px rgb(216 27 96 / .32);
     transition:transform .18s ease,box-shadow .18s ease}
   .kofi:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgb(216 27 96 / .42)}
   .kofi:active{transform:scale(.98)}
-  .kofi:focus-visible,.company:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .kofi:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .kofi .mark{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:rgb(255 255 255 / .22)}
   .kofi .copy strong{font-size:15px}
   .kofi .copy small{color:#fff}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
   .copy strong{font-size:13.5px;font-weight:700}
   .copy small{font-size:12px;line-height:1.4}
-  .company{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:12px;color:var(--muted);text-decoration:none}
-  .company:hover{background:var(--hover);color:var(--ink)}
+  .company{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:var(--ui-radius-xl);color:var(--ui-color-ink-muted);text-decoration:none}
+  .company:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .company :global(.icon){flex:none;margin-top:2px}
-  .company .copy strong{font-size:12.5px;color:var(--ink)}
-  supporters-roll{--sp-text:var(--ink);--sp-muted:var(--muted)}
-  .thanks{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted);text-align:center}
+  .company .copy strong{font-size:12.5px;color:var(--ui-color-ink)}
+  supporters-roll{--sp-text:var(--ui-color-ink);--sp-muted:var(--ui-color-ink-muted)}
+  .thanks{margin:0;font-size:12.5px;line-height:1.5;color:var(--ui-color-ink-muted);text-align:center}
   @media (prefers-reduced-motion:reduce){.heart,.spark,.kofi{animation:none;transition:none}}
 </style>
