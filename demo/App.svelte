@@ -46,6 +46,7 @@
   import MenuBar from './ui/MenuBar.svelte'
   import MenuList from './ui/MenuList.svelte'
   import Dialog from './ui/Dialog.svelte'
+  import LayerDialog from './ui/LayerDialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import PyramidDialog from './ui/PyramidDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
@@ -417,6 +418,27 @@
   // open, so the last one closes into a fresh tab. A tab closed by mistake comes back from the note,
   // with its tree and history.
   const current = () => /** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId))
+  /** The document session of the active tab. */
+  function currentSession() {
+    const tab = current()
+    return tab ? sessionFor(tab) : null
+  }
+  /** Keep the active tab's document after the layer dialog changes its session. */
+  function layerChanged() {
+    const tab = current()
+    if (!tab) return
+    tab.document = sessionRecord(sessionFor(tab))
+    store()
+  }
+  /** The layer panel decomposed a component; make the core tree follow the document. */
+  function layerStructureChanged() {
+    const tab = current()
+    if (!tab) return
+    const session = sessionFor(tab)
+    editor.open(toSequence(session.document.root))
+    tab.document = sessionRecord(session)
+    store()
+  }
   /** @typedef {{ adjustments: typeof adjustments, adjusting: boolean }} AdjustState */
   /** @type {Map<string, AdjustState>} */
   const adjustedStates = new Map()
@@ -690,7 +712,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), pyramidOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), pyramidOpen = $state(false), layerOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -872,6 +894,8 @@
             </IdsPreview>
           {/key}
           <div class="adjust">
+            <button type="button" class="adjust-toggle" disabled={editor.tree === null}
+              onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers')}</button>
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={!drawing || Boolean(drawing.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
@@ -913,6 +937,8 @@
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location)} sequence={editor.whole} {t} onnote={note} />
+<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
+  structure={char => adapter.structure(char)} onchange={layerChanged} onstructure={layerStructureChanged} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
     <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
