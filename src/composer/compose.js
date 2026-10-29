@@ -446,6 +446,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    const legs = !this.separate && op === '⿸' && this.legEnclosure(children, region)
+    if (legs) return legs
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
@@ -485,6 +487,26 @@ export class Composer {
       && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
+  }
+
+  /** Any ⿸ whose contents begin ⿱儿: the native legs join the enclosing bar. */
+  legEnclosure(children, region) {
+    if (this.separate || this.fontStyle === 'kaisho') return null
+    const key = keyOf(children[0]), contents = children[1]
+    if (yanSources.has(key) || this.excluded('儿') || this.excluded('元')
+      || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
+    const outer = this.node(key, region)
+    const opening = this.room('⿸', outer, region)
+    if (!opening) return null
+    // Lift the native bar under the enclosure's top by the room margin plus
+    // 20 units, so both contours overlap rather than meeting on a hairline.
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 20
+    // The legs take the upper part of the opening; the lower operand stays below.
+    const bottom = opening[1] + (opening[3] - opening[1]) * 0.55
+    const legs = componentPosition('儿:under-bar', [opening[0], bottom, opening[2], top], this.fontStyle, top - bottom)
+    if (!legs) return null
+    const lower = this.node(contents[2], [opening[0], opening[1], opening[2], bottom - 25])
+    return [...outer, legs, ...lower]
   }
 
   yanEnclosure(children, region) {
