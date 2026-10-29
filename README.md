@@ -864,7 +864,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
 - [揮春上的合體字　你看懂幾多？ (新春篇)](https://hk.ulifestyle.com.hk/topic/detail/200474/), UHK 港生活,
   2015-02-12: photographs of 日日有見財, 日進斗金, 唯吾知足, 進寶財招, 黃金萬兩, 吉祥如意 and 學好孔孟.
-  The examples take 日日有見財 and 日進斗金 from its arrangements. The other forms share strokes
+  The examples take the two forms' component order from the article. 日日有見財 draws in two rows,
+  有 beside 見財, so the composer does not squeeze 有 into a thin band. The other forms share strokes
   between their characters, which IDS cannot express, so they stay out of the examples.
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
