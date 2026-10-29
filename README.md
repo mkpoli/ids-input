@@ -101,7 +101,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `onuse(sequence)` | | called with a whole sequence; the Use button shows only when given |
 | `onchange(text, whole)` | | every change, and whether the sequence is whole |
 | `messages`, `locale` | | a catalogue from `messages/` (English fills any key it lacks) and its locale |
-| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts |
+| `pickers` | `['find', 'parts', 'from', 'templates']` | the part picker's tabs; a tab the adapter cannot answer is left out; `templates` offers editable two- to four-part layouts and two-row repeats |
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
@@ -161,7 +161,7 @@ use `light-dark()`, so the page needs `color-scheme: light dark` for its dark sc
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -172,6 +172,8 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10, reverse: false }
+repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
+repeatSequence('屮', [3, 3], { bottom: '刀' })  // '⿱⿲屮屮屮⿲刀刀刀'
 ```
 
 A component is a graphic Unicode code point (letter, mark, number, punctuation or symbol) or a
@@ -209,6 +211,16 @@ for subsequent insertions. Enter one component, then choose a preset or enter a 
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
+
+### Repeats
+
+`repeatSequence(part, [top, bottom], { bottom })` writes two rows of repeated components:
+`top` copies of `part` above `bottom` copies of the second component, which defaults to `part`.
+Each row holds two to four copies; rows of two and three use `⿰` and `⿲`, a row of four splits in
+half, and the rows stack with `⿱`. The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns
+with its own Component field, as Pyramids does. A second field, Bottom row, takes another component and
+falls back to the first when empty. These cover the 五同, 六同, 八同 and 二組 arrangements of
+[畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
 ### Loose marks
 
