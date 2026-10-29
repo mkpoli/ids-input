@@ -201,7 +201,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
-  // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
+  // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
   // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
   // thin band. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The
@@ -210,7 +210,9 @@ export const EXAMPLE_GROUPS = [
   // New Year 合文 share strokes between their characters, as 唯吾知足 does with one 口, and an IDS
   // tree cannot share a component, so they are not examples.
   { key: 'ligature', examples: [
-    { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
+    // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
+    // 辶's embrace, which is what the example draws.
+    { sequence: '⿺辶⿱宀⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
