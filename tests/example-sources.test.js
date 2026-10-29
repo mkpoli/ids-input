@@ -49,6 +49,7 @@ describe('example sources', () => {
     expect(ids.get('⿱地⿰地地')).toEqual(['x-uteta-pinzi-ten-chi'])
     expect(ids.get('⿱里⿰里里')).toEqual(['x-uteta-pinzi-ri-mo'])
     expect(ids.get('⿱莫⿰莫莫')).toEqual(['x-uteta-pinzi-ri-mo'])
+    expect(ids.get('⿱無⿰無無')).toEqual(['irg-ws2021-uk-20565'])
     expect(groupRefs('seal')).toEqual(['small-seal'])
     expect(groupRefs('tangut')).toEqual(['tangut-ids'])
     expect(groupRefs('geba')).toEqual(['geba-wp'])

@@ -72,6 +72,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱地⿰地地', refs: [40], char: '' },
     { sequence: '⿱里⿰里里', refs: [39], char: '' },
     { sequence: '⿱莫⿰莫莫', refs: [39], char: '' },
+    { sequence: '⿱無⿰無無', refs: [45], char: '𲬺' },
     // 二同系: stacked, side by side, mirrored and covered pairs.
     { sequence: '⿱火火', refs: [1,44], char: '炎' },
     { sequence: '⿱土土', refs: [1,44], char: '圭' },
