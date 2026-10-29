@@ -5,13 +5,15 @@
   // closes the focused tab, as does its ×. The sequence is in the tab's tooltip and its name.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
+  import Menu from './Menu.svelte'
   import TabIcon from './TabIcon.svelte'
   /**
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
-   *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void }}
+   *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
+   *   starter: { items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, templates: { heading: string, items: import('./Menu.svelte').Item[] } | null } }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -153,7 +155,10 @@
       </div>
     {/each}
   </div>
-  <button type="button" class="tab-new" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
+  <div class="tab-new">
+    <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
+    <Menu label={t('app.tabs.start')} text={false} items={starter.items} view={starter.view} templates={starter.templates} keyHints={false} wide />
+  </div>
 </div>
 
 {#if menu}
@@ -188,8 +193,10 @@
   .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--hover);color:var(--ink)}
   .tab-close:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
-  .tab-new{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:0 0 6px -6px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
-  .tab-new:hover{background:var(--hover);color:var(--ink)}
-  .tab-new:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
+  .tab-new{display:flex;align-items:center;gap:1px;flex:none;margin:0 0 6px -6px}
+  .tab-add,.tab-new :global(.tool){display:grid;place-items:center;width:26px;height:28px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
+  .tab-new :global(.tool){width:20px;gap:0}
+  .tab-add:hover,.tab-new :global(.tool:not(:disabled):hover){background:var(--hover);color:var(--ink)}
+  .tab-add:focus-visible,.tab-new :global(.tool:focus-visible){outline:2px solid var(--focus);outline-offset:-1px}
   @media (hover:none){.tab.on .tab-close{opacity:1;pointer-events:auto}}
 </style>

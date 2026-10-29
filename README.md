@@ -1005,14 +1005,14 @@ the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
-transform steps before the editor’s structural steps. Examples come with their character and code
-point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
-with its QR code, the language. The address bar carries the document while a layer transform exists,
-so copying the location keeps the placement; opening such a link keeps the token. A plain sequence
-stays in the hash.
-settings and the sources. Settings hold the system, light and dark themes, key hints, and the
-preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
-tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
+transform steps before the editor’s structural steps, a share link with its QR code, the language,
+settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it opens the
+operator templates and the examples, each with its character and code point, an abbreviated
+character, or a mark when they have none; an example opens a tab. The address bar carries the
+document while a layer transform exists, so copying the location keeps the placement; opening such a
+link keeps the token, and a plain sequence stays in the hash (`#⿰亻哥`, or `?ids=`). Settings hold the
+system, light and dark themes, key hints, and the preview data source; they open beside the toolbar
+button on desktop and in a bottom drawer on mobile. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys
 use the `ids-input:` prefix.

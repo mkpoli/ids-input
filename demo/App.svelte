@@ -3,14 +3,15 @@
   // below the toolbar; under it the input at the start (the sequence, the operators, where
   // parts come from), the tree and search in the middle, and the output at the end (the drawing, the
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
-  // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
+  // the toolbar holds undo, redo, sharing, the language, settings and sources; the tab strip's +
+  // opens a blank tab and its chevron opens the operator templates and the examples.
   import { tick, untrack } from 'svelte'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OP_NAMES, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATOR_GROUPS, componentQuery, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -756,6 +757,16 @@
       unencoded: t('app.examples.unencoded'), empty: t('app.examples.noMatch'),
     },
   })
+  // A blank tab comes from the strip's +; the chevron beside it offers the operator templates and
+  // the examples as the starting points of a new tab.
+  const starterTemplates = $derived({
+    heading: t('app.tabs.templates'),
+    items: OPERATOR_GROUPS.flatMap(group => group.ops.map(op => ({
+      leading: op, label: t(`ids.op.${OP_NAMES[op]}`), hint: t(`ids.op.${OP_NAMES[op]}`),
+      run: () => addTab(op + '⬚'.repeat(group.arity)),
+    }))),
+  })
+  const starter = $derived({ items: exampleItems, view: exampleView, templates: starterTemplates })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -851,7 +862,6 @@
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
-        <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
       <div class="font-switch" role="group" aria-label={t('app.font.label')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
@@ -876,7 +886,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} {starter} />
     </div>
   </div>
 
@@ -1094,7 +1104,7 @@
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
+  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:visible;background:var(--surface)}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
   .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
