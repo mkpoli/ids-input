@@ -69,6 +69,15 @@ try {
     assert.ok(Math.abs(rotatedMatrix?.[1] ?? 0) > 0.01, 'the rotate handle turned the layer')
     await dialog.getByRole('button', { name: 'Reset transform', exact: true }).click()
 
+    await dialog.locator('details.history summary').click()
+    const step = dialog.locator('.history-list button').first()
+    await step.waitFor({ timeout: 5000 })
+    if (process.env.IDS_LAYER_SHOTS) await dialog.locator('details.history').screenshot({ path: `${process.env.IDS_LAYER_SHOTS}/history-${scheme}.png` })
+    await step.click()
+    await page.waitForTimeout(300)
+    const undone = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.transform)
+    assert.equal(undone, undefined, 'the inspector history undoes a transform')
+
     await dialog.getByRole('button', { name: 'Matrix', exact: true }).click()
     const matrixFields = dialog.locator('input[type=number]')
     await matrixFields.nth(1).fill('0.2')
