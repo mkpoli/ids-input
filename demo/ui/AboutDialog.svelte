@@ -58,6 +58,7 @@
   .by,.licence{margin-left:8px;font-size:12px;color:var(--muted)}
   .licence{padding:1px 6px;border-radius:999px;border:1px solid var(--line)}
   p{margin:2px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45}
-  .bib{margin:0;padding-left:1.5em;display:flex;flex-direction:column;gap:8px}
+  .bib{margin:0;padding-left:1.6em}
   .bib li{padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+  .bib li + li{margin-top:8px}
 </style>
