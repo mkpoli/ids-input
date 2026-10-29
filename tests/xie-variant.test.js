@@ -62,6 +62,17 @@ for (const fontStyle of ['sans', 'serif', 'kaisho']) {
     expect(components(raster([dots], 512), 512)).toBe(4)
     const frame = raster(parts.slice(0, -1), 512)
     expect(components(frame, 512)).toBe(1)
+    // 冂 top, inner 一, closing 一 and 𠃌 crossbar are four distinct strokes.
+    // Count ink runs through the counter centres, excluding dots and hook tip.
+    for (const x of [580, 600, 620]) {
+      let runs = 0, previous = 0
+      for (let row = Math.floor((880 - 680) * .512); row < (880 - 180) * .512; row++) {
+        const ink = frame[row * 512 + Math.floor(x * .512)]
+        if (ink && !previous) runs++
+        previous = ink
+      }
+      expect(runs).toBe(4)
+    }
     expect(components(frame.map(pixel => pixel ? 0 : 1), 512)).toBe(3) // outside + two counters
     expect(components(raster(parts, 512), 512)).toBe(5)
     // The hook turns left locally; it must never become a full-width bottom bar.

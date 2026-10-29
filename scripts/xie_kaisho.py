@@ -37,8 +37,9 @@ def xie_kaisho(gs, cmap):
     """Return groups: 宀, 丨, 冂, baseline 一, middle 一, 𠃌, 灬.
 
     日's counter boundaries define the shared seams of 冂 and the two 一.
-    The lower 一 owns the shared baseline extending to 丨; 寫's separate
-    hook crossbar adjoins its underside. No normalization is applied.
+    The lower 一 closes the raised frame and extends left to 丨. The stem
+    continues below it to 寫's separate hook crossbar, leaving four visible
+    horizontal levels. No normalization is applied.
     """
     xie = _contours(gs, cmap[ord('寫')])
     day = _contours(gs, cmap[ord('日')])
@@ -52,8 +53,8 @@ def xie_kaisho(gs, cmap):
     def frame_map(x, y):
         # Contract counters more than brush strokes and preserve sloping bars.
         return (_piecewise(x, [(227, 450), (314, 495), (679, 630), (765, 675)]),
-                _piecewise(y, [(5, 320), (50, 350), (327, 450),
-                               (391, 485), (633, 590), (699, 625)]))
+                _piecewise(y, [(5, 390), (50, 420), (327, 495),
+                               (391, 525), (633, 595), (699, 625)]))
 
     # Inverted U: native outer top and terminals, native inner counter edge.
     # Intersect the straight outer-left edge with the lower counter's y=50.
@@ -73,26 +74,21 @@ def xie_kaisho(gs, cmap):
                     ('lineTo', ((311, 50),)), ('closePath', ())], frame_map)
     baseline = [baseline[0]] + baseline[1:-1] + [
         ('lineTo', (frame_map(left_x, 50),)),
-        ('lineTo', ((300, 339),)), ('lineTo', ((300, 309),)),
+        ('lineTo', ((300, 409),)), ('lineTo', ((300, 379),)),
         ('closePath', ())]
 
-    # Keep 丨's natural cap and slight taper; cut its foot at the shared bar.
+    # Keep 丨's natural cap and slight taper; continue past the frame's lower
+    # bar into the hook crossbar so the body remains one connected shape.
     upright = [('moveTo', ((465, 0),)), ('lineTo', ((525, 0),))] + stem[4:9] + [
         ('lineTo', ((471, 0),)), ('closePath', ())]
     upright = _map(upright, lambda x, y: (300 + (x - 465) * .8,
-                                         315 + y * (295 / 783)))
+                                         300 + y * (310 / 783)))
 
     # 寫's native hook follows the first edge of its fused body. Drop the
     # left-falling sweep and all 臼 material, retaining every hook curve.
     hook = [('moveTo', ((300, 205),))] + body[1:12] + [
         ('lineTo', ((300, 245),)), ('closePath', ())]
     hook = _map(hook, lambda x, y: (x, y + 65))
-    # Follow the baseline's underside with a one-unit interior overlap.
-    # Independent path quantization otherwise exposes a subpixel slit at
-    # the shared corner near x=494. This changes no exterior silhouette.
-    seam = [frame_map(730, 18), frame_map(312, 5), (300, 309)]
-    hook = hook[:-2] + [('lineTo', ((x, y + 1),)) for x, y in seam] + [
-        ('closePath', ())]
     # Retain all four native brush gestures as small, independent dots.
     dots = []
     for contour, cx, cy, target_y in zip(
