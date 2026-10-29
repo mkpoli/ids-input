@@ -1,13 +1,14 @@
 <script>
-  // Where parts come from, in tabs: components and characters the adapter's search finds, the parts
-  // palette (IdsParts), the parts of any character or description typed (IdsFrom) and structure
-  // templates (IdsTemplates), each only where the adapter can answer it. A part picked goes in
-  // `editor`'s chosen slot, or the first empty one; parts can also be dragged onto the tree. Arrow
-  // keys, Home and End move between the tabs.
-  import { untrack } from 'svelte'
+  // Where parts come from, in tabs: components and characters the adapter's search finds, by name or
+  // by a drawing, the parts palette (IdsParts), the parts of any character or description typed
+  // (IdsFrom) and structure templates (IdsTemplates), each only where the adapter can answer it. A
+  // part picked goes in `editor`'s chosen slot, or the first empty one; parts can also be dragged
+  // onto the tree. Arrow keys, Home and End move between the tabs.
+  import { tick, untrack } from 'svelte'
   import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
+  import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
 
   /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
@@ -37,6 +38,14 @@
   // The find tab: components and characters the adapter's search answers for what is typed, once
   // the typing settles.
   let query = $state('')
+  // The find tab also takes a drawing: the same palette, looked for by shape instead of by name.
+  let drawing = $state(false)
+  let field = $state(/** @type {HTMLInputElement | null} */ (null))
+  /** Leave the pad and put the cursor back in the field. */
+  function type() {
+    drawing = false
+    tick().then(() => field?.focus())
+  }
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let found = $state({ status: 'idle', items: [] })
   $effect(() => {
@@ -68,19 +77,32 @@
         <div class="ids-pick-panel" role="tabpanel" id={`${uid}-pick-${name}-panel`} aria-labelledby={`${uid}-pick-${name}`} hidden={current !== name}>
           {#if name === 'find'}
             <div class="ids-find">
-              <input type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
-                aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
-              {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
-              {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
-              {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('ids.search.none')}</p>
-              {:else if found.items.length}
-                <div class="ids-found">
-                  {#each found.items as item (item.char)}
-                    <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
-                      draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
-                      onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
-                  {/each}
+              {#if drawing}
+                <IdsSketch {adapter} disabled={editor.disabled} messages={editor.messages} locale={editor.locale}
+                  onpick={part => editor.take(part, undefined, { loose: isMarks(part) })} onclose={type} />
+              {:else}
+                <div class="ids-find-row">
+                  <input bind:this={field} type="search" bind:value={query} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
+                    aria-label={t('ids.search.label')} placeholder={t('ids.find.placeholder')} />
+                  {#if adapter.parts}
+                    <button type="button" class="ids-draw-toggle" disabled={editor.disabled} title={t('ids.draw.open')} aria-label={t('ids.draw.open')}
+                      onclick={() => { drawing = true; query = '' }}>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 20 4.2-1L19 8.2 15.8 5 5 15.8 4 20Z" /><path d="m13.8 7 3.2 3.2" /></svg>
+                    </button>
+                  {/if}
                 </div>
+                {#if found.status === 'loading'}<p class="ids-note">{t('ids.from.searching')}</p>
+                {:else if found.status === 'failed'}<p class="ids-note fault">{t('ids.from.searchFailed')}</p>
+                {:else if found.status === 'ready' && !found.items.length}<p class="ids-note">{t('ids.search.none')}</p>
+                {:else if found.items.length}
+                  <div class="ids-found">
+                    {#each found.items as item (item.char)}
+                      <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
+                        draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
+                        onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
+                    {/each}
+                  </div>
+                {/if}
               {/if}
             </div>
           {:else if name === 'templates'}<IdsTemplates {editor} />
@@ -112,7 +134,11 @@
   .ids-pick-panel{min-width:0}
   .ids-pick-panel[hidden]{display:none}
   .ids-find{display:flex;flex-direction:column;gap:6px}
-  .ids-find input{font-size:14px;padding:7px 10px}
+  .ids-find-row{display:flex;gap:6px;align-items:stretch}
+  .ids-find input{flex:1;min-width:0;font-size:14px;padding:7px 10px}
+  .ids-draw-toggle{display:inline-flex;align-items:center;justify-content:center;flex:none;width:36px;padding:0;color:var(--_muted)}
+  .ids-draw-toggle:hover{color:var(--_accent)}
+  .ids-draw-toggle svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
   .ids-found{display:flex;flex-wrap:wrap;gap:4px}
   .ids-hit{display:flex;align-items:baseline;gap:6px;max-width:100%;min-width:0;padding:2px 8px;border-color:transparent;background:var(--_surface-subtle)}
   .ids-hit:not(:disabled):hover{border-color:var(--_accent)}
