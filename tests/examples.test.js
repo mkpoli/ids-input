@@ -50,6 +50,10 @@ describe('the demo examples', () => {
           } else if (example.sequence === '⿰𛂦方') {
             expect(example.refs).toContain(sourceNumber('irg-n2744'))
             expect(table.get(char).map(entry => entry.text)).toContain('⿰？方')
+          } else if ('source' in example && example.source === 'data/shuishu.json.gz') {
+            const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
+            expect(shui.parts.map(part => part.part)).toContain(char)
+            expect(shui.parts.find(part => part.part === char)?.meaning).toBe(example.modern)
           } else if (example.sequence === '⿱無⿰無無') {
             // Unicode 17.0 encoded the character after the BabelStone edition, which has no row.
             expect(example.refs).toContain(sourceNumber('irg-ws2021-uk-20565'))
@@ -114,7 +118,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'seal', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

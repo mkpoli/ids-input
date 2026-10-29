@@ -4,6 +4,7 @@
 import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
+import { shuishuNames, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -185,6 +186,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * a Web Worker made by `worker` where there is one, its index built there once; elsewhere it runs
  * on the caller's thread. `smallSeal` adds the compiled CHISE Small Seal document to the
  * same table and palette; its modern correspondences supply search labels and character information.
+ * `shuishu` adds the Shuishu characters and radicals to the palette, and their names, readings and
+ * meanings to the search.
  * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
  *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
@@ -195,10 +198,11 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
 
  *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
+ *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, shuishu, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -291,6 +295,16 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return doc
   })().catch(error => { seal = null; throw error })
 
+  /** @type {Promise<import('./shuishu-data.js').ShuishuData | null> | null} */
+  let shui = null
+  const readShuishu = () => shui ??= (async () => {
+    if (!shuishu) return null
+    const doc = typeof shuishu === 'string' || shuishu instanceof URL
+      ? /** @type {import('./shuishu-data.js').ShuishuData} */ (JSON.parse(await readText(await load(shuishu)))) : shuishu
+    shuishuTable(doc) // Validate the format before exposing any of its data.
+    return doc
+  })().catch(error => { shui = null; throw error })
+
   /** @type {Promise<Map<string, string>> | null} */
   let overwriteMap = null
   const overwrites = () => overwriteMap ??= (overwriteText !== undefined ? Promise.resolve(overwriteText) : overwrite ? load(overwrite).then(readText) : Promise.resolve(''))
@@ -359,11 +373,12 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
-      : smallSeal ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
+      : smallSeal || shuishu ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
+    readShuishu(),
     formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
-  ]).then(([base, doc, text]) => {
-    const rows = doc ? [...new Map([...base, ...doc.parts].map(p => [p.part, p])).values()] : base
+  ]).then(([base, doc, shuiDoc, text]) => {
+    const rows = doc || shuiDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
     // Keep reviewed contextual search substitutions out of palette families.
     const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
     const variants = readForms(safe)
@@ -612,7 +627,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         } catch { /* The vocabulary is a convenience; the components still stand. */ }
       }
       if (characterInfo) hits = [...await relatedSeeds(text, direct), ...hits]
-      else if (smallSeal) {
+      if (shuishu) {
+        const doc = await readShuishu()
+        if (doc) hits = [...hits, ...shuishuNames(doc, text)]
+      }
+      if (!characterInfo && smallSeal) {
         const doc = await readSeal()
         if (doc) hits = [...hits, ...sealNames(doc, direct.length === 1 ? direct[0].char : text)]
       }

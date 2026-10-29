@@ -34,8 +34,8 @@
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'strokes' | 'recent' | 'other')[]} */
-  const TABS = ['components', 'gongche', 'tangut', 'seal', 'bopomofo', 'marks', 'alphabet', 'hangul', 'strokes', 'recent', 'other']
+  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'strokes' | 'recent' | 'other')[]} */
+  const TABS = ['components', 'gongche', 'tangut', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'strokes', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -249,7 +249,7 @@
     clearCompose()
     pick(text)
   }
-  const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
+  const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'shuishu' ? 'parts.shuishu.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
@@ -400,12 +400,24 @@
   const sealParts = $derived((parts ?? []).filter(part => part.kind === 'seal'))
   const sealGroups = $derived(SEAL_GROUPS.map(group => ({ ...group, parts: sealParts.filter(part => (part.sealGroup ?? 'other') === group.name) })).filter(group => group.parts.length))
   const selectedSealGroup = $derived(sealGroups.find(group => group.name === sealGroup) ?? sealGroups[0])
+  const SHUI_GROUPS = /** @type {const} */ ([{ name: 'common', message: 'common' }, { name: 'radical', message: 'radical' }, { name: 'logogram', message: 'logogram' }])
+  let shuiGroup = $state(/** @type {(typeof SHUI_GROUPS)[number]['name']} */ ('common'))
+  const shuiParts = $derived((parts ?? []).filter(part => part.kind === 'shui'))
+  const shuiGroups = $derived(SHUI_GROUPS.map(group => ({ ...group, parts: shuiParts.filter(part => part.shuiGroup === group.name) })).filter(group => group.parts.length))
+  const selectedShuiGroup = $derived(shuiGroups.find(group => group.name === shuiGroup) ?? shuiGroups[0])
   const query = $derived(filter.trim())
   const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
     if (!query || !parts || tab === 'other') return null
     if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
+    if (tab === 'shuishu') {
+      const code = /^U\+([0-9a-f]{4,6})$/i.exec(query)
+      if (code) return shuiParts.filter(part => part.part.codePointAt(0) === parseInt(code[1], 16))
+      const lowered = query.toLowerCase()
+      return shuiParts.filter(part => part.part === query)
+        .concat(shuiParts.filter(part => part.part !== query && shuiWords(part).some(word => word.includes(lowered))))
+    }
     if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
     const chars = new Set([...query])
     return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
@@ -419,6 +431,7 @@
     if (tab === 'alphabet') return [{ cls: undefined, parts: alphabet.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
+    if (tab === 'shuishu') return [{ cls: undefined, parts: selectedShuiGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     if (tab === 'strokes') return grouped(parts.filter(part => part.kind === 's'))
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
@@ -511,7 +524,22 @@
     selection?.addRange(range)
   }
   /** @param {PalettePart} part */
+  /** The name, reading and meaning a Shuishu part is found by, lowercased. @param {PalettePart} part */
+  function shuiWords(part) {
+    return [part.name, part.reading, part.meaning, part.meaningEn, ...(part.modern ?? [])]
+      .filter(Boolean).map(word => /** @type {string} */ (word).toLowerCase())
+  }
+  /** @param {PalettePart} part */
   const title = part => {
+    if (part.kind === 'shui') {
+      return [
+        part.part,
+        `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
+        part.name,
+        part.reading,
+        part.meaning && part.meaningEn ? `${part.meaning} (${part.meaningEn})` : part.meaning ?? part.meaningEn,
+      ].filter(Boolean).join(' · ')
+    }
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
     // Tangut characters carry their count in the tab's own data, not in the palette rows.
@@ -657,6 +685,17 @@
   {/if}
   {#if tab === 'seal' && (filtered ?? selectedSealGroup?.parts ?? []).some(part => part.sealBasis === 'cjk-ids')}
     <p class="parts-note">{t('parts.seal.estimate')}</p>
+  {/if}
+  {#if tab === 'shuishu' && !query && shuiGroups.length}
+    <div class="seal-groups" role="group" aria-label={t('parts.shuishu.groups')}>
+      {#each shuiGroups as group (group.name)}
+        <button type="button" class:active={selectedShuiGroup?.name === group.name} aria-pressed={selectedShuiGroup?.name === group.name}
+          onclick={() => shuiGroup = group.name}>{t(`parts.shuishu.${group.message}`)} <span>{group.parts.length}</span></button>
+      {/each}
+    </div>
+  {/if}
+  {#if tab === 'shuishu'}
+    <p class="parts-note">{t('parts.shuishu.note')}</p>
   {/if}
   {#if tab === 'components'}
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
@@ -853,7 +892,7 @@
   .compose-actions button{padding:0 8px;font-size:12px;color:var(--_muted)}
   .compose-actions .compose-backspace{font-size:16px;line-height:1}
   .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;flex:1;min-width:0;min-height:104px;padding:12px;border-color:var(--_line);
-    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
@@ -863,7 +902,7 @@
   .jamo-group h4{margin:2px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
   .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}
   .jamo-key{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:19px;line-height:1;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
@@ -871,11 +910,11 @@
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
-  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean",var(--ids-ui-font,system-ui,sans-serif)}
+  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu",var(--ids-ui-font,system-ui,sans-serif)}
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .part.compound{position:relative;padding:5px}
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;

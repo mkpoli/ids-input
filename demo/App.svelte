@@ -19,6 +19,7 @@
   import overwriteIds from '../data/ids-overwrites.tsv?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import shuishuData from '../data/shuishu.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import forms from '../data/component-forms.tsv?url'
@@ -66,7 +67,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo, chains })
 
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
@@ -734,7 +735,7 @@
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }

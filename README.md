@@ -48,6 +48,11 @@ editor. Syllable searches the 11,172 modern syllables by character, jamo,
 code point; the romanization is a syllable spelling without the assimilation rules that cross
 syllable boundaries.
 
+The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
+allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
+outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
+`IDS Shuishu` face, and the tab filters them by name, reading and meaning.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
   <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
@@ -182,7 +187,8 @@ forms one syllable is one component; the Hangul palette writes modern combinatio
 syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
-allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
+allocation U+3D000–U+3FC3F, the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE,
+and the proposed Shuishu block U+1B300–U+1B4E5 and U+1B500–U+1B52E.
 A combining mark fills an operand slot when one is due, and trails the whole description when the
 description is complete; only a variation selector attaches to the preceding component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 56,651 bundled font
@@ -1079,7 +1085,7 @@ Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
   rendering and decompositions, and suggestions for component shortcuts, loose marks (濁點,
-  諺文聲調), small-seal decomposition and the New Korean Orthography letters.
+  諺文聲調), small-seal decomposition, the New Korean Orthography letters and Shuishu.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
