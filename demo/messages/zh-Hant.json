@@ -227,5 +227,7 @@
   "compare.reviewNote": "評審用字來自早期han-compose評審材料，其中有些是罕見或實驗性字形。雙方都從IDS繪製。",
   "compare.set.review": "評審用字",
   "compare.setTag.review": "評審",
-  "compare.showMore": "顯示更多"
+  "compare.showMore": "顯示更多",
+  "app.engines": "引擎比較",
+  "compare.engines": "引擎比較"
 }

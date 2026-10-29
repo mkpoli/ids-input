@@ -155,7 +155,7 @@
     {/if}
 
     <footer>
-      <p>{t('compare.credit')}
+      <p><a href="./engines.html">{t('compare.engines')}</a> · {t('compare.credit')}
         <a href="https://zi.tools/" target="_blank" rel="noreferrer">zi.tools</a> ·
         <a href="https://glyphwiki.org/" target="_blank" rel="noreferrer">GlyphWiki</a> ·
         <a href="https://github.com/kurgm/kage-engine" target="_blank" rel="noreferrer">KAGE</a>.
