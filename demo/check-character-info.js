@@ -55,10 +55,10 @@ try {
     await field.fill('⿰木火'); await panel.waitFor({state:'hidden'})
     assert.match(await page.locator('.ids-tree [data-character="木"]').getAttribute('title'), /木/)
     assert.doesNotMatch(await page.locator('.ids-tree [data-character="木"]').getAttribute('title'), /水/)
-    // Inspect unfiltered Common and Tangut tiles without inserting either one.
+    // Inspect unfiltered Components and Tangut tiles without inserting either one.
     await page.keyboard.press('Escape')
-    const tabs=page.locator('.parts-tabs [role="tab"]'), filter=page.locator('.ids-parts input')
-    await tabs.filter({hasText:'Common'}).click()
+    const tabs=page.locator('.parts-tabs [role="tab"]'), filter=page.locator('.parts-filter')
+    await tabs.filter({hasText:'Components'}).click()
     const paletteHorse=page.locator('.part[data-character="馬"]'), unchanged=await field.inputValue()
     await paletteHorse.locator('.part-text').hover()
     // Reproduce the queued scroll event that can follow scrollIntoView + pointermove.
@@ -71,9 +71,10 @@ try {
     await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(100)
     if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-parts-common-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})
     // Scrolling the inspected tile away must still dismiss its card.
-    await page.locator('.pane.input').evaluate(el=>{el.scrollTop+=160})
+    await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
     await panel.waitFor({state:'hidden'})
     await tabs.filter({hasText:'Tangut'}).click()
+    await filter.fill('𘥇')
     const pick=page.locator('.part[data-character="𘥇"]')
     await pick.locator('.part-text').hover();await panel.waitFor({state:'visible'})
     await panel.getByText('associated with horses',{exact:true}).waitFor()
@@ -122,7 +123,7 @@ try {
     assert.equal(await field.inputValue(),'⿰𘆽水')
     // A palette relation uses the selected destination; it does not replace a matching input glyph.
     await page.locator('.ids-tree [data-character="水"]').click()
-    await page.keyboard.press('Escape');await tabs.filter({hasText:'Common'}).click();await filter.fill('馬')
+    await page.keyboard.press('Escape');await tabs.filter({hasText:'Components'}).click();await filter.fill('馬')
     await paletteHorse.hover()
     await panel.getByRole('button',{name:/^Insert 𘆽(?: ·|$)/}).click()
     assert.equal(await field.inputValue(),'⿰𘆽𘆽')
