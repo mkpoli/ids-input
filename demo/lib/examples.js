@@ -338,6 +338,25 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱坪乙', char: '', reading: '펼' },
     { sequence: '⿱呼乙', char: '', reading: '홀' },
   ] },
+  // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
+  // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
+  { key: 'gugyeol', refs: [1, 30], examples: [
+    { sequence: '⿱𠆢丶', char: '亽', reading: '나' },
+    { sequence: '⿱亦乁', char: '亪', reading: '란' },
+    { sequence: '⿱爲了', char: '爳', reading: '료' },
+    { sequence: '⿱厶小', char: '厼', reading: '며' },
+    { sequence: '⿰弓厼', char: '㢱', reading: '며' },
+    { sequence: '⿱一丿', char: '丆', reading: '면' },
+    { sequence: '⿱斜𰆊', char: '厁', reading: '산' },
+    { sequence: '⿱士𰆊', char: '壭', reading: '산' },
+    { sequence: '乛', char: '乛', reading: '야' },
+    { sequence: '𠃌', char: '𠃌', reading: '야' },
+    { sequence: '⿱𠆢⺀', char: '仒', reading: '어' },
+    { sequence: '⿰丶㇒', char: '丷', reading: '하' },
+    { sequence: '⿱丷𰆊', char: '兯', reading: '한' },
+    { sequence: '⿱㇒丷', char: '乊', reading: '호' },
+    { sequence: '⿱乊乙', char: '乥', reading: '홀' },
+  ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [
     {"sequence": "⿰𽁭𽁭", "char": "𽄌", "modern": "玨", "source": "data/small-seal.json.gz"},

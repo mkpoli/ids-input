@@ -867,12 +867,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (`⿰⿳⿰SIR木阝`) and 動L (`⿱成龍`).
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
-  readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`. The group
-  holds the article's complete 음역자 table, ninety-four encoded forms and twenty decompositions,
-  ordered by reading. The article gives each character's radical and code point. Its codas are 乙
-  and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ, and 巴 and 邑 for ㅂ. The encoded
-  descriptions are BabelStone's, all tagged K, fourteen as GKP; the twenty without a code point
-  stand last, as the article writes them.
+  readings and code points of the Korean gukja (國字) and gugyeol (口訣字) examples in
+  `demo/lib/examples.js`. The gukja group holds the article's complete 음역자 table, ninety-four
+  encoded forms and twenty decompositions, ordered by reading. The article gives each character's
+  radical and code point. Its codas are 乙 and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口
+  for ㅁ, and 巴 and 邑 for ㅂ. The encoded descriptions are BabelStone's, all tagged K, fourteen as
+  GKP; the twenty without a code point stand last, as the article writes them.
+  The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
+  厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
+  those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
