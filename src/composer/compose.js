@@ -46,8 +46,15 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
 // Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
+// Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
+// where a child touching it is drawn as it is.
+const SIDE_COVERS = new Set(['宀', '冖'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
+// Share of a child's ink that must meet a cover's side strokes before the child is moved, the room
+// left between the two as a share of the frame's height, and the least share of its size the child
+// keeps when the frame leaves little room.
+const COVER_COLLISION = 0.001, COVER_GAP = 0.01, COVER_SHRINK = 0.5
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
@@ -868,6 +875,7 @@ export class Composer {
     }
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
     this.fitUnderCover(op, children, groups)
+    this.clearUnderCover(op, children, groups, frameOf)
     return groups.flat()
   }
 
@@ -994,6 +1002,7 @@ export class Composer {
       }
     } else if (!compactYan) this.space(axis, groups)
     this.fitUnderCover(op, children, groups)
+    this.clearUnderCover(op, children, groups, region)
     return groups.flat()
   }
 
@@ -1241,6 +1250,27 @@ export class Composer {
         break
       }
     }
+  }
+
+  /** A child under a cover (宀, 冖) whose ink runs into the cover's side strokes: the child moved
+   *  below them and scaled evenly, keeping its proportions and its foot. 穴 and 雨 hang a middle
+   *  stroke where a touch stays as drawn. */
+  clearUnderCover(op, children, groups, frame) {
+    if (this.partial || op !== '⿱' || children.length !== 2 || !SIDE_COVERS.has(children[0])) return
+    const cover = groups[0], lower = groups[1]
+    if (!cover?.length || !lower?.length) return
+    const box = group => {
+      const boxes = group.map(drawnBox)
+      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+        Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+    }
+    const above = box(cover), below = box(lower), height = below[3] - below[1]
+    if (below[3] <= above[1] || height <= 0 || this.collide(cover, lower, frame, 128) <= COVER_COLLISION) return
+    const bottom = Math.max(below[1], frame[1]), top = above[1] - (frame[3] - frame[1]) * COVER_GAP
+    const share = (top - bottom) / height
+    if (share < COVER_SHRINK) return
+    const middle = (below[0] + below[2]) / 2, half = (below[2] - below[0]) / 2 * share
+    for (const part of lower) part.target = mapped(part.target, below, [middle - half, bottom, middle + half, top])
   }
 
   // ---------------------------------------------------------------- weight

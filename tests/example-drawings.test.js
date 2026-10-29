@@ -60,6 +60,16 @@ describe('the prepared example drawings', () => {
   })
 })
 
+it('keeps the cover clear of the 招財進寶 ligature', () => {
+  const drawing = data.drawings['⿱宀⿺辶⿱⿰王尔⿲隹貝招']?.drawn
+  const cover = drawing.parts.reduce((top, part) => part.box[1] < top.box[1] ? part : top)
+  expect(cover.origin).toMatch(/^learned /)
+  for (const part of drawing.parts) {
+    if (part === cover) continue
+    expect(part.box[1]).toBeGreaterThanOrEqual(cover.box[1] + cover.box[3] - 0.5)
+  }
+})
+
 it('prepares the additional enclosure, kana and musical forms', () => {
   for (const sequence of ['⿺辶說', '⿱龹幸', '⿶む子', '〾⿱⿰大⿱七六⿵勹五', '⿰⿱興興⿱興興', '⿱七⿰七七', '⿺克千']) {
     const drawn = data.drawings[sequence]?.drawn
