@@ -38,6 +38,14 @@
   "app.examples.geba": "게바자",
   "app.examples.ligature": "합자",
   "app.examples.korean": "한국 국자",
+  "app.examples.gugyeol": "한국 구결자",
+  "app.examples.kokuji": "일본 국자",
+  "app.examples.nom": "베트남 쯔놈",
+  "app.examples.filter": "수열·읽기·코드 포인트로 거르기",
+  "app.examples.filterAll": "전체",
+  "app.examples.encoded": "코드 포인트 있음",
+  "app.examples.unencoded": "코드 포인트 없음",
+  "app.examples.noMatch": "해당하는 예가 없습니다.",
   "app.examples.abbreviation": "약자",
   "app.examples.cards": "카드",
   "app.examples.list": "목록",
@@ -245,5 +253,7 @@
   "compare.setTag.review": "검토",
   "compare.showMore": "더 보기",
   "app.engines": "엔진 비교",
-  "compare.engines": "엔진 비교"
+  "compare.engines": "엔진 비교",
+  "app.layers.oncanvas": "캔버스에서 편집",
+  "app.layers.history": "기록"
 }

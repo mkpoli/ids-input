@@ -78,9 +78,13 @@ try {
     assert.equal(await field.inputValue(),unchanged)
     await page.evaluate(()=>document.fonts.ready);await page.waitForTimeout(100)
     if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-parts-common-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})
-    // Scrolling the inspected tile away must still dismiss its card.
+    // Scrolling the inspected tile away must still dismiss its card. Hovering a tile scrolls it
+    // into view, so the pane is already at its end; go back to the top, then restore the reading
+    // position for the steps after this one.
+    const reading = await page.locator('.pane.input').evaluate(el=>el.scrollTop)
     await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
     await panel.waitFor({state:'hidden'})
+    await page.locator('.pane.input').evaluate((el,top)=>{el.scrollTop=top},reading)
     // A click keeps the card while the pointer crosses the other tiles on its way to the buttons.
     await page.locator('.ids-tree [data-character="木"]').click()
     await paletteHorse.scrollIntoViewIfNeeded()
@@ -103,7 +107,9 @@ try {
     await page.locator('.ids-field').scrollIntoViewIfNeeded()
     await field.click();await page.keyboard.press('Control+a');await page.keyboard.type('⿰木火')
     await field.press('Tab');await page.waitForTimeout(300)
+    await page.locator('.pane.input').evaluate((el,top)=>{el.scrollTop=top},reading)
     await tabs.filter({hasText:'Tangut'}).click()
+    // The Tangut palette pages thousands of outlines; find the tile rather than assume page one.
     await filter.fill('𘥇')
     const pick=page.locator('.part[data-character="𘥇"]')
     await pick.locator('.part-text').hover();await panel.waitFor({state:'visible'})

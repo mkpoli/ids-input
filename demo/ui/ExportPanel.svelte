@@ -6,12 +6,12 @@
   import { download, fileName } from '../lib/files.js'
   import Icon from './Icon.svelte'
 
-  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
-  let { drawing = null, scopes = null, sequence, t, onnote } = $props()
+  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][], sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
+  let { drawing = null, scopes = null, slots = [], sequence, t, onnote } = $props()
   let s = $state(storedSettings())
   $effect(() => keepSettings($state.snapshot(s)))
   const ready = $derived(Boolean(scopes ?? drawing))
-  const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
+  const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
 
   /** @param {'svg' | 'png'} [format] */
   export async function save(format) {
@@ -19,16 +19,16 @@
     // The click's drawing, name and settings: the export runs on after the page has moved on.
     const drawn = drawing, drawnScopes = scopes, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
-      if (settings.format === 'svg') download(new Blob([drawnScopes ? scopedSvgOf(drawnScopes, settings) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
-      else download(drawnScopes ? await scopedPngOf(drawnScopes, settings) : await pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), fileName(name, 'png'))
+      if (settings.format === 'svg') download(new Blob([drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
+      else download(drawnScopes ? await scopedPngOf(drawnScopes, settings, slots) : await pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), fileName(name, 'png'))
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {
     if (!ready) return
     const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
     try {
-      if (settings.format === 'svg') await navigator.clipboard.writeText(drawnScopes ? scopedSvgOf(drawnScopes, settings) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings))
-      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': drawnScopes ? scopedPngOf(drawnScopes, settings) : pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings) })])
+      if (settings.format === 'svg') await navigator.clipboard.writeText(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings))
+      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': drawnScopes ? scopedPngOf(drawnScopes, settings, slots) : pngOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings) })])
       onnote(t('app.export.copied', { format }))
     } catch { onnote(t('app.copyFailed')) }
   }

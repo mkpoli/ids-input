@@ -16,7 +16,7 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
-/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number }} SvgOptions */
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][] }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
 /**
@@ -27,7 +27,7 @@ const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fil
  * @param {ScopeTree} drawing @param {SvgOptions} [options]
  * @returns {ScopedMarkup}
  */
-export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0 } = {}) {
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [] } = {}) {
   const fill = ink === 'currentColor' ? 'currentColor' : colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
   const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
@@ -88,7 +88,14 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
 
   const body = drawing.root ? render(drawing.root) : ''
   const backgroundRect = back ? `<rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="${back}"/>` : ''
-  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}`, background: back ?? '', width, padding: pad, span }
+  /** @param {number[]} box */
+  const slotRect = box => {
+    const [x, y, width, height] = box.slice(0, 4).map(Number)
+    if ([x, y, width, height].some(value => !Number.isFinite(value)) || width <= 0 || height <= 0) return ''
+    return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="18" fill="none" stroke="${fill}" stroke-width="5" stroke-dasharray="12 8" opacity="0.55"/>`
+  }
+  const slotsMarkup = slots.map(slotRect).join('')
+  return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${body}${slotsMarkup}`, background: back ?? '', width, padding: pad, span }
 }
 
 /**

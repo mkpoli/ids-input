@@ -26,11 +26,14 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, editable?: boolean, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], editable?: boolean, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), editable = false, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
+  // Serif outlines carry tiny self-overlap and open joins; a hairline stroke of the same ink
+  // seals them without changing the drawn weight.
+  const seal = $derived(adapter.fontStyle === 'serif')
 
   const uid = $props.id()
   const sequence = $derived(write(tree))
@@ -66,7 +69,7 @@
 
   const said = $derived(badge(step, shown?.drawn))
   /** @type {Record<string, string>} */
-  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', tooLarge: 'ids.preview.tooLargeNote' }
+  const NOTES = { approximate: 'ids.preview.approximateNote', failed: 'ids.preview.failedNote', cells: 'ids.preview.cellsNote', tooLarge: 'ids.preview.tooLargeNote' }
   const NAMES = /** @type {Record<string, string>} */ ({ '⿼': 'fromRight', '⿽': 'fromLowerRight', '⿾': 'mirrored', '⿿': 'rotated', '㇯': 'subtracted', '〾': 'variant' })
   // The operators named in words: their characters are too new for most fonts to show.
   const named = $derived(/** @type {Record<string, string>} */ (said.params.ops ? { ops: said.params.ops.split(' ').map((/** @type {string} */ op) => NAMES[op] ? t(`ids.op.${NAMES[op]}`) : op).join(' · ') } : {}))
@@ -92,7 +95,8 @@
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {
     scopes = view?.scopes ?? null
-    drawing = view ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
+    slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
+    drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
   })
   const chosenLayer = $derived(localDoc && chosen ? layerAtPath(localDoc.root, chosen) : null)
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
@@ -257,7 +261,7 @@
                     {/each}
                   </mask>
                 {/if}
-                <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
+                <path class="ink" class:seal d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
@@ -343,6 +347,7 @@
   .final{background:currentColor;-webkit-mask:var(--drawing) center/100% 100% no-repeat;mask:var(--drawing) center/100% 100% no-repeat}
   @media (forced-colors: active){.final{forced-color-adjust:none;background:CanvasText}.ink{fill:CanvasText}}
   .ink{fill:currentColor}
+  .ink.seal{stroke:currentColor;stroke-width:2;stroke-linejoin:round}
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}

@@ -78,8 +78,12 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
   /** @type {DocumentSession} */
   let session
 
-  /** @param {string} fallback */
-  const name = fallback => ({ replace: `Replace ${fallback}`, decompose: `Decompose ${fallback}`, wrap: `Wrap ${fallback}`, unwrap: `Unwrap ${fallback}`, operator: `Change ${fallback}`, delete: `Delete ${fallback}`, transform: `Transform ${fallback}`, clear: `Clear ${fallback}` })
+  /** A layer name a person can recognize in the undo history. @param {string} id */
+  const name = id => {
+    const node = findLayer(document.root, id)?.node
+    const fallback = node?.name ?? (node?.kind === 'component' ? node.char : node?.kind === 'operator' ? node.op : node?.kind === 'slot' ? '⬚' : id)
+    return { replace: `Replace ${fallback}`, decompose: `Decompose ${fallback}`, wrap: `Wrap ${fallback}`, unwrap: `Unwrap ${fallback}`, operator: `Change ${fallback}`, delete: `Delete ${fallback}`, transform: `Transform ${fallback}`, clear: `Clear ${fallback}` }
+  }
 
   /** @param {unknown} error */
   const reportListenerError = error => {

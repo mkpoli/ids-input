@@ -178,6 +178,30 @@ Notes on the columns:
   A CJK stroke counts 1 and is marked derived; other missing counts use the sum over the leaves
   of the first fully counted decomposition. All Han palette entries have a count.
 
+## `sketch-parts.json.gz`
+
+The drawing search's prepared glyph shapes: the palette's 803 parts, each fitted to the 40×40
+square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 104 KB
+gzipped. Format:
+
+```json
+{"format":"ids-input/sketch-parts","version":1,"size":40,"font":"…","fonts":{"file":"sha256"},
+ "parts":[["木",4,3348,"<base64 stretched>","<base64 kept>"]]}
+```
+
+Rebuild with `uv run scripts/build_sketch_parts.py` (or `bun run build:sketch-parts`). The script
+draws each part with Noto Sans CJK JP 2.004 at `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`
+(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3 and the Plangothic P1/P2
+palette subset. If none of those faces has a glyph, it uses the `IDS Fallback` shards in
+`fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and provenance are recorded in
+`fonts/unicode.json`; it skips a part drawn as the notdef box. The script checks Noto's SHA-256
+against the build it came from and records the primary font hashes and the `unicode.json` manifest
+hash in the file. The shapes derive from those fonts and fallback shards; their SIL OFL 1.1 terms
+apply (see `fonts/README.md`). `src/core/sketch-data.js` decodes the file and describes each mask for
+matching;
+`babelStoneAdapter({ sketches })` serves it, and the pad falls back to drawing the page's fonts when
+a host has no prepared file.
+
 ## component-forms.tsv
 
 Component forms that stand for another character (⺡ for 氵, 氵 for 水), which the description search
@@ -371,11 +395,13 @@ The keys of the bundled Tangut outline records, used to browse the full Tangut p
 
 ## `tangut-strokes.json.gz`
 
-The nominal stroke count of each Tangut ideograph, read from Unicode 18.0.0's
+The stroke count of every Tangut character in the list. The ideographs come from Unicode 18.0.0's
 `TangutSources.txt`: `kTGT_RSUnicode` gives the radical number and the total stroke count, so
-`1.6` is six strokes. 6,177 ideographs have one, from 4 to 22 strokes; the Tangut components in
-U+18800–U+18AFF are not ideographs and have none. Rebuild with
-`node scripts/build_tangut_strokes.mjs`, which pins the file's SHA-256
+`1.6` is six strokes, and 6,177 ideographs have one, from 4 to 22 strokes. The 768 Tangut components
+in U+18800–U+18AFF were counted from their glyphs and live in `tangut-component-strokes.tsv`, one
+`U+18800<TAB>1` line per component, 1 to 13 strokes. Each description's count is the sum of its
+parts', which covers the 6,107 descriptions in 4 to 22 strokes. Rebuild with
+`node scripts/build_tangut_strokes.mjs`, which pins the Unicode file's SHA-256
 (`ae440bd9bba89b2610cfe6b498ac462d2763dd32bfead8ac30d32988b5b67a27`). Unicode data is
 distributed under the Unicode License v3.
 

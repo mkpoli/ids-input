@@ -39,6 +39,14 @@
   "app.examples.geba": "Geba-ji",
   "app.examples.ligature": "Word ligatures",
   "app.examples.korean": "Korean gukja",
+  "app.examples.gugyeol": "Korean gugyeol",
+  "app.examples.kokuji": "Japanese kokuji",
+  "app.examples.nom": "Vietnamese Nôm",
+  "app.examples.filter": "Filter by sequence, reading or code point",
+  "app.examples.filterAll": "All",
+  "app.examples.encoded": "Code point",
+  "app.examples.unencoded": "No code point",
+  "app.examples.noMatch": "No examples match.",
   "app.examples.abbreviation": "Abbreviation",
   "app.examples.cards": "Cards",
   "app.examples.list": "List",
@@ -246,5 +254,7 @@
   "compare.setTag.review": "review",
   "compare.showMore": "Show more",
   "app.engines": "Engine comparison",
-  "compare.engines": "Engine comparison"
+  "compare.engines": "Engine comparison",
+  "app.layers.oncanvas": "Edit on canvas",
+  "app.layers.history": "History"
 }

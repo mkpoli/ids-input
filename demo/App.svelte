@@ -7,6 +7,7 @@
   import { tick, untrack } from 'svelte'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
+  import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
@@ -21,6 +22,7 @@
   import sealData from '../data/small-seal.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
+  import sketches from '../data/sketch-parts.json.gz?url'
   import forms from '../data/component-forms.tsv?url'
   import names from '../data/component-names.tsv?url'
   import folds from '../data/component-name-folds.tsv?url'
@@ -33,7 +35,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { documentFrom, linkTo, sequenceFrom } from './lib/share.js'
+  import { addressDocument, documentFrom, linkTo, sequenceFrom } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -66,7 +68,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const babel = { ...sealAdapter, parts: async () => {
     const curated = await sealAdapter.parts()
@@ -77,6 +79,7 @@
   let adjusting = $state(false)
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
+  let slots = $state(/** @type {number[][]} */ ([]))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
@@ -136,6 +139,7 @@
     const serif = previewAt(COMPOSER_BASES.serif, split, 'serif')
     const sans = sansPreviewAt(split)
     const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
+    const draw = defaultFace ? sans : composed
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
@@ -151,21 +155,23 @@
         if ([...char].length !== 1 || char === sequence) continue
         try { return await composed(char, options) } catch { /* compose the sequence */ }
       }
-      // A description that names a character draws that character: a sequence the composer does not
-      // know would otherwise be laid out by a guess of its own. A description with an operator
-      // modifier is left to the exact answer above, since the modifier-free reading is only a guess.
-      if (!split && !sequence.includes('[')) {
+      // A description built on an operator the composer only approximates draws the character it
+      // names: the layout has no crossing, subtraction or mirror to place. Descriptions of ordinary
+      // parts keep the layout, and a modifier is left to the exact answer above, since the
+      // modifier-free reading is only a guess.
+      if (!sequence.includes('[') && APPROXIMATE.some(operator => sequence.includes(operator))) {
         const [named] = await babel.encoded(sequence).catch(() => [])
         if (named !== undefined && [...named].length === 1 && named !== sequence) {
-          try { return await composed(named, { signal: options?.signal }) } catch { /* compose it */ }
+          try { return await draw(named, options) } catch { /* compose it */ }
         }
       }
-      const draw = defaultFace ? sans : composed
       try {
         const drawn = await draw(sequence, options)
         // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
-        // description (术 is ⿺木丶), so the Kaisho face borrows the Serif drawing then.
-        if (style === 'kaisho' && !split && drawn?.missing?.length) {
+        // description (术 is ⿺木丶), and a description it cannot cut is assembled from unscaled whole
+        // operands. The Kaisho face borrows the Serif drawing in both cases.
+        const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
+        if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
           try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
@@ -388,7 +394,7 @@
     layerChanged()
   }
   // The address starts on the tab shown, as it does after every change.
-  history.replaceState(null, '', linkTo(editor.draft, location))
+  history.replaceState(null, '', linkTo(editor.draft, location, addressDocument(sessionFor(initial).document)))
   // Each change stays in its tab and is written into the address, so the link opens it; the tabs
   // and the active one are kept at the same time, a keystroke at a time.
   $effect(() => editor.listen(text => {
@@ -399,7 +405,7 @@
       keepTabSession(tab)
     }
     store()
-    history.replaceState(null, '', linkTo(text, location))
+    syncAddress()
   }))
   untrack(store)
 
@@ -451,7 +457,9 @@
     const tab = current()
     if (!tab) return
     tab.document = sessionRecord(sessionFor(tab))
+    documentTick++
     store()
+    syncAddress()
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -460,6 +468,7 @@
     const session = sessionFor(tab)
     editor.open(toSequence(session.document.root))
     tab.document = sessionRecord(session)
+    documentTick++
     store()
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
@@ -487,10 +496,16 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    syncAddress()
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
   function redoAction() { if (!travelLayer(false)) editor.redo() }
+  /** Keep the address on the active tab, including transforms when they carry state. */
+  function syncAddress() {
+    const tab = current()
+    history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
+  }
   /** The active tab's complete document, for sharing. */
   function currentDocument() {
     const tab = current()
@@ -519,6 +534,7 @@
     if (kept) editor.restore(kept)
     else editor.reset(tab.sequence)
     store()
+    syncAddress()
   }
   /** A new empty tab, or one over `sequence`, shown at once. @param {string} [sequence] */
   function addTab(sequence = '') {
@@ -709,8 +725,8 @@
     } catch { note(t('app.edit.pasteFailed')) }
   }
   function selectAll() { if (editor.tree !== null) { editor.choose([], { toggle: false }); editor.focusChosen(work) } }
-  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] */
-  function exampleItem(example, lang, groupRefs = []) {
+  /** @param {{ sequence: string, char: string, refs?: number[], abbreviates?: string, modern?: string, reading?: string }} example @param {string} lang @param {number[]} [groupRefs] @param {string} [readingLang] */
+  function exampleItem(example, lang, groupRefs = [], readingLang = 'ja') {
     const point = example.char ? cp(example.char) : ''
     const target = example.char || example.abbreviates || ''
     const citation = (example.refs ?? groupRefs).map(/** @param {number} n */ n => `[${n}]`).join('')
@@ -721,6 +737,7 @@
       sequence: example.sequence,
       note: [noteText, citation].filter(Boolean).join(' '),
       reading: example.reading,
+      readingLang,
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
@@ -730,9 +747,16 @@
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs)),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
-  const exampleView = $derived({ list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards, onchange: (/** @type {boolean} */ cards) => exampleCards = cards })
+  const exampleView = $derived({
+    list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
+    onchange: (/** @type {boolean} */ cards) => exampleCards = cards,
+    filter: {
+      label: t('app.examples.filter'), all: t('app.examples.filterAll'), encoded: t('app.examples.encoded'),
+      unencoded: t('app.examples.unencoded'), empty: t('app.examples.noMatch'),
+    },
+  })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -836,10 +860,12 @@
       </div>
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
-        <svg class="sponsor-heart" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
-          <ellipse class="shine" cx="7.6" cy="9.6" rx="1.5" ry="2.1" transform="rotate(-30 7.6 9.6)" />
-        </svg>
+        <span class="sponsor-face" aria-hidden="true">
+          <img src="/sponsor-face.webp" alt="" width="24" height="24" decoding="async" />
+          <svg class="sponsor-heart" viewBox="0 0 24 24">
+            <path d="M12 21s-8.5-5.1-8.5-11.3A4.7 4.7 0 0 1 12 6.9a4.7 4.7 0 0 1 8.5 2.8C20.5 15.9 12 21 12 21Z" />
+          </svg>
+        </span>
         <span class="sponsor-label">{t('app.sponsor.label')}</span>
       </button>
       <div class="end">
@@ -938,7 +964,7 @@
         <div class="preview">
           {#key activeId}
             <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes
+              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
               editable={adjusting} onedit={layerChanged} bind:drawing>
               {#snippet detailContent()}
                 {#each encoded as ch (ch)}
@@ -960,7 +986,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -993,7 +1019,8 @@
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
-  onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged} />
+  onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
+  oncanvas={() => { layerOpen = false; adjusting = true }} />
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
     <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
@@ -1029,18 +1056,21 @@
   .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
   .group :global(.tool:focus-visible){outline-offset:-2px}
   .end{margin-left:0}
-  /* The sponsor button: a soft pink pill with a heart that beats now and then, so it stands out
-     from the grey toolbar without shouting. Hovering makes the heart bounce and the pill lift. */
+  /* The sponsor button: a soft pink pill led by the author's face, with a small heart on it that beats
+     now and then, so it stands out from the grey toolbar without shouting. Hovering makes the heart
+     bounce and the pill lift. */
   .sponsor{--sp-from:light-dark(#ffe6ef,#3d1a2b);--sp-to:light-dark(#fff0e0,#3a2318);
     --sp-ink:light-dark(#c2185b,#ffb3cd);--sp-line:light-dark(#ffc2d6,#6b2c47);--sp-heart:light-dark(#ff4f88,#ff7aa6);
-    display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:none;height:32px;padding:0 14px 0 11px;margin-inline:auto;
+    display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:none;height:32px;padding:0 14px 0 4px;margin-inline:auto;
     border:1px solid var(--sp-line);border-radius:999px;background:linear-gradient(135deg,var(--sp-from),var(--sp-to));color:var(--sp-ink);font:inherit;font-size:13px;font-weight:650;
     cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgb(194 24 91 / .12);transition:transform .18s ease,box-shadow .18s ease}
   .sponsor:hover,.sponsor:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgb(255 79 136 / .28)}
   .sponsor:active{transform:translateY(0) scale(.97)}
   .sponsor:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .sponsor-heart{width:16px;height:16px;flex:none;fill:var(--sp-heart);overflow:visible;transform-origin:50% 60%;animation:sponsor-beat 2.8s ease-in-out infinite}
-  .sponsor-heart .shine{fill:#fff;opacity:.55}
+  .sponsor-face{position:relative;flex:none;width:24px;height:24px}
+  .sponsor-face img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px light-dark(#fff,#3d1a2b),0 0 0 2.5px var(--sp-line)}
+  .sponsor-heart{position:absolute;right:-4px;bottom:-3px;width:12px;height:12px;fill:var(--sp-heart);stroke:light-dark(#fff,#3d1a2b);stroke-width:2.5;paint-order:stroke;
+    overflow:visible;transform-origin:50% 60%;animation:sponsor-beat 2.8s ease-in-out infinite}
   .sponsor:hover .sponsor-heart,.sponsor:focus-visible .sponsor-heart{animation:sponsor-bounce .6s ease-in-out infinite}
   .sponsor-label{line-height:1}
   @keyframes sponsor-beat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.22)}86%{transform:scale(.96)}93%{transform:scale(1.12)}}
@@ -1048,7 +1078,7 @@
   /* Below the full toolbar width the header already wraps; keep Sponsor with the right-hand
      controls there, and centre it in the free space only while the bar stays on one row. */
   @media (min-width:641px) and (max-width:1100px){
-    .sponsor{padding:0 11px 0 9px;font-size:12px}
+    .sponsor{padding:0 11px 0 4px;font-size:12px}
   }
   @media (min-width:641px) and (max-width:1024px){
     .end{margin-left:auto}
@@ -1165,11 +1195,11 @@
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
     .pane{padding:14px}
-    .sponsor{padding:0 10px}
+    .sponsor{padding:0 12px 0 4px}
   }
   @media (max-width:460px){
     .sponsor{width:32px;padding:0}
     .sponsor-label{display:none}
-    .sponsor-heart{width:18px;height:18px}
+    .sponsor-face{width:26px;height:26px}
   }
 </style>

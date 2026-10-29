@@ -30,8 +30,8 @@ export function inkOf(s) {
 /** @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @param {number} [size] */
 export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, placeholders: s.placeholders })
 
-/** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] */
-export const scopedSvgOf = (scopes, s, size = s.size) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size })
+/** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] @param {number[][]} [slots] */
+export const scopedSvgOf = (scopes, s, size = s.size, slots = []) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [] })
 
 /** The SVG string as a PNG blob at its pixel size. @param {string} svg @param {number} size @returns {Promise<Blob>} */
 async function pngOfSvg(svg, size) {
@@ -50,5 +50,5 @@ async function pngOfSvg(svg, size) {
 /** The drawing as a PNG blob at its pixel size. @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @returns {Promise<Blob>} */
 export const pngOf = (drawing, s) => pngOfSvg(svgOf(drawing, s), s.size)
 
-/** The scoped drawing as a PNG blob at its pixel size. @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @returns {Promise<Blob>} */
-export const scopedPngOf = (scopes, s) => pngOfSvg(scopedSvgOf(scopes, s), s.size)
+/** The scoped drawing as a PNG blob at its pixel size. @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number[][]} [slots] @returns {Promise<Blob>} */
+export const scopedPngOf = (scopes, s, slots = []) => pngOfSvg(scopedSvgOf(scopes, s, s.size, slots), s.size)

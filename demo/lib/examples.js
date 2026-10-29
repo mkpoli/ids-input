@@ -72,6 +72,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱地⿰地地', refs: [40], char: '' },
     { sequence: '⿱里⿰里里', refs: [39], char: '' },
     { sequence: '⿱莫⿰莫莫', refs: [39], char: '' },
+    { sequence: '⿱無⿰無無', refs: [45], char: '𲬺' },
     // 二同系: stacked, side by side, mirrored and covered pairs.
     { sequence: '⿱火火', refs: [1,44], char: '炎' },
     { sequence: '⿱土土', refs: [1,44], char: '圭' },
@@ -200,12 +201,20 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
-  // Word ligatures put a phrase inside one square. 招財進寶 follows the U-source record UTC-00949;
-  // the Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji
-  // article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
-  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo).
+  // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
+  // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
+  // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
+  // thin band. The Cantonese Wikipedia article gives 草泥馬 and 阿Sir with their descriptions. The
+  // Geba-ji article gives the remaining forms: コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土),
+  // 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K) and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other
+  // New Year 合文 share strokes between their characters, as 唯吾知足 does with one 口, and an IDS
+  // tree cannot share a component, so they are not examples.
   { key: 'ligature', examples: [
-    { sequence: '⿱宀⿺辶⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
+    // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
+    // 辶's embrace, which is what the example draws.
+    { sequence: '⿺辶⿱宀⿱⿰王尔⿲隹貝招', refs: [41,42], char: '' },
+    { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
+    { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
@@ -336,6 +345,69 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱吐乙', char: '', reading: '톨' },
     { sequence: '⿱坪乙', char: '', reading: '펼' },
     { sequence: '⿱呼乙', char: '', reading: '홀' },
+  ] },
+  // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
+  // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
+  { key: 'gugyeol', refs: [1, 30], examples: [
+    { sequence: '⿱𠆢丶', char: '亽', reading: '나' },
+    { sequence: '⿱亦乁', char: '亪', reading: '란' },
+    { sequence: '⿱爲了', char: '爳', reading: '료' },
+    { sequence: '⿱厶小', char: '厼', reading: '며' },
+    { sequence: '⿰弓厼', char: '㢱', reading: '며' },
+    { sequence: '⿱一丿', char: '丆', reading: '면' },
+    { sequence: '⿱斜𰆊', char: '厁', reading: '산' },
+    { sequence: '⿱士𰆊', char: '壭', reading: '산' },
+    { sequence: '乛', char: '乛', reading: '야' },
+    { sequence: '𠃌', char: '𠃌', reading: '야' },
+    { sequence: '⿱𠆢⺀', char: '仒', reading: '어' },
+    { sequence: '⿰丶㇒', char: '丷', reading: '하' },
+    { sequence: '⿱丷𰆊', char: '兯', reading: '한' },
+    { sequence: '⿱㇒丷', char: '乊', reading: '호' },
+    { sequence: '⿱乊乙', char: '乥', reading: '홀' },
+  ] },
+  // Japanese kokuji (国字): characters first made in Japan, in reading order. The list follows the
+  // Wikipedia article's examples; readings are kana from that article or KANJIDIC2.
+  { key: 'kokuji', refs: [1, 47], examples: [
+    { sequence: '⿰魚弱', char: '鰯', reading: 'いわし' },
+    { sequence: '⿰木堅', char: '樫', reading: 'かし' },
+    { sequence: '⿺瓦千', char: '瓩', reading: 'キログラム' },
+    { sequence: '⿰米千', char: '粁', reading: 'キロメートル' },
+    { sequence: '⿰立千', char: '竏', reading: 'キロリットル' },
+    { sequence: '⿰魚康', char: '鱇', reading: 'コウ' },
+    { sequence: '⿺辶入', char: '込', reading: 'こむ' },
+    { sequence: '⿰木神', char: '榊', reading: 'さかき' },
+    { sequence: '⿰身美', char: '躾', reading: 'しつけ' },
+    { sequence: '⿰木昌', char: '椙', reading: 'すぎ' },
+    { sequence: '⿰月泉', char: '腺', reading: 'せん' },
+    { sequence: '⿰魚雪', char: '鱈', reading: 'たら' },
+    { sequence: '⿺辶十', char: '辻', reading: 'つじ' },
+    { sequence: '⿰山𠧗', char: '峠', reading: 'とうげ' },
+    { sequence: '⿹勹匕', char: '匂', reading: 'におう' },
+    { sequence: '⿰火田', char: '畑', reading: 'はたけ' },
+    { sequence: '⿰亻動', char: '働', reading: 'はたらく' },
+    { sequence: '⿰釒武', char: '錻', reading: 'ぶりき' },
+    { sequence: '⿰土屏', char: '塀', reading: 'へい' },
+    { sequence: '⿰木正', char: '柾', reading: 'まさき' },
+    { sequence: '⿰立毛', char: '竓', reading: 'ミリリットル' },
+    { sequence: '⿰木⿱艹⿰亻𠤎', char: '椛', reading: 'もみじ' },
+    { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
+    { sequence: '⿰木卆', char: '枠', reading: 'わく' },
+  ] },
+  // Vietnamese Nôm: characters invented to write Vietnamese, in reading order. The forms and their
+  // readings follow the Wikipedia article's Tale of Kiều example and its account of invented characters.
+  { key: 'nom', refs: [1, 48], examples: [
+    { sequence: '⿺巴三', char: '𠀧', reading: 'ba' },
+    { sequence: '⿰宁字', char: '𡨸', reading: 'chữ' },
+    { sequence: '⿰土癸', char: '𡎝', reading: 'cõi' },
+    { sequence: '⿰忄吉', char: '恄', reading: 'ghét' },
+    { sequence: '⿱罒𪜀', char: '𱺵', reading: 'là' },
+    { sequence: '⿴𰀪⺀', char: '𫜵', reading: 'làm' },
+    { sequence: '⿱丷又', char: '𠬠', reading: 'một' },
+    { sequence: '⿰南年', char: '𢆥', reading: 'năm' },
+    { sequence: '⿰㝵人', char: '𠊛', reading: 'người' },
+    { sequence: '⿱百林', char: '𤾓', reading: 'trăm' },
+    { sequence: '⿺竜内', char: '𥪞', reading: 'trong' },
+    { sequence: '⿱天上', char: '𡗶', reading: 'trời' },
   ] },
   // CHISE Jiguge records in data/small-seal.json.gz; modern labels are correspondences.
   { key: 'seal', refs: [27], examples: [

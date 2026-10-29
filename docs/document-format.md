@@ -384,7 +384,8 @@ draft. `layerAtPath` and `pathOfLayer` bridge editor paths and layer IDs;
 main preview renders the scoped document drawing, Adjust layout writes layer
 transforms, export uses the same scoped drawing, and share links carry the
 document. The workshop’s Undo and Redo consume the session’s transform steps
-before falling back to the editor’s structural history. The core IDS parser and
+before falling back to the editor’s structural history. The address bar adds
+the document token while any layer carries a transform. The core IDS parser and
 writer remain the projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports

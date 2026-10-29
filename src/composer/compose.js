@@ -19,6 +19,7 @@ import { EM_BOX, area, count, drawnBox, drawnContours, fill, fitted, grown, grou
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { isOutbound, markFace, markParts } from './marks.js'
@@ -48,6 +49,23 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
+
+/** A description with this many leaves and no character to follow is drawn in cells: the
+ *  composer's host cuts fit a character's positions, and a dense invented description has none, so
+ *  its parts overlap. */
+const CELL_LEAVES = 8
+/** The gap between cells and the margin inside one, as shares of the cell's box. */
+const CELL_GAP = 0.006
+const CELL_INSET = 0.012
+/** A single top part takes this share of a stacked description's height; the reference design for
+ *  the 108-stroke 「ぼんのう」 gives 苦 about a quarter above a much taller bottom. */
+const CELL_TOP = 0.28
+/** A part may stretch this much to fill its cell, more than the composer allows a placed part. */
+const CELL_STRETCH = 2.4
+/** The axis an enclosure's two parts take when they are drawn apart: down for the top and bottom
+ *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
+ *  enclosure would put them on, since they no longer surround each other. */
+const CELL_AXIS = { '⿵': 1, '⿶': 1 }
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
@@ -242,7 +260,7 @@ export class Composer {
     const previous = this.face
     this.face = face
     try {
-      const out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
+      let out = this.node(this.standaloneExpandedOverlay(rendered) ?? this.standalonePyramid(rendered) ?? this.standaloneRepeatedGrid(rendered) ?? this.normalizeRepeatedGrids(rendered), this.face.slice(), true)
       // Separated drawings retain reading order. Only publish ownership when every
       // rendered leaf produced exactly one piece (including empty placeholders).
       const ownership = this.separate ? this.leafOwners(tree) : null
@@ -250,10 +268,113 @@ export class Composer {
         out.forEach((part, i) => { part.leaf = ownership.owners[i] })
       }
       if (!this.partial && this.weighted) this.balance(out)
+      const construct = CONSTRUCTS[sequence]
+      if (construct && !this.excluded(construct.host)) out = constructParts(construct, out)
       // Loose marks annotate the whole drawing; they take no part in its layout or weight.
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
     } finally { this.face = previous }
+  }
+
+  /** Whether `tree` is drawn in cells (`compose`'s `layout: 'auto'`): no character spells it as a
+   *  whole, it has at least `CELL_LEAVES` leaves, every leaf is a glyph or an empty slot, and every
+   *  node is an axis or an enclosure this layout splits without approximation. A description this
+   *  dense has no designed host forms; drawn in place, its parts overlap each other. */
+  cellsFor(tree, marks = '') {
+    if (marks || this.exclude.size) return false
+    const key = keyOf(tree)
+    if (this.bySequence(key) || this.spelled.has(key)) return false
+    if (this.pyramid(tree)) return false
+    if (isGroupedForm(key, this.fontStyle) || isComponentForm(key, this.fontStyle)) return false
+    let leaves = 0, supported = true
+    const walk = node => {
+      if (!Array.isArray(node)) {
+        leaves++
+        if (!isEmpty(node) && !this.glyph(node)) supported = false
+        return
+      }
+      const op = node[0]
+      if (APPROXIMATE.includes(op) || (!(op in this.AXIS) && !(op in this.ENCLOSE))) { supported = false; return }
+      node.slice(1).forEach(walk)
+    }
+    walk(tree)
+    return supported && leaves >= CELL_LEAVES
+  }
+
+  /** The parts of `tree` drawn in cells: one glyph (or empty slot) per leaf, in a cell its operator
+   *  gives it. Cells are weighted by each subtree's leaf count below the top; an enclosure's parts
+   *  keep the tree's reading order on an axis chosen for the cell's shape, so no cell overlaps
+   *  another. */
+  cellLayout(tree) {
+    let slots = 0
+    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
+    const numbered = number(tree)
+    const out = []
+    let leaf = 0
+    const f = this.face, width = f[2] - f[0], height = f[3] - f[1]
+    const target = box => [f[0] + box[0] * width, f[1] + (1 - box[3]) * height, f[0] + box[2] * width, f[1] + (1 - box[1]) * height]
+    const inset = box => {
+      const w = box[2] - box[0], h = box[3] - box[1]
+      return [box[0] + w * CELL_INSET, box[1] + h * CELL_INSET, box[2] - w * CELL_INSET, box[3] - h * CELL_INSET]
+    }
+    const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
+    const split = (kids, axis, box, equal, override = null) => {
+      const weights = override ?? kids.map(kid => equal ? 1 : Math.sqrt(leaves(kid)))
+      const sum = weights.reduce((a, b) => a + b, 0)
+      const lo = box[axis], span = box[axis + 2] - lo
+      let at = lo
+      return kids.map((kid, i) => {
+        const size = span * weights[i] / sum
+        const b = box.slice()
+        b[axis] = at + (i ? CELL_GAP / 2 : 0)
+        b[axis + 2] = at + size - (i < kids.length - 1 ? CELL_GAP / 2 : 0)
+        at += size
+        return b
+      })
+    }
+    const walk = (node, box, depth) => {
+      if (isEmpty(node)) {
+        const part = this.placeholder(node, inset(target(box)))
+        part.leaf = leaf++
+        out.push(part)
+        return
+      }
+      if (typeof node === 'string') {
+        const glyph = this.glyph(node)
+        if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
+        // A cell allows a little more stretch than a composed part, so the glyph fills it; a
+        // narrow cell still keeps the glyph's proportions instead of turning it into a sliver.
+        const cell = inset(target(box))
+        const part = placed(glyph, glyph.box, fitted(glyph.box, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
+        part.leaf = leaf++
+        out.push(part)
+        return
+      }
+      const op = node[0], kids = node.slice(1)
+      if (op in this.AXIS) {
+        // The top of a stacked description is one part over many; the reference design gives it
+        // less than half the height.
+        const topShare = depth === 0 && this.AXIS[op] === 1 && kids.length === 2 && leaves(kids[0]) === 1 ? [CELL_TOP, 1 - CELL_TOP] : null
+        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare)
+        kids.forEach((kid, i) => walk(kid, boxes[i], depth + 1))
+        return
+      }
+      if (op in this.ENCLOSE) {
+        const namedAxis = CELL_AXIS[op] ?? 0
+        // A cell narrower than it is tall reads better with its parts stacked, and a much wider one
+        // side by side, whatever the enclosure's own direction.
+        const across = box[2] - box[0], down = box[3] - box[1]
+        const axis = namedAxis === 0 && across < down * 0.9 ? 1 : namedAxis === 1 && down < across * 0.8 ? 0 : namedAxis
+        const boxes = split(kids, axis, box, false)
+        walk(kids[0], boxes[0], depth + 1)
+        walk(kids[1], boxes[1], depth + 1)
+        return
+      }
+      throw new LookupError(`${op} is not laid out.`)
+    }
+    walk(numbered, [0, 0, 1, 1], 0)
+    if (!this.partial && this.weighted) this.balance(out)
+    return out
   }
 
   /**
@@ -454,6 +575,8 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    const legs = !this.separate && op === '⿸' && this.legEnclosure(children, region)
+    if (legs) return legs
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
@@ -493,6 +616,45 @@ export class Composer {
       && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
+  }
+
+  /** Any ⿸ whose contents begin ⿱儿: the native legs join the enclosing bar. */
+  legEnclosure(children, region) {
+    if (this.separate || this.fontStyle === 'kaisho') return null
+    const key = keyOf(children[0]), contents = children[1]
+    if (yanSources.has(key) || this.excluded('儿') || this.excluded('元') || this.excluded('詹')
+      || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
+    const outer = this.node(children[0], region)
+    const opening = this.room('⿸', outer, region)
+    if (!opening) return null
+    // 詹, 擔 and 檐 set the width: the 八 under 厃 spans almost the whole
+    // opening at roughly a third of its height. Lift the native cut so its
+    // left leg joins the bar.
+    const form = (opening[2] - opening[0]) < 550 ? '儿:dan' : '儿:zhan'
+    const box = componentPositionBox(form, this.fontStyle)
+    if (!box) return null
+    const openW = opening[2] - opening[0], openH = opening[3] - opening[1], cx = (opening[0] + opening[2]) / 2
+    const width = openW * 0.88
+    const height = width * (box[3] - box[1]) / Math.max(box[2] - box[0], 1)
+    const top = opening[3] + this.C.ROOM_MARGIN * this.stem0[0][0] + 40
+    const bottom = top - height
+    const legs = componentPosition(form, [cx - width / 2, bottom, cx + width / 2, top], this.fontStyle, height)
+    if (!legs) return null
+    const lowerBox = [opening[0], opening[1], opening[2], bottom - 25]
+    const lowerKey = keyOf(contents[2])
+    if (lowerKey === '木') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[3] += openH * 0.03
+    }
+    else if (lowerKey === '𢀛' || lowerKey === '⿱工口') {
+      lowerBox[0] += openW * 0.10
+      lowerBox[2] -= openW * 0.10
+      lowerBox[1] += openH * 0.04
+      lowerBox[3] -= openH * 0.04
+    }
+    const lower = this.node(contents[2], lowerBox)
+    return [...outer, legs, ...lower]
   }
 
   yanEnclosure(children, region) {
