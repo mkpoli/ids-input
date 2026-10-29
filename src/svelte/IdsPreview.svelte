@@ -121,6 +121,45 @@
   const round = value => Math.round(value * 100) / 100
   /** @param {number} value @param {number} low @param {number} high */
   const clamp = (value, low, high) => Math.min(high, Math.max(low, value))
+  /** Apply a canvas-space affine operation to the chosen layer. @param {number[]} operation @param {import('../document/index.js').Chain} base @param {string} id @param {number[]} frameMatrix @param {string} coalesce */
+  function applyCanvas(operation, base, id, frameMatrix, coalesce) {
+    if (!session) return
+    const inverse = invertAffine(frameMatrix)
+    if (!inverse) return
+    const local = multiplyAffine(inverse, multiplyAffine(operation, frameMatrix))
+    session.setTransform([...base, { type: 'affine', matrix: local }], id, { coalesce })
+    localDoc = session.document
+    onedit?.()
+  }
+  /** @param {KeyboardEvent} event */
+  function adjustKey(event) {
+    if (!editable || !session || !chosenLayer || !frame?.supported || !selectionBox || !flat) return
+    const key = event.key
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', '+', '=', '-', '[', ']', '0'].includes(key)) return
+    event.preventDefault()
+    event.stopPropagation()
+    if (key === '0') {
+      session.clearTransform(chosenLayer.id)
+      localDoc = session.document
+      onedit?.()
+      return
+    }
+    const [cx, cy] = [selectionBox[0] + selectionBox[2] / 2, selectionBox[1] + selectionBox[3] / 2]
+    const step = event.shiftKey ? 10 : 1
+    let operation = [1, 0, 0, 1, 0, 0]
+    if (key === 'ArrowLeft') operation = [1, 0, 0, 1, -step, 0]
+    else if (key === 'ArrowRight') operation = [1, 0, 0, 1, step, 0]
+    else if (key === 'ArrowUp') operation = [1, 0, 0, 1, 0, -step]
+    else if (key === 'ArrowDown') operation = [1, 0, 0, 1, 0, step]
+    else if (key === '+' || key === '=') { const scale = 1.05; operation = [scale, 0, 0, scale, cx * (1 - scale), cy * (1 - scale)] }
+    else if (key === '-') { const scale = 1 / 1.05; operation = [scale, 0, 0, scale, cx * (1 - scale), cy * (1 - scale)] }
+    else {
+      const degrees = key === '[' ? -(event.shiftKey ? 15 : 5) : event.shiftKey ? 15 : 5
+      const radians = degrees * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
+      operation = [cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy]
+    }
+    applyCanvas(operation, [{ type: 'affine', matrix: flat }], chosenLayer.id, frame.frame, `key-${key}`)
+  }
   /** @param {PointerEvent} event @param {'move' | 'scale' | 'rotate'} kind */
   function startDrag(event, kind) {
     if (!editable || !session || !chosenLayer || !frame?.supported || !selectionBox) return
@@ -144,8 +183,6 @@
     if (!docDrag) return
     const p = pointAt(docDrag.svg, event)
     if (!p) return
-    const inverse = invertAffine(docDrag.frame)
-    if (!inverse) return
     const [cx, cy] = docDrag.center
     let operation = [1, 0, 0, 1, 0, 0]
     if (docDrag.kind === 'move') operation = [1, 0, 0, 1, p.x - docDrag.p0.x, p.y - docDrag.p0.y]
@@ -158,10 +195,7 @@
       const radians = angle * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
       operation = [cos, sin, -sin, cos, cx - cos * cx + sin * cy, cy - sin * cx - cos * cy]
     }
-    const local = multiplyAffine(inverse, multiplyAffine(operation, docDrag.frame))
-    session?.setTransform([...docDrag.base, { type: 'affine', matrix: local }], docDrag.id, { coalesce: `drag-${docDrag.gesture}` })
-    localDoc = session?.document ?? localDoc
-    onedit?.()
+    applyCanvas(operation, docDrag.base, docDrag.id, docDrag.frame, `drag-${docDrag.gesture}`)
   }
   /** @param {PointerEvent} event */
   function endDrag(event) {
@@ -199,6 +233,7 @@
               onpointermove={interactive ? moveDrag : undefined}
               onpointerup={interactive ? endDrag : undefined}
               onpointercancel={interactive ? endDrag : undefined}
+              onkeydown={interactive ? adjustKey : undefined}
 >
               {#if view?.scopes}
                 {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}` })}

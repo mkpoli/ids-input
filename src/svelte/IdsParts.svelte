@@ -363,14 +363,27 @@
       .catch(() => { tangutLoading = false; tangutFailed = true })
   })
   function retryTangut() { tangutLoading = false; tangutFailed = false }
-  $effect(() => { tab; filter; tangutPage = 0 })
+  /** @type {Record<string, number> | null} */
+  let tangutStrokes = $state.raw(null)
+  $effect(() => {
+    if (tab !== 'tangut' || tangutStrokes) return
+    fetch(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
+      .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Tangut strokes')))
+      .then(unpack).then(JSON.parse).then(data => { tangutStrokes = data.values })
+      .catch(() => { /* Counts stay unknown. */ })
+  })
+  /** @type {number | undefined} */
+  let tangutStroke = $state(undefined)
+  $effect(() => { tab; filter; tangutStroke; tangutPage = 0 })
   const tangutKeys = $derived([...new Set([...(partsByScript.get('tangut') ?? []).map(part => part.part), ...(tangutData ?? [])])])
+  const tangutCounts = $derived([...new Set(Object.values(tangutStrokes ?? {}))].sort((a, b) => a - b))
   const tangutMatches = $derived.by(() => {
+    const keys = tangutStroke === undefined ? tangutKeys : tangutKeys.filter(key => tangutStrokes?.[key] === tangutStroke)
     const term = filter.trim()
-    if (!term) return tangutKeys
+    if (!term) return keys
     const code = /^U\+([0-9a-f]{1,6})$/i.exec(term), point = code ? parseInt(code[1], 16) : null
     const text = point !== null && point <= 0x10ffff ? String.fromCodePoint(point) : term
-    const matches = matchScriptParts(tangutKeys, text, Boolean(code))
+    const matches = matchScriptParts(keys, text, Boolean(code))
     const metadata = (partsByScript.get('tangut') ?? []).filter(part =>
       /^\d+$/.test(term) && part.strokes === Number(term) || part.aliases?.some(alias => alias.includes(term)))
     return [...new Set([...matches, ...metadata.map(part => part.part)])]
@@ -499,6 +512,8 @@
   const title = part => {
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
+    // Tangut characters carry their count in the tab's own data, not in the palette rows.
+    const strokeCount = part.strokes ?? (tab === 'tangut' ? tangutStrokes?.[part.part] : null) ?? null
     // The composer's character list has no first-stroke class; its code point identifies the character.
     const composerCharacters = tab === 'components' && characters
     return [
@@ -509,7 +524,7 @@
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
-      nko || romanization ? null : tab === 'gongche' && part.strokes == null ? null : part.strokes == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: part.strokes })}`,
+      nko || romanization ? null : tab === 'gongche' && strokeCount == null ? null : strokeCount == null ? t('parts.unknownStrokes') : `${part.derived ? '≈ ' : ''}${t('parts.strokeCount', { count: strokeCount })}`,
       part.uses ? t('parts.uses', { count: part.uses }) : null,
     ].filter(Boolean).join(' · ')
   }
@@ -615,6 +630,18 @@
         placeholder={filterLabel} aria-label={filterLabel} />
     {/if}
   </div>
+  {#if tab === 'tangut' && tangutData}
+    <div class="parts-counts" role="group" aria-label={t('parts.tangut.strokes')}>
+      <button type="button" class:active={tangutStroke === undefined} aria-pressed={tangutStroke === undefined}
+        onclick={() => { tangutStroke = undefined; filter = '' }}>{t('parts.tangut.anyStrokes')}</button>
+      {#each tangutCounts as value (value)}
+        {@const label = t('parts.strokeCount', { count: value })}
+        <button type="button" class:active={tangutStroke === value} aria-pressed={tangutStroke === value}
+          title={label} aria-label={label}
+          onclick={() => { tangutStroke = value; filter = '' }}>{t('parts.strokeChip', { count: value })}</button>
+      {/each}
+    </div>
+  {/if}
   {#if tab === 'seal' && !query && sealGroups.length}
     <div class="seal-groups" role="group" aria-label={t('parts.seal.groups')}>
       {#each sealGroups as group (group.name)}
@@ -666,7 +693,7 @@
         {/if}
       {/if}
       <button type="button" class:active={characters} aria-pressed={characters}
-        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters')}</button>
+        onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters.label')}</button>
     </div>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>

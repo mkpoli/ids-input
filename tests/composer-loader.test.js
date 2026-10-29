@@ -55,8 +55,14 @@ describe('the composer loader', () => {
     expect(uncut.k).toBeUndefined()
   })
 
+  it('reads a format-6 export', async () => {
+    const source = fromUrl('/composer/v/', { fetch: served({ ...files, 'manifest.json': manifest(6) }) })
+    await source.ready()
+    expect(source.manifest.format).toBe(6)
+  })
+
   it('refuses an export of any other format', async () => {
-    for (const format of [3, 4, 6]) {
+    for (const format of [3, 4, 7]) {
       const source = fromUrl('/composer/v/', { fetch: served({ ...files, 'manifest.json': manifest(format) }) })
       await expect(source.ready()).rejects.toThrow(`format ${format} is not read here`)
     }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { fromSequence } from '../src/document/index.js'
-import { documentFrom, linkTo, sequenceFrom } from '../demo/lib/share.js'
+import { addressDocument, documentFrom, linkTo, sequenceFrom } from '../demo/lib/share.js'
 
 describe('share links', () => {
   it('puts a complete document and its sequence in a link', () => {
@@ -18,5 +18,15 @@ describe('share links', () => {
   })
   it('reads a malformed token as no document', () => {
     expect(documentFrom(new URL('https://example.org/?doc=abc'))).toBeNull()
+  })
+  it('keeps the address bar plain until a layer has a transform', () => {
+    const document = fromSequence('⿰木口')
+    expect(addressDocument(document)).toBeNull()
+    document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 9, 0] }]
+    expect(addressDocument(document)).toBe(document)
+    const group = fromSequence('木')
+    group.root = { id: 'g', kind: 'group', child: group.root }
+    group.root.child.transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 1, 0] }]
+    expect(addressDocument(group)).toBe(group)
   })
 })

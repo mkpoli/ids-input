@@ -774,6 +774,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Unicode 17.0.0, released 2025-09-09, CJK Extension J: `𳳳` (U+33473), a Vietnamese variant
   (VN-F0BEA) and `kStrange` of 龍. <https://www.unicode.org/versions/Unicode17.0.0/>; the code
   chart is <https://www.unicode.org/charts/PDF/U323B0.pdf>, p.55.
+- IRG Working Set 2021, [record UK-20565](https://hc.jsecs.org/irg/ws2021/app/index.php?find=UK-20565),
+  read 2026-10-29: 𲬺 (U+32B3A), the 品字様 of 無, as ⿱無⿰無無. Unicode 17.0 added the character in
+  CJK Extension J; BabelStone's Unicode 16.0 edition has no row for it.
 - KANJIDIC2, Electronic Dictionary Research and Development Group, CC BY-SA 4.0,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>: radical names, meanings, readings and pinyin of
   the component names.
@@ -869,12 +872,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   between their characters, which IDS cannot express, so they stay out of the examples.
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
-  readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`; the
-  article gives each character's radical and code point. The entries cover the 乙 coda ㄹ, 𠃍 and
-  ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ and 巴 for ㅂ, with the article's 약자 and 동자. Twenty
-  of them have no code point; the article writes them as decompositions (`⿱介乙` 갤, `⿱菸叱` 엇)
-  and they stand last in the group, described but unencoded. The remaining descriptions are
-  BabelStone's, all tagged K, nine as GKP.
+  readings and code points of the Korean gukja (國字) examples in `demo/lib/examples.js`. The group
+  holds the article's complete 음역자 table, ninety-four encoded forms and twenty decompositions,
+  ordered by reading. The article gives each character's radical and code point. Its codas are 乙
+  and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ, and 巴 and 邑 for ㅂ. The encoded
+  descriptions are BabelStone's, all tagged K, fourteen as GKP; the twenty without a code point
+  stand last, as the article writes them.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -939,8 +942,9 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Adjust layout moves, scales and turns document layers without changing the sequence; the changes
-stay with their tab and export through the scoped drawing. The Layers dialog edits the same layer
+for. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
+through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
@@ -954,8 +958,11 @@ commands. The Templates tab includes one-click pyramids of 3–24 rows. File →
 the active document; right-clicking a tab or pressing
 Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
 selection, undo history and layer transforms, which can then be edited independently.
-The toolbar holds Undo and Redo with the history of named steps, examples (each with its
-character and code point, an abbreviated character, or marked when it has none), a share link with its QR code, the language,
+The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
+transform steps before the editor’s structural steps. Examples come with their character and code
+point, an abbreviated character, or a mark when they have none; the toolbar also holds a share link
+with its QR code, the language. The address bar carries the document while a layer transform exists,
+so copying the location keeps the placement; a plain sequence stays in the hash.
 settings and the sources. Settings hold the system, light and dark themes, key hints, and the
 preview data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile. An example opens a
 tab. The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. Tabs use
@@ -1081,10 +1088,13 @@ bun install
 bun test tests          # core, adapter, composer and catalogue tests
 COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against han-compose's own drawings
 bun run check           # tsc and svelte-check
+bun run verify          # tests, tsc and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 ```
+
+CI only builds the demo and deploys it; the checks above stay local.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
