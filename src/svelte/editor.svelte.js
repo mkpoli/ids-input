@@ -116,6 +116,22 @@ export function createEditor(options) {
     }).catch(() => { /* Leave the original input in place if the data cannot be read. */ })
       .finally(() => { if (resolution === controller) resolution = null })
   }
+  /** Resolve a pasted zi.tools description that carries a stroke chain this package cannot draw,
+   * when the host's adapter names the character it describes. The text stays if it names none.
+   * @param {string} input */
+  function resolveChain(input) {
+    const adapter = options().adapter
+    if (!adapter?.chainCharacter || disabled()) return
+    cancelResolution()
+    const controller = new AbortController()
+    resolution = controller
+    const ticket = revision
+    adapter.chainCharacter(input, { signal: controller.signal }).then(char => {
+      if (!char || controller.signal.aborted || revision !== ticket || draft !== input || disabled() || options().adapter !== adapter) return
+      apply(char, null, t('ids.do.resolve', { char }))
+    }).catch(() => { /* Leave the text in place if the table cannot be read. */ })
+      .finally(() => { if (resolution === controller) resolution = null })
+  }
   function cancelResolution() { resolution?.abort(); resolution = null }
   function invalidateResolution() { revision++; cancelResolution() }
   /** Start again from `text` (a description, or nothing), forgetting the history. @param {string} start */
@@ -429,6 +445,7 @@ export function createEditor(options) {
     get t() { return t },
     lookup, name, text, pathKey,
     reset, operator, put, take, reorder, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    resolveChain,
     resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */
     travel(n) { for (let k = 0; k < Math.abs(n); k++) if (n < 0) undo(); else redo() },
