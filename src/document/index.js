@@ -18,6 +18,7 @@ export {
   applyChain,
   applyOperation,
   chainIsAffine,
+  invertAffine,
   multiplyAffine,
   parsePath,
   transformPieces,
@@ -27,5 +28,6 @@ export { renderLayers, renderScopes } from './render.js'
 export { scopesSvg } from './svg.js'
 export { createDocumentSession } from './session.js'
 export { SESSION_FORMAT, SESSION_VERSION, SessionRecordError, readSession, sessionFromRecord, sessionRecord, writeSession } from './store.js'
-export { documentFromTree, syncDocument, treeFromDocument } from './project.js'
+export { documentFromTree, layerAtPath, pathOfLayer, syncDocument, treeFromDocument } from './project.js'
 export { readShareDocument, shareDocument } from './store.js'
+export { boxCorners, layerFrames } from './frames.js'

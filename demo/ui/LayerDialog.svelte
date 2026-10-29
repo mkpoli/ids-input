@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '../../src/composer/index.js'
-  import { affineForChain, applyAffine, findLayer, multiplyAffine, renderScopes, scopesSvg } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerFrames, renderScopes, scopesSvg } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -23,7 +23,7 @@
   let issue = $state('')
   /** @type {import('../../src/document/render.js').LayerSource | null} */
   let source = $state.raw(null)
-  /** @type {Map<string, { box: number[], canvas: number[], frame: number[], supported: boolean }>} */
+  /** @type {Map<string, import('../../src/document/frames.js').LayerFrame>} */
   let layout = $state.raw(new Map())
   /** @type {{ kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
   let drag = $state.raw(null)
@@ -52,64 +52,9 @@
   })
   const selected = $derived(doc && chosen ? findLayer(doc.root, chosen)?.node ?? null : null)
 
-  /** @param {number[]} matrix */
-  function invert(matrix) {
-    const [a, b, c, d, e, f] = matrix
-    const determinant = a * d - b * c
-    if (!Number.isFinite(determinant) || Math.abs(determinant) < 1e-12) return null
-    return [d / determinant, -b / determinant, -c / determinant, a / determinant, (c * f - d * e) / determinant, (b * e - a * f) / determinant]
-  }
-  /** @param {number[]} a @param {number[]} b */
-  const unionBox = (a, b) => {
-    const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1])
-    const x1 = Math.max(a[0] + a[2], b[0] + b[2]), y1 = Math.max(a[1] + a[3], b[1] + b[3])
-    return [x, y, x1 - x, y1 - y]
-  }
-  /** @param {number[]} matrix @param {number[]} box */
-  function boxCorners(matrix, box) {
-    const [x, y, width, height] = box
-    const points = [[x, y], [x + width, y], [x, y + height], [x + width, y + height]].map(point => applyAffine(matrix, point))
-    const xs = points.map(point => point[0]), ys = points.map(point => point[1])
-    return [Math.min(...xs), Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)]
-  }
-
-  // Canvas frames for each layer: the box used for handles and the matrix that moves local edits to the canvas.
+  // Canvas frames for every layer, shared with the preview-side frame work.
   $effect(() => {
-    if (!doc || !source || !sketch) { layout = new Map(); return }
-    /** @type {Map<string, { box: number[], canvas: number[], frame: number[], supported: boolean }>} */
-    const out = new Map()
-    let leaf = 0
-    /** @param {Node} node @param {number[]} parentP @param {number[]} parentC @param {number[]} edge @returns {number[] | null} */
-    const walk = (node, parentP, parentC, edge) => {
-      const box = node.kind === 'component' || node.kind === 'slot'
-        ? /** @type {number[] | null} */ (sketch?.[leaf]?.box?.slice(0, 4) ?? null)
-        : null
-      if (node.kind === 'component' || node.kind === 'slot') leaf++
-      const P = multiplyAffine(parentP, edge)
-      const frame = multiplyAffine(parentC, P)
-      const chain = node.transform ?? []
-      const E = affineForChain(chain)
-      const inverse = invert(P)
-      const supported = Boolean(E && inverse)
-      const C = E && inverse ? multiplyAffine(parentC, multiplyAffine(P, multiplyAffine(E, inverse))) : parentC
-      let region = box
-      if (node.kind === 'operator') {
-        for (const [index, child] of node.children.entries()) {
-          const edgeMatrix = source?.placement(node, child, index) ?? null
-          if (!edgeMatrix) continue
-          const childBox = walk(child, P, C, edgeMatrix)
-          if (childBox) region = region ? unionBox(region, childBox) : childBox
-        }
-      } else if (node.kind === 'group') {
-        const childBox = walk(node.child, P, C, [1, 0, 0, 1, 0, 0])
-        if (childBox) region = childBox
-      }
-      const finalRegion = node.id === doc.root.id ? [0, 0, 1000, 1000] : region
-      if (finalRegion) out.set(node.id, { box: finalRegion, canvas: C, frame, supported })
-      return finalRegion
-    }
-    walk(doc.root, [1, 0, 0, 1, 0, 0], [1, 0, 0, 1, 0, 0], [1, 0, 0, 1, 0, 0])
-    layout = out
+    layout = doc && source && sketch ? layerFrames(doc, source, sketch) : new Map()
   })
 
   const selection = $derived.by(() => {
@@ -295,7 +240,7 @@
     const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
     drag = { kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
-      local0: (() => { const inverse = invert(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
+      local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
       a0: Math.atan2(point.y - center[1], point.x - center[0]), frame: selection.entry.frame }
     svg.setPointerCapture?.(event.pointerId)
   }
@@ -310,14 +255,14 @@
     const point = pointAt(svg, event)
     if (!point) return
     if (drag.kind === 'move') {
-      const inverse = invert(drag.frame)
+      const inverse = invertAffine(drag.frame)
       if (!inverse) return
       const origin = applyAffine(inverse, [0, 0])
       const local = applyAffine(inverse, [point.x - drag.p0.x, point.y - drag.p0.y])
       x = Math.round((drag.start.x + local[0] - origin[0]) * 100) / 100
       y = Math.round((drag.start.y + local[1] - origin[1]) * 100) / 100
     } else if (drag.kind === 'scale') {
-      const inverse = invert(drag.frame)
+      const inverse = invertAffine(drag.frame)
       if (!inverse) return
       const local = applyAffine(inverse, [point.x, point.y])
       const ratioX = Math.abs(drag.local0[0] - 500) < 1 ? 1 : (local[0] - 500) / (drag.local0[0] - 500)

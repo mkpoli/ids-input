@@ -31,6 +31,14 @@ export const applyAffine = (matrix, [x, y]) => [
   matrix[1] * x + matrix[3] * y + matrix[5],
 ]
 
+/** The inverse of an affine matrix, or null when it is singular. @param {number[]} matrix @returns {number[] | null} */
+export function invertAffine(matrix) {
+  const [a, b, c, d, e, f] = matrix
+  const determinant = a * d - b * c
+  if (!Number.isFinite(determinant) || Math.abs(determinant) < 1e-12) return null
+  return [d / determinant, -b / determinant, -c / determinant, a / determinant, (c * f - d * e) / determinant, (b * e - a * f) / determinant].map(value => value === 0 ? 0 : value)
+}
+
 /** Compose two affine matrices: the result applies `inner` first, then `outer`.
  * @param {number[]} outer @param {number[]} inner @returns {number[]} */
 export function multiplyAffine(outer, inner) {

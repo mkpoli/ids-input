@@ -377,8 +377,10 @@ document inside it is the same `.ids.json` document.
 The current editor still uses positional core trees, canvas-space drawing
 pieces and flat affine adjustments. The identified document model is reconciled
 from those trees with `syncDocument`, and the workshop keeps a session with
-each tab and saved draft. The preview, transform controls and share links have
-not switched to the document yet. The core IDS parser and writer remain the
+each tab and saved draft. `layerAtPath` and `pathOfLayer` bridge editor paths
+and layer IDs; `layerFrames` gives the inspector and preview one layout frame
+per layer. The preview, transform controls and share links have not switched to
+the document yet. The core IDS parser and writer remain the
 projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports
