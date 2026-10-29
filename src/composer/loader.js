@@ -21,7 +21,7 @@ export async function unpack(buffer) {
   return await new Response(stream).text()
 }
 
-// Where the export keeps each key's data: the one place that knows file names. han-compose's format 5
+// Where the export keeps each key's data: the one place that knows file names. han-compose's formats 5
 // packs the records in `g/<hhh>.json` and the host lists in `p/<hhh>.json`, `hhh` the first three hex
 // digits of the SHA-256 of the key's UTF-8 (of place TAB operand for a host list); each file is an
 // object from the full hash to the record or list, gzip bytes under a .json name, served as
@@ -31,7 +31,7 @@ export async function unpack(buffer) {
 // indices `k` of the host glyph's contours it keeps (or its own outlines `p`), its box `b`, the
 // node's frame `fr`, `wh` for the whole character, the gap `g` and `kv` for a KanjiVG cut, read here
 // onto the entry. A cut marked `pc` was made only under a parity row's exclusion.
-const FORMAT = 5
+const FORMATS = new Set([5, 6])
 const shard = (folder, h) => `${folder}/${h.slice(0, 3)}.json`
 const cutEntry = h => h.c === null ? { ...h } : { ...h, ...h.c, c: true }
 const recordHash = key => hexOf(key)
@@ -65,7 +65,7 @@ export function createSource(read, { concurrency = 10 } = {}) {
     ready() {
       ready ??= (async () => {
         source.manifest = JSON.parse(await unpack(await read('manifest.json')))
-        if (source.manifest.format !== FORMAT) throw new Error(`The composer export's format ${source.manifest.format} is not read here.`)
+        if (!FORMATS.has(source.manifest.format)) throw new Error(`The composer export's format ${source.manifest.format} is not read here.`)
         source.layout = readLayout(JSON.parse(await unpack(await read(source.manifest.files.layout.path))))
       })().catch(error => { ready = null; throw error })
       return ready
