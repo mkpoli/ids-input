@@ -150,6 +150,7 @@
   "app.tabs.close": "關閉{name}",
   "app.tabs.closeAll": "關閉所有分頁",
   "app.tabs.closeAllBody": "關閉所有分頁？",
+  "app.tabs.closeAllConfirm": "全部關閉",
   "app.tabs.closeLeft": "關閉左側分頁",
   "app.tabs.closeOne": "關閉分頁",
   "app.tabs.closeOthers": "關閉其他分頁",

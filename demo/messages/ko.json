@@ -150,6 +150,7 @@
   "app.tabs.close": "{name} 닫기",
   "app.tabs.closeAll": "모든 탭 닫기",
   "app.tabs.closeAllBody": "모든 탭을 닫을까요?",
+  "app.tabs.closeAllConfirm": "모두 닫기",
   "app.tabs.closeLeft": "왼쪽 탭 닫기",
   "app.tabs.closeOne": "탭 닫기",
   "app.tabs.closeOthers": "다른 탭 닫기",

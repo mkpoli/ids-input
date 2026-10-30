@@ -150,6 +150,7 @@
   "app.tabs.close": "关闭{name}",
   "app.tabs.closeAll": "关闭所有标签页",
   "app.tabs.closeAllBody": "关闭所有标签页？",
+  "app.tabs.closeAllConfirm": "全部关闭",
   "app.tabs.closeLeft": "关闭左侧标签页",
   "app.tabs.closeOne": "关闭标签页",
   "app.tabs.closeOthers": "关闭其他标签页",

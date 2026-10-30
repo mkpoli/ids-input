@@ -131,6 +131,7 @@
   "app.tabs.close": "Đóng {name}",
   "app.tabs.closeAll": "Đóng tất cả thẻ",
   "app.tabs.closeAllBody": "Đóng tất cả thẻ?",
+  "app.tabs.closeAllConfirm": "Đóng tất cả",
   "app.tabs.closeLeft": "Đóng các thẻ bên trái",
   "app.tabs.closeOne": "Đóng thẻ",
   "app.tabs.closeOthers": "Đóng các thẻ khác",

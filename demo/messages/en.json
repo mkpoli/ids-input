@@ -151,6 +151,7 @@
   "app.tabs.close": "Close {name}",
   "app.tabs.closeAll": "Close all tabs",
   "app.tabs.closeAllBody": "Close every tab?",
+  "app.tabs.closeAllConfirm": "Close all",
   "app.tabs.closeLeft": "Close tabs to the left",
   "app.tabs.closeOne": "Close tab",
   "app.tabs.closeOthers": "Close other tabs",

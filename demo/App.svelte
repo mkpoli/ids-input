@@ -428,13 +428,15 @@
       tab.whole = editor.tree === null ? '' : editor.whole
       keepTabSession(tab)
     }
+    // Any later edit spends the note of a close, even text the editor cannot read.
+    if (toast?.run) toast = null
     store()
     syncAddress()
   }))
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -652,6 +654,7 @@
     if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
+      sessions.delete(fresh.id)
     }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
@@ -703,7 +706,8 @@
     }
     const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
     toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
-      action: t('ids.undo.label'), run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
+      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
     store()
   }
   /**
@@ -717,6 +721,7 @@
     if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
+      sessions.delete(fresh.id)
     }
     for (const { tab, at, state } of removed) {
       if (tabs.some(kept => kept.id === tab.id)) continue
@@ -1187,7 +1192,7 @@
   <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
   <div class="confirm-actions">
     <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
-    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAll')}</button>
+    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
   </div>
 </Dialog>
 

@@ -55,7 +55,7 @@ try {
   await item('Close other tabs').click()
   assert.deepEqual(await order(), ['tab-2'], 'close other tabs leaves only its tab')
   assert.equal(await active(), 'tab-2', 'the remaining tab is shown')
-  assert.match(await page.locator('.toast').innerText(), /Closed 3 tabs/, 'the note counts the closed tabs')
+  assert.match(await page.locator('.toast').filter({ hasText: /Closed/ }).last().innerText(), /Closed 3 tabs/, 'the note counts the closed tabs')
   await undo()
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the group in order')
   assert.equal(await active(), 'tab-1', 'undo shows the tab that was being edited')
@@ -98,11 +98,11 @@ try {
   assert.equal((await order()).length, 4, 'cancelling keeps the tabs')
   await open('tab-2')
   await item('Close all tabs').click()
-  await dialog.getByRole('button', { name: 'Close all tabs', exact: true }).click()
+  await dialog.getByRole('button', { name: 'Close all', exact: true }).click()
   assert.equal((await order()).length, 1, 'confirming leaves one empty tab')
   assert.equal(await page.locator('.ids-field input').inputValue(), '', 'the replacement tab is empty')
   assert.equal(await page.locator('.tabbar .tab.on [role="tab"]').evaluate(el => el === document.activeElement), true, 'the replacement tab takes the focus')
-  assert.match(await page.locator('.toast').innerText(), /Closed 4 tabs/, 'the note counts every tab')
+  assert.match(await page.locator('.toast').filter({ hasText: /Closed/ }).last().innerText(), /Closed 4 tabs/, 'the note counts every tab')
   await undo()
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores every tab')
   assert.equal(await active(), 'tab-1', 'undo shows the tab that was being edited')
@@ -114,6 +114,7 @@ try {
   assert.equal(await active(), 'tab-1', 'a surviving active tab stays shown')
   await undo()
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the single tab')
+  assert.equal(await active(), 'tab-0', 'undo shows the reopened tab')
 
   // Shift+F10 opens the menu on the focused tab and the arrows walk the enabled items.
   await page.locator('.tab[data-tab-id="tab-0"] [role="tab"]').focus()
@@ -130,6 +131,13 @@ try {
   assert.equal(await focused(), 'Close all tabs', 'End reaches the last action')
   await closeMenu()
   assert.equal(await page.locator('.tab[data-tab-id="tab-0"] [role="tab"]').evaluate(el => el === document.activeElement), true, 'closing the menu returns to its tab')
+
+  // Any edit, even text the editor cannot read, spends the close note.
+  await open('tab-2')
+  await item('Close other tabs').click()
+  assert.equal(await page.locator('.toast').filter({ hasText: /Closed/ }).count(), 1, 'the close leaves its note')
+  await page.locator('.ids-field input').fill('⿰木木木')
+  assert.equal(await page.locator('.toast').filter({ hasText: /Closed/ }).count(), 0, 'a draft edit takes the note away')
 
   assert.deepEqual(errors, [])
   console.log('PASS tab menu closes single, other, left, right and all tabs, with undo and a confirmation')

@@ -296,7 +296,8 @@
 {#if menu}
   {@const at = tabs.findIndex(tab => tab.id === menu.id)}
   <div class="tab-menu" role="menu" tabindex="-1" popover="manual" bind:this={menuEl}
-    aria-label={t('app.tabs.menu')} style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
+    aria-label={at >= 0 ? `${t('app.tabs.menu')}: ${label(tabs[at])}` : t('app.tabs.menu')}
+    style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
     <button type="button" role="menuitem" onclick={() => run(onduplicate)}><Icon name="copy" size={16} />{t('app.tabs.duplicate')}</button>
     <hr />
     <button type="button" role="menuitem" onclick={() => run(onclose)}><Icon name="close" size={16} />{t('app.tabs.closeOne')}</button>
