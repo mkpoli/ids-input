@@ -1,9 +1,24 @@
-// A sequence in the page's address, so a link opens it: `#⿰亻哥` (also read: `?ids=⿰亻哥`).
-// A document that carries more than its sequence adds that difference as `?doc=<base64url>`.
+// A sequence in the page's own path, so a link opens it: `/⿰亻哥`. The fragment `#⿰亻哥` and
+// `?ids=⿰亻哥` say the same and are still read, as is `?doc=<base64url>` for a document that
+// carries more than its sequence.
 import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
+
+/** The one path segment that names a sequence, or null for another path (a page, an asset).
+ *  @param {Location | URL} where */
+function pathSequence(where) {
+  let path
+  try { path = decodeURIComponent(where.pathname) } catch { return null }
+  if (path.endsWith('/')) path = path.slice(0, -1)
+  if (!path.startsWith('/')) return null
+  const segment = path.slice(1)
+  // One segment, and no dot: `embed.html` and `robots.txt` are files, not sequences.
+  return segment && !segment.includes('/') && !segment.includes('.') ? segment : null
+}
 
 /** The sequence a link carries, or ''. @param {Location | URL} where */
 export function sequenceFrom(where) {
+  const path = pathSequence(where)
+  if (path !== null) return path
   const hash = where.hash.replace(/^#/, '')
   try {
     if (hash) return decodeURIComponent(hash)
@@ -18,7 +33,8 @@ export function linkTo(sequence, where, document = null) {
   const token = document ? shareDocument(document) : ''
   if (token) url.searchParams.set('doc', token)
   else url.searchParams.delete('doc')
-  url.hash = sequence ? encodeURIComponent(sequence) : ''
+  url.pathname = sequence ? `/${encodeURIComponent(sequence)}` : '/'
+  url.hash = ''
   return url.href
 }
 
@@ -30,7 +46,7 @@ export function transformed(root) {
   return false
 }
 
-/** The document to put in a link: only when it holds more than the sequence. The fragment carries
+/** The document to put in a link: only when it holds more than the sequence. The path carries
  *  the structure and the characters. @param {import('../../src/document/index.js').Document | null} document */
 export function addressDocument(document) {
   return document && carriedMore(document) ? document : null
