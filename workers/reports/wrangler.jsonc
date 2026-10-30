@@ -7,8 +7,8 @@
   "compatibility_date": "2026-10-30",
   "workers_dev": true,
   "preview_urls": true,
-  // The report endpoint stands on its own host under the site, so the browser posts cross-origin and
-  // the Worker's origin check has something to check.
+  // The endpoint keeps a host of its own for `curl` and for a page served from elsewhere; the
+  // workshop itself posts to /api/report on its origin, which the hosting worker hands here.
   "routes": [
     {
       "pattern": "report.ids.mkpo.li",
