@@ -199,7 +199,7 @@ export function modifierLength(text, at) {
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
- * of three or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
+ * of two or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
  *
  * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
  * definition after it are left out (see `entryDescription`).
@@ -256,8 +256,9 @@ export function parse(text, { open = false } = {}) {
       while (at < chars.length && isMark(chars[at])) marks += chars[at++]
       tree = withMarks(tree, marks)
     }
-    // A whole description may run past the ordinary length only as a pyramid; a draft may be long.
-    if (!open && long && !pyramidRows(tree)) return { problem: 'character' }
+    // A whole description may run past the ordinary length only as a pyramid, its cells any part;
+    // a draft may be long.
+    if (!open && long && !pyramidRows(tree, { minLayers: 2 })) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
