@@ -24,10 +24,12 @@ jobs:
         run: bunx wrangler deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Keep the Worker's GitHub token current
         if: env.REPORTS_GITHUB_TOKEN != ''
         working-directory: workers/reports
         run: printf '%s' "$REPORTS_GITHUB_TOKEN" | bunx wrangler secret put GITHUB_TOKEN
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           REPORTS_GITHUB_TOKEN: ${{ secrets.REPORTS_GITHUB_TOKEN }}
