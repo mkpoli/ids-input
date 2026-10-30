@@ -207,7 +207,7 @@ def main():
         target = chr(int(point, 16))
         if target not in known:
             raise ValueError(f'ids.json names U+{point}, which is not a part')
-        if ids_text[0] not in IDS_OPS or len(ids_text) != 3:
+        if len(ids_text) != 3 or ids_text[0] not in IDS_OPS:
             raise ValueError(f'{point}: {ids_text} is not an operator with two parts')
         for component in ids_text[1:]:
             if component not in known:

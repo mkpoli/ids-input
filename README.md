@@ -54,8 +54,8 @@ outlines are the glyphs of the amendment's own code charts, bundled for previews
 `IDS Shuishu` face, and the tab filters them by name, reading, meaning, code point and description.
 Its groups follow the dictionary the index comes from: the characters that dictionary numbers, the
 rest, and the radicals. Eighteen of the characters carry an editorial IDS, printed on the tile and
-in their title and searchable as a whole description; the tab says the decompositions are ours,
-since no source gives them.
+in their title; a description finds its character, and a typed part lists the characters written
+with it. The tab says the decompositions are ours, since no source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">

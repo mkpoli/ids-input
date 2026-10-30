@@ -504,10 +504,12 @@ does not cover.
 the characters whose parts are all in the block and whose arrangement is plain. No source states
 one: the charts give a `→` cross reference to a radical for 41 of the 533 characters and nothing
 else, the spreadsheet has no structure column, and the chart font carries no ligature or IDS glyph
-names. Each entry has one operator (`⿰`, `⿱`, `⿴`, `⿵`, `⿶`) and two parts of the block, written
-left before right, top before bottom, outer before inner. Shuishu writing order is undocumented in
-these sources, so the order follows the glyph. The entries aid display and search and sit outside
-the encoding proposal, and the count keeps to the unambiguous cases.
+names. Each entry has one operator (`⿰`, `⿱`, `⿴`, `⿵` and `⿶`, which the count does not yet reach)
+and two parts of the block, written left before right, top before bottom, outer before inner.
+Shuishu writing order is undocumented in these sources, so the order follows the glyph. The entries
+aid display and search and sit outside the encoding proposal, and the count keeps to the unambiguous
+cases. A search finds a character by its whole description, and a typed part also lists the
+characters written with it.
 `scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
 or the character itself.
 
