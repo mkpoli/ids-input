@@ -17,14 +17,18 @@ const ENVIRONMENT = [
   ['appVersion', 'App version'],
   ['commit', 'Build commit'],
   ['route', 'Route'],
+  ['preview', 'Preview state'],
   ['viewport', 'Viewport'],
   ['devicePixelRatio', 'Device pixel ratio'],
   ['locale', 'Locale'],
   ['theme', 'Theme'],
+  ['face', 'Han face'],
   ['userAgent', 'User agent'],
   ['platform', 'Platform'],
   ['fonts', 'Loaded fonts'],
   ['composerBase', 'Composer base URL'],
+  ['local', 'Local build'],
+  ['historyLength', 'History entries'],
 ]
 
 /**

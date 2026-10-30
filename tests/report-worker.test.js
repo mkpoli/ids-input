@@ -174,6 +174,10 @@ describe('report bodies', () => {
       platform: 'Linux x86_64',
       fonts: ['Noto Serif CJK'],
       composerBase: 'https://ids.mkpo.li/composer/',
+      preview: 'failed / failed',
+      face: 'serif',
+      local: false,
+      historyLength: 2,
       console: ['TypeError: x is not a function'],
     },
   })
@@ -200,6 +204,9 @@ describe('report bodies', () => {
     expect(body).toContain('| Device pixel ratio | 2 |')
     expect(body).toContain('| Loaded fonts | Noto Serif CJK |')
     expect(body).toContain('| Composer base URL | https://ids.mkpo.li/composer/ |')
+    expect(body).toContain('| Preview state | failed / failed |')
+    expect(body).toContain('| Han face | serif |')
+    expect(body).toContain('| History entries | 2 |')
   })
   it('folds the console output and the document away', () => {
     const body = issueBody(report, noAttachments)
