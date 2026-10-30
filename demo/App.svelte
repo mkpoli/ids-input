@@ -1181,6 +1181,12 @@
     .input-gap{display:block;grid-column:2;grid-row:1}
     .middle{grid-column:3;grid-row:1}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+    /* The panel's parts are what makes it tall: the palette keeps the cap it has on its own, but
+       once the panel sits in the workspace row, its grid takes the height it needs. */
+    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
+    /* The taller panel sets the row's height; the search under the tree fills the rest of its column
+       instead of leaving the page's background below it. */
+    .results{flex-grow:1}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
@@ -1188,7 +1194,6 @@
     .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr) 16px var(--output-width);min-height:0;align-items:stretch}
     .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
-    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
     .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
     .split .grip{width:56px;height:5px;border-radius:999px;background:var(--line-strong);transition:background-color .12s,width .12s}
