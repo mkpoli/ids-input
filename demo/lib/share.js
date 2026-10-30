@@ -1,9 +1,14 @@
-// A sequence in the page's address, so a link opens it: `#⿰亻哥` (also read: `?ids=⿰亻哥`).
-// A document that carries more than its sequence adds that difference as `?doc=<base64url>`.
+// A sequence in the page's path, so a link opens it and crawlers can preview it: `/s/⿰亻哥` (also
+// read: `#⿰亻哥`, `?ids=⿰亻哥`). A document that carries more than its sequence adds that difference
+// as `?doc=<base64url>`.
 import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
 
 /** The sequence a link carries, or ''. @param {Location | URL} where */
 export function sequenceFrom(where) {
+  const path = /^\/s\/(.+)$/.exec(where.pathname)
+  if (path) {
+    try { return decodeURIComponent(path[1].replace(/\/$/, '')) } catch { /* A path that is not a sequence. */ }
+  }
   const hash = where.hash.replace(/^#/, '')
   try {
     if (hash) return decodeURIComponent(hash)
@@ -18,7 +23,8 @@ export function linkTo(sequence, where, document = null) {
   const token = document ? shareDocument(document) : ''
   if (token) url.searchParams.set('doc', token)
   else url.searchParams.delete('doc')
-  url.hash = sequence ? encodeURIComponent(sequence) : ''
+  url.pathname = sequence ? `/s/${encodeURIComponent(sequence)}` : '/'
+  url.hash = ''
   return url.href
 }
 
@@ -30,8 +36,8 @@ export function transformed(root) {
   return false
 }
 
-/** The document to put in a link: only when it holds more than the sequence. The fragment carries
- *  the structure and the characters. @param {import('../../src/document/index.js').Document | null} document */
+/** The document to put in a link: only when it holds more than the sequence. The path carries the
+ *  sequence and the token everything else. @param {import('../../src/document/index.js').Document | null} document */
 export function addressDocument(document) {
   return document && carriedMore(document) ? document : null
 }
