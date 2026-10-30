@@ -347,6 +347,7 @@
       {#if !quiet}
         {#if step === 'loading'}<span class="ids-preview-spinner" aria-hidden="true"></span>{/if}
         <span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>
+        {#if step === 'composed' && shown?.drawn?.faceFallback}<span class="ids-preview-fallback">{t('ids.preview.faceFallback')}</span>{/if}
       {/if}
     </figcaption>
   {/if}
@@ -392,6 +393,7 @@
   .slot.selected .slot-fill{fill:color-mix(in srgb,var(--_accent) 16%,transparent)}
   .slot.selected .slot-line{stroke:var(--_accent)}
   .ids-preview-badge{padding:0 7px;border-radius:999px;font-size:11px;line-height:18px;color:var(--_muted);border:1px solid var(--_line);text-align:center}
+  .ids-preview-fallback{font-size:11px;color:var(--_muted);text-align:center}
   .ids-preview[data-label="loading"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 35%,var(--_line))}
   .ids-preview[data-label="final"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 45%,var(--_line))}
   .ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}

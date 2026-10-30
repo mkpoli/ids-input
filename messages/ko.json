@@ -103,6 +103,7 @@
   "ids.preview.draft": "미리보기",
   "ids.preview.drawing": "{sequence}의 자형",
   "ids.preview.failed": "조합 불가",
+  "ids.preview.faceFallback": "선택한 글자체로 그릴 수 없어 다른 글자체로 표시합니다.",
   "ids.preview.failedNote": "이 기술은 조합하지 못했습니다.",
   "ids.preview.final": "확정",
   "ids.preview.loading": "조합 중…",

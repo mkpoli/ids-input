@@ -103,6 +103,7 @@
   "ids.preview.draft": "Xem trước",
   "ids.preview.drawing": "Hình của {sequence}",
   "ids.preview.failed": "Không thể ghép hình",
+  "ids.preview.faceFallback": "Kiểu chữ đã chọn không vẽ được; hiển thị bằng kiểu chữ khác.",
   "ids.preview.failedNote": "Không thể vẽ chuỗi này.",
   "ids.preview.final": "Hoàn chỉnh",
   "ids.preview.loading": "Đang ghép hình…",
