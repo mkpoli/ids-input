@@ -60,16 +60,22 @@ describe('repeated rows', () => {
     }
   })
 
-  it('refuses something that is not one component or two or three rows of one to four', () => {
-    expect(() => repeatSequence('', [2, 3])).toThrow(TypeError)
-    expect(() => repeatSequence('⿰木口', [2, 3])).toThrow(TypeError)
+  it('repeats a description or an empty slot as well as one component', () => {
+    expect(repeatSequence('⿰木口', [2, 3])).toBe('⿱⿰⿰木口⿰木口⿲⿰木口⿰木口⿰木口')
+    expect(repeatSequence('', [2, 3])).toBe('⿱⿰⬚⬚⿲⬚⬚⬚')
+    expect(repeatSequence('⬚', [2, 1, 2])).toBe('⿳⿰⬚⬚⬚⿰⬚⬚')
+    expect(repeatSequence('口', [2, 3], { bottom: '⿰木口' })).toBe('⿱⿰口口⿲⿰木口⿰木口⿰木口')
+    expect(leaves(parse(repeatSequence('⿰木口', [2, 3])).tree).map(leaf => leaf.char)).toEqual(
+      ['木', '口', '木', '口', '木', '口', '木', '口', '木', '口'])
+  })
+
+  it('refuses a text that is no one part or rows out of range, and parts that join', () => {
     expect(() => repeatSequence('木口', [2, 3])).toThrow(TypeError)
     expect(() => repeatSequence('口', [2])).toThrow(RangeError)
     expect(() => repeatSequence('口', [2, 1, 2, 1])).toThrow(RangeError)
     expect(() => repeatSequence('口', [0, 3])).toThrow(RangeError)
     expect(() => repeatSequence('口', [2, 5])).toThrow(RangeError)
     expect(() => repeatSequence('口', [2.5, 3])).toThrow(RangeError)
-    expect(() => repeatSequence('口', [2, 3], { bottom: '⿰木口' })).toThrow(TypeError)
     // Two regional indicators join into one flag, so the copies are not separate components.
     expect(() => repeatSequence('🇯', [2, 3])).toThrow(TypeError)
     expect(() => repeatSequence('口', [2, 3], { bottom: '🇯' })).toThrow(TypeError)
@@ -87,10 +93,17 @@ describe('four copies inside an enclosure', () => {
     expect(leaves(tree).map(leaf => leaf.char)).toEqual(['囗', '口', '口', '口', '口'])
   })
 
-  it('refuses a host or part that is not one component', () => {
-    expect(() => enclosedRepeatSequence('⿰木口', '口')).toThrow(TypeError)
-    expect(() => enclosedRepeatSequence('囗', '⿰木口')).toThrow(TypeError)
-    expect(() => enclosedRepeatSequence('', '口')).toThrow(TypeError)
-    expect(() => enclosedRepeatSequence('囗', '')).toThrow(TypeError)
+  it('takes a description or an empty slot as the host and the copies', () => {
+    expect(enclosedRepeatSequence('⿰木口', '口')).toBe('⿴⿰木口⿱⿰口口⿰口口')
+    expect(enclosedRepeatSequence('囗', '⿰木口')).toBe('⿴囗⿱⿰⿰木口⿰木口⿰⿰木口⿰木口')
+    expect(enclosedRepeatSequence('', '口')).toBe('⿴⬚⿱⿰口口⿰口口')
+    expect(enclosedRepeatSequence('囗', '')).toBe('⿴囗⿱⿰⬚⬚⿰⬚⬚')
+    expect(leaves(parse(enclosedRepeatSequence('囗', '⿰木口')).tree).map(leaf => leaf.char)).toEqual(
+      ['囗', '木', '口', '木', '口', '木', '口', '木', '口'])
+  })
+
+  it('refuses a copy that joins into one component', () => {
+    expect(() => enclosedRepeatSequence('囗', '🇯')).toThrow(TypeError)
+    expect(() => enclosedRepeatSequence('木口', '口')).toThrow(TypeError)
   })
 })

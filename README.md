@@ -180,7 +180,9 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
-pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { part: '口', layers: 4, count: 10, reverse: false }
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, reverse: false }
+pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
+pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
 repeatSequence('口', [2, 1, 2])  // '⿳⿰口口口⿰口口'
 enclosedRepeatSequence('囗', '口')  // '⿴囗⿱⿰口口⿰口口'
@@ -229,29 +231,31 @@ an excluded character, or that carries loose marks or approximate operators, kee
 
 ### Pyramids
 
-`pyramidSequence(part, layers)` writes one component in rows of 1, 2, 3, …; `pyramidRows` reads an
-equivalent tree back, whichever way its rows use `⿰`/`⿲` and its stack uses `⿱`/`⿳`. The composer
-draws a pyramid of three or more rows as equal square cells in centred rows, so the 4-row spellings
-given for `口` above draw alike, and deeper triangles keep the same cell size. A whole description
-may run past the ordinary 64-code-point length only as a pyramid; a draft may be longer still. The
-composer draws up to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids
-of 3 to 24 rows. The shared Component field above the generators starts with the selected component
-or 口; a typed value is kept for all three. Enter one component, then choose a preset or a custom row
-count.
+`pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
+description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
+and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
+three or more rows as equal square cells in centred rows, so the 4-row spellings given for `口`
+above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
+composed inside its cell. A whole description may run past the ordinary 64-code-point length as a
+pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
+to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
+its sizes in a scrollable row. The shared Part field above the generators starts with the selected
+part or 口; an empty Part lays out empty slots, and a typed value is kept for all three. Enter a
+part, then choose a preset or a custom row count.
 Its Reverse toggle arranges rows from widest
-to narrowest while keeping each component upright. `pyramidSequence(part, layers, { reverse: true })`
+to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
 
 ### Repeats
 
-`repeatSequence(part, rows, { bottom })` writes two or three rows of repeated components, with one
-to four copies in a row. The first rows hold `part`; the last holds the second component, which
-defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and the rows stack with
+`repeatSequence(part, rows, { bottom })` writes two or three rows of repeated parts, with one to
+four copies in a row; a part is a component, any description or ⬚. The first rows hold `part`; the
+last holds the second part, which defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and the rows stack with
 `⿱`. `repeatSequence('口', [2, 1, 2])` writes 2·1·2 as `⿳⿰口口口⿰口口`. `enclosedRepeatSequence(host, part)` puts four
 copies in a 2×2 grid inside an enclosure.
 
-The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with the shared Component field. A
-second field, Bottom row, takes another component and falls back to the first when empty. A Rows
+The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with the shared Part field. A second
+field, Bottom row, takes another part and falls back to the first when empty. A Rows
 field takes two or three counts from 1 to 4, such as `3 4` or `2 1 2`. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
 五同, 六同, 八同 and 二組 arrangements of [畳字](https://wikiwiki.jp/myriadrevery/畳字).
 

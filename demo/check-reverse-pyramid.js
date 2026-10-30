@@ -29,7 +29,7 @@ try {
     await page.getByRole('tab', { name: 'Templates', exact: true }).click()
     assert.equal(await toggle.isChecked(), true, 'direction survives tab switches')
     await page.locator('[data-pyramid="3"]').click()
-    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { part: '口', layers: 3, count: 6, reverse: true })
+    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { cell: '口', layers: 3, count: 6, reverse: true })
     await page.locator('.ids-preview[data-step="composed"]').waitFor()
     if (process.env.IDS_PYRAMID_SHOTS) {
       mkdirSync(process.env.IDS_PYRAMID_SHOTS, { recursive: true })
@@ -38,8 +38,8 @@ try {
     }
     await field.fill('')
     await field.press('Tab')
-    await page.locator('.ids-pyramid-custom input[type=number]').fill('24')
-    await page.locator('.ids-pyramid-custom button').click()
+    await page.locator('form[id$="-pyramid-form"] input[type=number]').fill('24')
+    await page.locator('form[id$="-pyramid-form"] button').click()
     assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.layers, 24)
     assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.reverse, true)
     await field.fill('')

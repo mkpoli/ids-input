@@ -141,19 +141,26 @@ export function size(tree) {
   return { nodes: 1 + sizes.reduce((s, k) => s + k.nodes, 0), depth: 1 + Math.max(0, ...sizes.map(k => k.depth)) }
 }
 /** Whether a tree is larger than a preview draws (`LIMITS`), unless it is a pyramid within
- *  `PYRAMID_LAYERS`. */
+ *  `PYRAMID_LAYERS`. A pyramid of two rows counts too: its cells are laid out apart, never merged
+ *  into the overlapping parts the limits guard against. */
 export const tooLarge = tree => {
-  const pyramid = pyramidRows(tree)
+  const pyramid = pyramidRows(tree, { minLayers: 2 })
   if (pyramid) return pyramid.layers > PYRAMID_LAYERS
   const { nodes, depth } = size(tree)
   return nodes > LIMITS.nodes || depth > LIMITS.depth
 }
 
-/** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot. */
+/** Every key the tree names, nodes and leaves, as the first files to load; none holding an empty slot.
+ *  A pyramid asks for its repeated cell once, and that cell's own parts, instead of once per cell. */
 function keysOf(tree, out = [], separate = false, fontStyle = 'sans', root = true) {
   if (root) {
     const pyramid = pyramidRows(tree)
-    if (pyramid) { out.push(pyramid.part); return out }
+    if (pyramid) {
+      const cell = keyOf(pyramid.cell)
+      if (!cell.includes(EMPTY)) out.push(cell)
+      if (Array.isArray(pyramid.cell)) pyramid.cell.slice(1).forEach(n => keysOf(n, out, separate, fontStyle, false))
+      return out
+    }
   }
   if ((separate ? isGroupedForm : isComponentForm)(keyOf(tree), fontStyle)) return out
   if (!keyOf(tree).includes(EMPTY)) out.push(keyOf(tree))
