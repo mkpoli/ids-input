@@ -9,7 +9,7 @@ import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
 import { unicodeProperty } from '../core/unicode.js'
-import { isComponent, isSequence, parse, write } from '../core/ids.js'
+import { isComponent, isDescription, isSequence, parse, write } from '../core/ids.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
 
@@ -654,8 +654,12 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       if (shuishu) {
         const doc = await readShuishu()
         // A typed character or chart name stands with the components; a reading or meaning ranks
-        // below the vocabulary, which knows the query better.
-        if (doc) hits = [...hits, ...shuishuNames(doc, text)]
+        // below the vocabulary, which knows the query better. A whole description stands ahead of
+        // the characters it is written with.
+        if (doc) {
+          const named = shuishuNames(doc, text)
+          hits = isDescription(text) ? [...named, ...hits] : [...hits, ...named]
+        }
       }
       if (!characterInfo && smallSeal) {
         const doc = await readSeal()

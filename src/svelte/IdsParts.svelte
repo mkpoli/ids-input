@@ -423,6 +423,9 @@
       // A code point written U+1B300, or as bare hex when that is all there is.
       const code = /^(?:U\+)?((?=.*\d)[0-9a-f]{4,6})$/i.exec(query)
       if (code) return shuiParts.filter(part => part.part.codePointAt(0) === parseInt(code[1], 16))
+      // A description names the character built that way, before its components do.
+      const built = shuiParts.filter(part => part.ids === query)
+      if (built.length) return built
       const lowered = query.toLowerCase()
       return shuiParts.filter(part => part.part === query)
         .concat(shuiParts.filter(part => part.part !== query && shuiWords(part).some(word => word.includes(lowered))))
@@ -533,7 +536,7 @@
   }
   /** The name, reading and meaning a Shuishu part is found by, lowercased. @param {PalettePart} part */
   function shuiWords(part) {
-    return [part.shuiName, part.shuiReading, part.shuiMeaning, part.shuiGloss, ...(part.modern ?? [])]
+    return [part.shuiName, part.shuiReading, part.shuiMeaning, part.shuiGloss, part.ids, ...(part.modern ?? [])]
       .filter(Boolean).map(word => /** @type {string} */ (word).toLowerCase())
   }
   /** @param {PalettePart} part */
@@ -933,8 +936,8 @@
      place them over a Latin base the way the standard dotted-circle notation expects. */
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
-  .part:has(> .shui-ids){padding-bottom:11px;font-size:20px}
-  .shui-ids{position:absolute;inset:auto 0 0;font-size:9px;line-height:1;text-align:center;color:var(--_ink);background:var(--_surface);white-space:nowrap;overflow:hidden;user-select:none}
+  .part:has(> .shui-ids){padding-bottom:11px;font-size:18px}
+.shui-ids{position:absolute;inset:auto 0 0;font-size:8px;line-height:1;text-align:center;color:var(--_ink);background:var(--_surface);white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
