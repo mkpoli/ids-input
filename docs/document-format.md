@@ -369,9 +369,16 @@ operations. Invalid import leaves the open document untouched.
 
 Tabs, drafts, dirty-state comparisons and undo histories store the complete
 document. Raw invalid text being typed is separate editor-session state; it
-cannot masquerade as a valid document tree. A share link carrying edits includes
-the complete document; use a file when the document exceeds the host's URL or
-QR-code budget. Multiple documents per file are outside version 1.
+cannot masquerade as a valid document tree. Multiple documents per file are
+outside version 1.
+
+A share link carries the sequence in its fragment and, only where the document
+holds more than that sequence, the difference in a `doc` parameter: base64url of
+a small JSON object with the sequence, the title, the render recipe and each
+layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
+the same ones every read. A document its sequence already spells shares the
+fragment alone; use a file when the difference exceeds the host's URL or
+QR-code budget.
 
 A tab or draft keeps an `ids-input/session` envelope beside its document: the
 current document, the chosen layer and every ID the session has issued. Undo
@@ -385,11 +392,11 @@ them by `syncDocument`; the workshop keeps a session with each tab and saved
 draft. `layerAtPath` and `pathOfLayer` bridge editor paths and layer IDs;
 `layerFrames` gives the inspector and preview one layout frame per layer. The
 main preview renders the scoped document drawing, Adjust layout writes layer
-transforms, export uses the same scoped drawing, and share links carry the
-document. The workshop’s Undo and Redo consume the session’s transform steps
-before falling back to the editor’s structural history. The address bar adds
-the document token while any layer carries a transform. The core IDS parser and
-writer remain the projection boundary.
+transforms, export uses the same scoped drawing, and a share link carries the
+difference from the sequence. The workshop’s Undo and Redo consume the session’s
+transform steps before falling back to the editor’s structural history. The
+address bar adds the token while the document holds more than its sequence. The
+core IDS parser and writer remain the projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports
 and projects IDS, checks the document structure and transforms, reads and writes

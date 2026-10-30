@@ -37,7 +37,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { addressDocument, documentFrom, linkTo, sequenceFrom } from './lib/share.js'
+  import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -83,7 +83,10 @@
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
   let slots = $state(/** @type {number[][]} */ ([]))
-  const exportIncomplete = $derived(Boolean((addressDocument(currentSession()?.document) && !scopes) || (scopes && !scopes.complete)))
+  const exportIncomplete = $derived.by(() => {
+    const document = currentSession()?.document
+    return Boolean((document && transformed(document.root) && !scopes) || (scopes && !scopes.complete))
+  })
   const canExport = $derived(Boolean(!exportIncomplete && (scopes ?? drawing)))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
@@ -363,7 +366,7 @@
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
   const linkedTab = linked ? stored.find(tab => tab.sequence === linked
-    && (!linkedDocument || JSON.stringify(tab.document?.document) === JSON.stringify(linkedDocument))) : undefined
+    && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
@@ -511,10 +514,10 @@
     const tab = current()
     history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
   }
-  /** The active tab's complete document, for sharing. */
+  /** The active tab's document to share, or null when its sequence says it all. */
   function currentDocument() {
     const tab = current()
-    return tab ? sessionFor(tab).document : null
+    return tab ? addressDocument(sessionFor(tab).document) : null
   }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
