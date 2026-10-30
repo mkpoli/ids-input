@@ -30,6 +30,12 @@ try {
   const again = await reopened.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0])
   assert.equal(again?.document?.document?.title, 'Shared document')
   assert.deepEqual(again?.document?.document?.root?.children?.[0]?.transform?.[0]?.matrix, [1, 0, 0, 1, 14, 0])
+  const tabs = () => reopened.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').length)
+  for (let visit = 0; visit < 2; visit++) {
+    await reopened.reload({ waitUntil: 'domcontentloaded' })
+    await reopened.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
+    assert.equal(await tabs(), 1, 'a reload of the link keeps its one tab')
+  }
   const untouched = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
   untouched.on('pageerror', error => errors.push(error.message))
   await untouched.goto(`${base}/#%E2%BF%BA%E7%94%B5%E5%B0%BC`, { waitUntil: 'domcontentloaded' })

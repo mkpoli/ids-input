@@ -100,7 +100,7 @@ const GROUP = 'g'
 
 /** Whether `document` holds anything a link's fragment cannot carry. @param {Document} document */
 export function carriedMore(document) {
-  if (document.title !== undefined || document.render.mode !== 'unbound') return true
+  if (document.title !== undefined || document.render.mode !== 'unbound' || document.render.extensions !== undefined) return true
   if (document.extensions !== undefined) return true
   if (document.geometryEdits?.length) return true
   /** @param {Node} node @returns {boolean} */
@@ -148,7 +148,7 @@ export function shareDocument(document) {
   /** @type {Record<string, unknown>} */
   const token = { v: SHARE_VERSION, s: toSequence(document.root) }
   if (document.title !== undefined) token.t = document.title
-  if (document.render.mode !== 'unbound') token.r = document.render
+  if (document.render.mode !== 'unbound' || document.render.extensions !== undefined) token.r = document.render
   if (document.extensions !== undefined) token.e = document.extensions
   const nodes = pathOf(document.root)
   /** @type {[string, Record<string, unknown>][]} */
@@ -189,7 +189,18 @@ export function readShareDocument(token) {
   if (token_.t !== undefined) document.title = token_.t
   if (token_.r !== undefined) document.render = token_.r
   if (token_.e !== undefined) document.extensions = token_.e
-  const allocator = allocatorFor(document)
+  // An edit whose target the tree no longer has keeps its old ID, so no layer may receive it.
+  // Edit IDs are reserved the same way.
+  const edits = (Array.isArray(token_.g) ? token_.g : []).filter(edit => object(edit))
+  const carried = pathOf(document.root)
+  const reserved = edits.flatMap(edit => [edit.node, edit.id]).filter(id => typeof id === 'string' && !carried.has(/** @type {string} */ (id)))
+  const allocator = allocatorFor(document, reserved)
+  /** Rebuild every layer's ID, so a reference to a layer the tree lost cannot find a new one. @param {Node} node */
+  const renumber = node => {
+    const children = node.kind === 'operator' ? node.children : node.kind === 'group' ? [node.child] : []
+    for (const child of children) { child.id = allocator.next(); renumber(child) }
+  }
+  renumber(document.root)
   for (const [path, fields] of Array.isArray(token_.l) ? token_.l : []) {
     if (typeof path !== 'string' || !object(fields)) { issues.push({ path: '/l', message: 'a layer is a path and its fields' }); continue }
     const found = findAt(document.root, path)
@@ -197,7 +208,7 @@ export function readShareDocument(token) {
     /** @type {Node} */
     let node = found.node
     if (fields.k === GROUP) {
-      const wrapped = /** @type {Node} */ ({ id: allocator.next(), kind: 'group', child: { ...node } })
+      const wrapped = /** @type {Node} */ ({ id: allocator.next(), kind: 'group', child: node })
       if (found.parent === null) document.root = wrapped
       else if (found.key === 'child') /** @type {import('./model.js').Group} */ (/** @type {unknown} */ (found.parent)).child = wrapped
       else /** @type {import('./model.js').OperatorNode} */ (/** @type {unknown} */ (found.parent)).children[found.index] = wrapped
@@ -208,9 +219,9 @@ export function readShareDocument(token) {
     if (fields.e !== undefined) node.extensions = fields.e
   }
   if (issues.length) throw new DocumentError(issues)
-  if (Array.isArray(token_.g)) {
+  if (edits.length) {
     const ids = new Map([...pathOf(document.root)].map(([path, node]) => [path, node.id]))
-    document.geometryEdits = token_.g.map(/** @param {any} edit */ edit => ({ ...edit, node: ids.get(edit.node) ?? edit.node, id: edit.id ?? allocator.next() }))
+    document.geometryEdits = edits.map(/** @param {any} edit */ edit => ({ ...edit, node: ids.get(edit.node) ?? edit.node, id: edit.id ?? allocator.next() }))
   }
   return assertDocument(document)
 }

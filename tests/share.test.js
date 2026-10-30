@@ -63,6 +63,30 @@ describe('document share tokens', () => {
     document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, 0] }]
     expect(shareDocument(document).length * 2).toBeLessThan(b64(writeDocument(document)).length)
   })
+  it('leaves an edit whose target is gone without one', () => {
+    const document = fromSequence('⿰木口')
+    document.render = { mode: 'pinned', engine: 'e', revision: '1', options: {}, assets: [{ role: 'a', sha256: 'a'.repeat(64) }] }
+    document.geometryEdits = [{ id: 'e1', node: 'l2', geometry: 'b'.repeat(64), target: { kind: 'stroke', id: 's1' }, transform: [] }]
+    expect(document.root.children[0].id).toBe('l2')
+    document.root.children[0] = { id: 'other', kind: 'component', char: '木' }
+    const read = readShareDocument(shareDocument(document))
+    expect(read.root.children[0].id).not.toBe('l2')
+    expect(read.geometryEdits?.[0].node).toBe('l2')
+    expect(findLayer(read.root, 'l2')).toBeNull()
+  })
+  it('keeps extensions on an unbound recipe', () => {
+    const document = fromSequence('木')
+    document.render = { mode: 'unbound', extensions: { source: 'custom' } }
+    expect(shareDocument(document)).not.toBe('')
+    expect(readShareDocument(shareDocument(document)).render.extensions).toEqual({ source: 'custom' })
+  })
+  it('reads one document the same way however its keys are ordered', () => {
+    const document = fromSequence('⿰木口')
+    document.root.transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, 0] }]
+    const reordered = fromSequence('⿰木口')
+    reordered.root = { id: 'root', kind: 'operator', transform: document.root.transform, op: '⿰', children: document.root.children }
+    expect(shareDocument(reordered)).toBe(shareDocument(document))
+  })
   it('rejects a token that is not one', () => {
     expect(() => readShareDocument('e30')).toThrow(DocumentError)
   })

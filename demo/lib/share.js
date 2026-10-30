@@ -36,6 +36,11 @@ export function addressDocument(document) {
   return document && carriedMore(document) ? document : null
 }
 
+/** Whether two documents share alike, their property order aside. @param {import('../../src/document/index.js').Document | null} [a] @param {import('../../src/document/index.js').Document | null} [b] */
+export function sameShare(a, b) {
+  return (a ? shareDocument(a) : '') === (b ? shareDocument(b) : '')
+}
+
 /** The document a link carries, or null. @param {Location | URL} where */
 export function documentFrom(where) {
   const token = new URLSearchParams(where.search).get('doc')

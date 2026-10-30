@@ -37,7 +37,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { addressDocument, documentFrom, linkTo, sequenceFrom, transformed } from './lib/share.js'
+  import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -366,7 +366,7 @@
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
   const linkedTab = linked ? stored.find(tab => tab.sequence === linked
-    && (!linkedDocument || JSON.stringify(tab.document?.document) === JSON.stringify(linkedDocument))) : undefined
+    && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
