@@ -60,7 +60,7 @@ function say(value) {
  *  note. @param {string} value */
 function publicHref(value) {
   try {
-    const url = new URL(value, location.href)
+    const url = new URL(value, globalThis.location?.href)
     if (url.protocol === 'file:') return '(local file)'
     if (isLocalHost(url.hostname)) {
       const site = new URL(SITE)
@@ -75,9 +75,24 @@ function publicHref(value) {
 /** The share link alone: the path and the two parameters that open the sequence, on the published
  *  site, so a link from a local run or a preview build still opens and names no other host.
  *  @param {string} value */
+/**
+ * The share link within the size a report can carry: the document part is dropped rather than cut,
+ * so a link that arrives still reopens the sequence.
+ * @param {string} value @returns {string}
+ */
+export function shareLink(value) {
+  const whole = shareHref(value)
+  if (whole.length <= LIMITS.link) return whole
+  const url = new URL(whole)
+  url.searchParams.delete('doc')
+  const short = url.href
+  return short.length <= LIMITS.link ? short : short.slice(0, LIMITS.link)
+}
+
+/** A link on the published site, carrying only the sequence and the document. @param {string} value */
 function shareHref(value) {
   try {
-    const url = new URL(value, location.href)
+    const url = new URL(value, globalThis.location?.href)
     if (url.protocol === 'file:') return ''
     for (const name of [...url.searchParams.keys()]) if (name !== 'ids' && name !== 'doc') url.searchParams.delete(name)
     url.hash = ''
@@ -292,7 +307,7 @@ export async function reportSnapshot(source) {
   if (sequence) await settled(source.preview)
   const taken = {
     sequence,
-    link: shareHref(source.link).slice(0, LIMITS.link),
+    link: shareLink(source.link),
     document: workspaceJson(source.workspace),
     context: contextJson(reportContext(source, source.preview), consoleRing()),
   }
