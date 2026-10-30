@@ -138,6 +138,8 @@
   /** @param {PointerEvent} event */
   async function slide(event) {
     if (!drag || drag.pointer !== event.pointerId) return
+    // A release outside the page leaves no pointerup here; the next move shows the button is up.
+    if (event.buttons === 0) { drag = null; return }
     if (!drag.live) {
       if (Math.abs(event.clientX - drag.startX) < 5) return
       drag.live = true
