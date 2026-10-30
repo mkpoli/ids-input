@@ -61,7 +61,7 @@ export function pyramidSequence(part, layers, { reverse = false } = {}) {
     const read = parse(text, { open: true })
     const shape = read.tree === undefined ? null : pyramidRows(read.tree, { minLayers: layers })
     if (!shape || shape.layers !== layers || (layers > 1 && shape.reverse !== reverse)
-      || !sameTree(/** @type {import('./ids.js').Part} */ (shape.cell), cell)) {
+      || !sameTree(shape.cell, cell)) {
       throw new TypeError('A pyramid part cannot be repeated as written.')
     }
   }
