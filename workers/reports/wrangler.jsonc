@@ -4,7 +4,7 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "ids-reports",
   "main": "src/index.js",
-  "compatibility_date": "2026-10-31",
+  "compatibility_date": "2026-10-30",
   "workers_dev": true,
   "preview_urls": true,
   // The report endpoint stands on its own host under the site, so the browser posts cross-origin and
