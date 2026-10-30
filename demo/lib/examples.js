@@ -209,8 +209,9 @@ export const EXAMPLE_GROUPS = [
   // gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji article gives the remaining forms:
   // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
   // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). 唯吾知足, 黃金萬兩 and 吉祥如意 share strokes
-  // between their characters, as 唯吾知足 does with one 口; their sources do not describe the sharing,
-  // so the examples arrange the four characters in a square as editorial input forms.
+  // between their characters. 唯吾知足 sets 五 above 矢, 口 and 隹 above 止, so one 口 serves all four,
+  // as its photograph shows; 黃金萬兩 stacks 黃, 金, 萬 and 兩 in a column; 吉祥如意 keeps a square
+  // because its diamond's cross cannot be drawn cleanly.
   { key: 'ligature', examples: [
     // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
     // 辶's embrace, which is what the example draws.
@@ -218,10 +219,10 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
-    // These three arrange four characters in a square. Their sources describe shared strokes that an
-    // IDS tree cannot express, so the arrangements are editorial.
-    { sequence: '⿱⿰唯吾⿰知足', refs: [46], char: '' },
-    { sequence: '⿱⿰黃金⿰萬兩', refs: [46,51], char: '' },
+    // 唯吾知足 and 黃金萬兩 follow the photographed arrangements; 吉祥如意 is a square because its
+    // diamond's cross cannot be drawn cleanly. IDS cannot share a stroke, so these are editorial.
+    { sequence: '⿳五⿲矢口隹止', refs: [46], char: '' },
+    { sequence: '⿱黃⿱金⿱萬兩', refs: [46,51], char: '' },
     { sequence: '⿱⿰吉祥⿰如意', refs: [50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },

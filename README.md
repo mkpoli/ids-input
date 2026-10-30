@@ -978,8 +978,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
-  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters, and no recorded description
-  writes the sharing, so the examples arrange the four characters in a square as editorial input forms.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 follows the
+  photograph's cross, 五 above 矢, 口 and 隹 above 止, with one 口 for all four; 黃金萬兩 follows its
+  column of 黃, 金, 萬 and 兩; 吉祥如意 keeps a square because the diamond's cross cannot be drawn.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
