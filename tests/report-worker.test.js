@@ -177,6 +177,7 @@ describe('report bodies', () => {
       preview: 'failed / failed',
       face: 'serif',
       local: false,
+      previewVersion: true,
       historyLength: 2,
       console: ['TypeError: x is not a function'],
     },
@@ -206,6 +207,7 @@ describe('report bodies', () => {
     expect(body).toContain('| Composer base URL | https://ids.mkpo.li/composer/ |')
     expect(body).toContain('| Preview state | failed / failed |')
     expect(body).toContain('| Han face | serif |')
+    expect(body).toContain('| Preview version | true |')
     expect(body).toContain('| History entries | 2 |')
   })
   it('folds the console output and the document away', () => {

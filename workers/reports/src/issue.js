@@ -28,6 +28,7 @@ const ENVIRONMENT = [
   ['fonts', 'Loaded fonts'],
   ['composerBase', 'Composer base URL'],
   ['local', 'Local build'],
+  ['previewVersion', 'Preview version'],
   ['historyLength', 'History entries'],
 ]
 

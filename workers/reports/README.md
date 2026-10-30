@@ -27,7 +27,7 @@ A `fingerprint` field is accepted and ignored; the dedupe key is computed here.
 The keys `context` is read for, in the order the issue's environment table lists them:
 `appVersion`, `commit`, `route`, `preview` (the preview's step and badge), `viewport`,
 `devicePixelRatio`, `locale`, `theme`, `face`, `userAgent`, `platform`, `fonts` (an array),
-`composerBase`, `local` and `historyLength`. `face` and the rest of the settings ride in `context`. A `console` array holds the recent log lines. A
+`composerBase`, `local`, `previewVersion` and `historyLength`. `face` and the rest of the settings ride in `context`. A `console` array holds the recent log lines. A
 missing key reads as `—`. `locale`, when it is one of `en ja zh-Hans zh-Hant ko vi`, also decides
 the `lang:<locale>` label.
 
