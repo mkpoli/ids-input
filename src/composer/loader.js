@@ -45,7 +45,7 @@ const recordOf = (file, key) => file[recordHash(key)] ?? null
  * in the export (`manifest.json`, `layout.json`, `g/07a.json`), or null where there is no such file;
  * `fromUrl` builds one over HTTP.
  */
-export function createSource(read, { concurrency = 10, patch = null } = {}) {
+export function createSource(read, { concurrency = 10 } = {}) {
   let ready = null
   // At most `concurrency` files are asked for at once; the rest wait their turn.
   let active = 0
@@ -88,7 +88,7 @@ export function createSource(read, { concurrency = 10, patch = null } = {}) {
       const file = name => { const found = files.get(name); if (!found) missing.add(name); return found ?? null }
       return {
         manifest: source.manifest, layout: source.layout, missing,
-        rec: key => patch?.[key] ?? (() => { const f = file(recordFile(key)); return f ? recordOf(f, key) : null })(),
+        rec: key => { const f = file(recordFile(key)); return f ? recordOf(f, key) : null },
         // A host list in the order of the composer's index (`r`).
         hosts: (key, place) => {
           const f = file(hostsFile(key, place)), id = `${place}\t${key}`
@@ -110,7 +110,7 @@ export function createSource(read, { concurrency = 10, patch = null } = {}) {
 }
 
 /** A source over HTTP: `base` is the folder holding the export, `suffix` what each name carries there (`.gz`). */
-export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch, patch = null } = {}) {
+export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch } = {}) {
   const root = base.endsWith('/') ? base : `${base}/`
   return unicodeSource({ fallback: createSource(async name => {
     const response = await get(`${root}${name}${suffix}`)
@@ -119,7 +119,7 @@ export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch, patc
     if (response.status === 404 && /^[gp]\//.test(name)) return null
     if (!response.ok) throw new Error(`${name}: ${response.status}`)
     return await response.arrayBuffer()
-  }, { patch }) })
+  }) })
 }
 
 // A drawing asks for files as it needs them: each round loads those the pass before found missing.
