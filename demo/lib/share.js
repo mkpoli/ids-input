@@ -1,10 +1,10 @@
-// A sequence in the page's own path, so a link opens it: `/⿰亻哥`. The fragment `#⿰亻哥` and
-// `?ids=⿰亻哥` say the same and are still read, as is `?doc=<base64url>` for a document that
-// carries more than its sequence.
+// A sequence in the page's own path, so a link opens it: `/⿰亻哥`. A sequence holding `.` or `/`
+// stays in `?ids=`, which the path parser would eat; the fragment `#⿰亻哥` says it too. All are
+// read. A document that carries more than its sequence rides in `?doc=<base64url>`.
 import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
 
-/** The one path segment that names a sequence, or null for another path (a page, an asset).
- *  @param {Location | URL} where */
+/** The one path segment that names a sequence, or null for another path: a file (`embed.html`,
+ *  `robots.txt`), an asset below `assets/`, or the root. @param {Location | URL} where */
 function pathSequence(where) {
   let path
   try { path = decodeURIComponent(where.pathname) } catch { return null }
@@ -29,11 +29,16 @@ export function sequenceFrom(where) {
 /** The link to `sequence` on this page, with an optional document. @param {string} sequence @param {Location | URL} where @param {import('../../src/document/index.js').Document | null} [document] */
 export function linkTo(sequence, where, document = null) {
   const url = new URL(where.href)
-  url.searchParams.delete('ids')
+  // A `.` or a `/` in the text is not a path segment as it stands: the parser drops the former as a
+  // dot segment and reads the latter back as a separator.
+  const inPath = Boolean(sequence) && !/[./]/.test(sequence)
+  if (inPath) url.searchParams.delete('ids')
+  else if (sequence) url.searchParams.set('ids', sequence)
+  else url.searchParams.delete('ids')
   const token = document ? shareDocument(document) : ''
   if (token) url.searchParams.set('doc', token)
   else url.searchParams.delete('doc')
-  url.pathname = sequence ? `/${encodeURIComponent(sequence)}` : '/'
+  url.pathname = inPath ? `/${encodeURIComponent(sequence)}` : '/'
   url.hash = ''
   return url.href
 }

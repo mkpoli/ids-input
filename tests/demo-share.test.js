@@ -24,6 +24,13 @@ describe('share links', () => {
     expect(clean.searchParams.has('doc')).toBe(false)
     expect(sequenceFrom(clean)).toBe('⿰')
   })
+  it('keeps a text with a dot or a slash in `ids` and reads it back', () => {
+    for (const text of ['.', '..', '⿰木.', 'a/b', '[. ']) {
+      const url = new URL(linkTo(text, new URL('https://example.org/')))
+      expect(url.pathname).toBe('/')
+      expect(sequenceFrom(url)).toBe(text)
+    }
+  })
   it('reads a path, a fragment and `ids` alike', () => {
     expect(sequenceFrom(new URL('https://example.org/%E2%BF%B0%E6%9C%A8'))).toBe('⿰木')
     expect(sequenceFrom(new URL('https://example.org/#%E2%BF%B0%E6%9C%A8'))).toBe('⿰木')
