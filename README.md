@@ -1265,10 +1265,11 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
 
-The demo deploys to Cloudflare Pages from every push to `main`, through
-`.github/workflows/deploy.yml`; a pull request gets a preview on its own branch. Both need the
-`CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets, and `demo/public/_redirects`
-answers every path with the app so a sequence can live in the path.
+The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
+`.github/workflows/deploy.yml`; a pull request uploads a preview version on its own alias. Both need
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
+reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
+request to the assets.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
