@@ -37,10 +37,10 @@ export default defineConfig({
   root: import.meta.dirname,
   base: '/',
   // What the page says it is when someone reports a problem: the package's version and the commit
-  // the deploy built, `dev` for a build with none.
+  // the deploy built, `dev` for a build the CI did not make.
   define: {
     __APP_VERSION__: JSON.stringify(VERSION),
-    __BUILD_COMMIT__: JSON.stringify(process.env.VITE_BUILD_COMMIT || 'dev'),
+    __BUILD_COMMIT__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_BUILD_COMMIT || 'dev'),
   },
   plugins: [svelte(), ortAssets()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },

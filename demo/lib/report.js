@@ -175,20 +175,20 @@ const attribute = (preview, name) => redact(preview?.getAttribute(name) ?? '').s
  *  @param {Element | null} preview @returns {Record<string, unknown>} */
 export function reportContext(settings, preview) {
   return {
-    version: __APP_VERSION__,
+    appVersion: __APP_VERSION__,
     commit: String(__BUILD_COMMIT__).slice(0, 8),
     route: location.protocol === 'file:' ? '(local file)' : redact(`${location.pathname}${location.hash}`).slice(0, 1000),
-    local: location.protocol === 'file:' || LOCAL.test(location.hostname) || undefined,
+    preview: [attribute(preview, 'data-step'), attribute(preview, 'data-label')].filter(Boolean).join(' / '),
     viewport: `${innerWidth}×${innerHeight}`,
-    pixelRatio: devicePixelRatio,
+    devicePixelRatio,
     locale: settings.locale,
     theme: settings.theme,
     face: settings.face,
-    composer: logHref(settings.composer),
+    composerBase: logHref(settings.composer),
     userAgent: navigator.userAgent.slice(0, 500),
     platform: navigator.platform,
     fonts: loadedFonts(),
-    preview: { step: attribute(preview, 'data-step'), label: attribute(preview, 'data-label') },
+    local: location.protocol === 'file:' || LOCAL.test(location.hostname) || undefined,
     historyLength: history.length,
   }
 }
