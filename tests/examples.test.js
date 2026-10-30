@@ -94,6 +94,7 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
     expect(group.examples.map(example => example.sequence)).toEqual([
       '⿺辶⿱宀⿱⿰王尔⿲隹貝招', '⿱⿰日日⿲有見財', '⿰⿱日斗⿱進金', '⿳𦥯⿲女子乚皿',
+      '⿱⿰唯吾⿰知足', '⿱⿰黃金⿰萬兩', '⿱⿰吉祥⿰如意',
       '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
@@ -102,6 +103,9 @@ describe('the demo examples', () => {
     expect(refs.get('⿱⿰日日⿲有見財')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿰⿱日斗⿱進金')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿳𦥯⿲女子乚皿')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('zi-tools-kongmeng')])
+    expect(refs.get('⿱⿰唯吾⿰知足')).toEqual([sourceNumber('uhk-hetizi')])
+    expect(refs.get('⿱⿰黃金⿰萬兩')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
+    expect(refs.get('⿱⿰吉祥⿰如意')).toEqual([sourceNumber('fznews-jixiang')])
     expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
     expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])
     for (const sequence of ['⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo']) {
