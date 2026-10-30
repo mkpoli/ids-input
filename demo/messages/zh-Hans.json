@@ -93,6 +93,7 @@
   "app.menu": "菜单",
   "app.more": "更多",
   "app.output": "输出",
+  "app.preview.large": "放大查看",
   "app.panels.resize": "调整面板高度",
   "app.panels.resizeWidth": "调整{panel}面板宽度",
   "app.prefs.composer": "预览字形数据来源",

@@ -1,0 +1,45 @@
+// Run against a local devrun server: IDS_URL=http://localhost:5186 bun demo/check-preview-large.js
+import { chromium } from 'playwright-core'
+import { strict as assert } from 'node:assert'
+
+const sequence = '⿱苦⿲⿰⿹耳舌鼻⿳⿸⿹平惡意眼⿰淨𭰏⿰⿱女子身'
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
+try {
+  const errors = []
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+  await page.locator('.ids-field input').fill(sequence)
+  await page.waitForFunction(() => !/Composing/.test(document.querySelector('.ids-preview-meta')?.textContent ?? ''))
+  await page.waitForFunction(() => Boolean(document.querySelector('.ids-preview-large svg path')))
+  const before = await page.locator('.preview .ids-preview-large').boundingBox()
+  const button = page.getByRole('button', { name: 'Large view' })
+  assert.equal(await button.isVisible(), true, 'the large view button is visible')
+  await button.click()
+  const dialog = page.locator('dialog#large-preview[open]')
+  await dialog.waitFor()
+  await page.waitForFunction(() => Boolean(document.querySelector('dialog#large-preview .ids-preview-large svg path')))
+  const after = await page.locator('dialog#large-preview .ids-preview-large').boundingBox()
+  assert.ok(before && after && after.width > before.width * 2, `preview grew from ${before?.width} to ${after?.width}`)
+  assert.equal(await page.evaluate(() => document.body.style.overflow), 'hidden', 'the page behind the dialog does not scroll')
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Close', 'focus starts on the close button')
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: process.env.SHOT ?? '/tmp/preview-large.png' })
+  await page.locator('.large-close').click()
+  await page.waitForFunction(() => !document.querySelector('dialog#large-preview')?.hasAttribute('open'))
+  assert.equal(await page.evaluate(() => document.body.style.overflow), '', 'the page scroll returns')
+  assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), 'Large view', 'focus returns to the large view button')
+  await button.click()
+  await dialog.waitFor()
+  await page.keyboard.press('Escape')
+  await page.waitForFunction(() => !document.querySelector('dialog#large-preview')?.hasAttribute('open'))
+  await button.click()
+  await dialog.waitFor()
+  const box = await dialog.boundingBox()
+  await page.mouse.click(box.x + 8, box.y + box.height / 2)
+  assert.equal(await page.evaluate(() => document.querySelector('dialog#large-preview')?.hasAttribute('open')), true, 'a click on the dialog padding keeps it open')
+  await page.mouse.click(8, 8)
+  await page.waitForFunction(() => !document.querySelector('dialog#large-preview')?.hasAttribute('open'))
+  assert.deepEqual(errors, [])
+  console.log('PASS large view grows the drawing and Escape closes it')
+} finally { await browser.close() }

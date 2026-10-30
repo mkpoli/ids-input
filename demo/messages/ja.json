@@ -93,6 +93,7 @@
   "app.menu": "メニュー",
   "app.more": "その他",
   "app.output": "出力",
+  "app.preview.large": "拡大表示",
   "app.panels.resize": "パネルの高さを変える",
   "app.panels.resizeWidth": "{panel}パネルの幅を変える",
   "app.prefs.composer": "プレビューの字形データ",

@@ -80,6 +80,22 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  // The drawing at the full window, for a description too dense for the output column. A modal
+  // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
+  let large = $state(false)
+  let largeDialog = $state(/** @type {HTMLDialogElement | null} */ (null))
+  $effect(() => {
+    const dialog = largeDialog
+    if (!dialog) return
+    if (large && !dialog.open) dialog.showModal()
+    else if (!large && dialog.open) dialog.close()
+  })
+  $effect(() => {
+    if (!large) return
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = overflow }
+  })
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
   let slots = $state(/** @type {number[][]} */ ([]))
@@ -1003,6 +1019,8 @@
           <div class="adjust">
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
+            <button type="button" class="adjust-toggle" aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={!drawing && !scopes}
+              onclick={() => { large = true }}>{t('app.preview.large')}</button>
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
@@ -1012,6 +1030,19 @@
             {/if}
           </div>
         </div>
+        <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
+          oncancel={() => { large = false }} onclose={() => { large = false }}
+          onclick={event => {
+            if (event.target !== largeDialog || !largeDialog) return
+            const box = largeDialog.getBoundingClientRect()
+            if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) large = false
+          }}>
+          <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
+          {#if large}
+            <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+          {/if}
+        </dialog>
         <div class="details">
           <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
@@ -1149,6 +1180,14 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .large-dialog{width:min(90vh,92vw);width:min(90dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
+  .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
+  .large-dialog :global(.ids-preview){width:100%;max-width:100%}
+  .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
+  .large-close{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer}
+  .large-close:hover{border-color:var(--line-strong)}
+  .large-close:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
   .encoded-character code{font:11px ui-monospace,monospace}
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
