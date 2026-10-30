@@ -130,6 +130,8 @@
    */
   function grab(event, id) {
     if (event.button !== 0 || !event.isPrimary || event.pointerType === 'touch' || drag || tabs.length < 2) return
+    // A new press starts a new gesture, so a release click left over from the last one is spent.
+    dropped = null
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const tab = button.closest('.tab')
     if (!tab) return
@@ -179,7 +181,11 @@
     const held = drag
     drag = null
     if (!held?.moved) return
-    if (click) dropped = { id: held.id, at: performance.now() }
+    if (click) {
+      dropped = { id: held.id, at: performance.now() }
+      // Reordering moves the button in the DOM and drops its focus; put it back where it was held.
+      tick().then(() => { if (document.activeElement === document.body) focus(held.id) })
+    }
     oncommit()
   }
   /** @param {PointerEvent} event */
@@ -237,7 +243,8 @@
 
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) dismiss() }}
   onfocusin={event => { if (menu && menuEl && !menuEl.contains(/** @type {Node} */ (event.target))) dismiss() }}
-  onresize={() => dismiss()} onpointermove={slide} onpointerup={letGo} onpointercancel={letGo} onblur={() => { if (drag) end(false) }} />
+  onresize={() => dismiss()} onpointermove={slide} onpointerupcapture={letGo} onpointercancelcapture={letGo}
+  onblur={() => { if (drag) end(false) }} />
 
 <div class="tabbar">
   <div class="tabs" class:dragging={drag?.live} role="tablist" aria-label={t('app.tabs.label')} bind:this={strip}>

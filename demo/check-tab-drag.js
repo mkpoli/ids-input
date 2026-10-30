@@ -39,6 +39,9 @@ try {
   const start = await box(first), end = await box(third)
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
   await page.mouse.down()
+  await page.mouse.move(start.x + start.width / 2 + 20, start.y + start.height / 2)
+  const nudged = await box(first)
+  assert.ok(Math.abs(nudged.x - start.x - 20) <= 2, 'the held tab follows the pointer')
   await page.mouse.move(end.x + end.width / 2 + 10, end.y + end.height / 2, { steps: 20 })
   assert.deepEqual(await order(), [second, third, first], 'the dragged tab takes the place under the pointer')
   assert.equal(await page.locator('.tab.dragging').count(), 1, 'the dragged tab is marked')
@@ -46,11 +49,15 @@ try {
   assert.match(moved, /translateX\((?!0px)/, 'the dragged tab follows the pointer')
   await page.mouse.up()
   assert.equal(await page.locator('.tab.dragging').count(), 0, 'the drag ends on release')
+  assert.equal(await page.locator(`.tab[data-tab-id="${first}"]`).evaluate(el => /** @type {HTMLElement} */ (el).style.transform), '', 'the held tab settles into its slot')
+  assert.equal(await page.locator(`.tab[data-tab-id="${first}"] [role="tab"]`).evaluate(el => el === document.activeElement), true, 'the dropped tab keeps the focus')
   assert.equal(await active(), chosen, 'dragging leaves the active tab alone')
   const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').map(item => item.id))
   assert.deepEqual(kept, [second, third, first], 'the order is kept for the next visit')
 
-  // A press that does not move is still a click, and a drag that ends elsewhere is not.
+  // A new press spends the release click left over from the drag.
+  await page.locator(`.tab[data-tab-id="${first}"] [role="tab"]`).click()
+  assert.equal(await active(), first, 'a later click on the dropped tab chooses it')
   await page.locator(`.tab[data-tab-id="${second}"] [role="tab"]`).click()
   assert.equal(await active(), second, 'a click still chooses its tab')
   await page.reload({ waitUntil: 'domcontentloaded' })
@@ -110,6 +117,22 @@ try {
   await page.mouse.up()
   assert.deepEqual(await order(), [...before.slice(1), before[0]], 'the held tab lands last as the strip scrolls')
 
+  // A release whose pointerup the page never sees still ends the drag and its edge scroll.
+  await strip.evaluate(el => { el.scrollLeft = 0 })
+  const again = (await order())[0]
+  await page.locator(`.tab[data-tab-id="${again}"] [role="tab"]`).click()
+  const grip = await box(again), bound = await strip.boundingBox()
+  await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(bound.x + bound.width - 6, grip.y + grip.height / 2, { steps: 6 })
+  await page.waitForFunction(() => document.querySelector('.tabs').scrollLeft > 10)
+  await page.evaluate(() => document.addEventListener('pointerup', event => event.stopImmediatePropagation(), { capture: true, once: true }))
+  await page.mouse.up()
+  assert.equal(await page.locator('.tab.dragging').count(), 0, 'a missed release ends the drag')
+  const frozen = await order()
+  await page.waitForTimeout(700)
+  assert.deepEqual(await order(), frozen, 'no more swaps after a missed release')
+
   assert.deepEqual(errors, [])
-  console.log('PASS drag reorders tabs, keeps the active tab, and persists the order')
+  console.log('PASS drag reorders tabs, keeps the active tab, persists the order, and ends cleanly')
 } finally { await browser.close() }
