@@ -32,7 +32,7 @@ try {
     await page.locator('.tab-menu').waitFor({ state: 'detached' })
   }
   const undo = async () => {
-    const button = page.locator('.toast button')
+    const button = page.locator('.toast').filter({ hasText: /Closed/ }).last().locator('button')
     await button.waitFor()
     await button.click()
   }
@@ -59,6 +59,17 @@ try {
   await undo()
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the group in order')
   assert.equal(await active(), 'tab-1', 'undo shows the tab that was being edited')
+
+  // The editor state of the closed group comes back with it.
+  await page.locator('.ids-field input').fill('⿱日木')
+  await open('tab-2')
+  await item('Close other tabs').click()
+  assert.equal(await page.locator('.ids-field input').inputValue(), '⿱艹半', 'the remaining tab is shown')
+  await undo()
+  assert.equal(await active(), 'tab-1', 'undo shows the edited tab again')
+  assert.equal(await page.locator('.ids-field input').inputValue(), '⿱日木', 'its unsaved text comes back')
+  await page.keyboard.press('Control+z')
+  assert.equal(await page.locator('.ids-field input').inputValue(), '⿰氵恩', 'its undo history comes back')
 
   // Close tabs to the left of a tab, showing it when the active tab goes.
   await open('tab-2')
