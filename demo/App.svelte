@@ -888,7 +888,7 @@
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
-      <a class="brand" href="./" aria-label={t('app.title')}>
+      <a class="brand" href="/" aria-label={t('app.title')}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>

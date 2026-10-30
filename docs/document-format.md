@@ -372,13 +372,14 @@ document. Raw invalid text being typed is separate editor-session state; it
 cannot masquerade as a valid document tree. Multiple documents per file are
 outside version 1.
 
-A share link carries the sequence in its fragment and, only where the document
+A share link carries the sequence in its path and, only where the document
 holds more than that sequence, the difference in a `doc` parameter: base64url of
 a small JSON object with the sequence, the title, the render recipe and each
 layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
 the same ones every read. A document its sequence already spells shares the
-fragment alone; use a file when the difference exceeds the host's URL or
-QR-code budget.
+path alone; use a file when the difference exceeds the host's URL or QR-code
+budget. The older `#` and `?ids=` forms still open. Every unknown path is the app, so a typo opens
+as a draft on a fresh tab and the page carries its canonical at the root.
 
 A tab or draft keeps an `ids-input/session` envelope beside its document: the
 current document, the chosen layer and every ID the session has issued. Undo
@@ -395,8 +396,8 @@ main preview renders the scoped document drawing, Adjust layout writes layer
 transforms, export uses the same scoped drawing, and a share link carries the
 difference from the sequence. The workshop’s Undo and Redo consume the session’s
 transform steps before falling back to the editor’s structural history. The
-address bar adds the token while the document holds more than its sequence. The
-core IDS parser and writer remain the projection boundary.
+address keeps the sequence in its path and adds the token while the document holds more than that
+sequence. The core IDS parser and writer remain the projection boundary.
 
 The model layer lives in [`src/document`](../src/document/index.js): it imports
 and projects IDS, checks the document structure and transforms, reads and writes

@@ -77,6 +77,7 @@ try {
   assert.equal(await page.locator('.parts-grid .part').first().getAttribute('data-character'), '짝')
   await filter.fill('')
 
+  // The fragment form, kept as cover for links written before the sequence moved to the path.
   const draft = await browser.newPage()
   await draft.goto(new URL('/#' + encodeURIComponent('⿰⬚木'), process.env.IDS_URL ?? 'http://localhost:5173').href)
   await draft.getByRole('tab', { name: 'Parts', exact: true }).click()

@@ -1106,9 +1106,9 @@ without a code point, folds each section, and jumps to a section from a chip tha
 in view. An example opens a tab. The toolbar also holds a share link with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
-The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. While a layer
-transform exists the address bar carries the document instead, so copying the location keeps the
-placement; opening such a link keeps the token. A plain sequence stays in the hash. Tabs use
+The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
+`#⿰亻哥` and `?ids=⿰亻哥` forms still open. A document that holds more than its sequence rides along
+as `?doc=`, so copying the location keeps a placement and opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
 text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
