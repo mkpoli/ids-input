@@ -8,7 +8,7 @@ import { hasUnicodeGlyph } from '../src/composer/unicode.js'
 const GENERAL = 'general'
 const SHARDS = 'unicode'
 const ALWAYS = [GENERAL, 'parts', 'strokes']
-const FAMILY = { general: 'Noto Sans CJK JP', planes: 'Plangothic Planes', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean' }
+const FAMILY = { operators: 'IDS Operators', general: 'Noto Sans CJK JP', planes: 'Plangothic Planes', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean' }
 const SCRIPTS = [
   { face: 'seal', range: [0x3D000, 0x3FC3F] },
   { face: 'tangut', range: [0x17000, 0x18DFF] },
@@ -47,6 +47,7 @@ const SHARD_LIMIT = 48
 /** The face a character is set in: its script's, the parts subset outside the plane fonts cover, or a shard face. @param {string} character */
 function nameOf(character) {
   const point = character.codePointAt(0) ?? 0
+  if (within(point, [0x2FF0, 0x2FFF]) || point === 0x303E || point === 0x31EF) return 'operators'
   const script = SCRIPTS.find(({ range }) => within(point, range))
   if (script) return script.face
   if (within(point, [0x2E80, 0x2EFF]) || within(point, [0x31E4, 0x31EF])) return 'parts'

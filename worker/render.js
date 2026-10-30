@@ -7,12 +7,12 @@ import { compose } from '../src/composer/loader.js'
 import { unpack } from '../src/composer/loader.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE } from './card.js'
-import { OPERATORS } from './operators.js'
+import { OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 // The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v8'
+const VERSION = 'v9'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // The entry point starts the module's WebAssembly on import, so this only waits for it.
@@ -57,7 +57,7 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
  * @param {any} env @param {string} sequence
  */
 export async function characterOf(env, sequence) {
-  if ([...sequence].length === 1 && !OPERATORS[sequence]) return sequence
+  if ([...sequence].length === 1 && !OPERATORS.some(([operator]) => operator === sequence)) return sequence
   return (await idsIndex(env))[sequence] ?? null
 }
 
@@ -71,7 +71,7 @@ async function draw(env, sequence) {
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
 async function png(env, sequence, drawing, char) {
   await ready()
-  const { buffers, familyOf } = await facesFor(env, sequence)
+  const { buffers, familyOf } = await facesFor(env, sequence + (char ?? ''))
   const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },

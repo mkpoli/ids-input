@@ -1120,13 +1120,14 @@ font. Settings, drafts, the theme and font choice stay in `localStorage`; the ke
 
 A share link is a page of its own at `/s/<sequence>`. Its address, title and preview tags name the
 sequence, the character it describes and that character's code point, and point at a card image at
-`/og/<sequence>.png`: 1200×630, the drawing in a framed square, the sequence with its operators
-drawn as icons, and the site's name. The home page previews an example.
+`/og/<sequence>.png`: 1200×630, the drawing in a rounded frame, the sequence and the site's name.
+The card follows the workshop's neutral surfaces and blue accent. IDC characters use glyphs from
+the bundled GenZui Sans font. The home page previews an example.
 
 The worker behind `ids.mkpo.li` answers those two paths and hands every other request to the built
 workshop. It composes from the same export the editor uses, rasterizes with `@cf-wasm/resvg`, and
 keeps a card in the cache for a day. A sequence the composer cannot draw still gets a card, with the
-frame empty; one that describes no character says `UNENCODED` where the code point would go. A card
+frame labelled `Preview unavailable`; one without a lookup match says `No Unicode match`. A card
 that fails to render answers 500 without being cached. The bare `/og` and `/og/default.png` serve the
 home page's example.
 

@@ -21,6 +21,7 @@ mkdirSync(join(out, 'data/unicode-outlines'), { recursive: true })
 
 // resvg's font database reads TrueType and OpenType only, so the faces are unpacked from WOFF2.
 const FONTS = {
+  'operators.ttf': 'GenZuiSans-Regular.woff2',
   'parts.ttf': 'Plangothic-ids-parts.woff2',
   'strokes.ttf': 'NotoSansCJKjp-ids-strokes.woff2',
   'seal.ttf': 'IDSSeal-Regular.woff2',
@@ -47,10 +48,11 @@ const fetched = [
 ]
 copyFileSync(join(import.meta.dirname, '../fonts/OFL-NotoSansCJK.txt'), join(out, 'fonts/OFL-NotoSansCJK.txt'))
 copyFileSync(join(import.meta.dirname, '../fonts/OFL-Plangothic.txt'), join(out, 'fonts/OFL-Plangothic.txt'))
+copyFileSync(join(import.meta.dirname, '../fonts/OFL-GenZuiSans.txt'), join(out, 'fonts/OFL-GenZuiSans.txt'))
 const pairs = Object.entries(FONTS).map(([name, file]) => [join(out, 'fonts', name), join(import.meta.dirname, '../fonts', file)])
 pairs.push([fetched[0], fetched[0]], [fetched[1], fetched[1]])
 /** The family each face is named in the build; the sources' own names differ or collide. */
-const FAMILY = { parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
+const FAMILY = { operators: 'IDS Operators', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
 // The shard faces of the bundled glyphs are one family upstream; each is given its own name here so
 // a character resolves to the shard that has it.
 const shardFonts = join(import.meta.dirname, '../fonts/unicode')
@@ -61,11 +63,20 @@ for (const file of await Array.fromAsync(new Bun.Glob('*.woff2').scan(shardFonts
 execFileSync('uv', ['run', '--quiet', '--with', 'fonttools', '--with', 'brotli', 'python', '-'], {
   input: `
 from fontTools.ttLib import TTFont
+from fontTools.subset import Subsetter
 families = ${JSON.stringify(FAMILY)}
 for target, source in ${JSON.stringify(pairs)}:
     font = TTFont(source)
     font.flavor = None
-    family = families.get(target.rsplit('/', 1)[-1].removesuffix('.ttf') if '/unicode/' not in target else 'IDS Fallback ' + target.rsplit('/', 1)[-1].removesuffix('.ttf'))
+    name = target.rsplit('/', 1)[-1].removesuffix('.ttf')
+    if name == 'operators':
+        operators = set(range(0x2FF0, 0x3000)) | {0x303E, 0x31EF}
+        if not operators <= font.getBestCmap().keys():
+            raise ValueError('The operator font must cover all 18 IDS operators')
+        subset = Subsetter()
+        subset.populate(unicodes=operators)
+        subset.subset(font)
+    family = 'IDS Fallback ' + name if '/unicode/' in target else families.get(name)
     if family:
         for record in font['name'].names:
             if record.nameID in (1, 4, 16):
