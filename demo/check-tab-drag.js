@@ -122,7 +122,8 @@ try {
   await page.mouse.up()
   assert.deepEqual(await order(), [...before.slice(1), before[0]], 'the held tab lands last as the strip scrolls')
 
-  // A release whose pointerup the page never sees still ends the drag and its edge scroll.
+  // A pointerup stopped at the document still ends the drag, because the release is heard at
+  // the window's capture phase first.
   await strip.evaluate(el => { el.scrollLeft = 0 })
   const again = (await order())[0]
   await page.locator(`.tab[data-tab-id="${again}"] [role="tab"]`).click()
@@ -133,10 +134,10 @@ try {
   await page.waitForFunction(() => document.querySelector('.tabs').scrollLeft > 10)
   await page.evaluate(() => document.addEventListener('pointerup', event => event.stopImmediatePropagation(), { capture: true, once: true }))
   await page.mouse.up()
-  assert.equal(await page.locator('.tab.dragging').count(), 0, 'a missed release ends the drag')
+  assert.equal(await page.locator('.tab.dragging').count(), 0, 'a stopped release ends the drag')
   const frozen = await order()
   await page.waitForTimeout(700)
-  assert.deepEqual(await order(), frozen, 'no more swaps after a missed release')
+  assert.deepEqual(await order(), frozen, 'no more swaps after a stopped release')
 
   // A window with no session of its own opens on the order left in local storage.
   const keptOrder = await order()
