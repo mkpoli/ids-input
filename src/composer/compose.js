@@ -145,6 +145,23 @@ const ENCLOSURE_CUTS = {
   }],
 }
 
+// Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
+// box of such a glyph to this share of the width and draws its foot out to the right edge.
+const ENCLOSURE_SHARE = 0.485
+
+// Enclosing forms a designer drew for a whole operand: 电 as ⿺'s enclosing part, cut from 𫌷
+// (⿺电言) in Noto Sans CJK JP and Noto Serif CJK JP, whose swept foot han-compose will not take for
+// a host cut. The digest names the glyph's outlines; a font without that glyph presses its own
+// outline instead (`pressedEnclosure`).
+const ENCLOSURE_FORMS = {
+  '⿺': {
+    电: ['𫌷', {
+      '656184795d653a390844e1bfd99e8efddfb5c36be68d683d9d8986984f150a85': [0, 1, 2, 3, 4],
+      '2fa6f7b8e09a68c6173dafe84d5b96d5b4c36dc9a7e6b77703d9ed9f13ff525a': [0, 3, 4, 6, 7],
+    }],
+  },
+}
+
 export class Composer {
   /**
    * `data`: `{ manifest, layout, rec(key), hosts(key, place), places(key) }`; `exclude`: characters nothing is taken from (a
@@ -628,6 +645,19 @@ export class Composer {
     return this.shares(op, children, region)
   }
 
+  /** A designed enclosing form of a whole operand, where the export has no cut of it: 电 as ⿺'s
+   *  enclosing part from 𫌷. Answers a host-like `{ record, piece }`, or null. */
+  enclosureForm(op, node) {
+    const entry = typeof node === 'string' ? ENCLOSURE_FORMS[op]?.[node] : null
+    if (!entry || this.excluded(node)) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record || this.excluded(char)) return null
+    const indices = cuts[hexOf(JSON.stringify(record.p))]
+    if (!indices) return null
+    const glyph = partOf(record)
+    return { record: { h: char }, piece: derived(glyph, indices.map(i => glyph.contours[i])) }
+  }
+
   /** Preserve the font's designed shape while retaining one adjustable piece per leaf. */
   enclosureParts(node, region) {
     const entry = ENCLOSURE_CUTS[keyOf(node)]
@@ -1010,6 +1040,7 @@ export class Composer {
       let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
         && stretchOf(part.piece.box, box) > C.ENCLOSING_STRETCH) part = null
+      if (!part && op in this.ENCLOSE && i === 0) part = this.enclosureForm(op, child)
       if (!part) {
         if (op in this.ENCLOSE && i === 1) {
           groups.push(this.node(child, box))
@@ -1681,6 +1712,12 @@ export function sweptPart(p, edge, C) {
     && b[3] - b[1] >= C.SWEEP_RISE * (y1 - y0)).map(([, k]) => k)
   if (sweeps.length !== 1 || contours.length < 2) return null
   const sweep = sweeps[0], pts = contours[sweep]
+  // A glyph drawn as one outline with its counters (Klee One's 电) has no separate stroke to sweep:
+  // the outline already runs round the lower left, and pressing its counters apart would lose the
+  // 日. Press the whole glyph, counters and all.
+  const sweepRing = rings([p.part.contours[sweep]], [pts])[0]
+  if (contours.every((c, k) => k === sweep || insideRing(rings([p.part.contours[k]], [c])[0], sweepRing)))
+    return [pressedEnclosure(p, sweep) ?? { ...p, origin: `enclosure ${p.origin}` }]
   let lowMin = Infinity, lowMax = -Infinity
   for (let i = 0; i < pts.length; i += 2) if (pts[i + 1] <= y0 + 0.2 * (y1 - y0)) { lowMin = Math.min(lowMin, pts[i]); lowMax = Math.max(lowMax, pts[i]) }
   if (lowMax < lowMin || lowMax - lowMin < C.SWEEP_FOOT * (x1 - x0)) return null
@@ -1713,6 +1750,48 @@ export function sweptPart(p, edge, C) {
   const drawn = derived(p.part, [at(p.part.contours[sweep], drawnOut)])
   return [placed(strokes, strokes.box, pressedBox, p.native, `swept ${p.origin}`, p.weight),
     placed(drawn, drawn.box, drawn.box.slice(), p.native, `swept ${p.origin}`, p.weight)]
+}
+
+/**
+ * A glyph drawn as one outline with its counters (Klee One's 电), pressed as a designer presses a
+ * box round another part: the box keeps `share` of the width and the foot is drawn out to the right
+ * edge, as Kureedo draws 巴 round 三 in 𠀧 (⿺巴三). Every contour takes the same x map, so the
+ * counters stay inside the outline and the box keeps its windows.
+ */
+export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE) {
+  // The map belongs to the glyph's own coordinates: the placement scales the pressed part whole.
+  const boxes = p.part.contours.map(c => pointsBox(c.light))
+  const x0 = Math.min(...boxes.map(b => b[0])), x1 = Math.max(...boxes.map(b => b[2]))
+  // The box's right edge is its counter's right plus the thickness of the box's left frame.
+  const windows = boxes.filter((_, k) => k !== sweep)
+  const boxRight = Math.min(x1, Math.max(...windows.map(b => b[2])) + Math.min(...windows.map(b => b[0])) - x0)
+  const target = x0 + share * (x1 - x0)
+  if (!(boxRight > x0 && boxRight < x1)) return null
+  const box = (target - x0) / (boxRight - x0), foot = (x1 - target) / (x1 - boxRight)
+  const mapX = points => {
+    const out = points.slice()
+    for (let i = 0; i < out.length; i += 2) out[i] = out[i] <= boxRight ? x0 + (out[i] - x0) * box : target + (out[i] - boxRight) * foot
+    return out
+  }
+  const mapped = p.part.contours.map(c => ({ ops: c.ops, light: mapX(c.light), heavy: mapX(c.heavy), width: c.width }))
+  return placed(makePart(mapped, p.part.box.slice()), p.source, p.target, p.native, `enclosure ${p.origin}`, p.weight)
+}
+
+/** Whether every point of `ring` lies inside the closed `outer` ring (font units, y up). */
+function insideRing(ring, outer) {
+  for (let i = 0; i < ring.length; i += 2) {
+    const x = ring[i], y = ring[i + 1]
+    let winding = 0
+    for (let j = 0; j < outer.length; j += 2) {
+      const k = (j + 2) % outer.length
+      const x0 = outer[j], y0 = outer[j + 1], x1 = outer[k], y1 = outer[k + 1]
+      const side = (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0)
+      if (y0 <= y && y1 > y && side > 0) winding++
+      else if (y0 > y && y1 <= y && side < 0) winding--
+    }
+    if (winding === 0) return false
+  }
+  return true
 }
 
 export { raster }
