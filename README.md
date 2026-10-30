@@ -1242,6 +1242,22 @@ bun run build:sketch-parts       # the drawing search's glyph masks, after a fon
 
 CI only builds the demo and deploys it; the checks above stay local.
 
+### The demo's browser checks
+
+`demo/check-*.js` drives the workshop in a headless Chromium, one file per feature. It needs a dev
+server, because the checks open `/fixtures/` pages that `vite build` leaves out of `dist/`:
+
+```sh
+bun run dev &                                     # or your own dev server
+IDS_URL=http://localhost:5173 \
+CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
+  bun demo/check-similar.js
+```
+
+`CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
+in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
+`PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
 `tests/example-drawings.test.js` fails while the file and the export disagree.
