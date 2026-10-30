@@ -23,6 +23,12 @@ try {
   assert.ok(before && after && after.width > before.width * 2, `preview grew from ${before?.width} to ${after?.width}`)
   assert.equal(await page.evaluate(() => document.body.style.overflow), 'hidden', 'the page behind the dialog does not scroll')
   assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Close', 'focus starts on the close button')
+  await dialog.getByRole('button', { name: 'Serif' }).click()
+  assert.equal(await dialog.getByRole('button', { name: 'Serif' }).getAttribute('aria-pressed'), 'true', 'the dialog switches face')
+  await page.waitForFunction(() => {
+    const meta = document.querySelector('dialog#large-preview .ids-preview-meta')
+    return Boolean(meta) && !/Composing/.test(meta.textContent ?? '')
+  }, null, { timeout: 120000 })
   await page.waitForTimeout(600)
   await page.screenshot({ path: process.env.SHOT ?? '/tmp/preview-large.png' })
   await page.locator('.large-close').click()
