@@ -3,7 +3,8 @@
   // and a dot while it has edits since its last save. A tab is chosen by a click, by the arrow keys
   // while the strip has the focus (Home and End too), or by the page's own tab shortcuts; Delete
   // closes the focused tab, as does its ×. A tab dragged sideways takes the place it is dropped in,
-  // and Shift with the arrow keys moves the focused tab the same way. The sequence is in the tab's
+  // and Shift with the arrow keys moves the focused tab the same way. Right-clicking a tab offers
+  // Duplicate and the close actions, with Close all asking first. The sequence is in the tab's
   // tooltip and its name.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
@@ -12,9 +13,10 @@
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
+   *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
    *   onmove: (from: number, to: number) => void, oncommit: () => void }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, onmove, oncommit } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onmove, oncommit } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -67,7 +69,7 @@
     const rect = menuEl.getBoundingClientRect()
     menuEl.style.left = `${Math.max(8, Math.min(x, innerWidth - rect.width - 8))}px`
     menuEl.style.top = `${Math.max(8, Math.min(y, innerHeight - rect.height - 8))}px`
-    menuEl.querySelector('button')?.focus()
+    menuEl.querySelector('button:not(:disabled)')?.focus()
   }
   /** @param {boolean} [refocus] */
   function dismiss(refocus = false) {
@@ -75,13 +77,20 @@
     menu = null
     if (refocus && id) focus(id)
   }
-  async function duplicate() {
+  /** Run an action for the tab the menu was opened on. @param {(id: string) => void} action */
+  async function run(action) {
     const id = menu?.id
     if (!id) return
     dismiss()
-    onduplicate(id)
+    action(id)
     await tick()
     focus(activeId)
+  }
+  /** Ask before closing every tab. */
+  function closeAll() {
+    if (!menu?.id) return
+    dismiss(true)
+    oncloseall()
   }
   /** @param {KeyboardEvent} event */
   function menuKey(event) {
@@ -89,10 +98,17 @@
       if (event.key === 'Escape') event.preventDefault()
       event.stopPropagation()
       dismiss(true)
-    } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
-      event.preventDefault()
-      menuEl?.querySelector('button')?.focus()
+      return
     }
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+    event.preventDefault()
+    const items = /** @type {HTMLButtonElement[]} */ ([...(menuEl?.querySelectorAll('button:not(:disabled)') ?? [])])
+    if (!items.length) return
+    const current = items.indexOf(/** @type {HTMLButtonElement} */ (document.activeElement))
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+      : current < 0 ? (event.key === 'ArrowDown' ? 0 : items.length - 1)
+      : (current + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length
+    items[next].focus()
   }
 
   /** @param {string} id */
@@ -253,7 +269,8 @@
       {@const marked = edited(tab)}
       <div class="tab" class:on={tab.id === activeId} class:dragging={drag?.id === tab.id && drag.live} data-tab-id={tab.id}
         style:transform={drag?.id === tab.id && drag.live ? `translateX(${drag.dx}px)` : undefined}
-        onauxclick={event => { if (event.button === 1) { event.preventDefault(); close(tab.id) } }}>
+        onauxclick={event => { if (event.button === 1) { event.preventDefault(); close(tab.id) } }}
+        oncontextmenu={event => { event.preventDefault(); openMenu(tab.id, event.clientX, event.clientY) }}>
         <button type="button" class="tab-main" role="tab" id={`${panelId}-tab-${tab.id}`} aria-selected={tab.id === activeId}
           aria-controls={panelId} tabindex={tab.id === activeId ? 0 : -1} title={name} aria-posinset={at + 1} aria-setsize={tabs.length}
           aria-label={marked ? `${name}, ${t('app.tabs.edited')}` : name}
@@ -263,8 +280,7 @@
             const ended = dropped === tab.id && event.detail > 0
             dropped = null
             if (!ended) onselect(tab.id)
-          }}
-          oncontextmenu={event => { event.preventDefault(); openMenu(tab.id, event.clientX, event.clientY) }}>
+          }}>
           <span class="tab-icon"><TabIcon sequence={tab.whole || tab.sequence} {draw} />
             {#if marked}<span class="tab-dot" title={t('app.tabs.edited')} aria-hidden="true"></span>{/if}
           </span>
@@ -278,16 +294,27 @@
 </div>
 
 {#if menu}
+  {@const at = tabs.findIndex(tab => tab.id === menu.id)}
   <div class="tab-menu" role="menu" tabindex="-1" popover="manual" bind:this={menuEl}
     aria-label={t('app.tabs.menu')} style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
-    <button type="button" role="menuitem" onclick={duplicate}><Icon name="copy" size={16} />{t('app.tabs.duplicate')}</button>
+    <button type="button" role="menuitem" onclick={() => run(onduplicate)}><Icon name="copy" size={16} />{t('app.tabs.duplicate')}</button>
+    <hr />
+    <button type="button" role="menuitem" onclick={() => run(onclose)}><Icon name="close" size={16} />{t('app.tabs.closeOne')}</button>
+    <button type="button" role="menuitem" disabled={tabs.length < 2} onclick={() => run(oncloseothers)}><Icon name="close" size={16} />{t('app.tabs.closeOthers')}</button>
+    <button type="button" role="menuitem" disabled={at <= 0} onclick={() => run(oncloseleft)}><span class="flip"><Icon name="arrow-right" size={16} /></span>{t('app.tabs.closeLeft')}</button>
+    <button type="button" role="menuitem" disabled={at >= tabs.length - 1} onclick={() => run(oncloseright)}><Icon name="arrow-right" size={16} />{t('app.tabs.closeRight')}</button>
+    <hr />
+    <button type="button" role="menuitem" onclick={closeAll}><Icon name="trash" size={16} />{t('app.tabs.closeAll')}</button>
   </div>
 {/if}
 
 <style>
   .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 8px 28px #0003}
   .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
-  .tab-menu button:hover,.tab-menu button:focus-visible{background:var(--hover);outline:none}
+  .tab-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+  .tab-menu button:not(:disabled):hover,.tab-menu button:focus-visible{background:var(--hover);outline:none}
+  .tab-menu button:disabled{opacity:.45;cursor:default}
+  .tab-menu .flip{display:grid;transform:rotate(180deg)}
   .tabbar{display:flex;align-items:flex-end;gap:8px;flex:1;min-width:0;height:100%}
   .tabs{position:relative;display:flex;align-items:flex-end;gap:4px;flex:0 1 auto;min-width:0;height:100%;padding-inline:10px;
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
