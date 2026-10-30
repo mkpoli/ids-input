@@ -114,6 +114,8 @@ describe('document share tokens', () => {
   })
   it('rejects a token that is not one', () => {
     expect(() => readShareDocument('e30')).toThrow(DocumentError)
+    expect(() => readShareDocument('!')).toThrow(DocumentError)
+    expect(() => readShareDocument(b64(JSON.stringify({ v: 1, s: '木', l: [5] })))).toThrow(DocumentError)
   })
   it('rejects a layer path the sequence does not have', () => {
     expect(() => readShareDocument(b64(JSON.stringify({ v: 1, s: '⿰木口', l: [['3', { n: 'x' }]] })))).toThrow(DocumentError)

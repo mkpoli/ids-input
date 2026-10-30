@@ -182,8 +182,10 @@ export function shareDocument(document) {
 
 /** A document from a share token. @param {string} token @returns {Document} */
 export function readShareDocument(token) {
-  const text = decode(token)
-  let parsed
+  let text, parsed
+  try { text = decode(token) } catch (error) {
+    throw new DocumentError([{ path: '', message: `invalid share token: ${error instanceof Error ? error.message : error}` }])
+  }
   try { parsed = JSON.parse(text) } catch (error) {
     throw new DocumentError([{ path: '', message: `invalid share token: ${error instanceof Error ? error.message : error}` }])
   }
@@ -217,8 +219,9 @@ export function readShareDocument(token) {
     for (const child of children) renumber(child)
   }
   renumber(document.root)
-  for (const [path, fields] of Array.isArray(token_.l) ? token_.l : []) {
-    if (typeof path !== 'string' || !object(fields)) { issues.push({ path: '/l', message: 'a layer is a path and its fields' }); continue }
+  for (const entry of Array.isArray(token_.l) ? token_.l : []) {
+    if (!Array.isArray(entry) || typeof entry[0] !== 'string' || !object(entry[1])) { issues.push({ path: '/l', message: 'a layer is a path and its fields' }); continue }
+    const [path, fields] = /** @type {[string, Record<string, any>]} */ (entry)
     const found = findAt(document.root, path)
     if (!found) { issues.push({ path: `/l/${path}`, message: 'no layer at this path' }); continue }
     /** @type {Node} */
