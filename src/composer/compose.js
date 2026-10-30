@@ -214,13 +214,18 @@ export class Composer {
   rec = key => key.includes(EMPTY) ? null : (componentRecord(key, this.fontStyle) ?? this.data.rec(key))
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
-  /** The pyramid a node reads as, remembered for this drawing. */
+  /**
+   * The pyramid a node draws as, remembered for this drawing. A two-row pyramid of a description is
+   * one: no character designs that repeated form, so its equal cells are the drawing. A two-row
+   * pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid here.
+   */
   pyramid(node) {
     if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
     if (this.pyramids.has(node)) return this.pyramids.get(node)
-    const found = pyramidRows(node)
-    this.pyramids.set(node, found)
-    return found
+    const found = pyramidRows(node, { minLayers: 2 })
+    const answer = found && (found.layers > 2 || (found.cell !== null && typeof found.cell !== 'string')) ? found : null
+    this.pyramids.set(node, answer)
+    return answer
   }
 
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
