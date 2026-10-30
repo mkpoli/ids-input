@@ -1,6 +1,6 @@
 <script>
-  // The author's portrait, why they need help, then three steps that end at the Ko-fi button. Ko-fi handles the
-  // amount and the payment; companies can write in for an ad on the site. The header's Sponsor
+  // The author's portrait, what a tip pays for, then three steps that end at the Ko-fi button. Ko-fi handles the
+  // amount and the payment; companies can write in to sponsor with an ad on the site. The header's Sponsor
   // button opens it.
   import Dialog from './Dialog.svelte'
   import Icon from './Icon.svelte'
