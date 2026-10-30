@@ -649,7 +649,6 @@
     if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length) return
     const [tab] = tabs.splice(from, 1)
     tabs.splice(to, 0, tab)
-    store()
   }
 
   // Saved drafts.
@@ -901,7 +900,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} onmove={moveTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 

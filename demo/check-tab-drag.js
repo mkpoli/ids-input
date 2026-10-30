@@ -12,9 +12,7 @@ try {
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
-  await page.locator('.ids-field input').waitFor()
-  // Three tabs, the last one active.
-  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'New tab', exact: true }).click()
+  await page.locator('.ids-field input').waitFor({ timeout: 120000 })
   const order = () => page.locator('.tabbar .tab').evaluateAll(els => els.map(el => /** @type {HTMLElement} */ (el).dataset.tabId))
   const active = () => page.locator('.tabbar .tab.on').getAttribute('data-tab-id')
   const box = async id => {
@@ -22,6 +20,16 @@ try {
     assert.ok(found, `tab ${id} has a box`)
     return found
   }
+  // A lone tab cannot be dragged; it would only be clipped out of the strip.
+  assert.equal((await order()).length, 1, 'the workshop starts with one tab')
+  const lone = await box((await order())[0])
+  await page.mouse.move(lone.x + lone.width / 2, lone.y + lone.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(lone.x + lone.width / 2 + 30, lone.y + lone.height / 2, { steps: 6 })
+  assert.equal(await page.locator('.tab.dragging').count(), 0, 'a lone tab stays put')
+  await page.mouse.up()
+  // Three tabs, the last one active.
+  for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'New tab', exact: true }).click()
   const [first, second, third] = await order()
   assert.equal((await order()).length, 3, 'three tabs are open')
   const chosen = await active()
@@ -46,7 +54,7 @@ try {
   await page.locator(`.tab[data-tab-id="${second}"] [role="tab"]`).click()
   assert.equal(await active(), second, 'a click still chooses its tab')
   await page.reload({ waitUntil: 'domcontentloaded' })
-  await page.locator('.ids-field input').waitFor()
+  await page.locator('.ids-field input').waitFor({ timeout: 120000 })
   assert.deepEqual(await order(), [second, third, first], 'the next visit keeps the order')
 
   // Shift with the arrow keys moves the focused tab one place and keeps its focus.
@@ -79,23 +87,28 @@ try {
   assert.equal(await active(), third, 'a drag that crosses no tab still chooses its tab')
   assert.deepEqual(await order(), [third, first, second], 'that wobble leaves the order alone')
 
-  // A strip of tabs wider than a phone scrolls under a tab held at its edge.
+  // A strip of tabs wider than the window scrolls by itself while a tab is held at its edge.
   await page.setViewportSize({ width: 375, height: 812 })
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'New tab', exact: true }).click()
-  await page.waitForTimeout(200)
+  await page.waitForFunction(() => document.querySelectorAll('.tabbar .tab').length === 5)
   const strip = page.locator('.tabs')
   const wide = await strip.evaluate(el => el.scrollWidth > el.clientWidth + 2)
-  assert.equal(wide, true, 'five tabs overflow the phone strip')
+  assert.equal(wide, true, 'five tabs overflow the narrow strip')
   await strip.evaluate(el => { el.scrollLeft = 0 })
-  assert.equal(await strip.evaluate(el => el.scrollLeft), 0, 'the strip starts at its first tab')
   const before = await order()
+  // Show the first tab, so its reveal does not scroll the strip while it is being dragged.
+  await page.locator(`.tab[data-tab-id="${before[0]}"] [role="tab"]`).click()
+  assert.equal(await strip.evaluate(el => el.scrollLeft), 0, 'the strip starts at its first tab')
   const held = await box(before[0]), edge = await strip.boundingBox()
   await page.mouse.move(held.x + held.width / 2, held.y + held.height / 2)
   await page.mouse.down()
-  for (let i = 0; i < 3; i++) await page.mouse.move(edge.x + edge.width - 6, held.y + held.height / 2, { steps: 6 })
+  await page.mouse.move(edge.x + edge.width - 6, held.y + held.height / 2, { steps: 6 })
+  await page.waitForFunction(first => {
+    const ids = [...document.querySelectorAll('.tabbar .tab')].map(el => /** @type {HTMLElement} */ (el).dataset.tabId)
+    return ids[ids.length - 1] === first && document.querySelector('.tabs').scrollLeft > 0
+  }, before[0], { timeout: 15000 })
   await page.mouse.up()
-  assert.ok(await strip.evaluate(el => el.scrollLeft) > 0, 'the strip scrolls while a tab is held at its edge')
-  assert.notDeepEqual(await order(), before, 'the held tab lands past the tabs the strip scrolled by')
+  assert.deepEqual(await order(), [...before.slice(1), before[0]], 'the held tab lands last as the strip scrolls')
 
   assert.deepEqual(errors, [])
   console.log('PASS drag reorders tabs, keeps the active tab, and persists the order')

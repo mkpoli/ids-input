@@ -12,9 +12,9 @@
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
-   *   onmove: (from: number, to: number) => void }}
+   *   onmove: (from: number, to: number) => void, oncommit: () => void }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, onmove } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, onmove, oncommit } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -115,60 +115,94 @@
   }
 
   // A tab dragged sideways follows the pointer and takes the place it is dropped in: the tabs it
-  // passes swap around it as it crosses their middles, and the strip scrolls at its edges. A press
-  // that moves less than a few pixels is still a click. Touch keeps scrolling the strip instead.
+  // passes swap around it as its middle crosses theirs, and the strip scrolls while the pointer
+  // waits at an edge. A press that moves less than a few pixels is still a click. Touch keeps
+  // scrolling the strip instead.
   /** @type {{ id: string, pointer: number, startX: number, offset: number, live: boolean, moved: boolean, dx: number } | null} */
   let drag = $state(null)
   /** @type {{ id: string, at: number } | null} */
   let dropped = null
-  /** @param {string} id */
-  const tabElement = id => /** @type {HTMLElement | undefined} */ ([...(strip?.children ?? [])].find(child => /** @type {HTMLElement} */ (child).dataset.tabId === id))
+  let scrollFrame = 0
+  let edgeX = 0
   /**
    * @param {PointerEvent} event
    * @param {string} id
    */
   function grab(event, id) {
-    if (event.button !== 0 || !event.isPrimary || event.pointerType === 'touch' || drag) return
+    if (event.button !== 0 || !event.isPrimary || event.pointerType === 'touch' || drag || tabs.length < 2) return
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const tab = button.closest('.tab')
     if (!tab) return
     button.setPointerCapture(event.pointerId)
     drag = { id, pointer: event.pointerId, startX: event.clientX, offset: event.clientX - tab.getBoundingClientRect().left, live: false, moved: false, dx: 0 }
   }
+  /** Place the held tab for pointer `x`, swapping it past the tabs its middle has crossed. @param {number} x */
+  async function place(x) {
+    if (!drag || !strip) return
+    const box = strip.getBoundingClientRect()
+    const local = x - box.left + strip.scrollLeft
+    const children = /** @type {HTMLElement[]} */ ([...strip.children])
+    const el = children.find(child => child.dataset.tabId === drag?.id)
+    if (!el) { drag = null; return }
+    const from = tabs.findIndex(tab => tab.id === drag?.id)
+    if (from < 0) { drag = null; return }
+    // The swap follows the held tab's middle, not the pointer, so where it was grabbed does not matter.
+    const lead = local - drag.offset + el.offsetWidth / 2
+    let to = 0
+    for (const child of children) {
+      if (child === el) continue
+      if (lead > child.offsetLeft + child.offsetWidth / 2) to++
+    }
+    if (to !== from) { drag.moved = true; onmove(from, to); await tick() }
+    if (!drag) return
+    // Keep the held tab inside the strip rather than letting the overflow clip it away.
+    drag.dx = Math.max(strip.scrollLeft - el.offsetLeft,
+      Math.min(local - drag.offset - el.offsetLeft, strip.scrollLeft + strip.clientWidth - el.offsetLeft - el.offsetWidth))
+  }
+  /** Scroll the strip while the pointer waits at an edge, so the held tab can pass the tabs out of view. */
+  async function scrollEdge() {
+    scrollFrame = 0
+    if (!drag || !drag.live || !strip) return
+    const box = strip.getBoundingClientRect()
+    const dir = edgeX < box.left + 24 ? -1 : edgeX > box.right - 24 ? 1 : 0
+    if (!dir) return
+    const before = strip.scrollLeft
+    strip.scrollLeft += dir * 12
+    if (strip.scrollLeft === before) return
+    await place(edgeX)
+    if (drag?.live) scrollFrame = requestAnimationFrame(scrollEdge)
+  }
+  /** End the drag; `click` marks the release whose click should not choose the tab. @param {boolean} click */
+  function end(click) {
+    if (scrollFrame) { cancelAnimationFrame(scrollFrame); scrollFrame = 0 }
+    edgeX = 0
+    const held = drag
+    drag = null
+    if (!held?.moved) return
+    if (click) dropped = { id: held.id, at: performance.now() }
+    oncommit()
+  }
   /** @param {PointerEvent} event */
   async function slide(event) {
     if (!drag || drag.pointer !== event.pointerId) return
     // A release outside the page leaves no pointerup here; the next move shows the button is up.
-    if (event.buttons === 0) { drag = null; return }
+    if (event.buttons === 0) { end(false); return }
     if (!drag.live) {
       if (Math.abs(event.clientX - drag.startX) < 5) return
       drag.live = true
     }
     if (!strip) return
-    const box = strip.getBoundingClientRect(), x = event.clientX
-    if (x < box.left + 24) strip.scrollLeft -= 12
-    else if (x > box.right - 24) strip.scrollLeft += 12
-    const local = x - box.left + strip.scrollLeft
-    const from = tabs.findIndex(tab => tab.id === drag?.id)
-    if (from < 0) { drag = null; return }
-    let to = 0
-    for (const tab of tabs) {
-      if (tab.id === drag.id) continue
-      const el = tabElement(tab.id)
-      if (el && local > el.offsetLeft + el.offsetWidth / 2) to++
-    }
-    if (to !== from) { drag.moved = true; onmove(from, to); await tick() }
-    if (!drag) return
-    const el = tabElement(drag.id)
-    if (!el) return
-    drag.dx = local - drag.offset - el.offsetLeft
+    edgeX = event.clientX
+    const box = strip.getBoundingClientRect()
+    const atEdge = event.clientX < box.left + 24 || event.clientX > box.right - 24
+    if (atEdge) { if (!scrollFrame) scrollFrame = requestAnimationFrame(scrollEdge) }
+    else if (scrollFrame) { cancelAnimationFrame(scrollFrame); scrollFrame = 0 }
+    await place(event.clientX)
   }
   /** @param {PointerEvent} event */
   function letGo(event) {
     if (!drag || drag.pointer !== event.pointerId) return
-    // A drag that never swapped places is just a shaky click.
-    if (drag.moved) dropped = { id: drag.id, at: performance.now() }
-    drag = null
+    end(event.type === 'pointerup')
   }
   /** Move the focused tab one place, keeping its focus. @param {number} at @param {number} step */
   async function shuffle(at, step) {
@@ -176,6 +210,7 @@
     if (to < 0 || to >= tabs.length) return
     const id = tabs[at].id
     onmove(at, to)
+    oncommit()
     await tick()
     focus(id)
   }
@@ -202,7 +237,7 @@
 
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) dismiss() }}
   onfocusin={event => { if (menu && menuEl && !menuEl.contains(/** @type {Node} */ (event.target))) dismiss() }}
-  onresize={() => dismiss()} onpointermove={slide} onpointerup={letGo} onpointercancel={letGo} onblur={() => drag = null} />
+  onresize={() => dismiss()} onpointermove={slide} onpointerup={letGo} onpointercancel={letGo} onblur={() => { if (drag) end(false) }} />
 
 <div class="tabbar">
   <div class="tabs" class:dragging={drag?.live} role="tablist" aria-label={t('app.tabs.label')} bind:this={strip}>
@@ -213,7 +248,8 @@
         style:transform={drag?.id === tab.id && drag.live ? `translateX(${drag.dx}px)` : undefined}
         onauxclick={event => { if (event.button === 1) { event.preventDefault(); close(tab.id) } }}>
         <button type="button" class="tab-main" role="tab" id={`${panelId}-tab-${tab.id}`} aria-selected={tab.id === activeId}
-          aria-controls={panelId} tabindex={tab.id === activeId ? 0 : -1} title={name} aria-label={marked ? `${name}, ${t('app.tabs.edited')}` : name}
+          aria-controls={panelId} tabindex={tab.id === activeId ? 0 : -1} title={name} aria-posinset={at + 1} aria-setsize={tabs.length}
+          aria-label={marked ? `${name}, ${t('app.tabs.edited')}` : name}
           onpointerdown={event => grab(event, tab.id)} onkeydown={event => key(event, at)}
           onclick={event => {
             // The click that ends a drag is not a choice; one on any other tab still is.
