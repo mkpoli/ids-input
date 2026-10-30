@@ -7,11 +7,12 @@ import { compose } from '../src/composer/loader.js'
 import { unpack } from '../src/composer/loader.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE } from './card.js'
+import { OPERATORS } from './operators.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 // The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v7'
+const VERSION = 'v8'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // The entry point starts the module's WebAssembly on import, so this only waits for it.
@@ -21,7 +22,9 @@ const ready = () => started ??= initResvg.ensure()
 /** A file of the built card assets, or null where the build left it out. @param {any} env @param {string} path */
 const read = async (env, path) => {
   const answer = await env.ASSETS.fetch(new URL(`/og/${path}`, 'https://assets/'))
-  return answer.ok ? answer.arrayBuffer() : null
+  // A missing file is answered with the app's page, so the type says whether the file is there.
+  if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return null
+  return answer.arrayBuffer()
 }
 
 /** Outlines as `JSON.parse(await unpack(bytes))`, or an empty set where the file is missing. */
@@ -38,7 +41,7 @@ const loadersFor = env => ({
   newKorean: { load: outlines(env, 'data/new-korean-outlines.json.gz') },
   shuishu: { load: outlines(env, 'data/shuishu-outlines.json.gz') },
   palette: { load: outlines(env, 'data/palette-outlines.json.gz') },
-  unicode: { load: async name => { const bytes = await read(env, `data/${name}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
+  unicode: { load: async name => { const bytes = await read(env, `data/${name.replace('unicode/', 'unicode-outlines/')}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
 })
 
 /** @type {Promise<Record<string, string>> | null} */
@@ -54,7 +57,7 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
  * @param {any} env @param {string} sequence
  */
 export async function characterOf(env, sequence) {
-  if ([...sequence].length === 1 && !/[\u2FF0-\u2FFB]/.test(sequence)) return sequence
+  if ([...sequence].length === 1 && !OPERATORS[sequence]) return sequence
   return (await idsIndex(env))[sequence] ?? null
 }
 

@@ -10,6 +10,8 @@ import { cardResponse, characterOf } from './render.js'
 const DEFAULT = EXAMPLES[0].sequence
 /** The longest sequence a share link carries into a card. */
 const LONGEST = 200
+/** A sequence as the card can take it: without the controls XML and headers refuse, and cut by code point. */
+const limit = text => [...text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')].slice(0, LONGEST).join('')
 
 const decoded = text => {
   try { return decodeURIComponent(text) } catch { return null }
@@ -17,8 +19,9 @@ const decoded = text => {
 
 // The page a share link wraps, read once per isolate.
 let template = null
-const templateOf = async (env, origin) => template ??= await env.ASSETS.fetch(new URL('/', origin))
-  .then(answer => answer.text())
+const templateOf = async (env, origin) => template ??= env.ASSETS.fetch(new URL('/', origin))
+  .then(async answer => { if (!answer.ok) throw new Error(`the page answered ${answer.status}`); return answer.text() })
+  .catch(error => { template = null; throw error })
 
 /** A card, or a plain 500 the cache does not keep when the render fails. @param {any} env @param {any} ctx @param {string} sequence */
 const cardOrError = (env, ctx, sequence) => cardResponse(env, ctx, sequence)
@@ -27,7 +30,7 @@ const cardOrError = (env, ctx, sequence) => cardResponse(env, ctx, sequence)
 async function share(env, request, url, sequence) {
   const html = await templateOf(env, url.origin)
   const answer = new Response(request.method === 'HEAD' ? null : shareHtml(html, { sequence, char: await characterOf(env, sequence), origin: url.origin }), {
-    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300', 'x-og-sequence': sequence },
+    headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=300', 'x-og-sequence': encodeURIComponent(sequence) },
   })
   return answer
 }
@@ -49,7 +52,7 @@ export default {
     if (card) {
       const sequence = decoded(card[1])
       if (sequence === null) return new Response('Bad sequence', { status: 400 })
-      return cardOrError(env, ctx, sequence.slice(0, LONGEST))
+      return cardOrError(env, ctx, limit(sequence))
     }
 
     const link = /^\/s\/(.*)$/.exec(url.pathname)
@@ -57,7 +60,7 @@ export default {
       const sequence = decoded(link[1].replace(/\/$/, ''))
       if (sequence === null) return new Response('Bad sequence', { status: 400 })
       if (!sequence) return Response.redirect(new URL('/', url).href, 302)
-      return share(env, request, url, sequence.slice(0, LONGEST))
+      return share(env, request, url, limit(sequence))
     }
 
     return env.ASSETS.fetch(request)

@@ -21,11 +21,27 @@ describe('a card', () => {
   it('marks the empty frame where nothing was drawn', () => {
     expect(cardSvg({ sequence: '⿰木' })).toContain('>⬚</text>')
   })
-  it('drops to two lines and cuts an ellipsis on a line too long for the column', () => {
-    const svg = cardSvg({ sequence: '⿰'.repeat(80) + '木' })
-    expect(svg.match(/<text /g)?.length).toBeLessThan(20)
+  it('keeps seven characters on one line', () => {
+    const svg = cardSvg({ sequence: '⿰⿱日月モ木子' })
+    // Five characters set as text on one baseline, two operators as icons beside them.
+    expect(svg.match(/<text [^>]*font-size="60"/g)).toHaveLength(5)
+    expect(svg.match(/<g transform=/g)).toHaveLength(2)
+    expect([...svg.matchAll(/<text [^>]*y="(\d+)"[^>]*font-size="60"/g)].map(match => match[1])).toEqual(Array(5).fill('300'))
+  })
+  it('cuts an ellipsis once nothing fits, and stays inside the card', () => {
+    const sequence = '木'.repeat(200)
+    const svg = cardSvg({ sequence })
     expect(svg).toContain('…')
-    for (const y of [...svg.matchAll(/ y="(\d+)"/g)].map(match => Number(match[1]))) expect(y).toBeLessThan(630)
+    expect(svg).not.toContain('木'.repeat(200))
+    for (const [, x, y] of svg.matchAll(/<text x="(\d+)" y="(\d+)"/g)) {
+      expect(Number(x)).toBeLessThan(1136)
+      expect(Number(y)).toBeLessThan(630)
+    }
+  })
+  it('sets a base with its marks in one cell', () => {
+    const svg = cardSvg({ sequence: 'か゚' })
+    expect(svg).toContain('>か゚</text>')
+    expect(svg.match(/<text x="6\d\d" y="300"/g)?.length).toBe(1)
   })
   it('escapes a sequence that is markup', () => {
     const svg = cardSvg({ sequence: '<&>' })

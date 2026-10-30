@@ -17,7 +17,7 @@ export const pathOf = sequence => `/s/${encodeURIComponent(sequence)}`
  */
 export function metaFor({ sequence, char, origin }) {
   const url = `${origin}${pathOf(sequence)}`
-  const title = char ? `${sequence} = ${char} — IDS Workshop` : `${sequence} — IDS Workshop`
+  const title = char ? `${sequence} = ${char} (${codePoint(char)}) — IDS Workshop` : `${sequence} — IDS Workshop`
   const description = char
     ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
     : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
@@ -50,6 +50,7 @@ const escaped = text => text.replace(/[&<>"']/g, mark => ({ '&': '&amp;', '<': '
 // The home page's own wording, and the tags replaced on the share page.
 const REPLACED = [
   /<title>[\s\S]*?<\/title>/,
+  /<script type="application\/ld\+json">[\s\S]*?<\/script>/,
   /<meta name="description"[^>]*>/,
   /<link rel="canonical"[^>]*>/,
   /<meta property="og:[^"]*"[^>]*>/g,
@@ -57,6 +58,7 @@ const REPLACED = [
 ]
 /** @param {string} html */
 const stripped = html => REPLACED.reduce((out, pattern) => out.replace(pattern, ''), html)
+  .replace(/(\n[ \t]*){3,}/g, '\n')
 
 /**
  * The home page with `share`'s title and tags in place of its own.
@@ -65,6 +67,7 @@ const stripped = html => REPLACED.reduce((out, pattern) => out.replace(pattern, 
  */
 export function shareHtml(template, share) {
   const { title, tags } = metaFor(share)
+  // A function, so a `$` in a sequence is not read as a replacement pattern.
   return stripped(template)
-    .replace('</head>', `  <title>${escaped(title)}</title>\n    ${tags}\n  </head>`)
+    .replace('</head>', () => `  <title>${escaped(title)}</title>\n    ${tags}\n  </head>`)
 }

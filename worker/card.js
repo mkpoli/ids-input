@@ -22,8 +22,12 @@ export const escaped = text => text.replace(/[&<>"']/g, mark => ({ '&': '&amp;',
 // largest size that keeps it on one line, then the largest that keeps it to two, then the shortest
 // end of the ladder cut with an ellipsis.
 /** @param {string} sequence */
+const cluster = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+/** A sequence as the cells it is set in: a base with its marks is one. @param {string} sequence */
+const cells = sequence => [...cluster.segment(sequence)].map(({ segment }) => segment)
+
 function measured(sequence) {
-  const characters = [...sequence]
+  const characters = cells(sequence)
   for (const lines of [1, 2]) {
     for (const size of FONT_SIZE) {
       const columns = Math.floor(COLUMN.width / size)
@@ -98,7 +102,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
   const first = 300 - (lines.length - 1) * leading / 2
   const sequence_ = lines.map((line, at) => {
     const baseline = Math.round(first + at * leading)
-    return [...line].map((character, column) => set(character, COLUMN.left + Math.round(column * size), baseline, size, familyOf)).join('')
+    return cells(line).map((character, column) => set(character, COLUMN.left + Math.round(column * size), baseline, size, familyOf)).join('')
   }).join('')
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE.width}" height="${SIZE.height}" viewBox="0 0 ${SIZE.width} ${SIZE.height}">`
     + `<rect width="${SIZE.width}" height="${SIZE.height}" fill="${PAPER}"/>`
