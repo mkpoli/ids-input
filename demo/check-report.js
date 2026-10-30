@@ -1,4 +1,5 @@
-// Run against a local devrun server with IDS_URL; `--shots <dir>` or IDS_REPORT_SHOTS saves
+// Run against a local devrun server with IDS_URL, and IDS_COMPOSER to a composer export (the fixture
+// in tests/fixtures, so the check does not wait on the live one); `--shots <dir>` or IDS_REPORT_SHOTS saves
 // screenshots. The report dialog is filled and submitted against an intercepted intake, so the
 // multipart body itself is read back: the sequence, the context and the PNG of the drawing.
 import { chromium } from 'playwright-core'
@@ -45,7 +46,7 @@ async function open(viewport, scheme, deepLink = false) {
     sent = route.request().postDataBuffer() ?? Buffer.alloc(0)
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false }) })
   })
-  const address = `${base}/%E2%BF%B0%E6%9C%A8%E5%8F%A3?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}`
+  const address = `${base}/%E2%BF%B0%E6%9C%A8%E5%8F%A3?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
   await page.goto(address, { waitUntil: 'domcontentloaded' })
   await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
   return { page, errors, body: () => sent ?? Buffer.alloc(0) }
@@ -87,7 +88,7 @@ try {
   const context = JSON.parse(sent.context?.value ?? 'null')
   assert.ok(context && Object.keys(context).length > 8, 'the context is not empty')
   assert.ok(context.appVersion && context.commit, 'with the version and the build commit')
-  assert.ok(context.preview, 'the preview\'s own state')
+  assert.match(context.preview, /^composed/, `the preview says how the drawing went: ${context.preview}`)
   assert.equal(context.devicePixelRatio, 2, 'the pixel ratio')
   assert.ok(context.composerBase, 'and the composer the preview draws from')
   assert.equal(context.route, '/%E2%BF%B0%E6%9C%A8%E5%8F%A3', 'the route carries no query')

@@ -1325,7 +1325,7 @@
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
-  {drawing} {scopes} {slots} version={documentTick} preview={() => work?.querySelector('.ids-preview') ?? null} workspace={reportWorkspace}
+  {drawing} {scopes} {slots} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}

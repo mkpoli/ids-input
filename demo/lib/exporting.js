@@ -33,8 +33,9 @@ export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { backgr
 /** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] @param {number[][]} [slots] */
 export const scopedSvgOf = (scopes, s, size = s.size, slots = []) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [] })
 
-/** The SVG string as a PNG blob at its pixel size. @param {string} svg @param {number} size @returns {Promise<Blob>} */
-export async function pngOfSvg(svg, size) {
+/** The SVG string as a PNG blob at its pixel size, on `back` where a colour is given (an SVG drawn
+ *  without a background of its own is transparent otherwise). @param {string} svg @param {number} size @param {string | null} [back] @returns {Promise<Blob>} */
+export async function pngOfSvg(svg, size, back = null) {
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const url = URL.createObjectURL(blob)
   try {
@@ -42,7 +43,9 @@ export async function pngOfSvg(svg, size) {
     image.src = url
     await image.decode()
     const canvas = Object.assign(document.createElement('canvas'), { width: size, height: size })
-    canvas.getContext('2d')?.drawImage(image, 0, 0, size, size)
+    const context = canvas.getContext('2d')
+    if (context && back) { context.fillStyle = back; context.fillRect(0, 0, size, size) }
+    context?.drawImage(image, 0, 0, size, size)
     return await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('PNG failed')), 'image/png'))
   } finally { URL.revokeObjectURL(url) }
 }

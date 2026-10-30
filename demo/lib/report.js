@@ -220,6 +220,20 @@ function standalone(svg, size) {
   return new XMLSerializer().serializeToString(clone)
 }
 
+/** Wait while the preview still says it is drawing, or `ms` passes: a report sent from a deep link
+ *  arrives before the first composition, and a picture of placeholders says less than one of the
+ *  drawing. @param {Element | null} preview @param {number} [ms] */
+async function settled(preview, ms = 6000) {
+  const busy = () => ['loading', 'idle'].includes(preview?.getAttribute('data-step') ?? '')
+  if (!preview || !busy()) return
+  await new Promise(resolve => {
+    const stop = () => { observer.disconnect(); clearTimeout(timer); resolve() }
+    const observer = new MutationObserver(() => { if (!busy()) stop() })
+    observer.observe(preview, { attributes: true, attributeFilter: ['data-step'] })
+    const timer = setTimeout(stop, ms)
+  })
+}
+
 /** The drawing as a PNG — the scoped document's where it has one, as the export does — else the
  *  preview's own SVG rasterized the same way; null when neither works, so a report still goes
  *  without one. @param {Drawn} drawn @param {Element | null} preview @returns {Promise<Blob | null>} */
@@ -233,7 +247,7 @@ export async function reportImage({ drawing, scopes, slots = [] }, preview) {
   const svg = preview?.querySelector('svg')
   if (svg) {
     try {
-      const png = await pngOfSvg(standalone(/** @type {SVGElement} */ (svg), SHOT.size), SHOT.size)
+      const png = await pngOfSvg(standalone(/** @type {SVGElement} */ (svg), SHOT.size), SHOT.size, '#ffffff')
       if (png.size <= LIMITS.image) return png
     } catch { /* No image. */ }
   }
@@ -249,12 +263,14 @@ export async function reportImage({ drawing, scopes, slots = [] }, preview) {
 export async function reportSnapshot(source) {
   // The page is read first and the picture drawn after, so everything said here is what was on
   // screen when Send was pressed.
+  await settled(source.preview)
   const taken = {
     sequence: source.sequence.slice(0, LIMITS.sequence),
     link: shareHref(source.link),
     document: JSON.stringify(source.workspace ?? {}),
     context: contextJson(reportContext(source, source.preview), consoleRing()),
   }
+  // The context keeps what was on screen; the picture may wait for the first drawing.
   return { ...taken, image: await reportImage(source, source.preview) }
 }
 
