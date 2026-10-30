@@ -264,5 +264,6 @@
   "app.layers.oncanvas": "キャンバスで編集",
   "app.layers.history": "履歴",
   "app.export.incomplete": "この描画は不完全です。書き出すと変形や部品が欠けることがあります。",
-  "app.export.partial": "不完全なまま書き出す"
+  "app.export.partial": "不完全なまま書き出す",
+  "app.file.drop": "文書をドロップして開く"
 }

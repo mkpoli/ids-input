@@ -265,5 +265,6 @@
   "app.layers.oncanvas": "Edit on canvas",
   "app.layers.history": "History",
   "app.export.incomplete": "This drawing is incomplete. Exporting it can drop transforms or pieces.",
-  "app.export.partial": "Export partial drawing"
+  "app.export.partial": "Export partial drawing",
+  "app.file.drop": "Drop a document to open"
 }
