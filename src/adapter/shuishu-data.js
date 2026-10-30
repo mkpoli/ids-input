@@ -7,10 +7,11 @@ export { isShuishu }
 /**
  * A Shuishu palette part: `shuiName` is the proposed character's name, without the `SHUISHU
  * LOGOGRAM` prefix, `shuiReading` the reading the spreadsheet gives, `shuiMeaning` the dictionaries'
- * meaning, usually one Han character, and `shuiGloss` its English gloss.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'dictionary' | 'logogram' | 'radical', shuiName: string }} ShuishuPart
+ * meaning, usually one Han character, `shuiGloss` its English gloss and, for the characters
+ * `data/shuishu/ids.json` decomposes, `ids` its editorial IDS.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'dictionary' | 'logogram' | 'radical', shuiName: string, ids?: string | null }} ShuishuPart
  *
- * @typedef {{ format: number, parts: ShuishuPart[], proposal?: unknown }} ShuishuData
+ * @typedef {{ format: number, parts: ShuishuPart[], proposal?: unknown, ids?: { note: string, count: number } }} ShuishuData
  */
 
 /** @param {ShuishuData} doc @returns {ShuishuPart[]} */
@@ -29,6 +30,7 @@ export const shuishuLabel = part => [
   part.shuiName,
   part.shuiReading,
   part.shuiMeaning && part.shuiGloss ? `${part.shuiMeaning} (${part.shuiGloss})` : part.shuiMeaning ?? part.shuiGloss,
+  part.ids,
   `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}（暫定）`,
 ].filter(Boolean).join(' · ')
 
