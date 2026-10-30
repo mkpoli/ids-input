@@ -9,6 +9,7 @@
     "not_found_handling": "single-page-application"
   },
   "routes": [{ "pattern": "ids.mkpo.li", "custom_domain": true }],
+  "workers_dev": false,
   "observability": { "enabled": true },
   "preview_urls": true
 }
