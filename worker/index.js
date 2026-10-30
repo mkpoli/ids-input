@@ -20,6 +20,10 @@ let template = null
 const templateOf = async (env, origin) => template ??= await env.ASSETS.fetch(new URL('/', origin))
   .then(answer => answer.text())
 
+/** A card, or a plain 500 the cache does not keep when the render fails. @param {any} env @param {any} ctx @param {string} sequence */
+const cardOrError = (env, ctx, sequence) => cardResponse(env, ctx, sequence)
+  .catch(error => new Response(`Card failed: ${error?.message ?? error}`, { status: 500, headers: { 'cache-control': 'no-store' } }))
+
 async function share(env, request, url, sequence) {
   const html = await templateOf(env, url.origin)
   const answer = new Response(request.method === 'HEAD' ? null : shareHtml(html, { sequence, char: await characterOf(env, sequence), origin: url.origin }), {
@@ -37,15 +41,15 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     if (request.method !== 'GET' && request.method !== 'HEAD') return env.ASSETS.fetch(request)
-    if (url.pathname === '/og' || url.pathname === '/og/') return cardResponse(env, ctx, DEFAULT)
-    if (url.pathname === '/og/default.png') return cardResponse(env, ctx, DEFAULT)
+    if (url.pathname === '/og' || url.pathname === '/og/') return cardOrError(env, ctx, DEFAULT)
+    if (url.pathname === '/og/default.png') return cardOrError(env, ctx, DEFAULT)
     if (url.pathname === '/s') return Response.redirect(new URL('/', url).href, 302)
 
     const card = /^\/og\/(.+)\.png$/.exec(url.pathname)
     if (card) {
       const sequence = decoded(card[1])
       if (sequence === null) return new Response('Bad sequence', { status: 400 })
-      return cardResponse(env, ctx, sequence.slice(0, LONGEST))
+      return cardOrError(env, ctx, sequence.slice(0, LONGEST))
     }
 
     const link = /^\/s\/(.*)$/.exec(url.pathname)

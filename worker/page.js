@@ -36,7 +36,7 @@ export function metaFor({ sequence, char, origin }) {
       `<meta property="og:image:type" content="image/png">`,
       `<meta property="og:image:width" content="${OG_WIDTH}">`,
       `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-      `<meta property="og:image:alt" content="${escaped(`The composed character for ${sequence}`)}">`,
+      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
       `<meta name="twitter:card" content="summary_large_image">`,
       `<meta name="twitter:title" content="${escaped(title)}">`,
       `<meta name="twitter:description" content="${escaped(description)}">`,
