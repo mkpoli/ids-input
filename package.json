@@ -76,9 +76,11 @@
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
+    "build:site": "bun run build:demo && bun scripts/og-assets.mjs",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
+    "dev:worker": "bunx wrangler dev",
     "prepack": "node scripts/emit-types.mjs",
     "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
   },
@@ -92,7 +94,8 @@
     "svelte-check": "4.7.7",
     "tsrs": "0.20.1-ts7.1.0-beta",
     "typescript": "5.9.3",
-    "vite": "7.3.6"
+    "vite": "7.3.6",
+    "wrangler": "^4.156.0"
   },
   "peerDependencies": {
     "svelte": "^5.20.0"
@@ -101,5 +104,8 @@
     "svelte": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "@cf-wasm/resvg": "^0.4.0"
   }
 }

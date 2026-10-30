@@ -7,3 +7,4 @@ dist/
 /shots/
 __pycache__/
 /cache/
+.wrangler/

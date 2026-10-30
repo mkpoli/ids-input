@@ -1,0 +1,20 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ids-input",
+  "account_id": "5e6d5236e83c2395b253db1ec8e28a3e",
+  "compatibility_date": "2026-08-01",
+  "main": "worker/index.js",
+
+  // The built workshop. Share links and cards are answered by the worker first; every other path is
+  // an asset, and a path that is none opens the app so its own routing can read it.
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/s", "/s/*", "/og", "/og/*"]
+  },
+
+  "routes": [{ "pattern": "ids.mkpo.li", "custom_domain": true }],
+
+  "observability": { "enabled": true }
+}
