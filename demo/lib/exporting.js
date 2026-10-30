@@ -34,7 +34,7 @@ export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { backgr
 export const scopedSvgOf = (scopes, s, size = s.size, slots = []) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [] })
 
 /** The SVG string as a PNG blob at its pixel size. @param {string} svg @param {number} size @returns {Promise<Blob>} */
-async function pngOfSvg(svg, size) {
+export async function pngOfSvg(svg, size) {
   const blob = new Blob([svg], { type: 'image/svg+xml' })
   const url = URL.createObjectURL(blob)
   try {

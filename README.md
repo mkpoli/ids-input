@@ -1158,7 +1158,8 @@ and a separate Unicode caption. Text size follows the sequence length; longer se
 at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
 use glyphs from the bundled GenZui Sans font.
 
-The Cloudflare Worker serves preview pages and images alongside the workshop's static assets.
+The Cloudflare Worker serves preview pages and images alongside the workshop's static assets, and
+forwards `/api/report` to the report intake.
 Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
 An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
 Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
@@ -1171,6 +1172,25 @@ by SHA-256; font assets ship with their license notices. Run `node tests/worker-
 after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
 `wrangler dev` to serve the Worker and built assets locally.
 
+### Reporting a problem
+
+File → Report a problem, the same entry in the More sheet, and `?report=1` open a report dialog.
+It asks what happened and, if the reporter wants an answer, how to reach them; the drawing goes
+along as a 1024 px PNG unless the checkbox is cleared, and the dialog lists the rest in plain text.
+The request is `multipart/form-data` to `/api/report` on the site's own origin, which the worker
+hands over the `REPORT` binding to the `ids-reports` service (`?endpoint=` points it elsewhere from
+a local host, which the published site ignores so a shared link cannot collect reports of its own).
+It carries the active sequence, its share link, the workspace as JSON (every tab with its layer
+transforms, the active tab, the view, face, theme, language and panel widths) and a context
+document: the version and build commit (`__APP_VERSION__` and `__BUILD_COMMIT__`, the commit the CI
+built), the route without its query, the viewport, pixel ratio, user agent, loaded font families,
+the preview's step and label, and the last twenty console warnings, errors and failed requests
+collected by the ring `demo/main.js` installs before the app mounts. Anything naming the reporter's
+own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
+inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
+published site with only the parameters that open the sequence. The answer replaces the form with
+the issue it became; a report matching an open issue says so and links to it, and a refused one
+keeps the text and shows what the intake said.
 
 ### Comparison with KAGE
 

@@ -6,6 +6,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte'
 
 // The recognizer's WebAssembly runtime is read from the package at serve and build time, so no
 // 12 MB binary lives in the repository.
+const { version: VERSION } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+
 const ORT = ['ort-wasm-simd-threaded.mjs', 'ort-wasm-simd-threaded.wasm']
 const ORT_DIR = fileURLToPath(new URL('../node_modules/onnxruntime-web/dist/', import.meta.url))
 const ORT_ALIAS = fileURLToPath(new URL('../node_modules/onnxruntime-web/dist/ort.wasm.min.mjs', import.meta.url))
@@ -34,6 +36,12 @@ function ortAssets() {
 export default defineConfig({
   root: import.meta.dirname,
   base: '/',
+  // What the page says it is when someone reports a problem: the package's version and the commit
+  // the deploy built, `dev` for a build with none.
+  define: {
+    __APP_VERSION__: JSON.stringify(VERSION),
+    __BUILD_COMMIT__: JSON.stringify(process.env.VITE_BUILD_COMMIT || 'dev'),
+  },
   plugins: [svelte(), ortAssets()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
