@@ -1216,6 +1216,12 @@ Thanks to:
 - [馬のゆい (@umanoyui)](https://x.com/umanoyui) for asking about kana support, prompting a review
   of support for components from other writing systems.
 
+## Sponsor
+
+I build ids-input on my own, with no funding behind it, and it's free for everyone. If it's useful to you, a tip on [Ko-fi](https://ko-fi.com/mkpoli) gives me time to keep improving it. Companies interested in sponsoring can write to mkpoli@mkpo.li.
+
+[![Support me on Ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/mkpoli)
+
 ## Licenses
 
 The code is licensed under [MIT](LICENSE). Data is provided under Creative Commons
