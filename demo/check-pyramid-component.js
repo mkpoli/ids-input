@@ -83,6 +83,7 @@ try {
     await customRows.fill('2 1 2')
     await customInsert.click()
     assert.equal(await field.inputValue(), '⿳⿰木木木⿰口口')
+    await field.fill('')
     await field.press('Tab')
     await page.locator('[data-five="212"]').click()
     assert.equal(await field.inputValue(), '⿳⿰木木木⿰木木')
