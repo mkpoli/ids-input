@@ -1342,7 +1342,8 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
-`PASS` and exits non-zero on a failure.
+`PASS` and exits non-zero on a failure. `demo/check-report.js` also takes `IDS_COMPOSER`, a
+composer export to draw from, so it need not wait on the live one.
 
 `bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
 page load, runs every `demo/check-*.js` against it, and stops the server again. `--only <text>`
