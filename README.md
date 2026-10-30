@@ -240,8 +240,8 @@ composed inside its cell. A whole description may run past the ordinary 64-code-
 pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
 to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
 its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, and a typed value is kept for all three. Enter a
-part, then choose a preset or a custom row count.
+part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
+kept for all three. Enter a part, then choose a preset or a custom row count.
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
@@ -978,8 +978,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
-  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters, and no recorded description
-  writes the sharing, so they stay out.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 follows the
+  photograph's cross, 五 above 矢, 口 and 隹 above 止, with one 口 for all four; 黃金萬兩 follows its
+  column of 黃, 金, 萬 and 兩; 吉祥如意 keeps a square because the diamond's cross cannot be drawn.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
@@ -987,7 +988,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
   and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
-  written as an IDS tree without duplicating them.
+  written as an IDS tree without duplicating them; the example arranges them in a square.
 - 吴国升, [组合字的内外乾坤](https://epaper.gmw.cn/gmrb/html/2024-04/21/nw.D110000gmrb_20240421_2-05.htm),
   光明日报, 2024-04-21: describes 招財進寶 sharing the 貝 of 財 and the 扌 of 招 inside 寶's frame,
   with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
@@ -1106,10 +1107,9 @@ without a code point, folds each section, and jumps to a section from a chip tha
 in view. An example opens a tab. The toolbar also holds a share link with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
-The address carries the active sequence in its path (`/s/⿰亻哥`), so a link opens it and a crawler
-can preview it; older `#⿰亻哥` and `?ids=⿰亻哥` links still open. While the document holds more than
-its sequence, the address bar carries that difference as `?doc=` beside the sequence, so copying the
-location keeps the placement; opening such a link keeps the token. Tabs use
+The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
+`#⿰亻哥` and `?ids=⿰亻哥` forms still open. A document that holds more than its sequence rides along
+as `?doc=`, so copying the location keeps a placement and opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
 text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
@@ -1118,23 +1118,24 @@ font. Settings, drafts, the theme and font choice stay in `localStorage`; the ke
 
 ### Share cards
 
-A share link is a page of its own at `/s/<sequence>`. Its address, title and preview tags name the
-sequence, the character it describes and that character's code point, and point at a card image at
-`/og/<sequence>.png`: 1200×630, the drawing in a rounded frame, the sequence and the site's name.
-The card follows the workshop's neutral surfaces and blue accent. IDC characters use glyphs from
-the bundled GenZui Sans font. The home page previews an example.
+A share link at `/<sequence>` carries preview tags for its sequence, matching character and
+Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. The preview image
+at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic description sequence
+and a separate Unicode caption. Text size follows the sequence length; longer sequences wrap to
+at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
+use glyphs from the bundled GenZui Sans font.
 
-The worker behind `ids.mkpo.li` answers those two paths and hands every other request to the built
-workshop. It composes from the same export the editor uses, rasterizes with `@cf-wasm/resvg`, and
-keeps a card in the cache for a day. A sequence the composer cannot draw still gets a card, with the
-frame labelled `Preview unavailable`; one without a lookup match says `No Unicode match`. A card
-that fails to render answers 500 without being cached. The bare `/og` and `/og/default.png` serve the
-home page's example.
+The Cloudflare Pages project serves the workshop with an advanced-mode worker for preview pages
+and images. Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
+An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
+Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
+Preview hosts send `X-Robots-Tag: noindex`; canonical metadata points to `https://ids.mkpo.li`.
 
-`bun run build:site` builds the workshop and then `scripts/og-assets.mjs`, which unpacks the faces
-into `dist/og/fonts` (resvg reads no WOFF2), copies the outline files, and writes the IDS-to-character
-table from BabelStone's. Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and
-checked by SHA-256 rather than kept in the repository; each converts and ships with its OFL notice.
+`bun run build:site` builds the workshop, prepares the card fonts and outlines with
+`scripts/og-assets.mjs`, and bundles the Pages handler and WASM into `dist/_worker.js`.
+Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and checked by SHA-256;
+font assets ship with their license notices. Run `node tests/pages-og-runtime.mjs` after the build
+to test the bundled handler and PNG renderer. `bun run dev:worker` serves the built Pages app locally.
 
 ### Comparison with KAGE
 
@@ -1269,7 +1270,25 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
-CI verifies, builds and deploys to Cloudflare Workers; the checks above stay local.
+CI runs verification and builds the Pages app, including the preview handler. Deployment runs
+from `main` through `.github/workflows/deploy.yml`, using the `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID` repository secrets. Pull requests produce build artifacts.
+
+### The demo's browser checks
+
+`demo/check-*.js` drives the workshop in a headless Chromium, one file per feature. It needs a dev
+server, because the checks open `/fixtures/` pages that `vite build` leaves out of `dist/`:
+
+```sh
+bun run dev &                                     # or your own dev server
+IDS_URL=http://localhost:5173 \
+CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
+  bun demo/check-similar.js
+```
+
+`CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
+in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
+`PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and

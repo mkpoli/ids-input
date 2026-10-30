@@ -84,6 +84,7 @@
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
   let largeDialog = $state(/** @type {HTMLDialogElement | null} */ (null))
+  let largeButton = $state(/** @type {HTMLButtonElement | null} */ (null))
   $effect(() => {
     const dialog = largeDialog
     if (!dialog) return
@@ -196,7 +197,7 @@
         // operands. The Kaisho face borrows the Serif drawing in both cases.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
         if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
-          try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
+          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
       } catch (error) {
@@ -216,7 +217,7 @@
           }
         }
         if (defaultFace) throw error
-        return sans(sequence, options)
+        return { ...(await sans(sequence, options)), faceFallback: 'sans' }
       }
 
     }, {
@@ -663,6 +664,12 @@
     if (tabs.length < 2 || at < 0) return
     activate(tabs[(at + step + tabs.length) % tabs.length].id)
   }
+  /** Put the tab at `from` where `to` was, keeping the active tab and its editor. @param {number} from @param {number} to */
+  function moveTab(from, to) {
+    if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length) return
+    const [tab] = tabs.splice(from, 1)
+    tabs.splice(to, 0, tab)
+  }
 
   // Saved drafts.
   let drafts = $state(storedDrafts())
@@ -882,7 +889,7 @@
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
-      <a class="brand" href="./" aria-label={t('app.title')}>
+      <a class="brand" href="/" aria-label={t('app.title')}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>
@@ -920,7 +927,7 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 
@@ -1005,22 +1012,24 @@
       </div>
       <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
-          {#key activeId}
-            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-              editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
-              {#snippet detailContent()}
-                {#each encoded as ch (ch)}
-                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
-                {/each}
-              {/snippet}
-            </IdsPreview>
-          {/key}
+          {#if !large}
+            {#key activeId}
+              <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+                document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
+                {#snippet detailContent()}
+                  {#each encoded as ch (ch)}
+                    <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                  {/each}
+                {/snippet}
+              </IdsPreview>
+            {/key}
+          {/if}
           <div class="adjust">
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
-            <button type="button" class="adjust-toggle" aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={!drawing && !scopes}
-              onclick={() => { large = true }}>{t('app.preview.large')}</button>
+            <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
+              onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
@@ -1031,13 +1040,20 @@
           </div>
         </div>
         <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
-          oncancel={() => { large = false }} onclose={() => { large = false }}
+          oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
           onclick={event => {
             if (event.target !== largeDialog || !largeDialog) return
             const box = largeDialog.getBoundingClientRect()
             if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) large = false
           }}>
-          <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
+          <div class="large-bar">
+            <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
+            <div class="font-switch" role="group" aria-label={t('app.font.label')}>
+              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
+            </div>
+          </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
               document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
@@ -1185,7 +1201,10 @@
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
-  .large-close{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;align-self:flex-end;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer}
+  .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--surface)}
+  .large-bar .font-switch{order:1}
+  .large-bar .large-close{order:2}
+  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer}
   .large-close:hover{border-color:var(--line-strong)}
   .large-close:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
@@ -1196,7 +1215,7 @@
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
-  .adjust button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
   .adjust button:hover:not(:disabled){border-color:var(--accent)}
   .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
   .adjust button:disabled{opacity:.45;cursor:default}

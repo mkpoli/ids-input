@@ -8,8 +8,41 @@ export const OG_HEIGHT = 630
 /** The code point of `char`, written `U+93B6`. @param {string} char */
 export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 
-/** The link that opens `sequence`: `/s/` and the sequence, percent-encoded. @param {string} sequence */
-export const pathOf = sequence => `/s/${encodeURIComponent(sequence)}`
+/** The workshop's sequence URL, including its dot/slash query fallback. @param {string} sequence */
+export const pathOf = sequence => !sequence ? '/' : /[./]/.test(sequence)
+  ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
+
+const RESERVED = new Set(['embed', 'compare', 'engines', 'index', 'og'])
+const bad = (error, status = 400) => ({ error, status })
+
+/** Classify requests without loading fonts or rendering. Bounds never truncate a sequence. */
+export function routeFor(url, defaultSequence) {
+  if (url.href.length > 16384) return bad('Link too long', 414)
+  let sequence, kind
+  if (url.pathname === '/og' || url.pathname === '/og/' || url.pathname === '/og/default.png') {
+    sequence = defaultSequence
+    kind = 'card'
+  } else {
+    const card = /^\/og\/([^/]+)\.png$/.exec(url.pathname)
+    if (card) {
+      try { sequence = decodeURIComponent(card[1]) } catch { return bad('Bad sequence') }
+      kind = 'card'
+    } else if (url.pathname === '/') {
+      sequence = url.searchParams.get('ids')
+      if (!sequence) return { kind: 'asset' }
+      kind = 'page'
+    } else {
+      let path
+      try { path = decodeURIComponent(url.pathname).replace(/\/$/, '') } catch { return bad('Bad sequence') }
+      sequence = path.slice(1)
+      if (!sequence || sequence.includes('/') || sequence.includes('.') || RESERVED.has(sequence)) return { kind: 'asset' }
+      kind = 'page'
+    }
+  }
+  if ([...sequence].length > 200) return bad('Sequence too long', 414)
+  if (/[\u0000-\u001f\u007f-\u009f]/u.test(sequence)) return bad('Bad sequence')
+  return { kind, sequence }
+}
 
 /**
  * The title, description, tags and image of a shared sequence.

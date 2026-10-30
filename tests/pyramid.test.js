@@ -282,6 +282,35 @@ describe('drawing a pyramid', () => {
     expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
   })
 
+  it('draws a pyramid of empty slots in its cells, numbered in reading order', async () => {
+    const source = sourceOf()
+    for (const layers of [3, 6]) {
+      const text = pyramidSequence('', layers)
+      const drawn = await compose(source, text)
+      expect(drawn.parts).toHaveLength(0)
+      expect(drawn.slots).toHaveLength(pyramidCount(layers))
+      expect(drawn.slots.map(slot => slot.index)).toEqual([...Array(pyramidCount(layers)).keys()])
+      const [first] = drawn.slots
+      for (const slot of drawn.slots) {
+        expect(slot.box[2]).toBeCloseTo(first.box[2], 6)
+        expect(slot.box[3]).toBeCloseTo(first.box[3], 6)
+      }
+      expect(await sketch(source, text)).toHaveLength(pyramidCount(layers))
+    }
+    // A cell of several slots renumbers its slots each time it repeats.
+    const mixed = await compose(source, pyramidSequence('⿰木⬚', 3))
+    expect(mixed.parts).toHaveLength(6)
+    expect(mixed.slots.map(slot => slot.index)).toEqual([0, 1, 2, 3, 4, 5])
+  })
+
+  it('lets a pyramid of empty slots through the preview limits', () => {
+    const text = pyramidSequence('', 24), tree = parse(text, { open: true }).tree
+    expect(tooLarge(tree)).toBe(false)
+    expect(pyramidRows(tree)?.layers).toBe(24)
+    expect(pyramidRows(tree)?.cell).toBeNull()
+    expect(pyramidRows(parse(text, { open: true }).tree)?.count).toBe(300)
+  })
+
   it('draws a pyramid of a description, one cell per repeat and its leaves in order', async () => {
     const source = sourceOf(), text = pyramidSequence('⿰木口', 3)
     const leaves = await sketch(source, text)

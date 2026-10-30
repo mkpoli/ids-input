@@ -1,6 +1,7 @@
 // Run against a local devrun server with IDS_URL.
-// A whole-document token from before the difference format still opens, and both kinds of share
-// link say what they must: the sequence alone for an untouched document, a short token otherwise.
+// A sequence travels in the path; a fragment and a whole-document token still open. Both kinds of
+// share link say what they must: the sequence alone for an untouched document, a short token
+// otherwise.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { fromSequence, writeDocument } from '../src/document/index.js'
@@ -22,6 +23,7 @@ try {
   await page.getByRole('button', { name: 'Share', exact: true }).first().click()
   const link = await page.getByRole('dialog').locator('input').inputValue()
   assert.ok(link.includes('doc='), 'the share link carries the difference')
+  assert.equal(new URL(link).pathname, '/%E2%BF%B0%E6%9C%A8%E5%8F%A3', 'the sequence is the path')
   assert.ok(link.length < 260, `the share link stays short: ${link.length}`)
   const reopened = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
   reopened.on('pageerror', error => errors.push(error.message))
@@ -38,11 +40,12 @@ try {
   }
   const untouched = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 2 })
   untouched.on('pageerror', error => errors.push(error.message))
-  await untouched.goto(`${base}/#%E2%BF%BA%E7%94%B5%E5%B0%BC`, { waitUntil: 'domcontentloaded' })
+  await untouched.goto(`${base}/%E2%BF%BA%E7%94%B5%E5%B0%BC`, { waitUntil: 'domcontentloaded' })
   await untouched.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
   await untouched.getByRole('button', { name: 'Share', exact: true }).first().click()
   const plain = await untouched.getByRole('dialog').locator('input').inputValue()
   assert.equal(new URL(plain).search, '', `an untouched document shares its sequence alone: ${plain}`)
+  assert.equal(new URL(plain).pathname, '/%E2%BF%BA%E7%94%B5%E5%B0%BC', 'and keeps it in the path')
   assert.deepEqual(errors, [])
-  console.log('PASS a whole-document token opens, the shared link reopens with its transform, an untouched document shares its sequence alone')
+  console.log('PASS a whole-document token opens, the shared link reopens with its transform in the path, an untouched example shares its path alone')
 } finally { await browser.close() }

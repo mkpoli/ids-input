@@ -31,9 +31,6 @@
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
     document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
-  // Serif outlines carry tiny self-overlap and open joins; a hairline stroke of the same ink
-  // seals them without changing the drawn weight.
-  const seal = $derived(adapter.fontStyle === 'serif')
 
   const uid = $props.id()
   const sequence = $derived(write(tree))
@@ -282,7 +279,7 @@
                     {/each}
                   </mask>
                 {/if}
-                <path class="ink" class:seal d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
+                <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
@@ -350,6 +347,7 @@
       {#if !quiet}
         {#if step === 'loading'}<span class="ids-preview-spinner" aria-hidden="true"></span>{/if}
         <span class="ids-preview-badge" title={note || undefined}>{t(`ids.preview.${said.label}`)}</span>
+        {#if step === 'composed' && shown?.drawn?.faceFallback}<span class="ids-preview-fallback">{t('ids.preview.faceFallback')}</span>{/if}
       {/if}
     </figcaption>
   {/if}
@@ -377,7 +375,6 @@
   .final{background:currentColor;-webkit-mask:var(--drawing) center/100% 100% no-repeat;mask:var(--drawing) center/100% 100% no-repeat}
   @media (forced-colors: active){.final{forced-color-adjust:none;background:CanvasText}.ink{fill:CanvasText}}
   .ink{fill:currentColor}
-  .ink.seal{stroke:currentColor;stroke-width:2;stroke-linejoin:round}
   .ids-preview-large svg[tabindex]:focus-visible{outline:2px solid var(--_accent);outline-offset:-2px;border-radius:10px}
   .ids-preview[data-adjusting] .ids-preview-meta{display:none}
   .adjusting{touch-action:none}
@@ -396,6 +393,7 @@
   .slot.selected .slot-fill{fill:color-mix(in srgb,var(--_accent) 16%,transparent)}
   .slot.selected .slot-line{stroke:var(--_accent)}
   .ids-preview-badge{padding:0 7px;border-radius:999px;font-size:11px;line-height:18px;color:var(--_muted);border:1px solid var(--_line);text-align:center}
+  .ids-preview-fallback{font-size:11px;color:var(--_muted);text-align:center}
   .ids-preview[data-label="loading"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 35%,var(--_line))}
   .ids-preview[data-label="final"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 45%,var(--_line))}
   .ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}

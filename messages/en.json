@@ -104,6 +104,7 @@
   "ids.preview.draft": "Preview",
   "ids.preview.drawing": "Drawing of {sequence}",
   "ids.preview.failed": "Could not compose",
+  "ids.preview.faceFallback": "The chosen face could not draw this; another face is shown.",
   "ids.preview.failedNote": "The composer could not draw this sequence.",
   "ids.preview.final": "Final",
   "ids.preview.loading": "Composing…",

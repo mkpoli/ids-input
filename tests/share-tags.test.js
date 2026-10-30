@@ -37,6 +37,6 @@ describe('the tags a share link answers with', () => {
     expect(html).toContain('<title>A$&amp;B = 鎶 (U+93B6) — IDS Workshop</title>')
   })
   it('gives the path of the link', () => {
-    expect(pathOf('⿰釒哥')).toBe('/s/%E2%BF%B0%E9%87%92%E5%93%A5')
+    expect(pathOf('⿰釒哥')).toBe('/%E2%BF%B0%E9%87%92%E5%93%A5')
   })
 })
