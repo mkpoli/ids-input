@@ -1020,7 +1020,7 @@
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
             <button type="button" class="adjust-toggle" aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={!drawing && !scopes}
-              onclick={() => { large = true }}>{t('app.preview.large')}</button>
+              onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
@@ -1196,7 +1196,7 @@
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
-  .adjust button{height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
   .adjust button:hover:not(:disabled){border-color:var(--accent)}
   .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
   .adjust button:disabled{opacity:.45;cursor:default}
