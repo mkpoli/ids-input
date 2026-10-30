@@ -62,7 +62,7 @@ export function shuishuNames(doc, query, limit = 12) {
     // that way, not its two parts.
     if (IDS.test(text)) {
       const built = doc.parts.filter(part => part.ids === text)
-      if (built.length) return built.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part) }))
+      if (built.length) return built.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part), rank: 0 }))
     }
     const parts = index(doc)
     const typed = [...text].filter(isShuishu).map(char => parts.get(char)).filter(part => part !== undefined)
