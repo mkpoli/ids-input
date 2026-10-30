@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 import { createHash } from 'node:crypto'
 import { isComponent, isLetter, isShuishu, parse, write } from '../src/core/ids.js'
@@ -14,6 +17,7 @@ import { shuishuLabel, shuishuNames } from '../src/adapter/shuishu-data.js'
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
 const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu-outlines.json.gz', import.meta.url))))
 const chars = data.parts.map(part => part.part)
+const OPS = ['⿰', '⿱', '⿴', '⿵', '⿶']
 
 describe('Shuishu', () => {
   it('ships the whole proposed block, once each', () => {
@@ -109,15 +113,19 @@ describe('Shuishu', () => {
     expect(shuishuNames(data, 'one')[0].char).toBe(one.part)
   })
 
-  it('carries the editorial decompositions it can build', () => {
+  it('carries the editorial decompositions it can build', async () => {
     const built = data.parts.filter(part => part.ids)
     expect(built).toHaveLength(data.ids.count)
     expect(data.ids.note.length).toBeGreaterThan(0)
     const known = new Set(chars)
     for (const part of built) {
-      expect(part.ids[0]).toMatch(/[⿰⿱⿴⿵⿶]/)
+      // Exactly one operator and two parts of the block, neither of them the character itself.
+      expect([...part.ids]).toHaveLength(3)
+      expect(OPS).toContain(part.ids[0])
       expect([...part.ids.slice(1)].every(char => known.has(char))).toBe(true)
+      expect(part.ids.slice(1)).not.toContain(part.part)
     }
+    expect(new Set(built.map(part => part.ids[0])).size).toBeGreaterThan(1)
     // The chart's radical cross references name one of the parts where they exist.
     const one = built.find(part => part.part === '\u{1B318}')
     expect(one.ids).toBe(`⿱${String.fromCodePoint(0x1b501)}${String.fromCodePoint(0x1b500)}`)
@@ -125,13 +133,44 @@ describe('Shuishu', () => {
     expect(shuishuNames(data, one.ids)[0]).toMatchObject({ char: one.part })
     expect(shuishuNames(data, one.ids)[0].label).toContain(one.ids)
     expect(shuishuNames(data, String.fromCodePoint(0x1b501))[0].char).toBe(String.fromCodePoint(0x1b501))
+    // The same holds in the search the editor uses, past the typed parts, and a description nothing
+    // is built from leaves the parts where they were.
+    const [first] = await shuishuAdapter({ data, palette: [] }).search(one.ids)
+    expect(first.char).toBe(one.part)
+    const unbuilt = `⿰${String.fromCodePoint(0x1b500)}${String.fromCodePoint(0x1b30a)}`
+    const [typed] = await shuishuAdapter({ data, palette: [] }).search(unbuilt)
+    expect(typed.char).toBe(String.fromCodePoint(0x1b500))
   })
+
+  it('refuses a decomposition the build cannot use', () => {
+    // The build validates `ids.json`; a bad entry has to stop it, not reach the palette.
+    const tree = mkdtempSync(join(tmpdir(), 'ids-shuishu-'))
+    cpSync(new URL('../data', import.meta.url), join(tree, 'data'), { recursive: true })
+    cpSync(new URL('../fonts', import.meta.url), join(tree, 'fonts'), { recursive: true })
+    cpSync(new URL('../scripts', import.meta.url), join(tree, 'scripts'), { recursive: true })
+    const file = join(tree, 'data/shuishu/ids.json')
+    const entries = JSON.parse(readFileSync(file, 'utf8')).entries
+    const bad = {
+      'two operators': ['⿱⿰' + String.fromCodePoint(0x1b501) + String.fromCodePoint(0x1b500)],
+      'a part outside the block': ['⿱' + String.fromCodePoint(0x1b501) + '口'],
+      'its own character': ['⿱' + String.fromCodePoint(0x1b318) + String.fromCodePoint(0x1b500)],
+      'an empty value': [''],
+    }
+    for (const [name, [value]] of Object.entries(bad)) {
+      writeFileSync(file, JSON.stringify({ note: 'x', entries: { ...entries, '1B318': value } }))
+      const build = spawnSync('uv', ['run', '--python', '3.12', 'scripts/build_shuishu.py'], { cwd: tree, encoding: 'utf8' })
+      expect({ name, status: build.status }).toEqual({ name, status: 1 })
+      expect(build.stderr).toMatch(/ValueError/)
+    }
+    rmSync(tree, { recursive: true, force: true })
+  }, 120000)
 
   it('names a decomposition where a part has one', () => {
     const part = data.parts.find(entry => entry.ids)
     expect(shuishuLabel(part)).toContain(part.ids)
     const plain = data.parts.find(entry => !entry.ids)
-    expect(shuishuLabel(plain)).not.toContain('⿰')
+    expect([...plain.part].some(char => OPS.includes(char))).toBe(false)
+    expect(shuishuLabel(plain)).toBe(shuishuLabel({ ...plain, ids: null }))
   })
 
   it('keeps the pinned sources in step with their digests', () => {
