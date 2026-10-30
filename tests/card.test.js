@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { cardSvg, PALETTES } from '../worker/card.js'
+import { cardSvg, PALETTES, sequenceLayout } from '../worker/card.js'
 import { OPERATORS } from '../src/core/ids.js'
 
 const drawing = { d: 'M0 0L100 0L100 100Z' }
-const sequenceCells = svg => [...svg.matchAll(/<text data-sequence="true" x="(\d+)" y="(\d+)"[^>]*font-size="(\d+)"[^>]*>(.*?)<\/text>/g)]
+const sequenceCells = svg => [...svg.matchAll(/<text data-sequence="true" x="([\d.]+)" y="([\d.]+)"[^>]*font-size="([\d.]+)"[^>]*>(.*?)<\/text>/g)]
 
 describe('a workshop share card', () => {
   it('uses the workshop palette in both schemes', () => {
@@ -48,12 +48,35 @@ describe('a workshop share card', () => {
     expect(cells).toHaveLength(7)
     expect(new Set(cells.map(cell => cell[2])).size).toBe(1)
   })
+  it('fits continuously and wraps before making the text too small', () => {
+    expect(sequenceLayout('木'.repeat(7)).size).toBe(77.1)
+    expect(sequenceLayout('木'.repeat(8)).size).toBe(67.5)
+    expect(sequenceLayout('木'.repeat(18)).lines).toHaveLength(2)
+    expect(sequenceLayout('木'.repeat(18)).size).toBe(60)
+    expect(sequenceLayout('木'.repeat(45)).lines).toHaveLength(3)
+    expect(sequenceLayout('木'.repeat(45)).truncated).toBe(false)
+    for (let count = 1; count <= 200; count++) {
+      const layout = sequenceLayout('木'.repeat(count))
+      expect(layout.size).toBeGreaterThanOrEqual(26)
+      if (count > 1) expect(layout.size).toBeLessThanOrEqual(sequenceLayout('木'.repeat(count - 1)).size)
+      expect(layout.lines.length).toBeLessThanOrEqual(3)
+      for (const line of layout.lines) expect(line.length * layout.size).toBeLessThanOrEqual(540)
+      expect(layout.lines.flat().join('')).toBe(layout.truncated ? '木'.repeat(59) + '…' : '木'.repeat(count))
+    }
+  })
+  it('spells out sequence and typesets Unicode as secondary metadata', () => {
+    const svg = cardSvg({ sequence: '⿰釒哥', char: '鎶' })
+    expect(svg).toContain('>Ideographic description sequence</text>')
+    expect(svg).toContain('>Unicode</text>')
+    expect(svg).toContain('data-codepoint="true"')
+    expect(svg).not.toContain('width="164" height="44"')
+  })
   it('bounds long sequences and ends with an ellipsis', () => {
     const cells = sequenceCells(cardSvg({ sequence: '木'.repeat(200) }))
     expect(cells).toHaveLength(60)
     expect(cells.at(-1)[4]).toBe('…')
     for (const [, x, y, size] of cells) {
-      expect(Number(x) + Number(size)).toBeLessThanOrEqual(1108)
+      expect(Number(x) + Number(size) / 2).toBeLessThanOrEqual(1108)
       expect(Number(y)).toBeGreaterThan(210)
       expect(Number(y)).toBeLessThan(350)
     }

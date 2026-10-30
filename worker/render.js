@@ -2,7 +2,7 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { Resvg, initResvg, resvgWasmModule } from '@cf-wasm/resvg/workerd'
+import { Resvg, initResvg } from '@cf-wasm/resvg/workerd'
 import { compose } from '../src/composer/loader.js'
 import { unpack } from '../src/composer/loader.js'
 import { sourceFor } from '../src/composer/source.js'
@@ -12,7 +12,7 @@ import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 
 // The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v9'
+const VERSION = 'v10'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // The entry point starts the module's WebAssembly on import, so this only waits for it.
@@ -76,7 +76,10 @@ async function png(env, sequence, drawing, char) {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
-  return render.render().asPng()
+  try {
+    const image = render.render()
+    try { return image.asPng() } finally { image.free() }
+  } finally { render.free() }
 }
 
 /**

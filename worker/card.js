@@ -9,21 +9,29 @@ export const PALETTES = {
 }
 const COLUMN = { left: 568, width: 540 }
 const FRAME = { x: 64, y: 130, side: 432, pad: 42 }
-const FONT_SIZE = [80, 68, 56, 44, 36, 28, 22, 18]
+const SEQUENCE_BOX = { centerY: 288, height: 144, leading: 1.22 }
+const MAX_SIZE = 88
+const MIN_SIZE = 26
 const cluster = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 const cells = sequence => [...cluster.segment(sequence)].map(({ segment }) => segment)
 export const escaped = text => text.replace(/[&<>"']/g, mark => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[mark])
 
-function measured(sequence) {
+// Fit full-width grapheme cells continuously. Wrap before shrinking below a legible size;
+// exceptionally long descriptions end with an ellipsis inside the same fixed-height region.
+export function sequenceLayout(sequence) {
   const characters = cells(sequence)
-  for (const count of [1, 2]) {
-    for (const size of FONT_SIZE) {
-      const columns = Math.floor(COLUMN.width / size)
-      if (characters.length <= columns * count) return { size, lines: chunk(characters, columns) }
-    }
+  if (!characters.length) return { size: MAX_SIZE, lines: [], truncated: false }
+  let best = { size: 0, columns: 1 }
+  for (const rows of [1, 2, 3]) {
+    const columns = Math.ceil(characters.length / rows)
+    const heightLimit = SEQUENCE_BOX.height / (1 + (rows - 1) * SEQUENCE_BOX.leading)
+    const size = Math.floor(Math.min(MAX_SIZE, COLUMN.width / columns, heightLimit) * 10) / 10
+    // The largest fitting layout is monotonic in length. Ties keep fewer lines.
+    if (size > best.size) best = { size, columns }
   }
-  const size = FONT_SIZE.at(-1), columns = Math.floor(COLUMN.width / size)
-  return { size, lines: chunk([...characters.slice(0, 2 * columns - 1), '…'], columns) }
+  if (best.size >= MIN_SIZE) return { size: best.size, lines: chunk(characters, best.columns), truncated: false }
+  const columns = Math.floor(COLUMN.width / MIN_SIZE), capacity = columns * 3
+  return { size: MIN_SIZE, lines: chunk([...characters.slice(0, capacity - 1), '…'], columns), truncated: true }
 }
 const chunk = (characters, columns) => {
   const lines = []
@@ -50,13 +58,14 @@ function frame(p) {
 /** @param {{ sequence: string, drawing?: any, char?: string | null, familyOf?: (character: string) => string, theme?: 'light' | 'dark' }} card */
 export function cardSvg({ sequence, drawing = null, char = null, familyOf = () => 'Noto Sans CJK JP', theme = 'light' }) {
   const p = PALETTES[theme]
-  const { size, lines } = measured(sequence)
-  const first = 304 - (lines.length - 1) * size * 0.65
+  const { size, lines } = sequenceLayout(sequence)
+  const height = size * (1 + (lines.length - 1) * SEQUENCE_BOX.leading)
+  const first = SEQUENCE_BOX.centerY - height / 2 + size * 0.8
   const text = lines.map((line, row) => line.map((character, col) =>
-    `<text data-sequence="true" x="${COLUMN.left + col * size}" y="${Math.round(first + row * size * 1.3)}" font-family="${escaped(familyOf(character))}" font-size="${size}" fill="${p.ink}">${escaped(character)}</text>`).join('')).join('')
+    `<text data-sequence="true" x="${(COLUMN.left + (col + 0.5) * size).toFixed(1)}" y="${(first + row * size * SEQUENCE_BOX.leading).toFixed(1)}" text-anchor="middle" font-family="${escaped(familyOf(character))}" font-size="${size}" fill="${p.ink}">${escaped(character)}</text>`).join('')).join('')
   const identity = char
-    ? `<text x="568" y="411" font-family="${escaped(familyOf(char))}" font-size="44" fill="${p.ink}">${escaped(char)}</text><rect x="636" y="376" width="164" height="44" rx="9" fill="${p.soft}"/><text x="654" y="405" font-size="23" fill="${p.accent}">U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}</text>`
-    : `<text x="568" y="405" font-size="23" fill="${p.muted}">No Unicode match</text>`
+    ? `<text x="568" y="435" font-family="${escaped(familyOf(char))}" font-size="40" fill="${p.ink}">${escaped(char)}</text><path d="M628 397V437" stroke="${p.line}"/><text x="650" y="402" font-size="14" fill="${p.muted}">Unicode</text><text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}</text>`
+    : `<text x="568" y="426" font-size="20" fill="${p.muted}">No Unicode match</text>`
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Noto Sans CJK JP">`
     + `<rect width="1200" height="630" fill="${p.bg}"/>`
     + `<rect x="24" y="24" width="1152" height="582" rx="28" fill="${p.surface}" stroke="${p.line}"/>`
@@ -64,7 +73,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
     + `<text x="1120" y="75" text-anchor="end" font-size="18" fill="${p.muted}">ids.mkpo.li</text>`
     + `<path d="M56 103H1144" stroke="${p.line}"/>`
     + frame(p) + glyph(drawing, p)
-    + `<text x="568" y="202" font-size="18" fill="${p.muted}">IDEOGRAPHIC DESCRIPTION</text>`
+    + `<text x="568" y="193" font-size="19" fill="${p.muted}">Ideographic description sequence</text>`
     + text + identity
     + `<path d="M568 479H1108" stroke="${p.line}"/>`
     + `<text x="568" y="520" font-size="20" fill="${p.muted}">Open in IDS Workshop</text>`
