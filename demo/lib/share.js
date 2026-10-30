@@ -1,23 +1,12 @@
 // A sequence in the page's own path, so a link opens it: `/⿰亻哥`. A sequence holding `.` or `/`
 // stays in `?ids=`, which the path parser would eat; the fragment `#⿰亻哥` says it too. All are
 // read. A document that carries more than its sequence rides in `?doc=<base64url>`.
+import { sequenceOfPath } from '../../src/core/address.js'
 import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
-
-/** The one path segment that names a sequence, or null for another path: a file (`embed.html`,
- *  `robots.txt`), an asset below `assets/`, or the root. @param {Location | URL} where */
-function pathSequence(where) {
-  let path
-  try { path = decodeURIComponent(where.pathname) } catch { return null }
-  if (path.endsWith('/')) path = path.slice(0, -1)
-  if (!path.startsWith('/')) return null
-  const segment = path.slice(1)
-  // One segment, and no dot: `embed.html` and `robots.txt` are files, not sequences.
-  return segment && !segment.includes('/') && !segment.includes('.') ? segment : null
-}
 
 /** The sequence a link carries, or ''. @param {Location | URL} where */
 export function sequenceFrom(where) {
-  const path = pathSequence(where)
+  const path = sequenceOfPath(where.pathname)
   if (path !== null) return path
   const hash = where.hash.replace(/^#/, '')
   try {

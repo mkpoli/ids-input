@@ -378,8 +378,9 @@ a small JSON object with the sequence, the title, the render recipe and each
 layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
 the same ones every read. A document its sequence already spells shares the
 path alone; use a file when the difference exceeds the host's URL or QR-code
-budget. The older `#` and `?ids=` forms still open. Every unknown path is the app, so a typo opens
-as a draft on a fresh tab and the page carries its canonical at the root.
+budget. The older `#` and `?ids=` forms still open. Every unknown path is the
+app, so a typo opens as a draft on a fresh tab. The worker writes the title,
+the description and the canonical for a sequence into the head the host serves.
 
 A tab or draft keeps an `ids-input/session` envelope beside its document: the
 current document, the chosen layer and every ID the session has issued. Undo
