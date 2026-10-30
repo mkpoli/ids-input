@@ -4,9 +4,9 @@ import { mkdir } from 'node:fs/promises'
 import assert from 'node:assert/strict'
 
 const cases = [
-  ['shuang', '⿻大㸚'],
-  ['tou', '⿻⺀大'],
-  ['biang', '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心'],
+  ['shuang', '⿻大㸚', 'U+723D'],
+  ['tou', '⿻⺀大', 'U+5934'],
+  ['biang', '⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心', 'U+30EDE'],
 ]
 const out = process.env.SHOTS ?? '/tmp/glyph-regressions'
 await mkdir(out, { recursive: true })
@@ -19,13 +19,13 @@ try {
     await page.goto(process.env.IDS_URL ?? 'http://127.0.0.1:5197', { waitUntil: 'domcontentloaded' })
     const field = page.locator('.ids-field input')
     await field.waitFor()
-    for (const [name, sequence] of cases) {
+    for (const [name, sequence, code] of cases) {
       await field.fill(sequence)
       await field.dispatchEvent('input')
-      await page.waitForFunction(() => {
+      await page.waitForFunction(code => {
         const meta = document.querySelector('.ids-preview-meta')?.textContent ?? ''
-        return /U\+/.test(meta) && !/Composing/.test(meta) && document.querySelector('.ids-preview-large svg path')
-      }, null, { timeout: 120000 })
+        return meta.includes(code) && !/Composing/.test(meta) && document.querySelector('.ids-preview-large svg path')
+      }, code, { timeout: 120000 })
       let previous = '', stable = 0
       for (let i = 0; i < 100 && stable < 4; i++) {
         await page.waitForTimeout(300)
