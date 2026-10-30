@@ -5,6 +5,9 @@ describe('the report endpoint', () => {
   it('follows ?endpoint= on a local run', () => {
     expect(reportEndpoint(new URL('http://localhost:5186/?endpoint=http://localhost:8787/'))).toBe('http://localhost:8787/')
     expect(reportEndpoint(new URL('http://127.0.0.1:5173/?endpoint=/intake'))).toBe('http://127.0.0.1:5173/intake')
+    // A phone pointed at this machine's address over the LAN is a local run too.
+    expect(reportEndpoint(new URL('http://192.168.1.5:5173/?endpoint=http://192.168.1.5:8787/'))).toBe('http://192.168.1.5:8787/')
+    expect(reportEndpoint(new URL('http://my-box.local:5173/?endpoint=/intake'))).toBe('http://my-box.local:5173/intake')
   })
   it('ignores it on the published site, so a shared link cannot collect reports', () => {
     expect(reportEndpoint(new URL('https://ids.mkpo.li/?report=1&endpoint=https://collector.example/'))).toBe('https://ids.mkpo.li/api/report')

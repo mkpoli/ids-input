@@ -22,6 +22,10 @@ describe('a line on its way into a report', () => {
     expect(redact('read /tmp/draft.ids.json')).toBe('read (local)')
     expect(redact(String.raw`read C:\Users\someone\draft.ids.json`)).toBe('read (local)')
   })
+  it('takes out the live-reload socket, which names the host and carries a token', () => {
+    expect(redact("WebSocket connection to 'ws://localhost:5173/?token=abc' failed")).toBe("WebSocket connection to '(local)' failed")
+    expect(redact('wss://my-box.local/hmr?token=abc')).toBe('(local)')
+  })
   it('keeps a remote address, without what its query may say about the reader', () => {
     expect(redact('GET https://ids.mkpo.li/⿰木口?token=secret failed'))
       .toBe('GET https://ids.mkpo.li/⿰木口 failed')

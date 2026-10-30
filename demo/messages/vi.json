@@ -299,6 +299,8 @@
   "app.report.browser": "Trình duyệt: {browser}",
   "app.report.language": "Ngôn ngữ: {language}",
   "app.report.viewport": "Cửa sổ: {viewport}",
+  "app.report.workspace": "Toàn bộ không gian làm việc, gồm mọi thẻ đang mở",
+  "app.report.console": "Các cảnh báo và lỗi gần nhất",
   "app.report.send": "Gửi báo lỗi",
   "app.report.sending": "Đang gửi…",
   "app.report.retry": "Thử lại",

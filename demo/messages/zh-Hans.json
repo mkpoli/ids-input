@@ -299,11 +299,13 @@
   "app.report.browser": "浏览器：{browser}",
   "app.report.language": "界面语言：{language}",
   "app.report.viewport": "窗口：{viewport}",
+  "app.report.workspace": "工作区（所有打开的标签页）",
+  "app.report.console": "最近的警告和报错",
   "app.report.send": "发送报告",
   "app.report.sending": "发送中…",
   "app.report.retry": "重试",
   "app.report.failed": "报告未能发送。",
   "app.report.thanks": "谢谢。报告已成为一条议题，后续回复会出现在那里。",
   "app.report.duplicate": "已有相同的议题，这次报告已补充到那里。",
-  "app.report.issue": "议题 #{number}"
+  "app.report.issue": "议题#{number}"
 }

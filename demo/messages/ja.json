@@ -299,6 +299,8 @@
   "app.report.browser": "ブラウザー：{browser}",
   "app.report.language": "表示言語：{language}",
   "app.report.viewport": "ウィンドウ：{viewport}",
+  "app.report.workspace": "開いているタブすべての内容",
+  "app.report.console": "直前までの警告とエラー",
   "app.report.send": "報告を送信",
   "app.report.sending": "送信中…",
   "app.report.retry": "もう一度送信",

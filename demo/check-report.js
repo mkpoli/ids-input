@@ -34,8 +34,10 @@ const shoot = async (page, name) => { if (shots) await page.screenshot({ path: `
 /**
  * Open the workshop with the dialog ready and the intake intercepted.
  * @param {{ width: number, height: number }} viewport @param {'light' | 'dark'} scheme @param {boolean} deepLink
+ * @param {string} [sequence] the path, an encoded sequence by default
+ * @param {boolean} [clean] forget the workspace a previous case left in storage
  */
-async function open(viewport, scheme, deepLink = false) {
+async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6%9C%A8%E5%8F%A3', clean = false) {
   const page = await browser.newPage({ viewport, deviceScaleFactor: 2, colorScheme: scheme })
   /** @type {string[]} */
   const errors = []
@@ -46,9 +48,10 @@ async function open(viewport, scheme, deepLink = false) {
     sent = route.request().postDataBuffer() ?? Buffer.alloc(0)
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false }) })
   })
-  const address = `${base}/%E2%BF%B0%E6%9C%A8%E5%8F%A3?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
+  if (clean) await page.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
+  const address = `${base}/${sequence}?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
   await page.goto(address, { waitUntil: 'domcontentloaded' })
-  await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
+  await page.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').waitFor({ timeout: 30000 })
   return { page, errors, body: () => sent ?? Buffer.alloc(0) }
 }
 
@@ -132,6 +135,23 @@ try {
   assert.ok(parts(phone.body()).image, 'the phone report carries the drawing too')
   assert.deepEqual(phone.errors, [])
   await phone.page.close()
+
+  // A new, empty tab: the intake is told there is no sequence, and the dialog does not wait for a
+  // drawing that never comes.
+  const bare = await open({ width: 1440, height: 900 }, 'light', false, '', true)
+  await bare.page.getByRole('button', { name: 'New tab', exact: true }).click()
+  await bare.page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await bare.page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
+  const bareDialog = bare.page.getByRole('dialog').filter({ has: bare.page.getByRole('heading', { name: 'Report a problem' }) })
+  await bareDialog.waitFor({ timeout: 5000 })
+  await bareDialog.locator('textarea').fill('Nothing opens at all.')
+  const at = Date.now()
+  await bareDialog.getByRole('button', { name: 'Send report' }).click()
+  await bareDialog.getByRole('link', { name: 'Issue #123' }).waitFor({ timeout: 10000 })
+  assert.ok(Date.now() - at < 4000, `an empty tab sends without waiting on a drawing: ${Date.now() - at} ms`)
+  assert.ok(!parts(bare.body()).sequence, `an empty tab reports no sequence: ${JSON.stringify(parts(bare.body()).sequence)}`)
+  assert.deepEqual(bare.errors, [])
+  await bare.page.close()
 
   console.log('PASS the report dialog opens from File, the More sheet and ?report=1, sends the sequence, the workspace, the context and the drawing, shows the issue it became, and keeps the text when the intake refuses it')
 } finally { await browser.close() }

@@ -299,11 +299,13 @@
   "app.report.browser": "瀏覽器：{browser}",
   "app.report.language": "介面語言：{language}",
   "app.report.viewport": "視窗：{viewport}",
+  "app.report.workspace": "工作區（所有開啟的分頁）",
+  "app.report.console": "最近的警告與錯誤",
   "app.report.send": "送出回報",
   "app.report.sending": "正在送出…",
   "app.report.retry": "再試一次",
   "app.report.failed": "回報沒有送出。",
   "app.report.thanks": "謝謝。回報已成為一則議題，後續回覆會在那裡。",
   "app.report.duplicate": "已有相同的議題，這次回報補充到了那裡。",
-  "app.report.issue": "議題 #{number}"
+  "app.report.issue": "議題#{number}"
 }

@@ -2,6 +2,7 @@
 // snapshot of the workspace read once at submit, the drawing as a PNG, and the multipart request to
 // the intake Worker. A page served from a machine of its own says so instead of naming its host, so
 // no local address or file path reaches the issue.
+import { EMPTY_MARKS } from '../../src/core/ids.js'
 import { DEFAULTS, pngOf, pngOfSvg, scopedPngOf } from './exporting.js'
 
 /** @typedef {{ at: number, level: 'error' | 'warn', text: string }} LogEntry */
@@ -12,22 +13,26 @@ import { DEFAULTS, pngOf, pngOfSvg, scopedPngOf } from './exporting.js'
 /** @typedef {{ number: number, url: string, duplicate: boolean }} ReportAnswer */
 
 /** The sizes the intake accepts; the request is held to them here too. */
-export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, document: 200 * 1024, context: 32 * 1024, image: 5 * 1024 * 1024 }
+export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, document: 200 * 1024, context: 32 * 1024, image: 5 * 1024 * 1024 }
 const RING = 20, LINE = 500, BURST = 100, ATTRIBUTE = 120
 const SITE = 'https://ids.mkpo.li'
 const HOST = String.raw`localhost|127(?:\.\d{1,3}){1,3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[[0-9a-f:]*:[0-9a-f:]*\]|[\w.-]*\.local(?:host)?`
 const LOCAL = new RegExp(`^(?:${HOST})$`, 'i')
+
+/** Whether a host is this machine's: loopback, a private range, or a `.local`/`.localhost` name. The
+ *  endpoint module uses the same test for where `?endpoint=` may point. @param {string} host */
+export const isLocalHost = host => LOCAL.test(host)
 // Anything naming this machine, wherever it turns up in a line of text, and the query of any other
 // address: a match runs to the next space, so a port, a query and a `/@fs/` path all go with it.
 // Free text cannot be filtered exactly; this takes out the shapes a page's own messages carry.
 const PRIVATE = [
-  [new RegExp(String.raw`\bhttps?://(?:${HOST})(?::\d+)?\S*`, 'gi'), '(local)'],
-  [/\bfile:\/{1,3}\S*/gi, '(local)'],
-  [/\/@fs\/\S*/gi, '(local)'],
+  [new RegExp(String.raw`\b(?:https?|wss?)://(?:${HOST})(?::\d+)?[^\s"']*`, 'gi'), '(local)'],
+  [/\bfile:\/{1,3}[^\s"']*/gi, '(local)'],
+  [/\/@fs\/[^\s"']*/gi, '(local)'],
   [/\b[A-Za-z]:\\[^\s"'`)\]]+/g, '(local)'],
   [/\/(?:home|Users|tmp|private|var\/folders)\/[^\s"'`)\]]+/gi, '(local)'],
   // What is left is a remote address; its path says where, its query may say who.
-  [/(\bhttps?:\/\/[^\s"'`)\]]*?)[?#][^\s"'`)\]]*/gi, '$1'],
+  [/(\b(?:https?|wss?):\/\/[^\s"'`)\]]*?)[?#][^\s"'`)\]]*/gi, '$1'],
 ]
 
 /** Text with anything naming this machine, and any address's query, taken out, so nothing of the
@@ -57,7 +62,7 @@ function publicHref(value) {
   try {
     const url = new URL(value, location.href)
     if (url.protocol === 'file:') return '(local file)'
-    if (LOCAL.test(url.hostname)) {
+    if (isLocalHost(url.hostname)) {
       const site = new URL(SITE)
       url.protocol = site.protocol
       url.hostname = site.hostname
@@ -184,13 +189,28 @@ export function reportContext(settings, preview) {
     locale: settings.locale,
     theme: settings.theme,
     face: settings.face,
-    composerBase: logHref(settings.composer),
+    composerBase: logHref(settings.composer).slice(0, 300),
     userAgent: navigator.userAgent.slice(0, 500),
     platform: navigator.platform,
     fonts: loadedFonts(),
-    local: location.protocol === 'file:' || LOCAL.test(location.hostname) || undefined,
+    local: location.protocol === 'file:' || isLocalHost(location.hostname) || undefined,
+    // A pull request's preview is not the published page, and a report from one should say so.
+    previewVersion: location.hostname.endsWith('.workers.dev') || undefined,
     historyLength: history.length,
   }
+}
+
+/** The workspace as JSON within the intake's size: a report from a busy set of tabs loses its last
+ *  tabs rather than its whole document. @param {unknown} workspace @returns {string} */
+export function workspaceJson(workspace) {
+  const whole = /** @type {{ tabs?: unknown[] }} */ (workspace ?? {})
+  const tabs = Array.isArray(whole.tabs) ? [...whole.tabs] : []
+  let text = JSON.stringify(whole)
+  while (tabs.length > 1 && byteLength(text) > LIMITS.document) {
+    tabs.pop()
+    text = JSON.stringify({ ...whole, tabs, droppedTabs: (whole.droppedTabs ?? 0) + 1 })
+  }
+  return text
 }
 
 /** The size of a string in UTF-8 bytes, which is what the intake measures. @param {string} text */
@@ -206,10 +226,14 @@ function contextJson(context, entries) {
     if (kept.length) { kept = kept.slice(1); continue }
     const trimmed = JSON.stringify({ ...context, fonts: [], userAgent: String(context.userAgent).slice(0, 200), console: [] })
     if (byteLength(trimmed) <= LIMITS.context) return trimmed
-    const { version, commit, route, viewport, locale, theme, face, local } = context
-    return JSON.stringify({ version, commit, route: String(route).slice(0, 200), viewport, locale, theme, face, local, console: [] })
+    const { appVersion, commit, route, viewport, locale, theme, face, local } = context
+    return JSON.stringify({ appVersion, commit, route: String(route).slice(0, 200), viewport, locale, theme, face, local, console: [] })
   }
 }
+
+/** The colours the preview's scoped rules give an empty slot and a stroke; standalone, the clone
+ *  would fall back to black fills and no strokes. */
+const SLOT_STYLE = '<style>.slot-fill{fill:#f1f1f1}.slot-line{fill:none;stroke:#b9b9b9;stroke-linecap:round}.ink{fill:#000}</style>'
 
 /** An SVG element as a standalone document at `size` pixels square. @param {SVGElement} svg @param {number} size */
 function standalone(svg, size) {
@@ -217,6 +241,7 @@ function standalone(svg, size) {
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg')
   clone.setAttribute('width', String(size))
   clone.setAttribute('height', String(size))
+  clone.insertAdjacentHTML('afterbegin', SLOT_STYLE)
   return new XMLSerializer().serializeToString(clone)
 }
 
@@ -261,13 +286,14 @@ export async function reportImage({ drawing, scopes, slots = [] }, preview) {
  * @returns {Promise<ReportSnapshot>}
  */
 export async function reportSnapshot(source) {
-  // The page is read first and the picture drawn after, so everything said here is what was on
-  // screen when Send was pressed.
-  await settled(source.preview)
+  // An empty tab writes a mark of its own (or `＋`); the intake reads an empty sequence as no
+  // sequence, and nothing is drawing, so there is nothing to wait for.
+  const sequence = EMPTY_MARKS.includes(source.sequence) ? '' : source.sequence.slice(0, LIMITS.sequence)
+  if (sequence) await settled(source.preview)
   const taken = {
-    sequence: source.sequence.slice(0, LIMITS.sequence),
-    link: shareHref(source.link),
-    document: JSON.stringify(source.workspace ?? {}),
+    sequence,
+    link: shareHref(source.link).slice(0, LIMITS.link),
+    document: workspaceJson(source.workspace),
     context: contextJson(reportContext(source, source.preview), consoleRing()),
   }
   // The context keeps what was on screen; the picture may wait for the first drawing.

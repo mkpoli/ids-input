@@ -300,6 +300,8 @@
   "app.report.browser": "Browser: {browser}",
   "app.report.language": "Language: {language}",
   "app.report.viewport": "Window: {viewport}",
+  "app.report.workspace": "The workspace, with every tab left open",
+  "app.report.console": "The last warnings and errors the page logged",
   "app.report.send": "Send report",
   "app.report.sending": "Sending…",
   "app.report.retry": "Try again",

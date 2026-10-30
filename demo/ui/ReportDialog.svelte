@@ -18,8 +18,9 @@
   // whichever it has, as the export does. Where a composition failed there is still the preview's
   // own picture, which is the one a maintainer most wants to see.
   const drawn = $derived(Boolean(scopes ?? drawing))
+  // Whether there is a picture right now. A composition that fails after the dialog opened leaves
+  // this stale, so the checkbox keeps the reporter's intent and the shot is tried at submit anyway.
   const shootable = $derived.by(() => {
-    // Opening the dialog, and every change to the drawing or the document, ask the preview again.
     void open; void version
     return drawn || Boolean(preview()?.querySelector('svg'))
   })
@@ -29,10 +30,11 @@
   // The drawing goes along while there is one, until the reporter says otherwise; a deep link opens
   // the dialog before the preview has drawn anything.
   let chosenImage = $state(/** @type {boolean | null} */ (null))
-  const withImage = $derived(shootable && (chosenImage ?? true))
+  const withImage = $derived(chosenImage ?? true)
   /** @type {import('../lib/report.js').ReportAnswer | null} */
   let answer = $state(null)
   /** @type {HTMLTextAreaElement | null} */ let account = $state(null)
+  /** @type {HTMLAnchorElement | null} */ let saved = $state(null)
   const build = `${__APP_VERSION__} · ${String(__BUILD_COMMIT__).slice(0, 8)}`
   // The drawing as the report attaches it, at a size that fits the dialog.
   const thumbnail = $derived.by(() => {
@@ -45,6 +47,8 @@
     t('app.report.browser', { browser: navigator.userAgent }),
     t('app.report.language', { language: locale }),
     t('app.report.viewport', { viewport: `${innerWidth}×${innerHeight}` }),
+    t('app.report.workspace'),
+    t('app.report.console'),
   ])
   // Opening again after a report was sent starts a fresh form; an unsent account is kept.
   let shown = false
@@ -73,6 +77,8 @@
     try {
       const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
+      // The form is gone with the focused Send button; the issue is what to look at now.
+      tick().then(() => requestAnimationFrame(() => saved?.focus()))
     } catch (error) {
       failure = error instanceof ReportError && error.message ? error.message : t('app.report.failed')
     } finally { busy = false }
@@ -81,10 +87,10 @@
 
 <Dialog bind:open title={t('app.report.title')} closeLabel={t('app.close')} wide>
   {#if answer}
-    <div class="sent">
+    <div class="sent" role="status">
       <p class="thanks">{t('app.report.thanks')}</p>
       {#if answer.duplicate}<p class="duplicate">{t('app.report.duplicate')}</p>{/if}
-      <p class="issue"><a href={answer.url} target="_blank" rel="noreferrer" aria-label={t('app.report.issue', { number: answer.number })}>#{answer.number}</a></p>
+      <p class="issue">{#if answer.url}<a bind:this={saved} href={answer.url} target="_blank" rel="noreferrer" aria-label={t('app.report.issue', { number: answer.number })}>#{answer.number}</a>{:else}#{answer.number}{/if}</p>
     </div>
   {:else}
     <form class="report" onsubmit={submit}>
@@ -101,7 +107,7 @@
         <!-- The thumbnail is the exporter's own SVG for this drawing. -->
         {#if thumbnail}<div class="thumb" aria-hidden="true">{@html thumbnail}</div>{/if}
         <div class="shot-text">
-          <label class="check"><input type="checkbox" checked={withImage} disabled={!shootable} onchange={event => { chosenImage = event.currentTarget.checked }} />{t('app.report.image')}</label>
+          <label class="check"><input type="checkbox" checked={withImage} onchange={event => { chosenImage = event.currentTarget.checked }} />{t('app.report.image')}</label>
           {#if !shootable}<p class="none">{t('app.report.imageNone')}</p>{/if}
         </div>
       </div>
@@ -121,7 +127,7 @@
   .lead{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
   .field{display:flex;flex-direction:column;gap:4px}
   .field span{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
-  textarea,input[type=text],input:not([type]){width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:13px}
+  textarea,input:not([type]){width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:13px}
   textarea{resize:vertical;line-height:1.5}
   :is(textarea,input,button,a):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .shot{display:flex;align-items:center;gap:12px}
