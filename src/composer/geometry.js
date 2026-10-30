@@ -122,10 +122,15 @@ export function partOf(record, quant = 4) {
   if (record._part) return record._part
   const width = record.w ?? null
   const contours = record.p.map(([ops, light, delta]) => {
-    const lo = int16(light), d = int16(delta)
+    const cmds = commands(ops), lo = int16(light), d = int16(delta)
     const l = new Float64Array(lo.length), h = new Float64Array(lo.length)
     for (let i = 0; i < lo.length; i++) { l[i] = lo[i] / quant; h[i] = (lo[i] + d[i]) / quant }
-    return { ops: commands(ops), light: l, heavy: h, width }
+    // A contour whose light master repeats its first point as its last closes there; the heavy master
+    // of the serif and Kaisho exports does not, so interpolating toward it tears the contour open.
+    // One closing on an implied point starts on a control point instead, so it is left alone.
+    const n = l.length
+    if (n >= 4 && !cmds.at(-1)[2] && l[0] === l[n - 2] && l[1] === l[n - 1]) { h[0] = h[n - 2]; h[1] = h[n - 1] }
+    return { ops: cmds, light: l, heavy: h, width }
   })
   const part = wound(makePart(contours, record.b.slice()))
   if (record.fixed) part.fixed = true
