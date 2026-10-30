@@ -109,6 +109,31 @@ describe('Shuishu', () => {
     expect(shuishuNames(data, 'one')[0].char).toBe(one.part)
   })
 
+  it('carries the editorial decompositions it can build', () => {
+    const built = data.parts.filter(part => part.ids)
+    expect(built).toHaveLength(data.ids.count)
+    expect(data.ids.note.length).toBeGreaterThan(0)
+    const known = new Set(chars)
+    for (const part of built) {
+      expect(part.ids[0]).toMatch(/[⿰⿱⿴⿵⿶]/)
+      expect([...part.ids.slice(1)].every(char => known.has(char))).toBe(true)
+    }
+    // The chart's radical cross references name one of the parts where they exist.
+    const one = built.find(part => part.part === '\u{1B318}')
+    expect(one.ids).toBe(`⿱${String.fromCodePoint(0x1b501)}${String.fromCodePoint(0x1b500)}`)
+    // A description names the character built that way before its components do.
+    expect(shuishuNames(data, one.ids)[0]).toMatchObject({ char: one.part })
+    expect(shuishuNames(data, one.ids)[0].label).toContain(one.ids)
+    expect(shuishuNames(data, String.fromCodePoint(0x1b501))[0].char).toBe(String.fromCodePoint(0x1b501))
+  })
+
+  it('names a decomposition where a part has one', () => {
+    const part = data.parts.find(entry => entry.ids)
+    expect(shuishuLabel(part)).toContain(part.ids)
+    const plain = data.parts.find(entry => !entry.ids)
+    expect(shuishuLabel(plain)).not.toContain('⿰')
+  })
+
   it('keeps the pinned sources in step with their digests', () => {
     const sources = JSON.parse(readFileSync(new URL('../data/shuishu/sources.json', import.meta.url)))
     expect(sources.documents.map(document => document.file).sort()).toEqual(['Shuishu.xlsx', 'Uni1B300Shuishu-subset.ttf', 'cid-map.json', 'radical-names.json'])
