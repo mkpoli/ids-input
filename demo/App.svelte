@@ -10,7 +10,7 @@
   import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -20,6 +20,7 @@
   import overwriteIds from '../data/ids-overwrites.tsv?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import shuishuData from '../data/shuishu.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import sketches from '../data/sketch-parts.json.gz?url'
@@ -70,7 +71,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
     const curated = await sealAdapter.parts()
@@ -666,12 +667,8 @@
     note(t('app.file.saved', { name: file.name }))
   }
 
-  /** Open a chosen .ids.json as a new tab. @param {Event} event */
-  async function openDocument(event) {
-    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
-    const file = input.files?.[0]
-    input.value = ''
-    if (!file) return
+  /** Open a document file as a new tab. @param {File} file */
+  async function openFile(file) {
     try {
       const document = await readDocumentFile(file)
       const session = createDocumentSession(document)
@@ -681,6 +678,30 @@
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
     }
+  }
+  /** Open several document files as tabs, in order. @param {Iterable<File>} files */
+  async function openFiles(files) {
+    for (const file of files) await openFile(file)
+  }
+  /** Open chosen .ids.json, SVG or PNG files as tabs. @param {Event} event */
+  async function openDocument(event) {
+    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
+    const files = [...(input.files ?? [])]
+    input.value = ''
+    await openFiles(files)
+  }
+  /** @param {DragEvent} event */
+  function dropDocument(event) {
+    const files = event.dataTransfer?.files
+    if (!files?.length) return
+    event.preventDefault()
+    void openFiles(files)
+  }
+  /** @param {DragEvent} event */
+  function dragFiles(event) {
+    if (!event.dataTransfer?.types.includes('Files')) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
   }
 
   const fileItems = $derived([
@@ -737,13 +758,13 @@
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
@@ -829,7 +850,7 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} />
+<svelte:window onkeydown={keys} ondragover={dragFiles} ondrop={dropDocument} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
@@ -982,7 +1003,7 @@
           </div>
         </div>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -991,7 +1012,7 @@
 
 </div>
 
-<input bind:this={documentInput} type="file" accept=".json,.ids.json,application/json" hidden onchange={openDocument} />
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,.png,application/json,image/svg+xml,image/png" multiple hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">

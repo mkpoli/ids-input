@@ -23,6 +23,7 @@ it('matches Unicode 18 assigned graphic characters and the bundled allocations',
     for (let cp = name.endsWith(', Last>') ? start : point; cp <= point; cp++) graphic.add(cp)
   }
   const bundled = cp => cp >= 0x3D000 && cp <= 0x3FC3F || cp >= 0xA97D && cp <= 0xA97F || cp === 0xD7C7 || cp >= 0xD7FC && cp <= 0xD7FE
+    || cp >= 0x1B300 && cp <= 0x1B4E5 || cp >= 0x1B500 && cp <= 0x1B52E
   const mismatches = []
   for (let cp = 0; cp <= 0x10FFFF; cp++) {
     const char = String.fromCodePoint(cp)

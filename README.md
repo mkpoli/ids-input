@@ -48,6 +48,13 @@ editor. Syllable searches the 11,172 modern syllables by character, jamo,
 code point; the romanization is a syllable spelling without the assimilation rules that cross
 syllable boundaries.
 
+The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
+allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
+outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
+`IDS Shuishu` face, and the tab filters them by name, reading, meaning and code point. Its groups
+follow the dictionary the index comes from: the characters that dictionary numbers, the rest, and the
+radicals.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
   <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
@@ -186,7 +193,8 @@ forms one syllable is one component; the Hangul palette writes modern combinatio
 syllable and Old Hangul as the jamo run that fonts shape as one syllable. This includes 〇, Greek and Cyrillic
 letters from every block, and scripts beyond CJK. Operators, empty-slot markers, whitespace,
 controls, default-ignorable characters, surrogates and unassigned code points are excluded, except for the bundled Small Seal
-allocation U+3D000–U+3FC3F and the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE.
+allocation U+3D000–U+3FC3F, the New Korean Orthography code points U+A97D–A97F, U+D7C7 and U+D7FC–D7FE,
+and the proposed Shuishu block U+1B300–U+1B4E5 and U+1B500–U+1B52E.
 A combining mark fills an operand slot when one is due, and trails the whole description when the
 description is complete; only a variation selector attaches to the preceding component. Acceptance follows bundled Unicode 18.0.0 property tables and is independent of
 preview font coverage. The composer supplements missing export glyphs with 56,651 bundled font
@@ -207,16 +215,17 @@ supplies the ideographic operands; the other graphic categories are this editor'
 A description of eight or more leaves (an empty slot counts as one) is drawn **in cells** when no
 character spells it as a whole, it uses only alignment and exact enclosure operators, and every leaf
 has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
-cell layout gives the top of a stacked description less than half the height, weights each cell by
-its subtree's leaf count, and lets parts fill their cells, so a dense description reads as one
-character rather than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+cell layout gives a single top part less than a third of the height and lets it fill the width,
+shares an alignment axis below the top by the ink of its parts (one holding an empty slot keeps leaf shares), insets a side-split enclosure's inner part and a three-row middle,
+and fits each glyph by its ink. A dense description then reads as one character rather than a list
+of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
 such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
 puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
 
 The preview badges a cell drawing **Cells**. `compose(source, sequence, { layout: 'composed' })`
 forces the composer, and `'cells'` forces cells and rejects loose marks and modified operators; the default, `'auto'`, uses
-cells only for such dense descriptions. Pyramids, grouped forms, excluded characters and descriptions
-with loose marks or approximate operators keep the composer.
+cells only for such dense descriptions. A description that is itself a pyramid, a grouped form or
+an excluded character, or that carries loose marks or approximate operators, keeps the composer.
 
 ### Pyramids
 
@@ -242,8 +251,8 @@ defaults to `part`. Rows of three use `⿲`, a row of four splits in half, and t
 copies in a 2×2 grid inside an enclosure.
 
 The Templates tab inserts the 2+3, 3+3, 2+4 and 4+4 patterns with the shared Component field. A
-second field, Bottom row, takes another component and falls back to the first when
-empty. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
+second field, Bottom row, takes another component and falls back to the first when empty. A Rows
+field takes two or three counts from 1 to 4, such as `3 4` or `2 1 2`. The Five block adds 2·1·2 and 1 + 2 × 2; its Host field is the enclosure. These cover the
 五同, 六同, 八同 and 二組 arrangements of [畳字](https://wikiwiki.jp/myriadrevery/畳字).
 
 ### Loose marks
@@ -405,16 +414,17 @@ structural edits. Pass the long-lived session allocator so removed IDs do not re
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
-keeps a session with each tab and saved draft, so the document survives reloads; the preview and
-share links still use the sequence alone.
+keeps a session with each tab and saved draft, so the document survives reloads. The preview,
+Adjust layout, export and share links all use that document.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
 builds it in one call; the preview must use `separate: true`. `documentView(document, drawing, sketch)`
 adds the scoped drawing, frames and combined issues in one pass, for a preview that needs both the
 picture and its handles. When the composer omits leaf ownership, the source infers it only from one
-non-cut part per component in reading order; anything else leaves the source incomplete. Storage and
-the editor binding are not part of these modules yet.
+non-cut part per component in reading order; anything else leaves the source incomplete. Session
+records live in [`src/document/store.js`](src/document/store.js); file bindings live in
+[`demo/lib/documents.js`](demo/lib/documents.js).
 
 ## Adapters
 
@@ -998,6 +1008,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
   (些, 才, 命, 窖, 饒) are left out, and so is 媄, which the article notes is also a Chinese variant
   of 美. The descriptions are BabelStone's, tagged V.
+- [水族水书文字数据库](https://shuishu.ihanzi.net/shuishu) (Shui script character database), described in
+  孙治弘, 谢雨霏, 刘凌, 叶晨, [「水书文字数据库和智能识别平台构建」](http://dhr.ruc.edu.cn/CN/Y2026/V6/I1/94),
+  『数字人文研究』6(1), 2026, 94–109: the readings of the Shuishu characters in `demo/lib/examples.js`,
+  cross-checked against its 字形、音读检索 path (read 2026-10-29). Readings differ between texts; the
+  examples keep the one Shuishu.xlsx gives, which the database agrees on for the thirty-two. Its glyph
+  images are not bundled, and its readings come out through `POST /api/words/search` with a `prefix`.
 - Bai Yi (白易), “Brief introduction of IDS system in zi.tools,” [BiangBiangCon program](https://sites.google.com/dhii.asia/biangbiangcon/program), 2026-10-16: a reference for working with IDS.
 - Ryusei Yamaguchi, [“An Invitation to Hacking Character Data / 文字情報ハックのすすめ”](https://biangbiangcon.ryusei.dev/), BiangBiangCon, 2026-10-16: a reference for working with character data.
 - Gen Kojitani (小路谷源), “Script-Hybrid CJK Ideographs,” [BiangBiangCon](https://sites.google.com/dhii.asia/biangbiangcon/program),
@@ -1062,7 +1078,7 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
@@ -1189,7 +1205,7 @@ Thanks to:
 
 - [परवद💙💛 (@zoenshiueh_lieu)](https://x.com/zoenshiueh_lieu) for feedback on enclosure
   rendering and decompositions, and suggestions for component shortcuts, loose marks (濁點,
-  諺文聲調), small-seal decomposition and the New Korean Orthography letters.
+  諺文聲調), small-seal decomposition, the New Korean Orthography letters and Shuishu.
 - [Fn (@integuraru_P)](https://x.com/integuraru_P) for reporting that 〇 was rejected as a kanji
   component: 「｢〇｣が漢字扱いされていないです。採用お願いします。」
 - [なきは (@nakiha_kanji)](https://x.com/nakiha_kanji) for reporting difficulty saving SVGs on a phone.
@@ -1248,10 +1264,10 @@ usage is a terminal link, so shared components do not connect unrelated words.
 
 `IdsInput` shows these details on character hover, on keyboard focus, and on a click or
 tap. A click keeps the card in place while the pointer travels to it, so the parts in it
-can be used; Esc, its × or a click elsewhere dismisses it. Press F1 to move into the
-card. Related characters and emoji insert into the
-chosen slot, or replace the inspected character in the tree or sequence field. Custom
-layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
+can be used; Esc, its × or a click elsewhere dismisses it, and a click on the card's own
+surface reaches whatever it covers. Press F1 to move into the card. Related characters
+and emoji insert into the chosen slot, or replace the inspected character in the tree or
+sequence field. Custom layouts can place `<IdsCharacterInfo {root} {adapter} {messages} {locale} onpick={(part, path) => editor.take(part, path)} />` beside
 their editor, where `root` is the containing element. The parts, search, sequence and
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the

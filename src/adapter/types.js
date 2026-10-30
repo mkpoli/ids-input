@@ -20,13 +20,18 @@
  * @property {'selected' | 'seal-ids' | 'cjk-ids' | 'crosswalk' | 'unknown'} [sealBasis] Evidence for the palette grouping.
  * @property {string[]} [modern] Modern CJK correspondences for palette filtering.
  * @property {string[]} [modernIds] Modern IDS used for provisional grouping, never seal decompositions.
+ * @property {'dictionary' | 'logogram' | 'radical'} [shuiGroup] Shuishu palette group.
+ * @property {string} [shuiName] The proposed character's name, for Shuishu.
+ * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
+ * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
+ * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
  * @property {'横' | '豎' | '撇' | '點' | '折' | null} [first] The class of its first stroke.
- * @property {'c' | 't' | 'seal' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, difficult (hard to type) or a CJK stroke.
+ * @property {'c' | 't' | 'seal' | 'shui' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, Shuishu, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  * @typedef {{ x: number, y: number }} DrawingPoint

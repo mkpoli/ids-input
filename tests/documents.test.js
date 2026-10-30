@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { fromSequence, toSequence } from '../src/document/index.js'
-import { documentFile, documentName, readDocumentFile } from '../demo/lib/documents.js'
+import { documentFile, documentName, embedSvgDocument, readDocumentFile, readSvgDocument } from '../demo/lib/documents.js'
+import { embedPngDocument, readPngDocument } from '../demo/lib/png-document.js'
 
 describe('document files', () => {
   it('names a file after the sequence without path characters', () => {
@@ -12,6 +13,33 @@ describe('document files', () => {
     const stem = documentName('𠀀'.repeat(50)).replace('.ids.json', '')
     expect([...stem]).toHaveLength(40)
     expect(stem).toBe('𠀀'.repeat(40))
+  })
+  it('round-trips a document through SVG metadata', async () => {
+    const document = fromSequence('⿱木口')
+    document.title = 'SVG & <title>'
+    document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 9, 0] }]
+    const svg = embedSvgDocument('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0Z"/></svg>', document)
+    expect(svg).toContain('id="ids-input-document"')
+    expect(readSvgDocument(svg).title).toBe('SVG & <title>')
+    expect((await readDocumentFile(new File([svg], 'drawing.svg', { type: 'image/svg+xml' }))).root.children[0].transform).toEqual([{ type: 'affine', matrix: [1, 0, 0, 1, 9, 0] }])
+  })
+  it('round-trips a document through a PNG iTXt chunk', async () => {
+    const base = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130])
+    const document = fromSequence('⿱木口')
+    document.title = 'PNG'
+    document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 4, 0] }]
+    const png = embedPngDocument(base, document)
+    expect(readPngDocument(png).title).toBe('PNG')
+    expect(readPngDocument(embedPngDocument(png, document)).title).toBe('PNG')
+    const read = await readDocumentFile(new File([png], 'drawing.png', { type: 'image/png' }))
+    expect(read.root.children[0].transform).toEqual([{ type: 'affine', matrix: [1, 0, 0, 1, 4, 0] }])
+  })
+  it('rejects a PNG without a document', () => {
+    const base = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130])
+    expect(() => readPngDocument(base)).toThrow()
+  })
+  it('rejects an SVG without a document', () => {
+    expect(() => readSvgDocument('<svg></svg>')).toThrow()
   })
   it('writes and reads a document file', async () => {
     const document = fromSequence('⿱木口')

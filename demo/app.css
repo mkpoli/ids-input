@@ -21,9 +21,9 @@
   --shadow-pop:light-dark(0 12px 32px rgb(20 20 40 / .18),0 12px 32px rgb(0 0 0 / .55));
   --toast-bg:light-dark(#1c1c22,#ececf2);
   --toast-ink:light-dark(#ffffff,#111114);
-  --cjk-sans:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Project","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
-  --cjk-serif:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Project","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",var(--ids-glyph-fallback,"IDS Fallback"),serif;
-  --cjk-klee:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Project","Kureedo","GenZui Sans","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
+  --cjk-sans:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
+  --cjk-serif:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Noto Serif CJK JP","Noto Serif JP","Hiragino Mincho ProN","Yu Mincho","Songti SC","SimSun",var(--ids-glyph-fallback,"IDS Fallback"),serif;
+  --cjk-klee:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Project","Kureedo","GenZui Sans","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif;
   --cjk:var(--cjk-sans);--ids-font:var(--cjk-sans);
   /* After the reader's fonts and installed broad-coverage ones, before the bundled fallback. */
   --ids-glyph-fallback:"Jigmo","Jigmo2","Jigmo3","Plangothic P1","Plangothic P2","IDS Fallback";
@@ -34,7 +34,7 @@
 }
 *,*::before,*::after{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font:14px/1.5 "IDS New Korean",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+body{background:var(--bg);color:var(--ink);font:14px/1.5 "IDS New Korean","IDS Shuishu",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 /* Scrollbars follow the theme instead of the browser's bright default. */
 *{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
 *::-webkit-scrollbar{width:10px;height:10px}

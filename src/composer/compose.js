@@ -16,7 +16,7 @@
 // answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
 // before drawing again).
 import { EM_BOX, area, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
-  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
+  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
@@ -47,21 +47,31 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
 // Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
+// Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
+// where a child touching it is drawn as it is.
+const SIDE_COVERS = new Set(['宀', '冖'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
+// Share of its own height a component's top band covers, and the share of the component's width
+// the ink in that band must span for the component to count as flat-topped.
+const COVER_HEAD = 0.15, COVER_SPAN = 0.9
 
 /** A description with this many leaves and no character to follow is drawn in cells: the
  *  composer's host cuts fit a character's positions, and a dense invented description has none, so
  *  its parts overlap. */
 const CELL_LEAVES = 8
 /** The gap between cells and the margin inside one, as shares of the cell's box. */
-const CELL_GAP = 0.006
-const CELL_INSET = 0.012
+const CELL_GAP = 0.01
+const CELL_INSET = 0.018
 /** A single top part takes this share of a stacked description's height; the reference design for
  *  the 108-stroke 「ぼんのう」 gives 苦 about a quarter above a much taller bottom. */
 const CELL_TOP = 0.28
 /** A part may stretch this much to fill its cell, more than the composer allows a placed part. */
-const CELL_STRETCH = 2.4
+const CELL_STRETCH = 4
+/** An inner part of a side enclosure sits inside its outer: it takes less than the cell's height.
+ *  The middle row of a three-row description is inset across, as in the reference. */
+const CELL_INNER_INSET = 0.15
+const CELL_MIDDLE_INSET = 0.08
 /** The axis an enclosure's two parts take when they are drawn apart: down for the top and bottom
  *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
  *  enclosure would put them on, since they no longer surround each other. */
@@ -306,9 +316,9 @@ export class Composer {
   }
 
   /** The parts of `tree` drawn in cells: one glyph (or empty slot) per leaf, in a cell its operator
-   *  gives it. Cells are weighted by each subtree's leaf count below the top; an enclosure's parts
-   *  keep the tree's reading order on an axis chosen for the cell's shape, so no cell overlaps
-   *  another. */
+   *  gives it. An alignment axis below the top shares its cells by the ink of its parts, or by leaf
+   *  count when it holds an empty slot; an enclosure always shares by leaf count. Parts keep the
+   *  tree's reading order on an axis chosen for the cell's shape, so no cell overlaps another. */
   cellLayout(tree) {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
@@ -322,8 +332,18 @@ export class Composer {
       return [box[0] + w * CELL_INSET, box[1] + h * CELL_INSET, box[2] - w * CELL_INSET, box[3] - h * CELL_INSET]
     }
     const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
-    const split = (kids, axis, box, equal, override = null) => {
-      const weights = override ?? kids.map(kid => equal ? 1 : Math.sqrt(leaves(kid)))
+    // Fit the ink, not the glyph's placement box: a designed glyph's strokes can reach past it,
+    // and inside a cell that overflow runs into the next cell.
+    const tight = part => {
+      const box = part.contours.reduce((b, c) => union([b, pointsBox(c.light)]), [Infinity, Infinity, -Infinity, -Infinity])
+      return Number.isFinite(box[0]) ? box : part.box
+    }
+    const hasEmpty = node => isEmpty(node) || (Array.isArray(node) && node.slice(1).some(hasEmpty))
+    const split = (kids, axis, box, equal, override = null, dense = false) => {
+      // An axis takes its shares from the ink of its parts: a column of six dense parts needs more
+      // width than one tall 身. A placeholder has no ink, so an axis holding one keeps leaf shares.
+      const fallback = !dense || kids.some(hasEmpty)
+      const weights = override ?? kids.map(kid => equal ? 1 : fallback ? Math.sqrt(leaves(kid)) : Math.max(this.ink(kid), 1) ** 0.8)
       const sum = weights.reduce((a, b) => a + b, 0)
       const lo = box[axis], span = box[axis + 2] - lo
       let at = lo
@@ -348,8 +368,8 @@ export class Composer {
         if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
         // A cell allows a little more stretch than a composed part, so the glyph fills it; a
         // narrow cell still keeps the glyph's proportions instead of turning it into a sliver.
-        const cell = inset(target(box))
-        const part = placed(glyph, glyph.box, fitted(glyph.box, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
+        const cell = inset(target(box)), inkBox = tight(glyph)
+        const part = placed(glyph, inkBox, fitted(inkBox, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
         part.leaf = leaf++
         out.push(part)
         return
@@ -357,9 +377,15 @@ export class Composer {
       const op = node[0], kids = node.slice(1)
       if (op in this.AXIS) {
         // The top of a stacked description is one part over many; the reference design gives it
-        // less than half the height.
+        // less than a third of the height.
         const topShare = depth === 0 && this.AXIS[op] === 1 && kids.length === 2 && leaves(kids[0]) === 1 ? [CELL_TOP, 1 - CELL_TOP] : null
-        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare)
+        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare, true)
+        // The middle row of a three-row description is inset across, as in the reference.
+        if (op === '⿳' && kids.length === 3) {
+          const b = boxes[1], w = b[2] - b[0]
+          b[0] += w * CELL_MIDDLE_INSET
+          b[2] -= w * CELL_MIDDLE_INSET
+        }
         kids.forEach((kid, i) => walk(kid, boxes[i], depth + 1))
         return
       }
@@ -370,6 +396,13 @@ export class Composer {
         const across = box[2] - box[0], down = box[3] - box[1]
         const axis = namedAxis === 0 && across < down * 0.9 ? 1 : namedAxis === 1 && down < across * 0.8 ? 0 : namedAxis
         const boxes = split(kids, axis, box, false)
+        // A side-split enclosure's inner part sits inside its outer, so it takes less of the cell's
+        // height; the reference puts 意 to the right of 平/惡, not from top to bottom.
+        if (axis === 0) {
+          const b = boxes[1], h = b[3] - b[1]
+          b[1] += h * CELL_INNER_INSET
+          b[3] -= h * CELL_INNER_INSET
+        }
         walk(kids[0], boxes[0], depth + 1)
         walk(kids[1], boxes[1], depth + 1)
         return
@@ -1034,7 +1067,8 @@ export class Composer {
     }
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
     this.fitUnderCover(op, children, groups)
-    return groups.flat()
+    this.clearUnderCover(op, children, groups)
+    return this.flatten(groups)
   }
 
   /** A whole character's operands each taken unscaled from where a designer put them (`_transplant`). */
@@ -1109,7 +1143,7 @@ export class Composer {
             if (glyph) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
             else groups.push(this.row(child, box, children.length))
           }
-          return groups.flat()
+          return this.flatten(groups)
         }
       }
     }
@@ -1160,7 +1194,8 @@ export class Composer {
       }
     } else if (!compactYan) this.space(axis, groups)
     this.fitUnderCover(op, children, groups)
-    return groups.flat()
+    this.clearUnderCover(op, children, groups)
+    return this.flatten(groups)
   }
 
   /** `child` drawn into `box` as one of `count` aligned operands; a whole glyph in a row of three may
@@ -1359,6 +1394,16 @@ export class Composer {
     }
   }
 
+  /** The parts of each operand, flattened, each part remembering the operand it came from in
+   *  `branch`: the index within this node first, then the indices of the nodes below it. A caller
+   *  that needs a node's own operands reads `branch[0]` before this runs on the node above. */
+  flatten(groups) {
+    groups.forEach((group, index) => {
+      for (const part of [group].flat()) (part.branch ??= []).unshift(index)
+    })
+    return groups.flat()
+  }
+
   /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
@@ -1409,6 +1454,40 @@ export class Composer {
     }
   }
 
+  /** The parts of the child's topmost operand, when the child is a vertical stack drawn as more
+   *  than one operand. A child drawn as one piece has no operand to read, and a row (⿰, ⿲) has no
+   *  single top. */
+  topOperand(child, parts) {
+    if (!Array.isArray(child) || !['⿱', '⿳'].includes(child[0])) return null
+    const top = parts.filter(part => part.branch?.[0] === 0)
+    return top.length && top.length < parts.length ? top : null
+  }
+
+  /** Under a cover (宀, 冖) the component the child leads with carries the cover's width, the way
+   *  the net 罒 does under the roof of 𡩲 and the block 旧 under the roof of 𭓿: a leading component
+   *  with a wide flat top is drawn at `COVER_BAR` of the cover's width, centred on it, its own top,
+   *  bottom and sides narrowing together. What sits below it keeps its width, so a base bar such as
+   *  the 一 of 𡩬 stays as wide as it was drawn, and nothing moves down. 穴 and 雨 hang a middle
+   *  stroke where a component meeting it is drawn as it is. */
+  clearUnderCover(op, children, groups) {
+    if (this.partial || op !== '⿱' || children.length !== 2 || !SIDE_COVERS.has(children[0])) return
+    const cover = groups[0], lower = groups[1]
+    if (!cover?.length || !lower?.length) return
+    const head = this.topOperand(children[1], lower)
+    if (!head) return
+    const box = group => {
+      const boxes = group.map(drawnBox)
+      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+        Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+    }
+    const coverBox = box(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
+    const headBox = box(head)
+    if (want <= 0 || headBox[2] - headBox[0] <= want || !flatTopped(head, headBox)) return
+    const middle = (coverBox[0] + coverBox[2]) / 2
+    const to = [middle - want / 2, headBox[1], middle + want / 2, headBox[3]]
+    for (const part of head) part.target = targetFor(part, mapped(drawnBox(part), headBox, to))
+  }
+
   // ---------------------------------------------------------------- weight
   /** Each part's strokes brought to the width the whole character's density calls for (`_balance`). */
   balance(group) {
@@ -1442,6 +1521,21 @@ export class Composer {
 }
 
 // -------------------------------------------------------------------- free functions
+/** Whether a group leads with a wide flat top: its ink reaches both sides of its box within the
+ *  top `COVER_HEAD` of its height, as the net 罒 and the block 旧 do and 王 and 心 do not. */
+function flatTopped(group, box) {
+  const height = box[3] - box[1], width = box[2] - box[0]
+  if (height <= 0 || width <= 0) return false
+  const band = box[3] - COVER_HEAD * height
+  let x0 = Infinity, x1 = -Infinity
+  for (const part of group) for (const points of drawnContours(part))
+    for (let k = 0; k < points.length; k += 2) {
+      if (points[k + 1] < band) continue
+      x0 = Math.min(x0, points[k]); x1 = Math.max(x1, points[k])
+    }
+  return x1 - x0 >= COVER_SPAN * width
+}
+
 /** A detached four-point horizontal spanning half the part that no native cut supports (`_extra_bar`). */
 function extraBar(part, mask, references) {
   const size = 64, [x0, y0, x1, y1] = part.box, width = x1 - x0, height = y1 - y0

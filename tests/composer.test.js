@@ -11,7 +11,7 @@ import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
-import { makePart, placed } from '../src/composer/geometry.js'
+import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -274,6 +274,7 @@ describe('the composer', () => {
     const tall = await compose(sourceOf(), chain(8))
     const top = tall.parts.find(part => part.leaf === 0)
     expect(top.box[3]).toBeLessThan(350)
+    expect(top.box[2]).toBeGreaterThan(750)
     expect(Array.isArray(tall.stroke)).toBe(true)
     expect(tall.stroke).toHaveLength(2)
     // A top subtree of several leaves keeps half the height.
@@ -285,6 +286,15 @@ describe('the composer', () => {
     const narrow = await compose(sourceOf(), '⿰木⿹木口', { layout: 'cells' })
     const outer = narrow.parts.find(part => part.leaf === 1), inner = narrow.parts.find(part => part.leaf === 2)
     expect(outer.box[1] + outer.box[3]).toBeLessThanOrEqual(inner.box[1])
+    // A side enclosure's inner part is shorter, and a three-row middle is narrower.
+    const side = await compose(sourceOf(), '⿸木口', { layout: 'cells' })
+    expect(side.parts[1].box[3]).toBeLessThan(side.parts[0].box[3] * 0.8)
+    const rows = await compose(sourceOf(), '⿳木口木', { layout: 'cells' })
+    expect(rows.parts[1].box[2]).toBeLessThan(rows.parts[0].box[2] * 0.9)
+    // An empty slot has no ink to weigh with, so its axis keeps even leaf shares.
+    const slots = await compose(sourceOf(), '⿱木⿲⬚木⬚', { layout: 'cells' })
+    expect(slots.parts.find(part => part.leaf === 2).box[2]).toBeLessThan(400)
+    expect(slots.slots.every(slot => slot.box[2] < 400)).toBe(true)
     const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
     await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
   })
@@ -625,5 +635,69 @@ describe('the cover bar', () => {
     const bar = lower.part.contours[0].light
     expect(bar[0]).toBe(50)
     expect(bar[2]).toBe(950)
+  })
+})
+
+describe('the leading component under a cover', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (branch, ...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return { ...placed(p, p.box, p.box, 0, 'test'), branch: [branch] }
+  }
+  const cover = () => part(0, [100, 500, 900, 700])
+  // A net: a closed rectangle whose ink reaches both its sides along its top.
+  const net = branch => part(branch, [50, 300, 950, 360], [50, 160, 110, 360], [890, 160, 950, 360], [50, 160, 950, 220])
+  const clear = (child, ...lower) =>
+    Composer.prototype.clearUnderCover.call({ partial: false, topOperand: Composer.prototype.topOperand },
+      '⿱', ['宀', child], [[cover()], lower])
+  const span = placedPart => [placedPart.target[0], placedPart.target[2]]
+
+  it('narrows a flat-topped leading component to the cover’s bar width, keeping its height', () => {
+    const head = net(0), base = part(1, [50, 0, 950, 60])
+    const tall = head.target[3] - head.target[1]
+    clear(['⿱', '罒', '一'], head, base)
+    expect(span(head)[1] - span(head)[0]).toBeCloseTo(0.72 * 800)
+    expect((span(head)[0] + span(head)[1]) / 2).toBeCloseTo(500)
+    expect(head.target[3] - head.target[1]).toBeCloseTo(tall)
+    expect(head.target[3]).toBeCloseTo(360)
+  })
+
+  it('leaves a base bar below the leading component as it was drawn', () => {
+    const head = net(0), base = part(1, [50, 0, 950, 60])
+    clear(['⿱', '罒', '一'], head, base)
+    expect(span(base)).toEqual([50, 950])
+  })
+
+  it('leaves a leading component whose top does not reach its sides alone', () => {
+    // 王: bars stacked inside the component's width, the top one the shortest.
+    const head = part(0, [250, 300, 750, 360], [150, 160, 850, 220], [50, 20, 950, 80])
+    const base = part(1, [50, 0, 950, 60])
+    clear(['⿱', '王', '一'], head, base)
+    expect(span(head)).toEqual([50, 950])
+  })
+
+  it('leaves a child drawn as one piece alone', () => {
+    const whole = net(0)
+    clear('𪟊', whole)
+    expect(span(whole)).toEqual([50, 950])
+  })
+
+  it('narrows a mirrored part where it is drawn, not where its target sits', () => {
+    const head = net(0), base = part(1, [50, 0, 950, 60])
+    // A mirror centred away from the component, so its drawn box and its target differ.
+    head.flips = [{ x: true, y: false, about: [300, 0] }]
+    clear(['⿱', '⿾罒', '一'], head, base)
+    const drawn = drawnBox(head)
+    expect(drawn[2] - drawn[0]).toBeCloseTo(0.72 * 800)
+    expect((drawn[0] + drawn[2]) / 2).toBeCloseTo(500)
+  })
+
+  it('leaves a row alone, which has no single leading component', () => {
+    const head = net(0), other = part(1, [500, 0, 950, 600])
+    clear(['⿰', '爿', '罒'], head, other)
+    expect(span(head)).toEqual([50, 950])
   })
 })

@@ -1,12 +1,13 @@
 // Unicode Script grouping shared by the palette and its generated catalog.
 import ranges from '../../data/script-ranges.json' with { type: 'json' }
-import { isNewKorean, leaves, parse } from './ids.js'
+import { isNewKorean, isShuishu, leaves, parse } from './ids.js'
 
 /** @param {string} char @returns {string | null} */
 export function characterScript(char) {
   const cp = char.codePointAt(0)
   if (cp === undefined) return null
   if (cp >= 0x3d000 && cp <= 0x3fc3f) return 'seal'
+  if (isShuishu(char)) return 'shuishu'
   if (cp >= 0x31c0 && cp <= 0x31ef) return 'strokes'
   if (cp >= 0x30 && cp <= 0x39) return 'latin'
   if (isNewKorean(char)) return 'hangul'
@@ -38,7 +39,7 @@ export function partScript(part) {
 export function groupPaletteParts(parts) {
   const groups = new Map()
   for (const part of parts) {
-    const group = part.kind === 'seal' ? 'seal' : part.kind === 't' ? 'tangut' : part.kind === 's' ? 'strokes' : partScript(part.part)
+    const group = part.kind === 'seal' ? 'seal' : part.kind === 'shui' ? 'shuishu' : part.kind === 't' ? 'tangut' : part.kind === 's' ? 'strokes' : partScript(part.part)
     if (!group) continue
     const found = groups.get(group)
     if (found) found.push(part)
@@ -48,8 +49,8 @@ export function groupPaletteParts(parts) {
 }
 
 // These groups already have palette views: Han, Latin and Cyrillic tabs, Hangul, Bopomofo, Tangut,
-// Small Seal and the CJK strokes. Symbols and mixed-script descriptions have none, so the Other
-// scripts selector carries them too.
-const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'strokes'])
+// Small Seal, Shuishu and the one-stroke Components group. Symbols and mixed-script descriptions have
+// none, so the Other scripts selector carries them too.
+const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'shuishu', 'strokes'])
 /** @param {string | null | undefined} group */
 export const isOtherScript = group => Boolean(group && !EXISTING_GROUPS.has(group))
