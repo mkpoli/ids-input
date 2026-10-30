@@ -1106,14 +1106,32 @@ without a code point, folds each section, and jumps to a section from a chip tha
 in view. An example opens a tab. The toolbar also holds a share link with its QR code, the language,
 settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
-The address carries the active sequence (`#⿰亻哥`, or `?ids=`), so a link opens it. While a layer
-transform exists the address bar carries the document instead, so copying the location keeps the
-placement; opening such a link keeps the token. A plain sequence stays in the hash. Tabs use
+The address carries the active sequence in its path (`/s/⿰亻哥`), so a link opens it and a crawler
+can preview it; older `#⿰亻哥` and `?ids=⿰亻哥` links still open. While a layer transform exists the
+address bar carries the document as `?doc=` beside the sequence, so copying the location keeps the
+placement; opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
 text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
 font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys use the
 `ids-input:` prefix.
+
+### Share cards
+
+A share link is a page of its own at `/s/<sequence>`. Its address, title and preview tags name the
+sequence, the character it describes and that character's code point, and point at a card image at
+`/og/<sequence>.png`: 1200×630, the drawing in a framed square, the sequence with its operators
+drawn as icons, and the site's name. The home page previews an example.
+
+The worker behind `ids.mkpo.li` answers those two paths and hands every other request to the built
+workshop. It composes from the same export the editor uses, rasterizes with `@cf-wasm/resvg`, and
+keeps a card in the cache for a day. A sequence the composer cannot draw still gets a card, with the
+frame empty; one that describes no character says `UNENCODED` where the code point would go.
+
+`bun run build:site` builds the workshop and then `scripts/og-assets.mjs`, which unpacks the faces
+into `dist/og/fonts` (resvg reads no WOFF2), copies the outline files, and writes the IDS-to-character
+table from BabelStone's. Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and
+checked by SHA-256 rather than kept in the repository; each converts and ships with its OFL notice.
 
 ### Comparison with KAGE
 
@@ -1242,11 +1260,13 @@ bun run check           # tsrs and svelte-check
 bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:site      # the demo, then the share cards' faces and tables, into dist/
+bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
-CI only builds the demo and deploys it; the checks above stay local.
+CI verifies, builds and deploys to Cloudflare Workers; the checks above stay local.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
