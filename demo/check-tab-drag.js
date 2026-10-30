@@ -8,7 +8,8 @@ import { strict as assert } from 'node:assert'
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 const url = process.env.IDS_URL ?? 'http://localhost:5173'
 try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 })
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 })
+  const page = await context.newPage()
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
@@ -132,6 +133,14 @@ try {
   const frozen = await order()
   await page.waitForTimeout(700)
   assert.deepEqual(await order(), frozen, 'no more swaps after a missed release')
+
+  // A window with no session of its own opens on the order left in local storage.
+  const keptOrder = await order()
+  const next = await page.context().newPage()
+  await next.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  await next.locator('.ids-field input').waitFor({ timeout: 120000 })
+  assert.deepEqual(await next.locator('.tabbar .tab').evaluateAll(els => els.map(el => /** @type {HTMLElement} */ (el).dataset.tabId)), keptOrder, 'a new window opens with the saved order')
+  await next.close()
 
   assert.deepEqual(errors, [])
   console.log('PASS drag reorders tabs, keeps the active tab, persists the order, and ends cleanly')
