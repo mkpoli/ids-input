@@ -419,7 +419,7 @@ structural edits. Pass the long-lived session allocator so removed IDs do not re
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
 keeps a session with each tab and saved draft, so the document survives reloads. The preview,
-Adjust layout, export and share links all use that document.
+Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
