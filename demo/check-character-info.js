@@ -113,7 +113,41 @@ try {
     assert.ok(await panel.isVisible(),'the card stays across the tiles the pointer crosses')
     await insert.click()
     assert.match(await field.inputValue(),/🐎/,'a related part inserts from the pinned card')
+    await page.waitForTimeout(600)
+    // A press on the card's bare surface closes it and reaches the tile it covers.
+    await paletteHorse.scrollIntoViewIfNeeded()
+    await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
+    const covered=await page.evaluate(()=>{
+      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+      const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
+        const box=n.getBoundingClientRect()
+        return box.top>card.top&&box.bottom<card.bottom&&box.left>card.left&&box.right<card.right&&n.dataset.character!=='馬'
+      })
+      if(!node)return null
+      const box=node.getBoundingClientRect()
+      return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+    })
+    assert.ok(covered,'the card covers a tile')
+    await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
+    assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    // Selecting text inside the card keeps it, and passes nothing through.
+    const line1=await panel.locator('header .glyph').first().boundingBox(),line2=await panel.locator('.glosses li').first().boundingBox()
+    await page.mouse.move(line1.x+2,line1.y+line1.height/2);await page.mouse.down()
+    await page.mouse.move(line2.x+line2.width-4,line2.y+line2.height/2,{steps:12})
+    await page.mouse.up()
+    assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    await page.evaluate(()=>getSelection().removeAllRanges())
+    // A press that starts on a card button and ends on a tile below stays the button's press.
+    const pressButton=await panel.locator('header button').last().boundingBox(),beforePress=await field.inputValue()
+    await page.mouse.move(pressButton.x+pressButton.width/2,pressButton.y+pressButton.height/2);await page.mouse.down()
+    await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
+    await page.waitForTimeout(500)
+    assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
+    await panel.waitFor({state:'hidden'})
     await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
+    await page.waitForTimeout(600)
     // A pinned card goes when its tile is scrolled out of the grid.
     await paletteHorse.click();await panel.waitFor({state:'visible'})
     await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
