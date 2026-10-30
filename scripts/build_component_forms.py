@@ -14,6 +14,7 @@ from fontTools.pens.recordingPen import RecordingPen, replayRecording
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from xie_forms import xie_noto, register as register_xie, PROVENANCE as XIE_PROVENANCE
+from biang_forms import IDS as BIANG_IDS, biang_noto
 
 class Contours(BasePen):
     def __init__(self):
@@ -236,6 +237,18 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
+    # The expanded U+30EDE description retains its native enclosure and eleven
+    # editable leaves, including the junctions between neighboring components.
+    biang = biang_noto(cs, style)
+    original, partitioned = pathops.Path(), pathops.Path()
+    for contour in cs('𰻞'):
+        replayRecording(contour, original.getPen())
+    for part in biang:
+        for contour in part:
+            replayRecording(contour, partitioned.getPen())
+    assert len(biang) == 11
+    assert pathops.op(original, partitioned, pathops.PathOp.XOR).area < 0.1, 'Biang leaf cuts changed the native outline'
+    forms[BIANG_IDS] = [group(part) for part in biang]
     register_xie(forms, [group(part) for part in xie_noto(cs, style)])
     result['forms'][style]=forms
     result['sources'][style]={'name':font['name'].getDebugName(4),'version':font['name'].getDebugName(5),'sha256':sha,'face':0,
