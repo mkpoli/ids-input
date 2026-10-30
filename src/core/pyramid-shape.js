@@ -6,6 +6,11 @@
 
 /** @typedef {import('./ids.js').Part} Part */
 
+/** The cell an empty slot writes, numbered or not. */
+const EMPTY = '⬚'
+/** Whether `node` is an empty slot. A drawing numbers them (`⬚0`, `⬚1`, …). @param {unknown} node */
+const isSlot = node => typeof node === 'string' && node[0] === EMPTY
+
 /** The children of a parsed or editor tree node, or null for a leaf. @param {unknown} node */
 const childrenOf = node => Array.isArray(node) ? node.slice(1) : node && typeof node === 'object' ? /** @type {{ parts?: unknown[] }} */ (node).parts : null
 /** A node's operator, or undefined for a leaf. @param {unknown} node */
@@ -23,6 +28,8 @@ const STACKS = new Set(['⿱', '⿳'])
  */
 function samePart(a, b) {
   if (a === b) return true
+  // One empty slot is the cell of a pyramid of empty slots wherever it sits and however numbered.
+  if (isSlot(a) && isSlot(b)) return true
   if (typeof a === 'string' || a === null || typeof a !== 'object') return false
   if (typeof b === 'string' || b === null || typeof b !== 'object') return false
   if (operatorOf(a) !== operatorOf(b)) return false
@@ -110,8 +117,8 @@ export function pyramidRows(tree, { minLayers = 3 } = {}) {
   const counted = new Map()
   /** @param {unknown} node @returns {number} */
   const leaves = node => {
-    if (typeof node === 'string') return 1
-    if (!node || typeof node !== 'object') return 0
+    if (typeof node === 'string' || node === null) return 1
+    if (typeof node !== 'object') return 0
     const known = counted.get(node)
     if (known !== undefined) return known
     const kids = childrenOf(node)

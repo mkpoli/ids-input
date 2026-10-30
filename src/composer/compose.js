@@ -111,6 +111,13 @@ export const keyOf = node => typeof node === 'string' ? node : node[0] + node.sl
 export const EMPTY = '⬚'
 /** Whether a node is an empty slot, numbered in reading order (`⬚0`, `⬚1`, …) by `compose`. */
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
+/** Whether `node` holds an empty slot at all. */
+const hasSlot = node => isEmpty(node) || Array.isArray(node) && node.slice(1).some(hasSlot)
+/** How many empty slots `node` holds. */
+const slotsIn = node => isEmpty(node) ? 1 : Array.isArray(node) ? node.slice(1).reduce((sum, kid) => sum + slotsIn(kid), 0) : 0
+/** `node` with the numbers of its empty slots shifted by `by`, so each repeated cell keeps its own. */
+const shiftedSlots = (node, by) => isEmpty(node) ? `${EMPTY}${Number(node.slice(1)) + by}`
+  : Array.isArray(node) ? [node[0], ...node.slice(1).map(kid => shiftedSlots(kid, by))] : node
 const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
   node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
 
@@ -581,7 +588,16 @@ export class Composer {
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
-    if (pyramid) return pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse }).flatMap(box => this.node(pyramid.cell, box))
+    if (pyramid) {
+      const cells = pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })
+      // A pyramid of empty slots draws one placeholder per cell, numbered in reading order; a cell
+      // of several slots takes the next numbers each time it repeats.
+      if (hasSlot(pyramid.cell)) {
+        const slots = slotsIn(pyramid.cell)
+        return cells.flatMap((box, i) => this.node(i ? shiftedSlots(pyramid.cell, i * slots) : pyramid.cell, box))
+      }
+      return cells.flatMap(box => this.node(pyramid.cell, box))
+    }
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
