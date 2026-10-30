@@ -244,7 +244,7 @@
 <svelte:window onpointerdown={event => { if (menu && !menuEl?.contains(/** @type {Node} */ (event.target))) dismiss() }}
   onfocusin={event => { if (menu && menuEl && !menuEl.contains(/** @type {Node} */ (event.target))) dismiss() }}
   onresize={() => dismiss()} onpointermove={slide} onpointerupcapture={letGo} onpointercancelcapture={letGo}
-  onblur={() => { if (drag) end(false) }} />
+  onblur={() => { if (drag) end(true) }} />
 
 <div class="tabbar">
   <div class="tabs" class:dragging={drag?.live} role="tablist" aria-label={t('app.tabs.label')} bind:this={strip}>
