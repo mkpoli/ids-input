@@ -123,6 +123,8 @@
   "ids.redo.named": "Redo: {step}",
   "ids.replace": "Replace {part} with",
   "ids.search.label": "Find a component or character",
+  "ids.search.strokes": "Strokes",
+  "ids.search.strokesAny": "Any",
   "ids.search.none": "No part or character matches.",
   "ids.search.containing": "Characters containing “{sequence}”",
   "ids.search.similarTo": "Structures similar to “{sequence}”",
