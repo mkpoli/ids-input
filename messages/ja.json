@@ -103,6 +103,7 @@
   "ids.preview.draft": "プレビュー",
   "ids.preview.drawing": "{sequence}の字形",
   "ids.preview.failed": "組めません",
+  "ids.preview.faceFallback": "選択した字形では描けないため、別の字形で表示しています。",
   "ids.preview.failedNote": "この記述は組めませんでした。",
   "ids.preview.final": "確定",
   "ids.preview.loading": "組字中…",

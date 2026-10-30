@@ -197,7 +197,7 @@
         // operands. The Kaisho face borrows the Serif drawing in both cases.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
         if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
-          try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
+          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
       } catch (error) {
@@ -217,7 +217,7 @@
           }
         }
         if (defaultFace) throw error
-        return sans(sequence, options)
+        return { ...(await sans(sequence, options)), faceFallback: 'sans' }
       }
 
     }, {

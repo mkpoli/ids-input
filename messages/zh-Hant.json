@@ -103,6 +103,7 @@
   "ids.preview.draft": "預覽",
   "ids.preview.drawing": "{sequence}的字形",
   "ids.preview.failed": "無法組字",
+  "ids.preview.faceFallback": "所選字體無法繪製，已改用其他字體顯示。",
   "ids.preview.failedNote": "無法組合此序列。",
   "ids.preview.final": "定稿",
   "ids.preview.loading": "組字中…",
