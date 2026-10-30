@@ -17,6 +17,8 @@ const SCRIPTS = [
 ]
 
 /** @type {Map<string, Promise<Uint8Array | null>>} */
+// Faces stay loaded per isolate; the cap keeps a long-lived isolate from holding every shard.
+const KEPT = 80
 const kept = new Map()
 
 /** A face's file name in the build: the general face is OpenType, every other one TrueType. @param {string} name */
@@ -25,8 +27,10 @@ const fileOf = name => name === GENERAL ? `${GENERAL}.otf` : `${name}.ttf`
 /** A face's bytes, or null where the build left it out. @param {any} env @param {string} name */
 function face(env, name) {
   if (!kept.has(name)) {
+    if (kept.size >= KEPT) kept.delete(kept.keys().next().value)
     kept.set(name, env.ASSETS.fetch(new URL(`/og/fonts/${fileOf(name)}`, 'https://assets/'))
-      .then(answer => answer.ok ? answer.arrayBuffer() : null)
+      // A missing file is answered with the app's page, so the type says whether the face is there.
+      .then(answer => answer.ok && !answer.headers.get('content-type')?.startsWith('text/html') ? answer.arrayBuffer() : null)
       .then(bytes => bytes === null ? null : new Uint8Array(bytes))
       .catch(() => null))
   }
@@ -35,6 +39,10 @@ function face(env, name) {
 
 const within = (point, [from, to]) => point >= from && point <= to
 const shardOf = character => /** @type {number} */ (character.codePointAt(0) >> 8).toString(16).padStart(3, '0')
+
+// A card asks for faces in parallel, so the count has a ceiling: past it a character is set in the
+// general face, which covers most of the plane the shards would.
+const SHARD_LIMIT = 48
 
 /** The face a character is set in: its script's, the parts subset outside the plane fonts cover, or a shard face. @param {string} character */
 function nameOf(character) {
@@ -55,11 +63,23 @@ function nameOf(character) {
  */
 export async function facesFor(env, sequence) {
   const names = new Set(ALWAYS)
-  for (const character of sequence) names.add(nameOf(character))
+  let shards = 0
+  for (const character of sequence) {
+    const name = nameOf(character)
+    if (name.startsWith(SHARDS) && !names.has(name)) {
+      if (shards === SHARD_LIMIT) continue
+      shards++
+    }
+    names.add(name)
+  }
   const ordered = [...names]
   const bytes = await Promise.all(ordered.map(name => face(env, name)))
   return {
     buffers: bytes.filter(Boolean),
-    familyOf: character => { const name = nameOf(character); return FAMILY[name] ?? `IDS Fallback ${name.slice(SHARDS.length + 1)}` },
+    familyOf: character => {
+      const name = nameOf(character)
+      if (!names.has(name)) return FAMILY[GENERAL]
+      return FAMILY[name] ?? `IDS Fallback ${name.slice(SHARDS.length + 1)}`
+    },
   }
 }

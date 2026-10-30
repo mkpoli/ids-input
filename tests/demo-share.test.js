@@ -10,10 +10,10 @@ describe('share links', () => {
     expect(sequenceFrom(url)).toBe('⿰木口')
     expect(documentFrom(url)?.root.children[0].transform).toEqual([{ type: 'affine', matrix: [1, 0, 0, 1, 9, 0] }])
   })
-  it('leaves the fragment to say it all for a document nothing was done to', () => {
+  it('leaves the path to say it all for a document nothing was done to', () => {
     const url = new URL(linkTo('⿺电尼', new URL('https://example.org/'), fromSequence('⿺电尼')))
     expect(url.searchParams.has('doc')).toBe(false)
-    expect(url.href).toBe('https://example.org/#%E2%BF%BA%E7%94%B5%E5%B0%BC')
+    expect(url.href).toBe('https://example.org/s/%E2%BF%BA%E7%94%B5%E5%B0%BC')
   })
   it('removes a document token when none is given', () => {
     const url = new URL('https://example.org/?doc=abc#%E2%BF%B0')

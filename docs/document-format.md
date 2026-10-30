@@ -372,13 +372,13 @@ document. Raw invalid text being typed is separate editor-session state; it
 cannot masquerade as a valid document tree. Multiple documents per file are
 outside version 1.
 
-A share link carries the sequence in its fragment and, only where the document
-holds more than that sequence, the difference in a `doc` parameter: base64url of
+A share link carries the sequence in its path (`/s/<sequence>`) and, only where
+the document holds more than that sequence, the difference in a `doc` parameter: base64url of
 a small JSON object with the sequence, the title, the render recipe and each
 layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
 the same ones every read. A document its sequence already spells shares the
-fragment alone; use a file when the difference exceeds the host's URL or
-QR-code budget.
+path alone; use a file when the difference exceeds the host's URL or QR-code
+budget.
 
 A tab or draft keeps an `ids-input/session` envelope beside its document: the
 current document, the chosen layer and every ID the session has issued. Undo

@@ -1107,9 +1107,9 @@ in view. An example opens a tab. The toolbar also holds a share link with its QR
 settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
 The address carries the active sequence in its path (`/s/⿰亻哥`), so a link opens it and a crawler
-can preview it; older `#⿰亻哥` and `?ids=⿰亻哥` links still open. While a layer transform exists the
-address bar carries the document as `?doc=` beside the sequence, so copying the location keeps the
-placement; opening such a link keeps the token. Tabs use
+can preview it; older `#⿰亻哥` and `?ids=⿰亻哥` links still open. While the document holds more than
+its sequence, the address bar carries that difference as `?doc=` beside the sequence, so copying the
+location keeps the placement; opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
 text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
@@ -1126,7 +1126,9 @@ drawn as icons, and the site's name. The home page previews an example.
 The worker behind `ids.mkpo.li` answers those two paths and hands every other request to the built
 workshop. It composes from the same export the editor uses, rasterizes with `@cf-wasm/resvg`, and
 keeps a card in the cache for a day. A sequence the composer cannot draw still gets a card, with the
-frame empty; one that describes no character says `UNENCODED` where the code point would go.
+frame empty; one that describes no character says `UNENCODED` where the code point would go. A card
+that fails to render answers 500 without being cached. The bare `/og` and `/og/default.png` serve the
+home page's example.
 
 `bun run build:site` builds the workshop and then `scripts/og-assets.mjs`, which unpacks the faces
 into `dist/og/fonts` (resvg reads no WOFF2), copies the outline files, and writes the IDS-to-character
