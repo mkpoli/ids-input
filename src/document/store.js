@@ -91,9 +91,10 @@ export function readSession(text) {
 // name, transform and extensions, addressed by its path in the tree. The sequence travels in the
 // token as well as in the fragment, since the fragment is the part of a URL that gets stripped.
 // Layer IDs are fresh on arrival, from the same allocator every time; a group, the one node a
-// sequence cannot spell, is written as the kind of its path. A document's timestamps stay behind,
-// a share not being a file. An older token, a base64url document whose JSON carries `format`,
-// still reads, since such links are already in the wild.
+// sequence cannot spell, is written as the kind of its path, and a geometry edit whose target the
+// tree lost keeps that ID behind a `~`. A document's timestamps stay behind, a share not being a
+// file. An older token, a base64url document whose JSON carries `format`, still reads, since such
+// links are already in the wild.
 
 export const SHARE_VERSION = 1
 const GROUP = 'g'
