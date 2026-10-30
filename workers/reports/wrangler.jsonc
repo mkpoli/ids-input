@@ -1,0 +1,21 @@
+{
+  // The anonymous bug report intake for https://ids.mkpo.li. GITHUB_TOKEN, and the optional
+  // TURNSTILE_SECRET, are secrets: set them with `bunx wrangler secret put <name>`.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ids-reports",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-31",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": { "enabled": true },
+  "kv_namespaces": [
+    {
+      "binding": "REPORTS",
+      "id": "890a1389b87f4ef9915a7774605c7de5"
+    }
+  ],
+  "vars": {
+    "REPO": "mkpoli/ids-input",
+    "SITE_ORIGIN": "https://ids.mkpo.li"
+  }
+}

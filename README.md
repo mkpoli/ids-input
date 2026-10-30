@@ -1249,6 +1249,10 @@ bun run build:sketch-parts       # the drawing search's glyph masks, after a fon
 
 CI only builds the demo and deploys it; the checks above stay local.
 
+The workshop's bug report form posts to `ids-reports`, a Cloudflare Worker in `workers/reports/`
+that turns a report into an issue on this repository. `workers/reports/README.md` has the endpoint's
+fields, the secrets it needs and how to run and deploy it.
+
 ### The demo's browser checks
 
 `demo/check-*.js` drives the workshop in a headless Chromium, one file per feature. It needs a dev
