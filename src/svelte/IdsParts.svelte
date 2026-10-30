@@ -699,6 +699,7 @@
   {/if}
   {#if tab === 'shuishu'}
     <p class="parts-note">{t('parts.shuishu.note')}</p>
+    <p class="parts-note">{t('parts.shuishu.ids')}</p>
   {/if}
   {#if tab === 'components'}
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
