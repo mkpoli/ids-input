@@ -20,15 +20,18 @@ const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/sitever
  * @property {string} [TURNSTILE_SECRET]
  */
 
+/** A preview version of the workshop, on the alias its pull request deploys to. */
+const PREVIEW = /^https:\/\/(?:[a-z0-9-]+-)?ids-input-workshop\.mkpoli\.workers\.dev$/
+
 /**
- * Whether an origin may talk to the endpoint: the site itself, or any port of localhost for a
- * developer running the workshop. A request without an `Origin` header is not a browser's and is
- * left alone.
+ * Whether an origin may talk to the endpoint: the site itself, a preview of it, or any port of
+ * localhost for a developer running the workshop. A request without an `Origin` header is not a
+ * browser's and is left alone.
  * @param {string | null} origin @param {string} siteOrigin @returns {boolean}
  */
 export function originAllowed(origin, siteOrigin) {
   if (origin === null) return true
-  return origin === siteOrigin || /^http:\/\/localhost(:\d+)?$/.test(origin)
+  return origin === siteOrigin || PREVIEW.test(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)
 }
 
 /** @param {string | null} origin @returns {Record<string, string>} */

@@ -61,8 +61,8 @@ An error is `{"error": "<code>", "message": "<sentence>"}`:
 ### `OPTIONS`
 
 The preflight. `Access-Control-Allow-Methods: POST, OPTIONS`, and `Vary: Origin` on every answer.
-Only `https://ids.mkpo.li` and any port of `http://localhost` are allowed; another origin gets
-`403`. A request with no `Origin` header is not a browser's and passes, so `curl` works.
+Only `https://ids.mkpo.li`, its preview versions on `*.workers.dev` and any port of
+`http://localhost` are allowed; another origin gets `403`. A request with no `Origin` header is not a browser's and passes, so `curl` works.
 
 ## What the Worker does with a report
 
