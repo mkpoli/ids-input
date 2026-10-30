@@ -1,8 +1,10 @@
 // @ts-check
 // The shape of a pyramid, read from a parsed or editor tree: rows of 1, 2, 3, … cells, every cell
 // the same part. A cell is any description, so a pyramid of a repeated description reads back as
-// well as a pyramid of one component. This module stays free of imports: `ids.js` uses it to let a
-// long pyramid through the ordinary length limit, and `pyramid.js` builds on it.
+// well as a pyramid of one component. This module imports nothing at runtime: `ids.js` uses it to
+// let a long pyramid through the ordinary length limit, and `pyramid.js` builds on it.
+
+/** @typedef {import('./ids.js').Part} Part */
 
 /** The children of a parsed or editor tree node, or null for a leaf. @param {unknown} node */
 const childrenOf = node => Array.isArray(node) ? node.slice(1) : node && typeof node === 'object' ? /** @type {{ parts?: unknown[] }} */ (node).parts : null
@@ -101,7 +103,7 @@ function splitRows(node, from, to, counts, size, out, leaves) {
  * `reverse: false`.
  * @param {unknown} tree
  * @param {{ minLayers?: number }} [options]
- * @returns {{ cell: unknown, layers: number, count: number, reverse: boolean } | null}
+ * @returns {{ cell: Part, layers: number, count: number, reverse: boolean } | null}
  */
 export function pyramidRows(tree, { minLayers = 3 } = {}) {
   /** @type {Map<unknown, number>} */
@@ -130,7 +132,7 @@ export function pyramidRows(tree, { minLayers = 3 } = {}) {
       const cells = []
       if (!splitRows(tree, 0, layers - 1, rowCounts(layers, reverse), size, cells, leaves) || cells.length !== count) continue
       if (!cells.every(cell => samePart(cell, cells[0]))) continue
-      return { cell: cells[0], layers, count, reverse }
+      return { cell: /** @type {Part} */ (cells[0]), layers, count, reverse }
     }
   }
   return null
