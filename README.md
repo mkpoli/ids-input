@@ -240,8 +240,8 @@ composed inside its cell. A whole description may run past the ordinary 64-code-
 pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
 to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
 its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, and a typed value is kept for all three. Enter a
-part, then choose a preset or a custom row count.
+part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
+kept for all three. Enter a part, then choose a preset or a custom row count.
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.

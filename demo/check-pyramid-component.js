@@ -101,6 +101,12 @@ try {
     await group.locator('[data-pyramid="2"]').click()
     assert.equal(await field.inputValue(), '⿱⬚⿰⬚⬚', 'an empty part lays out empty slots')
     assert.equal(await part.getAttribute('aria-invalid'), 'false')
+    // A scaffold of empty slots previews in the pyramid's cells, not as too large.
+    await field.fill('')
+    await field.press('Tab')
+    await group.locator('[data-pyramid="6"]').click()
+    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 20000 })
+    assert(await page.locator('.ids-preview .slot').count() >= 21, 'a pyramid of empty slots previews as its cells')
     await field.fill('')
     await field.press('Tab')
     for (const component of ['𠮷', '木\uFE00', '가']) {
