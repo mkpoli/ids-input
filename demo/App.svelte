@@ -5,12 +5,12 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -73,6 +73,7 @@
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
+  const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
@@ -465,7 +466,16 @@
   const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
   /** @param {string} text */
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
+    try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })); return true } catch { note(t('app.copyFailed')); return false }
+  }
+  let footerCopied = $state('')
+  let footerTimer = /** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined)
+  /** @param {string} text */
+  async function copyFooter(text) {
+    const ok = await copy(text)
+    footerCopied = ok ? t('app.copied', { text: '' }).trim() : t('app.copyFailed')
+    clearTimeout(footerTimer)
+    footerTimer = setTimeout(() => { footerCopied = '' }, 2000)
   }
 
   // The tabs: choose one, open a new one, open a sequence in one, and close one. One tab always stays
@@ -1053,6 +1063,17 @@
               <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
               <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
             </div>
+            <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
+              {#each [...editor.whole] as ch}
+                {#if operatorSet.has(ch)}<OperatorIcon op={ch} size={18} />{:else}<span>{ch}</span>{/if}
+              {/each}
+            </span>
+            <div class="large-actions">
+              <button type="button" class="large-copy" title={`${t('app.copySequence')}: ${editor.whole}`} aria-label={footerCopied ? t('app.copied', { text: '' }).trim() : t('app.copySequence')} onclick={() => copyFooter(editor.whole)}><Icon name={footerCopied ? 'check' : 'copy'} size={14} /></button>
+              {#if encoded.length}
+                <button type="button" class="large-copy" title={`${t('app.copyPoints')}: ${encoded.map(cp).join(' ')}`} aria-label={t('app.copyPoints')} onclick={() => copyFooter(encoded.map(cp).join(' '))}><Icon name="copy" size={14} /></button>
+              {/if}
+            </div>
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
@@ -1196,15 +1217,20 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
-  .large-dialog{width:min(90vh,92vw);width:min(90dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
   .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
   .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--surface)}
   .large-bar .font-switch{order:1}
-  .large-bar .large-close{order:2}
+  .large-bar .large-close{order:4}
   .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer}
+  .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ink);white-space:nowrap;overflow:hidden}
+  .large-actions{order:3;display:flex;align-items:center;gap:4px}
+  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
+  .large-copy:hover{border-color:var(--line-strong)}
+  .large-copy:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .large-close:hover{border-color:var(--line-strong)}
   .large-close:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
