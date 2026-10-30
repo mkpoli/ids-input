@@ -117,7 +117,7 @@
   // A tab dragged sideways follows the pointer and takes the place it is dropped in: the tabs it
   // passes swap around it as it crosses their middles, and the strip scrolls at its edges. A press
   // that moves less than a few pixels is still a click. Touch keeps scrolling the strip instead.
-  /** @type {{ id: string, pointer: number, startX: number, offset: number, live: boolean, dx: number } | null} */
+  /** @type {{ id: string, pointer: number, startX: number, offset: number, live: boolean, moved: boolean, dx: number } | null} */
   let drag = $state(null)
   /** @type {{ id: string, at: number } | null} */
   let dropped = null
@@ -133,7 +133,7 @@
     const tab = button.closest('.tab')
     if (!tab) return
     button.setPointerCapture(event.pointerId)
-    drag = { id, pointer: event.pointerId, startX: event.clientX, offset: event.clientX - tab.getBoundingClientRect().left, live: false, dx: 0 }
+    drag = { id, pointer: event.pointerId, startX: event.clientX, offset: event.clientX - tab.getBoundingClientRect().left, live: false, moved: false, dx: 0 }
   }
   /** @param {PointerEvent} event */
   async function slide(event) {
@@ -157,7 +157,7 @@
       const el = tabElement(tab.id)
       if (el && local > el.offsetLeft + el.offsetWidth / 2) to++
     }
-    if (to !== from) { onmove(from, to); await tick() }
+    if (to !== from) { drag.moved = true; onmove(from, to); await tick() }
     if (!drag) return
     const el = tabElement(drag.id)
     if (!el) return
@@ -166,7 +166,8 @@
   /** @param {PointerEvent} event */
   function letGo(event) {
     if (!drag || drag.pointer !== event.pointerId) return
-    if (drag.live) dropped = { id: drag.id, at: performance.now() }
+    // A drag that never swapped places is just a shaky click.
+    if (drag.moved) dropped = { id: drag.id, at: performance.now() }
     drag = null
   }
   /** Move the focused tab one place, keeping its focus. @param {number} at @param {number} step */

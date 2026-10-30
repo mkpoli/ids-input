@@ -70,6 +70,15 @@ try {
   assert.equal(await active(), second, 'the edited tab stays active')
   assert.equal(await value(), text, 'its editor stays where it was')
 
+  // A wobble that crosses no neighbour is still a click on that tab.
+  const wobble = await box(third)
+  await page.mouse.move(wobble.x + wobble.width / 2, wobble.y + wobble.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(wobble.x + wobble.width / 2 + 10, wobble.y + wobble.height / 2)
+  await page.mouse.up()
+  assert.equal(await active(), third, 'a drag that crosses no tab still chooses its tab')
+  assert.deepEqual(await order(), [third, first, second], 'that wobble leaves the order alone')
+
   // A strip of tabs wider than a phone scrolls under a tab held at its edge.
   await page.setViewportSize({ width: 375, height: 812 })
   for (let i = 0; i < 2; i++) await page.getByRole('button', { name: 'New tab', exact: true }).click()
