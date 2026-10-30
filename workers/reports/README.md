@@ -132,3 +132,16 @@ curl -sS http://localhost:8787/ \
 
 The tests are in `tests/report-worker.test.js` at the repository root and run with the rest:
 `bun test tests`.
+
+## Deploying
+
+`.github/workflows/reports.yml` deploys from `main` whenever `workers/reports/` changes, so a merge
+is enough. Two repository secrets have to exist first:
+
+| Secret | What it is |
+| --- | --- |
+| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit** and **Workers KV Storage: Edit** on the account |
+| `REPORTS_GITHUB_TOKEN` | The Worker's fine-grained `GITHUB_TOKEN`, re-applied on every deploy |
+
+Until both are set the job skips itself and the deploy stays manual. The Worker answers on
+`report.ids.mkpo.li` (a custom domain in the config) and on `ids-reports.mkpoli.workers.dev`.

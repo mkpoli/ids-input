@@ -1,0 +1,33 @@
+name: Reports
+on:
+  push:
+    branches: [main]
+    paths: ['workers/reports/**', '.github/workflows/reports.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reports
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      # The secrets a maintainer has to add once: CLOUDFLARE_API_TOKEN for the deploy, and a
+      # fine-grained GITHUB_TOKEN for the Worker. Without the first the job does nothing.
+      - name: Deploy the report intake
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        working-directory: workers/reports
+        run: bunx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Keep the Worker's GitHub token current
+        if: env.REPORTS_GITHUB_TOKEN != ''
+        working-directory: workers/reports
+        run: printf '%s' "$REPORTS_GITHUB_TOKEN" | bunx wrangler secret put GITHUB_TOKEN
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          REPORTS_GITHUB_TOKEN: ${{ secrets.REPORTS_GITHUB_TOKEN }}
