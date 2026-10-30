@@ -816,10 +816,13 @@ export class Composer {
     return [op, ...kids]
   }
 
-  /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
+  /** Whole-character lookup for attested overlays; nested editing keeps its leaves. */
   standaloneExpandedOverlay(node) {
+    if (!Array.isArray(node) || node[0] !== '⿻') return null
     const equivalents = {"⿻大⿰人人": "夾", "⿻工⿰人人": "巫", "⿻⿰人人土": "坐"}
-    const char = equivalents[keyOf(node)]
+    const expanded = equivalents[keyOf(node)]
+    const char = expanded ?? this.bySequence(keyOf(node))
+    if (!expanded && char && this.overlayTeachers(node.slice(1)).length) return null
     return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
@@ -1269,10 +1272,9 @@ export class Composer {
   }
 
   // ---------------------------------------------------------------- overlays
-  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
-  overlay(children, region) {
+  /** Overlays the export holds both pieces of, sharing an operand of comparable ink. */
+  overlayTeachers(children) {
     const C = this.C, keys = children.map(keyOf)
-    // Teachers: overlays the export holds both pieces of, sharing an operand.
     const teachers = []
     for (const index of [0, 1]) {
       for (const h of upTo(this.hostsOf(keys[index], `⿻${index}`), C.OVERLAY_HOSTS)) {
@@ -1284,8 +1286,13 @@ export class Composer {
         teachers.push({ ch: h.h, pieces, written, frame: h.fr })
       }
     }
-    const usable = teachers.filter(t => keys.every((k, j) => t.written[j] === k
+    return teachers.filter(t => keys.every((k, j) => t.written[j] === k
       || (1 / C.OVERLAY_INK <= this.ink(k) / Math.max(this.ink(t.written[j]), 1) && this.ink(k) / Math.max(this.ink(t.written[j]), 1) <= C.OVERLAY_INK)))
+  }
+
+  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
+  overlay(children, region) {
+    const C = this.C, keys = children.map(keyOf), usable = this.overlayTeachers(children)
     if (!usable.length && children.length === 2) {
       const outer = this.node(children[0], region)
       const rooms = { '⿶': this.room('⿶', outer, region), '⿵': this.room('⿵', outer, region) }
@@ -1301,9 +1308,9 @@ export class Composer {
           return this.node([op, ...children], region)
         }
       }
-      return this.node(['⿱', ...children], region)
     }
     if (!usable.length) {
+      // With no matching cuts or enclosing room, retain the operands' shared em-square.
       return children.flatMap(child => {
         const glyph = typeof child === 'string' ? this.glyph(child) : null
         return this.node(child, glyph ? mapped(glyph.box, EM_BOX, region) : region)
