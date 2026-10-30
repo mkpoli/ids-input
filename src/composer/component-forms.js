@@ -2,16 +2,20 @@
 // Shape-specific font-derived forms. Keep the caller's IDS; encoded counterparts can vary by region.
 import data from './component-forms.json' with { type: 'json' }
 import constants from './constants.json' with { type: 'json' }
-import { commands, makePart, mapped, partInk, placed, svgPath, union } from './geometry.js'
+import { WINDING, commands, derived, makePart, mapped, partInk, placed, svgPath, union, windingOf, wound } from './geometry.js'
 
 const styles = Object.fromEntries(Object.entries(data.forms).map(([style, forms]) => [style,
   new Map(Object.entries(forms).map(([text, groups]) => {
     const parts = groups.map(group => makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points }))))
+    // A form's groups were cut from one glyph: its outermost contour winds them all alike, and a
+    // group that is a counter stays opposite the groups it sits in.
+    const back = windingOf(parts.flatMap(part => part.contours.map(c => c.light)))
+    if (back && back !== WINDING) for (const part of parts) part.reverse = true
     return [text, { parts, frame: union(parts.map(p => p.box)), ink: parts.reduce((n, p) => n + partInk(p), 0) }]
   }))]))
 const positions = Object.fromEntries(Object.entries(data.positions ?? {}).map(([style, entries]) => [style,
   new Map(Object.entries(entries).map(([name, group]) => [name,
-    makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points })))]))]))
+    wound(makePart(group.map(([ops, points]) => ({ ops: commands(ops), light: points, heavy: points }))))]))]))
 const editorialForms = new Map(Object.entries(data.editorial ?? {}).flatMap(([id, entry]) => entry.forms.map(text => [text, id])))
 // Brush forms require an explicit Kureedo entry; bundled Sans forms must not replace them.
 const forms = style => styles[style] ?? (style === 'kaisho' ? null : styles.sans)
@@ -72,7 +76,7 @@ function weightedLegs(part, style, height) {
       contours.push({ ...contour, light: points, heavy: points })
     }
   }
-  return makePart(contours, part.box.slice())
+  return derived(part, contours, part.box.slice())
 }
 
 export const componentPositionBox = (name, style = 'sans') => positions[style]?.get(name)?.box ?? null

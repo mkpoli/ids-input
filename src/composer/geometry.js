@@ -56,8 +56,19 @@ export function pointsBox(points) {
   return [x0, y0, x1, y1]
 }
 
-/** A part from contours `{ ops, light, heavy, width }`: its box from the light points. */
-export function makePart(contours, box) {
+/** The way every part is drawn: clockwise in font units, y up (a negative signed area). The fonts
+ *  the exports cut from mostly run that way, and the path fills with the nonzero rule, so parts
+ *  wound alike add their ink where they overlap and one wound the other way subtracts it. */
+export const WINDING = -1
+
+/**
+ * A part from contours `{ ops, light, heavy, width }`: its box from the light points. `reverse`
+ * marks contours that run against `WINDING`, as `wound` finds them.
+ * @param {any[]} contours
+ * @param {number[]} [box]
+ * @param {boolean} [reverse]
+ */
+export function makePart(contours, box, reverse = false) {
   if (!box) {
     box = [Infinity, Infinity, -Infinity, -Infinity]
     for (const c of contours) {
@@ -65,7 +76,45 @@ export function makePart(contours, box) {
       box = [Math.min(box[0], b[0]), Math.min(box[1], b[1]), Math.max(box[2], b[2]), Math.max(box[3], b[3])]
     }
   }
-  return { contours, box }
+  const part = { contours, box }
+  if (reverse) part.reverse = true
+  return part
+}
+
+/** A contour's signed area, y up; its sign is its winding. */
+const signedArea = flat => {
+  let sum = 0
+  for (let i = 0, n = flat.length; i < n; i += 2) {
+    const j = (i + 2) % n
+    sum += flat[i] * flat[j + 1] - flat[j] * flat[i + 1]
+  }
+  return sum / 2
+}
+
+/** The winding of the contour enclosing the most ink: `pointLists` are flat [x, y, …] arrays. */
+export function windingOf(pointLists) {
+  let best = 0, sign = 0
+  for (const flat of pointLists) {
+    const a = Math.abs(signedArea(flat))
+    if (a > best) { best = a; sign = Math.sign(signedArea(flat)) }
+  }
+  return sign
+}
+
+/** `part` marked to be drawn backwards when its outermost contour runs against `WINDING`; mark it
+ *  where the part is made. A cut or split piece keeps the mark through `derived`, so a glyph's
+ *  counters stay opposite its own outline. */
+export function wound(part) {
+  const sign = windingOf(part.contours.map(c => c.light))
+  return sign !== 0 && sign !== WINDING ? { ...part, reverse: true } : part
+}
+
+/** A part made of `contours` taken from `from` (a cut, a split, a stroke group): drawn the way
+ *  `from` is drawn. */
+export function derived(from, contours, box) {
+  const part = makePart(contours, box)
+  if (from.reverse) part.reverse = true
+  return part
 }
 
 /** A part record of the export (`b`, `p`, `w`) read as a part, decoded once. */
@@ -78,7 +127,7 @@ export function partOf(record, quant = 4) {
     for (let i = 0; i < lo.length; i++) { l[i] = lo[i] / quant; h[i] = (lo[i] + d[i]) / quant }
     return { ops: commands(ops), light: l, heavy: h, width }
   })
-  const part = makePart(contours, record.b.slice())
+  const part = wound(makePart(contours, record.b.slice()))
   if (record.fixed) part.fixed = true
   if (record.sg) part.strokes = record.sg
   Object.defineProperty(record, '_part', { value: part, enumerable: false })
@@ -317,7 +366,7 @@ export function drawnContours(p) {
 /** The rings of a group of placed parts, for masks, wound as `svgPath` draws them. */
 export const groupRings = (group, steps = 6) => group.flatMap(p => {
   const ring_ = rings(p.part.contours, drawnContours(p), steps)
-  return turnsOver(p) ? ring_.map(ring => {
+  return runsBack(p) ? ring_.map(ring => {
     const reversed = []
     for (let i = ring.length - 2; i >= 0; i -= 2) reversed.push(ring[i], ring[i + 1])
     return reversed
@@ -340,50 +389,31 @@ const num = v => { const s = v.toFixed(1); return s === '-0.0' ? '0.0' : s }
  *  a mirror in both axes does not. */
 const turnsOver = p => (p.flips ?? []).reduce((odd, f) => odd !== (Boolean(f.x) !== Boolean(f.y)), false)
 
-/** A contour's signed area, y up; its sign is its winding. */
-const signedArea = flat => {
-  let sum = 0
-  for (let i = 0, n = flat.length; i < n; i += 2) {
-    const j = (i + 2) % n
-    sum += flat[i] * flat[j + 1] - flat[j] * flat[i + 1]
-  }
-  return sum / 2
-}
-
-/** The winding of a part's outermost contour: the contour enclosing the most ink decides. */
-const windingOf = contours => {
-  let best = 0, sign = 0
-  for (const flat of contours) {
-    const a = Math.abs(signedArea(flat))
-    if (a > best) { best = a; sign = Math.sign(signedArea(flat)) }
-  }
-  return sign
-}
+/** Whether a placed part's contours, as drawn, run against `WINDING`: the part was marked at its
+ *  source, and its flips turn them over once more. */
+export const runsBack = p => Boolean(p.part.reverse) !== turnsOver(p)
 
 /** A contour's segments drawn the other way round: the same outline, wound as the glyph was drawn. */
 function backwards(segs) {
-  const ends = segs.map(([kind, pts]) => (kind === 'Q' ? pts[1] : pts[0]))
+  const ends = segs.map(([kind, pts]) => (kind === 'C' ? pts[2] : kind === 'Q' ? pts[1] : pts[0]))
   const out = [['M', [ends[0]]], ['L', [ends.at(-1)]]]
   for (let i = segs.length - 1; i > 0; i--) {
     const [kind, pts] = segs[i]
-    out.push(kind === 'Q' ? ['Q', [pts[0], ends[i - 1]]] : ['L', [ends[i - 1]]])
+    if (kind === 'C') out.push(['C', [pts[1], pts[0], ends[i - 1]]])
+    else if (kind === 'Q') out.push(['Q', [pts[0], ends[i - 1]]])
+    else out.push(['L', [ends[i - 1]]])
   }
   return out
 }
 
 /** Placed parts as one SVG path in a 1000 × 1000 box, y down from the em's top (`compose.svg_path`);
- *  fill it with the nonzero rule. A mirrored part's contours are wound the way the others are. */
+ *  fill it with the nonzero rule. A part whose source runs the other way, or whose flip turns it
+ *  over, is drawn backwards as a whole, so overlapping ink adds up and its counters stay holes. */
 export function svgPath(group) {
   const out = []
-  // Parts cut from different fonts can be wound either way; under the nonzero rule an opposite
-  // part cancels the ink it overlaps. One reference winding, from the first part, keeps them all
-  // adding up, while each part's counters stay opposite its own outline.
-  let reference = 0
   for (const p of group) {
     const drawn = drawnContours(p)
-    const sign = windingOf(drawn)
-    if (reference === 0) reference = windingOf(p.part.contours.map(c => c.light))
-    const over = sign !== 0 && sign !== reference
+    const over = runsBack(p)
     p.part.contours.forEach((contour, k) => {
       const segs = segments(contour.ops, drawn[k])
       for (const [kind, pts] of over ? backwards(segs) : segs) out.push(kind + pts.map(q => `${num(q[0])} ${num(ASCENT - q[1])}`).join(' '))
@@ -393,26 +423,28 @@ export function svgPath(group) {
   return out.join('')
 }
 
-/** An SVG path of M, L, Q and Z commands (absolute, as `svgPath` writes it) read back as rings in
+/** An SVG path of M, L, Q, C and Z commands (absolute, as `svgPath` writes it) read back as rings in
  *  font units, y up, its curves flattened in `steps`. */
 export function pathRings(d, steps = 6) {
   const out = []
   let ring = [], last = null
   const close = () => { if (ring.length >= 6) out.push(ring); ring = [] }
-  for (const [, kind, args] of d.matchAll(/([MLQZ])([^MLQZ]*)/g)) {
+  for (const [, kind, args] of d.matchAll(/([MLQCZ])([^MLQCZ]*)/g)) {
     const v = args.trim() ? args.trim().split(/[\s,]+/).map(Number) : []
     if (kind === 'Z') { close(); continue }
     if (kind === 'M') { close(); last = [v[0], ASCENT - v[1]]; ring.push(...last); continue }
     if (kind === 'L') { last = [v[0], ASCENT - v[1]]; ring.push(...last); continue }
-    const off = [v[0], ASCENT - v[1]], on = [v[2], ASCENT - v[3]]
+    const point = at => [v[at], ASCENT - v[at + 1]]
     if (kind === 'C') {
-      const c2 = [v[4], ASCENT - v[5]], end = [v[6], ASCENT - v[7]]
+      const c1 = point(0), c2 = point(2), end = point(4)
       for (let s = 1; s <= steps; s++) {
         const t = s / steps, u = 1 - t
-        ring.push(u*u*u*last[0] + 3*u*u*t*off[0] + 3*u*t*t*c2[0] + t*t*t*end[0], u*u*u*last[1] + 3*u*u*t*off[1] + 3*u*t*t*c2[1] + t*t*t*end[1])
+        ring.push(u*u*u*last[0] + 3*u*u*t*c1[0] + 3*u*t*t*c2[0] + t*t*t*end[0],
+          u*u*u*last[1] + 3*u*u*t*c1[1] + 3*u*t*t*c2[1] + t*t*t*end[1])
       }
       last = end
     } else {
+      const off = point(0), on = point(2)
       for (let s = 1; s <= steps; s++) {
         const t = s / steps, u = 1 - t
         ring.push(u * u * last[0] + 2 * u * t * off[0] + t * t * on[0], u * u * last[1] + 2 * u * t * off[1] + t * t * on[1])

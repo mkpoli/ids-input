@@ -15,8 +15,8 @@
 // every host entry of it there, cut or not, and `data.places(key)` the places it is held in; each
 // answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
 // before drawing again).
-import { EM_BOX, area, count, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf, targetFor,
-  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
+import { EM_BOX, area, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
+  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
@@ -546,7 +546,7 @@ export class Composer {
     if (!piece) {
       const glyph = this.glyph(h.h)
       if (!glyph) return makePart([], h.b.slice())
-      piece = makePart(h.k.map(k => glyph.contours[k]), h.b.slice())
+      piece = derived(glyph, h.k.map(k => glyph.contours[k]), h.b.slice())
       Object.defineProperty(h, '_piece', { value: piece, enumerable: false })
     }
     // A piece cut along KanjiVG's groups, which a drawing using it credits.
@@ -641,7 +641,7 @@ export class Composer {
     const glyph = partOf(record), target = fitted(glyph.box, region, this.C.STRETCH)
     if (!this.separate) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
     return indices.map(group => {
-      const part = makePart(group.map(i => glyph.contours[i]))
+      const part = derived(glyph, group.map(i => glyph.contours[i]))
       return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
     })
   }
@@ -1448,7 +1448,7 @@ export class Composer {
           c.light[k] = centre + shift + (c.light[k] - centre) * factor
           c.heavy[k] = centre + shift + (c.heavy[k] - centre) * factor
         }
-        p.part = makePart(contours)
+        p.part = derived(p.part, contours)
         break
       }
     }
@@ -1707,10 +1707,10 @@ export function sweptPart(p, edge, C) {
     const map = src => { const out = new Float64Array(src.length); for (let i = 0; i < src.length; i += 2) { out[i] = (src[i] - cx) * sx + gx; out[i + 1] = (src[i + 1] - cy) * sy + gy } return move(out) }
     return { ops: c.ops, light: map(c.light), heavy: map(c.heavy), width: c.width }
   }
-  const strokes = makePart(p.part.contours.filter((_, k) => k !== sweep).map(c => at(c, q => q)))
+  const strokes = derived(p.part, p.part.contours.filter((_, k) => k !== sweep).map(c => at(c, q => q)))
   const box = strokes.box
   const pressedBox = [x0 + (box[0] - x0) * pressed, box[1], x0 + (box[2] - x0) * pressed, box[3]]
-  const drawn = makePart([at(p.part.contours[sweep], drawnOut)])
+  const drawn = derived(p.part, [at(p.part.contours[sweep], drawnOut)])
   return [placed(strokes, strokes.box, pressedBox, p.native, `swept ${p.origin}`, p.weight),
     placed(drawn, drawn.box, drawn.box.slice(), p.native, `swept ${p.origin}`, p.weight)]
 }
