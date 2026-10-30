@@ -87,6 +87,31 @@ describe('document share tokens', () => {
     reordered.root = { id: 'root', kind: 'operator', transform: document.root.transform, op: '⿰', children: document.root.children }
     expect(shareDocument(reordered)).toBe(shareDocument(document))
   })
+  it('rebuilds the root ID as well', () => {
+    const read = readShareDocument(shareDocument(Object.assign(fromSequence('木'), { title: 'x' })))
+    expect(read.root.id).not.toBe('root')
+  })
+  it('keeps a dangling target whose old ID reads like a path', () => {
+    const document = fromSequence('⿰木口')
+    document.render = { mode: 'pinned', engine: 'e', revision: '1', options: {}, assets: [{ role: 'a', sha256: 'a'.repeat(64) }] }
+    document.geometryEdits = [{ id: 'e1', node: '0', geometry: 'b'.repeat(64), target: { kind: 'stroke', id: 's' }, transform: [] }]
+    const read = readShareDocument(shareDocument(document))
+    expect(read.geometryEdits?.[0].node).toBe('0')
+    expect(read.root.children[0].id).not.toBe('0')
+  })
+  it('rejects a malformed geometry edit instead of dropping it', () => {
+    const recipe = { mode: 'pinned', engine: 'e', revision: '1', options: {}, assets: [{ role: 'a', sha256: 'a'.repeat(64) }] }
+    for (const g of [[null], [1], ['bad'], [[]], {}]) {
+      expect(() => readShareDocument(b64(JSON.stringify({ v: 1, s: '木', g, r: recipe })))).toThrow(DocumentError)
+    }
+  })
+  it('writes one token for the same fields in another order', () => {
+    const first = fromSequence('木')
+    first.root.transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 1, 2] }]
+    const second = fromSequence('木')
+    second.root.transform = [{ matrix: [1, 0, 0, 1, 1, 2], type: 'affine' }]
+    expect(shareDocument(second)).toBe(shareDocument(first))
+  })
   it('rejects a token that is not one', () => {
     expect(() => readShareDocument('e30')).toThrow(DocumentError)
   })

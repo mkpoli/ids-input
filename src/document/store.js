@@ -128,6 +128,14 @@ function pathOf(root) {
   return found
 }
 
+/** `value` with the keys of every object it holds in name order, so that two equal documents write
+ *  one token. Arrays keep their order. @param {unknown} value @returns {unknown} */
+function sorted(value) {
+  if (Array.isArray(value)) return value.map(sorted)
+  if (!object(value)) return value
+  return Object.fromEntries(Object.keys(value).sort().map(key => [key, sorted(value[key])]))
+}
+
 /** Base64url of `text`. @param {string} text */
 function encode(text) {
   const bytes = new TextEncoder().encode(text)
@@ -165,9 +173,10 @@ export function shareDocument(document) {
   if (layers.length) token.l = layers
   if (document.geometryEdits?.length) {
     const paths = new Map([...nodes].map(([path, node]) => [node.id, path]))
-    token.g = document.geometryEdits.map(edit => ({ ...edit, node: paths.get(edit.node) ?? edit.node }))
+    // A target the tree no longer holds keeps its ID, marked so that it is not read as a path.
+    token.g = document.geometryEdits.map(edit => ({ ...edit, node: paths.get(edit.node) ?? `~${edit.node}` }))
   }
-  return encode(JSON.stringify(token))
+  return encode(JSON.stringify(sorted(token)))
 }
 
 /** A document from a share token. @param {string} token @returns {Document} */
@@ -189,16 +198,22 @@ export function readShareDocument(token) {
   if (token_.t !== undefined) document.title = token_.t
   if (token_.r !== undefined) document.render = token_.r
   if (token_.e !== undefined) document.extensions = token_.e
-  // An edit whose target the tree no longer has keeps its old ID, so no layer may receive it.
-  // Edit IDs are reserved the same way.
-  const edits = (Array.isArray(token_.g) ? token_.g : []).filter(edit => object(edit))
-  const carried = pathOf(document.root)
-  const reserved = edits.flatMap(edit => [edit.node, edit.id]).filter(id => typeof id === 'string' && !carried.has(/** @type {string} */ (id)))
+  if (token_.g !== undefined && !Array.isArray(token_.g)) issues.push({ path: '/g', message: 'geometry edits are an array' })
+  const edits = Array.isArray(token_.g) ? token_.g : []
+  edits.forEach((edit, i) => { if (!object(edit)) issues.push({ path: `/g/${i}`, message: 'a geometry edit is an object' }) })
+  if (issues.length) throw new DocumentError(issues)
+  // A target the tree no longer has keeps its old ID, so no layer may receive it. Edit IDs are
+  // reserved the same way.
+  const reserved = edits
+    .flatMap(edit => [typeof edit.node === 'string' && edit.node.startsWith('~') ? edit.node.slice(1) : null, typeof edit.id === 'string' ? edit.id : null])
+    .filter(id => typeof id === 'string')
   const allocator = allocatorFor(document, reserved)
-  /** Rebuild every layer's ID, so a reference to a layer the tree lost cannot find a new one. @param {Node} node */
+  /** Rebuild every layer's ID, the root's included, so a reference to a layer the tree lost cannot
+   *  find a new one. @param {Node} node */
   const renumber = node => {
+    node.id = allocator.next()
     const children = node.kind === 'operator' ? node.children : node.kind === 'group' ? [node.child] : []
-    for (const child of children) { child.id = allocator.next(); renumber(child) }
+    for (const child of children) renumber(child)
   }
   renumber(document.root)
   for (const [path, fields] of Array.isArray(token_.l) ? token_.l : []) {
@@ -221,7 +236,11 @@ export function readShareDocument(token) {
   if (issues.length) throw new DocumentError(issues)
   if (edits.length) {
     const ids = new Map([...pathOf(document.root)].map(([path, node]) => [path, node.id]))
-    document.geometryEdits = edits.map(/** @param {any} edit */ edit => ({ ...edit, node: ids.get(edit.node) ?? edit.node, id: edit.id ?? allocator.next() }))
+    document.geometryEdits = edits.map(/** @param {any} edit */ (/** @type {any} */ edit) => ({
+      ...edit,
+      node: edit.node.startsWith('~') ? edit.node.slice(1) : ids.get(edit.node) ?? edit.node,
+      id: edit.id ?? allocator.next(),
+    }))
   }
   return assertDocument(document)
 }
