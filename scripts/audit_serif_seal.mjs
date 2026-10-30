@@ -20,7 +20,9 @@ try {
     for (const seal of [0, 2])
       for (const [scheme, [inkColour, background]] of Object.entries(ink)) {
         const svg = drawingSvg(drawn, { background, ink: inkColour, size: 1000 })
-        const body = seal ? svg.replace('<path d="', `<path stroke="${inkColour}" stroke-width="${seal}" stroke-linejoin="round" d="`) : svg
+        // The ink path is the last one: a cut drawing puts its mask path first.
+        const at = svg.lastIndexOf('<path ')
+        const body = seal ? svg.slice(0, at) + svg.slice(at).replace('<path ', `<path stroke="${inkColour}" stroke-width="${seal}" stroke-linejoin="round" `) : svg
         const page = await browser.newPage({ viewport: { width: 340, height: 340 }, deviceScaleFactor: 3 })
         const image = Buffer.from(body).toString('base64')
         await page.setContent(`<body style="margin:0;display:grid;place-items:center;height:340px;background:${background}"><img src="data:image/svg+xml;base64,${image}" width=324 height=324></body>`)
