@@ -106,13 +106,19 @@ async function miss(request, env, url) {
   return render(request, notFound(url, text, spells(text)), 404)
 }
 
+/** @typedef {{ ASSETS: { fetch: (request: Request | string) => Promise<Response> },
+ *   REPORT: { fetch: (request: Request) => Promise<Response> } }} Env */
+
 export default {
-  /** @param {Request} request @param {Env} env */
+  /** @param {Request} request @param {Env} env @param {ExecutionContext} ctx */
   async fetch(request, env, ctx) {
+    const url = new URL(request.url)
+    // A report leaves the page on its own origin and is handed to the intake Worker, whose routes
+    // start at its root.
+    if (url.pathname === '/api/report') return env.REPORT.fetch(new Request(new URL('/', url), request))
     // The root, files and deeper paths belong to the asset layer, whose page keeps the root
     // canonical. A path that names a sequence reads its own address.
     if (request.method !== 'GET' && request.method !== 'HEAD') return env.ASSETS.fetch(request)
-    const url = new URL(request.url)
     const route = routeFor(url, EXAMPLES[0].sequence)
     let response
     if (route.error) response = failure(route.error, route.status)

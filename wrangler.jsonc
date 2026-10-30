@@ -11,6 +11,8 @@
     "not_found_handling": "none"
   },
   "routes": [{ "pattern": "ids.mkpo.li", "custom_domain": true }],
+  // The anonymous bug report intake, reached as /api/report.
+  "services": [{ "binding": "REPORT", "service": "ids-reports" }],
   "workers_dev": false,
   "observability": { "enabled": true },
   "preview_urls": true
