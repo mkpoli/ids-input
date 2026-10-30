@@ -120,7 +120,7 @@
   // scrolling the strip instead.
   /** @type {{ id: string, pointer: number, startX: number, offset: number, live: boolean, moved: boolean, dx: number } | null} */
   let drag = $state(null)
-  /** @type {{ id: string, at: number } | null} */
+  /** @type {string | null} */
   let dropped = null
   let scrollFrame = 0
   let edgeX = 0
@@ -129,9 +129,9 @@
    * @param {string} id
    */
   function grab(event, id) {
-    if (event.button !== 0 || !event.isPrimary || event.pointerType === 'touch' || drag || tabs.length < 2) return
     // A new press starts a new gesture, so a release click left over from the last one is spent.
     dropped = null
+    if (event.button !== 0 || !event.isPrimary || event.pointerType === 'touch' || drag || tabs.length < 2) return
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const tab = button.closest('.tab')
     if (!tab) return
@@ -182,7 +182,7 @@
     drag = null
     if (!held?.moved) return
     if (click) {
-      dropped = { id: held.id, at: performance.now() }
+      dropped = held.id
       // Reordering moves the button in the DOM and drops its focus; put it back where it was held.
       tick().then(() => { if (document.activeElement === document.body) focus(held.id) })
     }
@@ -260,7 +260,7 @@
           onpointerdown={event => grab(event, tab.id)} onkeydown={event => key(event, at)}
           onclick={event => {
             // The click that ends a drag is not a choice; one on any other tab still is.
-            const ended = dropped?.id === tab.id && event.detail > 0 && performance.now() - dropped.at < 400
+            const ended = dropped === tab.id && event.detail > 0
             dropped = null
             if (!ended) onselect(tab.id)
           }}

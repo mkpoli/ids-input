@@ -53,6 +53,10 @@ try {
   assert.equal(await page.locator(`.tab[data-tab-id="${first}"]`).evaluate(el => /** @type {HTMLElement} */ (el).style.transform), '', 'the held tab settles into its slot')
   assert.equal(await page.locator(`.tab[data-tab-id="${first}"] [role="tab"]`).evaluate(el => el === document.activeElement), true, 'the dropped tab keeps the focus')
   assert.equal(await active(), chosen, 'dragging leaves the active tab alone')
+  await page.evaluate(id => {
+    document.querySelector(`.tab[data-tab-id="${id}"] [role="tab"]`).dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1 }))
+  }, first)
+  assert.equal(await active(), chosen, 'the click that ends a drag does not choose the tab')
   const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').map(item => item.id))
   assert.deepEqual(kept, [second, third, first], 'the order is kept for the next visit')
 
