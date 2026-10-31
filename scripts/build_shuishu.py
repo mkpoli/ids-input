@@ -43,6 +43,9 @@ LICENCE = ROOT / 'fonts/LICENSE-IDSShuishu.txt'
 
 LOGOGRAMS = range(0x1B300, 0x1B4E6)
 RADICALS = range(0x1B500, 0x1B52F)
+# The operators `data/shuishu/ids.json` may use: side by side, stacked, and the three enclosures
+# that put a part inside another. Every entry has exactly two parts.
+IDS_OPS = '⿰⿱⿴⿵⿶'
 
 
 def packed(values):
@@ -197,16 +200,32 @@ def main():
             'shuiGroup': 'radical',
             'shuiName': re.sub(r'^SHUISHU RADICAL-', '', radicals[f'{point:X}']),
         })
+    known = {part['part'] for part in parts}
+    editorial = json.loads((SOURCE / 'ids.json').read_text())
+    ids = editorial['entries']
+    for point, ids_text in ids.items():
+        target = chr(int(point, 16))
+        if target not in known:
+            raise ValueError(f'ids.json names U+{point}, which is not a part')
+        if len(ids_text) != 3 or ids_text[0] not in IDS_OPS:
+            raise ValueError(f'{point}: {ids_text} is not an operator with two parts')
+        for component in ids_text[1:]:
+            if component not in known:
+                raise ValueError(f'{point}: component U+{ord(component):04X} is not a part')
+        if target in ids_text[1:]:
+            raise ValueError(f'{point}: {ids_text} contains its own character')
     for part in parts:
         part.setdefault('shuiReading', None)
         part.setdefault('shuiMeaning', None)
         part.setdefault('shuiGloss', None)
         part.setdefault('modern', [])
+        part['ids'] = ids.get(f'{ord(part["part"]):X}')
         part['strokes'] = None
 
     document = {
         'format': 1,
         'proposal': json.loads((SOURCE / 'sources.json').read_text()),
+        'ids': {'note': editorial['note'], 'count': len(ids)},
         'parts': parts,
     }
     raw = json.dumps(document, ensure_ascii=False, separators=(',', ':')).encode()

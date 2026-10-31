@@ -51,9 +51,11 @@ syllable boundaries.
 The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
 allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
 outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
-`IDS Shuishu` face, and the tab filters them by name, reading, meaning and code point. Its groups
-follow the dictionary the index comes from: the characters that dictionary numbers, the rest, and the
-radicals.
+`IDS Shuishu` face, and the tab filters them by name, reading, meaning, code point and description.
+Its groups follow the dictionary the index comes from: the characters that dictionary numbers, the
+rest, and the radicals. Eighteen of the characters carry an editorial IDS, printed on the tile and
+in their title; a description finds its character, and a typed part lists the characters written
+with it. The tab says the decompositions are ours, since no source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -234,14 +236,15 @@ an excluded character, or that carries loose marks or approximate operators, kee
 `pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
 description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
 and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows as equal square cells in centred rows, so the 4-row spellings given for `口`
-above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
-composed inside its cell. A whole description may run past the ordinary 64-code-point length as a
+three or more rows, or of two rows whose cell is a description, as equal square cells in centred
+rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
+cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
+follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
 pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
 to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
 its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, and a typed value is kept for all three. Enter a
-part, then choose a preset or a custom row count.
+part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
+kept for all three. Enter a part, then choose a preset or a custom row count.
 Its Reverse toggle arranges rows from widest
 to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
 writes that arrangement; `pyramidRows` reports its direction in `reverse`.
@@ -978,16 +981,16 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
-  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters, and no recorded description
-  writes the sharing, so they stay out.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
+  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 and 兩's
+  冂从; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
   the arrangement the reference photograph shows, so the shared 子 is drawn once.
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
-  and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
-  written as an IDS tree without duplicating them.
+  and between 祥 and 意. The example sets 士 above one 口 and 女 beside it, with 意 and 祥 around.
 - 吴国升, [组合字的内外乾坤](https://epaper.gmw.cn/gmrb/html/2024-04/21/nw.D110000gmrb_20240421_2-05.htm),
   光明日报, 2024-04-21: describes 招財進寶 sharing the 貝 of 財 and the 扌 of 招 inside 寶's frame,
   with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
@@ -1088,16 +1091,18 @@ through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
-`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
-closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
-column are divided by a draggable splitter, the tree starting
+`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click, Delete or the
+tab's menu closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the
+middle column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
 columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
 commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
-the active document; right-clicking a tab or pressing
-Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
-selection, undo history and layer transforms, which can then be edited independently.
+the active document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: duplicate it,
+close it, close the other tabs, close the tabs on either side, or close all tabs. Close all asks
+first, and Undo after a group close restores the tabs in their old places with the tab that was
+being edited. Duplicate opens the copy beside its source with its selection, undo history and layer
+transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
 with its character and code point, an abbreviated character, or a mark when it has none. It opens as
@@ -1263,6 +1268,12 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+
+The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
+`.github/workflows/deploy.yml`; a pull request uploads a preview version on its own alias. Both need
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
+reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
+request to the assets.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and

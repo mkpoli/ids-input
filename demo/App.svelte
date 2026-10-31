@@ -197,7 +197,7 @@
         // operands. The Kaisho face borrows the Serif drawing in both cases.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
         if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
-          try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
+          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
       } catch (error) {
@@ -217,7 +217,7 @@
           }
         }
         if (defaultFace) throw error
-        return sans(sequence, options)
+        return { ...(await sans(sequence, options)), faceFallback: 'sans' }
       }
 
     }, {
@@ -429,13 +429,15 @@
       tab.whole = editor.tree === null ? '' : editor.whole
       keepTabSession(tab)
     }
+    // Any later edit spends the note of a close, even text the editor cannot read.
+    if (toast?.run) toast = null
     store()
     syncAddress()
   }))
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -653,10 +655,103 @@
     if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
+      sessions.delete(fresh.id)
     }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
     activate(tab.id)
+  }
+  /**
+   * Close several tabs at once, showing `show` when it survives, else a fresh tab. The note brings
+   * the whole group back.
+   * @param {string[]} ids
+   * @param {string} [show]
+   */
+  function closeTabs(ids, show = activeId) {
+    const closing = ids
+      .map(id => ({ id, at: tabs.findIndex(tab => tab.id === id) }))
+      .filter(entry => entry.at >= 0)
+      .sort((a, b) => a.at - b.at)
+    if (!closing.length) return
+    // Keep the active tab's tree in its tab before its snapshot is taken.
+    flush()
+    const removed = closing.map(({ id, at }) => ({
+      tab: /** @type {import('./lib/tabs.js').Tab} */ (tabs[at]),
+      at,
+      state: states.get(id),
+    }))
+    const before = activeId
+    const wasActive = removed.some(entry => entry.tab.id === before)
+    // Remove from the end so each recorded index still names its tab.
+    for (const entry of [...removed].reverse()) {
+      tabs.splice(entry.at, 1)
+      states.delete(entry.tab.id)
+      sessions.delete(entry.tab.id)
+    }
+    const kept = tabs.find(tab => tab.id === show)
+    /** @type {import('./lib/tabs.js').Tab | undefined} */
+    let fresh
+    if (!kept) {
+      // One tab always stays open: closing every tab leaves a new empty one in their place.
+      fresh = makeTab()
+      tabs.push(fresh)
+      activeId = fresh.id
+      editor.reset('')
+      adjusting = false
+    } else if (wasActive) {
+      activeId = kept.id
+      const saved = states.get(kept.id)
+      states.delete(kept.id)
+      if (saved) editor.restore(saved)
+      else editor.reset(kept.sequence)
+    }
+    const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
+    toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
+      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+    store()
+  }
+  /**
+   * Put a closed group back where it was, taking back the empty tab that replaced it.
+   * @param {{ tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[]} removed
+   * @param {string | null} wasActive
+   * @param {string} [replacement]
+   */
+  function reopenTabs(removed, wasActive, replacement) {
+    const fresh = tabs.find(tab => tab.id === replacement)
+    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      sessions.delete(fresh.id)
+    }
+    for (const { tab, at, state } of removed) {
+      if (tabs.some(kept => kept.id === tab.id)) continue
+      tabs.splice(Math.min(at, tabs.length), 0, tab)
+      if (state) states.set(tab.id, state)
+    }
+    if (wasActive && wasActive !== activeId && tabs.some(tab => tab.id === wasActive)) activate(wasActive)
+    else store()
+  }
+  /** Close every tab but `id`, showing it. @param {string} id */
+  function closeOthers(id) {
+    closeTabs(tabs.filter(tab => tab.id !== id).map(tab => tab.id), id)
+  }
+  /** Close the tabs before `id`, showing it when the active tab goes. @param {string} id */
+  function closeLeft(id) {
+    const at = tabs.findIndex(tab => tab.id === id)
+    if (at > 0) closeTabs(tabs.slice(0, at).map(tab => tab.id), id)
+  }
+  /** Close the tabs after `id`, showing it when the active tab goes. @param {string} id */
+  function closeRight(id) {
+    const at = tabs.findIndex(tab => tab.id === id)
+    if (at >= 0) closeTabs(tabs.slice(at + 1).map(tab => tab.id), id)
+  }
+  /** Ask before closing every tab. */
+  function askCloseAll() { closeAllOpen = true }
+  function closeAllTabs() {
+    closeAllOpen = false
+    closeTabs(tabs.map(tab => tab.id))
+    tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
   }
   /** Show the tab `step` places on, round the strip. @param {number} step */
   function cycle(step) {
@@ -818,7 +913,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -927,7 +1022,8 @@
       <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} onmove={moveTab} oncommit={store} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
+        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 
@@ -1102,8 +1198,22 @@
     <button type="button" class="tool" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
   </div>
 </Dialog>
+<Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
+  <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
+  <div class="confirm-actions">
+    <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
+    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
+  </div>
+</Dialog>
 
 <style>
+  .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
+  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
+  .confirm-actions button:hover{background:var(--hover)}
+  .confirm-actions .danger{border-color:var(--fault);color:var(--fault)}
+  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--fault) 10%,transparent)}
+  .confirm-actions button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--line)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}

@@ -25,6 +25,7 @@
  * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
  * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
  * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
+ * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu characters that have one.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.
@@ -60,6 +61,7 @@
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
+ * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
  * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *

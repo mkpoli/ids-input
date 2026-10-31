@@ -111,6 +111,13 @@ export const keyOf = node => typeof node === 'string' ? node : node[0] + node.sl
 export const EMPTY = '⬚'
 /** Whether a node is an empty slot, numbered in reading order (`⬚0`, `⬚1`, …) by `compose`. */
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
+/** Whether `node` holds an empty slot at all. */
+const hasSlot = node => isEmpty(node) || Array.isArray(node) && node.slice(1).some(hasSlot)
+/** How many empty slots `node` holds. */
+const slotsIn = node => isEmpty(node) ? 1 : Array.isArray(node) ? node.slice(1).reduce((sum, kid) => sum + slotsIn(kid), 0) : 0
+/** `node` with the numbers of its empty slots shifted by `by`, so each repeated cell keeps its own. */
+const shiftedSlots = (node, by) => isEmpty(node) ? `${EMPTY}${Number(node.slice(1)) + by}`
+  : Array.isArray(node) ? [node[0], ...node.slice(1).map(kid => shiftedSlots(kid, by))] : node
 const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
   node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
 
@@ -207,13 +214,18 @@ export class Composer {
   rec = key => key.includes(EMPTY) ? null : (componentRecord(key, this.fontStyle) ?? this.data.rec(key))
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
-  /** The pyramid a node reads as, remembered for this drawing. */
+  /**
+   * The pyramid a node draws as, remembered for this drawing. A two-row pyramid of a description is
+   * one: no character designs that repeated form, so its equal cells are the drawing. A two-row
+   * pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid here.
+   */
   pyramid(node) {
     if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
     if (this.pyramids.has(node)) return this.pyramids.get(node)
-    const found = pyramidRows(node)
-    this.pyramids.set(node, found)
-    return found
+    const found = pyramidRows(node, { minLayers: 2 })
+    const answer = found && (found.layers > 2 || (found.cell !== null && typeof found.cell !== 'string')) ? found : null
+    this.pyramids.set(node, answer)
+    return answer
   }
 
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
@@ -581,7 +593,16 @@ export class Composer {
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
-    if (pyramid) return pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse }).flatMap(box => this.node(pyramid.cell, box))
+    if (pyramid) {
+      const cells = pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })
+      // A pyramid of empty slots draws one placeholder per cell, numbered in reading order; a cell
+      // of several slots takes the next numbers each time it repeats.
+      if (hasSlot(pyramid.cell)) {
+        const slots = slotsIn(pyramid.cell)
+        return cells.flatMap((box, i) => this.node(i ? shiftedSlots(pyramid.cell, i * slots) : pyramid.cell, box))
+      }
+      return cells.flatMap(box => this.node(pyramid.cell, box))
+    }
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
@@ -816,10 +837,13 @@ export class Composer {
     return [op, ...kids]
   }
 
-  /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
+  /** Whole-character lookup for attested overlays; nested editing keeps its leaves. */
   standaloneExpandedOverlay(node) {
+    if (!Array.isArray(node) || node[0] !== '⿻') return null
     const equivalents = {"⿻大⿰人人": "夾", "⿻工⿰人人": "巫", "⿻⿰人人土": "坐"}
-    const char = equivalents[keyOf(node)]
+    const expanded = equivalents[keyOf(node)]
+    const char = expanded ?? this.bySequence(keyOf(node))
+    if (!expanded && char && this.overlayTeachers(node.slice(1)).length) return null
     return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
@@ -1269,10 +1293,9 @@ export class Composer {
   }
 
   // ---------------------------------------------------------------- overlays
-  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
-  overlay(children, region) {
+  /** Overlays the export holds both pieces of, sharing an operand of comparable ink. */
+  overlayTeachers(children) {
     const C = this.C, keys = children.map(keyOf)
-    // Teachers: overlays the export holds both pieces of, sharing an operand.
     const teachers = []
     for (const index of [0, 1]) {
       for (const h of upTo(this.hostsOf(keys[index], `⿻${index}`), C.OVERLAY_HOSTS)) {
@@ -1284,8 +1307,13 @@ export class Composer {
         teachers.push({ ch: h.h, pieces, written, frame: h.fr })
       }
     }
-    const usable = teachers.filter(t => keys.every((k, j) => t.written[j] === k
+    return teachers.filter(t => keys.every((k, j) => t.written[j] === k
       || (1 / C.OVERLAY_INK <= this.ink(k) / Math.max(this.ink(t.written[j]), 1) && this.ink(k) / Math.max(this.ink(t.written[j]), 1) <= C.OVERLAY_INK)))
+  }
+
+  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
+  overlay(children, region) {
+    const C = this.C, keys = children.map(keyOf), usable = this.overlayTeachers(children)
     if (!usable.length && children.length === 2) {
       const outer = this.node(children[0], region)
       const rooms = { '⿶': this.room('⿶', outer, region), '⿵': this.room('⿵', outer, region) }
@@ -1301,9 +1329,9 @@ export class Composer {
           return this.node([op, ...children], region)
         }
       }
-      return this.node(['⿱', ...children], region)
     }
     if (!usable.length) {
+      // With no matching cuts or enclosing room, retain the operands' shared em-square.
       return children.flatMap(child => {
         const glyph = typeof child === 'string' ? this.glyph(child) : null
         return this.node(child, glyph ? mapped(glyph.box, EM_BOX, region) : region)
