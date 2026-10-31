@@ -2,19 +2,33 @@
   // A note at the foot of the page that goes by itself: what was just done, with an Undo button when
   // it threw something away. A newer note replaces it.
   import { fly } from 'svelte/transition'
+  import { onMount } from 'svelte'
+  let hovered = $state(false)
+  let focused = $state(false)
+  let reducedMotion = $state(false)
+  onMount(() => {
+    const media = matchMedia('(prefers-reduced-motion: reduce)')
+    const update = () => { reducedMotion = media.matches }
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  })
   /** @type {{ toast: { id: number, text: string, action?: string, run?: () => void, duration?: number } | null, ondone: () => void }} */
   let { toast, ondone } = $props()
   $effect(() => {
-    if (!toast) return
+    if (!toast || hovered || focused) return
     const timer = setTimeout(ondone, toast.run ? (toast.duration ?? 6000) : 2400)
     return () => clearTimeout(timer)
   })
 </script>
 
-<div class="toasts" aria-live="polite">
+<div class="toasts" aria-live="polite"
+  onpointerenter={() => hovered = true} onpointerleave={() => hovered = false}
+  onfocusin={() => focused = true}
+  onfocusout={event => { focused = event.currentTarget.contains(/** @type {Node | null} */ (event.relatedTarget)) }}>
   {#if toast}
     {#key toast.id}
-      <div class="toast" role="status" transition:fly={{ y: 12, duration: 160 }}>
+      <div class="toast" role="status" transition:fly={{ y: reducedMotion ? 0 : 12, duration: reducedMotion ? 0 : 160 }}>
         <span>{toast.text}</span>
         {#if toast.run && toast.action}<button type="button" onclick={() => { toast?.run?.(); ondone() }}>{toast.action}</button>{/if}
       </div>

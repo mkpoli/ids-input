@@ -9,7 +9,11 @@
   import SelectField from './controls/SelectField.svelte'
   import Switch from './controls/Switch.svelte'
   import TextField from './controls/TextField.svelte'
+  import TextareaField from './controls/TextareaField.svelte'
+  import RangeField from './controls/RangeField.svelte'
+  import ColorField from './controls/ColorField.svelte'
   import Icon from './Icon.svelte'
+  import DesignInteractions from './DesignInteractions.svelte'
 
   const THEME_KEY = 'ids-input:theme'
   /** @typedef {'system' | 'light' | 'dark'} Theme */
@@ -325,13 +329,13 @@
           <TextField label="Disabled field" bind:value={disabledText} disabled hint="Disabled means unavailable now, not invalid." />
           <TextField label="Description" bind:value={bad} error="This description is missing a part." hint="The error text is announced with the field." />
           <div class="tall">
-            <label class="ui-label" for="demo-textarea">A textarea</label>
-            <textarea id="demo-textarea" class="ui-textarea" bind:value={textarea}></textarea>
+            <TextareaField label="A textarea" bind:value={textarea} />
+            <TextareaField label="Read-only textarea" value="A saved description." readonly hint="The text stays selectable." />
           </div>
           <SelectField label="Default layout" bind:value={select} options={[
             { value: 'balanced', label: 'Balanced' },
             { value: 'compact', label: 'Compact' },
-            { value: 'loose', label: 'Loose' },
+            { value: 'loose', label: 'Loose (unavailable)', disabled: true },
           ]} hint="A native select is best when the list is longer than four." />
         </div>
 
@@ -371,7 +375,7 @@
             <span class="ui-label">Tree or shape</span>
             <Segmented label="Tree or shape" bind:value={icons} options={[
               { value: 'tree', label: 'Tree', icon: 'menu' },
-              { value: 'shape', label: 'Shape', icon: 'system', hint: 'The box layout, for dense descriptions.' },
+              { value: 'shape', label: 'Shape', icon: 'system', hint: 'The box layout, for dense descriptions.', disabled: true },
             ]} />
           </div>
           <div class="field">
@@ -380,7 +384,7 @@
               { value: 'none', swatch: 'none', ariaLabel: 'No background', title: 'No background' },
               { value: 'white', swatch: 'white', ariaLabel: 'White', title: 'White' },
               { value: 'black', swatch: 'black', ariaLabel: 'Black', title: 'Black' },
-              { value: 'custom', swatch: 'custom', ariaLabel: 'A custom colour', title: 'A custom colour' },
+              { value: 'custom', swatch: 'custom', ariaLabel: 'A custom colour', title: 'A custom colour', disabled: true },
             ]} />
           </div>
           <p class="note">A swatch group is for colour choices; a segmented control is for labelled choices or icons. Both are native radio groups.</p>
@@ -390,19 +394,13 @@
       <div class="grid">
         <div class="ui-card">
           <h3>Range and colour</h3>
-          <div class="field">
-            <label class="ui-label" for="demo-range">Margin <span class="value">{Math.round(range * 100)}%</span></label>
-            <input id="demo-range" class="ui-range" type="range" min="0" max="0.25" step="0.01" bind:value={range} />
-            <span class="ui-hint">The control is 24 px tall; the track is not the target.</span>
-          </div>
-          <div class="field">
-            <label class="ui-label" for="demo-colour">Background colour</label>
-            <input id="demo-colour" class="ui-color" type="color" bind:value={colour} />
-          </div>
-          <div class="field">
-            <label class="ui-label" for="demo-range-off">Disabled range</label>
-            <input id="demo-range-off" class="ui-range" type="range" min="0" max="1" step="0.1" value={0.4} disabled />
-          </div>
+          <RangeField label="Margin" min={0} max={0.25} step={0.01} bind:value={range}
+            hint="The control is 24 px tall; the track is not the target.">
+            {#snippet valueLabel()}<span class="value">{Math.round(range * 100)}%</span>{/snippet}
+          </RangeField>
+          <ColorField label="Background colour" bind:value={colour} />
+          <RangeField label="Disabled range" min={0} max={1} step={0.1} value={0.4} disabled />
+          <ColorField label="Disabled colour" value="#2944c7" disabled />
         </div>
 
         <div class="ui-card">
@@ -420,6 +418,8 @@
         </div>
       </div>
     </section>
+
+    <DesignInteractions />
 
     <section id="a11y" class="section" aria-labelledby="a11y-title">
       <div class="section-head">

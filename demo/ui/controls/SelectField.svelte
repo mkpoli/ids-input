@@ -1,7 +1,7 @@
 <script>
   // A labelled native select. For two to four compact choices in a toolbar or panel, use a
   // segmented control instead; a select is for a longer list.
-  /** @type {{ label: string, value?: string, options: { value: string | number, label: string }[], hint?: string, error?: string,
+  /** @type {{ label: string, value?: string, options: { value: string | number, label: string, disabled?: boolean }[], hint?: string, error?: string,
    * name?: string, disabled?: boolean, onchange?: (event: Event) => void }} */
   let { label, value = $bindable(), options, hint, error, name, disabled = false, onchange } = $props()
   const uid = $props.id()
@@ -16,7 +16,7 @@
   <span class="ui-select-wrap">
     <select {id} class="ui-select" bind:value {name} {disabled} aria-invalid={error ? 'true' : undefined} aria-describedby={describedby} {onchange}>
       {#each options as option (option.value)}
-        <option value={option.value}>{option.label}</option>
+        <option value={option.value} disabled={option.disabled}>{option.label}</option>
       {/each}
     </select>
   </span>

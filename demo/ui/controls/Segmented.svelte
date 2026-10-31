@@ -4,7 +4,7 @@
   // A segment may hold a label, an icon or a dot.
   import Icon from '../Icon.svelte'
 
-  /** @typedef {{ value: string, label?: string, ariaLabel?: string, icon?: string, dot?: string, title?: string, hint?: string }} Option */
+  /** @typedef {{ value: string, label?: string, ariaLabel?: string, icon?: string, dot?: string, title?: string, hint?: string, disabled?: boolean }} Option */
   /** @type {{ label: string, name?: string, value?: string, options: Option[], disabled?: boolean, onchange?: (value: string) => void }} */
   let { label, name, value = $bindable(), options, disabled = false, onchange } = $props()
   const uid = $props.id()
@@ -15,7 +15,7 @@
   {#each options as option, index (option.value)}
     {@const hintId = `${uid}-${index}-hint`}
     <label class="ui-segment" title={option.title}>
-      <input type="radio" bind:group={value} value={option.value} name={group} {disabled}
+      <input type="radio" bind:group={value} value={option.value} name={group} disabled={disabled || option.disabled}
         aria-label={option.ariaLabel ?? option.label}
         aria-describedby={option.hint ? hintId : undefined}
         onchange={event => { if (event.currentTarget.checked) onchange?.(option.value) }} />
