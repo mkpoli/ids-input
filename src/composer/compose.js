@@ -1621,11 +1621,12 @@ export class Composer {
     }
   }
 
-  /** The foot of a stack under a cover closed on to what it hangs from, where the designer the foot
-   *  was cut from drew it overlapping its neighbour (`gap` below zero) and it rises to its join
-   *  rather than leading with a bar of its own: the 𧘇 of 𡩲 and 𡫖, the lower half of a 衣 whose
-   *  middle bar the description names separately, grows up to meet that bar instead of hanging
-   *  under it. A flat-topped foot — the base 一 of 𡩬 — keeps the room the stack gave it. */
+  /** A description often names the halves of one shape apart: the ⿳罒一𧘇 of 𡩲 ends in a 衣 drawn
+   *  without its dot, whose middle bar the 一 spells on its own. Where the designer the foot was cut
+   *  from drew it overlapping its neighbour (`gap` below zero) and it rises to its join rather than
+   *  leading with a bar, the two are one body and the foot is drawn over the whole of the bar above
+   *  it, not hung below it. A flat-topped foot — the base 一 of 𡩬 — keeps the room the stack gave
+   *  it, and so does a foot its donor drew clear. */
   joinUnderCover(op, children, groups) {
     if (this.partial) return
     for (const [, below] of coverPairs(op, children, SIDE_COVERS)) {
@@ -1636,9 +1637,9 @@ export class Composer {
       const foot = lower.filter(part => part.branch?.[0] === operands.at(-1))
       const above = lower.filter(part => part.branch?.[0] === operands.at(-2))
       if (!foot.length || !above.length || !foot.some(part => part.gap < 0)) continue
-      const footBox = bounds(foot), meet = bounds(above)[1]
-      if (!(footBox[3] > footBox[1]) || meet <= footBox[3] || flatTopped(foot, footBox)) continue
-      const to = [footBox[0], footBox[1], footBox[2], meet]
+      const footBox = bounds(foot), aboveBox = bounds(above)
+      if (!(footBox[3] > footBox[1]) || aboveBox[1] <= footBox[3] || flatTopped(foot, footBox)) continue
+      const to = [footBox[0], footBox[1], footBox[2], aboveBox[3]]
       for (const part of foot) part.target = targetFor(part, mapped(drawnBox(part), footBox, to))
     }
   }

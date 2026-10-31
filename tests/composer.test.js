@@ -857,10 +857,10 @@ describe('the foot of a stack under a cover', () => {
   const join = (...lower) => Composer.prototype.joinUnderCover.call({ partial: false }, '⿱', ['宀', ['⿳', '罒', '一', '𧘇']], [[part(0, 0, [100, 500, 900, 700])], lower])
   const top = p => p.target[3]
 
-  it('grows a tail its donor drew overlapping up to the bar above it', () => {
+  it('grows a tail its donor drew overlapping over the whole of the bar above it', () => {
     const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, -36, 0, 340)
     join(bar, foot)
-    expect(top(foot)).toBe(400)
+    expect(top(foot)).toBe(460)
     expect(foot.target[1]).toBe(0)
   })
 
