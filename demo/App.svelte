@@ -654,7 +654,10 @@
   }
   /** Open a recent sequence, with its document when it has one. @param {import('./lib/recent.js').Recent} record */
   function openRecent(record) {
-    const open = tabs.find(tab => tab.sequence === record.sequence)
+    // A recent document opens its own tab; a tab with another document for the same sequence is
+    // not the one this entry stands for.
+    const open = tabs.find(tab => tab.sequence === record.sequence
+      && (!record.document || sameShare(tab.document?.document, record.document.document)))
     if (open) {
       recents = remember(record.sequence, open.document)
       activate(open.id)
