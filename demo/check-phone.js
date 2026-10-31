@@ -8,6 +8,7 @@ try {
   await phone.locator('.ids-preview[data-step="composed"]').waitFor({ state: 'attached', timeout: 30000 })
   const tabs = phone.locator('.phone-tabs')
   assert.equal(await tabs.isVisible(), true, 'the phone tabs are visible')
+  assert.equal(await tabs.locator('svg').count(), 3, 'each phone tab has an icon')
   assert.equal(await phone.locator('.pane.input').isVisible(), true, 'Input opens first')
   assert.equal(await phone.locator('.middle').isVisible(), false, 'the compose column is not stacked below')
   assert.equal(await phone.locator('.pane.output').isVisible(), false, 'the output is not stacked below')
