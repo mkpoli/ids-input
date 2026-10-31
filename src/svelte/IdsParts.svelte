@@ -580,7 +580,7 @@
     tab = TABS[to]
     tabButtons[to]?.focus()
   }
-  // In Stroke symbols, ㇣ falls outside the five first-stroke classes.
+  // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes.
   /** @param {string | null | undefined} cls */
   const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && chosen === 'strokes' ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
@@ -611,8 +611,8 @@
   {@const symbols = list.filter(part => isStroke(part.part))}
   {#if ordinary.length}{@render grid(ordinary)}{/if}
   {#if symbols.length}
-    <section class="stroke-results" aria-label={t('parts.strokes')}>
-      <h4 class="parts-class">{t('parts.strokes')}</h4>
+    <section class="stroke-results" aria-label={t('parts.strokeSymbols')}>
+      <h4 class="parts-class">{t('parts.strokeSymbols')}</h4>
       {@render grid(symbols)}
     </section>
   {/if}
@@ -729,7 +729,7 @@
       <button type="button" class:active={!characters && !partTail && chosen === undefined} aria-pressed={!characters && !partTail && chosen === undefined}
         onclick={() => { count = undefined; partTail = false; characters = false }}>{t('parts.tab.common')}</button>
       {#if strokeSymbols.length}
-        <button type="button" class="stroke-symbols" class:active={!characters && !partTail && chosen === 'strokes'} aria-pressed={!characters && !partTail && chosen === 'strokes'}
+        <button type="button" class="stroke-symbols" title={t('parts.strokeSymbols')} class:active={!characters && !partTail && chosen === 'strokes'} aria-pressed={!characters && !partTail && chosen === 'strokes'}
           onclick={() => { count = 'strokes'; partTail = false; characters = false }}>{t('parts.strokes')}</button>
       {/if}
       {#if characters}

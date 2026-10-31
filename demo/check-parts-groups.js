@@ -1,4 +1,4 @@
-// The Components chip row against a small palette: Common, Stroke symbols, stroke counts, and parts whose
+// The Components chip row against a small palette: Common, Strokes, stroke counts, and parts whose
 // count was never recorded. Run against a devrun server:
 //   IDS_URL=http://localhost:5173 bun demo/check-parts-groups.js
 import { chromium } from 'playwright-core'
@@ -12,7 +12,7 @@ try {
   const counts = palette.getByRole('group', { name: 'Component groups', exact: true })
   const chips = counts.locator('button')
   const common = counts.getByRole('button', { name: 'Common', exact: true })
-  const strokes = counts.getByRole('button', { name: 'Stroke symbols', exact: true })
+  const strokes = counts.getByRole('button', { name: 'Strokes', exact: true })
   const one = counts.getByRole('button', { name: '1 stroke', exact: true })
   const four = counts.getByRole('button', { name: '4 strokes', exact: true })
   const unknown = counts.getByRole('button', { name: 'Stroke count not recorded', exact: true })
@@ -27,7 +27,6 @@ try {
     assert.equal(await palette.getByRole('group', { name: 'Component type', exact: true }).count(), 0)
     assert.equal(await palette.getByRole('button', { name: 'Ideographs & radicals', exact: true }).count(), 0)
     assert.equal(await palette.getByRole('button', { name: 'All', exact: true }).count(), 0)
-    assert.equal(await palette.getByRole('button', { name: 'Strokes', exact: true }).count(), 0)
   }
   const assertNoStrokeSymbols = async () => {
     assert.equal(await palette.locator('.part[data-component-type="stroke"]').count(), 0)
@@ -51,14 +50,14 @@ try {
   assert.equal(await page.getByRole('tab', { name: 'Strokes', exact: true }).count(), 0)
   assert.equal(await page.getByRole('tab', { name: 'Stroke symbols', exact: true }).count(), 0, 'the CJK strokes have a chip in Components')
   assert.equal(await page.getByRole('tab', { name: 'Components', exact: true }).count(), 1, 'the tab names the components')
-  assert.deepEqual(await chips.allTextContents(), ['Common', 'Stroke symbols', '1', '4', '?', 'All characters'], 'Stroke symbols sits between Common and 1')
+  assert.deepEqual(await chips.allTextContents(), ['Common', 'Strokes', '1', '4', '?', 'All characters'], 'Strokes sits between Common and 1')
   await assertChosen(0)
   assert.deepEqual(await texts(), ['木'], 'the curated chip shows the curated parts only')
   await assertNoStrokeSymbols()
   await assertNoExtraControls()
 
   await strokes.click()
-  assert.deepEqual(await texts(), ['㇐', '㇣'], 'Stroke symbols shows only Unicode stroke symbols')
+  assert.deepEqual(await texts(), ['㇐', '㇣'], 'Strokes shows only Unicode stroke symbols')
   assert.deepEqual(await palette.locator('.parts-class').allTextContents(), ['㇐ Horizontal', 'Other strokes'])
   await assertChosen(1)
   await assertNoExtraControls()
@@ -92,13 +91,13 @@ try {
   assert.deepEqual(await texts(), ['木'], 'a text search reaches parts outside the selected chip')
   await assertNoStrokeSymbols()
   await search.fill('')
-  assert.deepEqual(await texts(), ['㇐', '㇣'], 'an empty search restores Stroke symbols')
+  assert.deepEqual(await texts(), ['㇐', '㇣'], 'an empty search restores Strokes')
   await assertChosen(1)
   await search.fill('   ')
   assert.deepEqual(await texts(), ['㇐', '㇣'], 'whitespace is an empty search')
   await search.fill('🦄')
   await palette.getByText('No part matches.', { exact: true }).waitFor()
-  assert.deepEqual(await texts(), [], 'a zero-result search does not fall back to Stroke symbols')
+  assert.deepEqual(await texts(), [], 'a zero-result search does not fall back to Strokes')
   assert.equal(await palette.locator('.parts-class').count(), 0)
   assert.equal(await palette.locator('section.stroke-results').count(), 0)
   await search.fill('')
@@ -111,7 +110,7 @@ try {
   assert.equal(await strokes.getAttribute('aria-pressed'), 'false')
   assert.equal(await common.getAttribute('aria-pressed'), 'false')
   await strokes.click()
-  assert.deepEqual(await texts(), ['㇐', '㇣'], 'Stroke symbols returns from All characters')
+  assert.deepEqual(await texts(), ['㇐', '㇣'], 'Strokes returns from All characters')
   await assertChosen(1)
   await common.click()
   assert.deepEqual(await texts(), ['木'], 'the curated chip comes back')
@@ -139,5 +138,5 @@ try {
   await palette.getByRole('tab', { name: 'Components', exact: true }).click()
   assert.deepEqual(await texts(), ['㇐', '㇣'])
   await assertChosen(1)
-  console.log('PASS Components chips: Common, Stroke symbols, ordinary counts, unknown heading, All characters and split global searches/Recent')
+  console.log('PASS Components chips: Common, Strokes, ordinary counts, unknown heading, All characters and split global searches/Recent')
 } finally { await browser.close() }
