@@ -427,6 +427,25 @@ export class Composer {
         return
       }
       if (op in this.ENCLOSE) {
+        // An enclosure whose outer operand is one part holds that part around the rest: cells that
+        // split the two apart stand the frame away from what it holds (𠕲's 冂 above its rows).
+        if (typeof kids[0] === 'string' && !isEmpty(kids[0])) {
+          const glyph = this.glyph(kids[0])
+          const region = target(box)
+          if (glyph) {
+            const ink = tight(glyph)
+            const outer = placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(kids[0]), `cells ${kids[0]}`)
+            const room = this.room(op, [outer], region)
+            if (room) {
+              outer.leaf = leaf++
+              out.push(outer)
+              const width = f[2] - f[0], height = f[3] - f[1]
+              walk(kids[1], [(room[0] - f[0]) / width, 1 - (room[3] - f[1]) / height,
+                (room[2] - f[0]) / width, 1 - (room[1] - f[1]) / height], depth + 1)
+              return
+            }
+          }
+        }
         const namedAxis = CELL_AXIS[op] ?? 0
         // A cell narrower than it is tall reads better with its parts stacked, and a much wider one
         // side by side, whatever the enclosure's own direction.
