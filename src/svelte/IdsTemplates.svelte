@@ -93,9 +93,9 @@
   }
   /** @param {[number, number]} rows */
   const repeatTitle = rows => !repeatPartsSupported
-    ? t('ids.templates.repeatUnsupported')
-    : target === null ? t('ids.templates.repeatTarget')
-    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.repeatTooLong')
+    ? t('ids.templates.generatorUnsupported')
+    : target === null ? t('ids.templates.generatorTarget')
+    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.generatorTooLong')
   /** @param {[number, number]} rows */
   function addRepeat(rows) {
     if (editor.disabled || !availableRepeats.has(rows.join('+'))) return
@@ -113,10 +113,10 @@
     } catch { return false }
   })
   const customRepeatTitle = $derived(!repeatPartsSupported
-    ? t('ids.templates.repeatUnsupported')
+    ? t('ids.templates.generatorUnsupported')
     : !customRows ? (customRowsTyped.trim() ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint'))
-    : target === null ? t('ids.templates.repeatTarget')
-    : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.repeatTooLong'))
+    : target === null ? t('ids.templates.generatorTarget')
+    : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.generatorTooLong'))
   function addCustomRepeat() {
     if (editor.disabled || !customRows || !customRepeatAvailable) return
     const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
@@ -148,10 +148,10 @@
   })
   /** @param {'212' | 'enclosed'} key */
   const fiveTitle = key => !fivePartSupported
-    ? t('ids.templates.fiveUnsupported')
-    : target === null ? t('ids.templates.fiveTarget')
+    ? t('ids.templates.generatorUnsupported')
+    : target === null ? t('ids.templates.generatorTarget')
     : key === 'enclosed' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported')
-    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
+    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.generatorTooLong')
   /** @param {'212' | 'enclosed'} key */
   const fiveLabel = key => key === '212'
     ? t('ids.templates.fiveInsert', { part: partName(generatorPart) })
@@ -200,13 +200,13 @@
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-pyramids`}>{t('ids.templates.pyramids')}</span>
       <label class="ids-pyramid-reverse"><input type="checkbox" bind:checked={reverse} disabled={editor.disabled} />{t('ids.templates.pyramidReverse')}</label>
-      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : target === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.generatorUnsupported') : target === null ? t('ids.templates.generatorTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-sizes">
       {#each pyramidTemplates as template (template.layers)}
         <button type="button" disabled={editor.disabled || !availablePyramids.has(template.layers)} data-pyramid={template.layers}
-          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
-          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
+          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.generatorTooLong')}
+          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.generatorTooLong')}
           onclick={() => addPyramid(template.layers)}>
           <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
             {#each template.shapes as shape, i (i)}
@@ -229,7 +229,7 @@
   <div class="ids-pyramid ids-repeat" role="group" aria-labelledby={`${uid}-repeats`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-repeats`}>{t('ids.templates.repeats')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.repeatUnsupported') : target === null ? t('ids.templates.repeatTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.repeatTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.generatorUnsupported') : target === null ? t('ids.templates.generatorTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-repeat-grid">
       {#each repeatTemplates as template (template.key)}
@@ -268,7 +268,7 @@
   <div class="ids-pyramid ids-five" role="group" aria-labelledby={`${uid}-five`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-five`}>{t('ids.templates.five')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.fiveUnsupported') : target === null ? t('ids.templates.fiveTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.fiveTooLong')}</span>
+      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.generatorUnsupported') : target === null ? t('ids.templates.generatorTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.generatorTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-five-grid">
       {#each fiveTemplates as template (template.key)}
