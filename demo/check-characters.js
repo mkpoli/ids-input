@@ -31,6 +31,7 @@ try {
     const group = page.locator('.ids-sketch .group').filter({ hasText: 'Characters' })
     await group.waitFor({ timeout: index === 0 ? 120000 : 30000 })
     const found = await page.locator('.ids-sketch .found').first().locator('.hit').allTextContents()
+    assert.ok(found.every(part => !/[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(part)), `no kana in the English interface: ${found.join(' ')}`)
     if (found.includes(char)) hits++
     else misses.push(`${char} (${found.slice(0, 6).join(' ')})`)
   }

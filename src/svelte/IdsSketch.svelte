@@ -27,6 +27,8 @@
   let font = $state('')
   let ink = '#000'
 
+  /** Kana results belong in a Japanese interface; elsewhere they crowd out the drawn character. */
+  const KANA = /[\p{Script=Hiragana}\p{Script=Katakana}]/u
   /** @type {Point[][]} */
   let strokes = $state.raw([])
   /** @type {{ part: string }[]} */
@@ -207,7 +209,9 @@
         drawn = []
       }
       if (id !== asks) return
-      characters = [...new Set(drawn)].slice(0, 24).map(part => ({ part }))
+      const unique = [...new Set(drawn)]
+      const visible = locale.startsWith('ja') ? unique : unique.filter(part => !KANA.test(part))
+      characters = visible.slice(0, 24).map(part => ({ part }))
       const seen = new Set(characters.map(character => character.part))
       results = ranked.filter(template => !seen.has(template.part)).map(template => ({ part: template.part, strokes: template.strokes }))
     }, 0)
