@@ -108,6 +108,33 @@ describe('Shuishu', () => {
     expect(found.hits.map(hit => hit.char)).toContain(built.part)
   })
 
+  it('tries the decomposition file again when it comes back', async () => {
+    const doc = { format: 1, parts: [
+      { part: '𛌘', kind: 'shui', ids: '⿱𛔁𛔀' }, { part: '𛔀', kind: 'shui', ids: null }, { part: '𛔁', kind: 'shui', ids: null },
+    ] }
+    let calls = 0
+    const get = async () => {
+      calls++
+      return calls === 1 ? new Response('', { status: 503 }) : new Response(JSON.stringify(doc))
+    }
+    const adapter = shuishuAdapter({ table: new Map(), data: 'shuishu.json.gz', fetch: get })
+    // The first call serves the sources, and the next reads the file again.
+    expect((await adapter.table()).has('𛌘')).toBe(false)
+    expect((await adapter.structure('𛌘'))[0].text).toBe('⿱𛔁𛔀')
+    expect((await adapter.containing('𛔁𛔀')).items).toContain('𛌘')
+    expect(calls).toBe(2)
+  })
+
+  it('keeps serving while the decomposition file stays away', async () => {
+    let calls = 0
+    const get = async () => { calls++; return new Response('', { status: 503 }) }
+    const adapter = shuishuAdapter({ table: new Map([['𛌘', [{ text: '⿱𛔁𛔀', regions: '' }]]]), data: 'shuishu.json.gz', fetch: get })
+    expect(await adapter.structure('𛌘')).toEqual([{ text: '⿱𛔁𛔀', regions: '' }])
+    expect(await adapter.structure('𛌘')).toEqual([{ text: '⿱𛔁𛔀', regions: '' }])
+    // One attempt per call, and the source description stands.
+    expect(calls).toBe(2)
+  })
+
   it("asks for a Shuishu character's parts", async () => {
     const adapter = shuishuAdapter({ data, palette: [] })
     const built = data.parts.find(part => part.ids)
