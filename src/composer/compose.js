@@ -52,6 +52,8 @@ const COVERS = new Set(['宀', '冖', '穴', '雨'])
 // Measured over 178 stacked characters scored against their own glyphs: at one witness the rule
 // moves 39 up and 23 down, at two 18 up and 7 down, at three 11 up and 3 down.
 const BODY_WITNESSES = 2
+// How much wider than it is tall a single-contour operand is before it counts as a bar.
+const BAR_ASPECT = 5
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -650,9 +652,11 @@ export class Composer {
     }
     const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
     if (found) return [found]
-    node = this.respelled(node)
+    const written = this.respelled(node)
     // Once nothing draws this node whole, a run of it the export designs as one body is regrouped.
-    node = this.groupedStack(node) ?? node
+    // A rewrite stands as it is: an enclosure written as a stack (㗊 as ⿳吅X吅) holds its operand
+    // between the halves of a frame, which is no run to group.
+    node = (written === node ? this.groupedStack(node) : null) ?? written
     const op = node[0], children = node.slice(1)
     if (op === MIRROR || op === ROTATE) return this.flipped(op, children[0], region, atRoot)
     if (op === VARIANT) return this.node(children[0], region, atRoot)
@@ -941,25 +945,34 @@ export class Composer {
   }
 
   /**
-   * How much of one designed body the export holds for `key`: the host cuts of the run itself, the
-   * cuts of the character that spells it, and its own glyph. Cuts on the left or the top are not
-   * counted, as `instance` cannot use them. A run no font designs as a body scores 0.
+   * How often the export cut `key` out of a character as one body, by its own key and by the name
+   * of the character that spells it. Cuts on the left or the top are not counted, as `instance`
+   * cannot use them, nor is the spelling character's own glyph: that a pair is a character of its
+   * own (沐 for 氵木) says nothing about whether a font sets it as one body inside a wider one.
    */
   bodySupport(key) {
-    if (key.includes(EMPTY) || this.excluded(key)) return 0
+    if (key.includes(EMPTY)) return 0
     const open = place => !this.C.SIDED_PLACES.includes(place)
     // Only a host the drawing may take from, and only where the export could cut the body out of it.
     const usable = host => host.c && !this.excluded(host.h)
     const cuts = name => this.data.places(name).filter(open)
       .reduce((n, place) => n + this.data.hosts(name, place).filter(usable).length, 0)
-    let support = cuts(key)
     const encoded = this.bySequence(key)
-    if (encoded && !this.excluded(encoded) && this.glyphRecord(encoded)) support += 1 + cuts(encoded)
-    return support
+    return cuts(key) + (encoded && !this.excluded(encoded) ? cuts(encoded) : 0)
+  }
+
+  /** A bare bar: one contour, far wider than it is tall. A stack's bar spans the whole character
+   *  (the 一 of 寅, the base 一 of 𡩬), so it belongs to no narrower body inside it. */
+  isBar(node) {
+    if (typeof node !== 'string') return false
+    const glyph = this.glyph(node)
+    if (!glyph || glyph.contours.length !== 1) return false
+    const [x0, y0, x1, y1] = glyph.box
+    return x1 - x0 > BAR_ASPECT * (y1 - y0)
   }
 
   /**
-   * A flat stack holding a run the export designs as one body (亠厶 in ⿳亠厶十, 八𠆢 as 谷 has it),
+   * A flat stack holding a run the export cuts as one body (亠厶 of ⿳亠厶十, the 𠫓 of 充 and 育),
    * regrouped so that run is one operand. The run then shares the stack as one body and divides its
    * own row, instead of each of the three operands taking a third of the stack and the body's two
    * halves standing as far apart as the operand beside them. Answers the rewritten node, or null
@@ -973,9 +986,11 @@ export class Composer {
     if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
     const pair = op === '⿳' ? '⿱' : '⿰'
     const children = node.slice(1)
-    // Three of the same operand are an even run by construction (品, 森, 焱): two of them are no
-    // more a body than the third, whatever cuts the export holds of the pair.
-    if (children.every(child => keyOf(child) === keyOf(children[0]))) return null
+    // An even run stays even, whatever cuts the export holds of a pair of it: three of the same
+    // operand (品, 森, 焱), a pair of the same operand beside a third (⿲大糸糸), and a run that
+    // reads the same from either end (呂, 粥), whose middle belongs to both sides at once.
+    const keys = children.map(keyOf)
+    if (keys[0] === keys[1] || keys[1] === keys[2] || keys[0] === keys[2]) return null
     // A stack the export draws whole keeps its own body; only a stronger run replaces it. A
     // character excluded from the drawing draws nothing, so the stack is free to regroup.
     const spelled = this.bySequence(key)
@@ -984,7 +999,9 @@ export class Composer {
     let best = null
     for (const at of [0, 1]) {
       // A cover takes what follows it under its roof (`fitUnderCover`); a body may not come between.
-      if (at === 0 && COVERS.has(children[1])) continue
+      if (at === 0 && op === '⿳' && COVERS.has(children[1])) continue
+      // A bar belongs to the whole character, not to a body inside it.
+      if (this.isBar(children[at]) || this.isBar(children[at + 1])) continue
       const run = [pair, children[at], children[at + 1]]
       const support = this.bodySupport(keyOf(run))
       if (support >= BODY_WITNESSES && support > whole && (!best || support > best.support)) best = { at, run, support }

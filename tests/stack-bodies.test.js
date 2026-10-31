@@ -45,6 +45,10 @@ const composerOf = async (source, options = {}) => {
     composer.bodySupport('⿳口木扌')
     composer.bodySupport('⿱口口')
     composer.bodySupport('⿱口冖')
+    composer.bodySupport('⿱吅口')
+    composer.bodySupport('⿱一木')
+    composer.isBar('一')
+    composer.isBar('口')
     if (!store.missing.size) return composer
     await source.load(store.missing)
   }
@@ -52,12 +56,14 @@ const composerOf = async (source, options = {}) => {
 }
 
 describe('a run of a flat stack the export designs as one body', () => {
-  it('counts the cuts and the glyph the export holds of a body', async () => {
+  it('counts the cuts the export holds of a body, under its key and its character', async () => {
     const composer = await composerOf(sourceOf(bodyRecords, bodyHosts))
     expect(composer.bodySupport('⿱口木')).toBe(2)
     expect(composer.bodySupport('⿱木扌')).toBe(0)
-    // A character spelling the run counts its own glyph as well as its cuts.
-    const spelled = await composerOf(sourceOf({ '⿱口木': { k: '⿱口木', e: '𪱳' }, 𪱳: { k: '𪱳', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 } }))
+    // A character spelling the run brings its own cuts; being a character is no witness by itself.
+    const spelled = await composerOf(sourceOf({ '⿱口木': { k: '⿱口木', e: '𪱳' },
+      𪱳: { k: '𪱳', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1, P: ['B'] } },
+    [['𪱳', 'B', [cut('永', [60, -40, 940, 500])]]]))
     expect(spelled.bodySupport('⿱口木')).toBe(1)
   })
 
@@ -78,13 +84,31 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toBeNull()
   })
 
-  it('keeps three of the same operand an even run', async () => {
-    // 品, 森 and 焱 repeat one operand over equal cells, however many cuts the export holds of the pair.
-    const composer = await composerOf(sourceOf({ '⿱口口': { k: '⿱口口', P: ['B', 'M'] } },
-      [['⿱口口', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱口口', 'M', [cut('厃', [60, 200, 940, 700])]]]))
+  it('leaves an even run even', async () => {
+    // 品 and 森 repeat one operand over equal cells, 糸糸 of ⿲大糸糸 is no more a body than the 大
+    // beside it, and the middle of 呂 belongs to the operands on both sides of it.
+    const composer = await composerOf(sourceOf({ '⿱口口': { k: '⿱口口', P: ['B', 'M'] }, ...bodyRecords },
+      [['⿱口口', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱口口', 'M', [cut('厃', [60, 200, 940, 700])]], ...bodyHosts]))
     expect(composer.bodySupport('⿱口口')).toBe(2)
     expect(composer.groupedStack(['⿳', '口', '口', '口'])).toBeNull()
-    expect(composer.groupedStack(['⿳', '口', '口', '木'])).toEqual(['⿱', ['⿱', '口', '口'], '木'])
+    expect(composer.groupedStack(['⿳', '口', '口', '木'])).toBeNull()
+    expect(composer.groupedStack(['⿳', '木', '口', '口'])).toBeNull()
+    // 口 … 口 around a 木 reads the same from either end, however the export cuts 口木.
+    expect(composer.groupedStack(['⿳', '口', '木', '口'])).toBeNull()
+  })
+
+  it('leaves an enclosure written as a stack alone', async () => {
+    // ⿴㗊X is drawn as ⿳吅X吅: the operand sits between the halves of a frame, and is no run.
+    const frame = { 吅: { k: '吅', G: boxGlyph([60, 300, 940, 700]), ink: 2560, nl: 1, o: 1 } }
+    const pair = { '⿱吅口': { k: '⿱吅口', P: ['B', 'M'] } }
+    const lists = [['⿱吅口', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱吅口', 'M', [cut('厃', [60, 200, 940, 700])]]]
+    const source = sourceOf({ ...frame, ...pair }, lists)
+    const composer = await composerOf(source)
+    expect(composer.splitEnclosure(['⿴', '㗊', '口'])?.tree).toEqual(['⿳', '吅', '口', '吅'])
+    // The rewrite the drawing uses keeps its three operands, though the pair has witnesses.
+    expect(composer.bodySupport('⿱吅口')).toBe(2)
+    const drawn = await compose(source, '⿴㗊口')
+    expect(drawn.d).toBe((await compose(sourceOf(frame), '⿴㗊口')).d)
   })
 
   it('wants more than one witness before it calls a run a body', async () => {
@@ -117,6 +141,18 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(composer.bodySupport('⿱口冖')).toBe(2)
     // 冖 roofs the 木 below it (`fitUnderCover`), which a ⿱ of 口 and 冖 would leave in another node.
     expect(composer.groupedStack(['⿳', '口', '冖', '木'])).toBeNull()
+  })
+
+  it('leaves a bar to the whole character', async () => {
+    // 一 spans the character it stands in, as it does in 寅; no body inside it holds it.
+    const bar = { 一: { k: '一', G: boxGlyph([80, 420, 920, 500]), ink: 1840, nl: 1, o: 1 } }
+    const composer = await composerOf(sourceOf({ ...bar, '⿱一木': { k: '⿱一木', P: ['B', 'M'] } },
+      [['⿱一木', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱一木', 'M', [cut('厃', [60, 200, 940, 700])]]]))
+    expect(composer.isBar('一')).toBe(true)
+    expect(composer.isBar('口')).toBe(false)
+    expect(composer.bodySupport('⿱一木')).toBe(2)
+    expect(composer.groupedStack(['⿳', '一', '木', '扌'])).toBeNull()
+    expect(composer.groupedStack(['⿳', '扌', '一', '木'])).toBeNull()
   })
 
   it('takes the better supported of two runs', async () => {
