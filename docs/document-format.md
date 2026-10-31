@@ -381,8 +381,10 @@ path alone; use a file when the difference exceeds the host's URL or QR-code
 budget. The older `#` and `?ids=` forms still open. The worker writes the title,
 the description and the canonical for a sequence into the head the host serves.
 A path that names no sequence answers 404 with the text and a link that opens it
-as a draft, and text the parser rejects, like a sequence holding `.` or `/`,
-stays in `?ids=` where the app can open it.
+as a draft. Text in a sequence's own letters that does not parse, like `木口`,
+is sent on to the editor with 303. A text holding `.` or `/` is no path segment
+as it stands, so the app keeps it in `?ids=`, as it does text the parser
+rejects.
 
 A tab or draft keeps an `ids-input/session` envelope beside its document: the
 current document, the chosen layer and every ID the session has issued. Undo
