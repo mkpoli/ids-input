@@ -328,29 +328,36 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** The additional tables, as one list; an optional single table stays one. @type {Array<string | URL>} */
   const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
-  const read = () => table ??= Promise.all([
-    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
-      : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
-    ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
-    componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
-    readSeal(),
-    // The Shuishu decompositions are an extra reading beside the sources; a failed file costs the
-    // search those descriptions only.
-    readShuishu().catch(() => null),
-  ]).then(([base, ...rest]) => {
-    const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
-    const numbered = /** @type {string} */ (rest[extraIds.length])
-    const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
-    const shuiDoc = /** @type {import('./shuishu-data.js').ShuishuData | null} */ (rest[extraIds.length + 2])
-    const parts = readNumberedComponents(numbered)
-    const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
-    /** @type {Map<string, Sequence[]>} */
-    const all = new Map(merged)
-    if (doc) for (const [char, texts] of sealTable(doc)) all.set(char, texts)
-    if (shuiDoc) for (const [char, texts] of shuishuSequences(shuiDoc)) all.set(char, texts)
-    return all
-  })
-    .catch(error => { table = null; throw error })
+  /** Whether the last read lost its decomposition file, so the table is read again next time. */
+  let shuiFailed = false
+  const read = () => {
+    if (table) return table
+    shuiFailed = false
+    table = Promise.all([
+      given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
+        : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+      ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
+      componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
+      readSeal(),
+      // The Shuishu decompositions are an extra reading beside the sources; a failed file costs the
+      // search those descriptions only, and is read again on the next call.
+      readShuishu().catch(() => { shuiFailed = true; return null }),
+    ]).then(([base, ...rest]) => {
+      const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
+      const numbered = /** @type {string} */ (rest[extraIds.length])
+      const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
+      const shuiDoc = /** @type {import('./shuishu-data.js').ShuishuData | null} */ (rest[extraIds.length + 2])
+      const parts = readNumberedComponents(numbered)
+      const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
+      /** @type {Map<string, Sequence[]>} */
+      const all = new Map(merged)
+      if (doc) for (const [char, texts] of sealTable(doc)) all.set(char, texts)
+      if (shuiDoc) for (const [char, texts] of shuishuSequences(shuiDoc)) all.set(char, texts)
+      if (shuiFailed) table = null
+      return all
+    }).catch(error => { table = null; throw error })
+    return table
+  }
 
   /** The characters with a description computed from other characters, and that description.
    * @type {Promise<Map<string, string>> | null} */

@@ -121,6 +121,14 @@ describe('Shuishu', () => {
     expect(search.search('𛔀', { limit: 3 }).hits.map(hit => hit.char)).toEqual(['𛌘'])
   })
 
+  it('keeps the worker search standing without a readable decomposition file', async () => {
+    const broken = Buffer.from('{oops').toString('base64')
+    const unreadable = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${broken}`)
+    expect(unreadable.search('𛔀', { limit: 3 }).hits).toEqual([])
+    const other = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, { format: 2, parts: [] })
+    expect(other.search('𛔀', { limit: 3 }).hits).toEqual([])
+  })
+
   it('finds the parts by name, reading, meaning and character', () => {
     const one = data.parts.find(part => part.shuiMeaning === '一')
     const two = data.parts.find(part => part.shuiMeaning === '二')
