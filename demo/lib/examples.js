@@ -235,10 +235,9 @@ export const EXAMPLE_GROUPS = [
   ] },
   // Korean gukja (國字): the coda of each syllable is written with a Chinese character or stroke,
   // and the forms follow the article by reading. Every encoded description is BabelStone's, tagged
-  // K, 14 as GKP. The twenty forms without a code point come last, as the article writes them,
-  // a decomposition alone.
-  // and the forms follow the article by reading. The twenty forms without a code point come last,
-  // as the article writes them, a decomposition alone.
+  // K, 14 as GKP. The twenty forms without a code point follow the encoded ones, as the article
+  // writes them, a decomposition alone. 𬼝, which the article leaves without a reading, ends the
+  // table and so the group.
   { key: 'korean', refs: [1, 30], examples: [
     { sequence: '⿱加𠃍', char: '㔖', reading: '각' },
     { sequence: '⿱加乙', char: '乫', reading: '갈' },
@@ -355,6 +354,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱吐乙', char: '', reading: '톨' },
     { sequence: '⿱坪乙', char: '', reading: '펼' },
     { sequence: '⿱呼乙', char: '', reading: '홀' },
+    // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
+    { sequence: '⿱去乙', char: '𬼝' },
   ] },
   // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
   // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.

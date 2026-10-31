@@ -175,9 +175,15 @@ it('reads the Korean gukja as the source does', () => {
     '⿱直𠮟': '짓', '⿱次乙': '찰', '⿱吐乙': '톨', '⿱土乙': '톨',
     '⿱巴𠮟': '팟', '⿱坪乙': '펼', '⿱甫𠮟': '폿', '⿱下乙': '할',
     '⿱呼乙': '홀', '⿱禾乙': '활',
+    // The article's last row gives 𬼝 no reading, so it carries none.
+    '⿱去乙': undefined,
   }
   expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
-  for (const example of korean) expect(example.reading).toBe(readings[example.sequence])
+  for (const example of korean) {
+    expect(example.reading).toBe(readings[example.sequence])
+    expect(Object.hasOwn(example, 'reading')).toBe(readings[example.sequence] !== undefined)
+  }
+  expect(korean.find(example => example.sequence === '⿱去乙')).toEqual({ sequence: '⿱去乙', char: '𬼝' })
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
