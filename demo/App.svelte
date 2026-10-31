@@ -1451,6 +1451,9 @@
     .phone-only{display:inline-flex}
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
+    .input{order:1}
+    .output{order:2}
+    .middle{order:3}
     .pane{padding:14px}
     .sponsor{padding:0 12px 0 4px}
   }
