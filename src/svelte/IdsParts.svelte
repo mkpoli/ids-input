@@ -1,10 +1,10 @@
 <script>
   // The parts palette: the parts of ideographic description sequences that are hard to type
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
-  // shows, by the choice above the grid, the parts 50 or more ideographs use, most used families
-  // first with related forms adjacent, or every part of one stroke count, the Han components and CJK
-  // strokes together, grouped by the class of the first stroke (横 豎 撇 點 折, where recorded,
-  // unknown last). Tangut the Tangut components in code point order, Small Seal the seal forms,
+  // offers frequent character components, character components by stroke count, and a separate
+  // stroke-symbol view. Counted groups use the first-stroke classes (横 豎 撇 點 折, where recorded,
+  // unknown last). Search and Recent place stroke symbols under their own heading.
+  // Tangut shows the Tangut components in code point order, Small Seal the seal forms,
   // Bopomofo the bopomofo letters, Letters & numbers the Latin, Cyrillic and ASCII parts, Hangul the
   // Hangul letters, Gongche the gongche notation, Recent the parts picked here before (kept in this
   // browser under `recentKey`, none when it is null), and Other scripts the rest. A filter of
@@ -307,15 +307,13 @@
     .map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }))
 
   const byPart = $derived(new Map([...GONGCHE_PARTS, ...(parts ?? [])].map(part => [part.part, part])))
-  // The Components panel: the parts whose real IDS use is at least COMMON_USE, with related forms
-  // adjacent, or every part of one stroke count, Han components and CJK strokes together. A host part
-  // without a use count falls back to its c kind. `chosen` drops a count the palette no longer holds,
-  // back to the frequent set.
+  // Common and stroke-count groups contain character components; Unicode stroke symbols have
+  // their own view. A host part without a use count falls back to its c kind in Common.
   const COMMON_USE = 50
-  const commonParts = $derived(adjacentStrokeForms(adjacentVariants((parts ?? []).filter(part =>
-    (part.kind === 'c' || part.kind === 'd' || part.kind === 's') && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE)))))
-  const countedParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd' || part.kind === 's'))
-  const strokeSymbols = $derived(countedParts.filter(part => isStroke(part.part)))
+  const countedParts = $derived((parts ?? []).filter(part => (part.kind === 'c' || part.kind === 'd') && !isStroke(part.part)))
+  const strokeSymbols = $derived((parts ?? []).filter(part => isStroke(part.part)))
+  const commonParts = $derived(adjacentVariants(countedParts.filter(part =>
+    part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE)))
   // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(countedParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
@@ -582,9 +580,9 @@
     tab = TABS[to]
     tabButtons[to]?.focus()
   }
-  // In Strokes and the one-stroke group, ㇣ falls outside the five first-stroke classes.
+  // In Stroke symbols, ㇣ falls outside the five first-stroke classes.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && (chosen === 1 || chosen === 'strokes') ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && chosen === 'strokes' ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
@@ -606,6 +604,18 @@
       </button>
     {/each}
   </div>
+{/snippet}
+
+{#snippet typedGrid(/** @type {PalettePart[]} */ list)}
+  {@const ordinary = list.filter(part => !isStroke(part.part))}
+  {@const symbols = list.filter(part => isStroke(part.part))}
+  {#if ordinary.length}{@render grid(ordinary)}{/if}
+  {#if symbols.length}
+    <section class="stroke-results" aria-label={t('parts.strokes')}>
+      <h4 class="parts-class">{t('parts.strokes')}</h4>
+      {@render grid(symbols)}
+    </section>
+  {/if}
 {/snippet}
 
 {#snippet hangulCompose()}
@@ -855,7 +865,7 @@
         {@render grid(hanShown)}
       {:else if hanKeys}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if filtered}
-      {#if filtered.length}{@render grid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
+      {#if filtered.length}{@render typedGrid(filtered)}{:else}<p class="parts-note">{t('parts.none')}</p>{/if}
     {:else if tab === 'components'}
       {#if componentPages > 1}
         <div class="script-pages" role="group" aria-label={t('parts.script.pages')}>
@@ -876,7 +886,7 @@
       {/if}
       {#each shown as group (group.cls ?? 'all')}
         {#if group.cls !== undefined}<h4 class="parts-class">{heading(group.cls)}</h4>{/if}
-        {@render grid(group.parts)}
+        {@render typedGrid(group.parts)}
       {/each}
     {/if}
   </div>
@@ -928,7 +938,8 @@
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .parts-counts .stroke-symbols,.part[data-component-type="stroke"]{color:var(--_accent)}
+  .part[data-component-type="stroke"]{color:var(--_muted)}
+  .stroke-results{display:flex;flex-direction:column;gap:8px;min-width:0}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
