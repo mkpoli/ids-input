@@ -24,28 +24,44 @@ describe('a pyramid sequence', () => {
     expect(pyramidCount(64)).toBe(2080)
   })
 
-  it('writes reversed rows from the widest down to one', () => {
-    expect(pyramidSequence('口', 3, { reverse: false })).toBe(pyramidSequence('口', 3))
-    expect(pyramidSequence('口', 1, { reverse: true })).toBe('口')
-    expect(pyramidSequence('口', 2, { reverse: true })).toBe('⿱⿰口口口')
-    expect(pyramidSequence('口', 3, { reverse: true })).toBe('⿳⿲口口口⿰口口口')
-    expect(pyramidSequence('口', 4, { reverse: true })).toBe('⿱⿱⿰⿰口口⿰口口⿲口口口⿱⿰口口口')
-    expect(pyramidRows('口', { minLayers: 1 })).toEqual({ cell: '口', layers: 1, count: 1, reverse: false })
-    expect(pyramidRows(tree('⿱⿰口口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 2, count: 3, reverse: true })
+  it('writes a bottom pyramid from the widest row down to one', () => {
+    expect(pyramidSequence('口', 3, { direction: 'top' })).toBe(pyramidSequence('口', 3))
+    expect(pyramidSequence('口', 1, { direction: 'bottom' })).toBe('口')
+    expect(pyramidSequence('口', 2, { direction: 'bottom' })).toBe('⿱⿰口口口')
+    expect(pyramidSequence('口', 3, { direction: 'bottom' })).toBe('⿳⿲口口口⿰口口口')
+    expect(pyramidSequence('口', 4, { direction: 'bottom' })).toBe('⿱⿱⿰⿰口口⿰口口⿲口口口⿱⿰口口口')
+    expect(pyramidRows('口', { minLayers: 1 })).toEqual({ cell: '口', layers: 1, count: 1, direction: 'top' })
+    expect(pyramidRows(tree('⿱⿰口口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 2, count: 3, direction: 'bottom' })
   })
 
-  it('reads reversed rows with equivalent stack groupings and editor trees', () => {
+  it('turns a pyramid sideways', () => {
+    expect(pyramidSequence('口', 2, { direction: 'left' })).toBe('⿰口⿱口口')
+    expect(pyramidSequence('口', 2, { direction: 'right' })).toBe('⿰⿱口口口')
+    expect(pyramidSequence('口', 3, { direction: 'left' })).toBe('⿲口⿱口口⿳口口口')
+    expect(pyramidSequence('口', 3, { direction: 'right' })).toBe('⿲⿳口口口⿱口口口')
+    expect(pyramidSequence('口', 4, { direction: 'left' })).toBe('⿰⿰口⿱口口⿰⿳口口口⿱⿱口口⿱口口')
+    expect(pyramidRows(tree('⿰口⿱口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 2, count: 3, direction: 'left' })
+    expect(pyramidRows(tree('⿰⿱口口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 2, count: 3, direction: 'right' })
+    expect(pyramidRows(tree('⿲口⿱口口⿳口口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 3, count: 6, direction: 'left' })
+    expect(pyramidRows(tree('⿲⿳口口口⿱口口口'), { minLayers: 2 })).toEqual({ cell: '口', layers: 3, count: 6, direction: 'right' })
+    // A sideways pyramid repeats a description just as a row does.
+    const cell = '⿰木口'
+    expect(pyramidSequence(cell, 2, { direction: 'left' })).toBe('⿰⿰木口⿱⿰木口⿰木口')
+    expect(pyramidRows(tree(pyramidSequence(cell, 3, { direction: 'right' })))?.direction).toBe('right')
+  })
+
+  it('reads a bottom pyramid with equivalent groupings and editor trees', () => {
     expect(pyramidRows(tree('⿱⿰⿰口口⿰口口⿳⿲口口口⿰口口口')))
-      .toEqual({ cell: '口', layers: 4, count: 10, reverse: true })
+      .toEqual({ cell: '口', layers: 4, count: 10, direction: 'bottom' })
     expect(pyramidRows({ op: '⿳', parts: [{ op: '⿲', parts: ['口', '口', '口'] }, { op: '⿰', parts: ['口', '口'] }, '口'] }))
-      .toEqual({ cell: '口', layers: 3, count: 6, reverse: true })
+      .toEqual({ cell: '口', layers: 3, count: 6, direction: 'bottom' })
     for (const text of ['⿳⿲口口口口⿰口口', '⿳⿲口口口⿰口口木', '⿳⿲口口口⿰口口⿰口口'])
       expect(pyramidRows(tree(text))).toBeNull()
   })
 
   it('keeps letter components literal', () => {
     const text = pyramidSequence('L', 3)
-    expect(pyramidRows(parse(text).tree)).toEqual({ cell: 'L', layers: 3, count: 6, reverse: false })
+    expect(pyramidRows(parse(text).tree)).toEqual({ cell: 'L', layers: 3, count: 6, direction: 'top' })
     expect([...text].filter(char => char === 'L')).toHaveLength(6)
   })
 
@@ -62,13 +78,14 @@ describe('a pyramid sequence', () => {
     expect(() => pyramidSequence('木ˊ', 3)).toThrow(TypeError)
     expect(() => pyramidSequence('口', 0)).toThrow(RangeError)
     expect(() => pyramidSequence('口', 2.5)).toThrow(RangeError)
+    expect(() => pyramidSequence('口', 3, { direction: /** @type {any} */ ('up') })).toThrow(RangeError)
   })
 
   it('repeats a description instead of one component', () => {
     const cell = '⿱众⿰众众'
     expect(pyramidSequence(cell, 2)).toBe('⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众')
     const found = pyramidRows(tree(pyramidSequence(cell, 3)))
-    expect(found).toMatchObject({ layers: 3, count: 6, reverse: false })
+    expect(found).toMatchObject({ layers: 3, count: 6, direction: 'top' })
     expect(write(found.cell)).toBe(cell)
     // Two rows read back only when asked for, so a two-row pyramid stays a description by default.
     expect(pyramidRows(tree(pyramidSequence(cell, 2)))).toBeNull()
@@ -78,15 +95,15 @@ describe('a pyramid sequence', () => {
   it('repeats a part of several leaves without splitting it into its leaves', () => {
     const cell = '⿰木口', text = pyramidSequence(cell, 3)
     expect(text).toBe('⿳⿰木口⿰⿰木口⿰木口⿲⿰木口⿰木口⿰木口')
-    expect(pyramidRows(tree(text))).toEqual({ cell: parse(cell).tree, layers: 3, count: 6, reverse: false })
-    expect(pyramidSequence(cell, 2, { reverse: true })).toBe('⿱⿰⿰木口⿰木口⿰木口')
+    expect(pyramidRows(tree(text))).toEqual({ cell: parse(cell).tree, layers: 3, count: 6, direction: 'top' })
+    expect(pyramidSequence(cell, 2, { direction: 'bottom' })).toBe('⿱⿰⿰木口⿰木口⿰木口')
   })
 
   it('lays out empty slots for a part that is empty or ⬚', () => {
     expect(pyramidSequence('', 3)).toBe('⿳⬚⿰⬚⬚⿲⬚⬚⬚')
     expect(pyramidSequence('⬚', 2)).toBe('⿱⬚⿰⬚⬚')
     expect(pyramidSequence('  ', 2)).toBe('⿱⬚⿰⬚⬚')
-    expect(pyramidSequence('', 2, { reverse: true })).toBe('⿱⿰⬚⬚⬚')
+    expect(pyramidSequence('', 2, { direction: 'bottom' })).toBe('⿱⿰⬚⬚⬚')
     expect(parse(pyramidSequence('', 4), { open: true }).tree).toEqual(parse('⿱⿱⬚⿰⬚⬚⿱⿲⬚⬚⬚⿰⿰⬚⬚⿰⬚⬚', { open: true }).tree)
   })
 
@@ -106,11 +123,11 @@ describe('a pyramid sequence', () => {
     expect(tooLarge(tree(two))).toBe(false)
   })
 
-  it('reads its own sequences back at every depth', () => {
-    for (const reverse of [false, true]) for (let layers = 3; layers <= 12; layers++) {
-      const text = pyramidSequence('口', layers, { reverse })
+  it('reads its own sequences back at every depth and direction', () => {
+    for (const direction of ['top', 'bottom', 'left', 'right']) for (let layers = 3; layers <= 12; layers++) {
+      const text = pyramidSequence('口', layers, { direction })
       const found = pyramidRows(tree(text))
-      expect(found).toEqual({ cell: '口', layers, count: pyramidCount(layers), reverse })
+      expect(found).toEqual({ cell: '口', layers, count: pyramidCount(layers), direction })
       expect([...text].length).toBeLessThanOrEqual(PYRAMID_LONGEST)
     }
   })
@@ -122,12 +139,12 @@ describe('a pyramid sequence', () => {
       '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口',
       '⿱⿳口⿰口口⿲口口口⿰⿰口口⿰口口',
     ]) expect(pyramidRows(tree(text))?.layers).toBe([...text].filter(ch => ch === '口').length === 6 ? 3 : 4)
-    expect(pyramidRows(tree('⿱⿳口⿰口口⿲口口口⿰⿰口口⿰口口'))).toEqual({ cell: '口', layers: 4, count: 10, reverse: false })
+    expect(pyramidRows(tree('⿱⿳口⿰口口⿲口口口⿰⿰口口⿰口口'))).toEqual({ cell: '口', layers: 4, count: 10, direction: 'top' })
   })
 
   it('reads an editor tree as well as a parsed one', () => {
     expect(pyramidRows({ op: '⿳', parts: ['口', { op: '⿰', parts: ['口', '口'] }, { op: '⿲', parts: ['口', '口', '口'] }] }))
-      .toEqual({ cell: '口', layers: 3, count: 6, reverse: false })
+      .toEqual({ cell: '口', layers: 3, count: 6, direction: 'top' })
   })
 
   it('leaves single rows, pairs and other grids alone', () => {
@@ -144,13 +161,13 @@ describe('a pyramid sequence', () => {
     expect(parse(changed, { open: true }).tree).not.toEqual(parse(text, { open: true }).tree)
   })
 
-  it('keeps a pyramid within the preview limits at depths the old limits refused', () => {
-    for (const reverse of [false, true]) {
-      expect(tooLarge(tree(pyramidSequence('口', 6, { reverse })))).toBe(false)
-      expect(tooLarge(tree(pyramidSequence('口', 7, { reverse })))).toBe(false)
-      expect(tooLarge(tree(pyramidSequence('口', PYRAMID_LAYERS, { reverse })))).toBe(false)
-      expect(tooLarge(tree(pyramidSequence('口', PYRAMID_LAYERS + 1, { reverse })))).toBe(true)
-      expect(parse(pyramidSequence('口', PYRAMID_LAYERS, { reverse })).problem).toBeUndefined()
+  it('keeps a pyramid within the preview limits in every direction', () => {
+    for (const direction of ['top', 'bottom', 'left', 'right']) {
+      expect(tooLarge(tree(pyramidSequence('口', 6, { direction })))).toBe(false)
+      expect(tooLarge(tree(pyramidSequence('口', 7, { direction })))).toBe(false)
+      expect(tooLarge(tree(pyramidSequence('口', PYRAMID_LAYERS, { direction })))).toBe(false)
+      expect(tooLarge(tree(pyramidSequence('口', PYRAMID_LAYERS + 1, { direction })))).toBe(true)
+      expect(parse(pyramidSequence('口', PYRAMID_LAYERS, { direction })).problem).toBeUndefined()
     }
   })
 })
@@ -175,12 +192,12 @@ describe('pyramid cells', () => {
     }
   })
 
-  it('centres descending rows without changing cell size or reading order', () => {
+  it('centres a bottom pyramid without changing cell size or reading order', () => {
     for (const layers of [1, 3, 4, 12]) {
       const region = [100, -200, 1300, 800]
       const normal = pyramidCells(region, layers)
-      const reversed = pyramidCells(region, layers, { reverse: true })
-      expect(pyramidCells(region, layers, { reverse: false })).toEqual(normal)
+      const reversed = pyramidCells(region, layers, { direction: 'bottom' })
+      expect(pyramidCells(region, layers, { direction: 'top' })).toEqual(normal)
       expect(reversed).toHaveLength(pyramidCount(layers))
       let offset = 0
       for (let count = layers; count >= 1; count--) {
@@ -198,6 +215,30 @@ describe('pyramid cells', () => {
       }
       expect(reversed[0][3]).toBeCloseTo(800, 8)
       expect(reversed.at(-1)[1]).toBeCloseTo(-200, 8)
+    }
+  })
+
+  it('draws a sideways pyramid in columns, with the cell size of the other directions', () => {
+    const region = [100, -200, 1300, 800], top = pyramidCells(region, 4)
+    for (const direction of ['left', 'right']) {
+      const cells = pyramidCells(region, 4, { direction })
+      expect(cells).toHaveLength(10)
+      expect(cells[0][2] - cells[0][0]).toBeCloseTo(top[0][2] - top[0][0], 8)
+      let offset = 0
+      for (let index = 0; index < 4; index++) {
+        const count = direction === 'left' ? index + 1 : 4 - index
+        const column = cells.slice(offset, offset + count)
+        const x = (column[0][0] + column[0][2]) / 2
+        for (const cell of column) expect((cell[0] + cell[2]) / 2).toBeCloseTo(x, 8)
+        for (let i = 1; i < column.length; i++) expect(column[i][1]).toBeLessThan(column[i - 1][1])
+        expect((column[0][3] + column.at(-1)[1]) / 2).toBeCloseTo(300, 8)
+        if (count === 4) {
+          expect(column[0][3]).toBeCloseTo(800, 8)
+          expect(column.at(-1)[1]).toBeCloseTo(-200, 8)
+        }
+        if (offset) expect(x).toBeGreaterThan((cells[offset - 1][0] + cells[offset - 1][2]) / 2)
+        offset += count
+      }
     }
   })
 
@@ -227,10 +268,10 @@ describe('drawing a pyramid', () => {
     }
   })
 
-  it('draws descending rows with upright glyphs and matching leaf ownership', async () => {
+  it('draws a bottom pyramid with upright glyphs and matching leaf ownership', async () => {
     const source = sourceOf()
     const normal = await compose(source, pyramidSequence('木', 4))
-    const text = pyramidSequence('木', 4, { reverse: true })
+    const text = pyramidSequence('木', 4, { direction: 'bottom' })
     const drawn = await compose(source, text, { separate: true })
     const leaves = await sketch(source, text)
     expect(drawn.parts).toHaveLength(10)
@@ -253,6 +294,30 @@ describe('drawing a pyramid', () => {
     expect(drawn.parts[4].box[1]).toBeGreaterThan(drawn.parts[0].box[1])
     expect(drawn.parts.map(part => part.leaf)).toEqual([...Array(10).keys()])
     expect(groupParts(drawn.parts, leaves)?.map(group => group.parts)).toEqual([...Array(10).keys()].map(i => [i]))
+  })
+
+  it('draws a sideways pyramid with upright glyphs and one leaf per cell', async () => {
+    const source = sourceOf(), text = pyramidSequence('木', 4, { direction: 'left' })
+    const drawn = await compose(source, text, { separate: true })
+    const leaves = await sketch(source, text)
+    const top = await compose(source, pyramidSequence('木', 4))
+    expect(drawn.parts).toHaveLength(10)
+    expect(leaves).toHaveLength(10)
+    const localOutline = part => part.d.match(/-?\d+(?:\.\d+)?/g).map((n, i) => Number(n) - part.box[i % 2])
+    const upright = localOutline(top.parts[0])
+    for (const part of drawn.parts) {
+      expect(part.origin).toBe('glyph 木')
+      expect(part.box[2]).toBeCloseTo(top.parts[0].box[2], 6)
+      expect(part.box[3]).toBeCloseTo(top.parts[0].box[3], 6)
+      const outline = localOutline(part)
+      expect(outline).toHaveLength(upright.length)
+      outline.forEach((n, i) => expect(n).toBeCloseTo(upright[i], 0))
+    }
+    expect(drawn.parts.map(part => part.leaf)).toEqual([...Array(10).keys()])
+    // The apex cell is centred on the widest column, and the columns run left to right.
+    const apex = drawn.parts[0], high = drawn.parts[6], low = drawn.parts[9]
+    expect(apex.box[1] + apex.box[3] / 2).toBeCloseTo((high.box[1] + low.box[1] + low.box[3]) / 2, 5)
+    expect(apex.box[0] + apex.box[2]).toBeLessThan(high.box[0])
   })
 
   it('draws the spellings of a 4-row pyramid alike', async () => {
@@ -366,6 +431,8 @@ describe('drawing a pyramid', () => {
     expect(composer.pyramid(composer.parse('⿱木⿰木木'))).toBeNull()
     expect(composer.pyramid(composer.parse(pyramidSequence('⿰木口', 2)))?.layers).toBe(2)
     expect(composer.pyramid(composer.parse(pyramidSequence('口', 3)))?.layers).toBe(3)
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 3, { direction: 'left' })))?.direction).toBe('left')
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 2, { direction: 'right' })))).toBeNull()
   })
 
   it('draws a pyramid nested in another description', async () => {
