@@ -8,10 +8,14 @@ const sequenceCells = svg => [...svg.matchAll(/<text data-sequence="true" x="([\
 
 describe('a workshop share card', () => {
   it('uses the workshop palette in both schemes', () => {
-    const css = readFileSync(new URL('../demo/app.css', import.meta.url), 'utf8')
-    const aliases = { subtle: 'surface-2', strong: 'line-strong', soft: 'accent-soft' }
-    for (const [token, value] of Object.entries(PALETTES.light)) {
-      expect(css).toContain(`--${aliases[token] ?? token}:light-dark(${value},${PALETTES.dark[token]})`)
+    const css = readFileSync(new URL('../design/tokens.css', import.meta.url), 'utf8')
+    // The card's palette is the design system's; each colour is one of its tokens.
+    const tokens = {
+      bg: 'canvas', surface: 'surface', subtle: 'surface-sunken', ink: 'ink', muted: 'ink-muted',
+      line: 'border', strong: 'border-strong', accent: 'accent', soft: 'accent-soft',
+    }
+    for (const [name, value] of Object.entries(PALETTES.light)) {
+      expect(css).toContain(`--ui-color-${tokens[name]}: light-dark(${value}, ${PALETTES.dark[name]})`)
     }
     for (const theme of ['light', 'dark']) {
       const svg = cardSvg({ sequence: '⿰木子', drawing, theme })
