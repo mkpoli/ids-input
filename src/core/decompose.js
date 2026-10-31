@@ -1,7 +1,7 @@
 // @ts-check
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
-import { arity, isComponent, isDescription, isSequence, leaves, modifierAt, parse, takesModifier } from './ids.js'
+import { arity, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
 import { emojiPrefix } from './emoji.js'
 
 import { unicodeProperty } from './unicode.js'
@@ -156,13 +156,12 @@ export function variants(entry) {
 /** The encoded components an unreadable sequence names, once each, so they can still be opened. @param {string} text */
 export const namedParts = text => [...new Set(tokens(text).filter(decomposable))]
 
-const PART = /^[\p{Script=Han}\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}\u{1B300}-\u{1B52E}㇀-㇯]$/u
+const PART = /^[\p{Script=Han}\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}㇀-㇯]$/u
 /**
  * The parts a search for characters containing them is asked for: two or more typed characters as
  * they are, else the components of the one typed (of its first readable description), counted, so
  * 林 asks for 木 twice. Only ideographs, radicals and strokes — Han, Tangut and the proposed
- * Shuishu block — are asked for, at most SEARCH_PARTS;
- * fewer than two ask for nothing (`''`).
+ * Shuishu block — are asked for, at most SEARCH_PARTS; fewer than two ask for nothing (`''`).
  * @param {Root[]} found
  * @param {Record<string, Entry | undefined>} known
  */
@@ -174,7 +173,8 @@ export function searchParts(found, known) {
     const tree = variants(known[lookupChar(found[0].char)]).find(v => v.tree)?.tree
     parts = tree ? leaves(tree).map(leaf => leaf.char) : []
   } else parts = found.map(root => root.kind === 'char' ? root.char : null)
-  const asked = parts.filter(part => typeof part === 'string' && (unicodeProperty('ideographic', lookupChar(part)) || PART.test(lookupChar(part).normalize('NFKC')))).map(lookupChar)
+  const asked = parts.filter(part => typeof part === 'string'
+    && (unicodeProperty('ideographic', lookupChar(part)) || isShuishu(lookupChar(part)) || PART.test(lookupChar(part).normalize('NFKC')))).map(lookupChar)
   return asked.length >= 2 ? asked.slice(0, SEARCH_PARTS).join('') : ''
 }
 
