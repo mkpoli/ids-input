@@ -41,16 +41,4 @@ describe('document records in demo storage', () => {
     expect(read.document).toEqual(record)
     expect(readActiveTab()).toBe(tab.id)
   })
-  it('keeps document records in drafts and deduplicates the pair', async () => {
-    const { drafts, keep } = await import('../demo/lib/projects.js')
-    const record = saved()
-    keep('⿰木口', record)
-    keep('⿰木口', record)
-    expect(drafts()).toHaveLength(1)
-    expect(drafts()[0].document).toEqual(record)
-    const other = structuredClone(record)
-    other.chosen = null
-    keep('⿰木口', other)
-    expect(drafts()).toHaveLength(2)
-  })
 })

@@ -36,7 +36,6 @@
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
-  import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
@@ -729,14 +728,6 @@
     }
     openSequence(record.sequence)
   }
-  /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
-  function openDraft(draft) {
-    flush()
-    const tab = makeTab(draft.sequence, draft.sequence, draft.document)
-    tabs.push(tab)
-    recents = remember(tab.sequence, tab.document)
-    activate(tab.id)
-  }
   /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
@@ -868,18 +859,6 @@
     tabs.splice(to, 0, tab)
   }
 
-  // Saved drafts.
-  let drafts = $state(storedDrafts())
-  function keepDraft() {
-    if (editor.tree === null) return
-    const tab = current()
-    if (tab) keepTabSession(tab)
-    drafts = keep(editor.whole, tab?.document)
-    // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
-    if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
-    store()
-    note(t('app.drafts.kept', { sequence: editor.whole }))
-  }
   /** Save the active tab's document as .ids.json. */
   function saveDocument() {
     const tab = current()
@@ -949,13 +928,6 @@
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
     { label: t('app.file.exportAs'), icon: 'download', disabled: !canExport, submenu: /** @type {const} */ (['svg', 'png']).map(format => ({ label: format.toUpperCase(), disabled: !canExport, run: () => { exportPanel?.save(format) } })) },
-    { separator: /** @type {const} */ (true) },
-    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
-    { label: t('app.drafts.heading'), icon: 'folder', disabled: !drafts.length, submenu: drafts.length ? [
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
-      { separator: /** @type {const} */ (true) },
-      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } },
-    ] : [] },
   ])
 
   const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
@@ -1060,7 +1032,6 @@
       else if (inEditor) focusActiveEditor()
       return
     }
-    if (mod && event.key.toLowerCase() === 's') { event.preventDefault(); keepDraft(); return }
     if (target.closest('input, textarea, select, [contenteditable="true"], [role="menu"]')) return
     if (mod && ['c', 'x', 'v', 'a'].includes(event.key.toLowerCase())) {
       if (['c', 'x'].includes(event.key.toLowerCase()) && !getSelection()?.isCollapsed) return

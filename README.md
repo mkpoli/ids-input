@@ -416,7 +416,7 @@ editor owns structural undo. `setTransform` accepts a coalesce key, so one drag 
 `onListenerError` (or `reportError`) and does not undo the committed edit.
 
 `sessionRecord(session)` and `writeSession(session)` keep the document, chosen layer and every issued
-ID for a tab or draft; `readSession(text)` restores them. The record omits undo history. The document
+ID for a tab; `readSession(text)` restores them. The record omits undo history. The document
 itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
 
 `syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
@@ -425,7 +425,7 @@ structural edits. Pass the long-lived session allocator so removed IDs do not re
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
-keeps a session with each tab and saved draft, so the document survives reloads. The preview,
+keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
@@ -788,7 +788,7 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
+Elsewhere, `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
 part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
 menus support arrow keys, Home/End and Escape; `Right` opens a submenu on its first item, `Left`
@@ -1120,7 +1120,7 @@ opens the tab or group closed last; that history lasts for the page session. The
 panels in the middle column are divided by a draggable splitter, the tree starting larger; the
 arrow keys move it and a double-click restores the default. Vertical dividers resize the columns by
 dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their keys on
-hover. File groups documents, Recent, tab actions, sharing and export, and drafts; Recent lists the
+hover. File groups documents, Recent, tab actions, sharing and export; Recent lists the
 sequences opened in this browser, newest first. The Edit menu holds the editing commands. The
 Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies the active
 document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: reopen the tab or
@@ -1145,7 +1145,7 @@ copying the location keeps a placement and opening such a link keeps the token. 
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
 chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, drafts, the recent sequences, the theme and font choice stay
+the configured export’s font. Settings, the recent sequences, the theme and font choice stay
 in `localStorage`; the keys use the `ids-input:` prefix.
 
 ### Share cards
