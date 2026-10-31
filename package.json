@@ -80,7 +80,8 @@
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
     "prepack": "node scripts/emit-types.mjs",
-    "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
+    "build:tangut-layers": "node scripts/build_tangut_layers.mjs",
+    "check:demo": "bun scripts/check-demo.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.4",
