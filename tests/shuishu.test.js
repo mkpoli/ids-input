@@ -127,6 +127,9 @@ describe('Shuishu', () => {
     expect(unreadable.search('𛔀', { limit: 3 }).hits).toEqual([])
     const other = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, { format: 2, parts: [] })
     expect(other.search('𛔀', { limit: 3 }).hits).toEqual([])
+    const wrong = Buffer.from('{"format":2,"parts":[]}').toString('base64')
+    const versioned = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${wrong}`)
+    expect(versioned.search('𛔀', { limit: 3 }).hits).toEqual([])
   })
 
   it('finds the parts by name, reading, meaning and character', () => {

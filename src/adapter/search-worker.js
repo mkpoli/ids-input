@@ -27,7 +27,7 @@ export async function load(ids, additionalIds, components, componentsText, forms
   // The Shuishu decompositions are editorial and run beside the sources; a failed file costs the
   // search those descriptions only.
   const shuiDoc = typeof shuishu === 'string'
-    ? await get(shuishu).then(readText).then(JSON.parse).then(doc => (shuishuSequences(doc), doc), () => undefined) : shuishu
+    ? await get(shuishu).then(readText).then(JSON.parse).then(doc => (shuishuSequences(doc), doc)).catch(() => undefined) : shuishu
   const parts = readNumberedComponents(numbered)
   /** @type {Map<string, import('../core/decompose.js').Sequence[]>} */
   const merged = new Map(extras.reduce((found, extra) => mergeIdsTables(found, expandNumberedComponents(parseIdsTable(extra), parts)), expandNumberedComponents(parseIdsTable(text), parts)))
