@@ -60,11 +60,31 @@ try {
   assert.equal(await input.count(), 1, 'the examples tab has a filter field')
   const total = await dialog.locator('.card').count()
   assert.ok(total > 100, 'the cards start expanded')
+  // The categories wrap instead of scrolling sideways, so every chip is readable at once.
+  const jump = dialog.locator('.jump')
+  const chips = jump.locator('.chip')
+  assert.ok(await chips.count() > 10, 'the categories fill the chip row')
+  const lines = new Set(await chips.evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().top))))
+  assert.ok(lines.size > 1, 'the chips take more than one line')
+  assert.ok(await jump.evaluate(node => node.scrollWidth <= node.clientWidth + 1), 'the wrapped row does not scroll sideways')
+  const jumpBox = await jump.boundingBox(), lastBox = await chips.last().boundingBox()
+  assert.ok(lastBox.x + lastBox.width <= jumpBox.x + jumpBox.width + 1, 'the last chip stays inside the row')
+  // Each collapsible heading says how many items its section holds.
+  const names = await dialog.locator('button.heading .heading-name').allTextContents()
+  const numbers = await dialog.locator('button.heading .count').allTextContents()
+  assert.equal(numbers.length, names.length, 'every section heading has a count')
+  for (const [i, number] of numbers.entries()) assert.match(number, /^[1-9]\d*$/, `the ${names[i]} heading counts its items`)
+  const koreanHeading = dialog.locator('button.heading', { hasText: 'Korean gukja' }).first()
+  const koreanCount = await koreanHeading.locator('.count').textContent()
+  assert.ok(Number(koreanCount) > 50, 'the Korean gukja count is the size of its section')
+  assert.equal(await koreanHeading.getAttribute('aria-label'), `Korean gukja, ${koreanCount}`, 'the count is part of the heading name')
   await input.fill('乙')
   await page.waitForTimeout(300)
   const filtered = await dialog.locator('.card').count()
   assert.ok(filtered > 0 && filtered < total, 'the query narrows the cards')
   assert.match(await dialog.locator('.card-label').first().textContent(), /乙/, 'a match shows the 乙 in its sequence')
+  const counted = (await dialog.locator('button.heading .count').allTextContents()).reduce((sum, number) => sum + Number(number), 0)
+  assert.equal(counted, filtered, 'the counts add up to the cards the query keeps')
   await input.fill('')
   await dialog.getByRole('button', { name: 'Code point', exact: true }).click()
   await page.waitForTimeout(200)
@@ -144,5 +164,27 @@ try {
   await page.keyboard.press('Escape')
   await page.setViewportSize({ width: 1440, height: 900 })
 
+  // The phone's menu sheet scrolls as one thing: the marked chip follows the section in view, and
+  // reading past a later section must not pull the sheet back to the chip row.
+  const phone = await browser.newPage({ viewport: { width: 390, height: 844 } })
+  await phone.goto(url)
+  await phone.getByRole('button', { name: 'Menu', exact: true }).click()
+  await phone.waitForTimeout(600)
+  const sheet = phone.locator('.list', { has: phone.locator('.jump') }).last()
+  const sheetState = () => sheet.evaluate(el => ({
+    top: Math.round(el.closest('dialog').scrollTop),
+    chip: el.querySelector('.chip[aria-current="true"]')?.textContent ?? '',
+  }))
+  assert.equal((await sheetState()).chip, 'Basic structures', 'the first section starts marked')
+  for (let i = 0; i < 15; i++) {
+    await phone.evaluate(() => { const open = document.querySelector('dialog[open]'); open.scrollTop += 200 })
+    await phone.waitForTimeout(80)
+  }
+  await phone.waitForTimeout(500)
+  const read = await sheetState()
+  assert.ok(read.top > 0, 'the phone sheet scrolls')
+  assert.notEqual(read.chip, 'Basic structures', 'the marked chip follows the section in view')
+  assert.ok(read.top >= 15 * 200 - 4, 'the phone sheet stays where it was scrolled')
+  await phone.close()
   console.log('PASS the starter dialog opens templates and examples in tabs, and the toolbar keeps its examples menu')
 } finally { await browser.close() }
