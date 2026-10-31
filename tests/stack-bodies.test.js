@@ -44,6 +44,7 @@ const composerOf = async (source, options = {}) => {
     composer.bodySupport('⿱木扌')
     composer.bodySupport('⿳口木扌')
     composer.bodySupport('⿱口口')
+    composer.bodySupport('⿱口冖')
     if (!store.missing.size) return composer
     await source.load(store.missing)
   }
@@ -84,6 +85,38 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(composer.bodySupport('⿱口口')).toBe(2)
     expect(composer.groupedStack(['⿳', '口', '口', '口'])).toBeNull()
     expect(composer.groupedStack(['⿳', '口', '口', '木'])).toEqual(['⿱', ['⿱', '口', '口'], '木'])
+  })
+
+  it('wants more than one witness before it calls a run a body', async () => {
+    const once = await composerOf(sourceOf({ '⿱口木': { k: '⿱口木', P: ['B'] } },
+      [['⿱口木', 'B', [cut('永', [60, -40, 940, 500])]]]))
+    expect(once.bodySupport('⿱口木')).toBe(1)
+    expect(once.groupedStack(['⿳', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('counts neither an uncut entry nor a host the drawing excludes', async () => {
+    const entries = [cut('永', [60, -40, 940, 500]), { h: '厃', r: 1, c: null }, cut('口', [60, 200, 940, 700], 2)]
+    const source = () => sourceOf({ '⿱口木': { k: '⿱口木', P: ['B'] } }, [['⿱口木', 'B', entries]])
+    expect((await composerOf(source())).bodySupport('⿱口木')).toBe(2)
+    // 口 is excluded, and the 厃 entry is one the export could not cut: one witness is left.
+    const limited = await composerOf(source(), { exclude: ['口'] })
+    expect(limited.bodySupport('⿱口木')).toBe(1)
+    expect(limited.groupedStack(['⿳', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('regroups a stack whose own character the drawing excludes', async () => {
+    const records = { ...bodyRecords, '⿳口木扌': { k: '⿳口木扌', e: '𪱳' },
+      𪱳: { k: '𪱳', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 } }
+    const tested = await composerOf(sourceOf(records, bodyHosts), { exclude: ['𪱳'] })
+    expect(tested.groupedStack(['⿳', '口', '木', '扌'])).toEqual(['⿱', ['⿱', '口', '木'], '扌'])
+  })
+
+  it('does not come between a cover and what it covers', async () => {
+    const composer = await composerOf(sourceOf({ '⿱口冖': { k: '⿱口冖', P: ['B', 'M'] } },
+      [['⿱口冖', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱口冖', 'M', [cut('厃', [60, 200, 940, 700])]]]))
+    expect(composer.bodySupport('⿱口冖')).toBe(2)
+    // 冖 roofs the 木 below it (`fitUnderCover`), which a ⿱ of 口 and 冖 would leave in another node.
+    expect(composer.groupedStack(['⿳', '口', '冖', '木'])).toBeNull()
   })
 
   it('takes the better supported of two runs', async () => {

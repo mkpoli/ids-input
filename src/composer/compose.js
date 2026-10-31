@@ -47,6 +47,11 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
 // Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
+// How much of a designed body a run of a flat stack needs before it is drawn as one (`bodySupport`).
+// One cut is a single accident of one character; from two the font is drawing the pair as a body.
+// Measured over 178 stacked characters scored against their own glyphs: at one witness the rule
+// moves 39 up and 23 down, at two 18 up and 7 down, at three 11 up and 3 down.
+const BODY_WITNESSES = 2
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -943,7 +948,10 @@ export class Composer {
   bodySupport(key) {
     if (key.includes(EMPTY) || this.excluded(key)) return 0
     const open = place => !this.C.SIDED_PLACES.includes(place)
-    const cuts = name => this.data.places(name).filter(open).reduce((n, place) => n + this.data.hosts(name, place).length, 0)
+    // Only a host the drawing may take from, and only where the export could cut the body out of it.
+    const usable = host => host.c && !this.excluded(host.h)
+    const cuts = name => this.data.places(name).filter(open)
+      .reduce((n, place) => n + this.data.hosts(name, place).filter(usable).length, 0)
     let support = cuts(key)
     const encoded = this.bySequence(key)
     if (encoded && !this.excluded(encoded) && this.glyphRecord(encoded)) support += 1 + cuts(encoded)
@@ -968,14 +976,18 @@ export class Composer {
     // Three of the same operand are an even run by construction (品, 森, 焱): two of them are no
     // more a body than the third, whatever cuts the export holds of the pair.
     if (children.every(child => keyOf(child) === keyOf(children[0]))) return null
-    // A stack the export draws whole keeps its own body; only a stronger run replaces it.
-    if (this.bySequence(key)) return null
+    // A stack the export draws whole keeps its own body; only a stronger run replaces it. A
+    // character excluded from the drawing draws nothing, so the stack is free to regroup.
+    const spelled = this.bySequence(key)
+    if (spelled && !this.excluded(spelled)) return null
     const whole = this.bodySupport(key)
     let best = null
     for (const at of [0, 1]) {
+      // A cover takes what follows it under its roof (`fitUnderCover`); a body may not come between.
+      if (at === 0 && COVERS.has(children[1])) continue
       const run = [pair, children[at], children[at + 1]]
       const support = this.bodySupport(keyOf(run))
-      if (support > whole && (!best || support > best.support)) best = { at, run, support }
+      if (support >= BODY_WITNESSES && support > whole && (!best || support > best.support)) best = { at, run, support }
     }
     if (!best) return null
     return best.at === 0 ? [pair, best.run, children[2]] : [pair, children[0], best.run]
