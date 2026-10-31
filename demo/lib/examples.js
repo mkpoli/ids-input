@@ -220,11 +220,10 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
-    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, 金
-    // lends 黃's bottom the 𠆢 it shares, and 士 and 女 meet at one 口. IDS cannot share a stroke,
-    // so the arrangements remain editorial.
+    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, and
+    // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
-    { sequence: '⿱⿱廿⿱一由⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
+    { sequence: '⿱黃⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
     { sequence: '⿳士⿲女口意祥', refs: [50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },

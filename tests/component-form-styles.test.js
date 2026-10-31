@@ -49,44 +49,14 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
   }
 })
 
-it('draws 萬 with the bottom of 両 as one prepared form', () => {
+it('draws 山 inside the 萬 frame without closing it', () => {
   for (const style of ['sans', 'serif']) {
     expect(isComponentForm('⿳艹田⿵冂山', style)).toBe(true)
-    expect(isGroupedForm('⿳艹田⿵冂山', style)).toBe(true)
     const drawing = componentDrawing('⿳艹田⿵冂山', style)
     expect(drawing.d).not.toMatch(/NaN|Infinity/)
-    expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
-    // The 山 bar forms the box bottom: the box's lowest ink closes at the bar, and the bar keeps
-    // 満's native thickness above it. A vertically scaled or floating 山 fails both.
-    const edges = []
-    let lowest = Infinity
-    for (const [ops, points] of data.forms[style]['⿳艹田⿵冂山'][1]) {
-      let index = 0, previous
-      for (const op of ops.match(/M|L|Q2/g)) {
-        const count = op === 'Q2' ? 4 : 2
-        const end = points.slice(index + count - 2, index + count)
-        lowest = Math.min(lowest, end[1])
-        if (op === 'L' && previous[1] === end[1]) {
-          edges.push({ y: end[1], width: Math.abs(end[0] - previous[0]) })
-        }
-        previous = end
-        index += count
-      }
-    }
-    const [barTop, thickness, run] = style === 'sans' ? [77, 61, 300] : [109, 29, 100]
-    expect(lowest).toBe(-80)
-    expect(edges.some(edge => edge.y === barTop && edge.width > run)).toBe(true)
-    expect(barTop - lowest).toBeGreaterThan(thickness)
-  }
-})
-
-it('cuts 黃 at the 八 that 金 repeats', () => {
-  for (const style of ['sans', 'serif']) {
-    expect(isComponentForm('⿱廿⿱一由', style)).toBe(true)
-    // 黃's 八 hangs below y=82 (sans) or y=70 (serif); the form keeps only the crown above it.
-    const floor = style === 'sans' ? 82 : 70
-    const lowest = Math.min(...componentParts('⿱廿⿱一由', undefined, style)
-      .flatMap(item => item.part.contours.flatMap(contour => Array.from(contour.light).filter((_, i) => i % 2 === 1))))
-    expect(lowest).toBeGreaterThanOrEqual(floor)
+    // Nothing is drawn below the 山: no bar closes 萬's box along its bottom.
+    const points = data.forms[style]['⿳艹田⿵冂山'].flat().flatMap(([, coords]) => coords)
+    const ys = points.filter((_, i) => i % 2 === 1)
+    expect(Math.min(...ys)).toBeGreaterThan(-40)
   }
 })

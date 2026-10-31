@@ -237,74 +237,23 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
-    # Retain 萬's complete outer contour, removing only the 禸 interior.
-    # 満 carries 両 under 艹: its lower box supplies a 山 of the right weight,
-    # widened into 萬's enclosure, with its bar forming the bottom edge.
-    wan = cs('萬')
-    if style == 'sans':
-        outer = [('moveTo', ((534, 208),))] + wan[4][4:25] + [('closePath', ())]
-        shell_contours = wan[:4] + [outer, wan[5]]
-        source_x, target_x = (391, 853), (182, 830)
-        source_y = (-79, -15, 16, 77, 339)
-        target_y = (-80, -17, 16, 77, 273)
-    else:
-        outer = [('moveTo', ((535, 240),))] + wan[5][5:42] + [('closePath', ())]
-        shell_contours = wan[:5] + [outer]
-        source_x, target_x = (370, 856), (190, 801)
-        source_y = (-78, -9, 102, 131, 376)
-        target_y = (-80, -17, 80, 109, 269)
-    target_bottom, target_top = target_y[0], target_y[-1]
-    # Any difference from 萬 must remain inside the lower interior.
-    original, edited, region = pathops.Path(), pathops.Path(), pathops.Path()
-    for contour in wan: replayRecording(contour, original.getPen())
-    for contour in shell_contours: replayRecording(contour, edited.getPen())
-    lx, rx = target_x
-    region.moveTo(lx, -85); region.lineTo(rx, -85); region.lineTo(rx, target_top)
-    region.lineTo(lx, target_top); region.close()
-    difference = pathops.op(original, edited, pathops.PathOp.XOR)
-    assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
-    def ramp(value):
-        i = next((i for i in range(len(source_y)-1) if value <= source_y[i+1]), len(source_y)-2)
-        return target_y[i] + (value-source_y[i]) * (target_y[i+1]-target_y[i]) / (source_y[i+1]-source_y[i])
-    mountain = crop_group(cs('満'), (source_x[0], -20, source_x[1], source_y[-1]))
-    mountain = [[ops, [round(ramp(v), 2) if i % 2
-        else round(target_x[0] + (v-source_x[0]) * (target_x[1]-target_x[0]) / (source_x[1]-source_x[0]), 2)
-        for i, v in enumerate(points)]] for ops, points in mountain]
-    # The widened bar meets both legs, closing the box as 両's own does.
-    shaped = pathops.Path()
-    pen = shaped.getPen()
-    for ops, points in mountain:
-        coords = iter(points)
-        for op in re.findall(r'M|L|Q2', ops):
-            if op == 'M': pen.moveTo((next(coords), next(coords)))
-            elif op == 'L': pen.lineTo((next(coords), next(coords)))
-            else: pen.qCurveTo((next(coords), next(coords)), (next(coords), next(coords)))
-        pen.closePath()
-    bar = pathops.Path()
-    bar.moveTo(target_x[0], target_bottom); bar.lineTo(target_x[1], target_bottom)
-    bar.lineTo(target_x[1], target_y[1]); bar.lineTo(target_x[0], target_y[1]); bar.close()
-    mountain_path = pathops.op(shaped, bar, pathops.PathOp.UNION)
-    # The 山 stays inside the interior, and only the interior changed.
-    bad = pathops.op(mountain_path, region, pathops.PathOp.DIFFERENCE)
-    bb = bad.bounds
-    assert bad.area < 0.1, (style, bad.area, bb)
-    difference = pathops.op(original, pathops.op(edited, mountain_path, pathops.PathOp.UNION), pathops.PathOp.XOR)
-    assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
-    drawn = RecordingPen(); mountain_path.draw(drawn)
-    split, mountain_contours = [], []
-    for command in drawn.value:
-        split.append(command)
-        if command[0] in ('closePath', 'endPath'):
-            mountain_contours.append(split); split = []
-    mountain = group(mountain_contours)
-    forms['⿳艹田⿵冂山'] = [group(shell_contours), mountain]
-    # 黃 minus its 八: the shared shape continues as the 𠆢 of 金 below.
-    huang = cs('黃')
-    if style == 'sans':
-        crown = crop_group(huang, (-50, 82, 1050, 1000))
-    else:
-        crown = group(huang[2:])
-    forms['⿱廿⿱一由'] = [crown]
+    # 萬 with 両's bottom: 萬's 艹田 over the 冂 and 山 of 両. The two pieces meet at the bar
+    # under 田; 両's lower body is widened to 萬's frame and left hanging, with no edge added
+    # below it. 万 itself ends at the 冂's hook, so a closed bottom turns the box into a frame.
+    top_y = 200 if style == 'sans' else 280
+    bot_y = 452 if style == 'sans' else 530
+    sy = 0.395 if style == 'sans' else 0.46
+    sx = 1.0 if style == 'sans' else 1.02
+    top = crop_group(cs('萬'), (-2000, top_y, 3000, 2000))
+    bot = crop_group(cs('両'), (-2000, -2000, 3000, bot_y))
+    def lower(group):
+        ops, points = group
+        out = []
+        for i in range(0, len(points), 2):
+            out.append((points[i] - 500) * sx + 500)
+            out.append((points[i + 1] - bot_y) * sy + top_y)
+        return [ops, out]
+    forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
