@@ -72,15 +72,16 @@ function publicHref(value) {
   } catch { return '' }
 }
 
-/** The share link within the size a report can carry: the document part is dropped rather than cut,
- *  so a link that arrives still reopens the sequence. @param {string} value @returns {string} */
+/** The share link within the size a report can carry. The document part goes first; a link still
+ *  over the size after that is dropped whole, since a cut one would open a different sequence.
+ *  @param {string} value @returns {string} */
 export function shareLink(value) {
   const whole = shareHref(value)
   if (whole.length <= LIMITS.link) return whole
   const url = new URL(whole)
   url.searchParams.delete('doc')
   const short = url.href
-  return short.length <= LIMITS.link ? short : short.slice(0, LIMITS.link)
+  return short.length <= LIMITS.link ? short : ''
 }
 
 /** A link on the published site, carrying only the sequence and the document. @param {string} value */
