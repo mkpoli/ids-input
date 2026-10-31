@@ -982,8 +982,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
   唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
-  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 and 兩's
-  冂从; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
+  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with
+  両's bottom, 冂 around 山; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
@@ -1091,16 +1091,18 @@ through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys and accept drops. A click, the
 arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
-`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click or Delete
-closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the middle
-column are divided by a draggable splitter, the tree starting
+`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click, Delete or the
+tab's menu closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the
+middle column are divided by a draggable splitter, the tree starting
 larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
 columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
 keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
 commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
-the active document; right-clicking a tab or pressing
-Shift+F10 on it offers the same action for that tab. The copy opens beside its source with its
-selection, undo history and layer transforms, which can then be edited independently.
+the active document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: duplicate it,
+close it, close the other tabs, close the tabs on either side, or close all tabs. Close all asks
+first, and Undo after a group close restores the tabs in their old places with the tab that was
+being edited. Duplicate opens the copy beside its source with its selection, undo history and layer
+transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
 with its character and code point, an abbreviated character, or a mark when it has none. It opens as
