@@ -117,6 +117,15 @@ try {
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the single tab')
   assert.equal(await active(), 'tab-1', 'a surviving active tab stays shown')
 
+  // Closing the shown tab shows its right neighbour; Undo shows the closed tab again.
+  await open('tab-1')
+  await item('Close tab').click()
+  assert.deepEqual(await order(), ['tab-0', 'tab-2', 'tab-3'], 'close tab closes the shown tab')
+  assert.equal(await active(), 'tab-2', 'its right neighbour is shown')
+  await undo()
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the shown tab')
+  assert.equal(await active(), 'tab-1', 'undo shows the tab that was closed')
+
   // Ctrl+Shift+T reopens the last closed tab; the tab menu reopens a whole group.
   await open('tab-0')
   await item('Close tab').click()
