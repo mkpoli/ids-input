@@ -284,5 +284,7 @@
   "app.titleDialog.label": "제목",
   "app.titleDialog.hint": "저장 및 내보낸 파일에 표시됩니다. 탭은 구성 문자열을 유지합니다.",
   "app.titleDialog.placeholder": "제목 없는 문서",
-  "app.save": "저장"
+  "app.save": "저장",
+  "app.phone.panels": "작업 영역 패널",
+  "app.phone.compose": "구성"
 }
