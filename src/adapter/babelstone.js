@@ -590,7 +590,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
   let relations = null
-  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal ? read() : new Map()])
+  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal || shuishu ? read() : new Map()])
     .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
     .catch(error => { relations = null; throw error })
 
@@ -600,7 +600,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
-      if (info?.script === 'component' && (given || ids || smallSeal)) {
+      if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
         info.relations.push(...componentExamples(char, doc, await read()))
         for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
         if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
