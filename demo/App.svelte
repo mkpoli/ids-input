@@ -1065,9 +1065,9 @@
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
       <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
-        <button type="button" role="tab" aria-selected={phonePane === 'input'} onclick={() => phoneTab('input')}>{t('app.input')}</button>
-        <button type="button" role="tab" aria-selected={phonePane === 'compose'} onclick={() => phoneTab('compose')}>{t('app.phone.compose')}</button>
-        <button type="button" role="tab" aria-selected={phonePane === 'output'} onclick={() => phoneTab('output')}>{t('app.output')}</button>
+        <button type="button" role="tab" aria-selected={phonePane === 'input'} onclick={() => phoneTab('input')}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
+        <button type="button" role="tab" aria-selected={phonePane === 'compose'} onclick={() => phoneTab('compose')}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
+        <button type="button" role="tab" aria-selected={phonePane === 'output'} onclick={() => phoneTab('output')}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
       </div>
       <section class="pane input" class:phone-active={phonePane === 'input'} id="input-panel" aria-label={t('app.input')}>
         <div class="block">
@@ -1446,7 +1446,7 @@
   .phone-tabs{display:none}
   @media (max-width:640px){
     .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:-12px -12px 0;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)}
-    .phone-tabs button{flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+    .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
     .phone-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
     .phone-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
     .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
