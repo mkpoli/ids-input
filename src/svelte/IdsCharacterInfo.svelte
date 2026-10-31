@@ -41,9 +41,10 @@
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
-  // The class named as a message writes the stroke glyph first, then its name (㇐ Horizontal).
+  // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
+  // the glyph is the first character and the name is what follows it.
   const strokeLabel = $derived(strokeClassName(t, strokes?.first))
-  const strokeGlyph = $derived(strokeLabel.split(' ')[0] ?? '')
+  const strokeGlyph = $derived(Array.from(strokeLabel)[0] ?? '')
   const strokeName = $derived(strokeLabel.slice(strokeGlyph.length).trim())
 
   function close() {

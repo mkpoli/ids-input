@@ -40,7 +40,8 @@ it('carries the first stroke Rime records for each character', () => {
   // The parts palette reads the same dictionary, so the two agree wherever both record a class.
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
   const rows = palette.parts.map(row => Object.fromEntries(palette.columns.map((name, index) => [name, row[index]])))
-  const shared = rows.filter(row => row.first && keys.includes(row.part))
+  const held = new Map(keys.map((key, index) => [key, firsts[index]]))
+  const shared = rows.filter(row => row.first && held.has(row.part))
   expect(shared.length).toBeGreaterThan(5000)
-  expect(shared.filter(row => first(row.part) !== row.first).map(row => row.part)).toEqual([])
+  expect(shared.filter(row => held.get(row.part) !== row.first).map(row => row.part)).toEqual([])
 })
