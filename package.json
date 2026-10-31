@@ -82,7 +82,8 @@
     "preview": "vite preview demo",
     "dev:worker": "bunx wrangler dev",
     "prepack": "node scripts/emit-types.mjs",
-    "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
+    "build:tangut-layers": "node scripts/build_tangut_layers.mjs",
+    "check:demo": "bun scripts/check-demo.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.4",

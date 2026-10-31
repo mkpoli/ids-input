@@ -1322,7 +1322,13 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
-`PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+`PASS` and exits non-zero on a failure.
+
+`bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
+page load, runs every `demo/check-*.js` against it, and stops the server again. `--only <text>`
+narrows the set, `--port <n>` moves the server, and `--retries <n>` gives a failing check more
+attempts (one by default), so a check that only lost a race with the dev server does not fail the
+run.
 
 The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
 `.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs
