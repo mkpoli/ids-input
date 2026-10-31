@@ -328,36 +328,21 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** The additional tables, as one list; an optional single table stays one. @type {Array<string | URL>} */
   const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
-  /** Whether the last read lost its decomposition file, so the table is read again next time. */
-  let shuiFailed = false
-  const read = () => {
-    if (table) return table
-    shuiFailed = false
-    table = Promise.all([
-      given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
-        : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
-      ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
-      componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
-      readSeal(),
-      // The Shuishu decompositions are an extra reading beside the sources; a failed file costs the
-      // search those descriptions only, and is read again on the next call.
-      readShuishu().catch(() => { shuiFailed = true; return null }),
-    ]).then(([base, ...rest]) => {
-      const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
-      const numbered = /** @type {string} */ (rest[extraIds.length])
-      const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
-      const shuiDoc = /** @type {import('./shuishu-data.js').ShuishuData | null} */ (rest[extraIds.length + 2])
-      const parts = readNumberedComponents(numbered)
-      const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
-      /** @type {Map<string, Sequence[]>} */
-      const all = new Map(merged)
-      if (doc) for (const [char, texts] of sealTable(doc)) all.set(char, texts)
-      if (shuiDoc) for (const [char, texts] of shuishuSequences(shuiDoc)) all.set(char, texts)
-      if (shuiFailed) table = null
-      return all
-    }).catch(error => { table = null; throw error })
-    return table
-  }
+  const read = () => table ??= Promise.all([
+    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
+      : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+    ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
+    componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
+    readSeal(),
+  ]).then(([base, ...rest]) => {
+    const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
+    const numbered = /** @type {string} */ (rest[extraIds.length])
+    const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
+    const parts = readNumberedComponents(numbered)
+    const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
+    return doc ? new Map([...merged, ...sealTable(doc)]) : merged
+  })
+    .catch(error => { table = null; throw error })
 
   /** The characters with a description computed from other characters, and that description.
    * @type {Promise<Map<string, string>> | null} */
@@ -375,18 +360,31 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let searchTable = null
   const readSearch = () => {
     if (searchTable) return searchTable
-    searchTable = read().then(async found => {
-      /** @type {Map<string, string>} */
-      let derived
-      try { derived = await readLayers() }
-      catch { searchTable = null; return found }
-      searchGeneration++
-      if (!derived.size) return found
+    // Both extra readings are optional and are tried again on the next call; the source search
+    // serves until then.
+    let lost = false
+    searchTable = Promise.all([
+      read(),
+      readLayers().catch(() => { lost = true; return new Map() }),
+      readShuishu().catch(() => { lost = true; return null }),
+    ]).then(([found, derived, shuiDoc]) => {
+      /** @type {Map<string, Sequence[]>} */
       const merged = new Map(found)
+      let changed = false
       for (const [char, text] of derived) {
         const sequences = merged.get(char) ?? []
-        if (!sequences.some(sequence => sequence.text === text)) merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
+        if (sequences.some(sequence => sequence.text === text)) continue
+        merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
+        changed = true
       }
+      // The Shuishu decompositions are editorial and carry no source region.
+      if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
+        const had = merged.get(char) ?? []
+        merged.set(char, [...sequences, ...had.filter(sequence => !sequences.some(own => own.text === sequence.text))])
+        changed = true
+      }
+      if (changed) searchGeneration++
+      if (lost) searchTable = null
       return merged
     }).catch(error => { searchTable = null; throw error })
     return searchTable
@@ -590,18 +588,18 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
   let relations = null
-  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal || shuishu ? read() : new Map()])
+  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal || shuishu ? readSearch() : new Map()])
     .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
     .catch(error => { relations = null; throw error })
 
   return {
-    table: read,
+    table: readSearch,
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
       if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
-        info.relations.push(...componentExamples(char, doc, await read()))
+        info.relations.push(...componentExamples(char, doc, await readSearch()))
         for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
         if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
       }
