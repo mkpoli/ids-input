@@ -243,13 +243,14 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
   const localSearch = async () => {
-    const table = await readSearch(), generation = searchGeneration
+    const { table, generation } = await readSearch()
     if (local && localGeneration === generation) return local
-    local = Promise.all([Promise.resolve(table), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
+    const building = local = Promise.all([Promise.resolve(table), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
       localGeneration = generation
       return createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })
     }).catch(error => { local = null; throw error })
-    return local
+    localGeneration = generation
+    return building
   }
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
@@ -353,16 +354,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     .then(parseLayers)
     .catch(error => { layered = null; throw error })
 
-  /** The source table and the derived descriptions, for the description search and `encoded`. The
-   * derived reading is an alternative description, so a layered sequence finds its character.
-   * A failed extra reading leaves the source descriptions standing and is tried again on the next
-   * call, instead of turning the failure into a source-only table for the life of the adapter.
-   * @type {Promise<Map<string, Sequence[]>> | null} */
+  /** The source table with the extra readings, and the generation it was built at.
+   * @type {{ generation: number, table: Promise<Map<string, Sequence[]>> } | null} */
   let searchTable = null
   /** The extra readings the table was built from, to notice a retried file bringing something else.
    * @type {{ derived: Map<string, string>, shui: Map<string, string> }} */
   let searchUsed = { derived: new Map(), shui: new Map() }
-  /** The optional readings still missing, the retry, and whether one is running. */
+  /** The optional readings still missing, and the retry running for them. */
   let lostLayers = false
   let lostShui = false
   /** @type {Promise<void> | null} */
@@ -371,8 +369,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const byText = sequences => new Map([...sequences].map(([char, texts]) => [char, texts.map(text => text.text).join('|')]))
   /** @param {Map<string, string>} next @param {Map<string, string>} had */
   const differs = (next, had) => next.size !== had.size || [...next].some(([char, text]) => had.get(char) !== text)
-  // A missing reading is retried behind the table that already serves, so the rebuild happens when
-  // the file comes back.
+  // A missing reading is retried before the next answer, so the rebuild happens as soon as the file
+  // comes back; a file that stays away costs one request.
   const retryLost = () => retrying ??= Promise.all([
     lostLayers ? readLayers().then(derived => derived, () => null) : null,
     lostShui ? readShuishu().then(shuiDoc => shuiDoc, () => null) : null,
@@ -389,13 +387,20 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     }
     if (changed) searchTable = null
   }, () => {}).finally(() => { retrying = null })
+  /**
+   * The search table with the extra readings and the generation it was built at. A build carries its
+   * own generation, so a cache built while it was pending can never be mistaken for a newer one.
+   * @returns {Promise<{ generation: number, table: Map<string, Sequence[]> }>}
+   */
   const readSearch = async () => {
     if (searchTable) {
-      // A lost file is read again before answering, so a caller never sees the loss twice.
       if (lostLayers || lostShui) await retryLost()
-      if (searchTable) return searchTable
+      if (searchTable) return { generation: searchTable.generation, table: await searchTable.table }
     }
-    searchTable = Promise.all([
+    lostLayers = false
+    lostShui = false
+    const generation = ++searchGeneration
+    const table = Promise.all([
       read(),
       readLayers().catch(() => { lostLayers = true; return new Map() }),
       readShuishu().catch(() => { lostShui = true; return null }),
@@ -415,11 +420,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         const had = merged.get(char) ?? []
         merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
       }
-      searchGeneration++
       searchUsed = { derived, shui: byText(shui) }
       return merged
     }).catch(error => { searchTable = null; throw error })
-    return searchTable
+    searchTable = { generation, table }
+    return { generation, table: await table }
   }
 
   /** @type {Promise<import('../core/sketch-data.js').SketchTemplate[]> | null} */
@@ -622,23 +627,23 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let relations = null
   let relationsGeneration = -1
   const relationIndex = async () => {
-    const table = given || ids || smallSeal || shuishu ? await readSearch() : new Map()
-    const generation = searchGeneration
-    if (relations && relationsGeneration === generation) return relations
-    relations = Promise.all([readInformation(), Promise.resolve(table)])
-      .then(([{ doc, seal }, found]) => { relationsGeneration = generation; return createRelationSearch(doc, seal, found) })
+    const built = given || ids || smallSeal || shuishu ? await readSearch() : { generation: searchGeneration, table: new Map() }
+    if (relations && relationsGeneration === built.generation) return relations
+    const building = relations = Promise.all([readInformation(), Promise.resolve(built.table)])
+      .then(([{ doc, seal }, found]) => createRelationSearch(doc, seal, found))
       .catch(error => { relations = null; throw error })
-    return relations
+    relationsGeneration = built.generation
+    return building
   }
 
   return {
-    table: readSearch,
+    async table() { return (await readSearch()).table },
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
       if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
-        info.relations.push(...componentExamples(char, doc, await readSearch()))
+        info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
         for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
         if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
       }
@@ -647,7 +652,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     } } : {}),
     /** @param {string} char @param {import('./types.js').Options} [options] */
     async structure(char, { signal } = {}) {
-      const found = (await readSearch()).get(char) ?? []
+      const found = (await readSearch()).table.get(char) ?? []
       signal?.throwIfAborted()
       // A computed character-first description replaces its source in the decomposition tree;
       // both remain indexed for search. Preserve malformed descriptions as source text.
@@ -748,9 +753,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
       // again on the next call, and the source index serves until then.
       const search = await readSearch()
-      if (!described || describedGeneration !== searchGeneration) {
-        const generation = searchGeneration
-        described = Promise.resolve(search).then(found => {
+      if (!described || describedGeneration !== search.generation) {
+        described = Promise.resolve(search.table).then(found => {
           /** @type {Map<string, string[]>} */
           const by = new Map()
           const prefixes = new Set()
@@ -761,9 +765,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
             const chars = by.get(text)
             if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
           }
-          describedGeneration = generation
           return { by, prefixes }
         }).catch(error => { described = null; throw error })
+        describedGeneration = search.generation
       }
 
       const { by, prefixes } = await described
@@ -833,10 +837,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       return result
     },
     async containing(asked, { limit = 24 } = {}) {
-      const [found, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
-      if (!index || indexGeneration !== searchGeneration) {
-        index = componentIndex(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
-        indexGeneration = searchGeneration
+      const [built, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
+      if (!index || indexGeneration !== built.generation) {
+        index = componentIndex(new Map([...built.table].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
+        indexGeneration = built.generation
       }
       return index.search(asked, limit)
     },

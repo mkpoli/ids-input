@@ -125,6 +125,16 @@ describe('Shuishu', () => {
     expect(calls).toBe(2)
   })
 
+  it('keeps serving while the decomposition file stays away', async () => {
+    let calls = 0
+    const get = async () => { calls++; return new Response('', { status: 503 }) }
+    const adapter = shuishuAdapter({ table: new Map([['𛌘', [{ text: '⿱𛔁𛔀', regions: '' }]]]), data: 'shuishu.json.gz', fetch: get })
+    expect(await adapter.structure('𛌘')).toEqual([{ text: '⿱𛔁𛔀', regions: '' }])
+    expect(await adapter.structure('𛌘')).toEqual([{ text: '⿱𛔁𛔀', regions: '' }])
+    // One attempt per call, and the source description stands.
+    expect(calls).toBe(2)
+  })
+
   it("asks for a Shuishu character's parts", async () => {
     const adapter = shuishuAdapter({ data, palette: [] })
     const built = data.parts.find(part => part.ids)
