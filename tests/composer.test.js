@@ -701,3 +701,73 @@ describe('the leading component under a cover', () => {
     expect(span(head)).toEqual([50, 950])
   })
 })
+
+
+describe('a child contained by its cover', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return placed(p, p.box, p.box, 0, 'test')
+  }
+  // 宀: ink from 100 to 900, its side strokes reaching down to 500.
+  const cover = () => part([100, 500, 900, 700])
+  const contain = (op, children, groups) =>
+    Composer.prototype.containUnderCover.call({ partial: false }, op, children, groups)
+  const span = p => [p.target[0], p.target[2]]
+
+  it('brings a child rising beside the cover’s side strokes in to the cover’s ink', () => {
+    // A column standing up past the cover's left edge, as the 爿 of 㝲 does.
+    const leg = part([20, 300, 120, 650]), rest = part([400, 300, 980, 650])
+    contain('⿱', ['宀', ['⿰', '爿', '罒']], [[cover()], [leg, rest]])
+    // 980 is the farthest from the middle, 480 out; it comes in to 420, the cover's half plus 5%.
+    const factor = 420 / 480
+    expect(span(leg)[0]).toBeCloseTo(500 + (20 - 500) * factor)
+    expect(span(rest)[1]).toBeCloseTo(500 + (980 - 500) * factor)
+  })
+
+  it('keeps the child’s height and the middle it is centred on', () => {
+    const leg = part([20, 300, 120, 650]), rest = part([400, 300, 980, 650])
+    contain('⿱', ['宀', ['⿰', '爿', '罒']], [[cover()], [leg, rest]])
+    expect(leg.target[1]).toBe(300)
+    expect(rest.target[3]).toBe(650)
+    expect((span(leg)[0] + span(rest)[1]) / 2).toBeCloseTo(500)
+  })
+
+  it('leaves ink that only spreads below the side strokes, as the foot of 木 in 宋 does', () => {
+    const splay = part([400, 300, 600, 480], [20, 0, 980, 60])
+    contain('⿱', ['宀', '木'], [[cover()], [splay]])
+    expect(span(splay)).toEqual([20, 980])
+  })
+
+  it('leaves a child that reaches less than a twentieth past the cover', () => {
+    const near = part([90, 300, 910, 650])
+    contain('⿱', ['宀', '口'], [[cover()], [near]])
+    expect(span(near)).toEqual([90, 910])
+  })
+
+  it('leaves a child already standing inside the cover', () => {
+    const inside = part([300, 300, 700, 650])
+    contain('⿱', ['宀', '子'], [[cover()], [inside]])
+    expect(span(inside)).toEqual([300, 700])
+  })
+
+  it('contains under a cover lower in a stack as well as under the first', () => {
+    const top = part([100, 800, 900, 900]), lower = part([20, 300, 980, 650])
+    contain('⿳', ['艹', '冖', '帚'], [[top], [cover()], [lower]])
+    expect(span(lower)[0]).toBeGreaterThan(20)
+    expect(span(lower)[1]).toBeLessThan(980)
+  })
+
+  it('contains a mirrored part where it is drawn, not where its target sits', () => {
+    const wide = part([20, 300, 980, 650])
+    wide.flips = [{ x: true, y: false, about: [300, 0] }]
+    contain('⿱', ['宀', '⿾X'], [[cover()], [wide]])
+    // Drawn from −380 to 580: 880 out from the middle on the left, brought in to 420.
+    const factor = 420 / 880, drawn = drawnBox(wide)
+    expect(drawn[0]).toBeCloseTo(80)
+    expect(drawn[2]).toBeCloseTo(500 + 80 * factor)
+  })
+})

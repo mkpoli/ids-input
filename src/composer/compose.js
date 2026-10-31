@@ -55,6 +55,8 @@ const COVER_BAR = 0.72
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
+// How far past a cover's own ink the child may reach beside its side strokes before it is brought in.
+const COVER_REACH = 1.05
 
 /** A description with this many leaves and no character to follow is drawn in cells: the
  *  composer's host cuts fit a character's positions, and a dense invented description has none, so
@@ -1124,6 +1126,7 @@ export class Composer {
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
     this.fitUnderCover(op, children, groups)
     this.clearUnderCover(op, children, groups)
+    this.containUnderCover(op, children, groups)
     return this.flatten(groups)
   }
 
@@ -1251,6 +1254,7 @@ export class Composer {
     } else if (!compactYan) this.space(axis, groups)
     this.fitUnderCover(op, children, groups)
     this.clearUnderCover(op, children, groups)
+    this.containUnderCover(op, children, groups)
     return this.flatten(groups)
   }
 
@@ -1467,16 +1471,9 @@ export class Composer {
   /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
-    const pairs = op === '⿱' ? (COVERS.has(children[0]) ? [[0, 1]] : [])
-      : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && COVERS.has(children[i])).map(i => [i, i + 1]) : []
-    for (const [above, below] of pairs) {
+    for (const [above, below] of coverPairs(op, children, COVERS)) {
       const cover = groups[above] ?? [], lower = groups[below] ?? []
       if (!cover.length || !lower.length) continue
-      const bounds = group => {
-        const boxes = group.map(drawnBox)
-        return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
-          Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
-      }
       const coverBox = bounds(cover), lowerBox = bounds(lower)
       const width = lowerBox[2] - lowerBox[0], height = lowerBox[3] - lowerBox[1]
       if (width <= 0 || height <= 0) continue
@@ -1535,17 +1532,40 @@ export class Composer {
     if (!cover?.length || !lower?.length) return
     const head = this.topOperand(children[1], lower)
     if (!head) return
-    const box = group => {
-      const boxes = group.map(drawnBox)
-      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
-        Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
-    }
-    const coverBox = box(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
-    const headBox = box(head)
+    const coverBox = bounds(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
+    const headBox = bounds(head)
     if (want <= 0 || headBox[2] - headBox[0] <= want || !flatTopped(head, headBox)) return
     const middle = (coverBox[0] + coverBox[2]) / 2
     const to = [middle - want / 2, headBox[1], middle + want / 2, headBox[3]]
     for (const part of head) part.target = targetFor(part, mapped(drawnBox(part), headBox, to))
+  }
+
+  /** A cover's side strokes mark how far what it covers may reach beside them: where the child
+   *  rises alongside them — the 爿 of 㝲, the 爪 of 𭓹 — it stays within the cover's own ink, and
+   *  the whole child narrows about the cover's middle to put it there. Ink below the side strokes
+   *  is free to spread, so the splayed foot of 木 in 宋 and of 八 in 穴 is left as drawn. Covers
+   *  lower in a stack hold their children the same way. */
+  containUnderCover(op, children, groups) {
+    if (this.partial) return
+    for (const [above, below] of coverPairs(op, children, SIDE_COVERS)) {
+      const cover = groups[above] ?? [], lower = groups[below] ?? []
+      if (!cover.length || !lower.length) continue
+      const coverBox = bounds(cover), lowerBox = bounds(lower)
+      const middle = (coverBox[0] + coverBox[2]) / 2, half = (coverBox[2] - coverBox[0]) / 2
+      if (half <= 0) continue
+      let reach = 0
+      for (const part of lower) for (const points of drawnContours(part))
+        for (let k = 0; k < points.length; k += 2) {
+          if (points[k + 1] < coverBox[1]) continue
+          reach = Math.max(reach, Math.abs(points[k] - middle))
+        }
+      const room = half * COVER_REACH
+      if (reach <= room) continue
+      const factor = room / reach
+      const to = [middle + (lowerBox[0] - middle) * factor, lowerBox[1],
+        middle + (lowerBox[2] - middle) * factor, lowerBox[3]]
+      for (const part of lower) part.target = targetFor(part, mapped(drawnBox(part), lowerBox, to))
+    }
   }
 
   // ---------------------------------------------------------------- weight
@@ -1581,6 +1601,20 @@ export class Composer {
 }
 
 // -------------------------------------------------------------------- free functions
+/** The box a group of placed parts is drawn in. */
+function bounds(group) {
+  const boxes = group.map(drawnBox)
+  return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+    Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+}
+
+/** The operand pairs where one of `covers` stands directly above another operand. */
+function coverPairs(op, children, covers) {
+  if (op === '⿱') return covers.has(children[0]) ? [[0, 1]] : []
+  if (op === '⿳') return [0, 1].filter(i => i + 1 < children.length && covers.has(children[i])).map(i => [i, i + 1])
+  return []
+}
+
 /** Whether a group leads with a wide flat top: its ink reaches both sides of its box within the
  *  top `COVER_HEAD` of its height, as the net 罒 and the block 旧 do and 王 and 心 do not. */
 function flatTopped(group, box) {
