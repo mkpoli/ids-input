@@ -1010,6 +1010,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
   disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- 笹原宏之, [第83回 漢字の音義の一人歩き](https://dictionary.sanseido-publ.co.jp/column/kanji_genzai083),
+  三省堂「漢字の現在」, 2011-02-15 (read 2026-10-31): 妛's origin in 𡚴 and 彁's unidentified
+  source at the time of writing. The ghost-kanji descriptions are BabelStone's Japanese forms.
+- 小林肇, [新聞漢字あれこれ91 幽霊漢字があやうく紙面に](https://www.kanjicafe.jp/detail/10128.html),
+  日本漢字能力検定協会「漢字カフェ」, 2022-04-06 (read 2026-10-31): identifies 椦 as a ghost kanji
+  and reports its presumed mistaken inclusion for 橳. The books it cites are consulted indirectly.
 - [Chữ Nôm](https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m), Wikipedia, read 2026-10-30: the
   invented Nôm characters in `demo/lib/examples.js` and their readings, from the Tale of Kiều table
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
