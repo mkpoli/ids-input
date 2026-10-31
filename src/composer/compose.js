@@ -646,6 +646,8 @@ export class Composer {
     const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
     if (found) return [found]
     node = this.respelled(node)
+    // Once nothing draws this node whole, a run of it the export designs as one body is regrouped.
+    node = this.groupedStack(node) ?? node
     const op = node[0], children = node.slice(1)
     if (op === MIRROR || op === ROTATE) return this.flipped(op, children[0], region, atRoot)
     if (op === VARIANT) return this.node(children[0], region, atRoot)
@@ -931,6 +933,48 @@ export class Composer {
     if (op === '⿶' && outer === '𩰲') return { tree: ['⿱', ['⿲', '弓', inner, '弓'], '鬲'], innerIndex: 1 }
     if (op === '⿹' && outer === '𣪊') return { tree: ['⿰', ['⿱', ['⿳', '士', '冖', '一'], inner], '殳'], innerIndex: 3 }
     return null
+  }
+
+  /**
+   * How much of one designed body the export holds for `key`: the host cuts of the run itself, the
+   * cuts of the character that spells it, and its own glyph. Cuts on the left or the top are not
+   * counted, as `instance` cannot use them. A run no font designs as a body scores 0.
+   */
+  bodySupport(key) {
+    if (key.includes(EMPTY) || this.excluded(key)) return 0
+    const open = place => !this.C.SIDED_PLACES.includes(place)
+    const cuts = name => this.data.places(name).filter(open).reduce((n, place) => n + this.data.hosts(name, place).length, 0)
+    let support = cuts(key)
+    const encoded = this.bySequence(key)
+    if (encoded && !this.excluded(encoded) && this.glyphRecord(encoded)) support += 1 + cuts(encoded)
+    return support
+  }
+
+  /**
+   * A flat stack holding a run the export designs as one body (亠厶 in ⿳亠厶十, 八𠆢 as 谷 has it),
+   * regrouped so that run is one operand. The run then shares the stack as one body and divides its
+   * own row, instead of each of the three operands taking a third of the stack and the body's two
+   * halves standing as far apart as the operand beside them. Answers the rewritten node, or null
+   * where no run is at least as much of a body as the whole stack.
+   */
+  groupedStack(node) {
+    if (!Array.isArray(node) || node.length !== 4) return null
+    const op = node[0]
+    if (op !== '⿳' && op !== '⿲') return null
+    const key = keyOf(node)
+    if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
+    const pair = op === '⿳' ? '⿱' : '⿰'
+    const children = node.slice(1)
+    // A stack the export draws whole keeps its own body; only a stronger run replaces it.
+    if (this.bySequence(key)) return null
+    let best = null
+    for (const at of [0, 1]) {
+      const run = [pair, children[at], children[at + 1]]
+      const support = this.bodySupport(keyOf(run))
+      if (support > this.bodySupport(key) && (!best || support > best.support)) best = { at, run, support }
+    }
+    if (!best) return null
+    return best.at === 0 ? [pair, best.run, children[2]] : [pair, children[0], best.run]
   }
 
   /** Rendering rewrites for split enclosures and compound corners (原 in 愿). */

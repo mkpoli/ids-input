@@ -1,0 +1,115 @@
+// A flat stack holding a run the export designs as one body is drawn as that body in its own row
+// (`Composer.groupedStack`), on a fixture export that names which runs it designs.
+import { describe, expect, it } from 'bun:test'
+import { createHash } from 'node:crypto'
+import { gzipSync } from 'node:zlib'
+import { Composer } from '../src/composer/compose.js'
+import { compose, createSource, sketch } from '../src/composer/loader.js'
+import { groupParts } from '../src/core/preview.js'
+import { files } from './fixtures/composer-export.js'
+
+const hex = text => createHash('sha256').update(text).digest('hex')
+const int16 = values => Buffer.from(Int16Array.from(values).buffer).toString('base64')
+const boxGlyph = ([x0, y0, x1, y1]) => ({ v: 1, b: [x0, y0, x1, y1],
+  p: [['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(value => value * 4)), int16(Array(8).fill(0))]] })
+
+/** The fixture export with `records` added, and host lists for `hosts` (`[key, place, entries]`). */
+const sourceOf = (records = {}, hosts = []) => {
+  const extra = new Map()
+  const put = (folder, text, value) => {
+    const name = `${folder}/${hex(text).slice(0, 3)}.json`
+    const file = extra.has(name) ? JSON.parse(extra.get(name)) : {}
+    file[hex(text)] = value
+    extra.set(name, JSON.stringify(file))
+  }
+  for (const [key, record] of Object.entries(records)) put('g', key, record)
+  for (const [key, place, entries] of hosts) put('p', `${place}\t${key}`, { hosts: entries })
+  return createSource(async name => {
+    const body = extra.has(name) ? gzipSync(extra.get(name)) : files[name]
+    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+  })
+}
+
+const cut = (host, box, rank = 0) => ({ h: host, r: rank, c: { k: [0], b: box, fr: box, wh: [0, 0, 1000, 1000], g: 0 } })
+// 口 over 木 as a body the export holds two cuts of, and a stack of three where it is the upper run.
+const bodyRecords = { '⿱口木': { k: '⿱口木', P: ['B', 'M'] } }
+const bodyHosts = [['⿱口木', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱口木', 'M', [cut('厃', [60, 200, 940, 700])]]]
+
+const composerOf = async (source, options = {}) => {
+  await source.ready()
+  for (let round = 0; round < 8; round++) {
+    const store = source.store()
+    const composer = new Composer(store, options)
+    composer.bodySupport('⿱口木')
+    composer.bodySupport('⿱木扌')
+    composer.bodySupport('⿳口木扌')
+    if (!store.missing.size) return composer
+    await source.load(store.missing)
+  }
+  throw new Error('the fixture never finished loading')
+}
+
+describe('a run of a flat stack the export designs as one body', () => {
+  it('counts the cuts and the glyph the export holds of a body', async () => {
+    const composer = await composerOf(sourceOf(bodyRecords, bodyHosts))
+    expect(composer.bodySupport('⿱口木')).toBe(2)
+    expect(composer.bodySupport('⿱木扌')).toBe(0)
+    // A character spelling the run counts its own glyph as well as its cuts.
+    const spelled = await composerOf(sourceOf({ '⿱口木': { k: '⿱口木', e: '𪱳' }, 𪱳: { k: '𪱳', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 } }))
+    expect(spelled.bodySupport('⿱口木')).toBe(1)
+  })
+
+  it('leaves the cuts a left or top place holds out of the count', async () => {
+    const sided = await composerOf(sourceOf({ '⿱口木': { k: '⿱口木', P: ['L', 'T'] } },
+      [['⿱口木', 'L', [cut('永', [0, 0, 400, 900])]], ['⿱口木', 'T', [cut('厃', [0, 500, 900, 900])]]]))
+    expect(sided.bodySupport('⿱口木')).toBe(0)
+    expect(sided.groupedStack(['⿳', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('regroups the stack around the run, and leaves a stack with no such run alone', async () => {
+    const composer = await composerOf(sourceOf(bodyRecords, bodyHosts))
+    expect(composer.groupedStack(['⿳', '口', '木', '扌'])).toEqual(['⿱', ['⿱', '口', '木'], '扌'])
+    expect(composer.groupedStack(['⿳', '扌', '口', '木'])).toEqual(['⿱', '扌', ['⿱', '口', '木']])
+    expect(composer.groupedStack(['⿳', '木', '扌', '口'])).toBeNull()
+    expect(composer.groupedStack(['⿱', '口', '木'])).toBeNull()
+    // A row of three looks for a run on its own axis, which this export designs no body of.
+    expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('takes the better supported of two runs', async () => {
+    const composer = await composerOf(sourceOf(
+      { '⿱口木': { k: '⿱口木', P: ['B'] }, '⿱木扌': { k: '⿱木扌', P: ['B', 'M'] } },
+      [['⿱口木', 'B', [cut('永', [60, -40, 940, 500])]],
+        ['⿱木扌', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱木扌', 'M', [cut('厃', [60, 200, 940, 700])]]]))
+    expect(composer.bodySupport('⿱口木')).toBe(1)
+    expect(composer.bodySupport('⿱木扌')).toBe(2)
+    expect(composer.groupedStack(['⿳', '口', '木', '扌'])).toEqual(['⿱', '口', ['⿱', '木', '扌']])
+  })
+
+  it('keeps a stack the export draws whole, and one it designs as a whole body', async () => {
+    const spelled = await composerOf(sourceOf({ ...bodyRecords, '⿳口木扌': { k: '⿳口木扌', e: '𪱳' },
+      𪱳: { k: '𪱳', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 } }, bodyHosts))
+    expect(spelled.groupedStack(['⿳', '口', '木', '扌'])).toBeNull()
+    const whole = await composerOf(sourceOf({ ...bodyRecords, '⿳口木扌': { k: '⿳口木扌', P: ['B', 'M'] } },
+      [...bodyHosts, ['⿳口木扌', 'B', [cut('永', [60, -40, 940, 900])]], ['⿳口木扌', 'M', [cut('厃', [60, -40, 940, 900])]]]))
+    expect(whole.groupedStack(['⿳', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('draws the stack as the nested description of the same leaves', async () => {
+    const source = sourceOf(bodyRecords, bodyHosts)
+    const grouped = await compose(source, '⿳口木扌')
+    expect(grouped.d).toBe((await compose(sourceOf(bodyRecords, bodyHosts), '⿱⿱口木扌')).d)
+    // The run stands closer together than the operand below it, which three equal rows never do.
+    const [top, middle, bottom] = grouped.parts.map(part => part.box)
+    expect(middle[1] - (top[1] + top[3])).toBeLessThan(bottom[1] - (middle[1] + middle[3]))
+    expect(grouped.d).not.toBe((await compose(sourceOf(), '⿳口木扌')).d)
+  })
+
+  it('keeps one piece per leaf, in reading order, in a separated drawing', async () => {
+    const source = sourceOf(bodyRecords, bodyHosts)
+    const drawn = await compose(source, '⿳口木扌', { separate: true })
+    const leaves = await sketch(source, '⿳口木扌')
+    expect(leaves).toHaveLength(3)
+    expect(groupParts(drawn.parts, leaves)?.map(group => group.parts)).toEqual([[0], [1], [2]])
+  })
+})
