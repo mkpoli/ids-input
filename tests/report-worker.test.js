@@ -96,6 +96,16 @@ describe('report text escaping', () => {
   it('defuses a line that would open a list or a heading', () => {
     expect(escapeMarkdown('- one\n1. two\n# three')).toBe('\\- one\n1\\. two\n\\# three')
   })
+  it('stops a mention notifying someone, and leaves an address whole', () => {
+    expect(escapeMarkdown('ping @someone about it')).toBe('ping @\u200bsomeone about it')
+    expect(escapeMarkdown('@someone')).toBe('@\u200bsomeone')
+    expect(escapeMarkdown('write to me@example.com')).toBe('write to me@example.com')
+  })
+  it('stops a mention notifying someone, and leaves an address whole', () => {
+    expect(escapeMarkdown('ping @someone about it')).toBe('ping @\u200bsomeone about it')
+    expect(escapeMarkdown('@someone')).toBe('@\u200bsomeone')
+    expect(escapeMarkdown('write to me@example.com')).toBe('write to me@example.com')
+  })
   it('leaves a version number alone', () => {
     expect(escapeMarkdown('0.1.0')).toBe('0.1.0')
     expect(cell('0.1.0')).toBe('0.1.0')
@@ -217,7 +227,8 @@ describe('report bodies', () => {
     expect(body).toContain('```json\n{"root":{}}\n```')
   })
   it('names the reporter, or says there is none', () => {
-    expect(issueBody(report, noAttachments)).toContain('@someone')
+    // Neutralised so the contact does not notify anyone.
+    expect(issueBody(report, noAttachments)).toContain('@\u200bsomeone')
     expect(issueBody(emptyReport(), noAttachments)).toContain('Anonymous visitor')
   })
   it('says when an attachment could not be stored', () => {
@@ -559,6 +570,28 @@ describe('the endpoint', () => {
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({ number: 42, url: 'https://github.com/mkpoli/ids-input/issues/42', duplicate: true })
     expect(stub.calls.map(call => call.key)).toEqual(['POST /repos/mkpoli/ids-input/issues/42/comments'])
+  })
+  it('files afresh when the issue a repeat matched has gone', async () => {
+    stub = stubGitHub({
+      routes: { 'POST /repos/mkpoli/ids-input/issues/42/comments': () => new Response(JSON.stringify({ message: 'Not Found' }), { status: 404 }) },
+    })
+    const env = fakeEnv()
+    const key = await dedupeKey('⿰亻哥', 'The preview is blank.')
+    await rememberIssue(env, key, { number: 42, url: 'https://github.com/mkpoli/ids-input/issues/42' })
+    const response = await handle(postReport(reportForm()), env)
+    expect(response.status).toBe(201)
+    expect(await response.json()).toMatchObject({ number: 123, duplicate: false })
+    expect(await findDuplicate(env, key)).toMatchObject({ number: 123 })
+  })
+  it('still answers duplicate when only the comment fails', async () => {
+    stub = stubGitHub({
+      routes: { 'POST /repos/mkpoli/ids-input/issues/42/comments': () => new Response(JSON.stringify({ message: 'Server Error' }), { status: 500 }) },
+    })
+    const env = fakeEnv()
+    await rememberIssue(env, await dedupeKey('⿰亻哥', 'The preview is blank.'), { number: 42, url: 'https://github.com/mkpoli/ids-input/issues/42' })
+    const response = await handle(postReport(reportForm()), env)
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ number: 42, duplicate: true })
   })
   it('turns away an address that has filed too many', async () => {
     const env = fakeEnv()

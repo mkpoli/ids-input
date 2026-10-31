@@ -40,6 +40,9 @@ const ENVIRONMENT = [
 export function escapeMarkdown(text) {
   return text
     .replace(/[\\`*_{}[\]()#+|<>~!&]/g, match => `\\${match}`)
+    // A backslash does not stop a mention, so `@someone` in a symptom would notify them; a
+    // zero-width space does, and an address like `me@example.com` keeps its shape.
+    .replace(/(^|\s)@(?=[\w-])/g, '$1@\u200b')
     .split('\n')
     .map(line =>
       line
