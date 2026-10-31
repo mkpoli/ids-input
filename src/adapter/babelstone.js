@@ -243,10 +243,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
   const localSearch = async () => {
-    const table = await readSearch()
-    if (local && localGeneration === searchGeneration) return local
+    const table = await readSearch(), generation = searchGeneration
+    if (local && localGeneration === generation) return local
     local = Promise.all([Promise.resolve(table), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
-      localGeneration = searchGeneration
+      localGeneration = generation
       return createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })
     }).catch(error => { local = null; throw error })
     return local
@@ -355,67 +355,68 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** The source table and the derived descriptions, for the description search and `encoded`. The
    * derived reading is an alternative description, so a layered sequence finds its character.
-   * A failed layer file leaves the source descriptions standing and is tried again on the next
+   * A failed extra reading leaves the source descriptions standing and is tried again on the next
    * call, instead of turning the failure into a source-only table for the life of the adapter.
    * @type {Promise<Map<string, Sequence[]>> | null} */
   let searchTable = null
-  /** The table the generation counts from, without the extra readings. @type {Map<string, Sequence[]> | null} */
-  let searchRead = null
-  /** Whether the last search table lost one of the optional readings, and how many entries it held. */
-  let searchLost = false
-  let searchExtra = 0
+  /** The extra readings the table was built from, to notice a retried file bringing something else.
+   * @type {{ derived: Map<string, string>, shui: Map<string, string> }} */
+  let searchUsed = { derived: new Map(), shui: new Map() }
+  /** The optional readings still missing, the retry, and whether one is running. */
+  let lostLayers = false
+  let lostShui = false
   /** @type {Promise<void> | null} */
   let retrying = null
-  // The loss is retried behind a table that already serves, so a file that stays away does not
-  // rebuild the table on every call; the rebuild waits for the file to come back.
-  const retryLost = () => retrying ??= Promise.all([readLayers(), readShuishu().catch(() => null)])
-      .then(([derived, shuiDoc]) => {
-        // Only a reading that adds something is worth rebuilding the table for.
-        if (derived.size + (shuiDoc ? shuishuSequences(shuiDoc).size : 0) <= searchExtra) return
-        searchTable = null
-        searchLost = false
-      }, () => {})
-      .finally(() => { retrying = null })
+  /** The readings as comparable text. @param {Map<string, { text: string }[]>} sequences */
+  const byText = sequences => new Map([...sequences].map(([char, texts]) => [char, texts.map(text => text.text).join('|')]))
+  /** @param {Map<string, string>} next @param {Map<string, string>} had */
+  const differs = (next, had) => next.size !== had.size || [...next].some(([char, text]) => had.get(char) !== text)
+  // A missing reading is retried behind the table that already serves, so the rebuild happens when
+  // the file comes back.
+  const retryLost = () => retrying ??= Promise.all([
+    lostLayers ? readLayers().then(derived => derived, () => null) : null,
+    lostShui ? readShuishu().then(shuiDoc => shuiDoc, () => null) : null,
+  ]).then(([derived, shuiDoc]) => {
+    let changed = false
+    if (derived) {
+      lostLayers = false
+      if (differs(derived, searchUsed.derived)) { searchUsed.derived = derived; changed = true }
+    }
+    if (shuiDoc) {
+      lostShui = false
+      const shui = byText(shuishuSequences(shuiDoc))
+      if (differs(shui, searchUsed.shui)) { searchUsed.shui = shui; changed = true }
+    }
+    if (changed) searchTable = null
+  }, () => {}).finally(() => { retrying = null })
   const readSearch = async () => {
     if (searchTable) {
       // A lost file is read again before answering, so a caller never sees the loss twice.
-      if (searchLost) await retryLost()
+      if (lostLayers || lostShui) await retryLost()
       if (searchTable) return searchTable
     }
-    // Both extra readings are optional and are tried again on the next call; the source search
-    // serves until then.
-    let lost = false
     searchTable = Promise.all([
       read(),
-      readLayers().catch(() => { lost = true; return new Map() }),
-      readShuishu().catch(() => { lost = true; return null }),
+      readLayers().catch(() => { lostLayers = true; return new Map() }),
+      readShuishu().catch(() => { lostShui = true; return null }),
     ]).then(([found, derived, shuiDoc]) => {
       /** @type {Map<string, Sequence[]>} */
       const merged = new Map(found)
-      /** Characters the extra readings describe, which the source table may not. @type {Set<string>} */
-      const added = new Set()
       for (const [char, text] of derived) {
         const sequences = merged.get(char) ?? []
         if (sequences.some(sequence => sequence.text === text)) continue
         merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
-        added.add(char)
       }
       // The Shuishu decompositions are editorial and carry no source region; a source description
       // of the same character stays behind them.
-      searchExtra = derived.size
-      if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
-        searchExtra++
+      /** @type {Map<string, Sequence[]>} */
+      const shui = shuiDoc ? shuishuSequences(shuiDoc) : new Map()
+      for (const [char, sequences] of shui) {
         const had = merged.get(char) ?? []
         merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
-        added.add(char)
       }
-      // Only a character the last table did not hold makes the caches worth rebuilding, so a file
-      // that stays away does not rebuild them on every call.
-      if ([...added].some(char => !searchRead?.has(char))) {
-        searchGeneration++
-        searchRead = merged
-      }
-      searchLost = lost
+      searchGeneration++
+      searchUsed = { derived, shui: byText(shui) }
       return merged
     }).catch(error => { searchTable = null; throw error })
     return searchTable
@@ -622,9 +623,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let relationsGeneration = -1
   const relationIndex = async () => {
     const table = given || ids || smallSeal || shuishu ? await readSearch() : new Map()
-    if (relations && relationsGeneration === searchGeneration) return relations
+    const generation = searchGeneration
+    if (relations && relationsGeneration === generation) return relations
     relations = Promise.all([readInformation(), Promise.resolve(table)])
-      .then(([{ doc, seal }, found]) => { relationsGeneration = searchGeneration; return createRelationSearch(doc, seal, found) })
+      .then(([{ doc, seal }, found]) => { relationsGeneration = generation; return createRelationSearch(doc, seal, found) })
       .catch(error => { relations = null; throw error })
     return relations
   }
@@ -747,8 +749,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       // again on the next call, and the source index serves until then.
       const search = await readSearch()
       if (!described || describedGeneration !== searchGeneration) {
+        const generation = searchGeneration
         described = Promise.resolve(search).then(found => {
-          const generation = searchGeneration
           /** @type {Map<string, string[]>} */
           const by = new Map()
           const prefixes = new Set()
