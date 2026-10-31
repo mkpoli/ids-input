@@ -25,6 +25,7 @@
  * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
  * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
  * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
+ * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu characters that have one.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
  * @property {number} [uses] How many ideographs use it.

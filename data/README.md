@@ -494,11 +494,24 @@ PDF's `cid-map.json` and `radical-names.json`, and the spreadsheet. Rebuild `shu
 `uv run --python 3.12 scripts/build_shuishu.py`.
 
 JSON format 1 has `parts`, each with `part`, `kind` (`shui`), `shuiGroup` (`dictionary`, `logogram`
-or `radical`), `shuiName`, `shuiReading`, `shuiMeaning`, `shuiGloss`, `modern` and `strokes` (always
-null, since no source counts them). `shuiGroup` is `dictionary` for the 207 logograms the WSF
+or `radical`), `shuiName`, `shuiReading`, `shuiMeaning`, `shuiGloss`, `modern`, `ids` and `strokes`
+(always null, since no source counts them). `shuiGroup` is `dictionary` for the 207 logograms the WSF
 dictionary numbers, `logogram` for the other 279 and `radical` for the 47 radicals. The groups follow
 dictionary coverage, not frequency; the spreadsheet also lists 286 further forms that the proposal
 does not cover.
+
+`ids` is an editorial decomposition, written by hand in [`shuishu/ids.json`](shuishu/ids.json) for
+the characters whose parts are all in the block and whose arrangement is plain. No source states
+one: the charts give a `→` cross reference to a radical for 41 of the 533 characters and nothing
+else, the spreadsheet has no structure column, and the chart font carries no ligature or IDS glyph
+names. Each entry has one operator (`⿰`, `⿱`, `⿴`, `⿵` and `⿶`, which the count does not yet reach)
+and two parts of the block, written left before right, top before bottom, outer before inner.
+Shuishu writing order is undocumented in these sources, so the order follows the glyph. The entries
+aid display and search and sit outside the encoding proposal, and the count keeps to the unambiguous
+cases. A search finds a character by its whole description, and a typed part also lists the
+characters written with it.
+`scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
+or the character itself.
 
 ## New Korean Orthography outlines
 

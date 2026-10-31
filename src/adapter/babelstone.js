@@ -654,8 +654,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       if (shuishu) {
         const doc = await readShuishu()
         // A typed character or chart name stands with the components; a reading or meaning ranks
-        // below the vocabulary, which knows the query better.
-        if (doc) hits = [...hits, ...shuishuNames(doc, text)]
+        // below the vocabulary, which knows the query better. A character named by a whole
+        // description stands ahead of the characters the description is written with.
+        if (doc) {
+          const named = shuishuNames(doc, text)
+          const built = named.filter(hit => hit.rank === 0)
+          hits = [...built, ...hits, ...named.filter(hit => hit.rank !== 0)]
+        }
       }
       if (!characterInfo && smallSeal) {
         const doc = await readSeal()

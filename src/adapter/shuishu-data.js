@@ -4,13 +4,17 @@
 import { isShuishu } from '../core/ids.js'
 export { isShuishu }
 
+/** A query written as an IDS with one of the operators the data uses. */
+const IDS = /^[⿰⿱⿴⿵⿶]/
+
 /**
  * A Shuishu palette part: `shuiName` is the proposed character's name, without the `SHUISHU
  * LOGOGRAM` prefix, `shuiReading` the reading the spreadsheet gives, `shuiMeaning` the dictionaries'
- * meaning, usually one Han character, and `shuiGloss` its English gloss.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'dictionary' | 'logogram' | 'radical', shuiName: string }} ShuishuPart
+ * meaning, usually one Han character, `shuiGloss` its English gloss and, for the characters
+ * `data/shuishu/ids.json` decomposes, `ids` its editorial IDS.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'shui', shuiGroup: 'dictionary' | 'logogram' | 'radical', shuiName: string, ids?: string | null }} ShuishuPart
  *
- * @typedef {{ format: number, parts: ShuishuPart[], proposal?: unknown }} ShuishuData
+ * @typedef {{ format: number, parts: ShuishuPart[], proposal?: unknown, ids?: { note: string, count: number } }} ShuishuData
  */
 
 /** @param {ShuishuData} doc @returns {ShuishuPart[]} */
@@ -29,6 +33,7 @@ export const shuishuLabel = part => [
   part.shuiName,
   part.shuiReading,
   part.shuiMeaning && part.shuiGloss ? `${part.shuiMeaning} (${part.shuiGloss})` : part.shuiMeaning ?? part.shuiGloss,
+  part.ids,
   `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}（暫定）`,
 ].filter(Boolean).join(' · ')
 
@@ -42,9 +47,10 @@ function index(doc) {
 }
 
 /**
- * The characters a query names: the Shuishu characters it contains, then the ones a whole name,
- * reading or meaning equals. A typed character or chart name stands on its own; a reading or a
- * meaning ranks below the vocabulary, since it says little about which character is meant.
+ * The characters a query names: the Shuishu characters it contains, then the ones whose editorial
+ * IDS is the query, then the ones a whole name, reading or meaning equals. A typed character or
+ * chart name stands on its own; a reading or a meaning ranks below the vocabulary, since it says
+ * little about which character is meant.
  * @param {ShuishuData} doc @param {string} query @param {number} [limit]
  * @returns {{ char: string, label: string, rank?: number }[]}
  */
@@ -52,6 +58,12 @@ export function shuishuNames(doc, query, limit = 12) {
   const text = query.trim()
   if (!text) return []
   if (!text.includes(' ')) {
+    // A whole description before the characters it is made of: ⿱𛔁𛔀 names the character built
+    // that way, not its two parts.
+    if (IDS.test(text)) {
+      const built = doc.parts.filter(part => part.ids === text)
+      if (built.length) return built.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part), rank: 0 }))
+    }
     const parts = index(doc)
     const typed = [...text].filter(isShuishu).map(char => parts.get(char)).filter(part => part !== undefined)
     if (typed.length) return typed.slice(0, limit).map(part => ({ char: part.part, label: shuishuLabel(part) }))
@@ -63,7 +75,7 @@ export function shuishuNames(doc, query, limit = 12) {
   const hits = []
   for (const part of doc.parts) {
     if (hits.length >= limit) break
-    const senses = [part.shuiReading, part.shuiMeaning, part.shuiGloss]
+    const senses = [part.shuiReading, part.shuiMeaning, part.shuiGloss, part.ids]
       .filter(Boolean).flatMap(value => String(value).split(';')).map(sense => sense.trim().toLowerCase())
     if (senses.includes(lowered)) hits.push({ char: part.part, label: shuishuLabel(part), rank: 5 })
   }

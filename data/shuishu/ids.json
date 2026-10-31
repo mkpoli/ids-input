@@ -1,0 +1,23 @@
+{
+  "note": "Editorial decompositions: neither the Amendment 2.2 charts nor Shuishu.xlsx states one, so each entry is a reading of the glyph. Only characters whose parts are in the inventory and whose arrangement is clear are listed; the charts' radical cross references, where they exist, name one of the parts. Order is left before right, top before bottom, outer before inner.",
+  "entries": {
+    "1B309": "⿱𛔀𛔥",
+    "1B311": "⿱𛔀𛔤",
+    "1B318": "⿱𛔁𛔀",
+    "1B362": "⿴𛔉𛔁",
+    "1B36B": "⿰𛔛𛔛",
+    "1B36D": "⿱𛔊𛔔",
+    "1B373": "⿱𛔛𛔈",
+    "1B3B7": "⿵𛔅𛔐",
+    "1B3D3": "⿱𛔒𛔉",
+    "1B410": "⿱𛔚𛔈",
+    "1B416": "⿱𛔛𛔠",
+    "1B41A": "⿱𛔜𛔗",
+    "1B428": "⿱𛔒𛔫",
+    "1B42C": "⿱𛔍𛔦",
+    "1B47A": "⿱𛔤𛔇",
+    "1B47E": "⿱𛔩𛔞",
+    "1B481": "⿱𛔪𛔙",
+    "1B48C": "⿱𛔀𛔩"
+  }
+}
