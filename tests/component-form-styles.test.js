@@ -56,5 +56,12 @@ it('draws 萬 with the bottom of 両 as one prepared form', () => {
     const drawing = componentDrawing('⿳艹田⿵冂山', style)
     expect(drawing.d).not.toMatch(/NaN|Infinity/)
     expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
+    // The horizontal bar retains 満's native contextual 山 thickness.
+    const mountain = data.forms[style]['⿳艹田⿵冂山'][1][0][1]
+    const ys = mountain.filter((_, i) => i % 2 === 1)
+    const bar = style === 'sans' ? [86, 144, 58] : [95, 124, 29]
+    expect(ys).toContain(bar[0])
+    expect(ys).toContain(bar[1])
+    expect(bar[1] - bar[0]).toBe(bar[2])
   }
 })

@@ -243,11 +243,13 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     if style == 'sans':
         outer = [('moveTo', ((534, 208),))] + wan[4][4:25] + [('closePath', ())]
         shell_contours = wan[:4] + [outer, wan[5]]
-        source_bottom, source_top, target_bottom, target_top, dx = 44, 491, 25, 208, 5
+        source_bottom, source_top, target_bottom, target_top = 16, 339, 25, 208
+        gap_bottom, gap_top, dx = 135, 285, -120
     else:
         outer = [('moveTo', ((535, 240),))] + wan[5][5:42] + [('closePath', ())]
         shell_contours = wan[:5] + [outer]
-        source_bottom, source_top, target_bottom, target_top, dx = 55, 549, 32, 240, 10
+        source_bottom, source_top, target_bottom, target_top = 39, 376, 32, 240
+        gap_bottom, gap_top, dx = 131, 289, -110
     # Any difference from 萬 must remain inside the lower interior.
     original, edited, region = pathops.Path(), pathops.Path(), pathops.Path()
     for contour in wan: replayRecording(contour, original.getPen())
@@ -256,8 +258,16 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     region.lineTo(200, target_top); region.close()
     difference = pathops.op(original, edited, pathops.PathOp.XOR)
     assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
-    mountain = crop_group(cs('両'), (240, source_bottom, 760, source_top))
-    mountain = [[ops, [round(target_bottom + (v - source_bottom) * (target_top - target_bottom) / (source_top - source_bottom), 2) if i % 2 else v + dx for i, v in enumerate(points)]] for ops, points in mountain]
+    # 満's contextual 両 has a shorter 山. Shorten only the straight
+    # upright runs between its bottom bar and upper terminals; keep all
+    # terminals and the bar at their native weight and shape.
+    mountain = crop_group(cs('満'), (430, source_bottom, 810, source_top))
+    reduction = (source_top - source_bottom) - (target_top - target_bottom)
+    def mountain_y(y):
+        if y <= gap_bottom: return y + target_bottom - source_bottom
+        if y >= gap_top: return y + target_bottom - source_bottom - reduction
+        return gap_bottom + target_bottom - source_bottom + (y-gap_bottom) * (gap_top-gap_bottom-reduction) / (gap_top-gap_bottom)
+    mountain = [[ops, [round(mountain_y(v), 2) if i % 2 else v + dx for i, v in enumerate(points)]] for ops, points in mountain]
     # Check the final union too, including containment of the inserted contours.
     mountain_path = pathops.Path()
     pen = mountain_path.getPen()
