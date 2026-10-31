@@ -1325,10 +1325,21 @@ in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`.
 `PASS` and exits non-zero on a failure.
 
 `bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
-page load, runs every `demo/check-*.js` against it, and stops the server again. `--only <text>`
-narrows the set, `--port <n>` moves the server, and `--retries <n>` gives a failing check more
-attempts (one by default), so a check that only lost a race with the dev server does not fail the
-run.
+page load, runs every `demo/check-*.js` against it, and stops the server and its children again.
+Its flags:
+
+- `--only <text>` — only checks whose file name contains it.
+- `--skip a,b` — leave those out, e.g. the six-minute `check-gongche`.
+- `--port <n>` — the port to try first; Vite takes the next free one.
+- `--retries <n>` — attempts per check (one retry by default), so a check that only lost a race
+  with the dev server does not fail the run.
+- `--timeout <s>` — the page timeout each check gets (120 by default; `0` keeps the check file's
+  own). A busy machine can take longer than Playwright's 30-second default to serve a page, and a
+  check that fails for that reason says nothing about the app.
+- `--watchdog <min>` — stop the run when no check has finished for that long (15 by default).
+
+The checks see the raised timeout through `scripts/check-demo-preload.mjs`, which `bun --preload`
+loads before each check; the check files themselves keep Playwright's defaults.
 
 The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
 `.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs
