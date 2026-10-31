@@ -85,6 +85,7 @@
   let titleOpen = $state(false)
   /** @type {'input' | 'compose' | 'output'} */
   let phonePane = $state('input')
+  const PHONE_PANES = /** @type {const} */ (['input', 'compose', 'output'])
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -562,6 +563,16 @@
     phonePane = pane
     requestAnimationFrame(() => window.scrollTo({ top: 0 }))
   }
+  /** Move between the phone tabs with the keyboard. @param {KeyboardEvent} event */
+  function phoneKey(event) {
+    const at = PHONE_PANES.indexOf(phonePane)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? PHONE_PANES.length - 1
+      : event.key === 'ArrowRight' ? at + 1 : event.key === 'ArrowLeft' ? at - 1 : null
+    if (next === null || next < 0 || next >= PHONE_PANES.length) return
+    event.preventDefault()
+    phoneTab(PHONE_PANES[next])
+    requestAnimationFrame(() => /** @type {HTMLElement | null} */ (event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next])?.focus())
+  }
   /** A pointer that may become a horizontal tab swipe. @type {{ id: number, x: number, y: number } | null} */
   let swipe = null
   const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.ids-preview,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
@@ -579,8 +590,7 @@
     swipe = null
     const dx = event.clientX - start.x, dy = event.clientY - start.y
     if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy) * 1.4) return
-    const order = /** @type {const} */ (['input', 'compose', 'output'])
-    const next = order[order.indexOf(phonePane) + (dx < 0 ? 1 : -1)]
+    const next = PHONE_PANES[PHONE_PANES.indexOf(phonePane) + (dx < 0 ? 1 : -1)]
     if (next) phoneTab(next)
   }
   function swipeCancel() { swipe = null }
@@ -1088,9 +1098,9 @@
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
       <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
-        <button type="button" role="tab" aria-selected={phonePane === 'input'} onclick={() => phoneTab('input')}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
-        <button type="button" role="tab" aria-selected={phonePane === 'compose'} onclick={() => phoneTab('compose')}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
-        <button type="button" role="tab" aria-selected={phonePane === 'output'} onclick={() => phoneTab('output')}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
+        <button type="button" role="tab" id="phone-input-tab" aria-controls="input-panel" aria-selected={phonePane === 'input'} tabindex={phonePane === 'input' ? 0 : -1} onclick={() => phoneTab('input')} onkeydown={phoneKey}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
+        <button type="button" role="tab" id="phone-compose-tab" aria-controls="compose-panel" aria-selected={phonePane === 'compose'} tabindex={phonePane === 'compose' ? 0 : -1} onclick={() => phoneTab('compose')} onkeydown={phoneKey}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
+        <button type="button" role="tab" id="phone-output-tab" aria-controls="output-panel" aria-selected={phonePane === 'output'} tabindex={phonePane === 'output' ? 0 : -1} onclick={() => phoneTab('output')} onkeydown={phoneKey}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
       </div>
       <section class="pane input" class:phone-active={phonePane === 'input'} id="input-panel" aria-label={t('app.input')}>
         <div class="block">
@@ -1117,7 +1127,7 @@
           controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
 
-      <div class="middle" class:phone-active={phonePane === 'compose'} bind:this={middleEl} style:--upper="{split}%">
+      <div class="middle" id="compose-panel" class:phone-active={phonePane === 'compose'} bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
           <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}

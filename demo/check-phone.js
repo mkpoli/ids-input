@@ -18,6 +18,14 @@ try {
   await tabs.getByRole('tab', { name: 'Output', exact: true }).click()
   assert.equal(await phone.locator('.pane.output').isVisible(), true, 'Output shows the drawing and export')
   assert.equal(await phone.locator('.middle').isVisible(), false)
+  await tabs.getByRole('tab', { name: 'Input', exact: true }).click()
+  await phone.keyboard.press('ArrowRight')
+  assert.equal(await phone.locator('.middle').isVisible(), true, 'ArrowRight selects Compose')
+  assert.equal(await tabs.getByRole('tab', { name: 'Compose', exact: true }).getAttribute('aria-selected'), 'true')
+  await phone.keyboard.press('End')
+  assert.equal(await phone.locator('.pane.output').isVisible(), true, 'End selects Output')
+  await phone.keyboard.press('Home')
+  assert.equal(await phone.locator('.pane.input').isVisible(), true, 'Home selects Input')
   await phone.close()
 
   const tablet = await browser.newPage({ viewport: { width: 768, height: 1024 } })
@@ -34,5 +42,5 @@ try {
   assert.equal(await desktop.locator('.phone-tabs').isVisible(), false, 'desktop has no phone tabs')
   for (const selector of ['.pane.input', '.middle', '.pane.output']) assert.equal(await desktop.locator(selector).isVisible(), true, `${selector} stays visible on desktop`)
   await desktop.close()
-  console.log('PASS phone/tablet tabs switch Input, Compose and Output; desktop keeps all columns')
+  console.log('PASS phone/tablet tabs switch by tap, swipe and keyboard; desktop keeps all columns')
 } finally { await browser.close() }
