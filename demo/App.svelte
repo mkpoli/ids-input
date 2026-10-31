@@ -575,12 +575,13 @@
   }
   /** A pointer that may become a horizontal tab swipe. @type {{ id: number, x: number, y: number } | null} */
   let swipe = null
-  const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.ids-preview,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
+  const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
   /** @param {PointerEvent} event */
   function swipeStart(event) {
     swipe = null
     if (!event.isPrimary || event.pointerType === 'mouse' || !matchMedia('(max-width: 879px)').matches) return
     if (event.target instanceof Element && event.target.closest(SWIPE_EXCLUDE)) return
+    if (adjusting && event.target instanceof Element && event.target.closest('.ids-preview')) return
     swipe = { id: event.pointerId, x: event.clientX, y: event.clientY }
   }
   /** @param {PointerEvent} event */
@@ -1178,7 +1179,7 @@
         <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
-      <section class="pane output" class:phone-active={phonePane === 'output'} id="output-panel" aria-label={t('app.output')}>
+      <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#if !large}
             {#key activeId}
@@ -1485,7 +1486,8 @@
     .phone-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
     .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
     .work{touch-action:pan-y}
-    .work :global(.ids-preview){touch-action:none}
+    .work :global(.ids-preview){touch-action:pan-y}
+    .output.adjusting :global(.ids-preview){touch-action:none}
   }
   .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
