@@ -237,21 +237,43 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
-    # 萬 with 両's bottom: 萬's 艹田 over the 冂 and 山 of 両. The two pieces meet at the bar
-    # under 田; 両's lower body is narrowed and lowered into the 禸 band.
-    top_y = 200 if style == 'sans' else 280
-    bot_y = 452 if style == 'sans' else 530
-    sy = 0.526 if style == 'sans' else 0.59
-    top = crop_group(cs('萬'), (-2000, top_y, 3000, 2000))
-    bot = crop_group(cs('両'), (-2000, -2000, 3000, bot_y))
-    def lower(group):
-        ops, points = group
-        out = []
-        for i in range(0, len(points), 2):
-            out.append((points[i] - 500) * 0.9 + 500)
-            out.append((points[i + 1] - bot_y) * sy + top_y)
-        return [ops, out]
-    forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
+    # Retain 萬's complete outer contour, removing only the 禸 interior.
+    # 両 supplies 山, fitted inside the original enclosure and joined at its roof.
+    wan = cs('萬')
+    if style == 'sans':
+        outer = [('moveTo', ((534, 208),))] + wan[4][4:25] + [('closePath', ())]
+        shell_contours = wan[:4] + [outer, wan[5]]
+        source_bottom, source_top, target_bottom, target_top, dx = 44, 491, 25, 208, 5
+    else:
+        outer = [('moveTo', ((535, 240),))] + wan[5][5:42] + [('closePath', ())]
+        shell_contours = wan[:5] + [outer]
+        source_bottom, source_top, target_bottom, target_top, dx = 55, 549, 32, 240, 10
+    # Any difference from 萬 must remain inside the lower interior.
+    original, edited, region = pathops.Path(), pathops.Path(), pathops.Path()
+    for contour in wan: replayRecording(contour, original.getPen())
+    for contour in shell_contours: replayRecording(contour, edited.getPen())
+    region.moveTo(200, -20); region.lineTo(800, -20); region.lineTo(800, target_top)
+    region.lineTo(200, target_top); region.close()
+    difference = pathops.op(original, edited, pathops.PathOp.XOR)
+    assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
+    mountain = crop_group(cs('両'), (240, source_bottom, 760, source_top))
+    mountain = [[ops, [round(target_bottom + (v - source_bottom) * (target_top - target_bottom) / (source_top - source_bottom), 2) if i % 2 else v + dx for i, v in enumerate(points)]] for ops, points in mountain]
+    # Check the final union too, including containment of the inserted contours.
+    mountain_path = pathops.Path()
+    pen = mountain_path.getPen()
+    import re
+    for ops, points in mountain:
+        coords = iter(points)
+        for op in re.findall(r'M|L|Q2', ops):
+            if op == 'M': pen.moveTo((next(coords), next(coords)))
+            elif op == 'L': pen.lineTo((next(coords), next(coords)))
+            else: pen.qCurveTo((next(coords), next(coords)), (next(coords), next(coords)))
+        pen.closePath()
+    assert pathops.op(mountain_path, region, pathops.PathOp.DIFFERENCE).area < 0.1
+    combined = pathops.op(edited, mountain_path, pathops.PathOp.UNION)
+    difference = pathops.op(original, combined, pathops.PathOp.XOR)
+    assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
+    forms['⿳艹田⿵冂山'] = [group(shell_contours), mountain]
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
