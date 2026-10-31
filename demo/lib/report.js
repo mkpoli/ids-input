@@ -221,10 +221,21 @@ export function reportContext(settings, preview) {
   }
 }
 
+/** Every string of a value through the redaction: an imported document keeps its asset addresses,
+ *  and those name the machine it came from. @param {unknown} value @returns {unknown} */
+function redacted(value) {
+  if (typeof value === 'string') return redact(value)
+  if (Array.isArray(value)) return value.map(redacted)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, redacted(item)]))
+  }
+  return value
+}
+
 /** The workspace as JSON within the intake's size: a report from a busy set of tabs loses its last
  *  tabs rather than its whole document. @param {unknown} workspace @returns {string} */
 export function workspaceJson(workspace) {
-  const whole = /** @type {{ tabs?: unknown[], droppedTabs?: number }} */ (workspace ?? {})
+  const whole = /** @type {{ tabs?: unknown[], droppedTabs?: number }} */ (redacted(workspace ?? {}))
   const tabs = Array.isArray(whole.tabs) ? [...whole.tabs] : []
   const all = tabs.length
   let text = JSON.stringify(whole)

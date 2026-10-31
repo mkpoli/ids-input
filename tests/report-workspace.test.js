@@ -21,6 +21,16 @@ describe('the workspace a report carries', () => {
     const workspace = { tabs: [{ sequence: '⬚', document: 'y'.repeat(300 * 1024) }] }
     expect(JSON.parse(workspaceJson(workspace)).tabs).toHaveLength(1)
   })
+  it('takes a local address out of an imported document, wherever it sits', () => {
+    const workspace = { tabs: [{ sequence: '⿰木口', document: {
+      title: 'made on file:///home/alice/private.ids.json',
+      assets: [{ uri: 'http://localhost:8080/glyph.svg', note: 'via /@fs/home/alice/draw.js' }],
+    } }] }
+    const sent = JSON.stringify(JSON.parse(workspaceJson(workspace)))
+    expect(sent).not.toContain('alice')
+    expect(sent).toContain('(local)')
+    expect(JSON.parse(workspaceJson(workspace)).tabs[0].sequence).toBe('⿰木口')
+  })
   it('takes an empty or odd workspace', () => {
     expect(workspaceJson(undefined)).toBe('{}')
     expect(workspaceJson({})).toBe('{}')
