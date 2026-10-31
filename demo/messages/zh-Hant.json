@@ -111,6 +111,8 @@
   "app.share.title": "分享",
   "app.share.tooLong": "連結過長，無法產生QR碼。",
   "app.sponsor.label": "贊助",
+  "app.sponsor.supporters": "最近的贊助者",
+  "app.sponsor.anonymous": "某人",
   "app.sponsor.lead": "做這個工坊純粹是出於對文字的熱愛，我自己也陸續自掏腰包貼了好幾百美元進去。我目前沒有工作，微薄的助教薪水連付房租和三餐都很勉強，有時候甚至快要吃不起飯了……",
   "app.sponsor.ask": "拜託幫幫我，讓我能繼續撐下去🥺 哪怕只有1⁠美元，都能讓我今天有飯吃。",
   "app.sponsor.howTo": "如何贊助我",

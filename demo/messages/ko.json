@@ -111,6 +111,8 @@
   "app.share.title": "공유",
   "app.share.tooLong": "링크가 너무 길어 QR 코드로 만들 수 없습니다.",
   "app.sponsor.label": "후원",
+  "app.sponsor.supporters": "최근 후원자",
+  "app.sponsor.anonymous": "누군가",
   "app.sponsor.lead": "글자를 사랑하는 마음으로 사비 수백 달러를 털어 넣으며 이 공방을 만들고 있어요. 지금은 따로 직장도 없고, 쥐꼬리만 한 조교 월급으로는 월세랑 식비 감당도 벅차네요. 밥 한 끼 제대로 챙겨 먹기 힘든 날도 많아요.",
   "app.sponsor.ask": "제가 계속해 나갈 수 있게 도와주세요 🥺 단 1달러라도 오늘 밥을 먹는 데 정말 큰 힘이 돼요.",
   "app.sponsor.howTo": "도와주시는 방법",

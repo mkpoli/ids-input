@@ -111,6 +111,8 @@
   "app.share.title": "共有",
   "app.share.tooLong": "リンクが長すぎてQRコードにできません。",
   "app.sponsor.label": "スポンサー",
+  "app.sponsor.supporters": "最近の支援者",
+  "app.sponsor.anonymous": "匿名希望",
   "app.sponsor.lead": "文字が好きでこの工房を作っていて、これまでに自腹で数百ドルをつぎ込んできました。今は仕事がなく、わずかなTAの給料では家賃や食費すらまかなえません。日によっては、ご飯を食べるのさえやっとのこともあります。",
   "app.sponsor.ask": "開発を続けられるよう、どうか力を貸してください🥺 たった1⁠ドルでも、今日の私のごはん代として本当に助かります。",
   "app.sponsor.howTo": "応援の方法",

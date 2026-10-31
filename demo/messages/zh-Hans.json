@@ -111,6 +111,8 @@
   "app.share.title": "分享",
   "app.share.tooLong": "链接过长，无法生成二维码。",
   "app.sponsor.label": "赞助",
+  "app.sponsor.supporters": "最近的支持者",
+  "app.sponsor.anonymous": "某人",
   "app.sponsor.lead": "做这个小工坊完全是出于对文字的热爱，我自己已经陆陆续续贴进去了好几百美元。目前我没有工作，少得可怜的助教工资连房租和伙食都快负担不起了，有时甚至都快吃不起饭了。",
   "app.sponsor.ask": "求求大家帮帮我，让我能继续坚持下去🥺 哪怕只有1⁠美元，也能帮我解决今天的饭钱。",
   "app.sponsor.howTo": "如何支持我",
