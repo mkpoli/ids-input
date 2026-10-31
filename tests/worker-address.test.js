@@ -49,12 +49,22 @@ describe('a path that names no sequence', () => {
     expect(body).toContain('<meta name="robots" content="noindex">')
     expect(body).not.toContain('og:title')
   })
+  it('keeps the app on the root for a text in the query', async () => {
+    const response = await ask('https://ids.mkpo.li/?ids=Buy+cheap')
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain('<link rel="canonical" href="https://ids.mkpo.li/">')
+  })
   it('treats a word as a miss, not as a sequence attempt', async () => {
     for (const path of ['/admin', '/wp-login.php', '/Buy']) {
       const response = await navigate(`https://ids.mkpo.li${path}`)
       expect(response.status).toBe(404)
     }
     expect(await (await navigate('https://ids.mkpo.li/admin')).text()).toContain('No page or file lives here.')
+  })
+  it('reads the text at the root whether or not it parses', async () => {
+    const response = await ask('https://ids.mkpo.li/?ids=Buy+cheap')
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain('<link rel="canonical" href="https://ids.mkpo.li/?ids=Buy%20cheap">')
   })
   it('answers HEAD without a body', async () => {
     const response = await ask('https://ids.mkpo.li/Buy%20cheap', { method: 'HEAD' })

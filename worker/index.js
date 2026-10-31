@@ -121,10 +121,13 @@ export default {
     let response
     if (route.error) response = failure(route.error, route.status)
     else if (route.kind === 'asset') response = url.pathname === '/' ? await env.ASSETS.fetch(request) : await miss(request, env, url)
-    else if (route.kind === 'page' && !reads(route.sequence)) {
-      // A token carries its own document, whatever the address says, but the address is its
-      // subject only where it parses, so the shell keeps the root canonical.
-      if (url.searchParams.has('doc')) {
+    // The root reads the text its `ids` holds whether or not it parses, so a miss there is the
+    // share page; only a path can be no sequence.
+    else if (route.kind === 'page' && url.pathname !== '/' && !reads(route.sequence)) {
+      // A token carries its own document, and a query on the root is the app's own address for a
+      // text the path cannot carry; neither is a claim that the text parses, so the shell keeps
+      // the root canonical.
+      if (url.searchParams.has('doc') || url.pathname === '/') {
         const plain = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
         response = render(request, await plain.text(), plain.status)
       // Text in a sequence's letters but not a sequence: an older link or a draft. It belongs in
