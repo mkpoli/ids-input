@@ -6,7 +6,7 @@
 
 Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
 """
-import hashlib, json, sys
+import hashlib, json, re, sys
 import pathops
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -238,17 +238,19 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     # 萬 with 両's bottom: 萬's 艹田 over the 冂 and 山 of 両. The two pieces meet at the bar
-    # under 田; 両's lower body is narrowed and lowered into the 禸 band.
+    # under 田; 両's lower body is widened to 萬's frame and left hanging, with no edge added
+    # below it. 万 itself ends at the 冂's hook, so a closed bottom turns the box into a frame.
     top_y = 200 if style == 'sans' else 280
     bot_y = 452 if style == 'sans' else 530
-    sy = 0.526 if style == 'sans' else 0.59
+    sy = 0.395 if style == 'sans' else 0.46
+    sx = 1.0 if style == 'sans' else 1.02
     top = crop_group(cs('萬'), (-2000, top_y, 3000, 2000))
     bot = crop_group(cs('両'), (-2000, -2000, 3000, bot_y))
     def lower(group):
         ops, points = group
         out = []
         for i in range(0, len(points), 2):
-            out.append((points[i] - 500) * 0.9 + 500)
+            out.append((points[i] - 500) * sx + 500)
             out.append((points[i + 1] - bot_y) * sy + top_y)
         return [ops, out]
     forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
