@@ -402,6 +402,13 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
     { sequence: '⿰木卆', char: '枠', reading: 'わく' },
   ] },
+  // JIS ghost kanji discussed by Sasahara and Kobayashi; their histories differ (see sources).
+  // Descriptions follow BabelStone's Japanese forms. No historical readings are assigned here.
+  { key: 'ghost', refs: [1, 54], examples: [
+    { sequence: '⿳山一女', char: '妛' },
+    { sequence: '⿰弓哥', char: '彁' },
+    { sequence: '⿰木劵', refs: [1, 55], char: '椦' },
+  ] },
   // Vietnamese Nôm: characters invented to write Vietnamese, in reading order. The forms and their
   // readings follow the Wikipedia article's Tale of Kiều example and its account of invented characters.
   { key: 'nom', refs: [1, 48], examples: [

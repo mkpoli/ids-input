@@ -122,6 +122,17 @@ it('prepares the Geba examples and their letters', () => {
   expect(data.drawings['⿰言ギ'].drawn.origins).toContain('glyph ギ')
 })
 
+it('prepares every ghost kanji with its encoded glyph', () => {
+  const examples = EXAMPLE_GROUPS.find(group => group.key === 'ghost').examples
+  for (const { sequence, char } of examples) {
+    const cached = data.drawings[sequence]
+    expect(cached?.char).toBe(char)
+    expect(cached?.drawn.d.length).toBeGreaterThan(100)
+    expect(cached.drawn.d).not.toMatch(/NaN|Infinity/)
+    expect(cached.drawn.origins).toEqual([`glyph ${char}`])
+  }
+})
+
 it('prepares the Korean gukja examples', () => {
   const examples = EXAMPLE_GROUPS.find(group => group.key === 'korean').examples
   for (const { sequence } of examples) {

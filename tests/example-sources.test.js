@@ -56,6 +56,10 @@ describe('example sources', () => {
     // The examples come from the spreadsheet and the charts, and their readings from the database.
     expect(groupRefs('shuishu')).toEqual(['shuishu', 'shuishu-db'])
     expect(groupRefs('nom')).toEqual(['babelstone', 'en-wp-nom'])
+    expect(groupRefs('ghost')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿳山一女')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿰弓哥')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿰木劵')).toEqual(['babelstone', 'kanken-ghost'])
   })
 
   test('every example is cited or listed as unrecorded', () => {

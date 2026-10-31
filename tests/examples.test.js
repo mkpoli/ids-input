@@ -123,7 +123,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'nom', 'seal', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -213,6 +213,20 @@ it('reads the Japanese kokuji in kana', () => {
   for (const example of kokuji) {
     expect(example.reading).toBe(readings[example.sequence])
     expect(example.reading).toMatch(/^[\u3040-\u30FFー]+$/)
+  }
+})
+
+it('keeps the sourced JIS ghost kanji with Japanese IDS and no assigned readings', () => {
+  const group = EXAMPLE_GROUPS.find(group => group.key === 'ghost')
+  expect(group.refs).toEqual([sourceNumber('babelstone'), sourceNumber('sanseido-ghost')])
+  expect(group.examples).toEqual([
+    { sequence: '⿳山一女', char: '妛' },
+    { sequence: '⿰弓哥', char: '彁' },
+    { sequence: '⿰木劵', refs: [sourceNumber('babelstone'), sourceNumber('kanken-ghost')], char: '椦' },
+  ])
+  for (const example of group.examples) {
+    expect(example).not.toHaveProperty('reading')
+    expect(table.get(example.char).some(entry => entry.text === example.sequence && entry.regions.includes('J'))).toBe(true)
   }
 })
 
