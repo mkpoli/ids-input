@@ -156,11 +156,12 @@ export function variants(entry) {
 /** The encoded components an unreadable sequence names, once each, so they can still be opened. @param {string} text */
 export const namedParts = text => [...new Set(tokens(text).filter(decomposable))]
 
-const PART = /^[\p{Script=Han}\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}㇀-㇯]$/u
+const PART = /^[\p{Script=Han}\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}\u{1B300}-\u{1B52E}㇀-㇯]$/u
 /**
  * The parts a search for characters containing them is asked for: two or more typed characters as
  * they are, else the components of the one typed (of its first readable description), counted, so
- * 林 asks for 木 twice. Only ideographs, radicals and strokes are asked for, at most SEARCH_PARTS;
+ * 林 asks for 木 twice. Only ideographs, radicals and strokes — Han, Tangut and the proposed
+ * Shuishu block — are asked for, at most SEARCH_PARTS;
  * fewer than two ask for nothing (`''`).
  * @param {Root[]} found
  * @param {Record<string, Entry | undefined>} known
