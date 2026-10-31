@@ -224,12 +224,13 @@ export function reportContext(settings, preview) {
 /** The workspace as JSON within the intake's size: a report from a busy set of tabs loses its last
  *  tabs rather than its whole document. @param {unknown} workspace @returns {string} */
 export function workspaceJson(workspace) {
-  const whole = /** @type {{ tabs?: unknown[] }} */ (workspace ?? {})
+  const whole = /** @type {{ tabs?: unknown[], droppedTabs?: number }} */ (workspace ?? {})
   const tabs = Array.isArray(whole.tabs) ? [...whole.tabs] : []
+  const all = tabs.length
   let text = JSON.stringify(whole)
   while (tabs.length > 1 && byteLength(text) > LIMITS.document) {
     tabs.pop()
-    text = JSON.stringify({ ...whole, tabs, droppedTabs: (whole.droppedTabs ?? 0) + 1 })
+    text = JSON.stringify({ ...whole, tabs, droppedTabs: (whole.droppedTabs ?? 0) + all - tabs.length })
   }
   return text
 }

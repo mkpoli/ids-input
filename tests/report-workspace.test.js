@@ -14,6 +14,7 @@ describe('the workspace a report carries', () => {
     const kept = JSON.parse(workspaceJson(workspace))
     expect(kept.tabs[0].document.n).toBe(0)
     expect(kept.droppedTabs).toBeGreaterThan(0)
+    expect(kept.tabs.length + kept.droppedTabs).toBe(300)
     expect(kept.active).toBe(0)
   })
   it('keeps the last tab even when it alone is over', () => {
