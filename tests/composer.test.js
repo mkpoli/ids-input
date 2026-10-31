@@ -817,4 +817,13 @@ describe('the foot of a stack under a cover', () => {
     join(whole)
     expect(top(whole)).toBe(340)
   })
+
+  it('leaves a child drawn as a row, whose operands run across rather than down', () => {
+    // ⿰: operand 0 is the left column, operand 1 the right, so neither hangs from the other.
+    const left = part(0, 0, [50, 600, 450, 900])
+    const right = { ...tail(1, -36, 100, 500), branch: [1] }
+    Composer.prototype.joinUnderCover.call({ partial: false },
+      '⿱', ['宀', ['⿰', 'X', 'Y']], [[part(0, 0, [100, 500, 900, 700])], [left, right]])
+    expect(top(right)).toBe(500)
+  })
 })

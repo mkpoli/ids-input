@@ -1517,7 +1517,7 @@ export class Composer {
    *  than one operand. A child drawn as one piece has no operand to read, and a row (⿰, ⿲) has no
    *  single top. */
   topOperand(child, parts) {
-    if (!Array.isArray(child) || !['⿱', '⿳'].includes(child[0])) return null
+    if (!isStack(child)) return null
     const top = parts.filter(part => part.branch?.[0] === 0)
     return top.length && top.length < parts.length ? top : null
   }
@@ -1543,9 +1543,10 @@ export class Composer {
   }
 
   /** A cover's side strokes mark how far what it covers may reach beside them: where the child
-   *  rises alongside them — the 爿 of 㝲, the 爪 of 𭓹 — it stays within the cover's own ink, and
-   *  the whole child narrows about the cover's middle to put it there. Ink below the side strokes
-   *  is free to spread, so the splayed foot of 木 in 宋 and of 八 in 穴 is left as drawn. Covers
+   *  rises alongside them — the 爿 of 㝲, the 爪 of 𭓹 — it stays within the cover's own ink. Only
+   *  ink that high is measured, so the splayed foot of 木 in 宋 and of 八 in 穴 asks for nothing
+   *  and those drawings stand; where a child does ask, the whole of it narrows about the cover's
+   *  middle, foot included, rather than shearing at the line the measurement was taken on. Covers
    *  lower in a stack hold their children the same way. */
   containUnderCover(op, children, groups) {
     if (this.partial) return
@@ -1579,6 +1580,7 @@ export class Composer {
     if (this.partial) return
     for (const [, below] of coverPairs(op, children, SIDE_COVERS)) {
       const lower = groups[below] ?? []
+      if (!isStack(children[below])) continue
       const operands = [...new Set(lower.map(part => part.branch?.[0]))].filter(i => i !== undefined).sort((a, b) => a - b)
       if (operands.length < 2) continue
       const foot = lower.filter(part => part.branch?.[0] === operands.at(-1))
@@ -1629,6 +1631,12 @@ function bounds(group) {
   const boxes = group.map(drawnBox)
   return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
     Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+}
+
+/** Whether a child is drawn as a vertical stack, so that its parts' `branch[0]` numbers its
+ *  operands from the top down. A row (⿰, ⿲) numbers them across, and a leaf has none. */
+function isStack(child) {
+  return Array.isArray(child) && ['⿱', '⿳'].includes(child[0])
 }
 
 /** The operand pairs where one of `covers` stands directly above another operand. */
