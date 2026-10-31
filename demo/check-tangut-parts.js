@@ -10,6 +10,10 @@ try {
   await page.getByRole('tab', { name: 'Tangut', exact: true }).click()
   await page.getByText(/13,020 parts/).waitFor()
   assert.equal(await page.locator('.parts-grid .part').count(), 120)
+  // The counts group says what it counts, so its name does not read as the stroke symbols.
+  const counts = page.getByRole('group', { name: 'Stroke counts', exact: true })
+  assert.equal(await counts.count(), 1)
+  assert.equal(await page.getByRole('group', { name: 'Strokes', exact: true }).count(), 0)
   const filter = page.locator('.parts-filter')
   await filter.fill('U+17000')
   assert.equal(await page.locator('.parts-grid .part').count(), 1)
@@ -37,7 +41,9 @@ try {
   assert.equal(await page.locator('.parts-grid .part').count(), 7, 'a bare number filters by stroke count')
   await filter.fill('')
   const context = await browser.newContext()
-  await context.route('**/tangut-parts.json.gz*', route => route.abort())
+  // The build hashes the payload's name after `.json`, so match the stem, not the full file name.
+  const payload = /tangut-parts\.json/
+  await context.route(payload, route => route.abort())
   const offline = await context.newPage()
   offline.setDefaultNavigationTimeout(120000)
   await offline.goto(process.env.IDS_URL ?? 'http://localhost:5173')
@@ -45,7 +51,7 @@ try {
   await offline.getByRole('tab', { name: 'Tangut', exact: true }).click()
   await offline.getByText('Additional script parts could not be loaded.').waitFor()
   assert.equal(await offline.locator('.parts-grid .part').count(), 120)
-  await context.unroute('**/tangut-parts.json.gz*')
+  await context.unroute(payload)
   await offline.getByRole('button', { name: 'Retry', exact: true }).click()
   await offline.getByText(/13,020 parts/).waitFor()
   await context.close()
