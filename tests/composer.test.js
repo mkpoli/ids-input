@@ -12,6 +12,7 @@ import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
+import constants from '../src/composer/constants.json' with { type: 'json' }
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -651,24 +652,28 @@ describe('the leading component under a cover', () => {
   // A net: a closed rectangle whose ink reaches both its sides along its top.
   const net = branch => part(branch, [50, 300, 950, 360], [50, 160, 110, 360], [890, 160, 950, 360], [50, 160, 950, 220])
   const clear = (child, ...lower) =>
-    Composer.prototype.clearUnderCover.call({ partial: false, topOperand: Composer.prototype.topOperand },
+    Composer.prototype.clearUnderCover.call(
+      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang },
       '⿱', ['宀', child], [[cover()], lower])
   const span = placedPart => [placedPart.target[0], placedPart.target[2]]
 
-  it('narrows a flat-topped leading component to the cover’s bar width, keeping its height', () => {
+  it('narrows a flat-topped leading component to the cover’s bar width, keeping its proportions', () => {
     const head = net(0), base = part(1, [50, 0, 950, 60])
     const tall = head.target[3] - head.target[1]
     clear(['⿱', '罒', '一'], head, base)
     expect(span(head)[1] - span(head)[0]).toBeCloseTo(0.72 * 800)
     expect((span(head)[0] + span(head)[1]) / 2).toBeCloseTo(500)
-    expect(head.target[3] - head.target[1]).toBeCloseTo(tall)
+    expect(head.target[3] - head.target[1]).toBeCloseTo((0.72 * 800 / 900) * tall)
     expect(head.target[3]).toBeCloseTo(360)
   })
 
-  it('leaves a base bar below the leading component as it was drawn', () => {
+  it('raises the rest of the child into the room the leading component gives up', () => {
     const head = net(0), base = part(1, [50, 0, 950, 60])
     clear(['⿱', '罒', '一'], head, base)
+    // The component's foot rises from 160 to 232; the bar grows by as much and keeps its width.
     expect(span(base)).toEqual([50, 950])
+    expect(base.target[1]).toBe(0)
+    expect(base.target[3]).toBeCloseTo(132)
   })
 
   it('leaves a leading component whose top does not reach its sides alone', () => {
@@ -699,5 +704,32 @@ describe('the leading component under a cover', () => {
     const head = net(0), other = part(1, [500, 0, 950, 600])
     clear(['⿰', '爿', '罒'], head, other)
     expect(span(head)).toEqual([50, 950])
+  })
+
+  // A sweep tapering to a point at the top, as the lower half of 衣 does.
+  const sweep = branch => part(branch, [450, 40, 550, 60], [100, 0, 900, 40])
+
+  it('closes a last operand its donor overlapped on to the one above it', () => {
+    const head = net(0), bar = part(1, [50, 80, 950, 120]), tail = sweep(2)
+    tail.gap = -36
+    clear(['⿳', '罒', '一', '𧘇'], head, bar, tail)
+    expect(tail.target[3]).toBeCloseTo(bar.target[1])
+    expect(tail.target[1]).toBe(0)
+  })
+
+  it('leaves a last operand its donor drew clear of its neighbour where it was', () => {
+    const head = net(0), bar = part(1, [50, 80, 950, 120]), tail = sweep(2)
+    tail.gap = 48
+    clear(['⿳', '罒', '一', '𧘇'], head, bar, tail)
+    expect(tail.target[3]).toBeLessThan(bar.target[1])
+  })
+
+  it('leaves a flat-topped last operand where it is, which would run into what it meets', () => {
+    // A block: ink along both sides of its top, as 日 has.
+    const head = net(0), bar = part(1, [50, 80, 950, 120])
+    const tail = part(2, [100, 40, 900, 60], [100, 0, 120, 60], [880, 0, 900, 60], [100, 0, 900, 20])
+    tail.gap = -36
+    clear(['⿳', '罒', '一', '日'], head, bar, tail)
+    expect(tail.target[3]).toBeLessThan(bar.target[1])
   })
 })
