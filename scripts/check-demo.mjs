@@ -6,6 +6,7 @@
 //   bun run check:demo -- --port 5186      a port of your choosing
 //   bun run check:demo -- --retries 2      more attempts for a check that fails (one by default)
 //   bun run check:demo -- --skip gongche   leave the slow or focused checks out (comma separated)
+//   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (15 by default)
 //
 // The checks type into the workshop and open its fixture pages, and `vite build` leaves those pages
 // out of `dist/`, so a static server reports failures that are not in the app. This starts
@@ -24,6 +25,7 @@ import { chromium as launchable } from 'playwright-core'
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const only = arg('--only')
 const skip = (arg('--skip') ?? '').split(',').filter(Boolean)
+const watchdogMinutes = Number(arg('--watchdog') ?? 15)
 const port = Number(arg('--port') ?? 5186)
 const retries = Number(arg('--retries') ?? 1)
 const root = join(import.meta.dirname, '..')
@@ -120,8 +122,20 @@ function run(file, limit = 600) {
   })
 }
 
+// A safety net: every await below has its own bound, but a dev server or a browser can still wedge
+// something in a way that never settles, and a run that hangs is worse than one that fails.
+let lastProgress = Date.now()
+const progress = () => { lastProgress = Date.now() }
+setInterval(() => {
+  if (Date.now() - lastProgress < watchdogMinutes * 60 * 1000) return
+  console.error(`No check finished in ${watchdogMinutes} minutes; stopping the run.`)
+  stop()
+  process.exit(1)
+}, 30_000)
+
 await start()
 await warm()
+progress()
 console.log(`${checks.length} checks against ${url}`)
 const failed = []
 for (const [index, file] of checks.entries()) {
@@ -133,6 +147,7 @@ for (const [index, file] of checks.entries()) {
     log = ''
     await start()
     await warm()
+    progress()
   }
   const started = Date.now()
   let { code, output } = await run(file)
@@ -141,6 +156,7 @@ for (const [index, file] of checks.entries()) {
     attempts.push(attempts.length + 1)
     ;({ code, output } = await run(file))
   }
+  progress()
   const took = ((Date.now() - started) / 1000).toFixed(0)
   const tries = attempts.length > 1 ? ` (${attempts.length} attempts)` : ''
   if (code === 0) {
