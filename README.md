@@ -1189,8 +1189,8 @@ collected by the ring `demo/main.js` installs before the app mounts. Anything na
 own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
 inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
 published site with only the parameters that open the sequence. The answer replaces the form with
-the issue it became; a report matching an open issue says so and links to it, and a refused one
-keeps the text and shows what the intake said.
+the issue it became; a report matching an open issue says so and links to it, and a refused or
+timed-out one keeps the text and offers another try.
 
 ### Comparison with KAGE
 
