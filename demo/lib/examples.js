@@ -403,7 +403,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
     { sequence: '⿰木卆', char: '枠', reading: 'わく' },
   ] },
-  // The historical twelve unresolved JIS ghost kanji; source histories and later attestations differ.
+  // The twelve unresolved JIS characters listed by sources 56–57; later attestations differ.
   // Descriptions follow BabelStone's Japanese forms. No historical readings are assigned here.
   { key: 'ghost', refs: [1, 54], examples: [
     { sequence: '⿳山一女', char: '妛' },

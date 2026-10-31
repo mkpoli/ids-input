@@ -144,6 +144,9 @@
   "app.source.qrcode": "分享中的QR碼。",
   "app.source.daKanji": "手寫欄的整字辨識。",
   "app.source.etl": "用於訓練漢字辨識模型的手寫文字。",
+  "app.source.glyphWeave": "與日語結果一同顯示的中文辨識。",
+  "app.source.casia": "用於訓練 GlyphWeave 的手寫文字。",
+  "app.source.emnist": "用於訓練 GlyphWeave 的字母和數字。",
   "app.source.onnxRuntime": "在瀏覽器中執行漢字辨識模型。",
   "app.source.rime": "部件表的首筆分類。",
   "app.source.unihan": "筆畫數與來源地區。",
@@ -162,6 +165,7 @@
   "app.tabs.edited": "已編輯",
   "app.tabs.menu": "分頁操作",
   "app.tabs.new": "新增分頁",
+  "app.tabs.reopen": "重新開啟關閉的分頁",
   "app.tabs.untitled": "無標題",
   "app.theme.dark": "深色",
   "app.theme.light": "淺色",
@@ -276,5 +280,10 @@
   "app.layers.history": "歷史",
   "app.export.incomplete": "此繪圖不完整。匯出可能遺失變換或部件。",
   "app.export.partial": "匯出不完整繪圖",
-  "app.file.drop": "拖放文件以開啟"
+  "app.file.drop": "拖放文件以開啟",
+  "app.file.title": "文件標題…",
+  "app.titleDialog.label": "標題",
+  "app.titleDialog.hint": "用於儲存和匯出的檔案；分頁保留構字串。",
+  "app.titleDialog.placeholder": "無標題文件",
+  "app.save": "儲存"
 }

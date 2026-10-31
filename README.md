@@ -182,7 +182,8 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
-pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, reverse: false }
+pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -233,21 +234,24 @@ an excluded character, or that carries loose marks or approximate operators, kee
 
 ### Pyramids
 
-`pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
-description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
-and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows, or of two rows whose cell is a description, as equal square cells in centred
-rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
-cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
-follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
-pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
-to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
-its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
-kept for all three. Enter a part, then choose a preset or a custom row count.
-Its Reverse toggle arranges rows from widest
-to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
-writes that arrangement; `pyramidRows` reports its direction in `reverse`.
+`pyramidSequence(part, layers)` writes one part in groups of 1, 2, 3, …; the part is a component,
+any description or ⬚. `direction` points the pyramid `top` (default), `bottom`, `left` or `right`:
+top and bottom stack rows of 1…`layers` cells, left and right stand columns of 1…`layers` cells side
+by side. `pyramidRows` reads an equivalent tree back, whichever way its groups use `⿰`/`⿲` and its
+cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way it points in
+`direction`. The composer draws a pyramid of three or more layers, or of two layers whose cell is a
+description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
+above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
+composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
+instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
+64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
+layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
+or right. The shared Part field above the generators starts with the selected part or 口; an empty
+Part lays out empty slots, drawn in the pyramid's cells, and a typed value is kept for all three.
+Enter a part, then choose a preset or a custom layer count. Sideways pyramids keep every part
+upright. `pyramidSequence(part, layers, { direction: 'bottom' })` writes a pyramid from its widest
+row down to one; `'left'` and `'right'` write the sideways arrangements.
 
 ### Repeats
 
@@ -699,11 +703,11 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with 803 palette parts and the CJK
-strokes, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
+CJK strokes the prepared file covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
-the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
+the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
 fonts the page has loaded. Without `sketches`, the same shapes are drawn from the page's
 `--ids-font` when the pad opens, which needs its CJK faces loaded; a part a font draws as its
 missing-glyph box is left out either way. Nothing is sent anywhere.
@@ -716,15 +720,18 @@ similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the co
 `readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
 the fallback from the page's fonts.
 
-`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first, from strokes
-in percentage coordinates. The workshop implements it with DaKanji's 6,507-class Japanese
-classifier (MIT; trained on ETL and KanjiVG; `demo/model/`), served with ONNX Runtime Web and
-loaded on the first drawing: 2.2 MB of model and 12 MB of WebAssembly, outside the package. On
-the 20 synthetic stroke drawings in `demo/model/benchmark.json`, 19 put the drawn character in the
-top 24 and 18 in the top 10.
-Chinese-only forms are not in the model's labels; the palette parts remain their fallback. A host
-without `recognizeDrawing` gets the parts alone, and a failed or empty recognition falls back to
-them.
+`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first,
+from strokes in percentage coordinates. The workshop combines two classifiers in every locale:
+DaKanji's 6,507-class model (2.2 MB; MIT; trained on ETL and KanjiVG) supplies Japanese kanji and
+kana, and GlyphWeave's 7,247-class model (15.4 MB int8; MIT; trained on CASIA-HWDB and EMNIST)
+supplies its 7,185 Han classes including simplified forms, plus digits and Latin letters. Both run
+with ONNX Runtime Web's 12 MB WebAssembly runtime and load on the first drawing; sources and hashes
+are in `demo/model/`.
+
+On the 20 synthetic stroke drawings in `demo/model/benchmark.json`, both models put 19 targets in
+the top 24; DaKanji puts 18 in the top 10. GlyphWeave's release reports 96.0% top-1 and 97.6%
+macro-average on its 870,895-sample test split. A host without `recognizeDrawing` gets the parts alone, and a failed or empty
+recognition falls back to them.
 
 ## Preview
 
@@ -1016,10 +1023,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - 小林肇, [新聞漢字あれこれ91 幽霊漢字があやうく紙面に](https://www.kanjicafe.jp/detail/10128.html),
   日本漢字能力検定協会「漢字カフェ」, 2022-04-06 (read 2026-10-31): identifies 椦 as a ghost kanji
   and reports its presumed mistaken inclusion for 橳. The books it cites are consulted indirectly.
-- WDIC Creators club, [幽霊文字](https://www.wdic.org/w/WDIC/幽霊文字) (2010-04-24), and Wikipedia contributors,
-  [幽霊文字, revision 110601177](https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177), read 2026-10-31:
-  the historical twelve unresolved JIS characters. JIS X 0208:1997, Annex 7, and old dictionaries are cited indirectly.
-  Unresolved JIS provenance coexists with same-shape attestations; proposed miscopy origins remain hypotheses.
+- WDIC Creators club, [幽霊文字](https://www.wdic.org/w/WDIC/幽霊文字), updated 2010-04-24
+  (read 2026-10-31): the twelve characters classified as unresolved in JIS X 0208:1997, Annex 7,
+  cited indirectly. They include 墸, 壥, 挧, 暃, 槞, 蟐, 袮, 閠 and 駲. Broader ghost-character
+  lists also exist.
+- Wikipedia contributors, [幽霊文字, revision 110601177](https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177),
+  2026-08-11 (read 2026-10-31): the same twelve-character set. Many have historical same-shape
+  attestations; 彁 has none in this account. Proposed miscopy origins remain hypotheses.
+  The JIS annex and old dictionaries are cited indirectly.
 - [Chữ Nôm](https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m), Wikipedia, read 2026-10-30: the
   invented Nôm characters in `demo/lib/examples.js` and their readings, from the Tale of Kiều table
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
@@ -1095,24 +1106,25 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
-with the arrow keys and accept drops. A click, the
-arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
-`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click, Delete or the
-tab's menu closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the
-middle column are divided by a draggable splitter, the tree starting
-larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
-columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
-keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
-commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
-the active document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: duplicate it,
-close it, close the other tabs, close the tabs on either side, or close all tabs. Close all asks
-first, and Undo after a group close restores the tabs in their old places with the tab that was
-being edited. Duplicate opens the copy beside its source with its selection, undo history and layer
-transforms, which can then be edited independently.
+with the arrow keys and accept drops. A click, the arrow keys, Home/End or, where the browser leaves
+them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
+middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
+`Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab or the tab's menu
+opens the tab or group closed last; that history lasts for the page session. The tree and search panels in the middle column are divided by a
+draggable splitter, the tree starting larger; the arrow keys move it and a double-click restores the
+default. Vertical dividers resize the columns by dragging or with Left/Right; a double-click resets
+their widths. Toolbar buttons show their keys on hover. File and Edit menus provide new tabs, saved
+drafts, sharing, image export, and editing commands. The Templates tab includes one-click pyramids of
+3–24 rows. File → Duplicate tab copies the active document. Right-clicking a tab, or pressing
+Shift+F10 on it, opens its menu: reopen the tab or group closed last, duplicate it, close it, close
+the other tabs, the tabs on either side, or close all tabs. Close all asks first, and Undo after a
+group close restores the tabs in their old places with the tab that was being edited. Duplicate
+opens the copy beside its source with its selection, undo history and layer transforms, which can
+then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
 with its character and code point, an abbreviated character, or a mark when it has none. It opens as

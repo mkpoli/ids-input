@@ -223,9 +223,10 @@ export class Composer {
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
   /**
-   * The pyramid a node draws as, remembered for this drawing. A two-row pyramid of a description is
-   * one: no character designs that repeated form, so its equal cells are the drawing. A two-row
-   * pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid here.
+   * The pyramid a node draws as, remembered for this drawing. A two-layer pyramid of a description
+   * is one: no character designs that repeated form, so its equal cells are the drawing. A
+   * two-layer pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid
+   * here.
    */
   pyramid(node) {
     if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
@@ -464,7 +465,7 @@ export class Composer {
       const pyramid = this.pyramid(node)
       if (pyramid) {
         // One box per leaf of the repeated cell, in the cell the pyramid gives it.
-        for (const box of pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })) walk(pyramid.cell, box, false)
+        for (const box of pyramidCells(region, pyramid.layers, { direction: pyramid.direction })) walk(pyramid.cell, box, false)
         return
       }
       const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
@@ -602,7 +603,7 @@ export class Composer {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
     if (pyramid) {
-      const cells = pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })
+      const cells = pyramidCells(region, pyramid.layers, { direction: pyramid.direction })
       // A pyramid of empty slots draws one placeholder per cell, numbered in reading order; a cell
       // of several slots takes the next numbers each time it repeats.
       if (hasSlot(pyramid.cell)) {
