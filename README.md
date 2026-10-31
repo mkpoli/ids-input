@@ -982,8 +982,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
   唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
-  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with
-  両's bottom, 冂 around 山, drawn as a prepared form; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
+  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃, cut at the 八 that 金 repeats,
+  above 金 and 萬's 艹田, drawn with 両's 冂 around 山 as prepared forms; 吉祥如意 shares one 口
+  between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,

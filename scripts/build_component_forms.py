@@ -6,7 +6,7 @@
 
 Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
 """
-import hashlib, json, sys
+import hashlib, json, re, sys
 import pathops
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -238,40 +238,41 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
     # Retain 萬's complete outer contour, removing only the 禸 interior.
-    # 両 supplies 山, fitted inside the original enclosure and joined at its roof.
+    # 満 carries 両 under 艹: its lower box supplies a 山 of the right weight,
+    # widened into 萬's enclosure, with its bar forming the bottom edge.
     wan = cs('萬')
     if style == 'sans':
         outer = [('moveTo', ((534, 208),))] + wan[4][4:25] + [('closePath', ())]
         shell_contours = wan[:4] + [outer, wan[5]]
-        source_bottom, source_top, target_bottom, target_top = 16, 339, 25, 208
-        gap_bottom, gap_top, dx = 135, 285, -120
+        source_x, target_x = (391, 853), (182, 830)
+        source_y = (-79, -15, 16, 77, 339)
+        target_y = (-80, -17, 16, 77, 273)
     else:
         outer = [('moveTo', ((535, 240),))] + wan[5][5:42] + [('closePath', ())]
         shell_contours = wan[:5] + [outer]
-        source_bottom, source_top, target_bottom, target_top = 39, 376, 32, 240
-        gap_bottom, gap_top, dx = 131, 289, -110
+        source_x, target_x = (370, 856), (190, 801)
+        source_y = (-78, -9, 102, 131, 376)
+        target_y = (-80, -17, 80, 109, 269)
+    target_bottom, target_top = target_y[0], target_y[-1]
     # Any difference from 萬 must remain inside the lower interior.
     original, edited, region = pathops.Path(), pathops.Path(), pathops.Path()
     for contour in wan: replayRecording(contour, original.getPen())
     for contour in shell_contours: replayRecording(contour, edited.getPen())
-    region.moveTo(200, -20); region.lineTo(800, -20); region.lineTo(800, target_top)
-    region.lineTo(200, target_top); region.close()
+    lx, rx = target_x
+    region.moveTo(lx, -85); region.lineTo(rx, -85); region.lineTo(rx, target_top)
+    region.lineTo(lx, target_top); region.close()
     difference = pathops.op(original, edited, pathops.PathOp.XOR)
     assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
-    # 満's contextual 両 has a shorter 山. Shorten only the straight
-    # upright runs between its bottom bar and upper terminals; keep all
-    # terminals and the bar at their native weight and shape.
-    mountain = crop_group(cs('満'), (430, source_bottom, 810, source_top))
-    reduction = (source_top - source_bottom) - (target_top - target_bottom)
-    def mountain_y(y):
-        if y <= gap_bottom: return y + target_bottom - source_bottom
-        if y >= gap_top: return y + target_bottom - source_bottom - reduction
-        return gap_bottom + target_bottom - source_bottom + (y-gap_bottom) * (gap_top-gap_bottom-reduction) / (gap_top-gap_bottom)
-    mountain = [[ops, [round(mountain_y(v), 2) if i % 2 else v + dx for i, v in enumerate(points)]] for ops, points in mountain]
-    # Check the final union too, including containment of the inserted contours.
-    mountain_path = pathops.Path()
-    pen = mountain_path.getPen()
-    import re
+    def ramp(value):
+        i = next((i for i in range(len(source_y)-1) if value <= source_y[i+1]), len(source_y)-2)
+        return target_y[i] + (value-source_y[i]) * (target_y[i+1]-target_y[i]) / (source_y[i+1]-source_y[i])
+    mountain = crop_group(cs('満'), (source_x[0], -20, source_x[1], source_y[-1]))
+    mountain = [[ops, [round(ramp(v), 2) if i % 2
+        else round(target_x[0] + (v-source_x[0]) * (target_x[1]-target_x[0]) / (source_x[1]-source_x[0]), 2)
+        for i, v in enumerate(points)]] for ops, points in mountain]
+    # The widened bar meets both legs, closing the box as 両's own does.
+    shaped = pathops.Path()
+    pen = shaped.getPen()
     for ops, points in mountain:
         coords = iter(points)
         for op in re.findall(r'M|L|Q2', ops):
@@ -279,11 +280,31 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             elif op == 'L': pen.lineTo((next(coords), next(coords)))
             else: pen.qCurveTo((next(coords), next(coords)), (next(coords), next(coords)))
         pen.closePath()
-    assert pathops.op(mountain_path, region, pathops.PathOp.DIFFERENCE).area < 0.1
-    combined = pathops.op(edited, mountain_path, pathops.PathOp.UNION)
-    difference = pathops.op(original, combined, pathops.PathOp.XOR)
+    bar = pathops.Path()
+    bar.moveTo(target_x[0], target_bottom); bar.lineTo(target_x[1], target_bottom)
+    bar.lineTo(target_x[1], target_y[1]); bar.lineTo(target_x[0], target_y[1]); bar.close()
+    mountain_path = pathops.op(shaped, bar, pathops.PathOp.UNION)
+    # The 山 stays inside the interior, and only the interior changed.
+    bad = pathops.op(mountain_path, region, pathops.PathOp.DIFFERENCE)
+    bb = bad.bounds
+    assert bad.area < 0.1, (style, bad.area, bb)
+    difference = pathops.op(original, pathops.op(edited, mountain_path, pathops.PathOp.UNION), pathops.PathOp.XOR)
     assert pathops.op(difference, region, pathops.PathOp.DIFFERENCE).area < 0.1
+    drawn = RecordingPen(); mountain_path.draw(drawn)
+    split, mountain_contours = [], []
+    for command in drawn.value:
+        split.append(command)
+        if command[0] in ('closePath', 'endPath'):
+            mountain_contours.append(split); split = []
+    mountain = group(mountain_contours)
     forms['⿳艹田⿵冂山'] = [group(shell_contours), mountain]
+    # 黃 minus its 八: the shared shape continues as the 𠆢 of 金 below.
+    huang = cs('黃')
+    if style == 'sans':
+        crown = crop_group(huang, (-50, 82, 1050, 1000))
+    else:
+        crown = group(huang[2:])
+    forms['⿱廿⿱一由'] = [crown]
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
