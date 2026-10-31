@@ -14,8 +14,9 @@ describe('the worker’s head', () => {
     expect(body).toContain('<meta property="og:title" content="⿰木口 — IDS Workshop">')
     expect(body).toContain('<link rel="canonical" href="https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3">')
     expect(body).toContain('<meta property="og:url" content="https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3">')
-    expect(body.match(/⿰木口 in the IDS Workshop/g)?.length).toBe(3)
-    expect(body).toContain('<meta name="description" content="⿰木口 in the IDS Workshop')
+    expect(body.match(/The ideographic description sequence ⿰木口/g)?.length).toBe(3)
+    expect(body).toContain('<meta name="description" content="The ideographic description sequence ⿰木口')
+    expect(body).toContain('https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png')
     // A sequence still being typed is a sequence.
     expect(await (await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')).text()).toContain('<title>⿰木 — IDS Workshop</title>')
   })

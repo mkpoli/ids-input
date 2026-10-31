@@ -6,59 +6,29 @@
 // A `{ id, warm, base }` message loads the manifest and layout and answers `{ id, warm }`, so the
 // first drawing starts with them. The page ends a worker whose answer it no longer needs
 // (`client.js`).
-import { compose, fromUrl, sketch } from './loader.js'
-import { hasTangut, tangutSource } from './tangut.js'
-
-import { hasBopomofo, bopomofoSource } from './bopomofo.js'
-import { hasSmallSeal, smallSealSource } from './small-seal.js'
-import { hasNewKorean, newKoreanSource } from './new-korean.js'
-import { hasShuishu, shuishuSource } from './shuishu.js'
-import { bundledSource } from './bundled.js'
+import { compose, sketch } from './loader.js'
 import { onlyBundled } from './local.js'
-import { hasPaletteGlyph, paletteSource } from './palette.js'
-import { unicodeSource } from './unicode.js'
-import { leaves, parse, splitDescription } from '../core/ids.js'
+import { sourceFor, traitKey, traitsOf } from './source.js'
 
 const sources = new Map()
 self.onmessage = async ({ data: { id, sequence, base, separate, fontStyle, warm } }) => {
-  const parsed = !warm ? parse(sequence, { open: true }) : null
-  const emptyOnly = parsed && !parsed.problem && parsed.tree !== null && leaves(parsed.tree).every(leaf => leaf.char === null)
-  const local = !warm && (emptyOnly || onlyBundled(sequence, separate, false, fontStyle))
-  const tangut = !warm && hasTangut(sequence), bopomofo = !warm && hasBopomofo(sequence)
-  const seal = !warm && hasSmallSeal(sequence)
-  const newKorean = !warm && hasNewKorean(sequence)
-  const shuishu = !warm && hasShuishu(sequence)
-  const palette = !warm && [...sequence].some(hasPaletteGlyph)
-  // A loose mark's outline comes from the bundled Unicode outlines, even when the rest is local.
-  const loose = !warm && splitDescription(sequence).marks !== ''
-  const key = `${local ? 'local' : base}:${tangut}:${bopomofo}:${seal}:${newKorean}:${shuishu}:${palette}:${loose}`
-  if (!sources.has(key)) {
-    let source = null
-    if (!local) source = fromUrl(base)
-    else if (loose) source = unicodeSource()
-    if (tangut) source = tangutSource({ fallback: source })
-    if (bopomofo) source = bopomofoSource({ fallback: source })
-    if (seal) source = smallSealSource({ fallback: source })
-    if (newKorean) source = newKoreanSource({ fallback: source })
-    if (shuishu) source = shuishuSource({ fallback: source })
-    if (palette) source = paletteSource({ fallback: source })
-    source ??= bundledSource({ load: async () => ({ records: {} }), matches: () => false })
-    sources.set(key, source)
-  }
+  const traits = !warm ? traitsOf(sequence) : null
+  // Whether the sequence draws from bundled outlines is part of the key: `onlyBundled` reads the
+  // sequence, which the traits alone do not cover.
+  const local = !warm && (traits.empty || onlyBundled(sequence, separate, false, fontStyle))
+  const key = `${base}:${warm ? 'warm' : `${local ? 'local' : 'remote'}:${traitKey(traits)}`}:${separate}:${fontStyle}`
+  if (!sources.has(key)) sources.set(key, sourceFor(sequence, { base, fontStyle, separate, traits, remote: warm }))
   let source = sources.get(key)
-  try { await source.ready() } catch (error) {
+  try {
+    await source.ready()
+  } catch (error) {
+    // The export could not be read: the bundled outlines alone still draw what they cover.
     if (!warm && onlyBundled(sequence, false, true, fontStyle)) {
-      source = unicodeSource()
-      if (tangut) source = tangutSource({ fallback: source })
-      if (bopomofo) source = bopomofoSource({ fallback: source })
-      if (seal) source = smallSealSource({ fallback: source })
-      if (newKorean) source = newKoreanSource({ fallback: source })
-      if (shuishu) source = shuishuSource({ fallback: source })
-      if (palette) source = paletteSource({ fallback: source })
+      source = sourceFor(sequence, { base, fontStyle, separate, traits, bundled: true })
       await source.ready()
     } else {
-    self.postMessage(warm ? { id, warm: true, error: String(error?.message ?? error) } : { id, error: String(error?.message ?? error), unavailable: true })
-    return
+      self.postMessage(warm ? { id, warm: true, error: String(error?.message ?? error) } : { id, error: String(error?.message ?? error), unavailable: true })
+      return
     }
   }
   if (warm) { self.postMessage({ id, warm: true }); return }

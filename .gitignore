@@ -8,3 +8,4 @@ dist/
 /shots/
 __pycache__/
 /cache/
+/dist-worker/
