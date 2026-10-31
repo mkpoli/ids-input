@@ -1,6 +1,7 @@
-// The tab menu: right-click a tab for duplicate and the close actions, with close all asking first.
-// Closing a group leaves a note that brings the whole group back in its old order. Run against a
-// devrun server:
+// The tab menu: right-clicking a tab reopens the last closed tab or group, duplicates it and closes
+// it or the tabs around it, with Close all asking first. The note, Ctrl+Shift+T (where the host
+// delivers it), File or the tab menu brings a close back in its old order, showing the tab that was
+// active. Run against a devrun server:
 //   IDS_URL=http://localhost:5197 CHROMIUM_PATH=/path/to/chrome bun demo/check-tab-menu.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -130,8 +131,11 @@ try {
   await open('tab-0')
   await item('Close tab').click()
   assert.deepEqual(await order(), ['tab-1', 'tab-2', 'tab-3'], 'close tab closes it')
+  // Playwright injects this below the browser's own reopen shortcut; the menus are the safe path.
   await page.keyboard.press('Control+Shift+T')
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'Ctrl+Shift+T reopens the closed tab')
+  await page.keyboard.press('Control+Shift+T')
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'a second reopen has nothing left to open')
   assert.equal(await active(), 'tab-0', 'reopening shows the tab')
   assert.equal(await page.locator('.toast').filter({ hasText: /Closed/ }).count(), 0, 'reopening takes the close note away')
   await open('tab-2')
@@ -152,6 +156,9 @@ try {
   assert.equal(await active(), 'tab-0', 'the File menu shows the tab it reopened')
 
   // Shift+F10 opens the menu on the focused tab and the arrows walk the enabled items.
+  await open('tab-0')
+  assert.equal(await item('Reopen closed tab').isDisabled(), true, 'the reopen history is empty again')
+  await closeMenu()
   await page.locator('.tab[data-tab-id="tab-0"] [role="tab"]').focus()
   await page.keyboard.press('Shift+F10')
   await page.locator('.tab-menu').waitFor()
@@ -167,6 +174,17 @@ try {
   await closeMenu()
   assert.equal(await page.locator('.tab[data-tab-id="tab-0"] [role="tab"]').evaluate(el => el === document.activeElement), true, 'closing the menu returns to its tab')
 
+  // A replacement left behind by Close all goes when the group comes back after another tab.
+  await open('tab-2')
+  await item('Close all tabs').click()
+  await page.locator('dialog[open]').getByRole('button', { name: 'Close all', exact: true }).click()
+  await page.getByRole('button', { name: 'New tab', exact: true }).click()
+  const atClose = await order()
+  assert.equal(atClose.length, 2, 'Close all left its replacement and the new tab')
+  await page.keyboard.press('Control+Shift+T')
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3', atClose[1]], 'the replacement goes and the new tab stays')
+  assert.equal(await active(), 'tab-0', 'the reopened group shows the tab that was active')
+
   // Any edit, even text the editor cannot read, spends the close note.
   await open('tab-2')
   await item('Close other tabs').click()
@@ -175,5 +193,5 @@ try {
   assert.equal(await page.locator('.toast').filter({ hasText: /Closed/ }).count(), 0, 'a draft edit takes the note away')
 
   assert.deepEqual(errors, [])
-  console.log('PASS tab menu closes single, other, left, right and all tabs, with undo and a confirmation')
+  console.log('PASS tab menu closes single, group and all tabs, with undo and reopen')
 } finally { await browser.close() }

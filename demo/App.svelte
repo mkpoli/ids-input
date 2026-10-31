@@ -441,7 +441,7 @@
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number, close?: boolean } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -669,7 +669,7 @@
     closedGroups = [...closedGroups, group].slice(-10)
     const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
     toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
-      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000, close: true,
       run: () => restoreClosed(group) }
     store()
   }
@@ -682,7 +682,9 @@
    */
   function reopenTabs(removed, wasActive, replacement, first = false) {
     const fresh = tabs.find(tab => tab.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+    // The replacement is a placeholder: take it back while it is empty and untouched, even if
+    // another tab has been opened since the close.
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
       sessions.delete(fresh.id)
@@ -701,7 +703,7 @@
   /** Put a closed group back and take it off the reopen history. @param {ClosedGroup} group @param {boolean} [first] */
   function restoreClosed(group, first = false) {
     closedGroups = closedGroups.filter(entry => entry !== group)
-    if (toast?.run) toast = null
+    if (toast?.close) toast = null
     reopenTabs(group.tabs, group.active, group.fresh, first)
   }
   /** Reopen the tab or group closed last, showing it. */
@@ -811,7 +813,7 @@
 
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
-    { label: t('app.tabs.reopen'), icon: 'history', shortcut: shortcut('mod+shift+t'), disabled: !closedGroups.length, run: reopenClosed },
+    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
@@ -909,7 +911,8 @@
     const mod = command && !event.shiftKey
     if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
     // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
-    if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length) {
+    if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
+      && !target.closest('[role="menu"], [role="menubar"]')) {
       event.preventDefault()
       const inStrip = Boolean(target.closest('.tabbar'))
       reopenClosed()
