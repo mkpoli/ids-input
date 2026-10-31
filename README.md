@@ -1023,10 +1023,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - 小林肇, [新聞漢字あれこれ91 幽霊漢字があやうく紙面に](https://www.kanjicafe.jp/detail/10128.html),
   日本漢字能力検定協会「漢字カフェ」, 2022-04-06 (read 2026-10-31): identifies 椦 as a ghost kanji
   and reports its presumed mistaken inclusion for 橳. The books it cites are consulted indirectly.
-- WDIC Creators club, [幽霊文字](https://www.wdic.org/w/WDIC/幽霊文字) (2010-04-24), and Wikipedia contributors,
-  [幽霊文字, revision 110601177](https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177), read 2026-10-31:
-  the historical twelve unresolved JIS characters. JIS X 0208:1997, Annex 7, and old dictionaries are cited indirectly.
-  Unresolved JIS provenance coexists with same-shape attestations; proposed miscopy origins remain hypotheses.
+- WDIC Creators club, [幽霊文字](https://www.wdic.org/w/WDIC/幽霊文字), updated 2010-04-24
+  (read 2026-10-31): the twelve characters classified as unresolved in JIS X 0208:1997, Annex 7,
+  cited indirectly. They include 墸, 壥, 挧, 暃, 槞, 蟐, 袮, 閠 and 駲. Broader ghost-character
+  lists also exist.
+- Wikipedia contributors, [幽霊文字, revision 110601177](https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177),
+  2026-08-11 (read 2026-10-31): the same twelve-character set. Many have historical same-shape
+  attestations; 彁 has none in this account. Proposed miscopy origins remain hypotheses.
+  The JIS annex and old dictionaries are cited indirectly.
 - [Chữ Nôm](https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m), Wikipedia, read 2026-10-30: the
   invented Nôm characters in `demo/lib/examples.js` and their readings, from the Tale of Kiều table
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
