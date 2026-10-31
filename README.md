@@ -979,8 +979,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
-  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters, and no recorded description
-  writes the sharing, so they stay out.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 follows the
+  photograph's cross, 五 above 矢, 口 and 隹 above 止, with one 口 for all four; 黃金萬兩 follows its
+  column of 黃, 金, 萬 and 兩; 吉祥如意 keeps a square because the diamond's cross cannot be drawn.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
@@ -988,7 +989,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
   and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
-  written as an IDS tree without duplicating them.
+  written as an IDS tree without duplicating them; the example arranges them in a square.
 - 吴国升, [组合字的内外乾坤](https://epaper.gmw.cn/gmrb/html/2024-04/21/nw.D110000gmrb_20240421_2-05.htm),
   光明日报, 2024-04-21: describes 招財進寶 sharing the 貝 of 財 and the 扌 of 招 inside 寶's frame,
   with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
@@ -1264,6 +1265,12 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+
+The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
+`.github/workflows/deploy.yml`; a pull request uploads a preview version on its own alias. Both need
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
+reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
+request to the assets.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
