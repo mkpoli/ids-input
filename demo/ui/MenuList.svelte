@@ -2,7 +2,7 @@
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
-  import { untrack } from 'svelte'
+  import { tick, untrack } from 'svelte'
   let { items, label, onpick, view = null } = $props()
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let root = $state(null)
@@ -47,6 +47,16 @@
     collapsed = next
   }
   /** @param {string} heading */
+  /** @param {string} label */
+  function expand(label) {
+    openSubmenu = label
+    tick().then(() => root?.querySelector('.submenu')?.scrollIntoView({ block: 'nearest' }))
+  }
+  /** @param {{ label: string }} item */
+  function toggleSubmenu(item) {
+    if (openSubmenu === item.label) openSubmenu = ''
+    else expand(item.label)
+  }
   function jump(heading) {
     const list = groups.filter(group => group.heading)
     const at = list.findIndex(group => group.heading === heading)
@@ -125,7 +135,7 @@
 {#snippet submenuRow(item, i)}
   {@const open = openSubmenu === item.label}
   <button type="button" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
-    disabled={item.disabled} onclick={() => openSubmenu = open ? '' : item.label}>
+    disabled={item.disabled} onclick={() => toggleSubmenu(item)}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
     <span class="label">{item.label}</span>
     <span class="chev" class:open><Icon name="chevron" size={14} /></span>

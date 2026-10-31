@@ -120,6 +120,16 @@
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
   function hide() { openSubmenu = ''; setOpen(false); trigger?.focus() }
+  /** Open one submenu inline and keep it in the menu's scrollport. @param {string} label */
+  function expand(label) {
+    openSubmenu = label
+    tick().then(() => box?.querySelector('.submenu')?.scrollIntoView({ block: 'nearest' }))
+  }
+  /** @param {{ label: string }} item */
+  function toggleSubmenu(item) {
+    if (openSubmenu === item.label) openSubmenu = ''
+    else expand(item.label)
+  }
   /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
   export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
   // A wide menu can start left of the window when its trigger sits near that edge, as a short
@@ -190,8 +200,8 @@
 {#snippet submenuRow(item, i)}
   {@const open = openSubmenu === item.label}
   <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
-    disabled={item.disabled} onclick={() => openSubmenu = open ? '' : item.label}
-    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); openSubmenu = item.label } }}>
+    disabled={item.disabled} onclick={() => toggleSubmenu(item)}
+    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); expand(item.label) } }}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
     <span class="label">{item.label}</span>
     <span class="chev" class:open><Icon name="chevron" size={14} /></span>
