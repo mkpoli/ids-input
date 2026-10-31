@@ -50,6 +50,7 @@ import { syncDocument } from './project.js'
  * @property {(id?: string) => string | null} remove
  * @property {(id?: string) => string} clear
  * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
+ * @property {(title: string) => void} setTitle
  * @property {(id?: string) => string} clearTransform
  * @property {(listener: (session: DocumentSession) => void) => () => void} listen
  */
@@ -282,6 +283,15 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       else delete found.node.transform
       commit(next, at, action(name(at).transform), coalesce)
       return at
+    },
+    /** @param {string} title */
+    setTitle(title) {
+      const next = /** @type {Document} */ (structuredClone(document))
+      const value = String(title).trim()
+      if ((next.title ?? '') === value) return
+      if (value) next.title = value
+      else delete next.title
+      commit(next, chosen, value ? `Title ${value}` : 'Clear title')
     },
     /** @param {string} [id] */
     clearTransform(id) {

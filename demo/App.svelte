@@ -46,6 +46,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
@@ -81,6 +82,7 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  let titleOpen = $state(false)
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -548,6 +550,29 @@
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
   }
+  /** The active tab's document title, kept current by the document revision. */
+  const currentTitle = $derived.by(() => {
+    documentTick
+    const tab = current()
+    return tab ? sessionFor(tab).document.title ?? '' : ''
+  })
+  function openTitle() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    titleOpen = true
+  }
+  /** @param {string} value */
+  function saveTitle(value) {
+    const tab = current()
+    if (!tab) return
+    const session = sessionFor(tab)
+    session.setTitle(value)
+    tab.document = sessionRecord(session)
+    documentTick++
+    store()
+    syncAddress()
+  }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
@@ -846,6 +871,7 @@
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
+    { label: t('app.file.title'), disabled: editor.tree === null, run: openTitle },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
@@ -989,7 +1015,7 @@
 </script>
 
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
-<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
+<svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
@@ -1204,6 +1230,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />

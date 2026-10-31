@@ -276,5 +276,10 @@
   "app.layers.history": "기록",
   "app.export.incomplete": "이 그림은 불완전합니다. 내보내면 변형이나 구성 요소가 빠질 수 있습니다.",
   "app.export.partial": "불완전한 그림 내보내기",
-  "app.file.drop": "문서를 놓아 열기"
+  "app.file.drop": "문서를 놓아 열기",
+  "app.file.title": "문서 제목…",
+  "app.titleDialog.label": "제목",
+  "app.titleDialog.hint": "저장 및 내보낸 파일에 표시됩니다. 탭은 구성 문자열을 유지합니다.",
+  "app.titleDialog.placeholder": "제목 없는 문서",
+  "app.save": "저장"
 }

@@ -276,5 +276,10 @@
   "app.layers.history": "Lịch sử",
   "app.export.incomplete": "Hình vẽ này chưa hoàn chỉnh. Xuất có thể làm mất phép biến đổi hoặc thành phần.",
   "app.export.partial": "Xuất hình chưa hoàn chỉnh",
-  "app.file.drop": "Thả tài liệu để mở"
+  "app.file.drop": "Thả tài liệu để mở",
+  "app.file.title": "Tiêu đề tài liệu…",
+  "app.titleDialog.label": "Tiêu đề",
+  "app.titleDialog.hint": "Hiển thị trong tệp đã lưu và xuất; tab giữ chuỗi cấu trúc.",
+  "app.titleDialog.placeholder": "Tài liệu chưa đặt tên",
+  "app.save": "Lưu"
 }
