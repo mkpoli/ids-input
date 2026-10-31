@@ -76,7 +76,8 @@
     target?.scrollIntoView({ block: 'start' })
     active = heading
   }
-  // The chip of the section at the top of the scrollport is marked, and kept in view in its row.
+  // The chip of the section at the top of the scrollport is marked. The row wraps, so the menu
+  // scrolls to show a chip that lands outside the head instead of nudging the row sideways.
   $effect(() => {
     const menu = box
     if (!open || !menu || !view) return
@@ -98,12 +99,11 @@
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
       const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.chip')[at])
-      const row = chip?.parentElement
-      if (chip && row) {
-        const chipRect = chip.getBoundingClientRect()
-        const rowRect = row.getBoundingClientRect()
-        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
-        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
+      if (chip && head) {
+        const chipRect = chip.getBoundingClientRect(), headRect = head.getBoundingClientRect()
+        if (chipRect.top < headRect.top || chipRect.bottom > headRect.bottom) {
+          menu.scrollTop += chipRect.top - headRect.top - 4
+        }
       }
     }
     update()
@@ -198,9 +198,9 @@
 <svelte:window onpointerdown={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }}
   onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
 
-{#snippet groupHeading(heading)}
+{#snippet groupHeading(heading, count)}
   <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
-    <Icon name="chevron" size={12} /><span>{heading}</span>
+    <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}
 
@@ -306,12 +306,12 @@
         <p class="empty">{view.filter.empty}</p>
       {:else if view?.cardsSelected}
         {#each groups as group (group.heading)}
-          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
           {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
         {/each}
       {:else if view}
         {#each groups as group (group.heading)}
-          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
           {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
         {/each}
       {:else}
@@ -365,9 +365,11 @@
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .heading:hover{color:var(--ink)}
   .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .heading-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .count{flex:none;margin-left:auto;padding:1px 6px;border-radius:999px;background:var(--hover);color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
-  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
+  .jump{display:flex;flex-wrap:wrap;gap:4px;padding:1px 1px 2px}
   .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
   .chip:hover{color:var(--ink);border-color:var(--ink)}
   .chip[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
