@@ -11,7 +11,6 @@ const failure = (message, status) => new Response(message, { status, headers: { 
 
 // A sequence's own letters: operators, the marks a draft leaves for an empty slot, selectors.
 const LETTER = new Set([...OPERATORS.map(([operator]) => operator), ...EMPTY_MARKS, UNKNOWN])
-const IDEOGRAPH = /\p{Script=Han}|\p{Script=Tangut}/u
 
 /** @param {string} text */
 const escapeHtml = text => text.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`)
@@ -20,15 +19,11 @@ const escapeHtml = text => text.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`)
 const reads = sequence => Boolean(parse(sequence, { open: true }).tree)
 
 /** Whether the text is spelt in a sequence's own letters, even where it does not parse: an older
- *  link, or a draft's address, which is worth opening rather than a miss. An operator, a slot or a
- *  selector says so on its own; ideographs only count where the whole text is spelt in them.
+ *  link, or a draft's address, which is worth opening rather than a miss. Latin letters and digits
+ *  are the alphabet of paths in general, so their presence makes a word rather than a draft.
  *  @param {string} text */
-function spells(text) {
-  const chars = [...text]
-  if (!chars.length) return false
-  if (!chars.every(char => LETTER.has(char) || isSelector(char) || isComponent(char))) return false
-  return chars.some(char => LETTER.has(char)) || chars.every(char => IDEOGRAPH.test(char))
-}
+const spells = text => Boolean(text.length) && !/[A-Za-z0-9]/.test(text)
+  && [...text].every(char => LETTER.has(char) || isSelector(char) || isComponent(char))
 
 /** The page a path that names no sequence gets: the text, and a way to open it as a draft.
  *  @param {URL} url @param {string} text @param {boolean} doomed  whether the text itself reads as
@@ -83,10 +78,11 @@ const render = (request, text, status) => new Response(request.method === 'HEAD'
 /** The segment a path holds, decoded, or the raw path where it will not decode.
  *  @param {string} pathname */
 function textOf(pathname) {
+  const trimmed = pathname.replace(/\/+$/, '')
   try {
-    return decodeURIComponent(pathname.slice(1))
+    return decodeURIComponent(trimmed.slice(1))
   } catch {
-    return pathname.slice(1)
+    return trimmed.slice(1)
   }
 }
 

@@ -50,7 +50,7 @@ describe('a path that names no sequence', () => {
     expect(body).not.toContain('og:title')
   })
   it('treats a word as a miss, not as a sequence attempt', async () => {
-    for (const path of ['/admin', '/wp-login.php', '/Buy']) {
+    for (const path of ['/admin', '/wp-login.php', '/Buy', '/ab']) {
       const response = await navigate(`https://ids.mkpo.li${path}`)
       expect(response.status).toBe(404)
     }
@@ -67,7 +67,7 @@ describe('a path that names no sequence', () => {
     expect(await response.text()).toBe('')
   })
   it('sends text in a sequence’s letters to the editor rather than to a miss', async () => {
-    for (const [path, text] of [['%E6%9C%A8%E5%8F%A3', '木口'], ['%E2%AC%9A', '⬚'], ['%E2%BF%B0%E6%9C%A8%E5%8F%A3%E5%8F%A3', '⿰木口口']]) {
+    for (const [path, text] of [['%E6%9C%A8%E5%8F%A3', '木口'], ['%E2%AC%9A', '⬚'], ['%E2%BF%B0%E6%9C%A8%E5%8F%A3%E5%8F%A3', '⿰木口口'], ['%E3%81%82%E3%81%84', 'あい'], ['%E6%9D%B1%E4%BA%AC', '東京']]) {
       const response = await ask(`https://ids.mkpo.li/${path}`)
       expect(response.status).toBe(303)
       expect(response.headers.get('location')).toBe(`https://ids.mkpo.li/?ids=${encodeURIComponent(text).replace(/%20/g, '+')}`)
@@ -89,9 +89,14 @@ describe('what the asset layer owns', () => {
       expect((await ask(`https://ids.mkpo.li${path}`)).status).toBe(404)
   })
   it('forwards a sequence the path rule cannot carry to any client', async () => {
-    const response = await ask('https://ids.mkpo.li/%E2%BF%B0.%E5%8F%A3')
-    expect(response.status).toBe(303)
-    expect(response.headers.get('location')).toBe('https://ids.mkpo.li/?ids=%E2%BF%B0.%E5%8F%A3')
+    for (const [path, text] of [['%E2%BF%B0.%E5%8F%A3', '⿰.口'], ['%E2%BF%B0.%E5%8F%A3/', '⿰.口']]) {
+      const response = await ask(`https://ids.mkpo.li/${path}`)
+      expect(response.status).toBe(303)
+      expect(response.headers.get('location')).toBe(`https://ids.mkpo.li/?ids=${encodeURIComponent(text)}`)
+    }
+  })
+  it('keeps the shell’s title, which the share page looks for', () => {
+    expect(shell).toContain('<title>IDS Workshop — Ideographic Description Sequence Editor</title>')
   })
   it('decodes a miss once, for the page and for the draft', async () => {
     const body = await (await navigate('https://ids.mkpo.li/deep/%E6%B7%B1%E3%81%84')).text()
