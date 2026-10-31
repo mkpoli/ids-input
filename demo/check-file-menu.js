@@ -22,6 +22,10 @@ try {
   await page.locator('.ids-field input').waitFor({ timeout: 120000 })
 
   const item = name => page.getByRole('menuitem', { name, exact: true })
+  // The export waits for the preview's drawing to arrive.
+  const waitExport = async (button = item('Export')) => {
+    for (let i = 0; i < 40 && await button.isDisabled(); i++) await page.waitForTimeout(250)
+  }
   const openFile = async () => {
     await page.getByRole('menuitem', { name: 'File', exact: true }).click()
     await page.locator('.menu').waitFor()
@@ -38,9 +42,10 @@ try {
   assert.equal(await item('Reopen closed tab').isDisabled(), true, 'nothing has been closed')
   assert.equal(await item('Browser drafts').isDisabled(), true, 'no drafts yet')
   const labels = await page.locator('.menu > [role="menuitem"]').evaluateAll(els => els.map(el => el.textContent.trim()))
-  assert.deepEqual(labels.slice(0, 8), ['New sequence', 'Open document…', 'Save document…', 'Recent', 'Reopen closed tab', 'Duplicate tab', 'Share', 'Export'], 'the File menu runs from documents through Recent and tabs to sharing')
-  assert.match(labels[8], /^Keep draft in browser/, 'the draft action follows export')
-  assert.equal(labels[9], 'Browser drafts', 'the drafts submenu ends the menu')
+  assert.deepEqual(labels.slice(0, 9), ['New sequence', 'Open document…', 'Save document…', 'Document title…', 'Recent', 'Reopen closed tab', 'Duplicate tab', 'Share', 'Export'], 'the File menu runs from documents through Recent and tabs to sharing')
+  assert.match(labels[9], /^Keep draft in browser/, 'the draft action follows export')
+  assert.equal(labels[10], 'Browser drafts', 'the drafts submenu ends the menu')
+  await waitExport()
   await item('Export').click()
   assert.deepEqual(await submenu().allInnerTexts(), ['SVG', 'PNG'], 'Export opens its formats')
   await close()
@@ -118,14 +123,14 @@ try {
   await close()
 
   // A layer change replaces the recent document rather than leaving the version first opened.
-  const document = fromSequence('⿰木口')
+  const document = fromSequence('⿱艹半')
   document.title = 'Recent document'
   const docPage = await context.newPage()
   const docErrors = []
   docPage.on('pageerror', error => docErrors.push(error.message))
-  await docPage.goto(`${url}/?doc=${shareDocument(document)}#${encodeURIComponent('⿰木口')}`, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  await docPage.goto(`${url}/?doc=${shareDocument(document)}#${encodeURIComponent('⿱艹半')}`, { waitUntil: 'domcontentloaded', timeout: 120000 })
   await docPage.locator('.ids-field input').waitFor({ timeout: 120000 })
-  const opened = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿰木口'))
+  const opened = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿱艹半'))
   assert.equal(opened?.document?.document?.title, 'Recent document', 'the link records its document in Recent')
   await docPage.getByRole('button', { name: 'Layers', exact: true }).click()
   const layerDialog = docPage.getByRole('dialog')
@@ -135,7 +140,7 @@ try {
   await xField.fill('20')
   await xField.press('Tab')
   await docPage.waitForTimeout(600)
-  const layerRecord = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿰木口'))
+  const layerRecord = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿱艹半'))
   assert.equal(layerRecord?.document?.document?.title, 'Recent document', 'the recent keeps its document')
   const matrix = layerRecord?.document?.document?.root?.children?.[0]?.transform?.[0]?.matrix
   assert.equal(matrix?.[4], 20, 'a layer change keeps the recent document current')
@@ -184,6 +189,7 @@ try {
   await sheet.getByRole('button', { name: 'Recent', exact: true }).click()
   assert.equal(await sheet.getByText('ⱱ日木', { exact: true }).count(), 1, 'the phone File section opens Recent')
   assert.equal(await sheet.locator('.submenu .item').count(), 12, 'Recent keeps twelve distinct entries')
+  await waitExport(sheet.getByRole('button', { name: 'Export', exact: true }))
   await sheet.getByRole('button', { name: 'Export', exact: true }).click()
   assert.deepEqual(await sheet.locator('.submenu .item').allInnerTexts(), ['SVG', 'PNG'], 'the phone Export submenu offers both formats')
   assert.equal(await sheet.getByRole('button', { name: 'Recent', exact: true }).getAttribute('aria-expanded'), 'false', 'one submenu is open at a time on the phone')
