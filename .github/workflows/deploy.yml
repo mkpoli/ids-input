@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 concurrency:
-  # A second merge may replace an in-flight deploy; a second push to a preview only replaces itself.
+  # A deploy runs to the end; a second push to a preview cancels the one it supersedes.
   group: deploy-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
@@ -50,7 +50,10 @@ jobs:
       - id: creds
         env:
           token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: echo "ok=${{ env.token != '' }}" >> "$GITHUB_OUTPUT"
+          account: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$token" ] && [ -n "$account" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
+          else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
       - id: name
         if: github.ref != 'refs/heads/main'
         env:
@@ -58,7 +61,11 @@ jobs:
           branch: ${{ github.ref_name }}
         run: |
           if [ -n "$number" ]; then echo "preview=pr-${number}" >> "$GITHUB_OUTPUT"
-          else echo "preview=$(printf %s "$branch" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-\+/-/g; s/^-//' | cut -c1-40 | sed 's/-$//')" >> "$GITHUB_OUTPUT"; fi
+          else
+            slug=$(printf %s "$branch" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-\+/-/g; s/^-//' | cut -c1-40 | sed 's/-$//')
+            [ -n "$slug" ] || slug="branch-$(echo "$GITHUB_SHA" | cut -c1-7)"
+            echo "preview=${slug}" >> "$GITHUB_OUTPUT"
+          fi
       - id: ship
         if: steps.creds.outputs.ok == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -72,8 +79,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           alias: ${{ steps.name.outputs.preview }}
-          version: ${{ steps.ship.outputs.deployment-url }}
           number: ${{ github.event.number }}
         run: |
           url="https://${alias}-ids-input-workshop.mkpoli.workers.dev"
-          gh pr comment "$number" --edit-last --create-if-none --body "Preview: ${url} (version ${version})"
+          gh pr comment "$number" --edit-last --create-if-none --body "Preview: ${url}"
