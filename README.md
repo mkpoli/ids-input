@@ -1015,11 +1015,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
   厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
   those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
-- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the Japanese-made
-  characters in `demo/lib/examples.js`, the jōyō, jinmeiyō and hyōgai examples and 鰯, 鱈, 樫, 椙,
-  椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
-  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
-  disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the twenty-four
+  characters it names in the table and the examples sections, with their readings; those of 鰯, 鱈,
+  樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2, <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>, and
+  the rest are the article's. 搾 is left out as disputed there, and 鮟 as not a kokuji. The
+  descriptions are BabelStone's.
+- [A list of kokuji (国字)](http://www.sljfaq.org/afaq/kokuji-list.html), SLJFAq, read 2026-10-31: the
+  group's other 132 characters and their first kana reading, with romaji and English meanings. 蟐 is
+  on that list and among the unresolved JIS characters, so it stays in the ghost group. The
+  descriptions are BabelStone's.
 - 笹原宏之, [第83回 漢字の音義の一人歩き](https://dictionary.sanseido-publ.co.jp/column/kanji_genzai083),
   三省堂「漢字の現在」, 2011-02-15 (read 2026-10-31): 妛's origin in 𡚴 and 彁's unidentified
   source at the time of writing. The ghost-kanji descriptions are BabelStone's Japanese forms.
