@@ -182,7 +182,8 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
-pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, reverse: false }
+pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -233,21 +234,24 @@ an excluded character, or that carries loose marks or approximate operators, kee
 
 ### Pyramids
 
-`pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
-description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
-and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows, or of two rows whose cell is a description, as equal square cells in centred
-rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
-cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
-follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
-pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
-to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
-its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
-kept for all three. Enter a part, then choose a preset or a custom row count.
-Its Reverse toggle arranges rows from widest
-to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
-writes that arrangement; `pyramidRows` reports its direction in `reverse`.
+`pyramidSequence(part, layers)` writes one part in groups of 1, 2, 3, …; the part is a component,
+any description or ⬚. `direction` points the pyramid `top` (default), `bottom`, `left` or `right`:
+top and bottom stack rows of 1…`layers` cells, left and right stand columns of 1…`layers` cells side
+by side. `pyramidRows` reads an equivalent tree back, whichever way its groups use `⿰`/`⿲` and its
+cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way it points in
+`direction`. The composer draws a pyramid of three or more layers, or of two layers whose cell is a
+description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
+above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
+composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
+instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
+64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
+layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
+or right. The shared Part field above the generators starts with the selected part or 口; an empty
+Part lays out empty slots, drawn in the pyramid's cells, and a typed value is kept for all three.
+Enter a part, then choose a preset or a custom layer count. Sideways pyramids keep every part
+upright. `pyramidSequence(part, layers, { direction: 'bottom' })` writes a pyramid from its widest
+row down to one; `'left'` and `'right'` write the sideways arrangements.
 
 ### Repeats
 
