@@ -7,8 +7,9 @@ on:
 permissions:
   contents: read
 concurrency:
+  # A second merge may replace an in-flight deploy; a second push to a preview only replaces itself.
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,22 +29,51 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # Pull requests build artifacts; deployment uses merged main only.
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    # Merged main becomes the site; a branch of this repository answers at a preview alias. A fork's
+    # pull request cannot read this repository's secrets, which gate the steps below.
+    if: |
+      github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - run: bun install --frozen-lockfile
       - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist
-      - uses: cloudflare/wrangler-action@v3
+      - id: creds
+        env:
+          token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: echo "ok=${{ env.token != '' }}" >> "$GITHUB_OUTPUT"
+      - id: name
+        if: github.ref != 'refs/heads/main'
+        env:
+          number: ${{ github.event.number }}
+          branch: ${{ github.ref_name }}
+        run: |
+          if [ -n "$number" ]; then echo "preview=pr-${number}" >> "$GITHUB_OUTPUT"
+          else echo "preview=$(printf %s "$branch" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-\+/-/g; s/^-//' | cut -c1-40 | sed 's/-$//')" >> "$GITHUB_OUTPUT"; fi
+      - id: ship
+        if: steps.creds.outputs.ok == 'true'
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.156.0'
           packageManager: bun
-          command: deploy
+          command: ${{ github.ref == 'refs/heads/main' && 'deploy' || format('versions upload --preview-alias {0}', steps.name.outputs.preview) }}
+      - if: github.event_name == 'pull_request' && steps.creds.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          alias: ${{ steps.name.outputs.preview }}
+          version: ${{ steps.ship.outputs.deployment-url }}
+          number: ${{ github.event.number }}
+        run: |
+          url="https://${alias}-ids-input-workshop.mkpoli.workers.dev"
+          gh pr comment "$number" --edit-last --create-if-none --body "Preview: ${url} (version ${version})"
