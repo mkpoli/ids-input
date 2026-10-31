@@ -5,7 +5,7 @@ import { APPROXIMATE } from '../../src/composer/compose.js'
 export function glyphAuditConfidence(row, { style = 'sans', characters = [] } = {}) {
   const routes = []
   if (row.sequence.includes('[')) routes.push('exact-modifier-glyph')
-  if (APPROXIMATE.some(op => row.sequence.includes(op))) routes.push('encoded-approximation-glyph')
+  if (!row.sequence.includes('[') && APPROXIMATE.some(op => row.sequence.includes(op))) routes.push('encoded-approximation-glyph')
   if (row.error && style !== 'sans') routes.push('sans-face-fallback')
   const regions = [...new Set((row.attributions ?? []).map(entry => entry.regions).filter(Boolean))]
   return { scope: 'direct-composer', demoRouting: routes.length ? 'override-possible' : 'unverified', routes, regions,

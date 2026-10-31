@@ -4,6 +4,7 @@ import { glyphAuditConfidence } from '../scripts/lib/glyph-audit-confidence.mjs'
 it('marks possible encoded routes without declaring a preview defect', () => {
   expect(glyphAuditConfidence({ sequence: '⿻[1:]木口' }).routes).toEqual(['exact-modifier-glyph'])
   expect(glyphAuditConfidence({ sequence: '⿾木' }).routes).toEqual(['encoded-approximation-glyph'])
+  expect(glyphAuditConfidence({ sequence: '⿻[1:]⿾木口' }).routes).toEqual(['exact-modifier-glyph'])
   expect(glyphAuditConfidence({ sequence: '⿻木口' }).demoRouting).toBe('unverified')
   expect(glyphAuditConfidence({ sequence: '⿻木口', error: {} }, { style: 'serif' }).routes).toEqual(['sans-face-fallback'])
 })

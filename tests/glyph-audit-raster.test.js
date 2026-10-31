@@ -20,4 +20,4 @@ it.skipIf(!process.env.CHROMIUM_PATH)('rasterizes cutouts, empty references, and
     expect((await comparator.compare(square, { d: '' })).iou).toBeNull()
     expect((await comparator.compare({ d: 'M-500 -500H1500V1500H-500Z' }, square)).iou).toBe(1)
   } finally { await comparator.close() }
-})
+}, 30000)

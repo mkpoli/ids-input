@@ -26,8 +26,8 @@ const cards = await Promise.all(picked.map(async (row, index) => {
   return `<article id="case-${row.id}"><h2>${index + 1}. ${escape(row.char)} <small>${code}</small></h2><div class="sequence">${escape(row.sequence)}</div>
 <div class="pair"><div><h3>Composed IDS</h3>${svg(data.drawn, `${row.id}-actual`)}</div><div><h3>Native reference</h3>${svg(data.native, `${row.id}-native`)}</div></div>
 <p class="flags">${escape(row.flags.map(flag => flag.code).join(' · ') || row.error?.message)}</p>
-<p>Overlap: ${row.raster ? `${Math.round(row.raster.iou * 100)}%` : 'unavailable'} · <a href="${row.id}.json">Case data</a></p>
-<p class="flags">Demo routing: ${escape(confidence.demoRouting)}${confidence.routes.length ? ` (${escape(confidence.routes.join(', '))})` : ''}. Dataset regions: ${escape(confidence.regions.join(', ') || 'unspecified')}.</p>
+<p>Overlap: ${Number.isFinite(row.raster?.iou) ? `${Math.round(row.raster.iou * 100)}%` : 'unavailable'} · <a href="${row.id}.json">Case data</a></p>
+<p class="flags">Demo routing: ${escape(confidence.demoRouting)}${confidence.routes.length ? ` (${escape(confidence.routes.join(', '))})` : ''}. Dataset regions: ${escape(confidence.regions.join(', ') || 'unspecified')}.${confidence.ambiguousCharacter ? ' This sequence names multiple characters; reference identity is ambiguous.' : ''}</p>
 <details><summary>Source attribution</summary><pre>${escape(JSON.stringify(row.attributions, null, 2))}</pre></details></article>`
 }))
 const html = `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Glyph layout audit</title>
