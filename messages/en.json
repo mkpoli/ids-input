@@ -160,7 +160,7 @@
   "parts.identity.stroke": "Stroke symbol",
   "parts.relatedForms": "Related Unicode forms",
   "parts.idsUses": "IDS records: {count}",
-  "parts.groups": "Common, characters and stroke counts",
+  "parts.groups": "Component groups",
   "parts.characters.label": "All characters",
   "parts.characters.unavailable": "The composer's Han characters could not be loaded.",
   "parts.characters.fromStrokes": "{count} strokes and up",

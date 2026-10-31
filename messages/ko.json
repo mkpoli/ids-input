@@ -158,7 +158,7 @@
   "parts.identity.stroke": "획 기호",
   "parts.relatedForms": "관련 유니코드 자형",
   "parts.idsUses": "IDS 기록: {count}건",
-  "parts.groups": "자주 쓰는 것, 한자와 획수",
+  "parts.groups": "구성 요소 분류",
   "parts.characters.label": "모든 한자",
   "parts.characters.unavailable": "한자 목록을 불러오지 못했습니다.",
   "parts.characters.fromStrokes": "{count}획 이상",

@@ -158,7 +158,7 @@
   "parts.identity.stroke": "笔画符号",
   "parts.relatedForms": "Unicode相关字形",
   "parts.idsUses": "IDS记录：{count}条",
-  "parts.groups": "常用、汉字和笔画数",
+  "parts.groups": "部件分组",
   "parts.characters.label": "全部汉字",
   "parts.characters.unavailable": "无法加载汉字列表。",
   "parts.characters.fromStrokes": "{count}画及以上",

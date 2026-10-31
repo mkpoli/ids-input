@@ -158,7 +158,7 @@
   "parts.identity.stroke": "Ký hiệu nét",
   "parts.relatedForms": "Dạng Unicode liên quan",
   "parts.idsUses": "Bản ghi IDS: {count}",
-  "parts.groups": "Thường dùng, chữ Hán và số nét",
+  "parts.groups": "Nhóm bộ phận",
   "parts.characters.label": "Tất cả chữ Hán",
   "parts.characters.unavailable": "Không thể tải danh sách chữ Hán.",
   "parts.characters.fromStrokes": "Từ {count} nét",

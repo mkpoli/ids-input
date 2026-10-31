@@ -9,7 +9,7 @@ try {
   const page = await browser.newPage()
   await page.goto(new URL('/fixtures/parts-groups.html', url).href)
   const palette = page.getByRole('group', { name: 'Parts', exact: true })
-  const counts = palette.locator('.parts-counts')
+  const counts = palette.getByRole('group', { name: 'Component groups', exact: true })
   const chips = counts.locator('button')
   const common = counts.getByRole('button', { name: 'Common', exact: true })
   const strokes = counts.getByRole('button', { name: 'Strokes', exact: true })

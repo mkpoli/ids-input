@@ -148,6 +148,18 @@ try {
     await full.close()
   }
 
+  // Textual classification remains available when system colors replace the accent.
+  const monochrome = await browser.newPage({ forcedColors: 'active' })
+  monochrome.on('pageerror', error => errors.push(error.message))
+  await monochrome.goto(`${url}/fixtures/parts-groups.html`)
+  await monochrome.getByRole('button', { name: 'Strokes', exact: true }).click()
+  assert.deepEqual(await values(monochrome.locator('.part')), ['㇐', '㇣'])
+  await monochrome.locator('[data-character="㇐"]').focus()
+  const monoCard = monochrome.getByRole('dialog', { name: 'Character information' })
+  await monoCard.getByText('Stroke symbol', { exact: true }).waitFor()
+  await monoCard.getByText('U+31D0', { exact: true }).waitFor()
+  await monochrome.close()
+
   const touch = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true })
   touch.on('pageerror', error => errors.push(error.message))
   await touch.goto(`${url}/fixtures/parts-groups.html`)

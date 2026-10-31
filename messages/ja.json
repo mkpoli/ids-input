@@ -158,7 +158,7 @@
   "parts.identity.stroke": "筆画記号",
   "parts.relatedForms": "Unicodeの関連字形",
   "parts.idsUses": "IDS記録：{count}件",
-  "parts.groups": "常用・漢字・画数",
+  "parts.groups": "部品の分類",
   "parts.characters.label": "すべての漢字",
   "parts.characters.unavailable": "漢字の一覧を読み込めませんでした。",
   "parts.characters.fromStrokes": "{count}画以上",
