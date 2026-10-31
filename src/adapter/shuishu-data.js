@@ -24,6 +24,16 @@ export function shuishuTable(doc) {
 }
 
 /**
+ * The editorial decompositions as the descriptions the rest of the editor reads, so a character
+ * can be split, found by its parts and listed as holding them. They carry no source region: no
+ * source states one.
+ * @param {ShuishuData} doc
+ */
+export function shuishuSequences(doc) {
+  return new Map(shuishuTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '' }]]] : []))
+}
+
+/**
  * What a part is called wherever the editor names one. The code point carries 暫定, since the
  * block is a proposal and a bare `U+1B300` would read as an assignment.
  * @param {ShuishuPart} part

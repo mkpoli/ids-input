@@ -4,7 +4,7 @@
 import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
-import { shuishuNames, shuishuTable } from './shuishu-data.js'
+import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -278,7 +278,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         additionalIds: extraIds.length ? extraIds.map(url => new URL(String(url), base).href) : undefined,
         components: components ? new URL(String(components), base).href : undefined, componentsText,
         forms: forms ? new URL(String(forms), base).href : undefined, formsText,
-        layers: layers ? new URL(String(layers), base).href : undefined, layersText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+        layers: layers ? new URL(String(layers), base).href : undefined, layersText,
+        smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal,
+        shuishu: shuishu instanceof URL || typeof shuishu === 'string' ? new URL(String(shuishu), base).href : shuishu })
     })
   }
 
@@ -332,13 +334,21 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
     componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
+    // The Shuishu decompositions are an extra reading beside the sources; a failed file costs the
+    // search those descriptions only.
+    readShuishu().catch(() => null),
   ]).then(([base, ...rest]) => {
     const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
     const numbered = /** @type {string} */ (rest[extraIds.length])
     const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
+    const shuiDoc = /** @type {import('./shuishu-data.js').ShuishuData | null} */ (rest[extraIds.length + 2])
     const parts = readNumberedComponents(numbered)
     const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
-    return doc ? new Map([...merged, ...sealTable(doc)]) : merged
+    /** @type {Map<string, Sequence[]>} */
+    const all = new Map(merged)
+    if (doc) for (const [char, texts] of sealTable(doc)) all.set(char, texts)
+    if (shuiDoc) for (const [char, texts] of shuishuSequences(shuiDoc)) all.set(char, texts)
+    return all
   })
     .catch(error => { table = null; throw error })
 
