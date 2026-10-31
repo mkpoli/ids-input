@@ -342,6 +342,7 @@
   .item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:13.5px;text-align:left;cursor:pointer}
   .item.rich{min-height:52px;padding:5px 8px;gap:11px;border-radius:var(--ui-radius-lg)}
   .item:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
+  .item[aria-disabled='true']{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
   .item.rich:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .item:disabled{opacity:.45;cursor:default}
   .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--ui-color-ink-muted);transform:rotate(-90deg);transition:transform .12s}

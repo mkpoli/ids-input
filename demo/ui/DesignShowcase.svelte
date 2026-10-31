@@ -398,8 +398,8 @@
             hint="The control is 24 px tall; the track is not the target.">
             {#snippet valueLabel()}<span class="value">{Math.round(range * 100)}%</span>{/snippet}
           </RangeField>
-          <ColorField label="Background colour" bind:value={colour} />
-          <RangeField label="Disabled range" min={0} max={1} step={0.1} value={0.4} disabled />
+          <ColorField label="Background colour" bind:value={colour} hint="Stored as a hex value." />
+          <RangeField label="Disabled range" min={0} max={1} step={0.1} value={0.4} disabled hint="A disabled range stays readable and takes no input." />
           <ColorField label="Disabled colour" value="#2944c7" disabled />
         </div>
 

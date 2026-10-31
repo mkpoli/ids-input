@@ -132,6 +132,49 @@ async function checkKeyboard(page) {
   pass('the focus ring is a visible 2px outline with an offset')
 }
 
+
+/** Per-option disability, read-only fields and disabled inputs follow their native state. @param {import('playwright-core').Page} page */
+async function checkStates(page) {
+  const shape = page.getByRole('radio', { name: 'Shape', exact: true })
+  assert.equal(await shape.isDisabled(), true, 'a disabled segment option is disabled')
+  const neighbouring = page.getByRole('radio', { name: 'Tree', exact: true }).first()
+  const groupOpacity = await page.locator('.ui-segmented').filter({ has: neighbouring }).evaluate(el => getComputedStyle(el).opacity)
+  assert.equal(groupOpacity, '1', 'a disabled option does not dim its group')
+  await neighbouring.focus()
+  const start = await neighbouring.isChecked()
+  await page.keyboard.press('ArrowRight')
+  assert.equal(await shape.isChecked(), false, 'arrow keys skip a disabled segment')
+  await page.keyboard.press('ArrowLeft')
+  assert.equal(await neighbouring.isChecked(), start, 'arrow keys stay on enabled segments')
+  pass('disabled segment options keep their group usable')
+
+  const custom = page.getByRole('radio', { name: 'A custom colour', exact: true })
+  assert.equal(await custom.isDisabled(), true, 'a disabled swatch is disabled')
+  const tile = await custom.evaluate(el => ({ opacity: getComputedStyle(el.nextElementSibling).opacity, group: getComputedStyle(el.closest('.ui-swatches')).opacity }))
+  assert.ok(Number(tile.opacity) < 1, 'a disabled swatch tile is dimmed')
+  assert.equal(tile.group, '1', 'a disabled swatch does not dim the group')
+  pass('disabled swatches are dimmed once, inside a usable group')
+
+  const loosed = page.getByLabel('Default layout', { exact: true }).locator('option[value="loose"]')
+  assert.equal(await loosed.getAttribute('disabled') !== null, true, 'a disabled select option is disabled')
+  const textarea = page.getByLabel('Read-only textarea', { exact: true })
+  assert.equal(await textarea.getAttribute('readonly') !== null, true, 'the textarea is read-only')
+  const readonlyBackground = await textarea.evaluate(el => getComputedStyle(el).backgroundColor)
+  const sunken = await page.evaluate(() => {
+    const probe = document.createElement('span')
+    probe.style.backgroundColor = 'var(--ui-color-surface-sunken)'
+    document.body.append(probe)
+    const value = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    return value
+  })
+  assert.equal(readonlyBackground, sunken, 'a read-only textarea takes the sunken surface')
+  const colour = page.getByLabel('Disabled colour', { exact: true })
+  assert.equal(await colour.isDisabled(), true, 'the colour control is disabled')
+  assert.ok(Number(await colour.evaluate(el => getComputedStyle(el).opacity)) < 1, 'the disabled colour control is dimmed')
+  pass('read-only and disabled fields follow their native state')
+}
+
 /** @param {import('playwright-core').Page} page */
 async function checkContrast(page) {
   await page.getByLabel('Copy the outline', { exact: true }).focus()
@@ -229,6 +272,43 @@ async function checkTheme(page, scheme) {
   pass('the theme control changes the palette and returns to the system scheme')
 }
 
+
+/** Overlays and feedback use the same tokens and keyboard behaviour. @param {import('playwright-core').Page} page */
+async function checkInteractions(page) {
+  const trigger = page.getByRole('button', { name: 'Open example dialog', exact: true })
+  await trigger.focus()
+  await page.keyboard.press('Enter')
+  const dialog = page.getByRole('dialog', { name: 'Example dialog', exact: true })
+  await dialog.waitFor()
+  assert.equal(await dialog.evaluate(el => el.contains(document.activeElement)), true, 'focus moves into the dialog')
+  await page.keyboard.press('Escape')
+  await dialog.waitFor({ state: 'hidden' })
+  assert.equal(await trigger.evaluate(el => el === document.activeElement), true, 'Escape returns focus to the trigger')
+  pass('a dialog takes focus, closes on Escape and returns it')
+
+  const menuTrigger = page.getByRole('button', { name: 'Example actions', exact: true })
+  await menuTrigger.focus()
+  await page.keyboard.press('ArrowDown')
+  const menu = page.getByRole('menu', { name: 'Example actions', exact: true })
+  await menu.waitFor()
+  await page.keyboard.press('ArrowDown')
+  await page.keyboard.press('Enter')
+  assert.equal(await page.getByRole('status', { name: 'Example review status' }).textContent().then(text => text.trim()), 'Reviewed.', 'an arrow and Enter run a menu item')
+  pass('a menu moves with the arrow keys and runs its item')
+
+  const remove = page.getByRole('button', { name: 'Remove example item', exact: true })
+  await remove.click()
+  const action = page.getByRole('button', { name: 'Undo removal', exact: true })
+  await action.waitFor()
+  await action.hover()
+  await page.waitForTimeout(3200)
+  assert.equal(await action.isVisible(), true, 'hovering keeps an actionable note')
+  await page.mouse.move(0, 0)
+  await action.click()
+  assert.equal(await page.getByText('Example item is present.', { exact: true }).isVisible(), true, 'Undo runs the action')
+  pass('an actionable note waits for the pointer and undoes its change')
+}
+
 try {
   for (const scheme of ['light', 'dark']) {
     const { context, page } = await open({ scheme })
@@ -238,6 +318,8 @@ try {
     await checkContrast(page)
     await checkTargets(page)
     await checkSurfaces(page)
+    await checkStates(page)
+    await checkInteractions(page)
     await checkTheme(page, scheme)
     if (shots) await page.screenshot({ path: join(shots, `design-${scheme}.png`), fullPage: true })
     await context.close()

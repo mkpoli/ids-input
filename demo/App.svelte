@@ -1440,7 +1440,7 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
-  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:16px;background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:var(--ui-shadow-2)}
   .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
@@ -1538,9 +1538,9 @@
     .work :global(.ids-preview){touch-action:pan-y}
     .output.adjusting :global(.ids-preview){touch-action:none}
   }
-  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--ui-color-canvas) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
+  x;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
-  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:18px;background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
+  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}

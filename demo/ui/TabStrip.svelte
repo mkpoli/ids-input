@@ -337,7 +337,7 @@
   .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
   .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
   .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
-  .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px #0003)}
+  .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px var(--ui-shadow-color-1))}
   .tab.dragging .tab-main{cursor:grabbing}
   .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
   .tab:not(.on) .tab-main{padding-inline:12px}
