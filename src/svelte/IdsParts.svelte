@@ -15,7 +15,7 @@
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
-  import { adjacentStrokeForms, componentIdentity } from '../core/component-identity.js'
+  import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
@@ -108,9 +108,9 @@
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
   let tab = $state(/** @type {(typeof TABS)[number]} */ ('components')), filter = $state('')
-  // The group shown in Components: a stroke count, null for the parts lacking one, undefined for the
-  // curated parts the panel opens on.
-  /** @type {number | null | undefined} */
+  // Components opens on Common (undefined); other groups are stroke symbols, a stroke count,
+  // or parts without a recorded count (null).
+  /** @type {number | 'strokes' | null | undefined} */
   let count = $state(undefined)
   // The Components tail: every part from HAN_TAIL strokes up in one group.
   let partTail = $state(false)
@@ -315,25 +315,15 @@
   const commonParts = $derived(adjacentStrokeForms(adjacentVariants((parts ?? []).filter(part =>
     (part.kind === 'c' || part.kind === 'd' || part.kind === 's') && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE)))))
   const countedParts = $derived((parts ?? []).filter(part => part.kind === 'c' || part.kind === 'd' || part.kind === 's'))
-  const COMPONENT_TYPES = /** @type {const} */ (['all', 'characters', 'strokes'])
-  /** @type {(typeof COMPONENT_TYPES)[number]} */
-  let componentType = $state('all')
-  $effect(() => { tab; count; partTail; characters; filter; componentType = 'all' })
-  const typeFilterVisible = $derived.by(() => tab === 'components' && !characters && !partTail && chosen === 1 && !query)
-  /** @param {PalettePart} part */
-  function matchesType(part) {
-    if (!typeFilterVisible || componentType === 'all') return true
-    const type = componentIdentity(part.part)?.type
-    return componentType === 'strokes' ? type === 'stroke' : type === 'ideograph' || type === 'radical'
-  }
+  const strokeSymbols = $derived(countedParts.filter(part => isStroke(part.part)))
   // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(countedParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
   const partChips = $derived(/** @type {number[]} */ (counts.filter(value => value != null && value < HAN_TAIL)))
-  // The Components views page like the character list: the frequent set, or one count, in
+  // The Components views page like the character list: frequent parts, stroke symbols or one count, in
   // first-stroke order, 120 at a time.
   let componentPage = $state(0)
-  $effect(() => { tab; count; partTail; characters; filter; componentType; componentPage = 0 })
+  $effect(() => { tab; count; partTail; characters; filter; componentPage = 0 })
   const componentList = $derived.by(() => {
     /** @type {{ part: PalettePart, cls: string | null | undefined }[]} */
     const list = []
@@ -342,8 +332,9 @@
       for (const part of commonParts) list.push({ part, cls: undefined })
       return list
     }
-    const chosenParts = countedParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen)
-    for (const group of grouped(chosenParts.filter(matchesType))) for (const part of group.parts) list.push({ part, cls: group.cls })
+    const chosenParts = !partTail && chosen === 'strokes' ? strokeSymbols
+      : countedParts.filter(part => partTail ? (part.strokes ?? 0) >= HAN_TAIL : (part.strokes ?? null) === chosen)
+    for (const group of grouped(chosenParts)) for (const part of group.parts) list.push({ part, cls: group.cls })
     return list
   })
   const componentPages = $derived(Math.max(1, Math.ceil(componentList.length / PAGE_SIZE)))
@@ -359,7 +350,7 @@
   })
   const partTailCount = $derived(countedParts.filter(part => (part.strokes ?? 0) >= HAN_TAIL).length)
   const partUnknown = $derived(counts.includes(null))
-  const chosen = $derived(count === undefined || counts.includes(count) ? count : undefined)
+  const chosen = $derived(count === 'strokes' ? (strokeSymbols.length ? count : undefined) : count === undefined || counts.includes(count) ? count : undefined)
   /** @param {PalettePart[]} list */
   const grouped = list => [...CLASSES, null]
     .map(cls => ({ cls, parts: adjacentStrokeForms(adjacentVariants(list.filter(part => (part.first ?? null) === cls))) }))
@@ -460,12 +451,6 @@
     if (tab === 'shuishu') return [{ cls: undefined, parts: selectedShuiGroup?.parts ?? [] }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
-  })
-
-  const strokeLegendVisible = $derived.by(() => {
-    const list = tab === 'components' && !characters ? filtered ?? componentList.map(entry => entry.part)
-      : tab === 'recent' ? filtered ?? shown.flatMap(group => group.parts) : []
-    return list.some(part => componentIdentity(part.part)?.type === 'stroke')
   })
 
   /** @param {string} part */
@@ -597,15 +582,10 @@
     tab = TABS[to]
     tabButtons[to]?.focus()
   }
-  // In the one-stroke group, a part without a first-stroke class is ㇣, a stroke outside the five;
-  // in every other group it is a part whose first stroke was never recorded.
+  // In Strokes and the one-stroke group, ㇣ falls outside the five first-stroke classes.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && chosen === 1 ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && (chosen === 1 || chosen === 'strokes') ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
-
-{#snippet strokeBadge()}
-  <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="m10 2 4 4-7 7-5 1 1-5zM9 3l4 4M3 10l3 3" /></svg>
-{/snippet}
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
   <div class="parts-grid">
@@ -622,7 +602,6 @@
           <span class="part-text">{part.display ?? part.part}</span>
           {#if part.kind === 'shui' && part.ids}<span class="shui-ids" aria-hidden="true">{part.ids}</span>{/if}
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
-          {#if identity?.type === 'stroke'}<span class="stroke-badge" aria-hidden="true">{@render strokeBadge()}</span>{/if}
         {/if}
       </button>
     {/each}
@@ -739,6 +718,10 @@
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
       <button type="button" class:active={!characters && !partTail && chosen === undefined} aria-pressed={!characters && !partTail && chosen === undefined}
         onclick={() => { count = undefined; partTail = false; characters = false }}>{t('parts.tab.common')}</button>
+      {#if strokeSymbols.length}
+        <button type="button" class="stroke-symbols" class:active={!characters && !partTail && chosen === 'strokes'} aria-pressed={!characters && !partTail && chosen === 'strokes'}
+          onclick={() => { count = 'strokes'; partTail = false; characters = false }}>{t('parts.strokes')}</button>
+      {/if}
       {#if characters}
         {#each hanChips as value (value)}
           {@const label = t('parts.strokeCount', { count: value })}
@@ -777,17 +760,6 @@
       <button type="button" class:active={characters} aria-pressed={characters}
         onclick={() => { characters = true; hanCount = undefined }}>{t('parts.characters.label')}</button>
     </div>
-  {/if}
-  {#if typeFilterVisible}
-    <div class="component-types" role="group" aria-label={t('parts.types.label')}>
-      {#each COMPONENT_TYPES as type}
-        <button type="button" class:active={componentType === type} aria-pressed={componentType === type}
-          onclick={() => componentType = type}>{t(`parts.types.${type}`)}</button>
-      {/each}
-    </div>
-  {/if}
-  {#if strokeLegendVisible}
-    <p class="stroke-legend">{@render strokeBadge()} {t('parts.identity.stroke')}</p>
   {/if}
   <div class="parts-panel" role="tabpanel" id={`${uid}-panel`} aria-labelledby={`${uid}-tab-${tab}`}>
     {#if tab === 'tangut' && parts}
@@ -956,12 +928,7 @@
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
-  .component-types{display:flex;flex-wrap:wrap;gap:3px;padding:3px;border:1px solid var(--_line);border-radius:8px;background:var(--_surface-subtle)}
-  .component-types button{flex:1 0 auto;border:0;background:transparent;font-size:11px;padding:5px 7px;color:var(--_muted)}
-  .component-types button.active{background:var(--_surface);color:var(--_ink);box-shadow:0 1px 2px #00000018}
-  .stroke-legend{display:flex;align-items:center;gap:5px;margin:0;font-size:11px;color:var(--_muted)}
-  .stroke-badge{position:absolute;right:0;bottom:0;display:grid;place-items:center;width:10px;height:10px;border-radius:2px;color:var(--_accent);background:var(--_surface);pointer-events:none;user-select:none}
-  .stroke-badge :global(svg){width:9px;height:9px}
+  .parts-counts .stroke-symbols,.part[data-component-type="stroke"]{color:var(--_accent)}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
