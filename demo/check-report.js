@@ -15,11 +15,12 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 
 /** The multipart body as its parts, by field name: a file keeps its bytes, a field its text.
  *  @param {Buffer} body */
-function parts(body) {
+function parts({ body, boundary }) {
   /** @type {Record<string, { filename?: string, type?: string, value: string }>} */
   const found = {}
   // The bytes map one to one onto latin1, so a PNG survives the split; text fields are decoded after.
-  for (const chunk of body.toString('latin1').split(/--[-\w]+/)) {
+  // The real boundary, since a PNG decoded as latin1 can hold `--` and a word character by chance.
+  for (const chunk of body.toString('latin1').split(boundary ? `--${boundary}` : /--[-\w]+/)) {
     const match = /name="([^"]+)"(?:; filename="([^"]*)")?\r?\n(?:Content-Type: ([^\r\n]+)\r?\n)?\r?\n([\s\S]*?)\r?\n$/.exec(chunk)
     if (!match) continue
     const value = match[2] === undefined ? Buffer.from(match[4], 'latin1').toString('utf8') : match[4]
@@ -44,15 +45,18 @@ async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6
   page.on('pageerror', error => errors.push(error.message))
   /** @type {Buffer | null} */
   let sent = null
+  /** @type {string} */
+  let boundary = ''
   await page.route(INTAKE, async route => {
     sent = route.request().postDataBuffer() ?? Buffer.alloc(0)
+    boundary = /boundary=(?:"([^"]+)"|([^;]+))/.exec(route.request().headers()['content-type'] ?? '')?.slice(1).find(Boolean) ?? ''
     await route.fulfill({ status: 201, contentType: 'application/json', body: JSON.stringify({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false }) })
   })
   if (clean) await page.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
   const address = `${base}/${sequence}?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
   await page.goto(address, { waitUntil: 'domcontentloaded' })
   await page.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').waitFor({ timeout: 30000 })
-  return { page, errors, body: () => sent ?? Buffer.alloc(0) }
+  return { page, errors, body: () => ({ body: sent ?? Buffer.alloc(0), boundary }) }
 }
 
 try {
