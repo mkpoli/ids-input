@@ -509,7 +509,9 @@ and two parts of the block, written left before right, top before bottom, outer 
 Shuishu writing order is undocumented in these sources, so the order follows the glyph. The entries
 aid display and search and sit outside the encoding proposal, and the count keeps to the unambiguous
 cases. A search finds a character by its whole description, and a typed part also lists the
-characters written with it.
+characters written with it. The adapter reads the entries as the characters' descriptions, with no
+source region, so the structure search, the component panel and the tree reach them; a failed
+decomposition file costs those descriptions only.
 `scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
 or the character itself.
 
