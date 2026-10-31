@@ -20,6 +20,9 @@ const sourceOf = (fetched = []) => createSource(async name => {
 })
 const SEQUENCES = ['⿰木口', '⿱口木', '⿴口木', '⿲木口木', '⿱⿰木木口', '⿾⿰木口', '㇯口木', '⿼口木']
 
+// A frame with parts inside it: 冂 is a tall top bar, a long left side and a hooked foot, and the
+// parts it holds are bars of a different shape, so a split that tears the frame shows in the boxes.
+
 // The fixture with one description the export draws whole, `𪱳`, so `separate` has a glyph to skip.
 const hex = text => createHash('sha256').update(text).digest('hex')
 const gShard = key => `g/${hex(key).slice(0, 3)}.json`
@@ -46,6 +49,7 @@ describe('the composer', () => {
   it('places a lower-right enclosure fallback above and left of its closed sides', async () => {
     const source = sourceOf()
     await source.ready()
+    await source.load([...source.filesOf(['冂'])])
     const composer = new Composer(source.store())
     composer.room = () => null
     composer.fit = () => false
@@ -297,6 +301,32 @@ describe('the composer', () => {
     expect(slots.slots.every(slot => slot.box[2] < 400)).toBe(true)
     const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
     await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
+  })
+  it('holds a one-part enclosure around its inner parts', async () => {
+    // 冂 is a frame: drawn beside its parts it stops being one, so it keeps its own region and the
+    // rest is laid out in the room it leaves.
+    const frame = await compose(sourceOf(), '⿵冂⿲⿱三口⿱三口⿰⿱三口⿱三口')
+    const svgBox = ([x, y, w, h]) => [x, y, x + w, y + h]
+    expect(frame.cells).toBe(true)
+    const outer = svgBox(frame.parts.find(part => part.leaf === 0).box)
+    expect(frame.parts.find(part => part.leaf === 0).origin).toBe('cells 冂')
+    // The frame covers the cell instead of taking a band of it.
+    expect(outer[3] - outer[1]).toBeGreaterThan(860)
+    const inner = frame.parts.filter(part => part.leaf !== 0).map(part => svgBox(part.box))
+    expect(inner).toHaveLength(8)
+    // 冂's room is the gap its left side leaves: every part sits inside it, past the side and the
+    // bar, so no part straddles the frame.
+    const room = [Math.min(...inner.map(box => box[0])), Math.min(...inner.map(box => box[1]))]
+    for (const [x0, y0, x1] of inner) {
+      expect(x0).toBeGreaterThan(outer[0])
+      expect(y0).toBeGreaterThan(outer[1])
+      expect(x1).toBeLessThan(outer[2])
+    }
+    // Inside the room the parts keep reading order: four across, then two rows.
+    expect([...new Set(inner.map(box => box[0]))]).toHaveLength(4)
+    expect(inner[0][1]).toBeLessThan(inner[1][1])
+    expect(inner[0][0]).toBeLessThan(inner[2][0])
+    expect(room[1]).toBeGreaterThan(outer[1])
   })
   it('keeps the composer for marks, exclusions and approximate operators, and forces cells only when asked', async () => {
     const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
@@ -701,3 +731,5 @@ describe('the leading component under a cover', () => {
     expect(span(head)).toEqual([50, 950])
   })
 })
+
+
