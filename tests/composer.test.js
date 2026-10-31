@@ -771,3 +771,50 @@ describe('a child contained by its cover', () => {
     expect(drawn[2]).toBeCloseTo(500 + 80 * factor)
   })
 })
+
+
+describe('the foot of a stack under a cover', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (branch, gap, ...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return { ...placed(p, p.box, p.box, 0, 'test'), branch: [branch], gap }
+  }
+  // A tail rising to a point, as the 𧘇 cut from 袁 does: no ink reaching its sides along its top.
+  const tail = (branch, gap, y0, y1) => part(branch, gap, [460, y0, 540, y1], [200, y0, 800, y0 + 60])
+  const join = (...lower) => Composer.prototype.joinUnderCover.call({ partial: false }, '⿱', ['宀', ['⿳', '罒', '一', '𧘇']], [[part(0, 0, [100, 500, 900, 700])], lower])
+  const top = p => p.target[3]
+
+  it('grows a tail its donor drew overlapping up to the bar above it', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, -36, 0, 340)
+    join(bar, foot)
+    expect(top(foot)).toBe(400)
+    expect(foot.target[1]).toBe(0)
+  })
+
+  it('leaves a foot its donor drew clear of its neighbour', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, 30, 0, 340)
+    join(bar, foot)
+    expect(top(foot)).toBe(340)
+  })
+
+  it('leaves a flat-topped foot, as the base 一 of 𡩬 is', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), base = part(2, -30, [50, 280, 950, 340])
+    join(bar, base)
+    expect(top(base)).toBe(340)
+  })
+
+  it('leaves a foot that already reaches what it hangs from', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, -36, 0, 420)
+    join(bar, foot)
+    expect(top(foot)).toBe(420)
+  })
+
+  it('leaves a child drawn as a single operand', () => {
+    const whole = tail(0, -36, 0, 340)
+    join(whole)
+    expect(top(whole)).toBe(340)
+  })
+})

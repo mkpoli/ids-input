@@ -1114,7 +1114,7 @@ export class Composer {
         }
       }
       if (op in this.AXIS && stretchOf(source.box, box) > C.STRETCH) return null
-      groups.push([placed(source, source.box, box, this.ink(drawn.h), `learned ${drawn.h}`)])
+      groups.push([{ ...placed(source, source.box, box, this.ink(drawn.h), `learned ${drawn.h}`), gap: drawn.g }])
       if (op === '⿸' && Array.isArray(children[0]) && i === 1 && this.collide(groups[0], groups[1], frameOf, 256) > C.COLLIDE)
         this.fit(groups[0], groups[1], frameOf, stem, C, { size: 256, room: box })
       if (C.CLEARED.includes(op) && i === 1 && this.collide(groups[0], groups[1], frameOf, 64) > C.COLLIDE) {
@@ -1127,6 +1127,7 @@ export class Composer {
     this.fitUnderCover(op, children, groups)
     this.clearUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
+    this.joinUnderCover(op, children, groups)
     return this.flatten(groups)
   }
 
@@ -1237,7 +1238,7 @@ export class Composer {
         }
       }
       const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
-      if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
+      if (part) groups.push([{ ...placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`), gap: part.record.g }])
       else groups.push(this.row(child, box, children.length))
     })
     if (compactYan && !this.partial) {
@@ -1255,6 +1256,7 @@ export class Composer {
     this.fitUnderCover(op, children, groups)
     this.clearUnderCover(op, children, groups)
     this.containUnderCover(op, children, groups)
+    this.joinUnderCover(op, children, groups)
     return this.flatten(groups)
   }
 
@@ -1565,6 +1567,27 @@ export class Composer {
       const to = [middle + (lowerBox[0] - middle) * factor, lowerBox[1],
         middle + (lowerBox[2] - middle) * factor, lowerBox[3]]
       for (const part of lower) part.target = targetFor(part, mapped(drawnBox(part), lowerBox, to))
+    }
+  }
+
+  /** The foot of a stack under a cover closed on to what it hangs from, where the designer the foot
+   *  was cut from drew it overlapping its neighbour (`gap` below zero) and it rises to its join
+   *  rather than leading with a bar of its own: the 𧘇 of 𡩲 and 𡫖, the lower half of a 衣 whose
+   *  middle bar the description names separately, grows up to meet that bar instead of hanging
+   *  under it. A flat-topped foot — the base 一 of 𡩬 — keeps the room the stack gave it. */
+  joinUnderCover(op, children, groups) {
+    if (this.partial) return
+    for (const [, below] of coverPairs(op, children, SIDE_COVERS)) {
+      const lower = groups[below] ?? []
+      const operands = [...new Set(lower.map(part => part.branch?.[0]))].filter(i => i !== undefined).sort((a, b) => a - b)
+      if (operands.length < 2) continue
+      const foot = lower.filter(part => part.branch?.[0] === operands.at(-1))
+      const above = lower.filter(part => part.branch?.[0] === operands.at(-2))
+      if (!foot.length || !above.length || !foot.some(part => part.gap < 0)) continue
+      const footBox = bounds(foot), meet = bounds(above)[1]
+      if (!(footBox[3] > footBox[1]) || meet <= footBox[3] || flatTopped(foot, footBox)) continue
+      const to = [footBox[0], footBox[1], footBox[2], meet]
+      for (const part of foot) part.target = targetFor(part, mapped(drawnBox(part), footBox, to))
     }
   }
 
