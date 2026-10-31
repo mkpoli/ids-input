@@ -13,11 +13,14 @@ const SEQUENCE_BOX = { centerY: 288, height: 144, leading: 1.22 }
 const MAX_SIZE = 88
 const MIN_SIZE = 26
 const cluster = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
+/** @param {string} sequence */
 const cells = sequence => [...cluster.segment(sequence)].map(({ segment }) => segment)
-export const escaped = text => text.replace(/[&<>"']/g, mark => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[mark])
+/** @param {string} text */
+export const escaped = text => text.replace(/[&<>"']/g, mark => /** @type {Record<string, string>} */ ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[mark])
 
 // Fit full-width grapheme cells continuously. Wrap before shrinking below a legible size;
 // exceptionally long descriptions end with an ellipsis inside the same fixed-height region.
+/** @param {string} sequence */
 export function sequenceLayout(sequence) {
   const characters = cells(sequence)
   if (!characters.length) return { size: MAX_SIZE, lines: [], truncated: false }
@@ -33,12 +36,14 @@ export function sequenceLayout(sequence) {
   const columns = Math.floor(COLUMN.width / MIN_SIZE), capacity = columns * 3
   return { size: MIN_SIZE, lines: chunk([...characters.slice(0, capacity - 1), '…'], columns), truncated: true }
 }
+/** @param {string[]} characters @param {number} columns */
 const chunk = (characters, columns) => {
   const lines = []
   for (let at = 0; at < characters.length; at += columns) lines.push(characters.slice(at, at + columns))
   return lines
 }
 
+/** @param {Parameters<typeof drawingSvg>[0] | null} drawing @param {typeof PALETTES.light} palette */
 function glyph(drawing, palette) {
   const { x, y, side, pad } = FRAME
   const box = side - 2 * pad, inset = 16, span = 1000 + 2 * inset
@@ -47,6 +52,7 @@ function glyph(drawing, palette) {
     .replace(/^<svg[^>]*>/, `<svg x="${x + pad}" y="${y + pad}" width="${box}" height="${box}" viewBox="${-inset} ${-inset} ${span} ${span}">`)
 }
 
+/** @param {typeof PALETTES.light} p */
 function frame(p) {
   const { x, y, side } = FRAME
   return `<rect x="${x + 8}" y="${y + 8}" width="${side}" height="${side}" rx="22" fill="${p.soft}"/>`
@@ -64,7 +70,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
   const text = lines.map((line, row) => line.map((character, col) =>
     `<text data-sequence="true" x="${(COLUMN.left + (col + 0.5) * size).toFixed(1)}" y="${(first + row * size * SEQUENCE_BOX.leading).toFixed(1)}" text-anchor="middle" font-family="${escaped(familyOf(character))}" font-size="${size}" fill="${p.ink}">${escaped(character)}</text>`).join('')).join('')
   const identity = char
-    ? `<text x="568" y="435" font-family="${escaped(familyOf(char))}" font-size="40" fill="${p.ink}">${escaped(char)}</text><path d="M628 397V437" stroke="${p.line}"/><text x="650" y="402" font-size="14" fill="${p.muted}">Unicode</text><text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}</text>`
+    ? `<text x="568" y="435" font-family="${escaped(familyOf(char))}" font-size="40" fill="${p.ink}">${escaped(char)}</text><path d="M628 397V437" stroke="${p.line}"/><text x="650" y="402" font-size="14" fill="${p.muted}">Unicode</text><text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">U+${(/** @type {number} */ (char.codePointAt(0))).toString(16).toUpperCase().padStart(4, '0')}</text>`
     : `<text x="568" y="426" font-size="20" fill="${p.muted}">No Unicode match</text>`
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Noto Sans CJK JP">`
     + `<rect width="1200" height="630" fill="${p.bg}"/>`

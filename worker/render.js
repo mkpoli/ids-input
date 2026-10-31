@@ -2,7 +2,6 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { Resvg, initResvg } from '@cf-wasm/resvg/workerd'
 import { compose } from '../src/composer/loader.js'
 import { unpack } from '../src/composer/loader.js'
 import { sourceFor } from '../src/composer/source.js'
@@ -15,9 +14,12 @@ import { COMPOSER_BASE } from '../demo/lib/composer.js'
 const VERSION = 'v10'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
-// The entry point starts the module's WebAssembly on import, so this only waits for it.
+// Metadata requests do not need the rasterizer.
 let started = null
-const ready = () => started ??= initResvg.ensure()
+const ready = () => started ??= import('@cf-wasm/resvg/workerd').then(async module => {
+  await module.initResvg.ensure()
+  return module.Resvg
+})
 
 /** A file of the built card assets, or null where the build left it out. @param {any} env @param {string} path */
 const read = async (env, path) => {
@@ -70,7 +72,7 @@ async function draw(env, sequence) {
 
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
 async function png(env, sequence, drawing, char) {
-  await ready()
+  const Resvg = await ready()
   const { buffers, familyOf } = await facesFor(env, sequence + (char ?? ''))
   const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },

@@ -70,7 +70,7 @@
     "audit:zi": "bun scripts/audit_zi_ids.mjs",
     "check:zi-parity": "bun scripts/check_zi_parity.mjs",
     "types": "node scripts/emit-types.mjs",
-    "check": "tsrs -p tsconfig.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
+    "check": "tsrs -p tsconfig.json --noEmit && tsrs -p tsconfig.worker.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "i18n": "x18n check",
     "verify": "bun run test && bun run check && bun run i18n",
     "dev": "vite demo",
@@ -80,7 +80,7 @@
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
-    "dev:worker": "bunx wrangler pages dev dist",
+    "dev:worker": "bunx wrangler dev",
     "prepack": "node scripts/emit-types.mjs",
     "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
   },
@@ -97,7 +97,7 @@
     "tsrs": "0.20.1-ts7.1.0-beta",
     "typescript": "5.9.3",
     "vite": "7.3.6",
-    "wrangler": "^4.156.0"
+    "wrangler": "4.156.0"
   },
   "peerDependencies": {
     "svelte": "^5.20.0"

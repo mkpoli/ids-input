@@ -2,6 +2,8 @@
 // The page a share link answers with: the app's own HTML, with the sequence in the title and in the
 // tags a preview is built from. Browsers run the app from it as they run it from the home page.
 
+import { sequenceOfPath } from '../src/core/address.js'
+
 export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
 
@@ -32,10 +34,9 @@ export function routeFor(url, defaultSequence) {
       if (!sequence) return { kind: 'asset' }
       kind = 'page'
     } else {
-      let path
-      try { path = decodeURIComponent(url.pathname).replace(/\/$/, '') } catch { return bad('Bad sequence') }
-      sequence = path.slice(1)
-      if (!sequence || sequence.includes('/') || sequence.includes('.') || RESERVED.has(sequence)) return { kind: 'asset' }
+      try { decodeURIComponent(url.pathname) } catch { return bad('Bad sequence') }
+      sequence = sequenceOfPath(url.pathname)
+      if (!sequence || RESERVED.has(sequence)) return { kind: 'asset' }
       kind = 'page'
     }
   }

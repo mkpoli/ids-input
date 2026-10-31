@@ -95,6 +95,8 @@ try {
     assert.equal(await part.getAttribute('aria-invalid'), 'false', 'a description is a part')
     await group.locator('[data-pyramid="2"]').click()
     assert.equal(await field.inputValue(), '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', 'a 2-row pyramid of a description')
+    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 20000 })
+    assert.notEqual(await page.locator('.ids-preview').first().getAttribute('data-label'), 'cells', 'a 2-row description pyramid draws in its own cells')
     await field.fill('')
     await field.press('Tab')
     await part.fill('')

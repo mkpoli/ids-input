@@ -1,5 +1,5 @@
-// Run after build:site: node tests/pages-og-runtime.mjs
-// Exercises the actual bundled Pages worker and WASM without a listening development server.
+// Run after build:site: node tests/worker-og-runtime.mjs
+// Exercises the actual bundled Worker and WASM without a listening development server.
 import assert from 'node:assert/strict'
 import { readFile, readdir } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
@@ -9,14 +9,14 @@ import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
 if (process.versions.bun) throw new Error('Run this workerd test with node; Bun does not support its Undici dispatcher')
 
 const dist = fileURLToPath(new URL('../dist/', import.meta.url))
-const directory = resolve(dist, '_worker.js')
-const modules = await Promise.all((await readdir(directory)).sort((a, b) => (a === 'index.js' ? -1 : b === 'index.js' ? 1 : a.localeCompare(b))).map(async name => ({
+const directory = resolve(dist, '../dist-worker')
+const modules = await Promise.all((await readdir(directory)).filter(name => /\.(js|wasm)$/.test(name)).sort((a, b) => (a === 'index.js' ? -1 : b === 'index.js' ? 1 : a.localeCompare(b))).map(async name => ({
   type: name.endsWith('.wasm') ? 'CompiledWasm' : 'ESModule',
   path: resolve(directory, name),
   contents: await readFile(resolve(directory, name)),
 })))
 const runtime = new Miniflare(convertV4MiniflareOptions({ workers: [{
-  name: 'og', modules, modulesRoot: directory, compatibilityDate: '2026-08-01',
+  name: 'og', modules, modulesRoot: directory, compatibilityDate: '2026-10-30',
   serviceBindings: { ASSETS: async request => {
     const path = decodeURIComponent(new URL(request.url).pathname)
     const file = resolve(dist, '.' + (path === '/' ? '/index.html' : path))
@@ -35,7 +35,7 @@ try {
   const html = await page.text()
   assert.match(html, /og:url" content="https:\/\/ids.mkpo.li\/%E2%BF%B0%E9%87%92%E5%93%A5"/)
   assert.match(html, /og:image" content="https:\/\/ids.mkpo.li\/og\/%E2%BF%B0%E9%87%92%E5%93%A5.png"/)
-  const query = await runtime.dispatchFetch('https://branch.ids-input-workshop.pages.dev/?ids=a%2Fb')
+  const query = await runtime.dispatchFetch('https://branch-ids-input-workshop.mkpoli.workers.dev/?ids=a%2Fb')
   assert.equal(query.status, 200)
   assert.equal(query.headers.get('x-robots-tag'), 'noindex')
   assert.match(await query.text(), /https:\/\/ids.mkpo.li\/\?ids=a%2Fb/)
@@ -56,5 +56,5 @@ try {
   assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
   assert.equal(png.readUInt32BE(16), 1200)
   assert.equal(png.readUInt32BE(20), 630)
-  console.log(`Pages worker runtime passed; resvg PNG ${png.length} bytes, 1200 × 630`)
+  console.log(`Worker runtime passed; resvg PNG ${png.length} bytes, 1200 × 630`)
 } finally { await runtime.dispose() }

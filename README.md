@@ -51,9 +51,11 @@ syllable boundaries.
 The Shuishu tab holds the 486 characters and 47 radicals of the proposed block, at its tentative
 allocations U+1B300–U+1B4E5 and U+1B500–U+1B52E. Unicode 18.0.0 leaves them unassigned too; the
 outlines are the glyphs of the amendment's own code charts, bundled for previews and export with the
-`IDS Shuishu` face, and the tab filters them by name, reading, meaning and code point. Its groups
-follow the dictionary the index comes from: the characters that dictionary numbers, the rest, and the
-radicals.
+`IDS Shuishu` face, and the tab filters them by name, reading, meaning, code point and description.
+Its groups follow the dictionary the index comes from: the characters that dictionary numbers, the
+rest, and the radicals. Eighteen of the characters carry an editorial IDS, printed on the tile and
+in their title; a description finds its character, and a typed part lists the characters written
+with it. The tab says the decompositions are ours, since no source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -234,9 +236,10 @@ an excluded character, or that carries loose marks or approximate operators, kee
 `pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
 description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
 and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows as equal square cells in centred rows, so the 4-row spellings given for `口`
-above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
-composed inside its cell. A whole description may run past the ordinary 64-code-point length as a
+three or more rows, or of two rows whose cell is a description, as equal square cells in centred
+rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
+cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
+follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
 pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
 to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
 its sizes in a scrollable row. The shared Part field above the generators starts with the selected
@@ -978,17 +981,16 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The examples take 日日有見財 and 日進斗金 from the article; 日日有見財 draws in two rows, 有 beside
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
-  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 follows the
-  photograph's cross, 五 above 矢, 口 and 隹 above 止, with one 口 for all four; 黃金萬兩 follows its
-  column of 黃, 金, 萬 and 兩; 吉祥如意 keeps a square because the diamond's cross cannot be drawn.
+  唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
+  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 and 兩's
+  冂从; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
   the arrangement the reference photograph shows, so the shared 子 is drawn once.
 - [楹联高手首创“吉祥如意”合体字](https://news.fznews.com.cn/kjww/2011-1-12/2011112ql7wk9qCih23027.shtml),
   福州新闻网, 2011-01-12: 曾光明's 吉祥如意 shares the 口 of 吉 and 如 and a dot between 如 and 祥
-  and between 祥 and 意. The sharing has no recorded description, so the four characters cannot be
-  written as an IDS tree without duplicating them; the example arranges them in a square.
+  and between 祥 and 意. The example sets 士 above one 口 and 女 beside it, with 意 and 祥 around.
 - 吴国升, [组合字的内外乾坤](https://epaper.gmw.cn/gmrb/html/2024-04/21/nw.D110000gmrb_20240421_2-05.htm),
   光明日报, 2024-04-21: describes 招財進寶 sharing the 貝 of 財 and the 扌 of 招 inside 寶's frame,
   with 辶 below, and names 黃金萬兩 among the 厌胜钱 ligatures.
@@ -1125,17 +1127,18 @@ and a separate Unicode caption. Text size follows the sequence length; longer se
 at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
 use glyphs from the bundled GenZui Sans font.
 
-The Cloudflare Pages project serves the workshop with an advanced-mode worker for preview pages
-and images. Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
+The Cloudflare Worker serves preview pages and images alongside the workshop's static assets.
+Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
 An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
 Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
 Preview hosts send `X-Robots-Tag: noindex`; canonical metadata points to `https://ids.mkpo.li`.
 
 `bun run build:site` builds the workshop, prepares the card fonts and outlines with
-`scripts/og-assets.mjs`, and bundles the Pages handler and WASM into `dist/_worker.js`.
-Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and checked by SHA-256;
-font assets ship with their license notices. Run `node tests/pages-og-runtime.mjs` after the build
-to test the bundled handler and PNG renderer. `bun run dev:worker` serves the built Pages app locally.
+`scripts/og-assets.mjs`, and bundles the Worker and WASM into `dist-worker/`, outside the static
+assets in `dist/`. Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and checked
+by SHA-256; font assets ship with their license notices. Run `node tests/worker-og-runtime.mjs`
+after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
+`wrangler dev` to serve the Worker and built assets locally.
 
 ### Comparison with KAGE
 
@@ -1264,15 +1267,14 @@ bun run check           # tsrs and svelte-check
 bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
-bun run build:site      # the demo, then the share cards' faces and tables, into dist/
+bun run build:site      # assets into dist/, share-card Worker into dist-worker/
 bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
-CI runs verification and builds the Pages app, including the preview handler. Deployment runs
-from `main` through `.github/workflows/deploy.yml`, using the `CLOUDFLARE_API_TOKEN` and
-`CLOUDFLARE_ACCOUNT_ID` repository secrets. Pull requests produce build artifacts.
+CI runs verification and builds the workshop and share-card Worker. Production deployment is
+gated to `main` through `.github/workflows/deploy.yml`.
 
 ### The demo's browser checks
 
@@ -1289,6 +1291,12 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+
+The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
+`.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs
+the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
+reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
+request to the assets.
 
 The prepared drawings in `demo/lib/example-drawings.json` are composed once from the export at
 `demo/lib/composer.js`'s `COMPOSER_BASE`; `bun run build:example-drawings` rebuilds them, and
