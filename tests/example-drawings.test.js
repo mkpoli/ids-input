@@ -122,8 +122,9 @@ it('prepares the Geba examples and their letters', () => {
   expect(data.drawings['⿰言ギ'].drawn.origins).toContain('glyph ギ')
 })
 
-it('prepares every ghost kanji with its encoded glyph', () => {
+it('prepares all twelve historical ghost kanji with their encoded glyphs', () => {
   const examples = EXAMPLE_GROUPS.find(group => group.key === 'ghost').examples
+  expect(examples).toHaveLength(12)
   for (const { sequence, char } of examples) {
     const cached = data.drawings[sequence]
     expect(cached?.char).toBe(char)

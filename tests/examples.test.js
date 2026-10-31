@@ -223,6 +223,11 @@ it('keeps the sourced JIS ghost kanji with Japanese IDS and no assigned readings
     { sequence: '⿳山一女', char: '妛' },
     { sequence: '⿰弓哥', char: '彁' },
     { sequence: '⿰木劵', refs: [sourceNumber('babelstone'), sourceNumber('kanken-ghost')], char: '椦' },
+    ...[
+      ['墸', '⿰土⿱艹⿻者丶'], ['壥', '⿰土㕓'], ['挧', '⿰扌羽'],
+      ['暃', '⿱日非'], ['槞', '⿰木竜'], ['蟐', '⿰虫常'],
+      ['袮', '⿰衤尓'], ['閠', '⿵門玉'], ['駲', '⿰馬州'],
+    ].map(([char, sequence]) => ({ sequence, refs: [sourceNumber('babelstone'), sourceNumber('wdic-ghost'), sourceNumber('ja-wp-ghost')], char })),
   ])
   for (const example of group.examples) {
     expect(example).not.toHaveProperty('reading')
