@@ -105,6 +105,15 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(grouped.d).not.toBe((await compose(sourceOf(), '⿳口木扌')).d)
   })
 
+  it('draws the same whether the body data arrives at once or as it is asked for', async () => {
+    const lazy = sourceOf(bodyRecords, bodyHosts), eager = sourceOf(bodyRecords, bodyHosts)
+    await eager.ready()
+    // Every record and host list the export holds, loaded before the drawing starts.
+    await eager.load(['⿳口木扌', '⿱口木', '⿱木扌', '口', '木', '扌', '永', '厃'].flatMap(key => [...eager.filesOf([key])]))
+    await eager.load(['B', 'M', 'L', 'T'].map(place => `p/${hex(`${place}\t⿱口木`).slice(0, 3)}.json`))
+    expect((await compose(lazy, '⿳口木扌')).d).toBe((await compose(eager, '⿳口木扌')).d)
+  })
+
   it('keeps one piece per leaf, in reading order, in a separated drawing', async () => {
     const source = sourceOf(bodyRecords, bodyHosts)
     const drawn = await compose(source, '⿳口木扌', { separate: true })
