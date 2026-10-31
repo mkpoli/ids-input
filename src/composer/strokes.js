@@ -2,7 +2,7 @@
 // Stroke groups from han-compose's export (format 6, `G.sg`): which contours belong to which
 // KanjiVG stroke. A stroke whose contours are all its own can be detached and moved without
 // cutting; a stroke sharing a contour with another (口's top and right) needs a cut first.
-import { drawnContours, makePart, placed } from './geometry.js'
+import { drawnContours, makePart, placed, runsBack } from './geometry.js'
 
 /**
  * A placed part split at `strokeId`: the stroke as its own placed part and the rest.
@@ -32,8 +32,10 @@ export function splitStroke(item, strokeId) {
     width: contour.width ?? null,
   }))
   const keep = new Set(target[1])
-  const strokePart = makePart(contours.filter((_, index) => keep.has(index)))
-  const restPart = makePart(contours.filter((_, index) => !keep.has(index)))
+  // The contours are the drawing's, flips and all, so the two parts carry its drawn winding.
+  const reverse = runsBack(item)
+  const strokePart = makePart(contours.filter((_, index) => keep.has(index)), undefined, reverse)
+  const restPart = makePart(contours.filter((_, index) => !keep.has(index)), undefined, reverse)
   if (!strokePart.contours.length || !restPart.contours.length) return null
   /** @param {any} part */
   const at = part => placed(part, part.box, part.box, item.native ?? 0, `${item.origin ?? 'part'} stroke ${strokeId}`, [0, 0])

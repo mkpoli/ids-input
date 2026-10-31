@@ -208,9 +208,10 @@ export const EXAMPLE_GROUPS = [
   // 女, 子 and 乚 sit in one row as the reference photograph shows. The Cantonese Wikipedia article
   // gives 草泥馬 and 阿Sir with their descriptions. The Geba-ji article gives the remaining forms:
   // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
-  // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). The other New Year 合文 share strokes between
-  // their characters, as 唯吾知足 does with one 口, and no recorded description writes the sharing,
-  // so they are not examples.
+  // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). 唯吾知足, 黃金萬兩 and 吉祥如意 share strokes
+  // between their characters. 唯吾知足 sets 五 above 矢, 口 and 隹, with 龰, the bottom of 足, below,
+  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with 両's bottom, 冂 around 山;
+  // 吉祥如意 shares one 口 between 吉 (士 above it) and 如 (女 beside it), with 意 and 祥 around.
   { key: 'ligature', examples: [
     // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
     // 辶's embrace, which is what the example draws.
@@ -218,6 +219,11 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
+    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, and
+    // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
+    { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
+    { sequence: '⿱黃⿱金⿱⿱艹田⿵冂山', refs: [46,51], char: '' },
+    { sequence: '⿳士⿲女口意祥', refs: [50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },
@@ -422,6 +428,43 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿱𽄨𽁞", "char": "𽋒", "modern": "蒜", "source": "data/small-seal.json.gz"},
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
+  ] },
+  { key: 'shuishu', refs: [52, 53], examples: [
+    // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
+    // block's tentative code points; `modern` names the Han character each one covers. Names,
+    // readings and meanings: Shuishu.xlsx; glyphs: the Amendment 2.2 code charts.
+    { "sequence": "𛌀", "char": "𛌀", "modern": "一", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌚", "char": "𛌚", "modern": "二", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌝", "char": "𛌝", "modern": "三", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛒟", "char": "𛒟", "modern": "四", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛑂", "char": "𛑂", "modern": "五", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛐝", "char": "𛐝", "modern": "六", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏝", "char": "𛏝", "modern": "七", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛐩", "char": "𛐩", "modern": "八", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏡", "char": "𛏡", "modern": "九", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏜", "char": "𛏜", "modern": "十", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛍢", "char": "𛍢", "modern": "甲", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛍒", "char": "𛍒", "modern": "乙", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌁", "char": "𛌁", "modern": "丙", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏆", "char": "𛏆", "modern": "丁", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏧", "char": "𛏧", "modern": "戊", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛍽", "char": "𛍽", "modern": "己", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛑐", "char": "𛑐", "modern": "庚", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌡", "char": "𛌡", "modern": "辛", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛎃", "char": "𛎃", "modern": "壬", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛍋", "char": "𛍋", "modern": "癸", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏫", "char": "𛏫", "modern": "子", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏬", "char": "𛏬", "modern": "丑", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛐠", "char": "𛐠", "modern": "寅", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛍤", "char": "𛍤", "modern": "卯", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛑌", "char": "𛑌", "modern": "辰", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏪", "char": "𛏪", "modern": "巳", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛏢", "char": "𛏢", "modern": "午", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛑊", "char": "𛑊", "modern": "未", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛎺", "char": "𛎺", "modern": "申", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌈", "char": "𛌈", "modern": "酉", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌉", "char": "𛌉", "modern": "戌", "source": "data/shuishu.json.gz" },
+    { "sequence": "𛌶", "char": "𛌶", "modern": "亥", "source": "data/shuishu.json.gz" },
   ] },
   // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
   // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).

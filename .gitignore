@@ -1,6 +1,7 @@
 node_modules
 types/
 dist/
+.wrangler/
 .svelte-check/
 *.log
 .DS_Store

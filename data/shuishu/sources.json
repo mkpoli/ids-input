@@ -1,0 +1,46 @@
+{
+  "documents": [
+    {
+      "file": "Uni1B300Shuishu-subset.ttf",
+      "kind": "font subset",
+      "title": "Uni1B300Shuishu, the font embedded in the ISO/IEC 10646 Amendment 2.2 code charts (PDAM 2.2)",
+      "chartUrl": "https://www.unicode.org/wg2/docs/n4922-5theditionPdam2-2-charts.pdf",
+      "chartSha256": "b200ce0f5ec06bb97a6c16f08507ba531de88b2f88395462a4915be5824ddd6e",
+      "note": "The chart font draws the proposed characters at their tentative code points. The subset keeps its glyph order; cid-map.json gives each glyph its code point from the PDF's ToUnicode map.",
+      "sha256": "65df46dc3b269464afdef409542e5c05251826f3518bb41891fd6521a1d99ae3"
+    },
+    {
+      "file": "cid-map.json",
+      "kind": "code point map",
+      "note": "Glyph index to tentative code point, read from the ToUnicode CMap of the chart PDF.",
+      "sha256": "78cc99a534d5bf87cdc1b7f041673b23e869a5f8d60c0c7588e54c9062676afa"
+    },
+    {
+      "file": "radical-names.json",
+      "kind": "radical names",
+      "note": "The proposed radicals U+1B500..U+1B52E and the names the chart prints for them.",
+      "sha256": "bd164fcfeffab6102e817a4b36755b25d649606959c8da757b7dde8ba875f370"
+    },
+    {
+      "file": "Shuishu.xlsx",
+      "kind": "character index",
+      "title": "Shuishu.xlsx: names, readings and meanings for the BabelStone Shuishu fonts and Mojikyo M113, indexed by N4922 code point",
+      "url": "https://www.babelstone.co.uk/Shuishu/Shuishu.xlsx",
+      "page": "https://www.babelstone.co.uk/Fonts/Shuishu.html",
+      "note": "Andrew West (BabelStone). 772 rows: the 486 proposed logograms and 286 further private-use-only forms. The site states no licence for the file; the names, readings and meanings it records are facts.",
+      "sha256": "9d52ef9baac945d7d0a1fd8646e5969e4fa6ac806f8ff82ff056916d4daf2f64"
+    }
+  ],
+  "proposal": {
+    "title": "Proposal for encoding Shuishu (WG2 N4758, L2/18-193, N4922)",
+    "url": "https://www.unicode.org/wg2/docs/n4758-Proposal%20for%20encoding%20Shuishu2016Sep3.pdf"
+  },
+  "readingCheck": {
+    "title": "水族水书文字数据库 (Shui script character database), 水书数据库检索",
+    "url": "https://shuishu.ihanzi.net/shuishu",
+    "paper": "孙治弘, 谢雨霏, 刘凌, 叶晨. 水书文字数据库和智能识别平台构建[J]. 数字人文研究, 2026, 6(01): 94–109.",
+    "note": "Readings read from POST https://ocr.ihanzi.net/api/words/search with a `prefix` of the meaning; the glyph images are the database's and are not bundled. The readings vary by text, so the single reading per character here follows Shuishu.xlsx.",
+    "checked": "2026-10-29"
+  },
+  "roadmap": "https://www.unicode.org/roadmaps/smp/"
+}

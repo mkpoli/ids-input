@@ -10,7 +10,7 @@
   import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, componentQuery, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -20,6 +20,7 @@
   import overwriteIds from '../data/ids-overwrites.tsv?url'
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
+  import shuishuData from '../data/shuishu.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import sketches from '../data/sketch-parts.json.gz?url'
@@ -36,7 +37,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
-  import { addressDocument, documentFrom, linkTo, sequenceFrom } from './lib/share.js'
+  import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -70,7 +71,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
     const curated = await sealAdapter.parts()
@@ -79,10 +80,30 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  // The drawing at the full window, for a description too dense for the output column. A modal
+  // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
+  let large = $state(false)
+  let largeDialog = $state(/** @type {HTMLDialogElement | null} */ (null))
+  let largeButton = $state(/** @type {HTMLButtonElement | null} */ (null))
+  $effect(() => {
+    const dialog = largeDialog
+    if (!dialog) return
+    if (large && !dialog.open) dialog.showModal()
+    else if (!large && dialog.open) dialog.close()
+  })
+  $effect(() => {
+    if (!large) return
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = overflow }
+  })
   let documentTick = $state(0)
   let scopes = $state(/** @type {import('../src/document/index.js').ScopeTree | null} */ (null))
   let slots = $state(/** @type {number[][]} */ ([]))
-  const exportIncomplete = $derived(Boolean((addressDocument(currentSession()?.document) && !scopes) || (scopes && !scopes.complete)))
+  const exportIncomplete = $derived.by(() => {
+    const document = currentSession()?.document
+    return Boolean((document && transformed(document.root) && !scopes) || (scopes && !scopes.complete))
+  })
   const canExport = $derived(Boolean(!exportIncomplete && (scopes ?? drawing)))
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
@@ -176,7 +197,7 @@
         // operands. The Kaisho face borrows the Serif drawing in both cases.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
         if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
-          try { return await serif(sequence, options) } catch { /* keep the Kaisho drawing */ }
+          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the Kaisho drawing */ }
         }
         return drawn
       } catch (error) {
@@ -196,7 +217,7 @@
           }
         }
         if (defaultFace) throw error
-        return sans(sequence, options)
+        return { ...(await sans(sequence, options)), faceFallback: 'sans' }
       }
 
     }, {
@@ -362,7 +383,7 @@
   }
   const keptTab = stored.find(tab => tab.id === readActiveTab())
   const linkedTab = linked ? stored.find(tab => tab.sequence === linked
-    && (!linkedDocument || JSON.stringify(tab.document?.document) === JSON.stringify(linkedDocument))) : undefined
+    && (!linkedDocument || sameShare(tab.document?.document, linkedDocument))) : undefined
   // A link opens its tab, or a tab of its own when none has it; of two tabs holding the same text,
   // the one kept active stays.
   const linkedRecord = linkedDocument ? sessionRecord(createDocumentSession(linkedDocument)) : undefined
@@ -408,13 +429,15 @@
       tab.whole = editor.tree === null ? '' : editor.whole
       keepTabSession(tab)
     }
+    // Any later edit spends the note of a close, even text the editor cannot read.
+    if (toast?.run) toast = null
     store()
     syncAddress()
   }))
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -510,10 +533,10 @@
     const tab = current()
     history.replaceState(null, '', linkTo(editor.draft, location, tab ? addressDocument(sessionFor(tab).document) : null))
   }
-  /** The active tab's complete document, for sharing. */
+  /** The active tab's document to share, or null when its sequence says it all. */
   function currentDocument() {
     const tab = current()
-    return tab ? sessionFor(tab).document : null
+    return tab ? addressDocument(sessionFor(tab).document) : null
   }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
@@ -632,16 +655,115 @@
     if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
+      sessions.delete(fresh.id)
     }
     tabs.splice(Math.min(at, tabs.length), 0, tab)
     if (state) states.set(tab.id, state)
     activate(tab.id)
+  }
+  /**
+   * Close several tabs at once, showing `show` when it survives, else a fresh tab. The note brings
+   * the whole group back.
+   * @param {string[]} ids
+   * @param {string} [show]
+   */
+  function closeTabs(ids, show = activeId) {
+    const closing = ids
+      .map(id => ({ id, at: tabs.findIndex(tab => tab.id === id) }))
+      .filter(entry => entry.at >= 0)
+      .sort((a, b) => a.at - b.at)
+    if (!closing.length) return
+    // Keep the active tab's tree in its tab before its snapshot is taken.
+    flush()
+    const removed = closing.map(({ id, at }) => ({
+      tab: /** @type {import('./lib/tabs.js').Tab} */ (tabs[at]),
+      at,
+      state: states.get(id),
+    }))
+    const before = activeId
+    const wasActive = removed.some(entry => entry.tab.id === before)
+    // Remove from the end so each recorded index still names its tab.
+    for (const entry of [...removed].reverse()) {
+      tabs.splice(entry.at, 1)
+      states.delete(entry.tab.id)
+      sessions.delete(entry.tab.id)
+    }
+    const kept = tabs.find(tab => tab.id === show)
+    /** @type {import('./lib/tabs.js').Tab | undefined} */
+    let fresh
+    if (!kept) {
+      // One tab always stays open: closing every tab leaves a new empty one in their place.
+      fresh = makeTab()
+      tabs.push(fresh)
+      activeId = fresh.id
+      editor.reset('')
+      adjusting = false
+    } else if (wasActive) {
+      activeId = kept.id
+      const saved = states.get(kept.id)
+      states.delete(kept.id)
+      if (saved) editor.restore(saved)
+      else editor.reset(kept.sequence)
+    }
+    const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
+    toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
+      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+    store()
+  }
+  /**
+   * Put a closed group back where it was, taking back the empty tab that replaced it.
+   * @param {{ tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[]} removed
+   * @param {string | null} wasActive
+   * @param {string} [replacement]
+   */
+  function reopenTabs(removed, wasActive, replacement) {
+    const fresh = tabs.find(tab => tab.id === replacement)
+    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      sessions.delete(fresh.id)
+    }
+    for (const { tab, at, state } of removed) {
+      if (tabs.some(kept => kept.id === tab.id)) continue
+      tabs.splice(Math.min(at, tabs.length), 0, tab)
+      if (state) states.set(tab.id, state)
+    }
+    if (wasActive && wasActive !== activeId && tabs.some(tab => tab.id === wasActive)) activate(wasActive)
+    else store()
+  }
+  /** Close every tab but `id`, showing it. @param {string} id */
+  function closeOthers(id) {
+    closeTabs(tabs.filter(tab => tab.id !== id).map(tab => tab.id), id)
+  }
+  /** Close the tabs before `id`, showing it when the active tab goes. @param {string} id */
+  function closeLeft(id) {
+    const at = tabs.findIndex(tab => tab.id === id)
+    if (at > 0) closeTabs(tabs.slice(0, at).map(tab => tab.id), id)
+  }
+  /** Close the tabs after `id`, showing it when the active tab goes. @param {string} id */
+  function closeRight(id) {
+    const at = tabs.findIndex(tab => tab.id === id)
+    if (at >= 0) closeTabs(tabs.slice(at + 1).map(tab => tab.id), id)
+  }
+  /** Ask before closing every tab. */
+  function askCloseAll() { closeAllOpen = true }
+  function closeAllTabs() {
+    closeAllOpen = false
+    closeTabs(tabs.map(tab => tab.id))
+    tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
   }
   /** Show the tab `step` places on, round the strip. @param {number} step */
   function cycle(step) {
     const at = tabs.findIndex(tab => tab.id === activeId)
     if (tabs.length < 2 || at < 0) return
     activate(tabs[(at + step + tabs.length) % tabs.length].id)
+  }
+  /** Put the tab at `from` where `to` was, keeping the active tab and its editor. @param {number} from @param {number} to */
+  function moveTab(from, to) {
+    if (from === to || from < 0 || to < 0 || from >= tabs.length || to >= tabs.length) return
+    const [tab] = tabs.splice(from, 1)
+    tabs.splice(to, 0, tab)
   }
 
   // Saved drafts.
@@ -666,12 +788,8 @@
     note(t('app.file.saved', { name: file.name }))
   }
 
-  /** Open a chosen .ids.json as a new tab. @param {Event} event */
-  async function openDocument(event) {
-    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
-    const file = input.files?.[0]
-    input.value = ''
-    if (!file) return
+  /** Open a document file as a new tab. @param {File} file */
+  async function openFile(file) {
     try {
       const document = await readDocumentFile(file)
       const session = createDocumentSession(document)
@@ -681,6 +799,37 @@
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
     }
+  }
+  /** Open several document files as tabs, in order. @param {Iterable<File>} files */
+  async function openFiles(files) {
+    for (const file of files) await openFile(file)
+  }
+  /** Open chosen .ids.json, SVG or PNG files as tabs. @param {Event} event */
+  async function openDocument(event) {
+    const input = /** @type {HTMLInputElement} */ (event.currentTarget)
+    const files = [...(input.files ?? [])]
+    input.value = ''
+    await openFiles(files)
+  }
+  let dropping = $state(false)
+  /** @param {DragEvent} event */
+  function dropDocument(event) {
+    const files = event.dataTransfer?.files
+    dropping = false
+    if (!files?.length) return
+    event.preventDefault()
+    void openFiles(files)
+  }
+  /** @param {DragEvent} event */
+  function dragFiles(event) {
+    if (!event.dataTransfer?.types.includes('Files')) return
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+    dropping = true
+  }
+  /** @param {DragEvent} event */
+  function leaveFiles(event) {
+    if (!event.relatedTarget) dropping = false
   }
 
   const fileItems = $derived([
@@ -737,13 +886,13 @@
       unencoded: !example.char,
       lang,
       drawing: prepared.get(example.sequence),
-      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}　${example.sequence}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
+      hint: [example.abbreviates ? `${example.abbreviates}　${example.sequence}　${t('app.examples.abbreviation')}` : example.char ? `${example.char}${example.sequence === example.char ? '' : `　${example.sequence}`}　${point}` : `${example.sequence}　${t('app.examples.none')}`, citation].filter(Boolean).join('　'),
       run: () => addTab(canonical(example.sequence)),
     }
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
@@ -764,7 +913,7 @@
     ]
   })
 
-  let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false)
+  let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -829,13 +978,13 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} />
+<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
 <svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
-      <a class="brand" href="./" aria-label={t('app.title')}>
+      <a class="brand" href="/" aria-label={t('app.title')}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>
@@ -873,7 +1022,8 @@
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab} />
+      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
+        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 
@@ -958,20 +1108,24 @@
       </div>
       <section class="pane output" id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
-          {#key activeId}
-            <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
-              document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-              editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
-              {#snippet detailContent()}
-                {#each encoded as ch (ch)}
-                  <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
-                {/each}
-              {/snippet}
-            </IdsPreview>
-          {/key}
+          {#if !large}
+            {#key activeId}
+              <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
+                document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
+                {#snippet detailContent()}
+                  {#each encoded as ch (ch)}
+                    <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
+                  {/each}
+                {/snippet}
+              </IdsPreview>
+            {/key}
+          {/if}
           <div class="adjust">
             <button type="button" class="adjust-toggle" disabled={editor.tree === null}
               onclick={() => { const tab = current(); if (tab) { keepTabSession(tab); layerOpen = true } }}>{t('app.layers.label')}</button>
+            <button type="button" class="adjust-toggle" bind:this={largeButton} aria-haspopup="dialog" aria-controls="large-preview" aria-expanded={large} disabled={editor.tree === null}
+              onclick={() => { large = true }}><Icon name="search" size={15} />{t('app.preview.large')}</button>
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
@@ -981,8 +1135,28 @@
             {/if}
           </div>
         </div>
+        <dialog id="large-preview" class="large-dialog" bind:this={largeDialog} aria-label={t('app.preview.large')}
+          oncancel={() => { large = false }} onclose={() => { large = false; tick().then(() => { if (largeButton && !largeButton.disabled) largeButton.focus(); else largeButton?.closest('.adjust')?.querySelector('button:not(:disabled)')?.focus() }) }}
+          onclick={event => {
+            if (event.target !== largeDialog || !largeDialog) return
+            const box = largeDialog.getBoundingClientRect()
+            if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) large = false
+          }}>
+          <div class="large-bar">
+            <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
+            <div class="font-switch" role="group" aria-label={t('app.font.label')}>
+              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
+            </div>
+          </div>
+          {#if large}
+            <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
+              document={currentSession()?.document} session={currentSession()} version={documentTick} editable={false} />
+          {/if}
+        </dialog>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -991,7 +1165,7 @@
 
 </div>
 
-<input bind:this={documentInput} type="file" accept=".json,.ids.json,application/json" hidden onchange={openDocument} />
+<input bind:this={documentInput} type="file" accept=".json,.ids.json,.svg,.png,application/json,image/svg+xml,image/png" multiple hidden onchange={openDocument} />
 <Toast {toast} ondone={() => toast = null} />
 <Dialog bind:open={moreOpen} title={t('app.menu')} closeLabel={t('app.close')}>
   <div class="more-sheet">
@@ -1012,6 +1186,7 @@
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
+<div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
@@ -1023,8 +1198,22 @@
     <button type="button" class="ui-button" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
   </div>
 </Dialog>
+<Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
+  <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
+  <div class="confirm-actions">
+    <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
+    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
+  </div>
+</Dialog>
 
 <style>
+  .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
+  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--ui-color-border);border-radius:9px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
+  .confirm-actions button:hover{background:var(--ui-color-surface-hover)}
+  .confirm-actions .danger{border-color:var(--ui-color-danger);color:var(--ui-color-danger)}
+  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--ui-color-danger) 10%,transparent)}
+  .confirm-actions button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
@@ -1112,6 +1301,17 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
+  .large-dialog{width:min(90vh,92vw);width:min(90dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:16px;background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
+  .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
+  .large-dialog :global(.ids-preview){width:100%;max-width:100%}
+  .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
+  .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
+  .large-bar .font-switch{order:1}
+  .large-bar .large-close{order:2}
+  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-close:hover{border-color:var(--ui-color-border-strong)}
+  .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
   .encoded-character code{font:11px ui-monospace,monospace}
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
@@ -1120,7 +1320,7 @@
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
-  .adjust button{height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:8px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
   .adjust button:hover:not(:disabled){border-color:var(--ui-color-accent)}
   .adjust button[aria-pressed="true"]{border-color:var(--ui-color-accent);color:var(--ui-color-accent)}
   .adjust button:disabled{opacity:.45;cursor:default}
@@ -1155,6 +1355,12 @@
     .input-gap{display:block;grid-column:2;grid-row:1}
     .middle{grid-column:3;grid-row:1}
     .output{grid-column:1/-1;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
+    /* The panel's parts are what makes it tall: the palette keeps the cap it has on its own, but
+       once the panel sits in the workspace row, its grid takes the height it needs. */
+    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
+    /* The taller panel sets the row's height; the search under the tree fills the rest of its column
+       instead of leaving the page's background below it. */
+    .results{flex-grow:1}
   }
   /* Three columns filling the window: input, the tree over its own search panel, output. */
   @media (min-width:1280px){
@@ -1162,7 +1368,6 @@
     .work{grid-template-columns:var(--input-width) 16px minmax(0,1fr) 16px var(--output-width);min-height:0;align-items:stretch}
     .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
-    .pane.input :global(.parts-grid),.pane.input :global(.from-found),.pane.input :global(.from-tree){max-height:none;overflow:visible}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
     .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
     .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color .12s,width .12s}
@@ -1177,6 +1382,9 @@
     .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
   }
+  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--ui-color-canvas) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
+  .drop-overlay.show{opacity:1}
+  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:18px;background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}

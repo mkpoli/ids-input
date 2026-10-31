@@ -29,7 +29,8 @@ function ortAssets() {
   }
 }
 
-// A static site served at the root of https://ids.mkpo.li/ (GitHub Pages with a custom domain).
+// A static site served at the root of https://ids.mkpo.li/ behind the worker in `worker/`, which
+// answers any path with the app so a sequence can live in the path.
 export default defineConfig({
   root: import.meta.dirname,
   base: '/',

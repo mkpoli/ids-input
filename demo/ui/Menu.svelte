@@ -277,7 +277,7 @@
   .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
-  .label:is(:lang(ja),:lang(txg)){font-family:var(--cjk)}
+  .label:is(:lang(ja),:lang(txg),:lang(swi)){font-family:var(--cjk)}
   .note{flex:none;color:var(--ui-color-ink-muted);font:500 11px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:12px;font-style:italic}
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}

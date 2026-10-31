@@ -15,8 +15,8 @@
 // every host entry of it there, cut or not, and `data.places(key)` the places it is held in; each
 // answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
 // before drawing again).
-import { EM_BOX, area, count, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
-  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, union, within } from './geometry.js'
+import { EM_BOX, area, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
+  placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
@@ -47,21 +47,31 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
 // Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
+// Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
+// where a child touching it is drawn as it is.
+const SIDE_COVERS = new Set(['宀', '冖'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
+// Share of its own height a component's top band covers, and the share of the component's width
+// the ink in that band must span for the component to count as flat-topped.
+const COVER_HEAD = 0.15, COVER_SPAN = 0.9
 
 /** A description with this many leaves and no character to follow is drawn in cells: the
  *  composer's host cuts fit a character's positions, and a dense invented description has none, so
  *  its parts overlap. */
 const CELL_LEAVES = 8
 /** The gap between cells and the margin inside one, as shares of the cell's box. */
-const CELL_GAP = 0.006
-const CELL_INSET = 0.012
+const CELL_GAP = 0.01
+const CELL_INSET = 0.018
 /** A single top part takes this share of a stacked description's height; the reference design for
  *  the 108-stroke 「ぼんのう」 gives 苦 about a quarter above a much taller bottom. */
 const CELL_TOP = 0.28
 /** A part may stretch this much to fill its cell, more than the composer allows a placed part. */
-const CELL_STRETCH = 2.4
+const CELL_STRETCH = 4
+/** An inner part of a side enclosure sits inside its outer: it takes less than the cell's height.
+ *  The middle row of a three-row description is inset across, as in the reference. */
+const CELL_INNER_INSET = 0.15
+const CELL_MIDDLE_INSET = 0.08
 /** The axis an enclosure's two parts take when they are drawn apart: down for the top and bottom
  *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
  *  enclosure would put them on, since they no longer surround each other. */
@@ -101,6 +111,13 @@ export const keyOf = node => typeof node === 'string' ? node : node[0] + node.sl
 export const EMPTY = '⬚'
 /** Whether a node is an empty slot, numbered in reading order (`⬚0`, `⬚1`, …) by `compose`. */
 export const isEmpty = node => typeof node === 'string' && node[0] === EMPTY
+/** Whether `node` holds an empty slot at all. */
+const hasSlot = node => isEmpty(node) || Array.isArray(node) && node.slice(1).some(hasSlot)
+/** How many empty slots `node` holds. */
+const slotsIn = node => isEmpty(node) ? 1 : Array.isArray(node) ? node.slice(1).reduce((sum, kid) => sum + slotsIn(kid), 0) : 0
+/** `node` with the numbers of its empty slots shifted by `by`, so each repeated cell keeps its own. */
+const shiftedSlots = (node, by) => isEmpty(node) ? `${EMPTY}${Number(node.slice(1)) + by}`
+  : Array.isArray(node) ? [node[0], ...node.slice(1).map(kid => shiftedSlots(kid, by))] : node
 const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
   node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
 
@@ -133,6 +150,23 @@ const ENCLOSURE_CUTS = {
     'b7d2cd4473cf5cda692771db18ae491dd302efd7e0fdafe3582ee0dd909117de': [[4,5,6,7],[0,1,2,3]],
     'e0606c7982bcb036d9ec1a866509fcbe1f079a387534c36a78e4c7041dc2fdbd': [[0,1,2,3],[4,5,6,7]],
   }],
+}
+
+// Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
+// box of such a glyph to this share of the width and draws its foot out to the right edge.
+const ENCLOSURE_SHARE = 0.485
+
+// Enclosing forms a designer drew for a whole operand: 电 as ⿺'s enclosing part, cut from 𫌷
+// (⿺电言) in Noto Sans CJK JP and Noto Serif CJK JP, whose swept foot han-compose will not take for
+// a host cut. The digest names the glyph's outlines; a font without that glyph presses its own
+// outline instead (`pressedEnclosure`).
+const ENCLOSURE_FORMS = {
+  '⿺': {
+    电: ['𫌷', {
+      '656184795d653a390844e1bfd99e8efddfb5c36be68d683d9d8986984f150a85': [0, 1, 2, 3, 4],
+      '2fa6f7b8e09a68c6173dafe84d5b96d5b4c36dc9a7e6b77703d9ed9f13ff525a': [0, 3, 4, 6, 7],
+    }],
+  },
 }
 
 export class Composer {
@@ -180,13 +214,18 @@ export class Composer {
   rec = key => key.includes(EMPTY) ? null : (componentRecord(key, this.fontStyle) ?? this.data.rec(key))
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
-  /** The pyramid a node reads as, remembered for this drawing. */
+  /**
+   * The pyramid a node draws as, remembered for this drawing. A two-row pyramid of a description is
+   * one: no character designs that repeated form, so its equal cells are the drawing. A two-row
+   * pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid here.
+   */
   pyramid(node) {
     if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
     if (this.pyramids.has(node)) return this.pyramids.get(node)
-    const found = pyramidRows(node)
-    this.pyramids.set(node, found)
-    return found
+    const found = pyramidRows(node, { minLayers: 2 })
+    const answer = found && (found.layers > 2 || (found.cell !== null && typeof found.cell !== 'string')) ? found : null
+    this.pyramids.set(node, answer)
+    return answer
   }
 
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
@@ -306,9 +345,9 @@ export class Composer {
   }
 
   /** The parts of `tree` drawn in cells: one glyph (or empty slot) per leaf, in a cell its operator
-   *  gives it. Cells are weighted by each subtree's leaf count below the top; an enclosure's parts
-   *  keep the tree's reading order on an axis chosen for the cell's shape, so no cell overlaps
-   *  another. */
+   *  gives it. An alignment axis below the top shares its cells by the ink of its parts, or by leaf
+   *  count when it holds an empty slot; an enclosure always shares by leaf count. Parts keep the
+   *  tree's reading order on an axis chosen for the cell's shape, so no cell overlaps another. */
   cellLayout(tree) {
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
@@ -322,8 +361,18 @@ export class Composer {
       return [box[0] + w * CELL_INSET, box[1] + h * CELL_INSET, box[2] - w * CELL_INSET, box[3] - h * CELL_INSET]
     }
     const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
-    const split = (kids, axis, box, equal, override = null) => {
-      const weights = override ?? kids.map(kid => equal ? 1 : Math.sqrt(leaves(kid)))
+    // Fit the ink, not the glyph's placement box: a designed glyph's strokes can reach past it,
+    // and inside a cell that overflow runs into the next cell.
+    const tight = part => {
+      const box = part.contours.reduce((b, c) => union([b, pointsBox(c.light)]), [Infinity, Infinity, -Infinity, -Infinity])
+      return Number.isFinite(box[0]) ? box : part.box
+    }
+    const hasEmpty = node => isEmpty(node) || (Array.isArray(node) && node.slice(1).some(hasEmpty))
+    const split = (kids, axis, box, equal, override = null, dense = false) => {
+      // An axis takes its shares from the ink of its parts: a column of six dense parts needs more
+      // width than one tall 身. A placeholder has no ink, so an axis holding one keeps leaf shares.
+      const fallback = !dense || kids.some(hasEmpty)
+      const weights = override ?? kids.map(kid => equal ? 1 : fallback ? Math.sqrt(leaves(kid)) : Math.max(this.ink(kid), 1) ** 0.8)
       const sum = weights.reduce((a, b) => a + b, 0)
       const lo = box[axis], span = box[axis + 2] - lo
       let at = lo
@@ -348,8 +397,8 @@ export class Composer {
         if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
         // A cell allows a little more stretch than a composed part, so the glyph fills it; a
         // narrow cell still keeps the glyph's proportions instead of turning it into a sliver.
-        const cell = inset(target(box))
-        const part = placed(glyph, glyph.box, fitted(glyph.box, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
+        const cell = inset(target(box)), inkBox = tight(glyph)
+        const part = placed(glyph, inkBox, fitted(inkBox, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
         part.leaf = leaf++
         out.push(part)
         return
@@ -357,9 +406,15 @@ export class Composer {
       const op = node[0], kids = node.slice(1)
       if (op in this.AXIS) {
         // The top of a stacked description is one part over many; the reference design gives it
-        // less than half the height.
+        // less than a third of the height.
         const topShare = depth === 0 && this.AXIS[op] === 1 && kids.length === 2 && leaves(kids[0]) === 1 ? [CELL_TOP, 1 - CELL_TOP] : null
-        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare)
+        const boxes = split(kids, this.AXIS[op], box, depth === 0, topShare, true)
+        // The middle row of a three-row description is inset across, as in the reference.
+        if (op === '⿳' && kids.length === 3) {
+          const b = boxes[1], w = b[2] - b[0]
+          b[0] += w * CELL_MIDDLE_INSET
+          b[2] -= w * CELL_MIDDLE_INSET
+        }
         kids.forEach((kid, i) => walk(kid, boxes[i], depth + 1))
         return
       }
@@ -370,6 +425,13 @@ export class Composer {
         const across = box[2] - box[0], down = box[3] - box[1]
         const axis = namedAxis === 0 && across < down * 0.9 ? 1 : namedAxis === 1 && down < across * 0.8 ? 0 : namedAxis
         const boxes = split(kids, axis, box, false)
+        // A side-split enclosure's inner part sits inside its outer, so it takes less of the cell's
+        // height; the reference puts 意 to the right of 平/惡, not from top to bottom.
+        if (axis === 0) {
+          const b = boxes[1], h = b[3] - b[1]
+          b[1] += h * CELL_INNER_INSET
+          b[3] -= h * CELL_INNER_INSET
+        }
         walk(kids[0], boxes[0], depth + 1)
         walk(kids[1], boxes[1], depth + 1)
         return
@@ -393,7 +455,8 @@ export class Composer {
     const walk = (node, region, atRoot) => {
       const pyramid = this.pyramid(node)
       if (pyramid) {
-        for (const box of pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })) out.push({ index: out.length, box, empty: false })
+        // One box per leaf of the repeated cell, in the cell the pyramid gives it.
+        for (const box of pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })) walk(pyramid.cell, box, false)
         return
       }
       const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
@@ -513,7 +576,7 @@ export class Composer {
     if (!piece) {
       const glyph = this.glyph(h.h)
       if (!glyph) return makePart([], h.b.slice())
-      piece = makePart(h.k.map(k => glyph.contours[k]), h.b.slice())
+      piece = derived(glyph, h.k.map(k => glyph.contours[k]), h.b.slice())
       Object.defineProperty(h, '_piece', { value: piece, enumerable: false })
     }
     // A piece cut along KanjiVG's groups, which a drawing using it credits.
@@ -530,7 +593,16 @@ export class Composer {
   node(node, region, atRoot = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
-    if (pyramid) return pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse }).flatMap(box => this.node(pyramid.part, box))
+    if (pyramid) {
+      const cells = pyramidCells(region, pyramid.layers, { reverse: pyramid.reverse })
+      // A pyramid of empty slots draws one placeholder per cell, numbered in reading order; a cell
+      // of several slots takes the next numbers each time it repeats.
+      if (hasSlot(pyramid.cell)) {
+        const slots = slotsIn(pyramid.cell)
+        return cells.flatMap((box, i) => this.node(i ? shiftedSlots(pyramid.cell, i * slots) : pyramid.cell, box))
+      }
+      return cells.flatMap(box => this.node(pyramid.cell, box))
+    }
     const native = this.enclosureParts(node, region)
     if (native) return native
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
@@ -595,6 +667,19 @@ export class Composer {
     return this.shares(op, children, region)
   }
 
+  /** A designed enclosing form of a whole operand, where the export has no cut of it: 电 as ⿺'s
+   *  enclosing part from 𫌷. Answers a host-like `{ record, piece }`, or null. */
+  enclosureForm(op, node) {
+    const entry = typeof node === 'string' ? ENCLOSURE_FORMS[op]?.[node] : null
+    if (!entry || this.excluded(node)) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record || this.excluded(char)) return null
+    const indices = cuts[hexOf(JSON.stringify(record.p))]
+    if (!indices) return null
+    const glyph = partOf(record)
+    return { record: { h: char }, piece: derived(glyph, indices.map(i => glyph.contours[i])) }
+  }
+
   /** Preserve the font's designed shape while retaining one adjustable piece per leaf. */
   enclosureParts(node, region) {
     const entry = ENCLOSURE_CUTS[keyOf(node)]
@@ -608,7 +693,7 @@ export class Composer {
     const glyph = partOf(record), target = fitted(glyph.box, region, this.C.STRETCH)
     if (!this.separate) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
     return indices.map(group => {
-      const part = makePart(group.map(i => glyph.contours[i]))
+      const part = derived(glyph, group.map(i => glyph.contours[i]))
       return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
     })
   }
@@ -752,10 +837,13 @@ export class Composer {
     return [op, ...kids]
   }
 
-  /** Whole-character lookup for attested expanded overlays; nested editing keeps its leaves. */
+  /** Whole-character lookup for attested overlays; nested editing keeps its leaves. */
   standaloneExpandedOverlay(node) {
+    if (!Array.isArray(node) || node[0] !== '⿻') return null
     const equivalents = {"⿻大⿰人人": "夾", "⿻工⿰人人": "巫", "⿻⿰人人土": "坐"}
-    const char = equivalents[keyOf(node)]
+    const expanded = equivalents[keyOf(node)]
+    const char = expanded ?? this.bySequence(keyOf(node))
+    if (!expanded && char && this.overlayTeachers(node.slice(1)).length) return null
     return char && !this.excluded(char) && this.glyph(char) ? char : null
   }
 
@@ -977,6 +1065,7 @@ export class Composer {
       let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
         && stretchOf(part.piece.box, box) > C.ENCLOSING_STRETCH) part = null
+      if (!part && op in this.ENCLOSE && i === 0) part = this.enclosureForm(op, child)
       if (!part) {
         if (op in this.ENCLOSE && i === 1) {
           groups.push(this.node(child, box))
@@ -1034,7 +1123,8 @@ export class Composer {
     }
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
     this.fitUnderCover(op, children, groups)
-    return groups.flat()
+    this.clearUnderCover(op, children, groups)
+    return this.flatten(groups)
   }
 
   /** A whole character's operands each taken unscaled from where a designer put them (`_transplant`). */
@@ -1109,7 +1199,7 @@ export class Composer {
             if (glyph) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
             else groups.push(this.row(child, box, children.length))
           }
-          return groups.flat()
+          return this.flatten(groups)
         }
       }
     }
@@ -1160,7 +1250,8 @@ export class Composer {
       }
     } else if (!compactYan) this.space(axis, groups)
     this.fitUnderCover(op, children, groups)
-    return groups.flat()
+    this.clearUnderCover(op, children, groups)
+    return this.flatten(groups)
   }
 
   /** `child` drawn into `box` as one of `count` aligned operands; a whole glyph in a row of three may
@@ -1202,10 +1293,9 @@ export class Composer {
   }
 
   // ---------------------------------------------------------------- overlays
-  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
-  overlay(children, region) {
+  /** Overlays the export holds both pieces of, sharing an operand of comparable ink. */
+  overlayTeachers(children) {
     const C = this.C, keys = children.map(keyOf)
-    // Teachers: overlays the export holds both pieces of, sharing an operand.
     const teachers = []
     for (const index of [0, 1]) {
       for (const h of upTo(this.hostsOf(keys[index], `⿻${index}`), C.OVERLAY_HOSTS)) {
@@ -1217,8 +1307,13 @@ export class Composer {
         teachers.push({ ch: h.h, pieces, written, frame: h.fr })
       }
     }
-    const usable = teachers.filter(t => keys.every((k, j) => t.written[j] === k
+    return teachers.filter(t => keys.every((k, j) => t.written[j] === k
       || (1 / C.OVERLAY_INK <= this.ink(k) / Math.max(this.ink(t.written[j]), 1) && this.ink(k) / Math.max(this.ink(t.written[j]), 1) <= C.OVERLAY_INK)))
+  }
+
+  /** Operands drawn across each other (⿻), where characters overlaying like operands put them. */
+  overlay(children, region) {
+    const C = this.C, keys = children.map(keyOf), usable = this.overlayTeachers(children)
     if (!usable.length && children.length === 2) {
       const outer = this.node(children[0], region)
       const rooms = { '⿶': this.room('⿶', outer, region), '⿵': this.room('⿵', outer, region) }
@@ -1234,9 +1329,9 @@ export class Composer {
           return this.node([op, ...children], region)
         }
       }
-      return this.node(['⿱', ...children], region)
     }
     if (!usable.length) {
+      // With no matching cuts or enclosing room, retain the operands' shared em-square.
       return children.flatMap(child => {
         const glyph = typeof child === 'string' ? this.glyph(child) : null
         return this.node(child, glyph ? mapped(glyph.box, EM_BOX, region) : region)
@@ -1359,6 +1454,16 @@ export class Composer {
     }
   }
 
+  /** The parts of each operand, flattened, each part remembering the operand it came from in
+   *  `branch`: the index within this node first, then the indices of the nodes below it. A caller
+   *  that needs a node's own operands reads `branch[0]` before this runs on the node above. */
+  flatten(groups) {
+    groups.forEach((group, index) => {
+      for (const part of [group].flat()) (part.branch ??= []).unshift(index)
+    })
+    return groups.flat()
+  }
+
   /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
@@ -1403,10 +1508,44 @@ export class Composer {
           c.light[k] = centre + shift + (c.light[k] - centre) * factor
           c.heavy[k] = centre + shift + (c.heavy[k] - centre) * factor
         }
-        p.part = makePart(contours)
+        p.part = derived(p.part, contours)
         break
       }
     }
+  }
+
+  /** The parts of the child's topmost operand, when the child is a vertical stack drawn as more
+   *  than one operand. A child drawn as one piece has no operand to read, and a row (⿰, ⿲) has no
+   *  single top. */
+  topOperand(child, parts) {
+    if (!Array.isArray(child) || !['⿱', '⿳'].includes(child[0])) return null
+    const top = parts.filter(part => part.branch?.[0] === 0)
+    return top.length && top.length < parts.length ? top : null
+  }
+
+  /** Under a cover (宀, 冖) the component the child leads with carries the cover's width, the way
+   *  the net 罒 does under the roof of 𡩲 and the block 旧 under the roof of 𭓿: a leading component
+   *  with a wide flat top is drawn at `COVER_BAR` of the cover's width, centred on it, its own top,
+   *  bottom and sides narrowing together. What sits below it keeps its width, so a base bar such as
+   *  the 一 of 𡩬 stays as wide as it was drawn, and nothing moves down. 穴 and 雨 hang a middle
+   *  stroke where a component meeting it is drawn as it is. */
+  clearUnderCover(op, children, groups) {
+    if (this.partial || op !== '⿱' || children.length !== 2 || !SIDE_COVERS.has(children[0])) return
+    const cover = groups[0], lower = groups[1]
+    if (!cover?.length || !lower?.length) return
+    const head = this.topOperand(children[1], lower)
+    if (!head) return
+    const box = group => {
+      const boxes = group.map(drawnBox)
+      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+        Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+    }
+    const coverBox = box(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
+    const headBox = box(head)
+    if (want <= 0 || headBox[2] - headBox[0] <= want || !flatTopped(head, headBox)) return
+    const middle = (coverBox[0] + coverBox[2]) / 2
+    const to = [middle - want / 2, headBox[1], middle + want / 2, headBox[3]]
+    for (const part of head) part.target = targetFor(part, mapped(drawnBox(part), headBox, to))
   }
 
   // ---------------------------------------------------------------- weight
@@ -1442,6 +1581,21 @@ export class Composer {
 }
 
 // -------------------------------------------------------------------- free functions
+/** Whether a group leads with a wide flat top: its ink reaches both sides of its box within the
+ *  top `COVER_HEAD` of its height, as the net 罒 and the block 旧 do and 王 and 心 do not. */
+function flatTopped(group, box) {
+  const height = box[3] - box[1], width = box[2] - box[0]
+  if (height <= 0 || width <= 0) return false
+  const band = box[3] - COVER_HEAD * height
+  let x0 = Infinity, x1 = -Infinity
+  for (const part of group) for (const points of drawnContours(part))
+    for (let k = 0; k < points.length; k += 2) {
+      if (points[k + 1] < band) continue
+      x0 = Math.min(x0, points[k]); x1 = Math.max(x1, points[k])
+    }
+  return x1 - x0 >= COVER_SPAN * width
+}
+
 /** A detached four-point horizontal spanning half the part that no native cut supports (`_extra_bar`). */
 function extraBar(part, mask, references) {
   const size = 64, [x0, y0, x1, y1] = part.box, width = x1 - x0, height = y1 - y0
@@ -1587,6 +1741,12 @@ export function sweptPart(p, edge, C) {
     && b[3] - b[1] >= C.SWEEP_RISE * (y1 - y0)).map(([, k]) => k)
   if (sweeps.length !== 1 || contours.length < 2) return null
   const sweep = sweeps[0], pts = contours[sweep]
+  // A glyph drawn as one outline with its counters (Klee One's 电) has no separate stroke to sweep:
+  // the outline already runs round the lower left, and pressing its counters apart would lose the
+  // 日. Press the whole glyph, counters and all.
+  const sweepRing = rings([p.part.contours[sweep]], [pts])[0]
+  if (contours.every((c, k) => k === sweep || insideRing(rings([p.part.contours[k]], [c])[0], sweepRing)))
+    return [pressedEnclosure(p, sweep) ?? { ...p, origin: `enclosure ${p.origin}` }]
   let lowMin = Infinity, lowMax = -Infinity
   for (let i = 0; i < pts.length; i += 2) if (pts[i + 1] <= y0 + 0.2 * (y1 - y0)) { lowMin = Math.min(lowMin, pts[i]); lowMax = Math.max(lowMax, pts[i]) }
   if (lowMax < lowMin || lowMax - lowMin < C.SWEEP_FOOT * (x1 - x0)) return null
@@ -1613,12 +1773,54 @@ export function sweptPart(p, edge, C) {
     const map = src => { const out = new Float64Array(src.length); for (let i = 0; i < src.length; i += 2) { out[i] = (src[i] - cx) * sx + gx; out[i + 1] = (src[i + 1] - cy) * sy + gy } return move(out) }
     return { ops: c.ops, light: map(c.light), heavy: map(c.heavy), width: c.width }
   }
-  const strokes = makePart(p.part.contours.filter((_, k) => k !== sweep).map(c => at(c, q => q)))
+  const strokes = derived(p.part, p.part.contours.filter((_, k) => k !== sweep).map(c => at(c, q => q)))
   const box = strokes.box
   const pressedBox = [x0 + (box[0] - x0) * pressed, box[1], x0 + (box[2] - x0) * pressed, box[3]]
-  const drawn = makePart([at(p.part.contours[sweep], drawnOut)])
+  const drawn = derived(p.part, [at(p.part.contours[sweep], drawnOut)])
   return [placed(strokes, strokes.box, pressedBox, p.native, `swept ${p.origin}`, p.weight),
     placed(drawn, drawn.box, drawn.box.slice(), p.native, `swept ${p.origin}`, p.weight)]
+}
+
+/**
+ * A glyph drawn as one outline with its counters (Klee One's 电), pressed as a designer presses a
+ * box round another part: the box keeps `share` of the width and the foot is drawn out to the right
+ * edge, as Kureedo draws 巴 round 三 in 𠀧 (⿺巴三). Every contour takes the same x map, so the
+ * counters stay inside the outline and the box keeps its windows.
+ */
+export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE) {
+  // The map belongs to the glyph's own coordinates: the placement scales the pressed part whole.
+  const boxes = p.part.contours.map(c => pointsBox(c.light))
+  const x0 = Math.min(...boxes.map(b => b[0])), x1 = Math.max(...boxes.map(b => b[2]))
+  // The box's right edge is its counter's right plus the thickness of the box's left frame.
+  const windows = boxes.filter((_, k) => k !== sweep)
+  const boxRight = Math.min(x1, Math.max(...windows.map(b => b[2])) + Math.min(...windows.map(b => b[0])) - x0)
+  const target = x0 + share * (x1 - x0)
+  if (!(boxRight > x0 && boxRight < x1)) return null
+  const box = (target - x0) / (boxRight - x0), foot = (x1 - target) / (x1 - boxRight)
+  const mapX = points => {
+    const out = points.slice()
+    for (let i = 0; i < out.length; i += 2) out[i] = out[i] <= boxRight ? x0 + (out[i] - x0) * box : target + (out[i] - boxRight) * foot
+    return out
+  }
+  const mapped = p.part.contours.map(c => ({ ops: c.ops, light: mapX(c.light), heavy: mapX(c.heavy), width: c.width }))
+  return placed(makePart(mapped, p.part.box.slice()), p.source, p.target, p.native, `enclosure ${p.origin}`, p.weight)
+}
+
+/** Whether every point of `ring` lies inside the closed `outer` ring (font units, y up). */
+function insideRing(ring, outer) {
+  for (let i = 0; i < ring.length; i += 2) {
+    const x = ring[i], y = ring[i + 1]
+    let winding = 0
+    for (let j = 0; j < outer.length; j += 2) {
+      const k = (j + 2) % outer.length
+      const x0 = outer[j], y0 = outer[j + 1], x1 = outer[k], y1 = outer[k + 1]
+      const side = (x1 - x0) * (y - y0) - (x - x0) * (y1 - y0)
+      if (y0 <= y && y1 > y && side > 0) winding++
+      else if (y0 > y && y1 <= y && side < 0) winding--
+    }
+    if (winding === 0) return false
+  }
+  return true
 }
 
 export { raster }

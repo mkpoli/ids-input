@@ -1,7 +1,7 @@
 @import "./gongche.css";
 /* The parts few installed fonts draw: CJK strokes and the empty-slot mark ⬚ (IDS Strokes), CJK
    Radicals Supplement and the supplementary planes (IDS Parts), the New Korean Orthography
-   letters (IDS New Korean). gongche.css repeats 17 Gongche code points inside the supplementary
+   letters (IDS New Korean) and the Shuishu characters (IDS Shuishu). gongche.css repeats 17 Gongche code points inside the supplementary
    range and is imported first; it is the face that carries those glyphs, since the general subset
    omits them. The rest of the text falls through to the page's own fonts.
    See fonts/README.md for their sources and licences. */
@@ -24,3 +24,7 @@
 /* The unencoded letters of the New Korean Orthography, in the positions proposed in L2/19-230R. */
 @font-face{font-family:"IDS New Korean";src:url("./IDSNewKorean.woff2") format("woff2");font-display:swap;
   unicode-range:U+A97D-A97F,U+D7C7,U+D7FC-D7FE}
+
+/* The proposed Shuishu block: its logograms and 47 radicals at the tentative allocations of PDAM 2.2. */
+@font-face{font-family:"IDS Shuishu";src:url("./IDSShuishu.woff2") format("woff2");font-display:swap;
+  unicode-range:U+1B300-1B4E5,U+1B500-1B52E}

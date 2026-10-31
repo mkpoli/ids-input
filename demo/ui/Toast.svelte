@@ -2,11 +2,11 @@
   // A note at the foot of the page that goes by itself: what was just done, with an Undo button when
   // it threw something away. A newer note replaces it.
   import { fly } from 'svelte/transition'
-  /** @type {{ toast: { id: number, text: string, action?: string, run?: () => void } | null, ondone: () => void }} */
+  /** @type {{ toast: { id: number, text: string, action?: string, run?: () => void, duration?: number } | null, ondone: () => void }} */
   let { toast, ondone } = $props()
   $effect(() => {
     if (!toast) return
-    const timer = setTimeout(ondone, toast.run ? 6000 : 2400)
+    const timer = setTimeout(ondone, toast.run ? (toast.duration ?? 6000) : 2400)
     return () => clearTimeout(timer)
   })
 </script>

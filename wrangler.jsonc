@@ -1,0 +1,15 @@
+{
+  "name": "ids-input-workshop",
+  "main": "worker/index.js",
+  "compatibility_date": "2026-10-30",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // An unknown path is the app, which reads the sequence out of it.
+    "not_found_handling": "single-page-application"
+  },
+  "routes": [{ "pattern": "ids.mkpo.li", "custom_domain": true }],
+  "workers_dev": false,
+  "observability": { "enabled": true },
+  "preview_urls": true
+}

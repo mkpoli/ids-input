@@ -18,6 +18,16 @@ const ENCLOSURES = {
   '⿺': { inside: [.28, 0, 1, .72], outline: [[0, 0], [0, 1], [1, 1]] },
 }
 
+/** A pyramid of `layers` rows of equal square cells, as template slots in the 24-unit square.
+ * @param {number} layers
+ * @param {{ reverse?: boolean }} [options]
+ * @returns {Shape[]}
+ */
+export function pyramidDiagram(layers, { reverse = false } = {}) {
+  return pyramidCells([2, 2, 22, 22], layers, { reverse })
+    .map(([x0, y0, x1, y1]) => ({ kind: 'slot', x: x0, y: 24 - y1, width: x1 - x0, height: y1 - y0, accent: false }))
+}
+
 /** A template icon in a 24-unit square. Frames stand for enclosure hosts; offset slots show overlays.
  * @param {string} sequence
  * @returns {Shape[]}
@@ -26,8 +36,7 @@ export function templateDiagram(sequence) {
   const parsed = parse(sequence, { open: true })
   if (parsed.problem || parsed.tree === undefined) return []
   const pyramid = pyramidRows(parsed.tree)
-  if (pyramid) return pyramidCells([2, 2, 22, 22], pyramid.layers, { reverse: pyramid.reverse })
-    .map(([x0, y0, x1, y1]) => ({ kind: 'slot', x: x0, y: 24 - y1, width: x1 - x0, height: y1 - y0, accent: false }))
+  if (pyramid) return pyramidDiagram(pyramid.layers, { reverse: pyramid.reverse })
   /** @type {Shape[]} */
   const shapes = []
   /** @param {import('../core/ids.js').Part} node @param {number[]} box @param {boolean} accent */

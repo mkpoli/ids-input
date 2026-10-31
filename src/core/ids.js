@@ -72,21 +72,32 @@ export const NEW_KOREAN = /[\u{A97D}-\u{A97F}\u{D7C7}\u{D7FC}-\u{D7FE}]/u
 /** Whether `text` contains a New Korean Orthography letter. @param {string | null | undefined} text */
 export const isNewKorean = text => NEW_KOREAN.test(text ?? '')
 
+/**
+ * The Shuishu characters, at the tentative allocations of the proposed block: logograms
+ * U+1B300..U+1B4E5 and its 47 radicals U+1B500..U+1B52E. Unicode 18.0.0 leaves them unassigned; the
+ * editor accepts them with the bundled outlines in `data/shuishu-outlines.json.gz` and the
+ * `IDS Shuishu` font, as it does for the Small Seal and New Korean allocations.
+ */
+export const SHUISHU = /[\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}]/u
+/** Whether `text` contains a Shuishu character. @param {string | null | undefined} text */
+export const isShuishu = text => SHUISHU.test(text ?? '')
+
 /** @param {string | undefined} char */
 export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(char)
 
 /** Whether `char` may stand as a component. @param {string | undefined | null} char */
 export const isComponent = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
-  // The bundled CHISE/Kaiyuan Small Seal allocation and the proposed New Korean Orthography
-  // letters are outside Unicode's assigned set and have bundled outlines.
-  return Boolean(first && (unicodeProperty('graphic', first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first) || NEW_KOREAN.test(first))
+  // The bundled CHISE/Kaiyuan Small Seal allocation and the proposed New Korean Orthography and
+  // Shuishu blocks are outside Unicode's assigned set and have bundled outlines.
+  return Boolean(first && (unicodeProperty('graphic', first) || /^[\u{3D000}-\u{3FC3F}]$/u.test(first) || NEW_KOREAN.test(first) || SHUISHU.test(first))
     && !ARITY.has(first) && !EMPTY_MARKS.includes(first))
 }
 
 /** Whether `char` is an alphabetic/syllabic letter or decimal digit. @param {string | undefined | null} char */
 export const isLetter = char => {
   const first = char && String.fromCodePoint(/** @type {number} */ (char.codePointAt(0)))
+  // The New Korean letters are letters; Shuishu logograms and radicals are ideographs like Han.
   return Boolean(first && isComponent(first) && (unicodeProperty('letters', first) || NEW_KOREAN.test(first)))
 }
 
@@ -188,7 +199,7 @@ export function modifierLength(text, at) {
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
- * of three or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
+ * of two or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
  *
  * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
  * definition after it are left out (see `entryDescription`).
@@ -245,8 +256,9 @@ export function parse(text, { open = false } = {}) {
       while (at < chars.length && isMark(chars[at])) marks += chars[at++]
       tree = withMarks(tree, marks)
     }
-    // A whole description may run past the ordinary length only as a pyramid; a draft may be long.
-    if (!open && long && !pyramidRows(tree)) return { problem: 'character' }
+    // A whole description may run past the ordinary length only as a pyramid, its cells any part;
+    // a draft may be long.
+    if (!open && long && !pyramidRows(tree, { minLayers: 2 })) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }

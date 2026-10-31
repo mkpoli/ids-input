@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs'
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
   for (const scheme of ['light', 'dark']) {
-    const page = await browser.newPage({ viewport: { width:1440, height:1000 }, deviceScaleFactor:2, colorScheme:scheme })
+    const page = await browser.newPage({ viewport: { width:1440, height:1000 }, deviceScaleFactor:2, colorScheme:scheme, permissions:['clipboard-read','clipboard-write'] })
     const errors=[]
     page.on('pageerror',e=>errors.push(e.message))
     await page.route('https://glyphatlas.org/**',r=>r.abort())
@@ -20,13 +20,28 @@ try {
     // Keep the card open while entering it; explanatory/source sections stay absent.
     await panel.hover();await page.waitForTimeout(300);assert.ok(await panel.isVisible())
     assert.equal(await panel.locator('details, footer').count(),0)
+    // The header copies the character it shows and says so.
+    await panel.getByRole('button',{name:'Copy 𘥇'}).click()
+    await panel.getByText('Copied',{exact:true}).waitFor()
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'𘥇')
+    await panel.getByText('Copied',{exact:true}).waitFor({state:'hidden',timeout:3000})
     if(process.env.IDS_INFO_SHOTS){mkdirSync(process.env.IDS_INFO_SHOTS,{recursive:true});await page.evaluate(()=>document.fonts.ready);await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/after-tangut-${scheme}.png`,clip:{x:0,y:0,width:1100,height:1000}})}
+    // A write that lands after the card moved must not label the new character.
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>new Promise(resolve=>{window.__resolveCopy=resolve})}}))
+    await panel.getByRole('button',{name:'Copy 𘥇'}).click()
+    await horse.hover();await panel.locator('header .glyph').filter({hasText:'馬'}).waitFor()
+    await page.evaluate(()=>window.__resolveCopy());await page.waitForTimeout(150)
+    assert.equal(await panel.locator('.copy-note').innerText(),'')
+    await page.evaluate(()=>{delete navigator.clipboard})
     await page.keyboard.press('Escape'); await page.waitForTimeout(400);assert.ok(await panel.isHidden())
     // Focus opens details without changing the editor; F1 enters, Escape restores focus.
     await horse.focus(); await panel.waitFor({state:'visible'}); await panel.getByText('Small seal',{exact:true}).waitFor()
     assert.match(await panel.innerText(),/horse/)
     const before=await field.inputValue()
-    await horse.press('F1'); assert.equal(await panel.locator('.close').evaluate(el=>el===document.activeElement),true)
+    await horse.press('F1'); assert.equal(await panel.locator('.copy').evaluate(el=>el===document.activeElement),true)
+    await page.keyboard.press('Enter')
+    await panel.getByText('Copied',{exact:true}).waitFor()
+    assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'馬')
     assert.equal(await field.inputValue(),before)
     await page.keyboard.press('Escape'); await page.waitForTimeout(400);assert.ok(await panel.isHidden())
     assert.ok(await horse.evaluate(el=>el===document.activeElement))
@@ -98,7 +113,41 @@ try {
     assert.ok(await panel.isVisible(),'the card stays across the tiles the pointer crosses')
     await insert.click()
     assert.match(await field.inputValue(),/🐎/,'a related part inserts from the pinned card')
+    await page.waitForTimeout(600)
+    // A press on the card's bare surface closes it and reaches the tile it covers.
+    await paletteHorse.scrollIntoViewIfNeeded()
+    await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
+    const covered=await page.evaluate(()=>{
+      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+      const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
+        const box=n.getBoundingClientRect()
+        return box.top>card.top&&box.bottom<card.bottom&&box.left>card.left&&box.right<card.right&&n.dataset.character!=='馬'
+      })
+      if(!node)return null
+      const box=node.getBoundingClientRect()
+      return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+    })
+    assert.ok(covered,'the card covers a tile')
+    await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
+    assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    // Selecting text inside the card keeps it, and passes nothing through.
+    const line1=await panel.locator('header .glyph').first().boundingBox(),line2=await panel.locator('.glosses li').first().boundingBox()
+    await page.mouse.move(line1.x+2,line1.y+line1.height/2);await page.mouse.down()
+    await page.mouse.move(line2.x+line2.width-4,line2.y+line2.height/2,{steps:12})
+    await page.mouse.up()
+    assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
+    assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
+    await page.evaluate(()=>getSelection().removeAllRanges())
+    // A press that starts on a card button and ends on a tile below stays the button's press.
+    const pressButton=await panel.locator('header button').last().boundingBox(),beforePress=await field.inputValue()
+    await page.mouse.move(pressButton.x+pressButton.width/2,pressButton.y+pressButton.height/2);await page.mouse.down()
+    await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
+    await page.waitForTimeout(500)
+    assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
+    await panel.waitFor({state:'hidden'})
     await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
+    await page.waitForTimeout(600)
     // A pinned card goes when its tile is scrolled out of the grid.
     await paletteHorse.click();await panel.waitFor({state:'visible'})
     await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
@@ -173,8 +222,16 @@ try {
     assert.equal(await field.inputValue(),'⿰𘆽木')
     await page.keyboard.press('Control+z');assert.equal(await field.inputValue(),'⿰馬木')
     assert.ok(await page.locator('.ids-treelist [data-path=""]').evaluate(el=>el===document.activeElement))
+    // A refused write says so, and the target keeps its full size.
+    await page.locator('.view-tabs').getByRole('tab',{name:'Shape',exact:true}).click()
+    await horse.hover();await panel.getByText('Small seal',{exact:true}).waitFor()
+    await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:()=>Promise.reject(new Error('denied'))}}))
+    await panel.getByRole('button',{name:'Copy 馬'}).click()
+    await panel.getByText('Copy failed',{exact:true}).waitFor()
+    const copyBox=await panel.locator('.copy').boundingBox()
+    assert.ok(copyBox.width>=24&&copyBox.height>=24)
     assert.deepEqual(errors,[])
-    await page.close();console.log(`PASS ${scheme}: meanings, actions, pinned card, hover persistence, keyboard, stale targets, insertion`)
+    await page.close();console.log(`PASS ${scheme}: meanings, copying, actions, pinned card, hover persistence, keyboard, stale targets, insertion`)
   }
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
   await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:120000})
