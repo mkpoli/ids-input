@@ -57,11 +57,23 @@ it('draws 萬 with the bottom of 両 as one prepared form', () => {
     expect(drawing.d).not.toMatch(/NaN|Infinity/)
     expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
     // The horizontal bar retains 満's native contextual 山 thickness.
-    const mountain = data.forms[style]['⿳艹田⿵冂山'][1][0][1]
-    const ys = mountain.filter((_, i) => i % 2 === 1)
-    const bar = style === 'sans' ? [86, 144, 58] : [95, 124, 29]
-    expect(ys).toContain(bar[0])
-    expect(ys).toContain(bar[1])
-    expect(bar[1] - bar[0]).toBe(bar[2])
+    const [ops, points] = data.forms[style]['⿳艹田⿵冂山'][1][0]
+    const edges = []
+    let index = 0, previous
+    for (const op of ops.match(/M|L|Q2/g)) {
+      const count = op === 'Q2' ? 4 : 2
+      const end = points.slice(index + count - 2, index + count)
+      if (op === 'L' && previous[1] === end[1]) {
+        edges.push({ y: end[1], left: Math.min(previous[0], end[0]), right: Math.max(previous[0], end[0]) })
+      }
+      previous = end
+      index += count
+    }
+    // Both boundaries must overlap over a substantial part of the bar.
+    // This rejects the formerly vertically scaled, thin horizontal stroke.
+    const [bottomY, topY, thickness] = style === 'sans' ? [86, 144, 58] : [95, 124, 29]
+    const bottom = edges.filter(edge => edge.y === bottomY)
+    const top = edges.filter(edge => edge.y === topY)
+    expect(bottom.some(a => top.some(b => Math.min(a.right, b.right) - Math.max(a.left, b.left) >= 80 && b.y - a.y === thickness))).toBe(true)
   }
 })
