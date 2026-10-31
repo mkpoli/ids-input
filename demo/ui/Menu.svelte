@@ -30,8 +30,9 @@
   let collapsed = $state(new Set())
   let active = $state('')
   // The label of the one submenu shown inline, or ''.
-  let openSubmenu = $state('')
-  $effect(() => { if (!open) openSubmenu = '' })
+  // The index of the one submenu shown inline, or -1.
+  let openSubmenu = $state(-1)
+  $effect(() => { if (!open) openSubmenu = -1 })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {Item} item */
   function matches(item) {
@@ -116,24 +117,24 @@
     query = ''
     mode = 'all'
     collapsed = new Set()
-    openSubmenu = ''
+    openSubmenu = -1
     setOpen(true)
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
-  function hide() { openSubmenu = ''; setOpen(false); trigger?.focus() }
-  /** Open one submenu inline, keep it in the menu's scrollport, and optionally take its first item. @param {string} label @param {boolean} [focus] */
-  async function expand(label, focus = false) {
-    openSubmenu = label
+  function hide() { openSubmenu = -1; setOpen(false); trigger?.focus() }
+  /** Open one submenu inline, keep it in the menu's scrollport, and optionally take its first item. @param {number} i @param {boolean} [focus] */
+  async function expand(i, focus = false) {
+    openSubmenu = i
     await tick()
     const group = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu'))
     if (!group) return
     group.scrollIntoView({ block: 'nearest' })
     if (focus) /** @type {HTMLElement | null} */ (group.querySelector('[role="menuitem"]:not([disabled])'))?.focus()
   }
-  /** @param {{ label: string }} item */
-  function toggleSubmenu(item) {
-    if (openSubmenu === item.label) openSubmenu = ''
-    else void expand(item.label)
+  /** @param {number} i */
+  function toggleSubmenu(i) {
+    if (openSubmenu === i) openSubmenu = -1
+    else void expand(i)
   }
   /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
   export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
@@ -161,18 +162,31 @@
     if (event.target instanceof HTMLInputElement && event.key !== 'Escape') return
     const all = enabled()
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
-    if (event.key === 'ArrowLeft' && openSubmenu) {
+    if (event.key === 'ArrowLeft' && openSubmenu >= 0) {
       const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
       const group = box?.querySelector('.submenu')
       if (parent === document.activeElement || group?.contains(document.activeElement)) {
         event.preventDefault()
-        openSubmenu = ''
+        openSubmenu = -1
         parent?.focus()
         return
       }
-      openSubmenu = ''
+      openSubmenu = -1
     }
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
+    if (event.key === 'ArrowRight' && openSubmenu >= 0 && box?.querySelector('.submenu')?.contains(document.activeElement)) {
+      event.preventDefault()
+      return
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (openSubmenu >= 0) {
+        const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+        openSubmenu = -1
+        parent?.focus()
+      } else hide()
+      return
+    }
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
     else if (event.key === 'ArrowUp') { event.preventDefault(); all[(at - 1 + all.length) % all.length]?.focus() }
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); all.at(event.key === 'End' ? -1 : 0)?.focus() }
@@ -207,11 +221,13 @@
   </button>
 {/snippet}
 
+<!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group, which is
+     not a popup, so it carries no aria-haspopup. -->
 {#snippet submenuRow(item, i)}
-  {@const open = openSubmenu === item.label}
+  {@const open = openSubmenu === i}
   <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
-    disabled={item.disabled} onclick={() => toggleSubmenu(item)}
-    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(item.label, true) } }}>
+    disabled={item.disabled} onclick={() => toggleSubmenu(i)}
+    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(i, true) } }}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
     <span class="label">{item.label}</span>
     <span class="chev" class:open><Icon name="chevron" size={14} /></span>
@@ -259,10 +275,10 @@
   {#if open}
     <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
       onfocusin={event => {
-        if (!openSubmenu) return
+        if (openSubmenu < 0) return
         const parent = box?.querySelector('.submenu-item[aria-expanded="true"]')
         const group = box?.querySelector('.submenu')
-        if (parent !== event.target && !group?.contains(/** @type {Node} */ (event.target))) openSubmenu = ''
+        if (parent !== event.target && !group?.contains(/** @type {Node} */ (event.target))) openSubmenu = -1
       }}>
       {#if view}
         <div class="menu-head">

@@ -1,7 +1,7 @@
 <script>
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
-  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
+  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean }} */
   import { tick, untrack } from 'svelte'
   let { items, label, onpick, view = null, open = true } = $props()
   const uid = $props.id()
@@ -12,8 +12,9 @@
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
   let active = $state('')
-  let openSubmenu = $state('')
-  $effect(() => { if (!open) openSubmenu = '' })
+  // The index of the one submenu shown inline, or -1.
+  let openSubmenu = $state(-1)
+  $effect(() => { if (!open) openSubmenu = -1 })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -47,17 +48,17 @@
     else next.add(heading)
     collapsed = next
   }
-  /** @param {string} heading */
-  /** @param {string} label */
-  function expand(label) {
-    openSubmenu = label
+  /** @param {number} i */
+  function expand(i) {
+    openSubmenu = i
     tick().then(() => root?.querySelector('.submenu')?.scrollIntoView({ block: 'nearest' }))
   }
-  /** @param {{ label: string }} item */
-  function toggleSubmenu(item) {
-    if (openSubmenu === item.label) openSubmenu = ''
-    else expand(item.label)
+  /** @param {number} i */
+  function toggleSubmenu(i) {
+    if (openSubmenu === i) openSubmenu = -1
+    else expand(i)
   }
+  /** @param {string} heading */
   function jump(heading) {
     const list = groups.filter(group => group.heading)
     const at = list.findIndex(group => group.heading === heading)
@@ -119,7 +120,7 @@
 {#snippet cardItem(item)}
   <button type="button" class="card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { openSubmenu = ''; onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
     {#if item.drawing?.d}
       <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
     {:else}
@@ -133,10 +134,11 @@
   </button>
 {/snippet}
 
+<!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group. -->
 {#snippet submenuRow(item, i)}
-  {@const open = openSubmenu === item.label}
+  {@const open = openSubmenu === i}
   <button type="button" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
-    disabled={item.disabled} onclick={() => toggleSubmenu(item)}>
+    disabled={item.disabled} onclick={() => toggleSubmenu(i)}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
     <span class="label">{item.label}</span>
     <span class="chev" class:open><Icon name="chevron" size={14} /></span>
@@ -155,7 +157,7 @@
 {#snippet listRow(item)}
   <button type="button" class="item" class:rich={item.sequence !== undefined}
     disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { openSubmenu = ''; onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
     {#if item.leading !== undefined}
       <span class="leading" lang={item.lang}>{item.leading}</span>
     {:else if item.sequence !== undefined}

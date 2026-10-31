@@ -500,14 +500,16 @@
     return tab ? sessionFor(tab) : null
   }
   /** Keep a tab's Recent entry on its latest document after a layer change. @param {import('./lib/tabs.js').Tab} tab */
-  let recentTimer = 0
+  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  const recentTimers = new Map()
   function keepRecent(tab = current()) {
     if (!tab || !tab.document || !recents.some(item => item.sequence === tab.sequence)) return
-    clearTimeout(recentTimer)
-    recentTimer = setTimeout(() => {
-      if (!tabs.includes(tab) || !tab.document) return
+    clearTimeout(recentTimers.get(tab.id))
+    recentTimers.set(tab.id, setTimeout(() => {
+      recentTimers.delete(tab.id)
+      if (!tabs.some(kept => kept.id === tab.id) || !tab.document) return
       recents = remember(tab.sequence, tab.document)
-    }, 250)
+    }, 250))
   }
   /** Keep the active tab's document after the layer dialog changes its session. */
   function layerChanged() {

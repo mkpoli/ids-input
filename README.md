@@ -791,7 +791,8 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
 part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
-menus support arrow keys, Home/End and Escape.
+menus support arrow keys, Home/End and Escape; `Right` opens a submenu on its first item, `Left`
+closes it, and Escape closes the submenu before the menu.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
@@ -1139,8 +1140,8 @@ copying the location keeps a placement and opening such a link keeps the token. 
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
 chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, drafts, the theme and font choice stay in `localStorage`;
-the keys use the `ids-input:` prefix.
+the configured export’s font. Settings, drafts, the recent sequences, the theme and font choice stay
+in `localStorage`; the keys use the `ids-input:` prefix.
 
 ### Share cards
 
@@ -1163,6 +1164,7 @@ assets in `dist/`. Noto Sans CJK JP and Plangothic P1 are fetched at pinned rele
 by SHA-256; font assets ship with their license notices. Run `node tests/worker-og-runtime.mjs`
 after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
 `wrangler dev` to serve the Worker and built assets locally.
+
 
 ### Comparison with KAGE
 
