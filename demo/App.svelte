@@ -499,6 +499,16 @@
     const tab = current()
     return tab ? sessionFor(tab) : null
   }
+  /** Keep a tab's Recent entry on its latest document after a layer change. @param {import('./lib/tabs.js').Tab} tab */
+  let recentTimer = 0
+  function keepRecent(tab = current()) {
+    if (!tab || !tab.document || !recents.some(item => item.sequence === tab.sequence)) return
+    clearTimeout(recentTimer)
+    recentTimer = setTimeout(() => {
+      if (!tabs.includes(tab) || !tab.document) return
+      recents = remember(tab.sequence, tab.document)
+    }, 250)
+  }
   /** Keep the active tab's document after the layer dialog changes its session. */
   function layerChanged() {
     const tab = current()
@@ -507,6 +517,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -517,6 +528,7 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    keepRecent(tab)
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
   /** @param {boolean} undo */
@@ -544,6 +556,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
@@ -1249,7 +1262,7 @@
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[

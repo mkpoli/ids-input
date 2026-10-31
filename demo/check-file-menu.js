@@ -4,6 +4,7 @@
 //   IDS_URL=http://localhost:5199 CHROMIUM_PATH=/path/to/chrome bun demo/check-file-menu.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
+import { fromSequence, shareDocument } from '../src/document/index.js'
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 const url = process.env.IDS_URL ?? 'http://localhost:5173'
@@ -71,10 +72,23 @@ try {
   await item('Recent').focus()
   await page.keyboard.press('ArrowRight')
   assert.equal(await item('Recent').getAttribute('aria-expanded'), 'true', 'the right arrow opens the submenu')
-  await page.keyboard.press('ArrowDown')
-  assert.match(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''), /日木/, 'the down arrow enters the submenu')
+  assert.match(await page.evaluate(() => document.activeElement?.textContent?.trim() ?? ''), /日木/, 'the right arrow enters the submenu')
   await page.keyboard.press('ArrowLeft')
   assert.equal(await page.evaluate(() => document.activeElement?.textContent?.trim()), 'Recent', 'the left arrow closes the submenu')
+  await close()
+  await openFile()
+  await item('Recent').focus()
+  await page.keyboard.press('ArrowRight')
+  await page.keyboard.press('ArrowDown')
+  assert.equal(await item('Recent').getAttribute('aria-expanded'), 'false', 'leaving the submenu closes it')
+  await close()
+
+  // Switching to another menu closes the submenu.
+  await openFile()
+  await item('Recent').click()
+  await page.getByRole('menuitem', { name: 'Edit', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  assert.equal(await item('Recent').getAttribute('aria-expanded'), 'false', 'opening another menu closes the submenu')
   await close()
 
   // Saving the open sequence gives the drafts submenu its item.
@@ -86,6 +100,27 @@ try {
   assert.equal(drafts[0], '⿱日木', 'the drafts submenu lists the saved sequence')
   assert.match(drafts.at(-1) ?? '', /^Remove/, 'the drafts submenu can remove it')
   await close()
+
+  // A layer change keeps the recent document current, not the version first opened.
+  const document = fromSequence('⿰木口')
+  const docPage = await context.newPage()
+  const docErrors = []
+  docPage.on('pageerror', error => docErrors.push(error.message))
+  await docPage.goto(`${url}/?doc=${shareDocument(document)}#${encodeURIComponent('⿰木口')}`, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  await docPage.locator('.ids-field input').waitFor({ timeout: 120000 })
+  await docPage.getByRole('button', { name: 'Layers', exact: true }).click()
+  const layerDialog = docPage.getByRole('dialog')
+  await layerDialog.locator('img').waitFor({ timeout: 30000 })
+  await layerDialog.getByRole('treeitem').nth(1).click()
+  const xField = layerDialog.locator('input.num').first()
+  await xField.fill('20')
+  await xField.press('Tab')
+  await docPage.waitForTimeout(600)
+  const layerRecord = await docPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:recent') ?? '[]').find(entry => entry.sequence === '⿰木口'))
+  const matrix = layerRecord?.document?.document?.root?.children?.[0]?.transform?.[0]?.matrix
+  assert.equal(matrix?.[4], 20, 'a layer change keeps the recent document current')
+  assert.deepEqual(docErrors, [])
+  await docPage.close()
 
   assert.deepEqual(errors, [])
 

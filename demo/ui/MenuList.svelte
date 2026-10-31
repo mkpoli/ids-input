@@ -3,7 +3,7 @@
   import Icon from './Icon.svelte'
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
   import { tick, untrack } from 'svelte'
-  let { items, label, onpick, view = null } = $props()
+  let { items, label, onpick, view = null, open = true } = $props()
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
@@ -13,6 +13,7 @@
   let collapsed = $state(new Set())
   let active = $state('')
   let openSubmenu = $state('')
+  $effect(() => { if (!open) openSubmenu = '' })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -118,7 +119,7 @@
 {#snippet cardItem(item)}
   <button type="button" class="card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = ''; onpick?.(); item.run?.() }}>
     {#if item.drawing?.d}
       <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
     {:else}
@@ -154,7 +155,7 @@
 {#snippet listRow(item)}
   <button type="button" class="item" class:rich={item.sequence !== undefined}
     disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = ''; onpick?.(); item.run?.() }}>
     {#if item.leading !== undefined}
       <span class="leading" lang={item.lang}>{item.leading}</span>
     {:else if item.sequence !== undefined}
