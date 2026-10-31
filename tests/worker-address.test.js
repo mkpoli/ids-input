@@ -20,11 +20,21 @@ describe('the worker’s head', () => {
     // A sequence still being typed is a sequence.
     expect(await (await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')).text()).toContain('<title>⿰木 — IDS Workshop</title>')
   })
-  it('leaves the root, a file and a path that is no sequence with their own tags', async () => {
-    for (const path of ['/', '/compare.html', '/Buy%20cheap'])
+  it('leaves the root and a file to the assets', async () => {
+    for (const path of ['/', '/compare.html', '/robots.txt'])
       expect((await ask(`https://ids.mkpo.li${path}`)).headers.get('content-type')).toBe('text/html')
-    const junk = await ask('https://ids.mkpo.li/Buy%20cheap')
-    expect(await junk.text()).not.toContain('— IDS Workshop</title>')
+  })
+  it('answers a path that is no sequence with 404 and a way to open it as a draft', async () => {
+    const response = await ask('https://ids.mkpo.li/Buy%20cheap')
+    expect(response.status).toBe(404)
+    const body = await response.text()
+    expect(body).toContain('<code>Buy cheap</code>')
+    expect(body).toContain('href="https://ids.mkpo.li/?ids=Buy+cheap"')
+    expect(body).toContain('rel="icon"')
+    expect(body).not.toContain('og:title')
+  })
+  it('answers a document token with the app, whatever the path says', async () => {
+    expect((await ask('https://ids.mkpo.li/Buy%20cheap?doc=abc')).status).toBe(200)
   })
   it('revalidates its HTML', async () => {
     const response = await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')

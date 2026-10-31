@@ -2,6 +2,7 @@
 // stays in `?ids=`, which the path parser would eat; the fragment `#⿰亻哥` says it too. All are
 // read. A document that carries more than its sequence rides in `?doc=<base64url>`.
 import { sequenceOfPath } from '../../src/core/address.js'
+import { parse } from '../../src/core/ids.js'
 import { carriedMore, readShareDocument, shareDocument } from '../../src/document/index.js'
 
 /** The sequence a link carries, or ''. @param {Location | URL} where */
@@ -19,8 +20,9 @@ export function sequenceFrom(where) {
 export function linkTo(sequence, where, document = null) {
   const url = new URL(where.href)
   // A `.` or a `/` in the text is not a path segment as it stands: the parser drops the former as a
-  // dot segment and reads the latter back as a separator.
-  const inPath = Boolean(sequence) && !/[./]/.test(sequence)
+  // dot segment and reads the latter back as a separator. Text the IDS parser rejects is no
+  // sequence either, and a path that names no sequence answers 404.
+  const inPath = Boolean(sequence) && !/[./]/.test(sequence) && Boolean(parse(sequence, { open: true }).tree)
   if (inPath) url.searchParams.delete('ids')
   else if (sequence) url.searchParams.set('ids', sequence)
   else url.searchParams.delete('ids')
