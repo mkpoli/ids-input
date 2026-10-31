@@ -1,6 +1,6 @@
 <script>
   import { tick } from 'svelte'
-  import { characterScript } from '../adapter/character-info.js'
+  import { characterScript, SOURCE_NOTES } from '../adapter/character-info.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { translator } from './i18n.js'
 
@@ -33,9 +33,70 @@
   const code = $derived(char ? codePoint(char) : '')
   const identity = $derived(componentIdentity(char))
   /** @type {number | null} */ let uses = $state(null)
+  // A source's tooltip rests on its button, 400 ms into a hover or at once on keyboard focus, and
+  // leaves with it, so a click reaches the site rather than a covered control.
+  /** @type {{ title: string, body: string[], x: number, y: number } | null} */ let tip = $state.raw(null)
+  /** @type {HTMLElement | null} */ let tipAnchor = null
+  /** @type {ReturnType<typeof setTimeout> | undefined} */ let tipTimer
+  // What the pointer is on, then the other sites the card is built from, named once each.
+  /** @param {HTMLElement} button */
+  function tipBody(button) {
+    const source = info?.sources.find(item => item.url === button.dataset.url)
+    const sites = (info?.sourceSites ?? []).map(key => t(`info.site.${key}`))
+    const others = sites.filter(site => site !== t(`info.site.${source?.note ?? 'component'}`))
+    const note = t(`info.note.${source?.note ?? 'component'}`)
+    return [note, others.length ? t('info.sources.also', { sites: new Intl.ListFormat(locale, { type: 'conjunction' }).format(others) }) : ''].filter(Boolean)
+  }
+  /** @param {HTMLElement} button */
+  async function tipOpen(button) {
+    tip = { title: t('info.sources.open', { label: button.dataset.label ?? '' }), body: tipBody(button), x: 0, y: 0 }
+    tipAnchor = button
+    await tick(); tipPlace(button)
+  }
+  /** @type {HTMLElement | null} */ let tipNode = $state.raw(null)
+  /** The pointer on the line being read, which keeps it up while it stays there. @param {PointerEvent} event */
+  function tipHover(event) {
+    if (!(event.target instanceof Element) || !tipAnchor || !tip) return
+    // Moving between the button and its note, or between the note's lines, keeps it.
+    if (tipAnchor.contains(event.target) || tipNode?.contains(event.target)) keep()
+    else tipClose()
+  }
+  /** @param {HTMLElement} button */
+  function tipPlace(button) {
+    if (!tip || !tipNode) return
+    const box = button.getBoundingClientRect(), note = tipNode.getBoundingClientRect()
+    const gap = 8, fits = (/** @type {number} */ x) => x >= 8 && x + note.width <= innerWidth - 8
+    const y = Math.max(8, Math.min(box.top, innerHeight - note.height - 8))
+    // Beside the open card, on the side with room, clear of the card's own content.
+    const card = panel?.getBoundingClientRect()
+    const right = Math.max(box.right, card?.right ?? 0) + gap, left = Math.min(box.left, card?.left ?? innerWidth) - gap - note.width
+    tip = { ...tip, x: fits(right) || !fits(left) ? Math.max(8, Math.min(right, innerWidth - note.width - 8)) : left, y }
+  }
+  /** @param {FocusEvent & { currentTarget: HTMLElement }} event */
+  function tipFocus(event) {
+    if (!event.currentTarget.matches(':focus-visible')) return
+    clearTimeout(tipTimer)
+    tipTimer = setTimeout(() => tipOpen(/** @type {HTMLElement} */ (event.currentTarget)), 0)
+  }
+  /** @param {PointerEvent & { currentTarget: HTMLElement }} event */
+  function tipEnter(event) {
+    const button = event.currentTarget
+    clearTimeout(tipTimer)
+    tipTimer = setTimeout(() => tipOpen(button), 400)
+  }
+  /** @param {FocusEvent | PointerEvent} event */
+  function tipHide(event) {
+    if (!tipAnchor) return
+    // A focus that moves within the same button is that button's business.
+    if (event.type === 'focusout' && /** @type {FocusEvent} */ (event).relatedTarget instanceof Node && tipAnchor.contains(/** @type {Node} */ (/** @type {FocusEvent} */ (event).relatedTarget))) return
+    // The pointer leaving a button that still has focus keeps the note up.
+    if (event.type === 'pointerleave' && tipAnchor === document.activeElement) return
+    tipClose()
+  }
+  function tipClose() { clearTimeout(tipTimer); tipTimer = undefined; tip = null; tipAnchor = null }
 
   function close() {
-    clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); clearTimeout(copyTimer); copyTimer = undefined
+    clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); clearTimeout(copyTimer); copyTimer = undefined; tipClose()
     copied = false; copyFailed = false; controller?.abort(); generation++
     if (anchor) {
       if (savedTitle !== null && anchor.dataset.character === char && !anchor.hasAttribute('title')) anchor.setAttribute('title', savedTitle)
@@ -173,6 +234,7 @@
   function key(event) {
     if (!open) return
     if (event.key === 'Escape') {
+      if (tip) { tipClose(); event.preventDefault(); event.stopImmediatePropagation(); return }
       const restore = panel?.contains(document.activeElement)
       const element = anchor
       close(); event.preventDefault(); event.stopImmediatePropagation()
@@ -334,9 +396,25 @@
           {#each related as row}<button type="button" class="relation" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: row.char })}${row.meaning ? ` · ${row.meaning}` : ''}`} onclick={() => pick(row.char)}><span class="related-glyph" lang={kind === 'tangut' || kind === 'usage' ? 'txg' : 'zh'}>{row.char}</span>{#if row.meaning && kind !== 'han'}<span class="meaning" lang="en">{row.meaning}</span>{/if}</button>{/each}
         </div></section>{/if}
       {/each}
+      {#if info.sources.length}
+        <section class="sources">
+          <p class="label" id={`${uid}-sources`}>{t('info.sources')}</p>
+          <div class="relations" role="group" aria-labelledby={`${uid}-sources`}>
+            {#each info.sources as source (source.url)}
+              <span class="source">
+                <button type="button" class="chip" data-label={source.label} data-url={source.url}
+                  aria-label={t('info.sources.open', { label: source.label })} onfocusin={tipFocus} onpointerenter={tipEnter} onpointerleave={tipHide} onfocusout={tipHide} onclick={() => window.open(source.url, '_blank', 'noopener,noreferrer')}>{t(`info.site.${source.note ?? 'component'}`)}<span class="chip-icon" aria-hidden="true">↗</span></button>
+              </span>
+            {/each}
+          </div>
+        </section>
+      {/if}
     {/if}
   {/if}
 </div>
+{#if open && tip}
+  <div class="ids-info-tip" role="tooltip" bind:this={tipNode} onpointermove={tipHover} style:left={`${tip.x}px`} style:top={`${tip.y}px`}><span class="tip-title">{tip.title}</span>{#each tip.body as line}<span class="tip-body">{line}</span>{/each}</div>
+{/if}
 
 <style>
   .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#d8d8de,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#696973,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif}
@@ -348,4 +426,7 @@
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
   .identity-sources{margin:8px 0 12px;font-size:11px;color:var(--info-muted)}.identity-sources summary{cursor:pointer}.identity-sources a{display:block;margin-top:4px;color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
+  .sources{margin-top:12px}.sources .relations{gap:6px}.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--ids-line,light-dark(#d8d8de,#484850));border-radius:999px;background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038));color:inherit;font:11.5px/1.4 inherit;cursor:pointer}.chip:hover{border-color:var(--ids-accent,#608cf0)}.chip-icon{color:var(--info-muted)}
+  .ids-info-tip{position:fixed;z-index:101;box-sizing:border-box;width:max-content;max-width:min(320px,calc(100vw - 16px));padding:8px 10px;border:1px solid light-dark(#d8d8de,#484850);border-radius:8px;background:light-dark(#fff,#303038);color:light-dark(#24242b,#f0f0f5);box-shadow:0 4px 16px #0003;font:12px/1.45 system-ui,sans-serif}
+  .ids-info-tip span{display:block}.tip-title{color:light-dark(#696973,#b4b4c0);font-size:11px;margin-bottom:2px}.tip-body+.tip-body{margin-top:4px;color:light-dark(#696973,#b4b4c0)}
 </style>
