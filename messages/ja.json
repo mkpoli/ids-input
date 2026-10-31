@@ -34,6 +34,7 @@
   "ids.draw.none": "似たものが見つかりません。",
   "ids.draw.open": "部品や文字を手書きで探す",
   "ids.draw.parts": "部品",
+  "ids.draw.tangut": "西夏文字の部品",
   "ids.draw.preparing": "字形を準備しています…",
   "ids.draw.results": "近い部品",
   "ids.draw.undo": "一画戻す",

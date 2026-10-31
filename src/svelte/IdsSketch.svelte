@@ -33,6 +33,10 @@
   let characters = $state.raw([])
   /** @type {{ part: string, strokes: number | null }[]} */
   let results = $state.raw([])
+  /** @type {{ part: string, strokes: number | null }[]} */
+  let tangut = $state.raw([])
+  /** Tangut parts are ranked apart so they do not bury Han components. */
+  const TANGUT = /[\p{Script=Tangut}]/u
   let preparing = $state(true)
   let progress = $state(/** @type {{ done: number, total: number }} */ ({ done: 0, total: 0 }))
   let failed = $state(false)
@@ -116,6 +120,7 @@
     clearTimeout(timer)
     characters = []
     results = []
+    tangut = []
     asks++
     looked = false
     strokes = [...strokes, [point(event)]]
@@ -177,14 +182,14 @@
 
   function schedule() {
     clearTimeout(timer)
-    if (!strokes.length) { characters = []; results = []; return }
+    if (!strokes.length) { characters = []; results = []; tangut = []; return }
     timer = setTimeout(recognize, 220)
   }
 
   /** The closest characters and parts to the strokes, after the palette's shapes are ready. */
   function recognize() {
-    if (!strokes.length) { characters = []; results = []; searching = false; return }
-    if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; searching = false; return }
+    if (!strokes.length) { characters = []; results = []; tangut = []; searching = false; return }
+    if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; tangut = []; searching = false; return }
     searching = true
     characters = []
     const id = ++asks
@@ -194,7 +199,10 @@
     compute = setTimeout(async () => {
       if (id !== asks) return
       const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: templates.length, strokes: strokesAt.length }) : []
-      results = ranked.map(template => ({ part: template.part, strokes: template.strokes }))
+      /** @param {import('./sketch-templates.js').SketchTemplate} template */
+      const isTangut = template => TANGUT.test(template.part)
+      results = ranked.filter(template => !isTangut(template)).map(template => ({ part: template.part, strokes: template.strokes }))
+      tangut = ranked.filter(isTangut).map(template => ({ part: template.part, strokes: template.strokes }))
       looked = true
       searching = false
       const recognizeDrawing = adapter.recognizeDrawing
@@ -210,7 +218,7 @@
       if (id !== asks) return
       characters = [...new Set(drawn)].map(part => ({ part }))
       const seen = new Set(characters.map(character => character.part))
-      results = ranked.filter(template => !seen.has(template.part)).map(template => ({ part: template.part, strokes: template.strokes }))
+      results = ranked.filter(template => !seen.has(template.part) && !isTangut(template)).map(template => ({ part: template.part, strokes: template.strokes }))
     }, 0)
   }
 
@@ -219,6 +227,7 @@
     strokes = strokes.slice(0, -1)
     characters = []
     results = []
+    tangut = []
     looked = false
     asks++
     paint()
@@ -229,6 +238,7 @@
     strokes = []
     characters = []
     results = []
+    tangut = []
     looked = false
     asks++
     clearTimeout(timer)
@@ -251,7 +261,7 @@
     event.stopPropagation()
     onclose()
   }
-  const total = $derived(characters.length + results.length)
+  const total = $derived(characters.length + results.length + tangut.length)
   const status = $derived(preparing ? t('ids.draw.preparing') : failed ? t('ids.draw.failed')
     : searching ? t('ids.from.searching') : total ? t('ids.search.count', { count: total })
     : looked && strokes.length ? t('ids.draw.none') : '')
@@ -285,6 +295,17 @@
     <div class="found" role="group" aria-label={t('ids.draw.results')}>
       {#each results as result (result.part)}
         <button type="button" class="hit" disabled={disabled} lang="ja"
+          title={`${result.part}${result.strokes === null ? '' : ` · ${t('parts.strokeCount', { count: result.strokes })}`}`}
+          draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
+          onclick={() => take(result.part)}><span class="char">{result.part}</span></button>
+      {/each}
+    </div>
+  {/if}
+  {#if tangut.length}
+    <p class="group">{t('ids.draw.tangut')}</p>
+    <div class="found" role="group" aria-label={t('ids.draw.tangut')}>
+      {#each tangut as result (result.part)}
+        <button type="button" class="hit" disabled={disabled} lang="txg"
           title={`${result.part}${result.strokes === null ? '' : ` · ${t('parts.strokeCount', { count: result.strokes })}`}`}
           draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
           onclick={() => take(result.part)}><span class="char">{result.part}</span></button>

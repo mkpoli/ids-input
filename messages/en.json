@@ -34,6 +34,7 @@
   "ids.draw.none": "Nothing looks like that.",
   "ids.draw.open": "Draw a part or character",
   "ids.draw.parts": "Parts",
+  "ids.draw.tangut": "Tangut parts",
   "ids.draw.preparing": "Preparing shapes…",
   "ids.draw.results": "Similar parts",
   "ids.draw.undo": "Undo stroke",

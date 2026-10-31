@@ -718,7 +718,8 @@ from the other's and by a coarse histogram of stroke directions. The match is ap
 parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
 similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison,
 `readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
-the fallback from the page's fonts.
+the fallback from the page's fonts. Tangut parts are listed in their own group after the Han parts,
+so they do not push Han components down.
 
 `adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first,
 from strokes in percentage coordinates. The workshop combines two classifiers in every locale:
