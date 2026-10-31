@@ -982,8 +982,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   見財, so the composer does not squeeze 有 into a thin band. It also photographs 學好孔孟, whose
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
   唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
-  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 and 兩's
-  冂从; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
+  矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with
+  両's bottom, 冂 around 山; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
@@ -1120,6 +1120,28 @@ text and Sans/Serif bundled component forms. Other composed outlines use the con
 font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys use the
 `ids-input:` prefix.
 
+### Share cards
+
+A share link at `/<sequence>` carries preview tags for its sequence, matching character and
+Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. The preview image
+at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic description sequence
+and a separate Unicode caption. Text size follows the sequence length; longer sequences wrap to
+at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
+use glyphs from the bundled GenZui Sans font.
+
+The Cloudflare Worker serves preview pages and images alongside the workshop's static assets.
+Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
+An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
+Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
+Preview hosts send `X-Robots-Tag: noindex`; canonical metadata points to `https://ids.mkpo.li`.
+
+`bun run build:site` builds the workshop, prepares the card fonts and outlines with
+`scripts/og-assets.mjs`, and bundles the Worker and WASM into `dist-worker/`, outside the static
+assets in `dist/`. Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and checked
+by SHA-256; font assets ship with their license notices. Run `node tests/worker-og-runtime.mjs`
+after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
+`wrangler dev` to serve the Worker and built assets locally.
+
 ### Comparison with KAGE
 
 `/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS in three
@@ -1247,11 +1269,14 @@ bun run check           # tsrs and svelte-check
 bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:site      # assets into dist/, share-card Worker into dist-worker/
+bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
-CI only builds the demo and deploys it; the checks above stay local.
+CI runs verification and builds the workshop and share-card Worker. Production deployment is
+gated to `main` through `.github/workflows/deploy.yml`.
 
 ### The demo's browser checks
 
@@ -1270,7 +1295,7 @@ in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`.
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
 
 The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
-`.github/workflows/deploy.yml`; a pull request uploads a preview version on its own alias. Both need
+`.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs
 the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
 reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
 request to the assets.
