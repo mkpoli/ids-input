@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void } | { heading: string } | { separator: true }} Item */
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void, submenu?: Item[] } | { heading: string } | { separator: true }} Item */
 </script>
 
 <script>
@@ -29,6 +29,10 @@
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
   let active = $state('')
+  // The label of the one submenu shown inline, or ''.
+  // The index of the one submenu shown inline, or -1.
+  let openSubmenu = $state(-1)
+  $effect(() => { if (!open) openSubmenu = -1 })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {Item} item */
   function matches(item) {
@@ -113,10 +117,25 @@
     query = ''
     mode = 'all'
     collapsed = new Set()
+    openSubmenu = -1
     setOpen(true)
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
-  function hide() { setOpen(false); trigger?.focus() }
+  function hide() { openSubmenu = -1; setOpen(false); trigger?.focus() }
+  /** Open one submenu inline, keep it in the menu's scrollport, and optionally take its first item. @param {number} i @param {boolean} [focus] */
+  async function expand(i, focus = false) {
+    openSubmenu = i
+    await tick()
+    const group = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu'))
+    if (!group) return
+    group.scrollIntoView({ block: 'nearest' })
+    if (focus) /** @type {HTMLElement | null} */ (group.querySelector('[role="menuitem"]:not([disabled])'))?.focus()
+  }
+  /** @param {number} i */
+  function toggleSubmenu(i) {
+    if (openSubmenu === i) openSubmenu = -1
+    else void expand(i)
+  }
   /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
   export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
   // A wide menu can start left of the window when its trigger sits near that edge, as a short
@@ -143,7 +162,31 @@
     if (event.target instanceof HTMLInputElement && event.key !== 'Escape') return
     const all = enabled()
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
+    if (event.key === 'ArrowLeft' && openSubmenu >= 0) {
+      const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+      const group = box?.querySelector('.submenu')
+      if (parent === document.activeElement || group?.contains(document.activeElement)) {
+        event.preventDefault()
+        openSubmenu = -1
+        parent?.focus()
+        return
+      }
+      openSubmenu = -1
+    }
+    if (event.key === 'ArrowRight' && openSubmenu >= 0 && box?.querySelector('.submenu')?.contains(document.activeElement)) {
+      event.preventDefault()
+      return
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (openSubmenu >= 0) {
+        const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+        openSubmenu = -1
+        parent?.focus()
+      } else hide()
+      return
+    }
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
     else if (event.key === 'ArrowUp') { event.preventDefault(); all[(at - 1 + all.length) % all.length]?.focus() }
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); all.at(event.key === 'End' ? -1 : 0)?.focus() }
@@ -178,6 +221,28 @@
   </button>
 {/snippet}
 
+<!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group, which is
+     not a popup, so it carries no aria-haspopup. -->
+{#snippet submenuRow(item, i)}
+  {@const open = openSubmenu === i}
+  <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+    disabled={item.disabled} onclick={() => toggleSubmenu(i)}
+    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(i, true) } }}>
+    <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    <span class="label">{item.label}</span>
+    <span class="chev" class:open><Icon name="chevron" size={14} /></span>
+  </button>
+  {#if open}
+    <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
+      {#each item.submenu as sub, j (j)}
+        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
+        {:else}{@render listRow(sub)}{/if}
+      {/each}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet listRow(item)}
   <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
     class:rich={item.sequence !== undefined} disabled={item.disabled}
@@ -208,7 +273,13 @@
     {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}{#if !menubar}<Icon name="chevron" size={14} />{/if}{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
-    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
+    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
+      onfocusin={event => {
+        if (openSubmenu < 0) return
+        const parent = box?.querySelector('.submenu-item[aria-expanded="true"]')
+        const group = box?.querySelector('.submenu')
+        if (parent !== event.target && !group?.contains(/** @type {Node} */ (event.target))) openSubmenu = -1
+      }}>
       {#if view}
         <div class="menu-head">
           <div class="views" role="group" aria-label={label}>
@@ -247,6 +318,7 @@
         {#each items as item, i (i)}
           {#if 'separator' in item}<div class="sep" role="separator"></div>
           {:else if 'heading' in item}<p class="heading">{item.heading}</p>
+          {:else if 'submenu' in item && item.submenu}{@render submenuRow(item, i)}
           {:else}{@render listRow(item)}{/if}
         {/each}
       {/if}
@@ -272,6 +344,11 @@
   .item:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
   .item.rich:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .item:disabled{opacity:.45;cursor:default}
+  .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--muted);transform:rotate(-90deg);transition:transform .12s}
+  .item.submenu-item .chev.open{transform:none}
+  .submenu{margin:0 0 4px 26px;padding:2px 0 2px 6px;border-left:1px solid var(--line)}
+  .submenu .item{padding:6px 8px;font-size:13px;border-radius:7px}
+  .submenu .sep{margin:4px 2px}
   .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}

@@ -1,9 +1,10 @@
 <script>
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
-  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null }} */
-  import { untrack } from 'svelte'
-  let { items, label, onpick, view = null } = $props()
+  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean }} */
+  import { tick, untrack } from 'svelte'
+  let { items, label, onpick, view = null, open = true } = $props()
+  const uid = $props.id()
   /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
   /** @type {'all' | 'encoded' | 'unencoded'} */
@@ -11,6 +12,9 @@
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
   let active = $state('')
+  // The index of the one submenu shown inline, or -1.
+  let openSubmenu = $state(-1)
+  $effect(() => { if (!open) openSubmenu = -1 })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -43,6 +47,16 @@
     if (next.has(heading)) next.delete(heading)
     else next.add(heading)
     collapsed = next
+  }
+  /** @param {number} i */
+  function expand(i) {
+    openSubmenu = i
+    tick().then(() => root?.querySelector('.submenu')?.scrollIntoView({ block: 'nearest' }))
+  }
+  /** @param {number} i */
+  function toggleSubmenu(i) {
+    if (openSubmenu === i) openSubmenu = -1
+    else expand(i)
   }
   /** @param {string} heading */
   function jump(heading) {
@@ -106,7 +120,7 @@
 {#snippet cardItem(item)}
   <button type="button" class="card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
     {#if item.drawing?.d}
       <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
     {:else}
@@ -120,10 +134,30 @@
   </button>
 {/snippet}
 
+<!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group. -->
+{#snippet submenuRow(item, i)}
+  {@const open = openSubmenu === i}
+  <button type="button" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+    disabled={item.disabled} onclick={() => toggleSubmenu(i)}>
+    <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    <span class="label">{item.label}</span>
+    <span class="chev" class:open><Icon name="chevron" size={14} /></span>
+  </button>
+  {#if open}
+    <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
+      {#each item.submenu as sub, j (j)}
+        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
+        {:else}{@render listRow(sub)}{/if}
+      {/each}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet listRow(item)}
   <button type="button" class="item" class:rich={item.sequence !== undefined}
     disabled={item.disabled} aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
-    title={item.hint} onclick={() => { onpick?.(); item.run?.() }}>
+    title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
     {#if item.leading !== undefined}
       <span class="leading" lang={item.lang}>{item.leading}</span>
     {:else if item.sequence !== undefined}
@@ -177,6 +211,7 @@
     {#each items as item, i (i)}
       {#if 'separator' in item}<div class="sep" role="separator"></div>
       {:else if 'heading' in item}<p class="heading">{item.heading}</p>
+      {:else if 'submenu' in item && item.submenu}{@render submenuRow(item, i)}
       {:else}{@render listRow(item)}{/if}
     {/each}
   {/if}
@@ -191,6 +226,11 @@
   .item:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
   .item.rich:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .item:disabled{opacity:.45;cursor:default}
+  .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--muted);transform:rotate(-90deg);transition:transform .12s}
+  .item.submenu-item .chev.open{transform:none}
+  .submenu{margin:0 0 4px 26px;padding:2px 0 2px 6px;border-left:1px solid var(--line)}
+  .submenu .item{min-height:36px;padding:5px 8px;font-size:13.5px}
+  .submenu .sep{margin:4px 2px}
   .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}

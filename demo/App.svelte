@@ -39,6 +39,7 @@
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
@@ -402,6 +403,9 @@
    * @typedef {{ tabs: { tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[], active: string | null, fresh?: string }} ClosedGroup
    * @type {ClosedGroup[]} */
   let closedGroups = $state.raw([])
+  // Sequences opened in this browser, newest first, for File -> Recent.
+  let recents = $state(readRecent())
+  if (linked) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -498,6 +502,18 @@
     const tab = current()
     return tab ? sessionFor(tab) : null
   }
+  /** Keep a tab's Recent entry on its latest document after a layer change. @param {import('./lib/tabs.js').Tab} tab */
+  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  const recentTimers = new Map()
+  function keepRecent(tab = current()) {
+    if (!tab || !tab.document || !recents.some(item => item.sequence === tab.sequence)) return
+    clearTimeout(recentTimers.get(tab.id))
+    recentTimers.set(tab.id, setTimeout(() => {
+      recentTimers.delete(tab.id)
+      if (!tabs.some(kept => kept.id === tab.id) || !tab.document) return
+      recents = remember(tab.sequence, tab.document)
+    }, 250))
+  }
   /** Keep the active tab's document after the layer dialog changes its session. */
   function layerChanged() {
     const tab = current()
@@ -506,6 +522,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -516,6 +533,7 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    keepRecent(tab)
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
   /** @param {boolean} undo */
@@ -543,6 +561,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
@@ -652,6 +671,7 @@
     toast = null
     editor.reset(sequence)
     adjusting = false
+    if (tab.sequence && !EMPTY_MARKS.includes(tab.sequence)) recents = remember(tab.sequence)
     store()
     return tab
   }
@@ -670,7 +690,11 @@
   function openSequence(sequence) {
     const text = canonical(sequence)
     const open = tabs.find(tab => tab.sequence === text)
-    if (open) { activate(open.id); return }
+    if (open) {
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
+      activate(open.id)
+      return
+    }
     const tab = current()
     // Only an empty tab is reused: an unreadable draft, or one with history, keeps its tab.
     if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
@@ -678,16 +702,39 @@
       editor.reset(text)
       adjusting = false
       if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
     }
     addTab(text)
+  }
+  /** Open a recent sequence, with its document when it has one. @param {import('./lib/recent.js').Recent} record */
+  function openRecent(record) {
+    // A recent document opens its own tab; a tab with another document for the same sequence is
+    // not the one this entry stands for.
+    const open = tabs.find(tab => tab.sequence === record.sequence
+      && (!record.document || sameShare(tab.document?.document, record.document.document)))
+    if (open) {
+      recents = remember(record.sequence, open.document)
+      activate(open.id)
+      return
+    }
+    if (record.document) {
+      flush()
+      const tab = makeTab(record.sequence, record.sequence, record.document)
+      tabs.push(tab)
+      recents = remember(record.sequence, tab.document)
+      activate(tab.id)
+      return
+    }
+    openSequence(record.sequence)
   }
   /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
   function openDraft(draft) {
     flush()
     const tab = makeTab(draft.sequence, draft.sequence, draft.document)
     tabs.push(tab)
+    recents = remember(tab.sequence, tab.document)
     activate(tab.id)
   }
   /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
@@ -850,6 +897,7 @@
       const session = createDocumentSession(document)
       const tab = makeTab(toSequence(document.root), toSequence(document.root), sessionRecord(session))
       tabs.push(tab)
+      recents = remember(tab.sequence, tab.document)
       activate(tab.id)
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
@@ -887,21 +935,27 @@
     if (!event.relatedTarget) dropping = false
   }
 
+  const recentItems = $derived(recents.map(record => ({ label: record.sequence, lang: 'ja', hint: record.sequence, run: () => openRecent(record) })))
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
-    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
     { label: t('app.file.title'), disabled: editor.tree === null, run: openTitle },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.file.recent'), icon: 'history', disabled: !recentItems.length, submenu: recentItems },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
-    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
-    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !canExport, run: () => { exportPanel?.save(format) } })),
-    ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
+    { label: t('app.file.exportAs'), icon: 'download', disabled: !canExport, submenu: /** @type {const} */ (['svg', 'png']).map(format => ({ label: format.toUpperCase(), disabled: !canExport, run: () => { exportPanel?.save(format) } })) },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
+    { label: t('app.drafts.heading'), icon: 'folder', disabled: !drafts.length, submenu: drafts.length ? [
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
-      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
+      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } },
+    ] : [] },
   ])
 
   const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
@@ -1257,7 +1311,7 @@
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
