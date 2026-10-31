@@ -801,6 +801,25 @@ describe('a stack under a cover drawn clear of itself', () => {
     open(stack, a, b, c)
     expect(a.target[3]).toBe(700)
     expect(c.target[1]).toBe(0)
+    // Both bands opened: the first to the full 63, the second to what the middle operand had
+    // left of its budget after the first.
+    expect(band(a)[0] - band(b)[1]).toBeCloseTo(63)
+    expect(band(b)[0] - band(c)[1]).toBeCloseTo(49)
+  })
+
+  it('gives a middle operand one budget however many neighbours ask of it', () => {
+    // Crowded on both sides: the middle may give up 15% of its 200 in all, not 15% to each.
+    const a = part(0, [100, 410, 900, 700]), b = part(1, [100, 200, 900, 400]), c = part(2, [100, 0, 900, 190])
+    open(stack, a, b, c)
+    expect(400 - band(b)[1] + (band(b)[0] - 200)).toBeCloseTo(30)
+  })
+
+  it('leaves a pair whose boxes already cross, which has no band to open', () => {
+    // A head dipping past the top of the operand under it: drawing both back opens nothing.
+    const head = part(0, [100, 380, 900, 700]), foot = part(1, [100, 0, 900, 400])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)).toEqual([380, 700])
+    expect(band(foot)).toEqual([0, 400])
   })
 
   it('leaves operands already standing clear of one another', () => {
@@ -810,7 +829,7 @@ describe('a stack under a cover drawn clear of itself', () => {
     expect(band(foot)).toEqual([0, 300])
   })
 
-  it('takes no more than a seventh of an operand’s own height to open a band', () => {
+  it('takes no more than a sixth of an operand’s own height to open a band', () => {
     // A thin bar beside a tall neighbour: it may give up 15% of its 60, not half the shortfall.
     const head = part(0, [100, 650, 900, 710]), foot = part(1, [100, 0, 900, 640])
     open(['⿱', '一', '衣'], head, foot)
@@ -824,6 +843,17 @@ describe('a stack under a cover drawn clear of itself', () => {
     const apex = makePart([rect(480, 440, 520, 620), rect(100, 0, 900, 440)])
     const foot = { ...placed(apex, apex.box, apex.box, 0, 'test'), branch: [1] }
     open(['⿱', '一', '八'], bar, foot)
+    expect(bar.target[1]).toBe(640)
+    expect(foot.target[3]).toBe(620)
+  })
+
+  it('leaves the band the join is about to close', () => {
+    // A foot broad enough across its top for the band rule (0.7) but not flat-topped (under 0.9),
+    // its donor drawn overlapping, under a bar: the join owns this pair, so the band stays shut.
+    const bar = part(0, [100, 640, 900, 700])
+    const shape = makePart([rect(220, 540, 780, 620), rect(100, 0, 900, 500)])
+    const foot = { ...placed(shape, shape.box, shape.box, 0, 'test'), branch: [1], gap: -36 }
+    open(['⿱', '一', '衣'], bar, foot)
     expect(bar.target[1]).toBe(640)
     expect(foot.target[3]).toBe(620)
   })
@@ -862,6 +892,13 @@ describe('the foot of a stack under a cover', () => {
     join(bar, foot)
     expect(top(foot)).toBe(460)
     expect(foot.target[1]).toBe(0)
+  })
+
+  it('leaves a foot hanging from an operand with a body of its own rather than from a bar', () => {
+    // The 火 of ⿳臼火心 is no missing middle stroke: a foot below it hangs, it does not join.
+    const body = part(1, 48, [50, 400, 950, 700]), foot = tail(2, -36, 0, 340)
+    join(body, foot)
+    expect(top(foot)).toBe(340)
   })
 
   it('leaves a foot its donor drew clear of its neighbour', () => {
