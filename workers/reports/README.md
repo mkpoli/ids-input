@@ -8,7 +8,8 @@ account: the Worker takes what the browser collected, files it as an issue on
 
 ### `POST /`
 
-`multipart/form-data`, answered as JSON. Every field is a string.
+`multipart/form-data`, answered as JSON. Every field is a string part except `image` and
+`documentFile`, which have to be file parts; a string sent for either is ignored.
 
 | Field | Required | Limit | What it is |
 | --- | --- | --- | --- |
@@ -69,7 +70,8 @@ Only `https://ids.mkpo.li`, its preview versions on `*.workers.dev` and any port
 The issue body holds the symptom, the sequence in a fenced block, the share link, the drawing, a
 table of the environment, and the console output, the document and the reporter folded into
 `<details>`. Every submitted value is escaped for Markdown first, so nothing a reporter writes can
-format the issue or arrive as HTML.
+format the issue or arrive as HTML. A `@` is followed by a zero-width space, since a backslash does
+not stop GitHub notifying the account a symptom happens to name.
 
 An issue body may hold 65536 characters, which a 200 KB document would overrun on its own, so each
 part the reporter controls is cut to a share of that budget: 20000 characters of the document, 8000
@@ -141,8 +143,9 @@ is enough. Two repository secrets have to exist first:
 
 | Secret | What it is |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit** and **Workers KV Storage: Edit** on the account |
+| `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit**, **Workers KV Storage: Edit** and, for the custom domain, **Workers Routes: Edit** on the zone |
 | `REPORTS_GITHUB_TOKEN` | The Worker's fine-grained `GITHUB_TOKEN`, re-applied on every deploy |
 
-Until both are set the job skips itself and the deploy stays manual. The Worker answers on
+Until both are set the job skips itself and the deploy stays manual; the token is re-applied before
+each deploy, so a version never goes out without it. The Worker answers on
 `report.ids.mkpo.li` (a custom domain in the config) and on `ids-reports.mkpoli.workers.dev`.
