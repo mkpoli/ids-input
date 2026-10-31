@@ -7,6 +7,8 @@
 //   bun run check:demo -- --retries 2      more attempts for a check that fails (one by default)
 //   bun run check:demo -- --skip gongche   leave the slow or focused checks out (comma separated)
 //   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (15 by default)
+//   bun run check:demo -- --timeout 30     the page timeout each check gets in seconds (120 by default;
+//                                          0 keeps whatever the check file asks for)
 //
 // The checks type into the workshop and open its fixture pages, and `vite build` leaves those pages
 // out of `dist/`, so a static server reports failures that are not in the app. This starts
@@ -26,6 +28,7 @@ const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? pr
 const only = arg('--only')
 const skip = (arg('--skip') ?? '').split(',').filter(Boolean)
 const watchdogMinutes = Number(arg('--watchdog') ?? 15)
+const timeout = Number(arg('--timeout') ?? 120)
 const port = Number(arg('--port') ?? 5186)
 const retries = Number(arg('--retries') ?? 1)
 const root = join(import.meta.dirname, '..')
@@ -64,16 +67,19 @@ let url = ''
 /** @type {import('node:child_process').ChildProcess | undefined} */
 let server
 let log = ''
-const stop = () => { if (server && server.exitCode === null) server.kill('SIGTERM') }
+// `bun run dev` starts vite as its own child, so the whole process group goes, not just the wrapper.
+const stop = () => { if (server?.pid) { try { process.kill(-server.pid, 'SIGKILL') } catch { /* already gone */ } } }
 process.on('exit', stop)
 process.on('SIGINT', () => { stop(); process.exit(130) })
+// A killed runner must not leave its dev server behind on the port.
+process.on('SIGTERM', () => { stop(); process.exit(143) })
 
 /** Starts the dev server and learns the address it answered on. Vite takes the next free port when
  *  the one asked for is held, so the runner reads the address from its output instead of assuming
  *  it; a restart therefore cannot collide with another session's server. */
 async function start() {
   log = ''
-  server = spawn('bun', ['run', 'dev', '--', '--port', String(port)], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] })
+  server = spawn('bun', ['run', 'dev', '--', '--port', String(port)], { cwd: root, detached: true, stdio: ['ignore', 'pipe', 'pipe'] })
   server.stdout.on('data', chunk => { log += chunk })
   server.stderr.on('data', chunk => { log += chunk })
   for (let i = 0; i < 180; i++) {
@@ -108,9 +114,10 @@ async function warm() {
  *  stopped after `limit` seconds, so one wedged browser cannot hold the whole run. */
 function run(file, limit = 600) {
   return new Promise(resolve => {
-    const child = spawn('bun', [join('demo', file)], {
+    const preload = join(root, 'scripts', 'check-demo-preload.mjs')
+    const child = spawn('bun', ['--preload', preload, join('demo', file)], {
       cwd: root,
-      env: { ...process.env, IDS_URL: url, CHROMIUM_PATH: chromium },
+      env: { ...process.env, IDS_URL: url, CHROMIUM_PATH: chromium, CHECK_TIMEOUT: String(timeout * 1000) },
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     let output = ''
@@ -173,3 +180,5 @@ if (failed.length) {
   process.exit(1)
 }
 console.log(`All ${checks.length} checks passed.`)
+// The dev server's pipes keep the event loop alive; the run is over either way.
+process.exit(0)
