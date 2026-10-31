@@ -151,6 +151,17 @@ export function watchConsole() {
     } catch { /* A console that will not be wrapped leaves the ring to the handlers below. */ }
   }
   addEventListener('error', event => {
+    // A failed <img> or <script> load is a plain event naming its element, not an ErrorEvent.
+    if (!(event instanceof ErrorEvent)) {
+      const target = /** @type {Element | null} */ (event.target)
+      const source = target instanceof HTMLImageElement || target instanceof HTMLMediaElement
+        ? target.currentSrc || target.src
+        : target instanceof HTMLScriptElement || target instanceof HTMLSourceElement
+          ? target.src
+          : target instanceof HTMLLinkElement ? target.href : ''
+      record('error', `resource failed${source ? ` ${logHref(source)}` : ''}`)
+      return
+    }
     const where = event.filename ? ` (${logHref(event.filename)}:${event.lineno})` : ''
     record('error', `${event.message || say(event.error) || 'error'}${where}`)
   }, true)
