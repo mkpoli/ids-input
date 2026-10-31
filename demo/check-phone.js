@@ -20,11 +20,19 @@ try {
   assert.equal(await phone.locator('.middle').isVisible(), false)
   await phone.close()
 
+  const tablet = await browser.newPage({ viewport: { width: 768, height: 1024 } })
+  await tablet.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
+  await tablet.locator('.ids-preview[data-step="composed"]').waitFor({ state: 'attached', timeout: 30000 })
+  assert.equal(await tablet.locator('.phone-tabs').isVisible(), true, 'the single-column tablet has tabs')
+  assert.equal(await tablet.locator('.pane.input').isVisible(), true)
+  assert.equal(await tablet.locator('.pane.output').isVisible(), false)
+  await tablet.close()
+
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await desktop.goto(process.env.IDS_URL ?? 'http://localhost:5186', { waitUntil: 'domcontentloaded' })
   await desktop.locator('.ids-preview[data-step="composed"]').waitFor({ state: 'attached', timeout: 30000 })
   assert.equal(await desktop.locator('.phone-tabs').isVisible(), false, 'desktop has no phone tabs')
   for (const selector of ['.pane.input', '.middle', '.pane.output']) assert.equal(await desktop.locator(selector).isVisible(), true, `${selector} stays visible on desktop`)
   await desktop.close()
-  console.log('PASS phone tabs switch Input, Compose and Output; desktop keeps all columns')
+  console.log('PASS phone/tablet tabs switch Input, Compose and Output; desktop keeps all columns')
 } finally { await browser.close() }
