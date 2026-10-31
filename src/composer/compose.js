@@ -215,16 +215,16 @@ export class Composer {
   excluded = ch => this.exclude.has(ch)
   slot = (op, i) => this.SLOTS[op] ? this.SLOTS[op][i] : `${op}${i}`
   /**
-   * The pyramid a node draws as, remembered for this drawing. A two-layer pyramid of a description
-   * is one: no character designs that repeated form, so its equal cells are the drawing. A
-   * two-layer pyramid of one part keeps the composer's designed forms (品, 森) and is no pyramid
-   * here.
+   * The pyramid a node draws as, remembered for this drawing. A two-layer pyramid of one part keeps
+   * the composer's designed forms for it (品, 森); a description or a slot has no designed form, so
+   * its equal cells are the drawing, and every deeper pyramid draws in its cells.
    */
   pyramid(node) {
     if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidRows(node)
     if (this.pyramids.has(node)) return this.pyramids.get(node)
     const found = pyramidRows(node, { minLayers: 2 })
-    const answer = found && (found.layers > 2 || (found.cell !== null && typeof found.cell !== 'string')) ? found : null
+    const designed = found && found.layers === 2 && typeof found.cell === 'string' && !isEmpty(found.cell)
+    const answer = found && !designed ? found : null
     this.pyramids.set(node, answer)
     return answer
   }
