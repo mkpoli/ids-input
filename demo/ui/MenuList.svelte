@@ -95,12 +95,11 @@
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
       const chip = /** @type {HTMLElement | undefined} */ (list.querySelectorAll('.chip')[at])
-      const row = chip?.parentElement
-      if (chip && row) {
-        const chipRect = chip.getBoundingClientRect()
-        const rowRect = row.getBoundingClientRect()
-        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
-        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
+      // The chip row wraps, so the sheet scrolls the active chip into its own viewport.
+      if (chip && scroller !== window) {
+        const chipRect = chip.getBoundingClientRect(), boxRect = /** @type {HTMLElement} */ (scroller).getBoundingClientRect()
+        if (chipRect.top < boxRect.top + 8) /** @type {HTMLElement} */ (scroller).scrollTop -= boxRect.top + 8 - chipRect.top
+        else if (chipRect.bottom > boxRect.bottom - 8) /** @type {HTMLElement} */ (scroller).scrollTop += chipRect.bottom - (boxRect.bottom - 8)
       }
     }
     const frame = requestAnimationFrame(update)
@@ -111,9 +110,9 @@
   })
 </script>
 
-{#snippet groupHeading(heading)}
+{#snippet groupHeading(heading, count)}
   <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
-    <Icon name="chevron" size={12} /><span>{heading}</span>
+    <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}
 
@@ -199,12 +198,12 @@
     <p class="empty">{view.filter.empty}</p>
   {:else if view?.cardsSelected}
     {#each groups as group (group.heading)}
-      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
       {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
     {/each}
   {:else if view}
     {#each groups as group (group.heading)}
-      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
       {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
     {/each}
   {:else}
@@ -243,8 +242,10 @@
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
+  .heading-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .count{flex:none;margin-left:auto;padding:1px 6px;border-radius:999px;background:var(--hover);color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .empty{margin:14px 10px;color:var(--muted);font-size:13px}
-  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px}
+  .jump{display:flex;flex-wrap:wrap;gap:4px;padding:1px 1px 2px}
   .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
   .chip:hover{color:var(--ink);border-color:var(--ink)}
   .chip[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
