@@ -699,11 +699,11 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with 803 palette parts and the CJK
-strokes, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
+CJK strokes the prepared file covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
-the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
+the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
 fonts the page has loaded. Without `sketches`, the same shapes are drawn from the page's
 `--ids-font` when the pad opens, which needs its CJK faces loaded; a part a font draws as its
 missing-glyph box is left out either way. Nothing is sent anywhere.
@@ -716,15 +716,18 @@ similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the co
 `readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
 the fallback from the page's fonts.
 
-`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first, from strokes
-in percentage coordinates. The workshop implements it with DaKanji's 6,507-class Japanese
-classifier (MIT; trained on ETL and KanjiVG; `demo/model/`), served with ONNX Runtime Web and
-loaded on the first drawing: 2.2 MB of model and 12 MB of WebAssembly, outside the package. On
-the 20 synthetic stroke drawings in `demo/model/benchmark.json`, 19 put the drawn character in the
-top 24 and 18 in the top 10.
-Chinese-only forms are not in the model's labels; the palette parts remain their fallback. A host
-without `recognizeDrawing` gets the parts alone, and a failed or empty recognition falls back to
-them.
+`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first,
+from strokes in percentage coordinates. The workshop combines two classifiers in every locale:
+DaKanji's 6,507-class model (2.2 MB; MIT; trained on ETL and KanjiVG) supplies Japanese kanji and
+kana, and GlyphWeave's 7,247-class model (15.4 MB int8; MIT; trained on CASIA-HWDB and EMNIST)
+supplies its 7,185 Han classes including simplified forms, plus digits and Latin letters. Both run
+with ONNX Runtime Web's 12 MB WebAssembly runtime and load on the first drawing; sources and hashes
+are in `demo/model/`.
+
+On the 20 synthetic stroke drawings in `demo/model/benchmark.json`, both models put 19 targets in
+the top 24; DaKanji puts 18 in the top 10. GlyphWeave's release reports 96.0% top-1 and 97.6%
+macro-average on its 870,895-sample test split. A host without `recognizeDrawing` gets the parts alone, and a failed or empty
+recognition falls back to them.
 
 ## Preview
 
