@@ -1113,7 +1113,7 @@ export class Composer {
         }
       }
       if (op in this.AXIS && stretchOf(source.box, box) > C.STRETCH) return null
-      groups.push([placed(source, source.box, box, this.ink(drawn.h), `learned ${drawn.h}`)])
+      groups.push([{ ...placed(source, source.box, box, this.ink(drawn.h), `learned ${drawn.h}`), ...(this.AXIS[op] === 1 ? { gap: drawn.g } : {}) }])
       if (op === '⿸' && Array.isArray(children[0]) && i === 1 && this.collide(groups[0], groups[1], frameOf, 256) > C.COLLIDE)
         this.fit(groups[0], groups[1], frameOf, stem, C, { size: 256, room: box })
       if (C.CLEARED.includes(op) && i === 1 && this.collide(groups[0], groups[1], frameOf, 64) > C.COLLIDE) {
@@ -1235,7 +1235,7 @@ export class Composer {
         }
       }
       const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
-      if (part) groups.push([placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`)])
+      if (part) groups.push([{ ...placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`), ...(axis === 1 ? { gap: part.record.g } : {}) }])
       else groups.push(this.row(child, box, children.length))
     })
     if (compactYan && !this.partial) {
@@ -1473,11 +1473,6 @@ export class Composer {
     for (const [above, below] of pairs) {
       const cover = groups[above] ?? [], lower = groups[below] ?? []
       if (!cover.length || !lower.length) continue
-      const bounds = group => {
-        const boxes = group.map(drawnBox)
-        return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
-          Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
-      }
       const coverBox = bounds(cover), lowerBox = bounds(lower)
       const width = lowerBox[2] - lowerBox[0], height = lowerBox[3] - lowerBox[1]
       if (width <= 0 || height <= 0) continue
@@ -1526,27 +1521,55 @@ export class Composer {
 
   /** Under a cover (宀, 冖) the component the child leads with carries the cover's width, the way
    *  the net 罒 does under the roof of 𡩲 and the block 旧 under the roof of 𭓿: a leading component
-   *  with a wide flat top is drawn at `COVER_BAR` of the cover's width, centred on it, its own top,
-   *  bottom and sides narrowing together. What sits below it keeps its width, so a base bar such as
-   *  the 一 of 𡩬 stays as wide as it was drawn, and nothing moves down. 穴 and 雨 hang a middle
-   *  stroke where a component meeting it is drawn as it is. */
+   *  with a wide flat top is drawn at `COVER_BAR` of the cover's width, centred on it, keeping the
+   *  proportions it was drawn with: it loses as much height as width and stays against the cover.
+   *  The rest of the child grows up into the room it gives up, from the child's own foot, so the
+   *  stack reaches the cover as it does in the glyph and nothing passes below the child. 穴 and 雨
+   *  hang a middle stroke where a component meeting it is drawn as it is. */
   clearUnderCover(op, children, groups) {
     if (this.partial || op !== '⿱' || children.length !== 2 || !SIDE_COVERS.has(children[0])) return
     const cover = groups[0], lower = groups[1]
     if (!cover?.length || !lower?.length) return
     const head = this.topOperand(children[1], lower)
     if (!head) return
-    const box = group => {
-      const boxes = group.map(drawnBox)
-      return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
-        Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
-    }
-    const coverBox = box(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
-    const headBox = box(head)
+    const coverBox = bounds(cover), want = COVER_BAR * (coverBox[2] - coverBox[0])
+    const headBox = bounds(head)
     if (want <= 0 || headBox[2] - headBox[0] <= want || !flatTopped(head, headBox)) return
-    const middle = (coverBox[0] + coverBox[2]) / 2
-    const to = [middle - want / 2, headBox[1], middle + want / 2, headBox[3]]
+    const middle = (coverBox[0] + coverBox[2]) / 2, factor = want / (headBox[2] - headBox[0])
+    const foot = headBox[3] - factor * (headBox[3] - headBox[1])
+    const to = [middle - want / 2, foot, middle + want / 2, headBox[3]]
     for (const part of head) part.target = targetFor(part, mapped(drawnBox(part), headBox, to))
+    const rest = lower.filter(part => !head.includes(part))
+    if (!rest.length) return
+    // Only into the room the component gave up: an operand already drawn against it stays put
+    // rather than climbing over it.
+    const restBox = bounds(rest), rise = Math.max(0, Math.min(foot - headBox[1], foot - restBox[3]))
+    const risen = [restBox[0], restBox[1], restBox[2], restBox[3] + rise]
+    if (rise && risen[3] > risen[1])
+      for (const part of rest) part.target = targetFor(part, mapped(drawnBox(part), restBox, risen))
+    this.hang(rest)
+  }
+
+  /** The last operand of the child under a cover closed on to the one above it, where a designer
+   *  drew it overlapping the component above (`gap` below zero: the lower half of 衣 as 袁 cuts it)
+   *  and it tapers to a point at the top, so it tucks under what it meets rather than running into
+   *  it. The operand is the one cut the stack placed itself, read from its own stack's gap, and it
+   *  grows no further than `STRETCH` allows: a wide gap is a sign the stack is not the one the
+   *  donor drew. */
+  hang(rest) {
+    const held = rest.filter(part => Number.isInteger(part.branch?.[0]))
+    const operands = [...new Set(held.map(part => part.branch[0]))].sort((a, b) => a - b)
+    if (held.length < rest.length || operands.length < 2) return
+    const last = held.filter(part => part.branch[0] === operands.at(-1))
+    const above = held.filter(part => part.branch[0] === operands.at(-2))
+    if (last.length !== 1) return
+    const lastBox = bounds(last)
+    if (!(last[0].gap < 0) || flatTopped(last, lastBox)) return
+    const meet = bounds(above)[1]
+    if (meet <= lastBox[3] || lastBox[3] <= lastBox[1]) return
+    const to = [lastBox[0], lastBox[1], lastBox[2], meet]
+    if (stretchOf(lastBox, to) > this.C.STRETCH) return
+    for (const part of last) part.target = targetFor(part, mapped(drawnBox(part), lastBox, to))
   }
 
   // ---------------------------------------------------------------- weight
@@ -1582,6 +1605,13 @@ export class Composer {
 }
 
 // -------------------------------------------------------------------- free functions
+/** The box a group of placed parts is drawn in. */
+function bounds(group) {
+  const boxes = group.map(drawnBox)
+  return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
+    Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+}
+
 /** Whether a group leads with a wide flat top: its ink reaches both sides of its box within the
  *  top `COVER_HEAD` of its height, as the net 罒 and the block 旧 do and 王 and 心 do not. */
 function flatTopped(group, box) {
