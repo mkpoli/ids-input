@@ -955,7 +955,7 @@ export class Composer {
    * regrouped so that run is one operand. The run then shares the stack as one body and divides its
    * own row, instead of each of the three operands taking a third of the stack and the body's two
    * halves standing as far apart as the operand beside them. Answers the rewritten node, or null
-   * where no run is at least as much of a body as the whole stack.
+   * where no run is more of a body than the whole stack.
    */
   groupedStack(node) {
     if (!Array.isArray(node) || node.length !== 4) return null
@@ -965,13 +965,17 @@ export class Composer {
     if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
     const pair = op === '⿳' ? '⿱' : '⿰'
     const children = node.slice(1)
+    // Three of the same operand are an even run by construction (品, 森, 焱): two of them are no
+    // more a body than the third, whatever cuts the export holds of the pair.
+    if (children.every(child => keyOf(child) === keyOf(children[0]))) return null
     // A stack the export draws whole keeps its own body; only a stronger run replaces it.
     if (this.bySequence(key)) return null
+    const whole = this.bodySupport(key)
     let best = null
     for (const at of [0, 1]) {
       const run = [pair, children[at], children[at + 1]]
       const support = this.bodySupport(keyOf(run))
-      if (support > this.bodySupport(key) && (!best || support > best.support)) best = { at, run, support }
+      if (support > whole && (!best || support > best.support)) best = { at, run, support }
     }
     if (!best) return null
     return best.at === 0 ? [pair, best.run, children[2]] : [pair, children[0], best.run]

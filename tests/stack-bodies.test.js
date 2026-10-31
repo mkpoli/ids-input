@@ -43,6 +43,7 @@ const composerOf = async (source, options = {}) => {
     composer.bodySupport('⿱口木')
     composer.bodySupport('⿱木扌')
     composer.bodySupport('⿳口木扌')
+    composer.bodySupport('⿱口口')
     if (!store.missing.size) return composer
     await source.load(store.missing)
   }
@@ -74,6 +75,15 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(composer.groupedStack(['⿱', '口', '木'])).toBeNull()
     // A row of three looks for a run on its own axis, which this export designs no body of.
     expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('keeps three of the same operand an even run', async () => {
+    // 品, 森 and 焱 repeat one operand over equal cells, however many cuts the export holds of the pair.
+    const composer = await composerOf(sourceOf({ '⿱口口': { k: '⿱口口', P: ['B', 'M'] } },
+      [['⿱口口', 'B', [cut('永', [60, -40, 940, 500])]], ['⿱口口', 'M', [cut('厃', [60, 200, 940, 700])]]]))
+    expect(composer.bodySupport('⿱口口')).toBe(2)
+    expect(composer.groupedStack(['⿳', '口', '口', '口'])).toBeNull()
+    expect(composer.groupedStack(['⿳', '口', '口', '木'])).toEqual(['⿱', ['⿱', '口', '口'], '木'])
   })
 
   it('takes the better supported of two runs', async () => {
