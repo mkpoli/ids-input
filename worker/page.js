@@ -3,6 +3,7 @@
 // tags a preview is built from. Browsers run the app from it as they run it from the home page.
 
 import { sequenceOfPath } from '../src/core/address.js'
+import { parse } from '../src/core/ids.js'
 
 export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
@@ -10,8 +11,10 @@ export const OG_HEIGHT = 630
 /** The code point of `char`, written `U+93B6`. @param {string} char */
 export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 
-/** The workshop's sequence URL, including its dot/slash query fallback. @param {string} sequence */
-export const pathOf = sequence => !sequence ? '/' : /[./]/.test(sequence)
+/** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
+ *  included and text the IDS parser rejects. A share link builds its address the same way.
+ *  @param {string} sequence */
+export const pathOf = sequence => !sequence ? '/' : (/[./]/.test(sequence) || !parse(sequence, { open: true }).tree)
   ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
 
 const RESERVED = new Set(['embed', 'compare', 'engines', 'index', 'og'])

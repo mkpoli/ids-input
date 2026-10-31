@@ -1123,9 +1123,9 @@ settings and the sources. Settings hold the system, light and dark themes, key h
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
 The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
 `#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the
-parser rejects, stays in `?ids=`. A path that names no sequence and is not spelt in a
-sequence's letters answers 404 with a link that opens it as a draft; text that is goes on
-to the editor. A document that holds more than its sequence rides along as `?doc=`, so
+parser rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link
+that opens it as a draft; text built from a sequence's letters goes on to the editor
+first. A document that holds more than its sequence rides along as `?doc=`, so
 copying the location keeps a placement and opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch

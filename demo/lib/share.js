@@ -21,7 +21,8 @@ export function linkTo(sequence, where, document = null) {
   const url = new URL(where.href)
   // A `.` or a `/` in the text is not a path segment as it stands: the parser drops the former as a
   // dot segment and reads the latter back as a separator. Text the IDS parser rejects is no
-  // sequence either, and a path that names no sequence answers 404.
+  // sequence either; the worker redirects such text into the editor, but a share ought to land on
+  // the page rather than take the hop.
   const inPath = Boolean(sequence) && !/[./]/.test(sequence) && Boolean(parse(sequence, { open: true }).tree)
   if (inPath) url.searchParams.delete('ids')
   else if (sequence) url.searchParams.set('ids', sequence)
