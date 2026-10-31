@@ -101,11 +101,6 @@ describe('report text escaping', () => {
     expect(escapeMarkdown('@someone')).toBe('@\u200bsomeone')
     expect(escapeMarkdown('write to me@example.com')).toBe('write to me@example.com')
   })
-  it('stops a mention notifying someone, and leaves an address whole', () => {
-    expect(escapeMarkdown('ping @someone about it')).toBe('ping @\u200bsomeone about it')
-    expect(escapeMarkdown('@someone')).toBe('@\u200bsomeone')
-    expect(escapeMarkdown('write to me@example.com')).toBe('write to me@example.com')
-  })
   it('leaves a version number alone', () => {
     expect(escapeMarkdown('0.1.0')).toBe('0.1.0')
     expect(cell('0.1.0')).toBe('0.1.0')

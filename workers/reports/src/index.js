@@ -110,6 +110,23 @@ export async function handle(request, env) {
   }
 }
 
+/**
+ * Comment on the issue an identical report became, and say whether it did.
+ * @param {Env} env @param {{ number: number, url: string }} known @returns {Promise<boolean>}
+ */
+async function commentDuplicate(env, known) {
+  try {
+    await commentOnIssue(env, known.number, duplicateComment(new Date().toISOString()))
+    return true
+  } catch (error) {
+    if (!(error instanceof GitHubError)) throw error
+    // The record has outlived its issue when the issue was deleted or moved, which the reporter
+    // should not be told is a success; the filing below writes over the record. Another failure
+    // costs only the comment, and the report did reach its issue.
+    return ![404, 410].includes(error.status)
+  }
+}
+
 /** @param {Request} request @param {Env} env @returns {Promise<Response>} */
 async function route(request, env) {
   const origin = request.headers.get('origin')
@@ -153,12 +170,7 @@ async function route(request, env) {
 
   const key = await dedupeKey(report.sequence, report.symptom)
   const known = await findDuplicate(env, key)
-  if (known) {
-    try {
-      await commentOnIssue(env, known.number, duplicateComment(new Date().toISOString()))
-    } catch (error) {
-      if (!(error instanceof GitHubError)) throw error
-    }
+  if (known && (await commentDuplicate(env, known))) {
     return json({ number: known.number, url: known.url, duplicate: true }, 200, origin)
   }
 
