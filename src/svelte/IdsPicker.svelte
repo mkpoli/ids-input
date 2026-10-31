@@ -10,7 +10,8 @@
   import IdsParts from './IdsParts.svelte'
   import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
-  import { loadStrokes } from './strokes.js'
+  import { loadStrokeRecords } from './strokes.js'
+  import { strokeSummary } from './i18n.js'
 
   /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
   /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
@@ -49,22 +50,26 @@
   }
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let found = $state({ status: 'idle', items: [] })
-  // A stroke count narrows the found characters; the palette's counts load on first use.
+  // A stroke count narrows the found characters, and every hit's tooltip says how many strokes it
+  // has and which stroke it starts with; the table loads on first use, once for both.
   let strokeLimit = $state('')
-  /** @type {Map<string, number | null> | null} */
-  let strokeCounts = $state.raw(null)
-  let strokeLoading = false
+  let strokeRecords = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
   $effect(() => {
-    if (strokeLimit === '' || strokeCounts || strokeLoading) return
-    strokeLoading = true
-    loadStrokes().then(counts => { strokeCounts = counts }).catch(() => { strokeCounts = new Map() })
+    if (strokeRecords) return
+    loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
+  const strokeCounts = $derived(strokeRecords && new Map([...strokeRecords].map(([char, record]) => [char, record.strokes])))
   const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
   const foundItems = $derived.by(() => {
     const counts = strokeCounts, wanted = wantedStrokes
     if (wanted === null || !counts) return found.items
     return found.items.filter(item => counts.get(item.char) === wanted)
   })
+  /** What a found character's tooltip says: its label, then its stroke count and first stroke. */
+  const hitTitle = (/** @type {import('../adapter/types.js').Found} */ item) => [
+    item.label ? `${item.char} ${item.label}` : item.char,
+    strokeSummary(t, strokeRecords?.get(item.char)),
+  ].filter(Boolean).join(' · ')
   $effect(() => {
     const asked = query.trim(), search = adapter.search, stroke = strokeLimit
     if (!asked || !search) { found = { status: 'idle', items: [] }; return }
@@ -117,7 +122,7 @@
                 {:else if foundItems.length}
                   <div class="ids-found">
                     {#each foundItems as item (item.char)}
-                      <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.label ? `${item.char} ${item.label}` : item.char}
+                      <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={hitTitle(item)}
                         draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                         onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
                     {/each}

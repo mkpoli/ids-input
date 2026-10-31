@@ -2,7 +2,8 @@
   import { tick } from 'svelte'
   import { characterScript } from '../adapter/character-info.js'
   import { componentIdentity } from '../core/component-identity.js'
-  import { translator } from './i18n.js'
+  import { strokeClassName, translator } from './i18n.js'
+  import { loadStrokeRecords } from './strokes.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
@@ -33,6 +34,17 @@
   const code = $derived(char ? codePoint(char) : '')
   const identity = $derived(componentIdentity(char))
   /** @type {number | null} */ let uses = $state(null)
+  // The stroke count and first stroke the card adds to the code point; the table loads on first use.
+  let strokeRecords = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
+  $effect(() => {
+    if (strokeRecords) return
+    loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
+  })
+  const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
+  // The class named as a message writes the stroke glyph first, then its name (㇐ Horizontal).
+  const strokeLabel = $derived(strokeClassName(t, strokes?.first))
+  const strokeGlyph = $derived(strokeLabel.split(' ')[0] ?? '')
+  const strokeName = $derived(strokeLabel.slice(strokeGlyph.length).trim())
 
   function close() {
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); clearTimeout(copyTimer); copyTimer = undefined
@@ -297,6 +309,8 @@
       <div>
         <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
         <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
+        {#if strokes?.strokes != null}<span class="strokes">{t('parts.strokeCount', { count: strokes.strokes })}</span>{/if}
+        {#if strokeGlyph}<span class="strokes">{t('info.firstStroke')}: <span class="stroke-glyph" lang="ja">{strokeGlyph}</span> {strokeName}</span>{/if}
       </div>
       <button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>
     </header>
@@ -341,7 +355,7 @@
 <style>
   .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#d8d8de,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#696973,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
-  .code{display:flex;align-items:center;gap:4px;min-height:24px}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
+  .code{display:flex;align-items:center;gap:4px;min-height:24px}.strokes{font-size:12px;color:var(--info-muted);font-variant-numeric:tabular-nums}.stroke-glyph{font-family:var(--info-font)}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
   p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f4f4f7,#303038))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
   .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
