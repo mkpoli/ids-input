@@ -1,10 +1,13 @@
 <script>
   // A note at the foot of the page that goes by itself: what was just done, with an Undo button when
-  // it threw something away. A newer note replaces it.
+  // it threw something away. A newer note replaces it. An actionable note waits while it is hovered
+  // or focused, and keeps the time it had left when the pointer or focus leaves.
   import { fly } from 'svelte/transition'
   import { onMount } from 'svelte'
   let hovered = $state(false)
   let focused = $state(false)
+  let remaining = $state(0)
+  let startedAt = 0
   let reducedMotion = $state(false)
   onMount(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)')
@@ -16,9 +19,20 @@
   /** @type {{ toast: { id: number, text: string, action?: string, run?: () => void, duration?: number } | null, ondone: () => void }} */
   let { toast, ondone } = $props()
   $effect(() => {
-    if (!toast || hovered || focused) return
-    const timer = setTimeout(ondone, toast.run ? (toast.duration ?? 6000) : 2400)
-    return () => clearTimeout(timer)
+    const current = toast
+    const lifetime = current ? (current.run ? (current.duration ?? 6000) : 2400) : 0
+    remaining = lifetime
+    startedAt = 0
+  })
+  $effect(() => {
+    if (!toast || hovered || focused) {
+      if (startedAt) remaining = Math.max(0, remaining - (performance.now() - startedAt))
+      startedAt = 0
+      return
+    }
+    if (!startedAt) startedAt = performance.now()
+    const timer = setTimeout(ondone, remaining)
+    return () => { clearTimeout(timer); startedAt = 0 }
   })
 </script>
 

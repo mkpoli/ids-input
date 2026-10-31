@@ -291,10 +291,10 @@ async function checkInteractions(page) {
   await page.keyboard.press('ArrowDown')
   const menu = page.getByRole('menu', { name: 'Example actions', exact: true })
   await menu.waitFor()
-  await page.keyboard.press('ArrowDown')
+  assert.match(await menu.evaluate(el => el.contains(document.activeElement) ? document.activeElement.textContent.trim() : ''), /^(Mark as reviewed|Reviewed)$/i, 'opening the menu focuses its first item')
   await page.keyboard.press('Enter')
-  assert.equal(await page.getByRole('status', { name: 'Example review status' }).textContent().then(text => text.trim()), 'Reviewed.', 'an arrow and Enter run a menu item')
-  pass('a menu moves with the arrow keys and runs its item')
+  await page.getByRole('status', { name: 'Example review status' }).filter({ hasText: 'Reviewed.' }).waitFor()
+  pass('a menu focuses its first item and Enter runs it')
 
   const remove = page.getByRole('button', { name: 'Remove example item', exact: true })
   await remove.click()

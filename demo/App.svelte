@@ -1538,7 +1538,7 @@
     .work :global(.ids-preview){touch-action:pan-y}
     .output.adjusting :global(.ids-preview){touch-action:none}
   }
-  x;backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
+  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--ui-color-canvas) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
   .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
   @media (max-width:640px){
