@@ -15,6 +15,8 @@ import { DEFAULTS, pngOf, pngOfSvg, scopedPngOf } from './exporting.js'
 /** The sizes the intake accepts; the request is held to them here too. */
 export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000, document: 200 * 1024, context: 32 * 1024, image: 5 * 1024 * 1024 }
 const RING = 20, LINE = 500, BURST = 100, ATTRIBUTE = 120
+// Long enough for 8 MB on a slow phone, short enough that a hung intake gives the dialog back.
+const SEND_TIMEOUT = 60_000
 const SITE = 'https://ids.mkpo.li'
 const HOST = String.raw`localhost|127(?:\.\d{1,3}){1,3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[[0-9a-f:]*:[0-9a-f:]*\]|[\w.-]*\.local(?:host)?`
 const LOCAL = new RegExp(`^(?:${HOST})$`, 'i')
@@ -356,7 +358,9 @@ export async function sendReport(endpoint, { symptom, contact, image, snapshot }
   if (image && snapshot.image) body.set('image', new File([snapshot.image], 'drawing.png', { type: 'image/png' }))
   sending = true
   try {
-    const response = await fetch(endpoint, { method: 'POST', body })
+    // A request that hangs must not keep the dialog busy for good; the abort lands in the caller's
+    // failure path, which keeps the text.
+    const response = await fetch(endpoint, { method: 'POST', body, signal: AbortSignal.timeout(SEND_TIMEOUT) })
     const answer = await response.json().catch(() => null)
     if (!response.ok || typeof answer?.number !== 'number') {
       throw new ReportError(String(answer?.message || answer?.error || `HTTP ${response.status}`))
