@@ -32,8 +32,12 @@ export async function load(ids, additionalIds, components, componentsText, forms
   /** @type {Map<string, import('../core/decompose.js').Sequence[]>} */
   const merged = new Map(extras.reduce((found, extra) => mergeIdsTables(found, expandNumberedComponents(parseIdsTable(extra), parts)), expandNumberedComponents(parseIdsTable(text), parts)))
   if (doc) for (const [char, sequences] of sealTable(doc)) merged.set(char, sequences)
-  try { if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) merged.set(char, sequences) }
-  catch { /* An unreadable decomposition file leaves the sources standing. */ }
+  try {
+    if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
+      const had = merged.get(char) ?? []
+      merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
+    }
+  } catch { /* An unreadable decomposition file leaves the sources standing. */ }
   const table = new Map([...merged].map(([char, sequences]) => [char, sequences.map(s => s.text)]))
   // A derived reading is an alternative description, so a layered sequence finds its character.
   let layerMap = new Map()

@@ -242,9 +242,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => {
+  const localSearch = async () => {
+    const table = await readSearch()
     if (local && localGeneration === searchGeneration) return local
-    local = Promise.all([readSearch(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
+    local = Promise.all([Promise.resolve(table), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
       localGeneration = searchGeneration
       return createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })
     }).catch(error => { local = null; throw error })
@@ -358,8 +359,29 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
    * call, instead of turning the failure into a source-only table for the life of the adapter.
    * @type {Promise<Map<string, Sequence[]>> | null} */
   let searchTable = null
-  const readSearch = () => {
-    if (searchTable) return searchTable
+  /** The table the generation counts from, without the extra readings. @type {Map<string, Sequence[]> | null} */
+  let searchRead = null
+  /** Whether the last search table lost one of the optional readings, and how many entries it held. */
+  let searchLost = false
+  let searchExtra = 0
+  /** @type {Promise<void> | null} */
+  let retrying = null
+  // The loss is retried behind a table that already serves, so a file that stays away does not
+  // rebuild the table on every call; the rebuild waits for the file to come back.
+  const retryLost = () => retrying ??= Promise.all([readLayers(), readShuishu().catch(() => null)])
+      .then(([derived, shuiDoc]) => {
+        // Only a reading that adds something is worth rebuilding the table for.
+        if (derived.size + (shuiDoc ? shuishuSequences(shuiDoc).size : 0) <= searchExtra) return
+        searchTable = null
+        searchLost = false
+      }, () => {})
+      .finally(() => { retrying = null })
+  const readSearch = async () => {
+    if (searchTable) {
+      // A lost file is read again before answering, so a caller never sees the loss twice.
+      if (searchLost) await retryLost()
+      if (searchTable) return searchTable
+    }
     // Both extra readings are optional and are tried again on the next call; the source search
     // serves until then.
     let lost = false
@@ -370,21 +392,30 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     ]).then(([found, derived, shuiDoc]) => {
       /** @type {Map<string, Sequence[]>} */
       const merged = new Map(found)
-      let changed = false
+      /** Characters the extra readings describe, which the source table may not. @type {Set<string>} */
+      const added = new Set()
       for (const [char, text] of derived) {
         const sequences = merged.get(char) ?? []
         if (sequences.some(sequence => sequence.text === text)) continue
         merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
-        changed = true
+        added.add(char)
       }
-      // The Shuishu decompositions are editorial and carry no source region.
+      // The Shuishu decompositions are editorial and carry no source region; a source description
+      // of the same character stays behind them.
+      searchExtra = derived.size
       if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
+        searchExtra++
         const had = merged.get(char) ?? []
-        merged.set(char, [...sequences, ...had.filter(sequence => !sequences.some(own => own.text === sequence.text))])
-        changed = true
+        merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
+        added.add(char)
       }
-      if (changed) searchGeneration++
-      if (lost) searchTable = null
+      // Only a character the last table did not hold makes the caches worth rebuilding, so a file
+      // that stays away does not rebuild them on every call.
+      if ([...added].some(char => !searchRead?.has(char))) {
+        searchGeneration++
+        searchRead = merged
+      }
+      searchLost = lost
       return merged
     }).catch(error => { searchTable = null; throw error })
     return searchTable
@@ -588,9 +619,15 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
   let relations = null
-  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal || shuishu ? readSearch() : new Map()])
-    .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
-    .catch(error => { relations = null; throw error })
+  let relationsGeneration = -1
+  const relationIndex = async () => {
+    const table = given || ids || smallSeal || shuishu ? await readSearch() : new Map()
+    if (relations && relationsGeneration === searchGeneration) return relations
+    relations = Promise.all([readInformation(), Promise.resolve(table)])
+      .then(([{ doc, seal }, found]) => { relationsGeneration = searchGeneration; return createRelationSearch(doc, seal, found) })
+      .catch(error => { relations = null; throw error })
+    return relations
+  }
 
   return {
     table: readSearch,
@@ -708,8 +745,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     async encoded(sequence, { exact: onlyTagged = false, signal } = {}) {
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
       // again on the next call, and the source index serves until then.
+      const search = await readSearch()
       if (!described || describedGeneration !== searchGeneration) {
-        described = readSearch().then(found => {
+        described = Promise.resolve(search).then(found => {
           const generation = searchGeneration
           /** @type {Map<string, string[]>} */
           const by = new Map()
