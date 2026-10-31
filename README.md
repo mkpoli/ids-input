@@ -1110,17 +1110,18 @@ with the arrow keys and accept drops. A click, the arrow keys, Home/End or, wher
 them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
 middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
 `Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab or the tab's menu
-opens the tab or group closed last; that history lasts for the page session. The tree and search panels in the middle column are divided by a
-draggable splitter, the tree starting larger; the arrow keys move it and a double-click restores the
-default. Vertical dividers resize the columns by dragging or with Left/Right; a double-click resets
-their widths. Toolbar buttons show their keys on hover. File and Edit menus provide new tabs, saved
-drafts, sharing, image export, and editing commands. The Templates tab includes one-click pyramids of
-3–24 rows. File → Duplicate tab copies the active document. Right-clicking a tab, or pressing
-Shift+F10 on it, opens its menu: reopen the tab or group closed last, duplicate it, close it, close
-the other tabs, the tabs on either side, or close all tabs. Close all asks first, and Undo after a
-group close restores the tabs in their old places with the tab that was being edited. Duplicate
-opens the copy beside its source with its selection, undo history and layer transforms, which can
-then be edited independently.
+opens the tab or group closed last; that history lasts for the page session. The tree and search
+panels in the middle column are divided by a draggable splitter, the tree starting larger; the
+arrow keys move it and a double-click restores the default. Vertical dividers resize the columns by
+dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their keys on
+hover. File groups documents, Recent, tab actions, sharing and export, and drafts; Recent lists the
+sequences opened in this browser, newest first. The Edit menu holds the editing commands. The
+Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies the active
+document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: reopen the tab or
+group closed last, duplicate it, close it, close the other tabs, the tabs on either side, or close
+all tabs. Close all asks first, and Undo after a group close restores the tabs in their old places
+with the tab that was being edited. Duplicate opens the copy beside its source with its selection,
+undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
 with its character and code point, an abbreviated character, or a mark when it has none. It opens as

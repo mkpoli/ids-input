@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void } | { heading: string } | { separator: true }} Item */
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void, submenu?: Item[] } | { heading: string } | { separator: true }} Item */
 </script>
 
 <script>
@@ -29,6 +29,8 @@
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
   let active = $state('')
+  // The label of the one submenu shown inline, or ''.
+  let openSubmenu = $state('')
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {Item} item */
   function matches(item) {
@@ -113,10 +115,11 @@
     query = ''
     mode = 'all'
     collapsed = new Set()
+    openSubmenu = ''
     setOpen(true)
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
-  function hide() { setOpen(false); trigger?.focus() }
+  function hide() { openSubmenu = ''; setOpen(false); trigger?.focus() }
   /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
   export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
   // A wide menu can start left of the window when its trigger sits near that edge, as a short
@@ -147,6 +150,12 @@
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
     else if (event.key === 'ArrowUp') { event.preventDefault(); all[(at - 1 + all.length) % all.length]?.focus() }
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); all.at(event.key === 'End' ? -1 : 0)?.focus() }
+    else if (event.key === 'ArrowLeft' && openSubmenu) {
+      event.preventDefault()
+      const parent = /** @type {HTMLElement | undefined} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+      openSubmenu = ''
+      parent?.focus()
+    }
     else if (menubar && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) { event.preventDefault(); onmove?.(event.key) }
     else if (event.key === 'Tab') { trigger?.focus(); setOpen(false) }
   }
@@ -176,6 +185,26 @@
       {#if item.note !== undefined || item.reading !== undefined}<span class="card-note" class:unencoded={item.unencoded}>{#if item.reading !== undefined}<span lang={item.readingLang}>{item.reading}</span>{' · '}{/if}{item.note}</span>{/if}
     </span>
   </button>
+{/snippet}
+
+{#snippet submenuRow(item, i)}
+  {@const open = openSubmenu === item.label}
+  <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+    disabled={item.disabled} onclick={() => openSubmenu = open ? '' : item.label}
+    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); openSubmenu = item.label } }}>
+    <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    <span class="label">{item.label}</span>
+    <span class="chev" class:open><Icon name="chevron" size={14} /></span>
+  </button>
+  {#if open}
+    <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
+      {#each item.submenu as sub, j (j)}
+        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
+        {:else}{@render listRow(sub)}{/if}
+      {/each}
+    </div>
+  {/if}
 {/snippet}
 
 {#snippet listRow(item)}
@@ -247,6 +276,7 @@
         {#each items as item, i (i)}
           {#if 'separator' in item}<div class="sep" role="separator"></div>
           {:else if 'heading' in item}<p class="heading">{item.heading}</p>
+          {:else if 'submenu' in item && item.submenu}{@render submenuRow(item, i)}
           {:else}{@render listRow(item)}{/if}
         {/each}
       {/if}
@@ -272,6 +302,11 @@
   .item:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
   .item.rich:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
   .item:disabled{opacity:.45;cursor:default}
+  .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--muted);transform:rotate(-90deg);transition:transform .12s}
+  .item.submenu-item .chev.open{transform:none}
+  .submenu{margin:0 0 4px 26px;padding:2px 0 2px 6px;border-left:1px solid var(--line)}
+  .submenu .item{padding:6px 8px;font-size:13px;border-radius:7px}
+  .submenu .sep{margin:4px 2px}
   .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}
