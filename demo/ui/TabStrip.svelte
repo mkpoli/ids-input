@@ -320,10 +320,10 @@
 {/if}
 
 <style>
-  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);box-shadow:0 8px 28px #0003}
-  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
-  .tab-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
-  .tab-menu button:not(:disabled):hover,.tab-menu button:focus-visible{background:var(--hover);outline:none}
+  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:0 8px 28px #0003}
+  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .tab-menu hr{border:0;border-top:1px solid var(--ui-color-border);margin:4px 2px}
+  .tab-menu button:not(:disabled):hover,.tab-menu button:focus-visible{background:var(--ui-color-surface-hover);outline:none}
   .tab-menu button:disabled{opacity:.45;cursor:default}
   .tab-menu .flip{display:grid;transform:rotate(180deg)}
   .tabbar{display:flex;align-items:flex-end;gap:8px;flex:1;min-width:0;height:100%}
@@ -331,27 +331,27 @@
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
   .tabs.dragging{user-select:none}
-  .tab{position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:12px 12px 0 0;color:var(--muted)}
-  .tab:not(.on):hover{background:var(--hover);color:var(--ink)}
-  .tab.on{background:var(--bg);color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
+  .tab{position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:var(--ui-radius-xl) var(--ui-radius-xl) 0 0;color:var(--ui-color-ink-muted)}
+  .tab:not(.on):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .tab.on{background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 2px 0 var(--ui-color-accent)}
   .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
-  .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--bg) 10.5px)}
-  .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--bg) 10.5px)}
-  .tab.dragging{z-index:4;color:var(--ink);filter:drop-shadow(0 5px 9px #0003)}
+  .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
+  .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
+  .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px #0003)}
   .tab.dragging .tab-main{cursor:grabbing}
   .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
   .tab:not(.on) .tab-main{padding-inline:12px}
-  .tab-main:focus-visible{outline:2px solid var(--focus);outline-offset:-3px}
+  .tab-main:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-3px}
   .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:28px;height:28px}
   .tab:not(.on) .tab-icon{opacity:.7}
-  .tab-dot{position:absolute;top:0;right:-4px;width:4px;height:4px;border-radius:50%;background:var(--accent)}
-  .tab-close{position:absolute;z-index:2;top:8px;right:8px;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:7px;
-    background:none;color:var(--muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
+  .tab-dot{position:absolute;top:0;right:-4px;width:4px;height:4px;border-radius:50%;background:var(--ui-color-accent)}
+  .tab-close{position:absolute;z-index:2;top:8px;right:8px;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:var(--ui-radius-sm);
+    background:none;color:var(--ui-color-ink-muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
   .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
-  .tab-close:not(:disabled):hover{background:var(--hover);color:var(--ink)}
-  .tab-close:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
-  .tab-new{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:0 0 6px -6px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
-  .tab-new:hover{background:var(--hover);color:var(--ink)}
-  .tab-new:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
+  .tab-close:not(:disabled):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .tab-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
+  .tab-new{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:0 0 6px -6px;padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
+  .tab-new:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .tab-new:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
   @media (hover:none){.tab.on .tab-close{opacity:1;pointer-events:auto}}
 </style>

@@ -24,9 +24,9 @@
 
 <style>
   .toasts{position:fixed;z-index:60;left:50%;bottom:20px;transform:translateX(-50%);display:grid;pointer-events:none;max-width:calc(100vw - 32px)}
-  .toast{grid-area:1/1;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;border-radius:12px;pointer-events:auto;
-    background:var(--toast-bg);color:var(--toast-ink);box-shadow:var(--shadow-pop);font-size:13.5px}
-  button{padding:5px 10px;border:0;border-radius:7px;background:color-mix(in srgb,var(--toast-ink) 16%,transparent);color:inherit;font:inherit;font-weight:600;cursor:pointer}
-  button:hover{background:color-mix(in srgb,var(--toast-ink) 26%,transparent)}
-  button:focus-visible{outline:2px solid var(--toast-ink);outline-offset:1px}
+  .toast{grid-area:1/1;display:flex;align-items:center;gap:14px;padding:10px 12px 10px 16px;border-radius:var(--ui-radius-xl);pointer-events:auto;
+    background:var(--ui-color-toast-surface);color:var(--ui-color-toast-ink);box-shadow:var(--ui-shadow-2);font-size:13.5px}
+  button{padding:5px 10px;border:0;border-radius:var(--ui-radius-sm);background:color-mix(in srgb,var(--ui-color-toast-ink) 16%,transparent);color:inherit;font:inherit;font-weight:600;cursor:pointer}
+  button:hover{background:color-mix(in srgb,var(--ui-color-toast-ink) 26%,transparent)}
+  button:focus-visible{outline:2px solid var(--ui-color-toast-ink);outline-offset:1px}
 </style>

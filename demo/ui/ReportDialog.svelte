@@ -124,29 +124,29 @@
 
 <style>
   .report{display:flex;flex-direction:column;gap:12px;font-size:13.5px}
-  .lead{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .lead{margin:0;color:var(--ui-color-ink-muted);font-size:12.5px;line-height:1.5}
   .field{display:flex;flex-direction:column;gap:4px}
-  .field span{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
-  textarea,input:not([type]){width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:13px}
+  .field span{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ui-color-ink-muted)}
+  textarea,input:not([type]){width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--ui-color-control-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font:inherit;font-size:13px}
   textarea{resize:vertical;line-height:1.5}
-  :is(textarea,input,button,a):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  :is(textarea,input,button,a):focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .shot{display:flex;align-items:center;gap:12px}
-  .thumb{flex:none;width:72px;height:72px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .thumb{flex:none;width:72px;height:72px;border:1px solid var(--ui-color-control-border);border-radius:var(--ui-radius-lg);overflow:hidden;background:#fff}
   .thumb :global(svg){display:block;width:100%;height:100%}
   .shot-text{display:flex;flex-direction:column;gap:2px;min-width:0}
   .check{display:flex;align-items:center;gap:7px;font-size:13px}
-  .check input{width:16px;height:16px;accent-color:var(--accent)}
-  .none{margin:0;color:var(--muted);font-size:12px}
-  h3{margin:4px 0 0;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-  .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+  .check input{width:16px;height:16px;accent-color:var(--ui-color-accent)}
+  .none{margin:0;color:var(--ui-color-ink-muted);font-size:12px}
+  h3{margin:4px 0 0;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
+  .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;color:var(--ui-color-ink-muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
   .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .fault{margin:0;color:var(--fault);font-size:12.5px}
-  .send{align-self:flex-start;height:36px;padding:0 16px;border:1px solid transparent;border-radius:9px;background:var(--accent);color:var(--on-accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .send{align-self:flex-start;height:36px;padding:0 16px;border:1px solid transparent;border-radius:var(--ui-radius-md);background:var(--ui-color-accent);color:var(--ui-color-on-accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
   .send:hover:not(:disabled){filter:brightness(1.05)}
-  .send:disabled{background:var(--surface-2);color:var(--muted);border-color:var(--line);cursor:default}
+  .send:disabled{background:var(--ui-color-surface-sunken);color:var(--ui-color-ink-muted);border-color:var(--ui-color-control-border);cursor:default}
   .sent{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
   .thanks{margin:0}
-  .duplicate{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .duplicate{margin:0;color:var(--ui-color-ink-muted);font-size:12.5px;line-height:1.5}
   .issue{margin:0}
-  .issue a{color:var(--accent);font-size:20px;font-weight:650;text-underline-offset:3px}
+  .issue a{color:var(--ui-color-accent);font-size:20px;font-weight:650;text-underline-offset:3px}
 </style>

@@ -48,8 +48,8 @@
 </div>
 
 <style>
-  .divider{height:100%;min-height:56px;cursor:col-resize;touch-action:none;user-select:none;border-radius:8px}
-  .grip{display:block;position:sticky;top:50dvh;transform:translateY(-50%);margin:0 auto;width:5px;height:56px;border-radius:999px;background:var(--line-strong);transition:background-color .12s,height .12s}
-  .divider:is(:hover,:focus-visible,.dragging) .grip{background:var(--accent);height:72px}
-  .divider:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .divider{height:100%;min-height:56px;cursor:col-resize;touch-action:none;user-select:none;border-radius:var(--ui-radius-md)}
+  .grip{display:block;position:sticky;top:50dvh;transform:translateY(-50%);margin:0 auto;width:5px;height:56px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color .12s,height .12s}
+  .divider:is(:hover,:focus-visible,.dragging) .grip{background:var(--ui-color-accent);height:72px}
+  .divider:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
 </style>
