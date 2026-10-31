@@ -144,6 +144,9 @@
   "app.source.qrcode": "分享中的二维码。",
   "app.source.daKanji": "手写栏的整字识别。",
   "app.source.etl": "用于训练汉字识别模型的手写文字。",
+  "app.source.glyphWeave": "与日语结果一同显示的中文识别。",
+  "app.source.casia": "用于训练 GlyphWeave 的手写文字。",
+  "app.source.emnist": "用于训练 GlyphWeave 的字母和数字。",
   "app.source.onnxRuntime": "在浏览器中运行汉字识别模型。",
   "app.source.rime": "部件表的首笔分类。",
   "app.source.unihan": "笔画数与来源地区。",
@@ -162,6 +165,7 @@
   "app.tabs.edited": "已编辑",
   "app.tabs.menu": "标签页操作",
   "app.tabs.new": "新建标签页",
+  "app.tabs.reopen": "重新打开关闭的标签页",
   "app.tabs.untitled": "无标题",
   "app.theme.dark": "深色",
   "app.theme.light": "浅色",
@@ -276,5 +280,10 @@
   "app.layers.history": "历史",
   "app.export.incomplete": "此绘图不完整。导出可能丢失变换或部件。",
   "app.export.partial": "导出不完整绘图",
-  "app.file.drop": "拖放文档以打开"
+  "app.file.drop": "拖放文档以打开",
+  "app.file.title": "文档标题…",
+  "app.titleDialog.label": "标题",
+  "app.titleDialog.hint": "用于保存和导出的文件；标签页保留构字串。",
+  "app.titleDialog.placeholder": "无标题文档",
+  "app.save": "保存"
 }

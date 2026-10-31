@@ -124,6 +124,9 @@
   "app.source.qrcode": "Mã QR trong mục Chia sẻ.",
   "app.source.daKanji": "Nhận dạng chữ trong khung vẽ.",
   "app.source.etl": "Chữ viết tay dùng để huấn luyện mô hình nhận dạng chữ Hán.",
+  "app.source.glyphWeave": "Nhận dạng chữ Hán hiển thị cùng kết quả tiếng Nhật.",
+  "app.source.casia": "Chữ viết tay dùng để huấn luyện GlyphWeave.",
+  "app.source.emnist": "Chữ cái và chữ số dùng để huấn luyện GlyphWeave.",
   "app.source.onnxRuntime": "Chạy mô hình nhận dạng chữ trong trình duyệt.",
   "app.source.rime": "Phân loại nét đầu trong bảng chọn bộ phận.",
   "app.source.unihan": "Số nét và khu vực nguồn.",
@@ -142,6 +145,7 @@
   "app.tabs.edited": "Đã chỉnh sửa",
   "app.tabs.menu": "Thao tác với thẻ",
   "app.tabs.new": "Thẻ mới",
+  "app.tabs.reopen": "Mở lại thẻ đã đóng",
   "app.tabs.untitled": "Chưa đặt tên",
   "app.theme.dark": "Tối",
   "app.theme.light": "Sáng",
@@ -276,5 +280,10 @@
   "app.layers.history": "Lịch sử",
   "app.export.incomplete": "Hình vẽ này chưa hoàn chỉnh. Xuất có thể làm mất phép biến đổi hoặc thành phần.",
   "app.export.partial": "Xuất hình chưa hoàn chỉnh",
-  "app.file.drop": "Thả tài liệu để mở"
+  "app.file.drop": "Thả tài liệu để mở",
+  "app.file.title": "Tiêu đề tài liệu…",
+  "app.titleDialog.label": "Tiêu đề",
+  "app.titleDialog.hint": "Hiển thị trong tệp đã lưu và xuất; tab giữ chuỗi cấu trúc.",
+  "app.titleDialog.placeholder": "Tài liệu chưa đặt tên",
+  "app.save": "Lưu"
 }

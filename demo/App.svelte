@@ -46,6 +46,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
@@ -81,6 +82,7 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  let titleOpen = $state(false)
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -393,6 +395,10 @@
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
+  /** Tabs closed this session, oldest first, for reopening.
+   * @typedef {{ tabs: { tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[], active: string | null, fresh?: string }} ClosedGroup
+   * @type {ClosedGroup[]} */
+  let closedGroups = $state.raw([])
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -438,7 +444,7 @@
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number, close?: boolean } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -548,6 +554,29 @@
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
   }
+  /** The active tab's document title, kept current by the document revision. */
+  const currentTitle = $derived.by(() => {
+    documentTick
+    const tab = current()
+    return tab ? sessionFor(tab).document.title ?? '' : ''
+  })
+  function openTitle() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    titleOpen = true
+  }
+  /** @param {string} value */
+  function saveTitle(value) {
+    const tab = current()
+    if (!tab) return
+    const session = sessionFor(tab)
+    session.setTitle(value)
+    tab.document = sessionRecord(session)
+    documentTick++
+    store()
+    syncAddress()
+  }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
   /** Keep the active tab's tree and history before another is shown. */
@@ -620,56 +649,11 @@
     tabs.push(tab)
     activate(tab.id)
   }
-  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
+  /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
-    const tab = tabs[at]
-    const state = id === activeId ? editor.snapshot() : states.get(id)
-    states.delete(id)
-    sessions.delete(id)
-    tabs.splice(at, 1)
-    /** @type {import('./lib/tabs.js').Tab | undefined} */
-    let fresh
-    if (id === activeId) {
-      const next = tabs[at] ?? tabs[at - 1]
-      if (next) {
-        activeId = next.id
-        const saved = states.get(next.id)
-        states.delete(next.id)
-        if (saved) editor.restore(saved)
-        else editor.reset(next.sequence)
-      } else {
-        // One tab always stays open: closing the last one leaves a new empty tab in its place.
-        fresh = makeTab()
-        tabs.push(fresh)
-        activeId = fresh.id
-        editor.reset('')
-        adjusting = false
-      }
-    }
-    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
-      run: () => reopen(tab, state, at, fresh?.id) }
-    store()
-  }
-  /**
-   * Put a closed tab back where it was, taking back the empty tab that replaced it.
-   * @param {import('./lib/tabs.js').Tab} tab
-   * @param {ReturnType<typeof editor.snapshot> | undefined} state
-   * @param {number} at
-   * @param {string} [replacement]
-   */
-  function reopen(tab, state, at, replacement) {
-    if (tabs.some(kept => kept.id === tab.id)) return
-    const fresh = tabs.find(kept => kept.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
-      tabs.splice(tabs.indexOf(fresh), 1)
-      states.delete(fresh.id)
-      sessions.delete(fresh.id)
-    }
-    tabs.splice(Math.min(at, tabs.length), 0, tab)
-    if (state) states.set(tab.id, state)
-    activate(tab.id)
+    closeTabs([id], id === activeId ? tabs[at + 1]?.id ?? tabs[at - 1]?.id : activeId)
   }
   /**
    * Close several tabs at once, showing `show` when it survives, else a fresh tab. The note brings
@@ -715,10 +699,13 @@
       if (saved) editor.restore(saved)
       else editor.reset(kept.sequence)
     }
+    /** @type {ClosedGroup} */
+    const group = { tabs: removed, active: wasActive ? before : null, ...(fresh ? { fresh: fresh.id } : {}) }
+    closedGroups = [...closedGroups, group].slice(-10)
     const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
     toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
-      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
-      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000, close: true,
+      run: () => restoreClosed(group) }
     store()
   }
   /**
@@ -726,10 +713,13 @@
    * @param {{ tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[]} removed
    * @param {string | null} wasActive
    * @param {string} [replacement]
+   * @param {boolean} [first] show the first restored tab when the tab that was active is not back
    */
-  function reopenTabs(removed, wasActive, replacement) {
+  function reopenTabs(removed, wasActive, replacement, first = false) {
     const fresh = tabs.find(tab => tab.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+    // The replacement is a placeholder: take it back while it is empty and untouched, even if
+    // another tab has been opened since the close.
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
       sessions.delete(fresh.id)
@@ -739,8 +729,22 @@
       tabs.splice(Math.min(at, tabs.length), 0, tab)
       if (state) states.set(tab.id, state)
     }
-    if (wasActive && wasActive !== activeId && tabs.some(tab => tab.id === wasActive)) activate(wasActive)
+    const target = wasActive && tabs.some(tab => tab.id === wasActive) ? wasActive
+      : first ? removed[0]?.tab.id
+      : null
+    if (target && target !== activeId) activate(target)
     else store()
+  }
+  /** Put a closed group back and take it off the reopen history. @param {ClosedGroup} group @param {boolean} [first] */
+  function restoreClosed(group, first = false) {
+    closedGroups = closedGroups.filter(entry => entry !== group)
+    if (toast?.close) toast = null
+    reopenTabs(group.tabs, group.active, group.fresh, first)
+  }
+  /** Reopen the tab or group closed last, showing it. */
+  function reopenClosed() {
+    const group = closedGroups.at(-1)
+    if (group) restoreClosed(group, true)
   }
   /** Close every tab but `id`, showing it. @param {string} id */
   function closeOthers(id) {
@@ -844,8 +848,10 @@
 
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
+    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
+    { label: t('app.file.title'), disabled: editor.tree === null, run: openTitle },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
     { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
@@ -940,6 +946,15 @@
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
     if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
+    if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
+      && !target.closest('[role="menu"], [role="menubar"]')) {
+      event.preventDefault()
+      const inStrip = Boolean(target.closest('.tabbar'))
+      reopenClosed()
+      if (inStrip) tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
+      return
+    }
     // The browser may keep Ctrl+Tab for itself; where it does not, it moves between the tabs.
     if (command && tabs.length > 1 && (event.key === 'Tab' || event.key === 'PageDown' || event.key === 'PageUp')) {
       event.preventDefault()
@@ -989,7 +1004,7 @@
 </script>
 
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
-<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
+<svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
@@ -1033,7 +1048,8 @@
     </header>
     <div class="tabs-slot">
       <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
-        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll} onmove={moveTab} oncommit={store} />
+        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
+        onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 
@@ -1204,6 +1220,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />

@@ -38,7 +38,15 @@ try {
     await page.keyboard.press('Escape')
     const linked = await browser.newContext({ colorScheme: scheme })
     const restoredPage = await linked.newPage()
-    await restoredPage.goto(page.url(), { waitUntil: 'domcontentloaded' })
+    // Static test servers do not rewrite sequence paths to index.html; move the same sequence to
+    // the supported ?ids= form so this checks document restore rather than server routing.
+    const shared = new URL(page.url())
+    const portable = new URL(shared.origin)
+    portable.search = shared.search
+    const text = decodeURIComponent(shared.pathname.replace(/^\/|\/$/g, ''))
+    if (text) portable.searchParams.set('ids', text)
+    else portable.hash = shared.hash
+    await restoredPage.goto(portable.href, { waitUntil: 'domcontentloaded' })
     await restoredPage.waitForTimeout(800)
     assert.ok(new URL(restoredPage.url()).searchParams.has('doc'), 'opening a document link keeps its token')
     const restoredTransform = await restoredPage.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document?.root?.children?.[0]?.transform)

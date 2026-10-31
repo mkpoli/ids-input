@@ -381,11 +381,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const readSketches = (options = {}) => sketchTemplates ??= (async () => {
     const document = typeof sketches === 'string' || sketches instanceof URL
       ? JSON.parse(await readText(await load(sketches, options))) : sketches
-    const prepared = readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     // A prepared file belongs to the palette it was made for; a host's own palette keeps only the
     // parts it holds, with that palette's counts.
-    if (!givenPalette && !parts && !smallSeal) return prepared
+    if (!givenPalette && !parts && !smallSeal && !shuishu) return readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const rows = await readPalette()
+    const prepared = readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const by = new Map(rows.map(row => [row.part, row]))
     return prepared.filter(template => by.has(template.part)).map(template => {
       const row = by.get(template.part)

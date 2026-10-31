@@ -48,3 +48,13 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
     expect(componentDrawing(text, 'kaisho').d).not.toMatch(/NaN|Infinity/)
   }
 })
+
+it('draws 萬 with the bottom of 両 as one prepared form', () => {
+  for (const style of ['sans', 'serif']) {
+    expect(isComponentForm('⿳艹田⿵冂山', style)).toBe(true)
+    expect(isGroupedForm('⿳艹田⿵冂山', style)).toBe(true)
+    const drawing = componentDrawing('⿳艹田⿵冂山', style)
+    expect(drawing.d).not.toMatch(/NaN|Infinity/)
+    expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
+  }
+})

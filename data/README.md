@@ -180,8 +180,8 @@ Notes on the columns:
 
 ## `sketch-parts.json.gz`
 
-The drawing search's prepared glyph shapes: the palette's 803 parts, each fitted to the 40×40
-square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 104 KB
+The drawing search's prepared glyph shapes: the palette's 11,417 parts, each fitted to the 40×40
+square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 1.8 MB
 gzipped. Format:
 
 ```json
@@ -191,9 +191,10 @@ gzipped. Format:
 
 Rebuild with `uv run scripts/build_sketch_parts.py` (or `bun run build:sketch-parts`). The script
 draws each part with Noto Sans CJK JP 2.004 at `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`
-(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3 and the Plangothic P1/P2
-palette subset. If none of those faces has a glyph, it uses the `IDS Fallback` shards in
-`fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and provenance are recorded in
+(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3, the Plangothic P1/P2
+palette subset and Noto Serif Tangut for Tangut parts. If none of those faces has a glyph, it uses
+the `IDS Fallback` shards in `fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and
+provenance are recorded in
 `fonts/unicode.json`; it skips a part drawn as the notdef box. The script checks Noto's SHA-256
 against the build it came from and records the primary font hashes and the `unicode.json` manifest
 hash in the file. The shapes derive from those fonts and fallback shards; their SIL OFL 1.1 terms
