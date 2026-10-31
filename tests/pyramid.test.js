@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { LONGEST, PYRAMID_LONGEST, isDescription, parse, pyramidCount, pyramidRows, pyramidSequence, write } from '../src/core/index.js'
 import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '../src/composer/loader.js'
+import { Composer } from '../src/composer/compose.js'
 import { pyramidCells } from '../src/composer/pyramid.js'
 import { groupParts } from '../src/core/preview.js'
 import { files } from './fixtures/composer-export.js'
@@ -334,14 +335,37 @@ describe('drawing a pyramid', () => {
     for (const box of cells.values()) expect(box[2] - box[0]).toBeGreaterThan(80)
   })
 
-  it('draws a two-row pyramid of a description through the ordinary composition', async () => {
+  it('draws a two-row pyramid of a description in equal cells', async () => {
     const source = sourceOf(), text = pyramidSequence('⿰木口', 2)
     expect(pyramidRows(tree(text), { minLayers: 2 })?.layers).toBe(2)
     expect(pyramidRows(tree(text))).toBeNull()
     expect(await sketch(source, text)).toHaveLength(6)
     const drawn = await compose(source, text)
     expect(drawn.cells).toBeUndefined()
-    expect(drawn.parts.length).toBeGreaterThan(0)
+    // The fixture draws each cell as its two glyphs; group them into the three pyramid cells.
+    expect(drawn.parts).toHaveLength(6)
+    const boxes = drawn.parts.map(part => part.box)
+    const union = group => group.reduce((box, [x, y, width, height]) =>
+      [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x + width), Math.max(box[3], y + height)],
+    [Infinity, Infinity, -Infinity, -Infinity])
+    const cells = [union(boxes.slice(0, 2)), union(boxes.slice(2, 4)), union(boxes.slice(4, 6))]
+    for (const cell of cells) {
+      expect(cell[2] - cell[0]).toBeCloseTo(cells[0][2] - cells[0][0], 5)
+      expect(cell[3] - cell[1]).toBeCloseTo(cells[0][3] - cells[0][1], 5)
+    }
+    expect((cells[0][0] + cells[0][2]) / 2).toBeCloseTo((cells[1][0] + cells[2][2]) / 2, 5)
+    expect(cells[0][3]).toBeLessThan(cells[1][1])
+    expect(cells[2][0]).toBeGreaterThan(cells[1][2])
+  })
+
+  it('keeps a two-row pyramid of one part in the composer', async () => {
+    const source = sourceOf()
+    await source.ready()
+    const composer = new Composer(source.store())
+    expect(composer.pyramid(composer.parse('⿱口⿰口口'))).toBeNull()
+    expect(composer.pyramid(composer.parse('⿱木⿰木木'))).toBeNull()
+    expect(composer.pyramid(composer.parse(pyramidSequence('⿰木口', 2)))?.layers).toBe(2)
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 3)))?.layers).toBe(3)
   })
 
   it('draws a pyramid nested in another description', async () => {

@@ -234,9 +234,10 @@ an excluded character, or that carries loose marks or approximate operators, kee
 `pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
 description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
 and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows as equal square cells in centred rows, so the 4-row spellings given for `口`
-above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
-composed inside its cell. A whole description may run past the ordinary 64-code-point length as a
+three or more rows, or of two rows whose cell is a description, as equal square cells in centred
+rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
+cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
+follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
 pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
 to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
 its sizes in a scrollable row. The shared Part field above the generators starts with the selected
