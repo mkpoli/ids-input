@@ -41,6 +41,7 @@ try {
 
   // The menu offers the actions the tab's place allows.
   await open('tab-0')
+  assert.equal(await item('Reopen closed tab').isDisabled(), true, 'nothing has been closed yet')
   assert.equal(await item('Close tabs to the left').isDisabled(), true, 'the first tab has nothing on its left')
   assert.equal(await item('Close tabs to the right').isDisabled(), false, 'the first tab has tabs on its right')
   await closeMenu()
@@ -114,7 +115,32 @@ try {
   assert.equal(await active(), 'tab-1', 'a surviving active tab stays shown')
   await undo()
   assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'undo restores the single tab')
-  assert.equal(await active(), 'tab-0', 'undo shows the reopened tab')
+  assert.equal(await active(), 'tab-1', 'a surviving active tab stays shown')
+
+  // Ctrl+Shift+T reopens the last closed tab; the tab menu reopens a whole group.
+  await open('tab-0')
+  await item('Close tab').click()
+  assert.deepEqual(await order(), ['tab-1', 'tab-2', 'tab-3'], 'close tab closes it')
+  await page.keyboard.press('Control+Shift+T')
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'Ctrl+Shift+T reopens the closed tab')
+  assert.equal(await active(), 'tab-0', 'reopening shows the tab')
+  assert.equal(await page.locator('.toast').filter({ hasText: /Closed/ }).count(), 0, 'reopening takes the close note away')
+  await open('tab-2')
+  await item('Close other tabs').click()
+  assert.deepEqual(await order(), ['tab-2'], 'only the menu tab is left')
+  await open('tab-2')
+  assert.equal(await item('Reopen closed tab').isDisabled(), false, 'the menu offers the closed group')
+  await page.getByRole('menuitem', { name: /Reopen closed tab/ }).click()
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'the menu reopens the whole group')
+  assert.equal(await active(), 'tab-0', 'the reopened group shows the tab that was active')
+
+  // The File menu opens the same history.
+  await open('tab-0')
+  await item('Close tab').click()
+  await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: /Reopen closed tab/ }).click()
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'the File menu reopens the closed tab')
+  assert.equal(await active(), 'tab-0', 'the File menu shows the tab it reopened')
 
   // Shift+F10 opens the menu on the focused tab and the arrows walk the enabled items.
   await page.locator('.tab[data-tab-id="tab-0"] [role="tab"]').focus()
