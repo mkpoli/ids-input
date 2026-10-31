@@ -49,6 +49,13 @@ describe('a path that names a sequence', () => {
     expect(forwarded.headers.get('origin')).toBe('https://ids.mkpo.li')
     expect(await forwarded.text()).toBe('a=1')
   })
+  it('says so when no intake is bound', async () => {
+    const response = await worker.fetch(new Request('https://ids.mkpo.li/api/report', { method: 'POST', body: 'a=1' }), {
+      ASSETS: { fetch: async () => new Response(shell) },
+    })
+    expect(response.status).toBe(503)
+    expect((await response.json()).error).toContain('not connected')
+  })
   it('revalidates its HTML', async () => {
     const response = await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')
     expect(response.headers.get('cache-control')).toBe('max-age=0, must-revalidate')

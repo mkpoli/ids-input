@@ -114,8 +114,13 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url)
     // A report leaves the page on its own origin and is handed to the intake Worker, whose routes
-    // start at its root.
-    if (url.pathname === '/api/report') return env.REPORT.fetch(new Request(new URL('/', url), request))
+    // start at its root. Without that Worker bound, the dialog is told rather than the throw escaping.
+    if (url.pathname === '/api/report') {
+      if (!env.REPORT) return new Response(JSON.stringify({ error: 'The report intake is not connected.' }), {
+        status: 503, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
+      })
+      return env.REPORT.fetch(new Request(new URL('/', url), request))
+    }
     // The root, files and deeper paths belong to the asset layer, whose page keeps the root
     // canonical. A path that names a sequence reads its own address.
     if (request.method !== 'GET' && request.method !== 'HEAD') return env.ASSETS.fetch(request)
