@@ -1444,8 +1444,9 @@
     .results :global(.empty){margin:auto}
   }
   .phone-tabs{display:none}
-  @media (max-width:640px){
-    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:-12px -12px 0;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)}
+  /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
+  @media (max-width:879px){
+    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--bg);border-bottom:1px solid var(--line)}
     .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
     .phone-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
     .phone-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
@@ -1462,6 +1463,7 @@
     .phone-only{display:inline-flex}
     .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
     .work{padding:12px;gap:12px}
+    .phone-tabs{margin:0 -12px;padding:8px 12px}
     .pane{padding:14px}
     .sponsor{padding:0 12px 0 4px}
   }
