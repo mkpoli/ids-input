@@ -285,5 +285,7 @@
   "app.titleDialog.label": "Tiêu đề",
   "app.titleDialog.hint": "Hiển thị trong tệp đã lưu và xuất; tab giữ chuỗi cấu trúc.",
   "app.titleDialog.placeholder": "Tài liệu chưa đặt tên",
-  "app.save": "Lưu"
+  "app.save": "Lưu",
+  "app.phone.panels": "Các bảng làm việc",
+  "app.phone.compose": "Tổ hợp"
 }

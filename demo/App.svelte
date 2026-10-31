@@ -83,6 +83,8 @@
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
   let titleOpen = $state(false)
+  /** @type {'input' | 'compose' | 'output'} */
+  let phonePane = $state('input')
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -553,6 +555,12 @@
   function currentDocument() {
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
+  }
+  $effect(() => { activeId; phonePane = 'input' })
+  /** @param {'input' | 'compose' | 'output'} pane */
+  function phoneTab(pane) {
+    phonePane = pane
+    requestAnimationFrame(() => window.scrollTo({ top: 0 }))
   }
   /** The active tab's document title, kept current by the document revision. */
   const currentTitle = $derived.by(() => {
@@ -1056,7 +1064,12 @@
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
+      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
+        <button type="button" role="tab" aria-selected={phonePane === 'input'} onclick={() => phoneTab('input')}>{t('app.input')}</button>
+        <button type="button" role="tab" aria-selected={phonePane === 'compose'} onclick={() => phoneTab('compose')}>{t('app.phone.compose')}</button>
+        <button type="button" role="tab" aria-selected={phonePane === 'output'} onclick={() => phoneTab('output')}>{t('app.output')}</button>
+      </div>
+      <section class="pane input" class:phone-active={phonePane === 'input'} id="input-panel" aria-label={t('app.input')}>
         <div class="block">
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
@@ -1081,7 +1094,7 @@
           controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
 
-      <div class="middle" bind:this={middleEl} style:--upper="{split}%">
+      <div class="middle" class:phone-active={phonePane === 'compose'} bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
           <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
@@ -1132,7 +1145,7 @@
         <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
-      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
+      <section class="pane output" class:phone-active={phonePane === 'output'} id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#if !large}
             {#key activeId}
@@ -1429,6 +1442,14 @@
     .results :global(.ids-search-results){flex:none;min-height:auto}
     .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
+  }
+  .phone-tabs{display:none}
+  @media (max-width:640px){
+    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:-12px -12px 0;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--line)}
+    .phone-tabs button{flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+    .phone-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+    .phone-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+    .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
   }
   .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}

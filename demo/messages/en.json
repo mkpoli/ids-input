@@ -286,5 +286,7 @@
   "app.titleDialog.label": "Title",
   "app.titleDialog.hint": "Shown in saved and exported files; the tab keeps the sequence.",
   "app.titleDialog.placeholder": "Untitled document",
-  "app.save": "Save"
+  "app.save": "Save",
+  "app.phone.panels": "Workspace panels",
+  "app.phone.compose": "Compose"
 }

@@ -285,5 +285,7 @@
   "app.titleDialog.label": "タイトル",
   "app.titleDialog.hint": "保存・書き出しファイルに使います。タブ名は構成文字列のままです。",
   "app.titleDialog.placeholder": "無題の文書",
-  "app.save": "保存"
+  "app.save": "保存",
+  "app.phone.panels": "ワークスペースのパネル",
+  "app.phone.compose": "構成"
 }

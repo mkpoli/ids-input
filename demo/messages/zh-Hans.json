@@ -285,5 +285,7 @@
   "app.titleDialog.label": "标题",
   "app.titleDialog.hint": "用于保存和导出的文件；标签页保留构字串。",
   "app.titleDialog.placeholder": "无标题文档",
-  "app.save": "保存"
+  "app.save": "保存",
+  "app.phone.panels": "工作区面板",
+  "app.phone.compose": "构成"
 }
