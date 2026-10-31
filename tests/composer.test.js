@@ -773,6 +773,76 @@ describe('a child contained by its cover', () => {
 })
 
 
+describe('a stack under a cover drawn clear of itself', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (branch, ...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return { ...placed(p, p.box, p.box, 0, 'test'), branch: [branch] }
+  }
+  const open = (children, ...lower) =>
+    Composer.prototype.openUnderCover.call({ partial: false }, '⿱', ['宀', children], [[part(0, [100, 800, 900, 1000])], lower])
+  const band = p => [p.target[1], p.target[3]]
+  const stack = ['⿳', '心', '皿', '一']
+
+  it('draws crowded operands back from one another', () => {
+    // 700 tall in all: the band wanted between them is 63, and they stand 20 apart.
+    const head = part(0, [100, 420, 900, 700]), foot = part(1, [100, 0, 900, 400])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)[0] - band(foot)[1]).toBeCloseTo(63)
+    expect(band(head)[1]).toBe(700)
+    expect(band(foot)[0]).toBe(0)
+  })
+
+  it('leaves the stack the top and bottom the layout gave it', () => {
+    const a = part(0, [100, 500, 900, 700]), b = part(1, [100, 240, 900, 480]), c = part(2, [100, 0, 900, 220])
+    open(stack, a, b, c)
+    expect(a.target[3]).toBe(700)
+    expect(c.target[1]).toBe(0)
+  })
+
+  it('leaves operands already standing clear of one another', () => {
+    const head = part(0, [100, 500, 900, 700]), foot = part(1, [100, 0, 900, 300])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)).toEqual([500, 700])
+    expect(band(foot)).toEqual([0, 300])
+  })
+
+  it('takes no more than a seventh of an operand’s own height to open a band', () => {
+    // A thin bar beside a tall neighbour: it may give up 15% of its 60, not half the shortfall.
+    const head = part(0, [100, 650, 900, 710]), foot = part(1, [100, 0, 900, 640])
+    open(['⿱', '一', '衣'], head, foot)
+    expect(head.target[1]).toBeCloseTo(650 + 9)
+    expect(foot.target[3]).toBeCloseTo(640 - 9)
+  })
+
+  it('leaves a foot that tapers to a point, as the 八 of 㝙 does', () => {
+    // No ink along its top: the band above it is left as the stack drew it.
+    const bar = part(0, [100, 640, 900, 700])
+    const apex = makePart([rect(480, 440, 520, 620), rect(100, 0, 900, 440)])
+    const foot = { ...placed(apex, apex.box, apex.box, 0, 'test'), branch: [1] }
+    open(['⿱', '一', '八'], bar, foot)
+    expect(bar.target[1]).toBe(640)
+    expect(foot.target[3]).toBe(620)
+  })
+
+  it('leaves a child drawn as one piece, which has no operands to draw apart', () => {
+    const one = part(0, [100, 0, 900, 700])
+    open('𪟊', one)
+    expect(band(one)).toEqual([0, 700])
+  })
+
+  it('leaves a row, whose operands stand beside one another', () => {
+    const left = part(0, [100, 0, 400, 700]), right = part(1, [420, 0, 900, 700])
+    open(['⿰', '爿', '罒'], left, right)
+    expect(band(left)).toEqual([0, 700])
+    expect(band(right)).toEqual([0, 700])
+  })
+})
+
+
 describe('the foot of a stack under a cover', () => {
   const rect = (x0, y0, x1, y1) => {
     const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
