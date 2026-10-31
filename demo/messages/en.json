@@ -115,6 +115,8 @@
   "app.share.title": "Share",
   "app.share.tooLong": "The link is too long for a QR code.",
   "app.sponsor.label": "Sponsor",
+  "app.sponsor.supporters": "Recent supporters",
+  "app.sponsor.anonymous": "Someone",
   "app.sponsor.lead": "I make this workshop out of love for characters, and I've put several hundred dollars of my own into it. I don't have a job, and my small TA pay doesn't cover rent and food. Some days I can barely afford to eat.",
   "app.sponsor.ask": "Please help me keep going 🥺 Even one dollar helps me eat today.",
   "app.sponsor.howTo": "How to help",

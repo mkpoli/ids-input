@@ -94,6 +94,8 @@
   "app.share.title": "Chia sẻ",
   "app.share.tooLong": "Liên kết quá dài để tạo mã QR.",
   "app.sponsor.label": "Tài trợ",
+  "app.sponsor.supporters": "Người ủng hộ gần đây",
+  "app.sponsor.anonymous": "Ai đó",
   "app.sponsor.lead": "Mình làm nên xưởng nhỏ này bằng trọn vẹn tình yêu dành cho những con chữ, và mình cũng đã tự bỏ ra mấy trăm đô tiền túi rồi. Mình hiện chưa có việc làm, khoản phụ cấp trợ giảng ít ỏi chẳng đủ gánh tiền trọ và ăn uống. Có những ngày mình còn chẳng đủ tiền để lo bữa cơm...",
   "app.sponsor.ask": "Xin hãy giúp mình đi tiếp nhé 🥺 Dù chỉ 1 đô thôi cũng giúp mình có bữa ăn hôm nay rồi.",
   "app.sponsor.howTo": "Cách ủng hộ mình nè",

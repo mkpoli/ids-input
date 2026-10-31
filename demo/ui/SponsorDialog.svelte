@@ -8,6 +8,10 @@
   let { open = $bindable(false), t } = $props()
 </script>
 
+<svelte:head>
+  <script type="module" src="https://supporters.mkpo.li/roll.js"></script>
+</svelte:head>
+
 <Dialog bind:open title={t('app.sponsor.label')} closeLabel={t('app.close')}>
   <div class="sheet">
     <div class="hero" aria-hidden="true">
@@ -39,6 +43,7 @@
       <Icon name="mail" size={16} />
       <span class="copy"><strong>{t('app.sponsor.company')}</strong><small>{t('app.sponsor.companyHint')}</small></span>
     </a>
+    <supporters-roll label={t('app.sponsor.supporters')} anonymous={t('app.sponsor.anonymous')}></supporters-roll>
     <p class="thanks">{t('app.sponsor.thanks')}</p>
   </div>
 </Dialog>
@@ -85,6 +90,7 @@
   .company:hover{background:var(--hover);color:var(--ink)}
   .company :global(.icon){flex:none;margin-top:2px}
   .company .copy strong{font-size:12.5px;color:var(--ink)}
+  supporters-roll{--sp-text:var(--ink);--sp-muted:var(--muted)}
   .thanks{margin:0;font-size:12.5px;line-height:1.5;color:var(--muted);text-align:center}
   @media (prefers-reduced-motion:reduce){.heart,.spark,.kofi{animation:none;transition:none}}
 </style>
