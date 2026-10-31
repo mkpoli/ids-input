@@ -210,7 +210,8 @@ export const EXAMPLE_GROUPS = [
   // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
   // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). 唯吾知足, 黃金萬兩 and 吉祥如意 share strokes
   // between their characters. 唯吾知足 sets 五 above 矢, 口 and 隹, with 龰, the bottom of 足, below,
-  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with 両's bottom, 冂 around 山;
+  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with 両's bottom, 冂 around 山, drawn as a prepared
+  // form;
   // 吉祥如意 shares one 口 between 吉 (士 above it) and 如 (女 beside it), with 意 and 祥 around.
   { key: 'ligature', examples: [
     // UTC-00949 records 宀 above the 辶 (⿱宀⿺辶...); the proposal's glyph puts the 宀 inside the
@@ -222,7 +223,7 @@ export const EXAMPLE_GROUPS = [
     // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, and
     // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
-    { sequence: '⿱黃⿱金⿱⿱艹田⿵冂山', refs: [46,51], char: '' },
+    { sequence: '⿱黃⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
     { sequence: '⿳士⿲女口意祥', refs: [50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
@@ -234,10 +235,9 @@ export const EXAMPLE_GROUPS = [
   ] },
   // Korean gukja (國字): the coda of each syllable is written with a Chinese character or stroke,
   // and the forms follow the article by reading. Every encoded description is BabelStone's, tagged
-  // K, 14 as GKP. The twenty forms without a code point come last, as the article writes them,
-  // a decomposition alone.
-  // and the forms follow the article by reading. The twenty forms without a code point come last,
-  // as the article writes them, a decomposition alone.
+  // K, 14 as GKP. The twenty forms without a code point follow the encoded ones, as the article
+  // writes them, a decomposition alone. 𬼝, which the article leaves without a reading, ends the
+  // table and so the group.
   { key: 'korean', refs: [1, 30], examples: [
     { sequence: '⿱加𠃍', char: '㔖', reading: '각' },
     { sequence: '⿱加乙', char: '乫', reading: '갈' },
@@ -354,6 +354,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱吐乙', char: '', reading: '톨' },
     { sequence: '⿱坪乙', char: '', reading: '펼' },
     { sequence: '⿱呼乙', char: '', reading: '홀' },
+    // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
+    { sequence: '⿱去乙', char: '𬼝' },
   ] },
   // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
   // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
@@ -401,6 +403,22 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木⿱艹⿰亻𠤎', char: '椛', reading: 'もみじ' },
     { sequence: '⿻勹乂', char: '匁', reading: 'もんめ' },
     { sequence: '⿰木卆', char: '枠', reading: 'わく' },
+  ] },
+  // The twelve unresolved JIS characters listed by sources 56–57; later attestations differ.
+  // Descriptions follow BabelStone's Japanese forms. No historical readings are assigned here.
+  { key: 'ghost', refs: [1, 54], examples: [
+    { sequence: '⿳山一女', char: '妛' },
+    { sequence: '⿰弓哥', char: '彁' },
+    { sequence: '⿰木劵', refs: [1, 55], char: '椦' },
+    { sequence: '⿰土⿱艹⿻者丶', refs: [1, 56, 57], char: '墸' },
+    { sequence: '⿰土㕓', refs: [1, 56, 57], char: '壥' },
+    { sequence: '⿰扌羽', refs: [1, 56, 57], char: '挧' },
+    { sequence: '⿱日非', refs: [1, 56, 57], char: '暃' },
+    { sequence: '⿰木竜', refs: [1, 56, 57], char: '槞' },
+    { sequence: '⿰虫常', refs: [1, 56, 57], char: '蟐' },
+    { sequence: '⿰衤尓', refs: [1, 56, 57], char: '袮' },
+    { sequence: '⿵門玉', refs: [1, 56, 57], char: '閠' },
+    { sequence: '⿰馬州', refs: [1, 56, 57], char: '駲' },
   ] },
   // Vietnamese Nôm: characters invented to write Vietnamese, in reading order. The forms and their
   // readings follow the Wikipedia article's Tale of Kiều example and its account of invented characters.

@@ -2,11 +2,22 @@ import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { translator } from '../src/svelte/i18n.js'
 import { STRUCTURAL_PRESETS } from '../src/core/structural-search.js'
+import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 
 const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.json`, import.meta.url), 'utf8'))
 const en = catalogue('en')
 
 describe('the message catalogues', () => {
+  it('name every example group in every workshop locale', () => {
+    for (const locale of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+      const messages = JSON.parse(readFileSync(new URL(`../demo/messages/${locale}.json`, import.meta.url), 'utf8'))
+      for (const { key } of EXAMPLE_GROUPS) {
+        const label = messages[`app.examples.${key}`]
+        expect(typeof label, `${locale}: ${key}`).toBe('string')
+        expect(label.trim().length, `${locale}: ${key}`).toBeGreaterThan(0)
+      }
+    }
+  })
   it('hold the keys the components build at runtime', () => {
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
     for (const tab of ['find', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
@@ -14,7 +25,7 @@ describe('the message catalogues', () => {
     for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
       const messages = catalogue(name)
       for (const preset of STRUCTURAL_PRESETS) expect(`ids.structural.${preset.id}` in messages, `${name}: ${preset.id}`).toBe(true)
-      for (const key of ['generatorPart', 'generatorPartHint', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHint', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveUnsupported', 'fiveHostUnsupported', 'fiveTooLong', 'fiveTarget'])
+      for (const key of ['generatorPart', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveUnsupported', 'fiveHostUnsupported', 'fiveTooLong', 'fiveTarget'])
         expect(`ids.templates.${key}` in messages, `${name}: ${key}`).toBe(true)
     }
   })

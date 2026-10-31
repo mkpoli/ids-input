@@ -4,8 +4,8 @@
   // while the strip has the focus (Home and End too), or by the page's own tab shortcuts; Delete
   // closes the focused tab, as does its ×. A tab dragged sideways takes the place it is dropped in,
   // and Shift with the arrow keys moves the focused tab the same way. Right-clicking a tab offers
-  // Duplicate and the close actions, with Close all asking first. The sequence is in the tab's
-  // tooltip and its name.
+  // reopening the last closed tab or group, Duplicate and the close actions, with Close all asking
+  // first. The sequence is in the tab's tooltip and its name.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
   import TabIcon from './TabIcon.svelte'
@@ -14,9 +14,9 @@
    *   t: (key: string, params?: Record<string, string | number>) => string,
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
    *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
-   *   onmove: (from: number, to: number) => void, oncommit: () => void }}
+   *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onmove, oncommit } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -83,6 +83,14 @@
     if (!id) return
     dismiss()
     action(id)
+    await tick()
+    focus(activeId)
+  }
+  /** Reopen the last closed tab or group, and show it. */
+  async function reopen() {
+    if (!canreopen) return
+    dismiss(true)
+    onreopen()
     await tick()
     focus(activeId)
   }
@@ -298,6 +306,8 @@
   <div class="tab-menu" role="menu" tabindex="-1" popover="manual" bind:this={menuEl}
     aria-label={at >= 0 ? `${t('app.tabs.menu')}: ${label(tabs[at])}` : t('app.tabs.menu')}
     style:left="{menu.x}px" style:top="{menu.y}px" onkeydown={menuKey}>
+    <button type="button" role="menuitem" disabled={!canreopen} onclick={reopen}><Icon name="history" size={16} />{t('app.tabs.reopen')}</button>
+    <hr />
     <button type="button" role="menuitem" onclick={() => run(onduplicate)}><Icon name="copy" size={16} />{t('app.tabs.duplicate')}</button>
     <hr />
     <button type="button" role="menuitem" onclick={() => run(onclose)}><Icon name="close" size={16} />{t('app.tabs.closeOne')}</button>

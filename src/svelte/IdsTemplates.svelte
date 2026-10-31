@@ -12,9 +12,16 @@
   const groups = [2, 3, 4].map(slots => ({ slots, templates: STRUCTURE_TEMPLATES.filter(item => item.slots === slots)
     .map(item => ({ ...item, shapes: templateDiagram(item.sequence) })) }))
   const MIN_PYRAMID = 2, MAX_PYRAMID = 24
-  // Sizes offered as one-click buttons; the Rows field takes any other count.
+  // Sizes offered as one-click buttons; the Layers field takes any other count.
   const PYRAMID_SIZES = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 16, 20, 24]
-  let reverse = $state(false)
+  /** @type {('top' | 'bottom' | 'left' | 'right')[]} */
+  const DIRECTIONS = ['top', 'bottom', 'left', 'right']
+  /** @type {Record<string, string>} */
+  const DIRECTION_NAMES = {
+    top: 'ids.templates.pyramidTop', bottom: 'ids.templates.pyramidBottom',
+    left: 'ids.templates.pyramidLeft', right: 'ids.templates.pyramidRight',
+  }
+  let direction = $state(/** @type {'top' | 'bottom' | 'left' | 'right'} */ ('top'))
   let typedComponent = $state(/** @type {string | null} */ (null))
   // The part every generator repeats: a typed part, or the chosen part of the tree.
   const generatorPart = $derived(typedComponent ?? (editor.picked === undefined ? '口' : write(editor.picked)))
@@ -37,11 +44,12 @@
     return !draft.problem && (nextEmpty(next) !== null || isDescription(text))
   }
 
-  const pyramidTemplates = $derived(PYRAMID_SIZES.map(layers => ({ layers, shapes: pyramidDiagram(layers, { reverse }) })))
+  const pyramidTemplates = $derived(PYRAMID_SIZES.map(layers => ({ layers, shapes: pyramidDiagram(layers, { direction }) })))
   /** @param {number} layers */
-  const pyramidLabel = layers => reverse
-    ? t('ids.templates.pyramidInsertReverse', { layers, part: partName(generatorPart) })
-    : t('ids.templates.pyramidInsert', { layers, part: partName(generatorPart) })
+  const pyramidLabel = layers => t(direction === 'bottom' ? 'ids.templates.pyramidInsertBottom'
+    : direction === 'left' ? 'ids.templates.pyramidInsertLeft'
+    : direction === 'right' ? 'ids.templates.pyramidInsertRight'
+    : 'ids.templates.pyramidInsert', { layers, part: partName(generatorPart) })
   const pyramidPartSupported = $derived(partSupported(generatorPart))
   let customLayers = $state(5)
   const customNumber = $derived(Math.trunc(Number(customLayers)))
@@ -53,17 +61,22 @@
     for (const layers of sizes) {
       if (layers < MIN_PYRAMID || layers > MAX_PYRAMID) continue
       try {
-        const found = parse(pyramidSequence(generatorPart, layers, { reverse }), { open: true })
+        const found = parse(pyramidSequence(generatorPart, layers, { direction }), { open: true })
         if (found.tree !== undefined && fits(found.tree)) available.add(layers)
       } catch { /* too long for the slot, or unreadable */ }
     }
     return available
   })
   const customValid = $derived(Number.isInteger(Number(customLayers)) && customNumber >= MIN_PYRAMID && customNumber <= MAX_PYRAMID && availablePyramids.has(customNumber))
+  /** What a size button says when it cannot insert, as its tooltip. @param {number} layers */
+  const pyramidTitle = layers => availablePyramids.has(layers) ? pyramidLabel(layers)
+    : !pyramidPartSupported ? t('ids.templates.pyramidUnsupported')
+    : target === null ? t('ids.templates.pyramidTarget')
+    : t('ids.templates.pyramidTooLong')
   /** @param {number} layers */
   function addPyramid(layers) {
     if (editor.disabled || !availablePyramids.has(layers)) return
-    const found = parse(pyramidSequence(generatorPart, layers, { reverse }), { open: true })
+    const found = parse(pyramidSequence(generatorPart, layers, { direction }), { open: true })
     if (!found.tree) return
     editor.put(found.tree, target, pyramidLabel(layers))
   }
@@ -192,21 +205,32 @@
     <label class="ids-pyramid-custom-label" for={`${uid}-generator-part`}>{t('ids.templates.generatorPart')}</label>
     <input id={`${uid}-generator-part`} class="ids-pyramid-part" type="text" value={generatorPart} form={`${uid}-pyramid-form`}
       oninput={event => typedComponent = event.currentTarget.value} disabled={editor.disabled}
-      placeholder={EMPTY} aria-invalid={!partSupported(generatorPart)} aria-describedby={`${uid}-generator-hint ${uid}-pyramid-hint ${uid}-repeat-hint ${uid}-five-hint`}
+      placeholder={EMPTY} aria-invalid={!partSupported(generatorPart)}
       spellcheck="false" autocomplete="off" />
-    <span class="ids-pyramid-hint" id={`${uid}-generator-hint`}>{t('ids.templates.generatorPartHint')}</span>
   </div>
   <div class="ids-pyramid" role="group" aria-labelledby={`${uid}-pyramids`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-pyramids`}>{t('ids.templates.pyramids')}</span>
-      <label class="ids-pyramid-reverse"><input type="checkbox" bind:checked={reverse} disabled={editor.disabled} />{t('ids.templates.pyramidReverse')}</label>
-      <span class="ids-pyramid-hint" id={`${uid}-pyramid-hint`} role="status">{!pyramidPartSupported ? t('ids.templates.pyramidUnsupported') : target === null ? t('ids.templates.pyramidTarget') : availablePyramids.size ? t('ids.templates.pyramidHint') : t('ids.templates.pyramidTooLong')}</span>
+      <div class="ids-pyramid-direction" role="group" aria-label={t('ids.templates.pyramidDirection')}>
+        {#each DIRECTIONS as option (option)}
+          <button type="button" aria-pressed={direction === option} data-direction={option} disabled={editor.disabled}
+            aria-label={t(DIRECTION_NAMES[option])} title={t(DIRECTION_NAMES[option])}
+            onclick={() => direction = option}>
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+              {#each pyramidDiagram(2, { direction: option }) as shape, i (i)}
+                {#if shape.kind === 'slot'}
+                  <rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx=".7" />
+                {/if}
+              {/each}
+            </svg>
+          </button>
+        {/each}
+      </div>
     </div>
     <div class="ids-pyramid-sizes">
       {#each pyramidTemplates as template (template.layers)}
         <button type="button" disabled={editor.disabled || !availablePyramids.has(template.layers)} data-pyramid={template.layers}
-          aria-label={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
-          title={availablePyramids.has(template.layers) ? pyramidLabel(template.layers) : t('ids.templates.pyramidTooLong')}
+          aria-label={pyramidTitle(template.layers)} title={pyramidTitle(template.layers)}
           onclick={() => addPyramid(template.layers)}>
           <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
             {#each template.shapes as shape, i (i)}
@@ -229,7 +253,6 @@
   <div class="ids-pyramid ids-repeat" role="group" aria-labelledby={`${uid}-repeats`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-repeats`}>{t('ids.templates.repeats')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-repeat-hint`} role="status">{!repeatPartsSupported ? t('ids.templates.repeatUnsupported') : target === null ? t('ids.templates.repeatTarget') : availableRepeats.size ? t('ids.templates.repeatHint') : t('ids.templates.repeatTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-repeat-grid">
       {#each repeatTemplates as template (template.key)}
@@ -252,23 +275,21 @@
       <input id={`${uid}-repeat-bottom`} class="ids-pyramid-part" type="text" value={repeatBottomTyped}
         oninput={event => repeatBottomTyped = event.currentTarget.value} disabled={editor.disabled}
         title={t('ids.templates.repeatBottomHint')} placeholder={partName(generatorPart)} aria-invalid={repeatBottomTyped.trim() !== '' && !partSupported(repeatBottom)}
-        aria-describedby={`${uid}-repeat-hint`} spellcheck="false" autocomplete="off" />
+        spellcheck="false" autocomplete="off" />
     </div>
     <form class="ids-pyramid-custom ids-repeat-custom" onsubmit={event => { event.preventDefault(); addCustomRepeat() }}>
       <label class="ids-pyramid-custom-label" for={`${uid}-repeat-rows`}>{t('ids.templates.repeatCustom')}</label>
       <input id={`${uid}-repeat-rows`} type="text" value={customRowsTyped} placeholder="2 3"
         oninput={event => customRowsTyped = event.currentTarget.value} disabled={editor.disabled}
         aria-invalid={customRowsTyped.trim() !== '' && !customRows}
-        aria-describedby={`${uid}-repeat-rows-hint`} spellcheck="false" autocomplete="off" />
+        spellcheck="false" autocomplete="off" />
       <button type="submit" data-repeat-custom disabled={editor.disabled || !customRepeatAvailable}
         title={customRepeatTitle} aria-label={customRepeatTitle}>{t('ids.templates.repeatAdd')}</button>
-      <span class="ids-pyramid-hint ids-repeat-rows-hint" id={`${uid}-repeat-rows-hint`}>{customRowsTyped.trim() && !customRows ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint')}</span>
     </form>
   </div>
   <div class="ids-pyramid ids-five" role="group" aria-labelledby={`${uid}-five`}>
     <div class="ids-pyramid-head">
       <span class="ids-template-label" id={`${uid}-five`}>{t('ids.templates.five')}</span>
-      <span class="ids-pyramid-hint" id={`${uid}-five-hint`} role="status">{!fivePartSupported ? t('ids.templates.fiveUnsupported') : target === null ? t('ids.templates.fiveTarget') : fiveHostTyped.trim() !== '' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported') : availableFive.size ? t('ids.templates.fiveHint') : t('ids.templates.fiveTooLong')}</span>
     </div>
     <div class="ids-pyramid-grid ids-five-grid">
       {#each fiveTemplates as template (template.key)}
@@ -291,7 +312,7 @@
         oninput={event => fiveHostTyped = event.currentTarget.value} disabled={editor.disabled}
         title={t('ids.templates.fiveHostHint')}
         aria-invalid={fiveHostTyped.trim() !== '' && fivePartSupported && !fiveHostSupported}
-        aria-describedby={`${uid}-five-hint`} spellcheck="false" autocomplete="off" />
+        spellcheck="false" autocomplete="off" />
     </div>
   </div>
 </div>
@@ -301,15 +322,15 @@
   .ids-generator-part{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:2px;padding-top:10px;border-top:1px solid var(--ids-line,light-dark(#e1e1e8,#2e2e36))}
   .ids-pyramid{display:flex;flex-direction:column;gap:6px;margin-top:2px;padding-top:10px;border-top:1px solid var(--ids-line,light-dark(#e1e1e8,#2e2e36))}
   .ids-pyramid-head{display:flex;align-items:center;flex-wrap:wrap;gap:4px 7px}
-  .ids-pyramid-reverse{display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer}
-  .ids-pyramid-reverse input{margin:0;accent-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
-  .ids-pyramid-reverse input:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2944c7,#8ea8ff));outline-offset:2px}
-  .ids-pyramid-hint{font-size:11px;color:var(--ids-muted,light-dark(#686874,#9d9daa))}
+  .ids-pyramid-direction{display:inline-flex;align-items:center;gap:1px;padding:2px;border:1px solid var(--ids-line,light-dark(#d8d8de,#3a3a43));border-radius:8px;background:var(--ids-surface,light-dark(#fff,#202026))}
+  .ids-pyramid-direction button{width:24px;height:24px;border:0;border-radius:6px;background:transparent;color:var(--ids-muted,light-dark(#696973,#9c9ca8))}
+  .ids-pyramid-direction button[aria-pressed="true"]{background:var(--ids-accent-light,light-dark(#e7edfc,#24304f));color:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
+  .ids-pyramid-direction button:focus-visible{outline:2px solid var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));outline-offset:1px}
+  .ids-pyramid-direction rect{fill:currentColor;stroke:none}
   .ids-pyramid-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
   .ids-pyramid-sizes{display:flex;gap:5px;padding-bottom:3px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;scrollbar-width:thin;scrollbar-color:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55)) transparent}
   .ids-repeat-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
   .ids-repeat-custom input{width:84px;text-align:center;font-variant-numeric:tabular-nums}
-  .ids-repeat-rows-hint{flex-basis:100%}
   .ids-five-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ids-pyramid-grid button,.ids-pyramid-sizes button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;height:56px;padding:0;font-size:12px;font-variant-numeric:tabular-nums}
   .ids-pyramid-sizes button{flex:0 0 54px;scroll-snap-align:start}

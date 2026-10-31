@@ -208,7 +208,11 @@ try {
     assert.equal(await field.inputValue(),'⿰𘆽水')
     // A palette relation uses the selected destination; it does not replace a matching input glyph.
     await page.locator('.ids-tree [data-character="水"]').click()
-    await page.keyboard.press('Escape');await tabs.filter({hasText:'Components'}).click();await filter.fill('馬')
+    // Escape closes the information card; sending it before the card opens deselects the tree slot.
+    await panel.locator('header .glyph').filter({hasText:/^水$/}).waitFor()
+    await page.keyboard.press('Escape')
+    assert.equal(await page.locator('.ids-tree [data-character="水"]').getAttribute('aria-pressed'),'true')
+    await tabs.filter({hasText:'Components'}).click();await filter.fill('馬')
     await paletteHorse.hover()
     await panel.getByRole('button',{name:/^Insert 𘆽(?: ·|$)/}).click()
     assert.equal(await field.inputValue(),'⿰𘆽𘆽')

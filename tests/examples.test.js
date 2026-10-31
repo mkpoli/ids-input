@@ -94,7 +94,7 @@ describe('the demo examples', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'ligature')
     expect(group.examples.map(example => example.sequence)).toEqual([
       '⿺辶⿱宀⿱⿰王尔⿲隹貝招', '⿱⿰日日⿲有見財', '⿰⿱日斗⿱進金', '⿳𦥯⿲女子乚皿',
-      '⿳五⿲矢口隹龰', '⿱黃⿱金⿱⿱艹田⿵冂山', '⿳士⿲女口意祥',
+      '⿳五⿲矢口隹龰', '⿱黃⿱金⿳艹田⿵冂山', '⿳士⿲女口意祥',
       '⿱艹⿰马尼', '⿰⿳⿰SIR木阝',
       '⿱⿰⿱コン⿱クリ土', '⿱⿲ンメセ土', '⿸广⿰KO', '⿱宀K', '⿻Mo',
     ])
@@ -104,7 +104,7 @@ describe('the demo examples', () => {
     expect(refs.get('⿰⿱日斗⿱進金')).toEqual([sourceNumber('uhk-hetizi')])
     expect(refs.get('⿳𦥯⿲女子乚皿')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('zi-tools-kongmeng')])
     expect(refs.get('⿳五⿲矢口隹龰')).toEqual([sourceNumber('uhk-hetizi')])
-    expect(refs.get('⿱黃⿱金⿱⿱艹田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
+    expect(refs.get('⿱黃⿱金⿳艹田⿵冂山')).toEqual([sourceNumber('uhk-hetizi'), sourceNumber('gmw-zuhezi')])
     expect(refs.get('⿳士⿲女口意祥')).toEqual([sourceNumber('fznews-jixiang')])
     expect(refs.get('⿱艹⿰马尼')).toEqual([sourceNumber('zh-yue-hetizi')])
     expect(refs.get('⿰⿳⿰SIR木阝')).toEqual([sourceNumber('zh-yue-hetizi')])
@@ -123,7 +123,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'nom', 'seal', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -175,9 +175,15 @@ it('reads the Korean gukja as the source does', () => {
     '⿱直𠮟': '짓', '⿱次乙': '찰', '⿱吐乙': '톨', '⿱土乙': '톨',
     '⿱巴𠮟': '팟', '⿱坪乙': '펼', '⿱甫𠮟': '폿', '⿱下乙': '할',
     '⿱呼乙': '홀', '⿱禾乙': '활',
+    // The article's last row gives 𬼝 no reading, so it carries none.
+    '⿱去乙': undefined,
   }
   expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
-  for (const example of korean) expect(example.reading).toBe(readings[example.sequence])
+  for (const example of korean) {
+    expect(example.reading).toBe(readings[example.sequence])
+    expect(Object.hasOwn(example, 'reading')).toBe(readings[example.sequence] !== undefined)
+  }
+  expect(korean.find(example => example.sequence === '⿱去乙')).toEqual({ sequence: '⿱去乙', char: '𬼝' })
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
@@ -213,6 +219,25 @@ it('reads the Japanese kokuji in kana', () => {
   for (const example of kokuji) {
     expect(example.reading).toBe(readings[example.sequence])
     expect(example.reading).toMatch(/^[\u3040-\u30FFー]+$/)
+  }
+})
+
+it('keeps the sourced JIS ghost kanji with Japanese IDS and no assigned readings', () => {
+  const group = EXAMPLE_GROUPS.find(group => group.key === 'ghost')
+  expect(group.refs).toEqual([sourceNumber('babelstone'), sourceNumber('sanseido-ghost')])
+  expect(group.examples).toEqual([
+    { sequence: '⿳山一女', char: '妛' },
+    { sequence: '⿰弓哥', char: '彁' },
+    { sequence: '⿰木劵', refs: [sourceNumber('babelstone'), sourceNumber('kanken-ghost')], char: '椦' },
+    ...[
+      ['墸', '⿰土⿱艹⿻者丶'], ['壥', '⿰土㕓'], ['挧', '⿰扌羽'],
+      ['暃', '⿱日非'], ['槞', '⿰木竜'], ['蟐', '⿰虫常'],
+      ['袮', '⿰衤尓'], ['閠', '⿵門玉'], ['駲', '⿰馬州'],
+    ].map(([char, sequence]) => ({ sequence, refs: [sourceNumber('babelstone'), sourceNumber('wdic-ghost'), sourceNumber('ja-wp-ghost')], char })),
+  ])
+  for (const example of group.examples) {
+    expect(example).not.toHaveProperty('reading')
+    expect(table.get(example.char).some(entry => entry.text === example.sequence && entry.regions.includes('J'))).toBe(true)
   }
 })
 

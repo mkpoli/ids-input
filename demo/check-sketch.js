@@ -11,7 +11,8 @@ try {
   await page.goto(`${process.env.IDS_URL ?? 'http://localhost:5186'}?lang=en`, { waitUntil: 'domcontentloaded' })
   await page.locator('.ids-field input').waitFor()
 
-  await page.getByRole('tab', { name: 'Find' }).click()
+  // The tab's own click action never settles for Playwright; a pointer click lands on it.
+  await page.getByRole('tab', { name: 'Find' }).click({ force: true })
   await page.locator('.ids-draw-toggle').click()
   await page.locator('canvas.pad').waitFor()
   await page.waitForFunction(() => !document.querySelector('.ids-sketch .bar'), null, { timeout: 30000 })
@@ -45,7 +46,7 @@ try {
   assert.ok(after.includes('日'), `the sequence holds 日: ${after}`)
 
   await page.locator('.ids-sketch').getByRole('button', { name: 'Type instead' }).click()
-  const field = page.locator('.ids-find input')
+  const field = page.locator('.ids-find input[type="search"]')
   await field.fill('水')
   await page.locator('.ids-find .ids-hit').first().waitFor({ timeout: 10000 })
   assert.ok((await page.locator('.ids-find .ids-hit').allTextContents()).some(text => text.includes('水')), 'typed search still finds 水')

@@ -5,12 +5,12 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
   import { tick, untrack } from 'svelte'
-  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, createEditor, shortcut, translator } from '../src/svelte/index.js'
+  import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
-  import { EMPTY_MARKS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -39,6 +39,7 @@
   import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
@@ -46,6 +47,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
@@ -73,6 +75,7 @@
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
   const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
+  const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
     const curated = await sealAdapter.parts()
     const seen = new Set(curated.map(part => part.part))
@@ -80,6 +83,10 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  let titleOpen = $state(false)
+  /** @type {'input' | 'compose' | 'output'} */
+  let phonePane = $state('input')
+  const PHONE_PANES = /** @type {const} */ (['input', 'compose', 'output'])
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -392,6 +399,13 @@
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
+  /** Tabs closed this session, oldest first, for reopening.
+   * @typedef {{ tabs: { tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[], active: string | null, fresh?: string }} ClosedGroup
+   * @type {ClosedGroup[]} */
+  let closedGroups = $state.raw([])
+  // Sequences opened in this browser, newest first, for File -> Recent.
+  let recents = $state(readRecent())
+  if (linked) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -437,7 +451,7 @@
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number, close?: boolean } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -467,7 +481,16 @@
   const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
   /** @param {string} text */
   async function copy(text) {
-    try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })) } catch { note(t('app.copyFailed')) }
+    try { await navigator.clipboard.writeText(text); note(t('app.copied', { text })); return true } catch { note(t('app.copyFailed')); return false }
+  }
+  let footerCopied = $state('')
+  let footerTimer = /** @type {ReturnType<typeof setTimeout> | undefined} */ (undefined)
+  /** @param {string} text */
+  async function copyFooter(text) {
+    const ok = await copy(text)
+    footerCopied = ok ? t('app.copied', { text: '' }).trim() : t('app.copyFailed')
+    clearTimeout(footerTimer)
+    footerTimer = setTimeout(() => { footerCopied = '' }, 2000)
   }
 
   // The tabs: choose one, open a new one, open a sequence in one, and close one. One tab always stays
@@ -479,6 +502,18 @@
     const tab = current()
     return tab ? sessionFor(tab) : null
   }
+  /** Keep a tab's Recent entry on its latest document after a layer change. @param {import('./lib/tabs.js').Tab} tab */
+  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  const recentTimers = new Map()
+  function keepRecent(tab = current()) {
+    if (!tab || !tab.document || !recents.some(item => item.sequence === tab.sequence)) return
+    clearTimeout(recentTimers.get(tab.id))
+    recentTimers.set(tab.id, setTimeout(() => {
+      recentTimers.delete(tab.id)
+      if (!tabs.some(kept => kept.id === tab.id) || !tab.document) return
+      recents = remember(tab.sequence, tab.document)
+    }, 250))
+  }
   /** Keep the active tab's document after the layer dialog changes its session. */
   function layerChanged() {
     const tab = current()
@@ -487,6 +522,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -497,6 +533,7 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    keepRecent(tab)
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
   /** @param {boolean} undo */
@@ -524,6 +561,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
@@ -537,6 +575,67 @@
   function currentDocument() {
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
+  }
+  $effect(() => { activeId; phonePane = 'input' })
+  /** @param {'input' | 'compose' | 'output'} pane */
+  function phoneTab(pane) {
+    phonePane = pane
+    requestAnimationFrame(() => window.scrollTo({ top: 0 }))
+  }
+  /** Move between the phone tabs with the keyboard. @param {KeyboardEvent} event */
+  function phoneKey(event) {
+    const at = PHONE_PANES.indexOf(phonePane)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? PHONE_PANES.length - 1
+      : event.key === 'ArrowRight' ? at + 1 : event.key === 'ArrowLeft' ? at - 1 : null
+    if (next === null || next < 0 || next >= PHONE_PANES.length) return
+    event.preventDefault()
+    phoneTab(PHONE_PANES[next])
+    requestAnimationFrame(() => /** @type {HTMLElement | null} */ (event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next])?.focus())
+  }
+  /** A pointer that may become a horizontal tab swipe. @type {{ id: number, x: number, y: number } | null} */
+  let swipe = null
+  const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
+  /** @param {PointerEvent} event */
+  function swipeStart(event) {
+    swipe = null
+    if (!event.isPrimary || event.pointerType === 'mouse' || !matchMedia('(max-width: 879px)').matches) return
+    if (event.target instanceof Element && event.target.closest(SWIPE_EXCLUDE)) return
+    if (adjusting && event.target instanceof Element && event.target.closest('.ids-preview')) return
+    swipe = { id: event.pointerId, x: event.clientX, y: event.clientY }
+  }
+  /** @param {PointerEvent} event */
+  function swipeEnd(event) {
+    const start = swipe
+    if (!start || start.id !== event.pointerId) return
+    swipe = null
+    const dx = event.clientX - start.x, dy = event.clientY - start.y
+    if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy) * 1.4) return
+    const next = PHONE_PANES[PHONE_PANES.indexOf(phonePane) + (dx < 0 ? 1 : -1)]
+    if (next) phoneTab(next)
+  }
+  function swipeCancel() { swipe = null }
+  /** The active tab's document title, kept current by the document revision. */
+  const currentTitle = $derived.by(() => {
+    documentTick
+    const tab = current()
+    return tab ? sessionFor(tab).document.title ?? '' : ''
+  })
+  function openTitle() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    titleOpen = true
+  }
+  /** @param {string} value */
+  function saveTitle(value) {
+    const tab = current()
+    if (!tab) return
+    const session = sessionFor(tab)
+    session.setTitle(value)
+    tab.document = sessionRecord(session)
+    documentTick++
+    store()
+    syncAddress()
   }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
@@ -572,6 +671,7 @@
     toast = null
     editor.reset(sequence)
     adjusting = false
+    if (tab.sequence && !EMPTY_MARKS.includes(tab.sequence)) recents = remember(tab.sequence)
     store()
     return tab
   }
@@ -590,7 +690,11 @@
   function openSequence(sequence) {
     const text = canonical(sequence)
     const open = tabs.find(tab => tab.sequence === text)
-    if (open) { activate(open.id); return }
+    if (open) {
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
+      activate(open.id)
+      return
+    }
     const tab = current()
     // Only an empty tab is reused: an unreadable draft, or one with history, keeps its tab.
     if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
@@ -598,68 +702,46 @@
       editor.reset(text)
       adjusting = false
       if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
     }
     addTab(text)
+  }
+  /** Open a recent sequence, with its document when it has one. @param {import('./lib/recent.js').Recent} record */
+  function openRecent(record) {
+    // A recent document opens its own tab; a tab with another document for the same sequence is
+    // not the one this entry stands for.
+    const open = tabs.find(tab => tab.sequence === record.sequence
+      && (!record.document || sameShare(tab.document?.document, record.document.document)))
+    if (open) {
+      recents = remember(record.sequence, open.document)
+      activate(open.id)
+      return
+    }
+    if (record.document) {
+      flush()
+      const tab = makeTab(record.sequence, record.sequence, record.document)
+      tabs.push(tab)
+      recents = remember(record.sequence, tab.document)
+      activate(tab.id)
+      return
+    }
+    openSequence(record.sequence)
   }
   /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
   function openDraft(draft) {
     flush()
     const tab = makeTab(draft.sequence, draft.sequence, draft.document)
     tabs.push(tab)
+    recents = remember(tab.sequence, tab.document)
     activate(tab.id)
   }
-  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
+  /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
-    const tab = tabs[at]
-    const state = id === activeId ? editor.snapshot() : states.get(id)
-    states.delete(id)
-    sessions.delete(id)
-    tabs.splice(at, 1)
-    /** @type {import('./lib/tabs.js').Tab | undefined} */
-    let fresh
-    if (id === activeId) {
-      const next = tabs[at] ?? tabs[at - 1]
-      if (next) {
-        activeId = next.id
-        const saved = states.get(next.id)
-        states.delete(next.id)
-        if (saved) editor.restore(saved)
-        else editor.reset(next.sequence)
-      } else {
-        // One tab always stays open: closing the last one leaves a new empty tab in its place.
-        fresh = makeTab()
-        tabs.push(fresh)
-        activeId = fresh.id
-        editor.reset('')
-        adjusting = false
-      }
-    }
-    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
-      run: () => reopen(tab, state, at, fresh?.id) }
-    store()
-  }
-  /**
-   * Put a closed tab back where it was, taking back the empty tab that replaced it.
-   * @param {import('./lib/tabs.js').Tab} tab
-   * @param {ReturnType<typeof editor.snapshot> | undefined} state
-   * @param {number} at
-   * @param {string} [replacement]
-   */
-  function reopen(tab, state, at, replacement) {
-    if (tabs.some(kept => kept.id === tab.id)) return
-    const fresh = tabs.find(kept => kept.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
-      tabs.splice(tabs.indexOf(fresh), 1)
-      states.delete(fresh.id)
-      sessions.delete(fresh.id)
-    }
-    tabs.splice(Math.min(at, tabs.length), 0, tab)
-    if (state) states.set(tab.id, state)
-    activate(tab.id)
+    closeTabs([id], id === activeId ? tabs[at + 1]?.id ?? tabs[at - 1]?.id : activeId)
   }
   /**
    * Close several tabs at once, showing `show` when it survives, else a fresh tab. The note brings
@@ -705,10 +787,13 @@
       if (saved) editor.restore(saved)
       else editor.reset(kept.sequence)
     }
+    /** @type {ClosedGroup} */
+    const group = { tabs: removed, active: wasActive ? before : null, ...(fresh ? { fresh: fresh.id } : {}) }
+    closedGroups = [...closedGroups, group].slice(-10)
     const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
     toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
-      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
-      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000, close: true,
+      run: () => restoreClosed(group) }
     store()
   }
   /**
@@ -716,10 +801,13 @@
    * @param {{ tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[]} removed
    * @param {string | null} wasActive
    * @param {string} [replacement]
+   * @param {boolean} [first] show the first restored tab when the tab that was active is not back
    */
-  function reopenTabs(removed, wasActive, replacement) {
+  function reopenTabs(removed, wasActive, replacement, first = false) {
     const fresh = tabs.find(tab => tab.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+    // The replacement is a placeholder: take it back while it is empty and untouched, even if
+    // another tab has been opened since the close.
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
       sessions.delete(fresh.id)
@@ -729,8 +817,22 @@
       tabs.splice(Math.min(at, tabs.length), 0, tab)
       if (state) states.set(tab.id, state)
     }
-    if (wasActive && wasActive !== activeId && tabs.some(tab => tab.id === wasActive)) activate(wasActive)
+    const target = wasActive && tabs.some(tab => tab.id === wasActive) ? wasActive
+      : first ? removed[0]?.tab.id
+      : null
+    if (target && target !== activeId) activate(target)
     else store()
+  }
+  /** Put a closed group back and take it off the reopen history. @param {ClosedGroup} group @param {boolean} [first] */
+  function restoreClosed(group, first = false) {
+    closedGroups = closedGroups.filter(entry => entry !== group)
+    if (toast?.close) toast = null
+    reopenTabs(group.tabs, group.active, group.fresh, first)
+  }
+  /** Reopen the tab or group closed last, showing it. */
+  function reopenClosed() {
+    const group = closedGroups.at(-1)
+    if (group) restoreClosed(group, true)
   }
   /** Close every tab but `id`, showing it. @param {string} id */
   function closeOthers(id) {
@@ -795,6 +897,7 @@
       const session = createDocumentSession(document)
       const tab = makeTab(toSequence(document.root), toSequence(document.root), sessionRecord(session))
       tabs.push(tab)
+      recents = remember(tab.sequence, tab.document)
       activate(tab.id)
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
@@ -832,19 +935,27 @@
     if (!event.relatedTarget) dropping = false
   }
 
+  const recentItems = $derived(recents.map(record => ({ label: record.sequence, lang: 'ja', hint: record.sequence, run: () => openRecent(record) })))
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
+    { label: t('app.file.title'), disabled: editor.tree === null, run: openTitle },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.file.recent'), icon: 'history', disabled: !recentItems.length, submenu: recentItems },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
-    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
-    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !canExport, run: () => { exportPanel?.save(format) } })),
-    ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
+    { label: t('app.file.exportAs'), icon: 'download', disabled: !canExport, submenu: /** @type {const} */ (['svg', 'png']).map(format => ({ label: format.toUpperCase(), disabled: !canExport, run: () => { exportPanel?.save(format) } })) },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
+    { label: t('app.drafts.heading'), icon: 'folder', disabled: !drafts.length, submenu: drafts.length ? [
       ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
       { separator: /** @type {const} */ (true) },
-      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
+      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } },
+    ] : [] },
   ])
 
   const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
@@ -930,6 +1041,15 @@
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
     if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
+    if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
+      && !target.closest('[role="menu"], [role="menubar"]')) {
+      event.preventDefault()
+      const inStrip = Boolean(target.closest('.tabbar'))
+      reopenClosed()
+      if (inStrip) tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
+      return
+    }
     // The browser may keep Ctrl+Tab for itself; where it does not, it moves between the tabs.
     if (command && tabs.length > 1 && (event.key === 'Tab' || event.key === 'PageDown' || event.key === 'PageUp')) {
       event.preventDefault()
@@ -978,8 +1098,9 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
-<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
+<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
+  onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
+<svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
@@ -1023,14 +1144,20 @@
     </header>
     <div class="tabs-slot">
       <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
-        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll} onmove={moveTab} oncommit={store} />
+        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
+        onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} />
     </div>
   </div>
 
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
+      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
+        <button type="button" role="tab" id="phone-input-tab" aria-controls="input-panel" aria-selected={phonePane === 'input'} tabindex={phonePane === 'input' ? 0 : -1} onclick={() => phoneTab('input')} onkeydown={phoneKey}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
+        <button type="button" role="tab" id="phone-compose-tab" aria-controls="compose-panel" aria-selected={phonePane === 'compose'} tabindex={phonePane === 'compose' ? 0 : -1} onclick={() => phoneTab('compose')} onkeydown={phoneKey}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
+        <button type="button" role="tab" id="phone-output-tab" aria-controls="output-panel" aria-selected={phonePane === 'output'} tabindex={phonePane === 'output' ? 0 : -1} onclick={() => phoneTab('output')} onkeydown={phoneKey}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
+      </div>
+      <section class="pane input" class:phone-active={phonePane === 'input'} id="input-panel" aria-label={t('app.input')}>
         <div class="block">
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
@@ -1055,7 +1182,7 @@
           controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
 
-      <div class="middle" bind:this={middleEl} style:--upper="{split}%">
+      <div class="middle" id="compose-panel" class:phone-active={phonePane === 'compose'} bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
           <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
@@ -1106,7 +1233,7 @@
         <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
-      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
+      <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#if !large}
             {#key activeId}
@@ -1149,6 +1276,17 @@
               <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
               <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
             </div>
+            <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
+              {#each [...editor.whole] as ch}
+                {#if operatorSet.has(ch)}<OperatorIcon op={ch} size={18} />{:else}<span>{ch}</span>{/if}
+              {/each}
+            </span>
+            <div class="large-actions">
+              <button type="button" class="large-copy" title={`${t('app.copySequence')}: ${editor.whole}`} aria-label={footerCopied ? t('app.copied', { text: '' }).trim() : t('app.copySequence')} onclick={() => copyFooter(editor.whole)}><Icon name={footerCopied ? 'check' : 'copy'} size={14} /></button>
+              {#if encoded.length}
+                <button type="button" class="large-copy" title={`${t('app.copyPoints')}: ${encoded.map(cp).join(' ')}`} aria-label={t('app.copyPoints')} onclick={() => copyFooter(encoded.map(cp).join(' '))}><Icon name="copy" size={14} /></button>
+              {/if}
+            </div>
           </div>
           {#if large}
             <IdsPreview {adapter} tree={editor.tree} {messages} {locale} small={false} notes={false}
@@ -1173,7 +1311,7 @@
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
@@ -1183,6 +1321,7 @@
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
@@ -1301,15 +1440,20 @@
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
-  .large-dialog{width:min(90vh,92vw);width:min(90dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:16px;background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:16px;background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
   .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
   .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
   .large-bar .font-switch{order:1}
-  .large-bar .large-close{order:2}
+  .large-bar .large-close{order:4}
   .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden}
+  .large-actions{order:3;display:flex;align-items:center;gap:4px}
+  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--ui-color-border);border-radius:7px;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-copy:hover{border-color:var(--ui-color-border-strong)}
+  .large-copy:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .large-close:hover{border-color:var(--ui-color-border-strong)}
   .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
@@ -1382,6 +1526,18 @@
     .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
   }
+  .phone-tabs{display:none}
+  /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
+  @media (max-width:879px){
+    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border)}
+    .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:13px;cursor:pointer}
+    .phone-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
+    .phone-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+    .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
+    .work{touch-action:pan-y}
+    .work :global(.ids-preview){touch-action:pan-y}
+    .output.adjusting :global(.ids-preview){touch-action:none}
+  }
   .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--ui-color-canvas) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
   .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:18px;background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
@@ -1393,6 +1549,7 @@
     .phone-only{display:inline-flex}
     .group > :global(.ui-button:last-of-type){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
     .work{padding:12px;gap:12px}
+    .phone-tabs{margin:0 -12px;padding:8px 12px}
     .pane{padding:14px}
     .sponsor{padding:0 12px 0 4px}
   }

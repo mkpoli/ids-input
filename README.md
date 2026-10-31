@@ -204,7 +204,8 @@ unalias('lr亻ud匕失')           // '⿰亻⿱匕失'
 commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' }, on any layout
 
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
-pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, reverse: false }
+pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
+pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -255,21 +256,24 @@ an excluded character, or that carries loose marks or approximate operators, kee
 
 ### Pyramids
 
-`pyramidSequence(part, layers)` writes one part in rows of 1, 2, 3, …; the part is a component, any
-description or ⬚. `pyramidRows` reads an equivalent tree back, whichever way its rows use `⿰`/`⿲`
-and its stack uses `⿱`/`⿳`, and answers the repeated part in `cell`. The composer draws a pyramid of
-three or more rows, or of two rows whose cell is a description, as equal square cells in centred
-rows, so the 4-row spellings given for `口` above draw alike, and deeper triangles keep the same
-cell size; a cell that is a description is composed inside its cell. A two-row pyramid of one part
-follows the composer's designed forms instead (品, 森). A whole description may run past the ordinary 64-code-point length as a
-pyramid of two or more rows, its cells any part; a draft may be longer still. The composer draws up
-to 64 rows (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24 rows,
-its sizes in a scrollable row. The shared Part field above the generators starts with the selected
-part or 口; an empty Part lays out empty slots, drawn in the pyramid's cells, and a typed value is
-kept for all three. Enter a part, then choose a preset or a custom row count.
-Its Reverse toggle arranges rows from widest
-to narrowest while keeping each part upright. `pyramidSequence(part, layers, { reverse: true })`
-writes that arrangement; `pyramidRows` reports its direction in `reverse`.
+`pyramidSequence(part, layers)` writes one part in groups of 1, 2, 3, …; the part is a component,
+any description or ⬚. `direction` points the pyramid `top` (default), `bottom`, `left` or `right`:
+top and bottom stack rows of 1…`layers` cells, left and right stand columns of 1…`layers` cells side
+by side. `pyramidRows` reads an equivalent tree back, whichever way its groups use `⿰`/`⿲` and its
+cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way it points in
+`direction`. The composer draws a pyramid of three or more layers, or of two layers whose cell is a
+description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
+above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
+composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
+instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
+64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
+layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
+or right. The shared Part field above the generators starts with the selected part or 口; an empty
+Part lays out empty slots, drawn in the pyramid's cells, and a typed value is kept for all three.
+Enter a part, then choose a preset or a custom layer count. Sideways pyramids keep every part
+upright. `pyramidSequence(part, layers, { direction: 'bottom' })` writes a pyramid from its widest
+row down to one; `'left'` and `'right'` write the sideways arrangements.
 
 ### Repeats
 
@@ -721,11 +725,11 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with 803 palette parts and the CJK
-strokes, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
+CJK strokes the prepared file covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
-the workshop passes it: the pad opens from 104 KB of prepared 40×40 masks, independent of which
+the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
 fonts the page has loaded. Without `sketches`, the same shapes are drawn from the page's
 `--ids-font` when the pad opens, which needs its CJK faces loaded; a part a font draws as its
 missing-glyph box is left out either way. Nothing is sent anywhere.
@@ -736,17 +740,21 @@ from the other's and by a coarse histogram of stroke directions. The match is ap
 parts such as 口, 木 and 氵 work best, and a part drawn with unusual proportions may rank below a
 similar one. `IdsSketch` is the pad; `shapesOf` and `rank` in the core do the comparison,
 `readSketchTemplates` decodes the prepared file, and `sketchTemplates` in the Svelte layer draws
-the fallback from the page's fonts.
+the fallback from the page's fonts. Tangut parts are listed in their own group after the Han parts,
+so they do not push Han components down.
 
-`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first, from strokes
-in percentage coordinates. The workshop implements it with DaKanji's 6,507-class Japanese
-classifier (MIT; trained on ETL and KanjiVG; `demo/model/`), served with ONNX Runtime Web and
-loaded on the first drawing: 2.2 MB of model and 12 MB of WebAssembly, outside the package. On
-the 20 synthetic stroke drawings in `demo/model/benchmark.json`, 19 put the drawn character in the
-top 24 and 18 in the top 10.
-Chinese-only forms are not in the model's labels; the palette parts remain their fallback. A host
-without `recognizeDrawing` gets the parts alone, and a failed or empty recognition falls back to
-them.
+`adapter.recognizeDrawing(strokes)` optionally names whole characters, closest first,
+from strokes in percentage coordinates. The workshop combines two classifiers in every locale:
+DaKanji's 6,507-class model (2.2 MB; MIT; trained on ETL and KanjiVG) supplies Japanese kanji and
+kana, and GlyphWeave's 7,247-class model (15.4 MB int8; MIT; trained on CASIA-HWDB and EMNIST)
+supplies its 7,185 Han classes including simplified forms, plus digits and Latin letters. Both run
+with ONNX Runtime Web's 12 MB WebAssembly runtime and load on the first drawing; sources and hashes
+are in `demo/model/`.
+
+On the 20 synthetic stroke drawings in `demo/model/benchmark.json`, both models put 19 targets in
+the top 24; DaKanji puts 18 in the top 10. GlyphWeave's release reports 96.0% top-1 and 97.6%
+macro-average on its 870,895-sample test split. A host without `recognizeDrawing` gets the parts alone, and a failed or empty
+recognition falls back to them.
 
 ## Preview
 
@@ -806,7 +814,8 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
 part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
-menus support arrow keys, Home/End and Escape.
+menus support arrow keys, Home/End and Escape; `Right` opens a submenu on its first item, `Left`
+closes it, and Escape closes the submenu before the menu.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
@@ -1005,7 +1014,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   shared 子 the zi.tools record below describes. 進寶財招 is another name for the 招財進寶 example.
   唯吾知足, 黃金萬兩 and 吉祥如意 share strokes between their characters. 唯吾知足 sets 五 above
   矢, 口 and 隹, with 龰, the bottom of 足, below; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with
-  両's bottom, 冂 around 山; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
+  両's bottom, 冂 around 山, drawn as a prepared form; 吉祥如意 shares one 口 between 吉 and 如, with 意 and 祥 around it.
 - [學好孔孟](https://zi.tools/api/lookup/lookup/%E5%AD%B8%E5%A5%BD%E5%AD%94%E5%AD%9F), 字統网 (zi.tools),
   read 2026-10-30: the lookup API answers the phrase with `⿳𦥯⿰女孔皿` and no code point. The
   description writes 女 and 孔 for 好 and 孔; the example writes the middle as 女, 子 and 乚 in a row,
@@ -1019,11 +1028,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - [국자의 음역자와 구결자](https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816),
   Korean Wikipedia, oldid 42393816 (last edited 2026-08-28; read 2026-10-29): the characters,
   readings and code points of the Korean gukja (國字) and gugyeol (口訣字) examples in
-  `demo/lib/examples.js`. The gukja group holds the article's complete 음역자 table, ninety-four
+  `demo/lib/examples.js`. The gukja group holds the article's complete 음역자 table, ninety-five
   encoded forms and twenty decompositions, ordered by reading. The article gives each character's
-  radical and code point. Its codas are 乙 and 己 for ㄹ, 𠃍 and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口
-  for ㅁ, and 巴 and 邑 for ㅂ. The encoded descriptions are BabelStone's, all tagged K, fourteen as
-  GKP; the twenty without a code point stand last, as the article writes them.
+  radical and code point, and gives 𬼝, its last row, no reading. Its codas are 乙 and 己 for ㄹ, 𠃍
+  and ㇣ for ㄱ, 𠃊 for ㄴ, 叱 for ㅅ, 口 for ㅁ, and 巴 and 邑 for ㅂ. The encoded descriptions are
+  BabelStone's, all tagged K, fourteen as GKP; the twenty without a code point follow them, as the
+  article writes them.
   The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
   厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
   those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
@@ -1032,6 +1042,20 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
   <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
   disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- 笹原宏之, [第83回 漢字の音義の一人歩き](https://dictionary.sanseido-publ.co.jp/column/kanji_genzai083),
+  三省堂「漢字の現在」, 2011-02-15 (read 2026-10-31): 妛's origin in 𡚴 and 彁's unidentified
+  source at the time of writing. The ghost-kanji descriptions are BabelStone's Japanese forms.
+- 小林肇, [新聞漢字あれこれ91 幽霊漢字があやうく紙面に](https://www.kanjicafe.jp/detail/10128.html),
+  日本漢字能力検定協会「漢字カフェ」, 2022-04-06 (read 2026-10-31): identifies 椦 as a ghost kanji
+  and reports its presumed mistaken inclusion for 橳. The books it cites are consulted indirectly.
+- WDIC Creators club, [幽霊文字](https://www.wdic.org/w/WDIC/幽霊文字), updated 2010-04-24
+  (read 2026-10-31): the twelve characters classified as unresolved in JIS X 0208:1997, Annex 7,
+  cited indirectly. They include 墸, 壥, 挧, 暃, 槞, 蟐, 袮, 閠 and 駲. Broader ghost-character
+  lists also exist.
+- Wikipedia contributors, [幽霊文字, revision 110601177](https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177),
+  2026-08-11 (read 2026-10-31): the same twelve-character set. Many have historical same-shape
+  attestations; 彁 has none in this account. Proposed miscopy origins remain hypotheses.
+  The JIS annex and old dictionaries are cited indirectly.
 - [Chữ Nôm](https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m), Wikipedia, read 2026-10-30: the
   invented Nôm characters in `demo/lib/examples.js` and their readings, from the Tale of Kiều table
   and the account of locally invented characters. Borrowed Chinese characters used phonetically
@@ -1107,24 +1131,26 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
-with the arrow keys and accept drops. A click, the
-arrow keys, Home/End or, where the browser leaves them to the page, `Ctrl+Tab`,
-`Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×, middle click, Delete or the
-tab's menu closes a tab (Undo brings it back; the last tab stays). The tree and search panels in the
-middle column are divided by a draggable splitter, the tree starting
-larger; the arrow keys move it and a double-click restores the default. Vertical dividers resize the
-columns by dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their
-keys on hover. File and Edit menus provide new tabs, saved drafts, sharing, image export, and editing
-commands. The Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies
-the active document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: duplicate it,
-close it, close the other tabs, close the tabs on either side, or close all tabs. Close all asks
-first, and Undo after a group close restores the tabs in their old places with the tab that was
-being edited. Duplicate opens the copy beside its source with its selection, undo history and layer
-transforms, which can then be edited independently.
+with the arrow keys and accept drops. A click, the arrow keys, Home/End or, where the browser leaves
+them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
+middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
+`Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab or the tab's menu
+opens the tab or group closed last; that history lasts for the page session. The tree and search
+panels in the middle column are divided by a draggable splitter, the tree starting larger; the
+arrow keys move it and a double-click restores the default. Vertical dividers resize the columns by
+dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their keys on
+hover. File groups documents, Recent, tab actions, sharing and export, and drafts; Recent lists the
+sequences opened in this browser, newest first. The Edit menu holds the editing commands. The
+Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies the active
+document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: reopen the tab or
+group closed last, duplicate it, close it, close the other tabs, the tabs on either side, or close
+all tabs. Close all asks first, and Undo after a group close restores the tabs in their old places
+with the tab that was being edited. Duplicate opens the copy beside its source with its selection,
+undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
 with its character and code point, an abbreviated character, or a mark when it has none. It opens as
@@ -1134,13 +1160,39 @@ in view. An example opens a tab. The toolbar also holds a share link with its QR
 settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
 data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
 The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
-`#⿰亻哥` and `?ids=⿰亻哥` forms still open. A document that holds more than its sequence rides along
-as `?doc=`, so copying the location keeps a placement and opening such a link keeps the token. Tabs use
+`#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the
+parser rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link
+that opens it as a draft; text built from a sequence's letters goes on to the editor
+first. A document that holds more than its sequence rides along as `?doc=`, so
+copying the location keeps a placement and opening such a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch chooses the face for Han
-text and Sans/Serif bundled component forms. Other composed outlines use the configured export’s
-font. Settings, drafts, the theme and font choice stay in `localStorage`; the keys use the
-`ids-input:` prefix.
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
+chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
+the configured export’s font. Settings, drafts, the recent sequences, the theme and font choice stay
+in `localStorage`; the keys use the `ids-input:` prefix.
+
+### Share cards
+
+A share link at `/<sequence>` carries preview tags for its sequence, matching character and
+Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. The preview image
+at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic description sequence
+and a separate Unicode caption. Text size follows the sequence length; longer sequences wrap to
+at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
+use glyphs from the bundled GenZui Sans font.
+
+The Cloudflare Worker serves preview pages and images alongside the workshop's static assets.
+Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
+An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
+Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
+Preview hosts send `X-Robots-Tag: noindex`; canonical metadata points to `https://ids.mkpo.li`.
+
+`bun run build:site` builds the workshop, prepares the card fonts and outlines with
+`scripts/og-assets.mjs`, and bundles the Worker and WASM into `dist-worker/`, outside the static
+assets in `dist/`. Noto Sans CJK JP and Plangothic P1 are fetched at pinned releases and checked
+by SHA-256; font assets ship with their license notices. Run `node tests/worker-og-runtime.mjs`
+after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
+`wrangler dev` to serve the Worker and built assets locally.
+
 
 ### Comparison with KAGE
 
@@ -1269,11 +1321,14 @@ bun run check           # tsrs and svelte-check
 bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
+bun run build:site      # assets into dist/, share-card Worker into dist-worker/
+bun run dev:worker      # the worker and dist/ locally, on port 8787
 bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE changes
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
-CI only builds the demo and deploys it; the checks above stay local.
+CI runs verification and builds the workshop and share-card Worker. Production deployment is
+gated to `main` through `.github/workflows/deploy.yml`.
 
 ### The demo's browser checks
 
@@ -1292,7 +1347,7 @@ in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`.
 `PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
 
 The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
-`.github/workflows/deploy.yml`; a pull request uploads a preview version on its own alias. Both need
+`.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs
 the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The worker in `worker/`
 reads the sequence out of the path, writes the tags a link preview needs, and leaves every other
 request to the assets.

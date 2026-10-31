@@ -5,8 +5,10 @@
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
-    // An unknown path is the app, which reads the sequence out of it.
-    "not_found_handling": "single-page-application"
+    "run_worker_first": true,
+    // The worker answers a miss itself: the app for a sequence, 404 otherwise. An
+    // SPA fallback here would resolve the miss before the worker ever sees it.
+    "not_found_handling": "none"
   },
   "routes": [{ "pattern": "ids.mkpo.li", "custom_domain": true }],
   "workers_dev": false,
