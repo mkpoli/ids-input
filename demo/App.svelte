@@ -562,6 +562,28 @@
     phonePane = pane
     requestAnimationFrame(() => window.scrollTo({ top: 0 }))
   }
+  /** A pointer that may become a horizontal tab swipe. @type {{ id: number, x: number, y: number } | null} */
+  let swipe = null
+  const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.ids-preview,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
+  /** @param {PointerEvent} event */
+  function swipeStart(event) {
+    swipe = null
+    if (!event.isPrimary || event.pointerType === 'mouse' || !matchMedia('(max-width: 879px)').matches) return
+    if (event.target instanceof Element && event.target.closest(SWIPE_EXCLUDE)) return
+    swipe = { id: event.pointerId, x: event.clientX, y: event.clientY }
+  }
+  /** @param {PointerEvent} event */
+  function swipeEnd(event) {
+    const start = swipe
+    if (!start || start.id !== event.pointerId) return
+    swipe = null
+    const dx = event.clientX - start.x, dy = event.clientY - start.y
+    if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy) * 1.4) return
+    const order = /** @type {const} */ (['input', 'compose', 'output'])
+    const next = order[order.indexOf(phonePane) + (dx < 0 ? 1 : -1)]
+    if (next) phoneTab(next)
+  }
+  function swipeCancel() { swipe = null }
   /** The active tab's document title, kept current by the document revision. */
   const currentTitle = $derived.by(() => {
     documentTick
@@ -1011,7 +1033,8 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
+<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
+  onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
 <svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
@@ -1451,6 +1474,8 @@
     .phone-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
     .phone-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
     .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
+    .work{touch-action:pan-y}
+    .work :global(.ids-preview){touch-action:none}
   }
   .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
