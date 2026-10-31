@@ -186,13 +186,14 @@
     if (!strokes.length) { characters = []; results = []; searching = false; return }
     if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; searching = false; return }
     searching = true
+    characters = []
     const id = ++asks
     const strokesAt = strokes
     // Let the searching note paint before the comparison runs.
     clearTimeout(compute)
     compute = setTimeout(async () => {
       if (id !== asks) return
-      const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: 24, strokes: strokesAt.length }) : []
+      const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: templates.length, strokes: strokesAt.length }) : []
       results = ranked.map(template => ({ part: template.part, strokes: template.strokes }))
       looked = true
       searching = false
@@ -207,7 +208,7 @@
         drawn = []
       }
       if (id !== asks) return
-      characters = [...new Set(drawn)].slice(0, 24).map(part => ({ part }))
+      characters = [...new Set(drawn)].map(part => ({ part }))
       const seen = new Set(characters.map(character => character.part))
       results = ranked.filter(template => !seen.has(template.part)).map(template => ({ part: template.part, strokes: template.strokes }))
     }, 0)
@@ -273,7 +274,7 @@
     <p class="group">{t('ids.draw.characters')}</p>
     <div class="found" role="group" aria-label={t('ids.draw.characters')}>
       {#each characters as result (result.part)}
-        <button type="button" class="hit" disabled={disabled} lang="ja" title={result.part}
+        <button type="button" class="hit" disabled={disabled} lang={locale} title={result.part}
           draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
           onclick={() => take(result.part)}><span class="char">{result.part}</span></button>
       {/each}
@@ -316,7 +317,7 @@
   .group{margin:2px 0 0;font-size:10.5px;letter-spacing:.03em;color:var(--_muted)}
   .bar{height:3px;border-radius:2px;background:var(--_surface-subtle);overflow:hidden}
   .bar span{display:block;height:100%;background:var(--_accent);transition:width .15s}
-  .found{display:flex;flex-wrap:wrap;gap:4px}
+  .found{display:flex;flex-wrap:wrap;gap:4px;max-height:40vh;overflow-y:auto;overscroll-behavior:contain}
   .hit{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:2px 8px;border:1px solid transparent;
     border-radius:8px;background:var(--_surface-subtle);color:inherit;cursor:pointer;font:inherit}
   .hit:not(:disabled):hover{border-color:var(--_accent)}
