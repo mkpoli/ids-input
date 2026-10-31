@@ -1,4 +1,5 @@
-// The examples menu's filter and its collapsible sections, in both views. Run against a devrun server:
+// The tab strip's starter menu: + opens a blank tab, the templates open an operator tab, and the
+// examples filter and fold in both views. Run against a devrun server:
 //   IDS_URL=http://localhost:5173 CHROMIUM_PATH=… bun demo/check-examples-filter.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -7,8 +8,21 @@ const url = process.env.IDS_URL ?? 'http://localhost:5173'
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } })
   await page.goto(url)
-  await page.getByTitle('Examples', { exact: true }).click()
+  const tabs = () => page.locator('.tabbar [role="tab"]').count()
+  const opened = await tabs()
+  await page.getByTitle('New tab', { exact: true }).click()
+  await page.waitForTimeout(300)
+  assert.equal(await tabs(), opened + 1, 'the + opens a blank tab')
+  assert.equal(await page.locator('.ids-field input').inputValue(), '', 'the new tab is empty')
+  await page.getByTitle('Templates and examples', { exact: true }).click()
   const menu = page.locator('.menu')
+  const templates = menu.getByRole('group', { name: 'Templates' })
+  assert.equal(await templates.getByRole('menuitem').count(), 18, 'the templates list every operator')
+  await templates.getByRole('menuitem', { name: 'Mirrored', exact: true }).click()
+  await page.waitForTimeout(300)
+  assert.equal(await page.locator('.ids-field input').inputValue(), '⿾⬚', 'a template opens its operator with empty slots')
+  assert.equal(await tabs(), opened + 2, 'a template opens a new tab')
+  await page.getByTitle('Templates and examples', { exact: true }).click()
   const input = menu.locator('.filter-input')
   assert.equal(await input.count(), 1, 'the examples menu has a filter field')
   const total = await menu.locator('.card').count()
@@ -49,5 +63,5 @@ try {
   const shown = await menu.locator('.item').count()
   assert.ok(shown > 0 && shown < rows, 'the list view filters too')
   assert.ok((await menu.locator('.note').allTextContents()).some(note => note.includes('돌')), 'a reading matches the query')
-  console.log('PASS the examples menu filters by sequence, reading and code point, and folds sections in both views')
+  console.log('PASS the tab strip starts a blank or template tab, and the examples filter and fold in both views')
 } finally { await browser.close() }

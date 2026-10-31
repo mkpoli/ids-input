@@ -165,6 +165,8 @@
   "app.tabs.menu": "标签页操作",
   "app.tabs.new": "新建标签页",
   "app.tabs.reopen": "重新打开关闭的标签页",
+  "app.tabs.start": "模板与示例",
+  "app.tabs.templates": "模板",
   "app.tabs.untitled": "无标题",
   "app.theme.dark": "深色",
   "app.theme.light": "浅色",
