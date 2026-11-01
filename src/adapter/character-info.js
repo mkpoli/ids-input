@@ -87,7 +87,9 @@ export function createCharacterInfo(doc, seal = null) {
     }
     if (script === 'han') {
       result.relations.push(...(translations.get(char) ?? []))
-      for (const relation of result.relations) result.sources.push(wiktionary(relation.char))
+      // Wiktionary gives the Tangut relation its Han translation; the Han character's own page is
+      // the reader's way in, so its own entry links there and a translation alone names the site.
+      for (const relation of result.relations) result.sources.push({ ...wiktionary(relation.char), url: 'https://en.wiktionary.org/' })
       result.relations.push(...(seals.get(char) ?? []).map(old => ({ char: old, kind: /** @type {const} */ ('seal') })))
     } else if (script === 'seal') {
       result.relations.push(...directModern(seal?.modern[char] ?? []).map(han => ({ char: han, kind: /** @type {const} */ ('modern') })))
