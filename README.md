@@ -166,9 +166,31 @@ component of one stroke count, including compound IDS, grouped by first stroke. 
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
-(`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
+(`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-control-border`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
 `--ids-font`, `--ids-glyph-fallback` and others; see the top of each component's style). The defaults
-use `light-dark()`, so the page needs `color-scheme: light dark` for its dark scheme.
+use `light-dark()`, so the page needs `color-scheme: light dark` for its dark scheme. The workshop
+maps these tokens onto the `--ui-*` tokens of its design system, below.
+
+### Design system
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/design-dark.png">
+  <img src="docs/images/design-light.png" alt="The design system page: the palette with measured contrast ratios in the light scheme">
+</picture>
+
+The workshop's colours, states and form controls live in `design/` and are published with the
+package as `ids-input/design.css`:
+
+- **Tokens** — semantic colours as `light-dark()` pairs, the type scale, spacing, radii, control
+  heights, focus ring, motion and layers.
+- **Controls** — native checkbox, radio, switch, text field, select, textarea, range and colour
+  input, with buttons, a segmented control, a swatch group and cards. The browser keeps the
+  semantics and keyboard behaviour; one stylesheet draws every state.
+- **Checks** — `demo/check-design.js` verifies accessible names, keyboard operation, focus rings,
+  contrast, 24 px targets, reduced motion and forced colours in Chromium.
+
+The reference page is built to `design.html` (on the workshop site, <https://ids.mkpo.li/design.html>), and the rules for choosing and applying a
+control are in [design/README.md](design/README.md).
 
 ### Core
 
@@ -1135,19 +1157,20 @@ all tabs. Close all asks first, and Undo after a group close restores the tabs i
 with the tab that was being edited. Duplicate opens the copy beside its source with its selection,
 undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
-transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
-with its character and code point, an abbreviated character, or a mark when it has none. It opens as
-cards or a list, filters by sequence, character, reading or code point, keeps only forms with or
-without a code point, folds each section, and jumps to a section from a chip that also marks the one
-in view. An example opens a tab. The toolbar also holds a share link with its QR code, the language,
-settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
-data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
-The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
-`#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the
-parser rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link
-that opens it as a draft; text built from a sequence's letters goes on to the editor
-first. A document that holds more than its sequence rides along as `?doc=`, so
-copying the location keeps a placement and opening such a link keeps the token. Tabs use
+transform steps before the editor’s structural steps, examples, a share link with its QR code, the
+language, settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it
+opens a starter dialog in two tabs: Templates is the same full catalogue the input pane offers
+(structures, pyramids, repeats and five-copy layouts), and Examples lists every starter sequence with
+its character and code point, an abbreviated character, or a mark when it has none, opening as cards
+or a list with its filters and folding. A template or an example opens a tab.
+Settings hold the system, light and dark
+themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
+bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
+the older `#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the parser
+rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link that opens it as a
+draft; text built from a sequence's letters goes on to the editor first. A document that holds more
+than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
+a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
 chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
@@ -1179,7 +1202,8 @@ after the build to test the bundled handler and PNG renderer. `bun run dev:worke
 
 ### Reporting a problem
 
-File → Report a problem, the same entry in the More sheet, and `?report=1` open a report dialog.
+A Report a problem button under the drawing in the output panel opens a report dialog, as do
+File → Report a problem, the same entry in the More sheet, and `?report=1`.
 It asks what happened and, if the reporter wants an answer, how to reach them; the drawing goes
 along as a 1024 px PNG unless the checkbox is cleared, and the dialog lists the rest in plain text.
 The request is `multipart/form-data` to `/api/report` on the site's own origin, which the worker

@@ -262,6 +262,7 @@
   "ids.pick.templates": "构字式",
   "ids.group.4": "4个部件",
   "ids.templates.insert": "插入构字式：{sequence}",
+  "ids.templates.open": "在新标签页中打开{sequence}",
   "ids.templates.repeats": "重复",
   "ids.templates.repeatBottom": "下排",
   "ids.templates.repeatBottomHint": "留空则使用上排部件。",
@@ -340,5 +341,13 @@
   "parts.gongche.seirakuSource": "清乐板眼符号 · 加藤彻",
   "info.copy": "复制{char}",
   "info.copied": "已复制",
-  "info.copyFailed": "复制失败"
+  "info.copyFailed": "复制失败",
+  "info.source.sections": "出处",
+  "info.source.open": "打开{site}",
+  "info.site.wiktionary": "维基词典",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "用字助记",
+  "info.site.component": "Andrew West"
 }

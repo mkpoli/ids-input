@@ -2,19 +2,26 @@
 
 Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
 Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). Kureedo and GenZui Sans supply the optional Kaisho face.
+the editor's empty-slot mark ⬚ (U+2B1A). A third draws the twelve ideographic description characters
+for sequence text where no installed font has them. Kureedo and GenZui Sans supply the optional
+Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
 (U+2B1A, U+31C0–U+31E3) and `IDS Parts` (U+2E80–U+2EFF, U+31E4–U+31EF, U+20000–U+3FFFF), with ranges
-that do not overlap. The rest of the Basic Multilingual
-Plane, Extension A included, comes from the reader's own CJK font.
+that do not overlap, and `IDS Operators` (U+2FF0–U+2FFB) for sequence text. The rest of the Basic
+Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 
 - `NotoSansCJKjp-ids-strokes.woff2` (3.4 KB, 37 characters): Noto Sans CJK JP 2.004
   (<https://github.com/notofonts/noto-cjk>, tag `Sans2.004`, the variable font instanced at weight
   400, SHA-256 `240c9b83bf7b386edbae39995ae7e068ed4583f484d92e4a74c34158b5f27b1a`), © 2014-2021
   Adobe, SIL Open Font License 1.1 (`OFL-NotoSansCJK.txt`). The Reserved Font Name is `Source`, which
   the family name does not use.
+- `NotoSansCJKjp-ids-operators.woff2` (2.0 KB, 12 characters): U+2FF0–U+2FFB from the same Noto Sans
+  CJK JP 2.004 source as the strokes subset, named `IDS Operators`, SIL Open Font License 1.1
+  (`OFL-NotoSansCJK.txt`), SHA-256 `d2b33d199ce5ad6edbf8b9f1ab11e719cb306a8d63ac5f07fddb5fde70cf2890`.
+  Rebuild with `uv run --with 'fonttools[woff]' pyftsubset NotoSansCJK-Regular.ttc --font-number=0
+  --unicodes=2FF0-2FFB --flavor=woff2 --output-file=fonts/NotoSansCJKjp-ids-operators.woff2`.
 - `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one
@@ -29,6 +36,17 @@ Plane, Extension A included, comes from the reader's own CJK font.
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
+
+## Fallback shards
+
+`fonts/unicode/` holds `IDS Fallback`, the composer's outlines as a webfont, one file per
+256-code-point shard listed in `fonts/unicode.json`. The faces are not in any stylesheet: the app
+registers a shard as a `FontFace` the first time a character in its range appears
+(`src/svelte/fallback-font.js`), so a page downloads only the shards it shows. A shard also carries
+the palette parts, the empty-slot mark ⬚ and the description characters that the composer has no
+outline for, drawn from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
+`LICENSE-Jigmo.txt`): 590 shards, 56,651 characters, 4,462 from Jigmo, 9.7 MB all together.
+`uv run scripts/build_unicode_font.py` rebuilds them and fetches Jigmo itself.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google

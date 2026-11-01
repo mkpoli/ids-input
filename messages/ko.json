@@ -262,6 +262,7 @@
   "ids.pick.templates": "구조",
   "ids.group.4": "4개 부품",
   "ids.templates.insert": "구조 삽입: {sequence}",
+  "ids.templates.open": "새 탭에서 {sequence} 열기",
   "ids.templates.repeats": "반복",
   "ids.templates.repeatBottom": "아랫줄",
   "ids.templates.repeatBottomHint": "비우면 위 부품을 씁니다.",
@@ -340,5 +341,13 @@
   "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루",
   "info.copy": "{char} 복사",
   "info.copied": "복사됨",
-  "info.copyFailed": "복사 실패"
+  "info.copyFailed": "복사 실패",
+  "info.source.sections": "출처",
+  "info.source.open": "{site} 열기",
+  "info.site.wiktionary": "위키낱말사전",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "표기 보조",
+  "info.site.component": "Andrew West"
 }
