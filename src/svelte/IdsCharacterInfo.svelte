@@ -19,7 +19,7 @@
   let restoringFocus = false
   let pointerX = NaN, pointerY = NaN
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
-  let pinned = false
+  let pinned = $state(false)
   /** @type {Element | null} */
   let press = null
   let generation = 0
@@ -93,6 +93,8 @@
     // Keep waiting while the pointer is still on its way to the card, and give up once it is gone.
     hideTimer = setTimeout(function look() {
       if (pinned || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+      // A source link keeps focus when it opens a new tab, with the pointer gone from the card.
+      if (document.activeElement instanceof HTMLAnchorElement && panel?.contains(document.activeElement)) return
       if (nearAnchor()) { hideTimer = setTimeout(look, 200); return }
       close()
     }, 220)
@@ -313,7 +315,7 @@
         {#if strokes?.strokes != null}<span class="strokes">{t('parts.strokeCount', { count: strokes.strokes })}</span>{/if}
         {#if strokeGlyph}<span class="strokes">{t('info.firstStroke')}: <span class="stroke-glyph" lang="ja">{strokeGlyph}</span> {strokeName}</span>{/if}
       </div>
-      <button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>
+      {#if pinned}<button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>{/if}
     </header>
     {#if identity}
       <p class="unicode-name" lang="en">{identity.name}</p>
@@ -349,6 +351,18 @@
           {#each related as row}<button type="button" class="relation" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: row.char })}${row.meaning ? ` · ${row.meaning}` : ''}`} onclick={() => pick(row.char)}><span class="related-glyph" lang={kind === 'tangut' || kind === 'usage' ? 'txg' : 'zh'}>{row.char}</span>{#if row.meaning && kind !== 'han'}<span class="meaning" lang="en">{row.meaning}</span>{/if}</button>{/each}
         </div></section>{/if}
       {/each}
+      {#if info.sources.length}
+        <section class="sources">
+          <p class="label" id={`${uid}-sources`}>{t('info.source.sections')}</p>
+          <div class="relations" role="group" aria-labelledby={`${uid}-sources`}>
+            {#each info.sources as source (source.url)}
+              <span class="source">
+                <a class="chip" href={source.url} target="_blank" rel="noopener noreferrer" title={source.label} aria-label={t('info.source.open', { site: t(`info.site.${source.note ?? 'component'}`) })}>{t(`info.site.${source.note ?? 'component'}`)}<span class="chip-icon" aria-hidden="true">↗</span></a>
+              </span>
+            {/each}
+          </div>
+        </section>
+      {/if}
     {/if}
   {/if}
 </div>
@@ -363,4 +377,5 @@
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
   .identity-sources{margin:8px 0 12px;font-size:11px;color:var(--info-muted)}.identity-sources summary{cursor:pointer}.identity-sources a{display:block;margin-top:4px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
+  .sources{margin-top:12px}.sources .relations{gap:6px}.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:999px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit;font:11.5px/1.4 inherit;cursor:pointer}.chip:hover{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.chip-icon{color:var(--info-muted)}
 </style>
