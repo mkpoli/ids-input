@@ -81,10 +81,12 @@ export function checkBodySize(headers) {
  * `Content-Length` is a courtesy a client need not extend — a chunked body carries none — so the
  * cap is also counted off the stream, and reading the form fails rather than buffering the rest.
  * @param {Request} request @param {number} [max]
- * @returns {{ request: Request, overrun: { exceeded: boolean } }}
+ * @returns {{ request: Request, overrun: { exceeded: boolean }, bytes: () => Uint8Array }}
  */
 export function meterBody(request, max = MAX_BODY) {
   const overrun = { exceeded: false }
+  /** @type {Uint8Array[]} */
+  const kept = []
   if (!request.body) return { request, overrun }
   let seen = 0
   const meter = new TransformStream({
@@ -95,11 +97,22 @@ export function meterBody(request, max = MAX_BODY) {
         controller.error(new Error('the report body ran past its limit'))
         return
       }
+      kept.push(chunk instanceof Uint8Array ? chunk : new Uint8Array(chunk))
       controller.enqueue(chunk)
     },
   })
   const metered = new Request(request, { body: request.body.pipeThrough(meter), duplex: 'half' })
-  return { request: metered, overrun }
+  // The bytes as read, for the dispatch, which carries them on to GitHub.
+  const bytes = () => {
+    const out = new Uint8Array(kept.reduce((total, chunk) => total + chunk.byteLength, 0))
+    let at = 0
+    for (const chunk of kept) {
+      out.set(chunk, at)
+      at += chunk.byteLength
+    }
+    return out
+  }
+  return { request: metered, overrun, bytes }
 }
 
 /** Whether the request carries a multipart form. @param {Headers} headers @returns {Rejected | null} */

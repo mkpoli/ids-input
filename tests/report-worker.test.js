@@ -3,7 +3,7 @@ import { MAX_BODY_CHARS, asText, autolink, cell, duplicateComment, elide, escape
 import { MAX_BODY, byteLength, checkBodySize, checkMediaType, cleanText, meterBody, parseReport, sniffImage } from '../workers/reports/src/validate.js'
 import { PER_DAY, PER_HOUR, TOTAL_PER_DAY, checkRate, dedupeKey, findDuplicate, rememberIssue } from '../workers/reports/src/limit.js'
 import { toBase64 } from '../workers/reports/src/github.js'
-import { handle, originAllowed } from '../workers/reports/src/index.js'
+import { keepAnswer, handle, originAllowed } from '../workers/reports/src/index.js'
 
 const SITE = 'https://ids.mkpo.li'
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x01, 0x02, 0x03])
@@ -23,10 +23,17 @@ const fakeKv = () => {
     async put(key, value) {
       store.set(key, value)
     },
+    async delete(key) {
+      store.delete(key)
+    },
   }
 }
 
-const fakeEnv = (overrides = {}) => ({ REPORTS: fakeKv(), REPO: 'mkpoli/ids-input', SITE_ORIGIN: SITE, GITHUB_TOKEN: 'token', ...overrides })
+const fakeEnv = (overrides = {}) => {
+  const env = { REPORTS: fakeKv(), REPO: 'mkpoli/ids-input', SITE_ORIGIN: SITE, GITHUB_TOKEN: 'token', ...overrides }
+  currentEnv = env
+  return env
+}
 
 const reportForm = (fields = {}, files = {}) => {
   const form = new FormData()
@@ -58,7 +65,7 @@ const noAttachments = { image: null, document: null, failed: false }
  * A stubbed global `fetch` that answers the GitHub calls a report makes. `calls` records every
  * request, and `routes` overrides one path's answer.
  */
-const stubGitHub = ({ routes = {}, issueNumber = 123 } = {}) => {
+const stubGitHub = ({ routes = {}, issueNumber = 123, answer = true } = {}) => {
   const calls = []
   const original = globalThis.fetch
   globalThis.fetch = async (input, init = {}) => {
@@ -78,6 +85,13 @@ const stubGitHub = ({ routes = {}, issueNumber = 123 } = {}) => {
       return reply(201, { number: issueNumber, html_url: `https://github.com/mkpoli/ids-input/issues/${issueNumber}` })
     }
     if (/^POST \/repos\/mkpoli\/ids-input\/issues\/\d+\/comments$/.test(key)) return reply(201, { id: 1 })
+    if (key === 'POST /repos/mkpoli/ids-input/dispatches') {
+      // The Action answers through the queue; the test plays it here.
+      if (!answer) return reply(204, null)
+      const payload = JSON.parse(JSON.stringify(calls.at(-1).body.client_payload))
+      globalThis.__answered = payload
+      return reply(204, null)
+    }
     throw new Error(`the stub has no answer for ${key}`)
   }
   return { calls, restore: () => { globalThis.fetch = original } }
@@ -88,6 +102,30 @@ afterEach(() => {
   stub?.restore()
   stub = null
 })
+
+/**
+ * Answer a dispatched report as the workshop's Action does: leave the answer where the endpoint
+ * waits for it. `over` names the routes the run's own GitHub calls take.
+ * @param {{ label?: object, answer?: (id: string) => string, follow?: Record<string, () => Response>, asked?: any }} [options]
+ */
+const stubAction = ({ answer = () => '{"number":123,"url":"https://github.com/mkpoli/ids-input/issues/123"}', asked, routes = {} } = {}) =>
+  stubGitHub({
+    routes: {
+      ...routes,
+      'POST /repos/mkpoli/ids-input/dispatches': () => {
+        const body = stub.calls.at(-1).body
+        if (asked) asked(body)
+        // The Action's answer reaches the queue before the wait's first look, unless the run
+        // itself failed to get that far.
+        const refused = Object.keys(routes).some(key => key !== 'POST /repos/mkpoli/ids-input/dispatches' && !stub.calls.some(call => call.key === key))
+        if (!refused) void keepAnswer(currentEnv, { id: body.client_payload.id, body: answer(body.client_payload.id) })
+        return new Response(null, { status: 204 })
+      },
+    },
+  })
+
+/** The environment the action stub answers into, set by `fakeEnv`. */
+let currentEnv = null
 
 describe('report text escaping', () => {
   it('leaves Markdown in the reporter’s words inert', () => {
@@ -493,66 +531,35 @@ describe('the endpoint', () => {
     expect(form.get('symptom')).toBe('The preview is blank.')
     expect(metered.overrun.exceeded).toBe(false)
   })
-  it('files an issue and commits the drawing', async () => {
-    stub = stubGitHub()
+  it('hands the report to the workshop action, then answers with the issue it made', async () => {
     const env = fakeEnv()
+    /** @type {any} */
+    let dispatch = null
+    stub = stubAction({ asked: body => { dispatch = body } })
     const form = reportForm({ context: '{"locale":"ja"}', link: `${SITE}/#s=abc` }, { image: new File([PNG], 'drawing.png', { type: 'image/png' }) })
     const response = await handle(postReport(form), env)
     expect(response.status).toBe(201)
     expect(await response.json()).toEqual({ number: 123, url: 'https://github.com/mkpoli/ids-input/issues/123', duplicate: false })
-
-    const blob = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/git/blobs')
-    expect(blob.body).toEqual({ content: toBase64(PNG), encoding: 'base64' })
-    const tree = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/git/trees')
-    expect('base_tree' in tree.body).toBe(false)
-    expect(tree.body.tree[0].path).toMatch(/^reports\/\d{4}\/\d{2}\/[0-9a-f-]{36}\.png$/)
-    const commit = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/git/commits')
-    expect(commit.body.parents).toEqual([])
-    expect(commit.body.message).toBe('report: report: ⿰亻哥 — The preview is blank.')
-    expect(stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/git/refs').body.ref).toBe('refs/heads/bug-attachments')
-
+    // The labels are the Worker's, and no issue is opened with its token: the Action opens it.
     const labels = stub.calls.filter(call => call.key === 'POST /repos/mkpoli/ids-input/labels').map(call => call.body.name)
     expect(labels).toEqual(['report', 'needs-triage', 'lang:ja'])
-    const issue = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/issues')
-    expect(issue.body.labels).toEqual(['report', 'needs-triage', 'lang:ja'])
-    expect(issue.body.body).toContain('![the reported drawing](https://github.com/mkpoli/ids-input/raw/bug-attachments/reports/')
+    expect(stub.calls.some(call => call.key === 'POST /repos/mkpoli/ids-input/issues')).toBe(false)
+    // The dispatch carries the form as the dialog sent it, with its headers, and the title.
+    expect(dispatch.event_type).toBe('report')
+    expect(Buffer.from(dispatch.client_payload.report, 'base64').length).toBeGreaterThan(0)
+    expect(JSON.parse(Buffer.from(dispatch.client_payload['x-report-headers'], 'base64').toString('utf8')).origin).toBe(SITE)
+    expect(dispatch.client_payload.title).toBe('report: ⿰亻哥 — The preview is blank.')
     expect(await env.REPORTS.get(`report:${await dedupeKey('⿰亻哥', 'The preview is blank.')}`, 'json')).toEqual({
       number: 123,
       url: 'https://github.com/mkpoli/ids-input/issues/123',
     })
   })
-  it('files the issue anyway when the attachment cannot be stored', async () => {
-    stub = stubGitHub({
-      routes: { 'POST /repos/mkpoli/ids-input/git/blobs': () => new Response(JSON.stringify({ message: 'boom' }), { status: 500 }) },
-    })
-    const form = reportForm({}, { image: new File([PNG], 'drawing.png', { type: 'image/png' }) })
-    const response = await handle(postReport(form), fakeEnv())
-    expect(response.status).toBe(201)
-    const issue = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/issues')
-    expect(issue.body.body).toContain('could not be stored')
-    expect(issue.body.body).not.toContain('![the reported drawing]')
-  })
-  it('retries once when the ref moved under it', async () => {
-    let patches = 0
-    stub = stubGitHub({
-      routes: {
-        'GET /repos/mkpoli/ids-input/git/ref/heads/bug-attachments': () =>
-          new Response(JSON.stringify({ object: { sha: 'head-sha' } }), { status: 200 }),
-        'GET /repos/mkpoli/ids-input/git/commits/head-sha': () => new Response(JSON.stringify({ tree: { sha: 'base-tree' } }), { status: 200 }),
-        'PATCH /repos/mkpoli/ids-input/git/refs/heads/bug-attachments': () => {
-          patches += 1
-          return new Response(JSON.stringify({ message: 'is at another sha' }), { status: patches === 1 ? 422 : 200 })
-        },
-      },
-    })
-    const form = reportForm({}, { image: new File([PNG], 'd.png', { type: 'image/png' }) })
-    const response = await handle(postReport(form), fakeEnv())
-    expect(response.status).toBe(201)
-    expect(patches).toBe(2)
-    const trees = stub.calls.filter(call => call.key === 'POST /repos/mkpoli/ids-input/git/trees')
-    expect(trees.every(call => call.body.base_tree === 'base-tree')).toBe(true)
-    const issue = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/issues')
-    expect(issue.body.body).toContain('![the reported drawing](')
+  it('says so when the action answers with a refusal', async () => {
+    const env = fakeEnv()
+    stub = stubAction({ answer: () => '{"error":"forbidden_origin","message":"no"}' })
+    const response = await handle(postReport(reportForm()), env)
+    expect(response.status).toBe(502)
+    expect(await response.json()).toMatchObject({ error: 'upstream_error' })
   })
   it('comments on the issue a repeat matches instead of filing another', async () => {
     stub = stubGitHub()
@@ -567,7 +574,7 @@ describe('the endpoint', () => {
     expect(stub.calls.map(call => call.key)).toEqual(['POST /repos/mkpoli/ids-input/issues/42/comments'])
   })
   it('files afresh when the issue a repeat matched has gone', async () => {
-    stub = stubGitHub({
+    stub = stubAction({
       routes: { 'POST /repos/mkpoli/ids-input/issues/42/comments': () => new Response(JSON.stringify({ message: 'Not Found' }), { status: 404 }) },
     })
     const env = fakeEnv()
@@ -596,7 +603,7 @@ describe('the endpoint', () => {
     expect(await response.json()).toMatchObject({ error: 'rate_limited' })
   })
   it('still reports success when the dedupe write fails after filing', async () => {
-    stub = stubGitHub()
+    stub = stubAction()
     const env = fakeEnv()
     const put = env.REPORTS.put.bind(env.REPORTS)
     env.REPORTS.put = async (key, value) => {
@@ -618,17 +625,17 @@ describe('the endpoint', () => {
     expect(response.headers.get('access-control-allow-origin')).toBe(SITE)
   })
   it('survives a context built to break the renderer', async () => {
-    stub = stubGitHub()
+    // The Worker reads the context for the labels and the title only; the Action renders the body.
     const hostile = JSON.stringify({ console: [{ toString: null }], fonts: [{ toString: null }], locale: { toString: null } })
+    stub = stubAction()
     const response = await handle(postReport(reportForm({ context: hostile })), fakeEnv())
     expect(response.status).toBe(201)
-    const issue = stub.calls.find(call => call.key === 'POST /repos/mkpoli/ids-input/issues')
-    expect(issue.body.labels).toEqual(['report', 'needs-triage'])
-    expect(issue.body.body).toContain('toString')
+    const labels = stub.calls.filter(call => call.key === 'POST /repos/mkpoli/ids-input/labels').map(call => call.body.name)
+    expect(labels).toEqual(['report', 'needs-triage'])
   })
-  it('answers 502 when GitHub refuses the issue', async () => {
+  it('answers 502 when GitHub refuses the dispatch', async () => {
     stub = stubGitHub({
-      routes: { 'POST /repos/mkpoli/ids-input/issues': () => new Response(JSON.stringify({ message: 'nope' }), { status: 503 }) },
+      routes: { 'POST /repos/mkpoli/ids-input/dispatches': () => new Response(JSON.stringify({ message: 'nope' }), { status: 503 }) },
     })
     const response = await handle(postReport(reportForm()), fakeEnv())
     expect(response.status).toBe(502)
@@ -645,7 +652,7 @@ describe('the endpoint', () => {
     expect(await response.json()).toMatchObject({ error: 'captcha_failed' })
   })
   it('lets a passing challenge through', async () => {
-    stub = stubGitHub({
+    stub = stubAction({
       routes: { 'POST /turnstile/v0/siteverify': () => new Response(JSON.stringify({ success: true }), { status: 200 }) },
     })
     const response = await handle(postReport(reportForm({ turnstile: 'token' })), fakeEnv({ TURNSTILE_SECRET: 'secret' }))

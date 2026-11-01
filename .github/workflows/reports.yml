@@ -28,4 +28,6 @@ jobs:
         working-directory: workers/reports
         run: |
           printf '%s' "$REPORTS_GITHUB_TOKEN" | bunx wrangler secret put GITHUB_TOKEN
+          # The queue the report action answers on; wrangler only creates it when asked.
+          bunx wrangler queues create ids-reports-answers 2>/dev/null || true
           bunx wrangler deploy

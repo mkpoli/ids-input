@@ -3,8 +3,12 @@
 // issue it became; `GET /health` answers that the Worker is up. Reporters have no account anywhere,
 // so the only thing standing between the endpoint and abuse is the origin check, the rate limits
 // and the optional Turnstile challenge.
-import { duplicateComment, issueBody, issueTitle, labelsFor } from './issue.js'
-import { GitHubError, commentOnIssue, createIssue, ensureLabels, rawUrl, uploadAttachments } from './github.js'
+//
+// The issue is filed by the workshop's own GitHub Action rather than by a personal token, so it is
+// the action that opens it and the report names the reporter; the Worker dispatches the report to
+// that Action and waits on the answer it dispatches back.
+import { duplicateComment, issueTitle, labelsFor } from './issue.js'
+import { GitHubError, commentOnIssue, dispatch, ensureLabels } from './github.js'
 import { MAX_BODY, checkBodySize, checkMediaType, meterBody, parseReport } from './validate.js'
 import { checkRate, dedupeKey, findDuplicate, rememberIssue } from './limit.js'
 
@@ -16,9 +20,12 @@ const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/sitever
  * @property {KVNamespace} REPORTS
  * @property {string} REPO
  * @property {string} SITE_ORIGIN
- * @property {string} GITHUB_TOKEN
+ * @property {string} GITHUB_TOKEN the token the dispatch and the dedupe use
  * @property {string} [TURNSTILE_SECRET]
  */
+
+/** How long a dialog waits on the Action filing its report before it is told to try again. */
+const ANSWER_WAIT = Number(/** @type {any} */ (globalThis).ANSWER_WAIT ?? 200_000)
 
 /** A preview version of the workshop, on the alias its pull request deploys to. */
 const PREVIEW = /^https:\/\/(?:[a-z0-9-]+-)?ids-input-workshop\.mkpoli\.workers\.dev$/
@@ -68,31 +75,69 @@ async function passesTurnstile(env, token, ip) {
   return verdict.success === true
 }
 
+/** The answers the Action dispatched, kept until the dialog that waits for one takes it. */
+/** @param {string} id */
+const answerKey = id => `answer:${id}`
+
 /**
- * Commit the report's attachments and answer with the URLs the issue body should point at. A
- * failure here is not a failure of the report: the issue is filed without the images and says so.
- * @param {Env} env @param {Report} report @param {string} title
- * @returns {Promise<import('./issue.js').Attachments>}
+ * Ask the workshop's Action to file the report, and hand back the issue it answered with. The
+ * dialog waits on this call, so the wait is bounded: past `ANSWER_WAIT` the reporter is told to
+ * try again, and the answer is left where a retry of the same report can find it.
+ * @param {Env} env @param {{ headers: Headers, bytes: () => Uint8Array }} posted @param {Report} report
+ * @returns {Promise<{ number: number, url: string }>}
  */
-async function storeAttachments(env, report, title) {
-  const offered = [report.image, report.documentFile].filter(Boolean)
-  if (!offered.length) return { image: null, document: null, failed: false }
-  const now = new Date()
-  const folder = `reports/${now.getUTCFullYear()}/${String(now.getUTCMonth() + 1).padStart(2, '0')}`
-  const paths = offered.map(attachment => `${folder}/${crypto.randomUUID()}.${/** @type {NonNullable<typeof attachment>} */ (attachment).ext}`)
-  try {
-    await uploadAttachments(
-      env,
-      offered.map((attachment, index) => ({ path: paths[index], bytes: /** @type {NonNullable<typeof attachment>} */ (attachment).bytes })),
-      `report: ${title}`,
-    )
-  } catch {
-    return { image: null, document: null, failed: true }
+async function fileByAction(env, posted, report) {
+  const id = crypto.randomUUID()
+  let form = ''
+  for (const byte of posted.bytes()) form += String.fromCharCode(byte)
+  /** @type {Record<string, string>} */
+  const headers = {}
+  for (const [name, value] of posted.headers) if (!['host', 'content-length', 'cf-connecting-ip'].includes(name)) headers[name] = value
+  await dispatch(env, {
+    event_type: 'report',
+    client_payload: {
+      id,
+      report: btoa(form),
+      'x-report-headers': btoa(JSON.stringify(headers)),
+      title: issueTitle(report),
+    },
+  })
+  const answer = await waitForAnswer(env, id, ANSWER_WAIT)
+  if (!answer) throw new Error('the Action did not answer in time')
+  const body = JSON.parse(answer)
+  if (typeof body?.number !== 'number') {
+    throw Object.assign(new Error(`the Action answered ${body?.error ?? 'without an issue'}`), { answered: true, message: body?.message })
   }
-  let next = 0
-  const image = report.image ? rawUrl(env, paths[next++]) : null
-  const document = report.documentFile ? rawUrl(env, paths[next]) : null
-  return { image, document, failed: false }
+  return { number: body.number, url: String(body.url ?? '') }
+}
+
+/**
+ * The answer the Action left for this report, or null once `ms` has gone by.
+ * @param {Env} env @param {string} id @param {number} ms @returns {Promise<string | null>}
+ */
+async function waitForAnswer(env, id, ms) {
+  const until = Date.now() + ms
+  for (;;) {
+    const kept = await env.REPORTS.get(answerKey(id))
+    if (kept !== null) {
+      await env.REPORTS.delete(answerKey(id))
+      return kept
+    }
+    if (Date.now() >= until) return null
+    await new Promise(done => setTimeout(done, 2_000))
+  }
+}
+
+/**
+ * The answer an Action dispatched, put where the waiting dialog will find it.
+ * @param {Env} env @param {{ id?: unknown, status?: unknown, body?: unknown }} event
+ * @returns {Promise<void>}
+ */
+export async function keepAnswer(env, event) {
+  const id = typeof event.id === 'string' ? event.id : ''
+  const body = typeof event.body === 'string' ? event.body : ''
+  if (!id || !body) return
+  await env.REPORTS.put(answerKey(id), body, { expirationTtl: 600 })
 }
 
 /**
@@ -174,14 +219,11 @@ async function route(request, env) {
     return json({ number: known.number, url: known.url, duplicate: true }, 200, origin)
   }
 
-  const title = issueTitle(report)
   /** @type {{ number: number, url: string }} */
   let issue
   try {
-    const attachments = await storeAttachments(env, report, title)
-    const labels = labelsFor(report.context)
-    await ensureLabels(env, labels)
-    issue = await createIssue(env, { title, body: issueBody(report, attachments), labels })
+    await ensureLabels(env, labelsFor(report.context))
+    issue = await fileByAction(env, { headers: request.headers, bytes: metered.bytes }, report)
   } catch (error) {
     console.error('filing the report failed', error)
     return fail(502, 'upstream_error', 'GitHub did not accept the report. Try again later.', origin)
@@ -199,5 +241,12 @@ export default {
   /** @param {Request} request @param {Env} env @returns {Promise<Response>} */
   fetch(request, env) {
     return handle(request, env)
+  },
+  // GitHub hands the Action's answer to the queue this Worker consumes, as a repository dispatch.
+  /** @param {{ messages: { body?: { event?: string, payload?: Record<string, unknown> } }[] }} batch @param {Env} env */
+  async queue(batch, env) {
+    for (const message of batch.messages) {
+      if (message.body?.event === 'report_answer') await keepAnswer(env, message.body.payload ?? {})
+    }
   },
 }
