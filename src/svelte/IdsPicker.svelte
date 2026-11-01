@@ -11,7 +11,7 @@
   import IdsSketch from './IdsSketch.svelte'
   import IdsTemplates from './IdsTemplates.svelte'
   import { loadStrokeRecords } from './strokes.js'
-  import { strokeSummary } from './i18n.js'
+  import { strokeGlyph, strokeSummary } from './i18n.js'
 
   /** @typedef {'find' | 'parts' | 'from' | 'templates'} Tab */
   /** @type {{ editor: import('./editor.svelte.js').Editor, pickers?: Tab[], recentKey?: string | null, tab?: Tab | null, fromText?: string, title?: boolean }} */
@@ -65,10 +65,18 @@
     const records = strokeRecords, wanted = wantedStrokes
     const items = wanted === null || !records ? found.items
       : found.items.filter(item => (records.get(item.char)?.strokes ?? null) === wanted)
-    return items.map(item => ({ ...item, title: [
-      item.label ? `${item.char} ${item.label}` : item.char,
-      strokeSummary(t, records?.get(item.char)),
-    ].filter(Boolean).join(' · ') }))
+    return items.map(item => {
+      const record = records?.get(item.char)
+      return {
+        ...item,
+        strokes: record?.strokes ?? null,
+        first: record?.first ?? null,
+        title: [
+          item.label ? `${item.char} ${item.label}` : item.char,
+          strokeSummary(t, record),
+        ].filter(Boolean).join(' · '),
+      }
+    })
   })
   $effect(() => {
     const asked = query.trim(), search = adapter.search, stroke = strokeLimit
@@ -124,7 +132,7 @@
                     {#each foundItems as item (item.char)}
                       <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.title}
                         draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
-                        onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
+                        onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}{#if item.strokes != null}<span class="ids-hit-strokes" aria-hidden="true"><span class="ids-hit-count">{item.strokes}</span>{#if item.first}<span class="ids-hit-first" lang="ja">{strokeGlyph(item.first)}</span>{/if}</span>{/if}</button>
                     {/each}
                   </div>
                 {/if}
@@ -172,6 +180,10 @@
   .ids-hit:not(:disabled):hover{border-color:var(--_accent)}
   .ids-hit-char{flex:none;font-size:22px;font-family:var(--_font)}
   .ids-hit-label{min-width:0;max-width:16ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:var(--_muted);font-variant-numeric:tabular-nums}
+  /* The stroke count and first-stroke glyph as one boxed datum, found by shape without reading. */
+  .ids-hit-strokes{flex:none;display:inline-flex;align-items:baseline;gap:3px;align-self:center;padding:0 5px;border:1px solid var(--_line);border-radius:5px;background:var(--_surface);font-size:10.5px;line-height:1.6;color:var(--_muted)}
+  .ids-hit-count{font-weight:600;color:var(--_ink);font-variant-numeric:tabular-nums}
+  .ids-hit-first{font-family:var(--_font);font-size:13px;color:var(--_ink)}
   .ids-note{margin:0;font-size:11px;color:var(--_muted)}
   .ids-note.fault{color:var(--_fault)}
 </style>

@@ -17,6 +17,9 @@ try {
   const title = await hit.getAttribute('title')
   assert.match(title, /4 strokes/, `the tooltip gives the stroke count, got ${title}`)
   assert.match(title, /㇐ Horizontal/, `the tooltip gives the first stroke, got ${title}`)
+  // The tile carries the count and the stroke glyph side by side, so both are read without words.
+  const chip = (await hit.locator('.ids-hit-strokes').innerText()).replace(/\s+/g, '')
+  assert.equal(chip, '4\u31D0', `the tile chip gives the count and the stroke glyph, got ${JSON.stringify(chip)}`)
 
   await field.fill('水')
   const water = page.locator('.ids-hit[data-character="水"]').first()

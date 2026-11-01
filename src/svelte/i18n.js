@@ -50,6 +50,15 @@ export function strokeClassName(t, cls) {
   return text === key ? '' : text
 }
 
+/** The stroke glyph of each first-stroke class: ㇐ 横, ㇑ 豎, ㇒ 撇, ㇔ 點, ㇕ 折. */
+const STROKE_GLYPH = { 横: '\u31D0', 豎: '\u31D1', 撇: '\u31D2', 點: '\u31D4', 折: '\u31D5' }
+
+/**
+ * The glyph a first-stroke class is drawn with. Empty where no class is known.
+ * @param {'横' | '豎' | '撇' | '點' | '折' | null | undefined} cls
+ */
+export const strokeGlyph = cls => cls ? STROKE_GLYPH[cls] ?? '' : ''
+
 /**
  * A character's stroke count and first stroke as one line for a tooltip, such as `4 strokes ·
  * ㇐ Horizontal`. Empty where neither is recorded.
