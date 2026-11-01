@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { commands, drawnContours, makePart, pathRings, placed, pointsBox, svgPath } from '../src/composer/geometry.js'
-import { pressedEnclosure as press } from '../src/composer/compose.js'
+import { footMap, pressedEnclosure as press } from '../src/composer/compose.js'
 
 /** A contour in font units, y up. */
 const contour = (ops, points, width = null) => ({ ops: commands(ops), light: Float64Array.from(points), heavy: Float64Array.from(points), width })
@@ -64,5 +64,16 @@ describe('a glyph drawn as one outline with its counters', () => {
   it('is left alone when it has no separate counters to press', () => {
     const glyph = stood(makePart([clockwise(0, 0, 1000, 800, [50, 40])]))
     expect(press(glyph, 0)).toBeNull()
+  })
+})
+
+describe('the foot map', () => {
+  it('is Möbius: steeper at the box than at the tip, and monotone between', () => {
+    const slope = s => (footMap(s + 1e-6) - footMap(s)) / 1e-6
+    expect(footMap(0)).toBe(0)
+    expect(footMap(1)).toBe(1)
+    expect(slope(0)).toBeCloseTo(1.5, 3)
+    expect(slope(1)).toBeCloseTo(1 / 1.5, 3)
+    for (let i = 1; i <= 100; i++) expect(footMap(i / 100)).toBeGreaterThan(footMap((i - 1) / 100))
   })
 })

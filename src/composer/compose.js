@@ -165,6 +165,8 @@ const ENCLOSURE_CUTS = {
 // Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
 // box of such a glyph to this share of the width and draws its foot out to the right edge.
 const ENCLOSURE_SHARE = 0.485
+// How much steeper the Möbius map starts the foot's stretch than its mean.
+const FOOT_RATIO = 1.5
 
 // Enclosing forms a designer drew for a whole operand: 电 as ⿺'s enclosing part, cut from 𫌷
 // (⿺电言) in Noto Sans CJK JP and Noto Serif CJK JP, whose swept foot han-compose will not take for
@@ -1980,17 +1982,27 @@ export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE) {
   // The box's right edge is its counter's right plus the thickness of the box's left frame.
   const windows = boxes.filter((_, k) => k !== sweep)
   const boxRight = Math.min(x1, Math.max(...windows.map(b => b[2])) + Math.min(...windows.map(b => b[0])) - x0)
-  const target = x0 + share * (x1 - x0)
   if (!(boxRight > x0 && boxRight < x1)) return null
-  const box = (target - x0) / (boxRight - x0), foot = (x1 - target) / (x1 - boxRight)
+  const width = x1 - x0, r = (boxRight - x0) / width
   const mapX = points => {
     const out = points.slice()
-    for (let i = 0; i < out.length; i += 2) out[i] = out[i] <= boxRight ? x0 + (out[i] - x0) * box : target + (out[i] - boxRight) * foot
+    for (let i = 0; i < out.length; i += 2) {
+      const u = (out[i] - x0) / width
+      // The box compresses linearly; its foot takes a Möbius map that starts steeper than the foot's
+      // mean stretch and eases toward the tip, so the rising hook keeps its angle.
+      const v = u <= r ? share * u / r : share + (1 - share) * footMap((u - r) / (1 - r))
+      out[i] = x0 + width * v
+    }
     return out
   }
   const mapped = p.part.contours.map(c => ({ ops: c.ops, light: mapX(c.light), heavy: mapX(c.heavy), width: c.width }))
   return placed(makePart(mapped, p.part.box.slice()), p.source, p.target, p.native, `enclosure ${p.origin}`, p.weight)
 }
+
+/** The Möbius map along a pressed enclosure's foot: `s` runs from 0 at the box's right edge to 1 at
+ *  the glyph's right, and the stretch starts `FOOT_RATIO` times its mean, easing to the reciprocal
+ *  at the tip. */
+export const footMap = (s, ratio = FOOT_RATIO) => ratio * s / (1 + (ratio - 1) * s)
 
 /** Whether every point of `ring` lies inside the closed `outer` ring (font units, y up). */
 function insideRing(ring, outer) {
