@@ -13,7 +13,7 @@ Demo: the IDS Workshop, <https://ids.mkpo.li/>
   <img src="docs/images/workshop-light.png" alt="The IDS Workshop: the sequence ⿰𠤕⿱龴疋 with the operator palette and parts on the left, its tree in the middle above the characters that contain it, and its drawing with export settings on the right">
 </picture></a>
 
-The package has four layers, and an optional preview:
+The package has four layers, and a preview:
 
 - **core**: framework-free JavaScript with types and no dependencies. It parses and writes
   sequences, edits them as trees (split, swap, unwrap, clear, undo), reads ASCII operator names
@@ -33,7 +33,9 @@ The package has four layers, and an optional preview:
   Traditional Chinese, Korean and Vietnamese.
 - **preview**: `IdsPreview` shows a description drawn by
   [han-compose](https://github.com/mkpoli/han-compose)'s composing engine, used as the adapter's
-  `preview`. The engine is its own package, `@han-compose/composer`; this package holds the editor.
+  `preview`. The engine is its own package, `@han-compose/composer`: it reads the export, parses the
+  sequence, keeps its own copy of the notation (⬚, tokens, Emoji) and draws. This package holds the
+  editor: the document's layers, the interaction, the data sources and the drawing SVG.
 
 The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
 from Yi Bai's IDS dataset, and the palette has a Tangut
@@ -773,18 +775,18 @@ one sequence at a time; a newer sequence ends the drawing before it.
 ```js
 import { composerPreview, dataUrls } from '@han-compose/composer'
 
-// The outlines the engine draws without the export, as URLs your bundler emits.
-import tangut from '@han-compose/composer/data/sources/tangut/outlines.json.gz?url'
-const loaders = { ...dataUrls, 'sources/tangut/outlines.json.gz': tangut }
+// The outlines the engine draws without the export, as URLs your bundler emits; the key is the
+// path the engine reads the file at, and `?url` makes Vite emit it wherever it bundles.
+const loaders = Object.fromEntries(Object.entries(dataUrls).map(([path, url]) => [path, new URL(url, import.meta.url).href]))
 
 const adapter = { ...babelStoneAdapter({ ids, parts }),
   preview: composerPreview({ base: 'https://example.org/composer/<version>/', loaders }) }
 ```
 
 `base` is the folder holding the export's `manifest.json`; the host serving it must allow the page's
-origin by CORS. `dataUrls` names the bundled files by their path under the package's `data/`, and
-`loaders` says where your build serves each of them; a page that serves the package's `data/` as it
-is needs neither. Without an export, descriptions whose parts all have bundled outlines still draw.
+origin by CORS. `dataUrls` names each bundled file by the path the engine reads it at, under the
+package's `data/`; `loaders` maps those names to the URLs your build serves them at, and a page that
+serves the package's `data/` where the package sits needs no `loaders`. Without an export, descriptions whose parts all have bundled outlines still draw.
 When the export loads but a part has no outline in either source, its badge reads "Could not
 compose". Sequences over 24 operators or 8 levels are not drawn, except pyramids of up to 64 rows,
 which are laid out as equal cells. Under Vite, keep both packages out of dependency pre-bundling
@@ -1339,7 +1341,7 @@ on their use.
 bun install
 bun test tests          # core, adapter, components and catalogue tests
 bun run check           # tsrs and svelte-check
-bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
+bun run verify          # tests, tsrs and svelte-check (against the engine's declarations), and the i18n check; run before pushing
 bun run dev             # the demo on a dev server
 bun run build:demo      # the demo into dist/
 bun run build:site      # assets into dist/, share-card Worker into dist-worker/
