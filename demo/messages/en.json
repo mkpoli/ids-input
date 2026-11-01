@@ -28,6 +28,7 @@
   "app.edit.selectAll": "Select all",
   "app.encoded": "Encoded as",
   "app.examples.label": "Examples",
+  "app.examples.open": "Open the examples",
   "app.examples.basic": "Basic structures",
   "app.examples.complex": "Complex structures",
   "app.examples.repeated": "Repeated components",

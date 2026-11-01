@@ -27,6 +27,7 @@
   "app.edit.selectAll": "全選",
   "app.encoded": "對應字元",
   "app.examples.label": "範例",
+  "app.examples.open": "開啟範例",
   "app.examples.basic": "基本結構",
   "app.examples.complex": "複雜結構",
   "app.examples.repeated": "重複部件",
