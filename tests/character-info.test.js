@@ -30,6 +30,33 @@ describe('sourced character meanings', () => {
     for (const char of '水火山石土') expect(info(char).emoji.length).toBeGreaterThan(0)
     expect(info('馬').emoji).toContainEqual({text:'🐎',meaning:'horse'})
   })
+  test('a character lists each kind of source once', () => {
+    // 馬 is glossed by Unihan, translated to Tangut by several Wiktionary records, and drawn in
+    // small seal from two lists; the card shows each kind of source once.
+    for (const char of ['馬', '鳥', '口', '𘥇']) {
+      const kinds = info(char).sources.map(source => source.note)
+      expect(new Set(kinds).size).toBe(kinds.length)
+      expect(info(char).sourceSites).toEqual(kinds)
+    }
+    expect(info('馬').sources.map(source => source.note)).toEqual(['unihan', 'wiktionary', 'sealSource', 'unicodeSealSource', 'editorial'])
+  })
+  test('a Wiktionary record links to a page that carries what it cites', () => {
+    // A Tangut character's own page has its glosses; a Han character's Wiktionary record says where
+    // its Tangut translation comes from, and a Tangut page would be no use to the reader.
+    expect(info('𘆽').sources.find(source => source.note === 'wiktionary').url).toContain(encodeURIComponent('𘆽'))
+    const han = info('馬').sources.find(source => source.note === 'wiktionary')
+    expect(han.url).toBe('https://en.wiktionary.org/')
+  })
+  test('sources the adapter adds for component examples keep their kind and appear once', async () => {
+    // The adapter adds a Wiktionary record for each example and the Tangut IDS list after lookup.
+    const adapter = babelStoneAdapter({ table: new Map([['𘆽', [{ text: '⿰𘥇𘨬', regions: '' }]]]), characterInfo: 'https://example.test/info.gz', fetch: async () => new Response(JSON.stringify(document)) })
+    const found = await adapter.characterInfo('𘥇')
+    const kinds = found.sources.map(source => source.note)
+    expect(kinds).toContain('wiktionary')
+    expect(kinds).toContain('component')
+    expect(new Set(kinds).size).toBe(kinds.length)
+    expect(found.sourceSites).toEqual(kinds)
+  })
   test('seal links have drawable coverage and both data-source credits', () => {
     const drawable = new Set([...Object.keys(seal.table), ...seal.parts.map(p=>p.part)])
     for (const char of Object.keys(document.entries)) for (const row of info(char).relations) if(row.kind==='seal') expect(drawable.has(row.char)).toBe(true)
