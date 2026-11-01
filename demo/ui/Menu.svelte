@@ -348,7 +348,7 @@
   .item.rich{min-height:52px;gap:var(--ui-space-md);padding:var(--ui-space-2xs) var(--ui-space-sm);border-radius:var(--ui-radius-lg)}
   .item:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
   .item.rich:focus-visible{outline:var(--ui-ring-width) solid var(--ui-color-focus);outline-offset:calc(-1 * var(--ui-ring-width))}
-  .item:is(:disabled,[aria-disabled='true']){opacity:var(--ui-disabled-opacity);cursor:not-allowed}
+  .item:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
   .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--ui-color-ink-muted);transform:rotate(-90deg);transition:transform var(--ui-duration-fast)}
   .item.submenu-item .chev.open{transform:none}
   .submenu{margin:0 0 var(--ui-space-2xs) 26px;padding:var(--ui-space-3xs) 0 var(--ui-space-3xs) var(--ui-space-xs);border-left:1px solid var(--ui-color-border)}
