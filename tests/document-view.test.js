@@ -53,6 +53,18 @@ describe('scoped markup', () => {
     expect(view.scopes?.complete).toBe(true)
     expect(view.issues).toEqual([])
   })
+  it('writes emoji as text over the ink and masks the ink for cut ones', () => {
+    const document = fromSequence('⿰木口')
+    const view = documentView(document, drawing([{ leaf: 0, d: '' }, { leaf: 1, d: square(500, 500) }]), sketch(boxes))
+    const ink = scopesMarkup(view.scopes, { emoji: [{ text: '🚗', box: boxes[0] }] })
+    expect(ink.body).toContain('<text')
+    expect(ink.body).toContain('🚗')
+    expect(ink.body).not.toContain('mask="url(#one-emoji)"')
+    const cut = scopesMarkup(view.scopes, { emoji: [{ text: '🚗', box: boxes[0], cut: true }] })
+    expect(cut.defs).toContain('emoji')
+    expect(cut.body).toContain('mask="url(#ids-emoji)"')
+    expect(cut.body).not.toMatch(/<text[^>]*>🚗<\/text>.*<text/)
+  })
   it('returns defs and body without the svg wrapper', () => {
     const view = documentView(fromSequence('⿰木口'), drawing(parts), sketch(boxes))
     const markup = scopesMarkup(view.scopes, { idPrefix: 'preview' })
