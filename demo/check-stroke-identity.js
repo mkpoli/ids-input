@@ -116,7 +116,8 @@ try {
   await card.getByText('Stroke symbol', { exact: true }).waitFor()
   await card.getByText('U+31D0', { exact: true }).waitFor()
   await card.getByText('IDS records: 0', { exact: true }).waitFor()
-  const sources = await card.locator('.identity-sources a').evaluateAll(links => links.map(link => link.href))
+  // The card has one list of sources; the records that name the stroke are in it.
+  const sources = await card.locator('.source-list a').evaluateAll(links => links.map(link => link.href))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt'))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt'))
   assert.ok(sources.includes('https://www.unicode.org/versions/Unicode15.1.0/appF.pdf'))

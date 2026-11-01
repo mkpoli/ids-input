@@ -315,7 +315,6 @@
   "info.script.component": "西夏部件",
   "info.title": "文字資訊",
   "info.firstStroke": "首筆",
-  "info.unicodeReference": "Unicode參考資料",
   "info.relation.seal": "小篆",
   "info.script.han": "漢字",
   "info.script.seal": "小篆",
@@ -343,12 +342,12 @@
   "info.copied": "已複製",
   "info.copyFailed": "複製失敗",
   "info.source.sections": "出處",
-  "info.source.open": "打開{site}",
   "info.site.wiktionary": "維基詞典",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
   "info.site.editorial": "用字助記",
   "info.site.component": "Andrew West",
-  "info.site.tangutIds": "Tangut IDS 表"
+  "info.site.tangutIds": "Tangut IDS 表",
+  "info.site.course": "Unicode"
 }

@@ -315,7 +315,6 @@
   "info.script.component": "Thành phần chữ Tây Hạ",
   "info.title": "Thông tin chữ",
   "info.firstStroke": "Nét đầu",
-  "info.unicodeReference": "Tài liệu Unicode",
   "info.relation.seal": "Tiểu triện",
   "info.script.han": "Chữ Hán",
   "info.script.seal": "Chữ Tiểu triện",
@@ -343,12 +342,12 @@
   "info.copied": "Đã sao chép",
   "info.copyFailed": "Lỗi sao chép",
   "info.source.sections": "Nguồn",
-  "info.source.open": "Mở {site}",
   "info.site.wiktionary": "Wiktionary",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
   "info.site.editorial": "Phụ trợ biên tập",
   "info.site.component": "Andrew West",
-  "info.site.tangutIds": "Danh sách Tangut IDS"
+  "info.site.tangutIds": "Danh sách Tangut IDS",
+  "info.site.course": "Unicode"
 }

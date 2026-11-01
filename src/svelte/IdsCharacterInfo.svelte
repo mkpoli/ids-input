@@ -41,6 +41,28 @@
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
+
+  // One list of every source the card drew on: the data it is built from, then the records that name
+  // the character itself. A data record is named by its site; each course record keeps its own title.
+  /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
+  const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
+  /** @type {{ key: string, site: string, what: string, url: string }[]} */
+  const sources = $derived.by(() => {
+    /** @type {{ key: string, site: string, what: string, url: string }[]} */
+    const list = []
+    for (const source of info?.sources ?? []) if (source.note) list.push({ key: source.note, site: t(`info.site.${source.note}`), what: source.label, url: source.url })
+    // A course's records share its name. The one record that carries the whole title leads and takes
+    // the name on the row; the others follow with what is left once the name is said.
+    const course = t('info.site.course')
+    const records = (identity?.sources ?? []).map(source => ({ site: source.note === 'editorial' ? t('info.site.editorial') : course, what: source.note === 'editorial' ? source.label : left(source.label, 'Unicode'), url: source.url }))
+    const lead = records.findIndex(record => record.site === course && left(record.what, course).length > 0)
+    if (lead > 0) records.unshift(...records.splice(lead, 1))
+    for (const [index, record] of records.entries()) {
+      const what = record.what
+      list.push({ key: `${record.site}:${record.what}:${record.url}`, site: record.site, what, url: record.url })
+    }
+    return list
+  })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
   // the glyph is the first character and the name is what follows it.
   const strokeLabel = $derived(strokeClassName(t, strokes?.first))
@@ -106,7 +128,9 @@
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     x = Math.max(8, Math.min(box.left, innerWidth - card.width - 8))
-    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : Math.max(8, box.top - card.height - 4)
+    // Below the anchor, or above it when the card would not fit; never above the top of the window.
+    const above = Math.max(8, box.top - card.height - 4)
+    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : above
   }
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
@@ -336,7 +360,6 @@
           </div>
         </section>
       {/if}
-      <details class="identity-sources"><summary>{t('info.unicodeReference')}</summary>{#each identity.sources as source}<a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>{/each}</details>
     {/if}
     {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
     {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
@@ -351,18 +374,16 @@
           {#each related as row}<button type="button" class="relation" disabled={disabled || !onpick} aria-label={`${t('info.insert', { part: row.char })}${row.meaning ? ` · ${row.meaning}` : ''}`} onclick={() => pick(row.char)}><span class="related-glyph" lang={kind === 'tangut' || kind === 'usage' ? 'txg' : 'zh'}>{row.char}</span>{#if row.meaning && kind !== 'han'}<span class="meaning" lang="en">{row.meaning}</span>{/if}</button>{/each}
         </div></section>{/if}
       {/each}
-      {#if info.sources.length}
-        <section class="sources">
-          <p class="label" id={`${uid}-sources`}>{t('info.source.sections')}</p>
-          <div class="relations" role="group" aria-labelledby={`${uid}-sources`}>
-            {#each info.sources as source (source.url)}
-              <span class="source">
-                <a class="chip" href={source.url} target="_blank" rel="noopener noreferrer" title={source.label} aria-label={t('info.source.open', { site: t(`info.site.${source.note ?? 'component'}`) })}>{t(`info.site.${source.note ?? 'component'}`)}<span class="chip-icon" aria-hidden="true">↗</span></a>
-              </span>
-            {/each}
-          </div>
-        </section>
-      {/if}
+    {/if}
+    {#if sources.length}
+      <section class="sources">
+        <p class="label" id={`${uid}-sources`}>{t('info.source.sections')}</p>
+        <ul class="source-list" aria-labelledby={`${uid}-sources`}>
+          {#each sources as source (source.key)}
+            <li><a class="source-line" href={source.url} target="_blank" rel="noopener noreferrer"><span class="source-site">{source.site}</span><span class="source-what">{source.what}</span><span class="chip-icon" aria-hidden="true">↗</span></a></li>
+          {/each}
+        </ul>
+      </section>
     {/if}
   {/if}
 </div>
@@ -376,6 +397,12 @@
   .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
-  .identity-sources{margin:8px 0 12px;font-size:11px;color:var(--info-muted)}.identity-sources summary{cursor:pointer}.identity-sources a{display:block;margin-top:4px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
-  .sources{margin-top:12px}.sources .relations{gap:6px}.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:999px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit;font:11.5px/1.4 inherit;cursor:pointer}.chip:hover{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.chip-icon{color:var(--info-muted)}
+  .sources{margin-top:12px}
+  .source-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+  .source-line{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:8px;row-gap:1px;margin:0 -6px;padding:3px 6px;border-radius:6px;color:inherit;font-size:12px;text-decoration:none}
+  .source-line:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a))}
+  .source-line:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:1px}
+  .source-site{min-width:0;overflow-wrap:anywhere}
+  .source-what{color:var(--info-muted);font-size:11.5px;min-width:0;overflow-wrap:anywhere}
+  .chip-icon{margin-left:auto;color:var(--info-muted)}
 </style>
