@@ -12,6 +12,7 @@ import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
+import constants from '../src/composer/constants.json' with { type: 'json' }
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -19,6 +20,9 @@ const sourceOf = (fetched = []) => createSource(async name => {
   return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
 })
 const SEQUENCES = ['⿰木口', '⿱口木', '⿴口木', '⿲木口木', '⿱⿰木木口', '⿾⿰木口', '㇯口木', '⿼口木']
+
+// A frame with parts inside it: 冂 is a tall top bar, a long left side and a hooked foot, and the
+// parts it holds are bars of a different shape, so a split that tears the frame shows in the boxes.
 
 // The fixture with one description the export draws whole, `𪱳`, so `separate` has a glyph to skip.
 const hex = text => createHash('sha256').update(text).digest('hex')
@@ -46,6 +50,7 @@ describe('the composer', () => {
   it('places a lower-right enclosure fallback above and left of its closed sides', async () => {
     const source = sourceOf()
     await source.ready()
+    await source.load([...source.filesOf(['冂'])])
     const composer = new Composer(source.store())
     composer.room = () => null
     composer.fit = () => false
@@ -297,6 +302,32 @@ describe('the composer', () => {
     expect(slots.slots.every(slot => slot.box[2] < 400)).toBe(true)
     const modified = '⿱⿴[1]木口⿲⿰木口⿰木口⿰木口'
     await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
+  })
+  it('holds a one-part enclosure around its inner parts', async () => {
+    // 冂 is a frame: drawn beside its parts it stops being one, so it keeps its own region and the
+    // rest is laid out in the room it leaves.
+    const frame = await compose(sourceOf(), '⿵冂⿲⿱三口⿱三口⿰⿱三口⿱三口')
+    const svgBox = ([x, y, w, h]) => [x, y, x + w, y + h]
+    expect(frame.cells).toBe(true)
+    const outer = svgBox(frame.parts.find(part => part.leaf === 0).box)
+    expect(frame.parts.find(part => part.leaf === 0).origin).toBe('cells 冂')
+    // The frame covers the cell instead of taking a band of it.
+    expect(outer[3] - outer[1]).toBeGreaterThan(860)
+    const inner = frame.parts.filter(part => part.leaf !== 0).map(part => svgBox(part.box))
+    expect(inner).toHaveLength(8)
+    // 冂's room is the gap its left side leaves: every part sits inside it, past the side and the
+    // bar, so no part straddles the frame.
+    const room = [Math.min(...inner.map(box => box[0])), Math.min(...inner.map(box => box[1]))]
+    for (const [x0, y0, x1] of inner) {
+      expect(x0).toBeGreaterThan(outer[0])
+      expect(y0).toBeGreaterThan(outer[1])
+      expect(x1).toBeLessThan(outer[2])
+    }
+    // Inside the room the parts keep reading order: four across, then two rows.
+    expect([...new Set(inner.map(box => box[0]))]).toHaveLength(4)
+    expect(inner[0][1]).toBeLessThan(inner[1][1])
+    expect(inner[0][0]).toBeLessThan(inner[2][0])
+    expect(room[1]).toBeGreaterThan(outer[1])
   })
   it('keeps the composer for marks, exclusions and approximate operators, and forces cells only when asked', async () => {
     const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
@@ -651,24 +682,28 @@ describe('the leading component under a cover', () => {
   // A net: a closed rectangle whose ink reaches both its sides along its top.
   const net = branch => part(branch, [50, 300, 950, 360], [50, 160, 110, 360], [890, 160, 950, 360], [50, 160, 950, 220])
   const clear = (child, ...lower) =>
-    Composer.prototype.clearUnderCover.call({ partial: false, topOperand: Composer.prototype.topOperand },
+    Composer.prototype.clearUnderCover.call(
+      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang },
       '⿱', ['宀', child], [[cover()], lower])
   const span = placedPart => [placedPart.target[0], placedPart.target[2]]
 
-  it('narrows a flat-topped leading component to the cover’s bar width, keeping its height', () => {
+  it('narrows a flat-topped leading component to the cover’s bar width, keeping its proportions', () => {
     const head = net(0), base = part(1, [50, 0, 950, 60])
     const tall = head.target[3] - head.target[1]
     clear(['⿱', '罒', '一'], head, base)
     expect(span(head)[1] - span(head)[0]).toBeCloseTo(0.72 * 800)
     expect((span(head)[0] + span(head)[1]) / 2).toBeCloseTo(500)
-    expect(head.target[3] - head.target[1]).toBeCloseTo(tall)
+    expect(head.target[3] - head.target[1]).toBeCloseTo((0.72 * 800 / 900) * tall)
     expect(head.target[3]).toBeCloseTo(360)
   })
 
-  it('leaves a base bar below the leading component as it was drawn', () => {
+  it('raises the rest of the child into the room the leading component gives up', () => {
     const head = net(0), base = part(1, [50, 0, 950, 60])
     clear(['⿱', '罒', '一'], head, base)
+    // The component's foot rises from 160 to 232; the bar grows by as much and keeps its width.
     expect(span(base)).toEqual([50, 950])
+    expect(base.target[1]).toBe(0)
+    expect(base.target[3]).toBeCloseTo(132)
   })
 
   it('leaves a leading component whose top does not reach its sides alone', () => {
@@ -699,5 +734,265 @@ describe('the leading component under a cover', () => {
     const head = net(0), other = part(1, [500, 0, 950, 600])
     clear(['⿰', '爿', '罒'], head, other)
     expect(span(head)).toEqual([50, 950])
+  })
+
+  // A sweep tapering to a point at the top, as the lower half of 衣 does.
+  const sweep = branch => part(branch, [450, 40, 550, 60], [100, 0, 900, 40])
+
+  it('closes a last operand its donor overlapped on to the one above it', () => {
+    const head = net(0), bar = part(1, [50, 80, 950, 120]), tail = sweep(2)
+    tail.gap = -36
+    clear(['⿳', '罒', '一', '𧘇'], head, bar, tail)
+    expect(tail.target[3]).toBeCloseTo(bar.target[1])
+    expect(tail.target[1]).toBe(0)
+  })
+
+  it('leaves a last operand its donor drew clear of its neighbour where it was', () => {
+    const head = net(0), bar = part(1, [50, 80, 950, 120]), tail = sweep(2)
+    tail.gap = 48
+    clear(['⿳', '罒', '一', '𧘇'], head, bar, tail)
+    expect(tail.target[3]).toBeLessThan(bar.target[1])
+  })
+
+  it('leaves a flat-topped last operand where it is, which would run into what it meets', () => {
+    // A block: ink along both sides of its top, as 日 has.
+    const head = net(0), bar = part(1, [50, 80, 950, 120])
+    const tail = part(2, [100, 40, 900, 60], [100, 0, 120, 60], [880, 0, 900, 60], [100, 0, 900, 20])
+    tail.gap = -36
+    clear(['⿳', '罒', '一', '日'], head, bar, tail)
+    expect(tail.target[3]).toBeLessThan(bar.target[1])
+  })
+})
+
+
+describe('a child contained by its cover', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return placed(p, p.box, p.box, 0, 'test')
+  }
+  // 宀: ink from 100 to 900, its side strokes reaching down to 500.
+  const cover = () => part([100, 500, 900, 700])
+  const contain = (op, children, groups) =>
+    Composer.prototype.containUnderCover.call({ partial: false }, op, children, groups)
+  const span = p => [p.target[0], p.target[2]]
+
+  it('brings a child rising beside the cover’s side strokes in to the cover’s ink', () => {
+    // A column standing up past the cover's left edge, as the 爿 of 㝲 does.
+    const leg = part([20, 300, 120, 650]), rest = part([400, 300, 980, 650])
+    contain('⿱', ['宀', ['⿰', '爿', '罒']], [[cover()], [leg, rest]])
+    // 980 is the farthest from the middle, 480 out; it comes in to 420, the cover's half plus 5%.
+    const factor = 420 / 480
+    expect(span(leg)[0]).toBeCloseTo(500 + (20 - 500) * factor)
+    expect(span(rest)[1]).toBeCloseTo(500 + (980 - 500) * factor)
+  })
+
+  it('keeps the child’s height and the middle it is centred on', () => {
+    const leg = part([20, 300, 120, 650]), rest = part([400, 300, 980, 650])
+    contain('⿱', ['宀', ['⿰', '爿', '罒']], [[cover()], [leg, rest]])
+    expect(leg.target[1]).toBe(300)
+    expect(rest.target[3]).toBe(650)
+    expect((span(leg)[0] + span(rest)[1]) / 2).toBeCloseTo(500)
+  })
+
+  it('leaves ink that only spreads below the side strokes, as the foot of 木 in 宋 does', () => {
+    const splay = part([400, 300, 600, 480], [20, 0, 980, 60])
+    contain('⿱', ['宀', '木'], [[cover()], [splay]])
+    expect(span(splay)).toEqual([20, 980])
+  })
+
+  it('leaves a child that reaches less than a twentieth past the cover', () => {
+    const near = part([90, 300, 910, 650])
+    contain('⿱', ['宀', '口'], [[cover()], [near]])
+    expect(span(near)).toEqual([90, 910])
+  })
+
+  it('leaves a child already standing inside the cover', () => {
+    const inside = part([300, 300, 700, 650])
+    contain('⿱', ['宀', '子'], [[cover()], [inside]])
+    expect(span(inside)).toEqual([300, 700])
+  })
+
+  it('contains under a cover lower in a stack as well as under the first', () => {
+    const top = part([100, 800, 900, 900]), lower = part([20, 300, 980, 650])
+    contain('⿳', ['艹', '冖', '帚'], [[top], [cover()], [lower]])
+    expect(span(lower)[0]).toBeGreaterThan(20)
+    expect(span(lower)[1]).toBeLessThan(980)
+  })
+
+  it('contains a mirrored part where it is drawn, not where its target sits', () => {
+    const wide = part([20, 300, 980, 650])
+    wide.flips = [{ x: true, y: false, about: [300, 0] }]
+    contain('⿱', ['宀', '⿾X'], [[cover()], [wide]])
+    // Drawn from −380 to 580: 880 out from the middle on the left, brought in to 420.
+    const factor = 420 / 880, drawn = drawnBox(wide)
+    expect(drawn[0]).toBeCloseTo(80)
+    expect(drawn[2]).toBeCloseTo(500 + 80 * factor)
+  })
+})
+
+
+describe('a stack under a cover drawn clear of itself', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (branch, ...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return { ...placed(p, p.box, p.box, 0, 'test'), branch: [branch] }
+  }
+  const open = (children, ...lower) =>
+    Composer.prototype.openUnderCover.call({ partial: false }, '⿱', ['宀', children], [[part(0, [100, 800, 900, 1000])], lower])
+  const band = p => [p.target[1], p.target[3]]
+  const stack = ['⿳', '心', '皿', '一']
+
+  it('draws crowded operands back from one another', () => {
+    // 700 tall in all: the band wanted between them is 63, and they stand 20 apart.
+    const head = part(0, [100, 420, 900, 700]), foot = part(1, [100, 0, 900, 400])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)[0] - band(foot)[1]).toBeCloseTo(63)
+    expect(band(head)[1]).toBe(700)
+    expect(band(foot)[0]).toBe(0)
+  })
+
+  it('leaves the stack the top and bottom the layout gave it', () => {
+    const a = part(0, [100, 500, 900, 700]), b = part(1, [100, 240, 900, 480]), c = part(2, [100, 0, 900, 220])
+    open(stack, a, b, c)
+    expect(a.target[3]).toBe(700)
+    expect(c.target[1]).toBe(0)
+    // Both bands opened: the first to the full 63, the second to what the middle operand had
+    // left of its budget after the first.
+    expect(band(a)[0] - band(b)[1]).toBeCloseTo(63)
+    expect(band(b)[0] - band(c)[1]).toBeCloseTo(49)
+  })
+
+  it('gives a middle operand one budget however many neighbours ask of it', () => {
+    // Crowded on both sides: the middle may give up 15% of its 200 in all, not 15% to each.
+    const a = part(0, [100, 410, 900, 700]), b = part(1, [100, 200, 900, 400]), c = part(2, [100, 0, 900, 190])
+    open(stack, a, b, c)
+    expect(400 - band(b)[1] + (band(b)[0] - 200)).toBeCloseTo(30)
+  })
+
+  it('leaves a pair whose boxes already cross, which has no band to open', () => {
+    // A head dipping past the top of the operand under it: drawing both back opens nothing.
+    const head = part(0, [100, 380, 900, 700]), foot = part(1, [100, 0, 900, 400])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)).toEqual([380, 700])
+    expect(band(foot)).toEqual([0, 400])
+  })
+
+  it('leaves operands already standing clear of one another', () => {
+    const head = part(0, [100, 500, 900, 700]), foot = part(1, [100, 0, 900, 300])
+    open(['⿱', '心', '皿'], head, foot)
+    expect(band(head)).toEqual([500, 700])
+    expect(band(foot)).toEqual([0, 300])
+  })
+
+  it('takes no more than a sixth of an operand’s own height to open a band', () => {
+    // A thin bar beside a tall neighbour: it may give up 15% of its 60, not half the shortfall.
+    const head = part(0, [100, 650, 900, 710]), foot = part(1, [100, 0, 900, 640])
+    open(['⿱', '一', '衣'], head, foot)
+    expect(head.target[1]).toBeCloseTo(650 + 9)
+    expect(foot.target[3]).toBeCloseTo(640 - 9)
+  })
+
+  it('leaves a foot that tapers to a point, as the 八 of 㝙 does', () => {
+    // No ink along its top: the band above it is left as the stack drew it.
+    const bar = part(0, [100, 640, 900, 700])
+    const apex = makePart([rect(480, 440, 520, 620), rect(100, 0, 900, 440)])
+    const foot = { ...placed(apex, apex.box, apex.box, 0, 'test'), branch: [1] }
+    open(['⿱', '一', '八'], bar, foot)
+    expect(bar.target[1]).toBe(640)
+    expect(foot.target[3]).toBe(620)
+  })
+
+  it('leaves the band the join is about to close', () => {
+    // A foot broad enough across its top for the band rule (0.7) but not flat-topped (under 0.9),
+    // its donor drawn overlapping, under a bar: the join owns this pair, so the band stays shut.
+    const bar = part(0, [100, 640, 900, 700])
+    const shape = makePart([rect(220, 540, 780, 620), rect(100, 0, 900, 500)])
+    const foot = { ...placed(shape, shape.box, shape.box, 0, 'test'), branch: [1], gap: -36 }
+    open(['⿱', '一', '衣'], bar, foot)
+    expect(bar.target[1]).toBe(640)
+    expect(foot.target[3]).toBe(620)
+  })
+
+  it('leaves a child drawn as one piece, which has no operands to draw apart', () => {
+    const one = part(0, [100, 0, 900, 700])
+    open('𪟊', one)
+    expect(band(one)).toEqual([0, 700])
+  })
+
+  it('leaves a row, whose operands stand beside one another', () => {
+    const left = part(0, [100, 0, 400, 700]), right = part(1, [420, 0, 900, 700])
+    open(['⿰', '爿', '罒'], left, right)
+    expect(band(left)).toEqual([0, 700])
+    expect(band(right)).toEqual([0, 700])
+  })
+})
+
+
+describe('the foot of a stack under a cover', () => {
+  const rect = (x0, y0, x1, y1) => {
+    const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
+    return { ops: [], light, heavy: light.slice(), width: null }
+  }
+  const part = (branch, gap, ...boxes) => {
+    const p = makePart(boxes.map(([x0, y0, x1, y1]) => rect(x0, y0, x1, y1)))
+    return { ...placed(p, p.box, p.box, 0, 'test'), branch: [branch], gap }
+  }
+  // A tail rising to a point, as the 𧘇 cut from 袁 does: no ink reaching its sides along its top.
+  const tail = (branch, gap, y0, y1) => part(branch, gap, [460, y0, 540, y1], [200, y0, 800, y0 + 60])
+  const join = (...lower) => Composer.prototype.joinUnderCover.call({ partial: false }, '⿱', ['宀', ['⿳', '罒', '一', '𧘇']], [[part(0, 0, [100, 500, 900, 700])], lower])
+  const top = p => p.target[3]
+
+  it('grows a tail its donor drew overlapping over the whole of the bar above it', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, -36, 0, 340)
+    join(bar, foot)
+    expect(top(foot)).toBe(460)
+    expect(foot.target[1]).toBe(0)
+  })
+
+  it('leaves a foot hanging from an operand with a body of its own rather than from a bar', () => {
+    // The 火 of ⿳臼火心 is no missing middle stroke: a foot below it hangs, it does not join.
+    const body = part(1, 48, [50, 400, 950, 700]), foot = tail(2, -36, 0, 340)
+    join(body, foot)
+    expect(top(foot)).toBe(340)
+  })
+
+  it('leaves a foot its donor drew clear of its neighbour', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, 30, 0, 340)
+    join(bar, foot)
+    expect(top(foot)).toBe(340)
+  })
+
+  it('leaves a flat-topped foot, as the base 一 of 𡩬 is', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), base = part(2, -30, [50, 280, 950, 340])
+    join(bar, base)
+    expect(top(base)).toBe(340)
+  })
+
+  it('leaves a foot that already reaches what it hangs from', () => {
+    const bar = part(1, 48, [50, 400, 950, 460]), foot = tail(2, -36, 0, 420)
+    join(bar, foot)
+    expect(top(foot)).toBe(420)
+  })
+
+  it('leaves a child drawn as a single operand', () => {
+    const whole = tail(0, -36, 0, 340)
+    join(whole)
+    expect(top(whole)).toBe(340)
+  })
+
+  it('leaves a child drawn as a row, whose operands run across rather than down', () => {
+    // ⿰: operand 0 is the left column, operand 1 the right, so neither hangs from the other.
+    const left = part(0, 0, [50, 600, 450, 900])
+    const right = { ...tail(1, -36, 100, 500), branch: [1] }
+    Composer.prototype.joinUnderCover.call({ partial: false },
+      '⿱', ['宀', ['⿰', 'X', 'Y']], [[part(0, 0, [100, 500, 900, 700])], [left, right]])
+    expect(top(right)).toBe(500)
   })
 })

@@ -33,6 +33,29 @@ describe('a path that names a sequence', () => {
   it('serves a sequence still being typed', async () => {
     expect(await (await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')).text()).toContain('<title>⿰木 — IDS Workshop</title>')
   })
+  it('hands a report to the intake at its root, with the body', async () => {
+    /** @type {Request | null} */
+    let got = null
+    const response = await worker.fetch(new Request('https://ids.mkpo.li/api/report?x=1', {
+      method: 'POST', headers: { origin: 'https://ids.mkpo.li' }, body: 'a=1',
+    }), {
+      ASSETS: { fetch: async () => new Response(shell) },
+      REPORT: { fetch: async request => { got = request; return new Response('{}', { status: 201 }) } },
+    })
+    expect(response.status).toBe(201)
+    const forwarded = /** @type {Request} */ (got)
+    expect(new URL(forwarded.url).pathname).toBe('/')
+    expect(forwarded.method).toBe('POST')
+    expect(forwarded.headers.get('origin')).toBe('https://ids.mkpo.li')
+    expect(await forwarded.text()).toBe('a=1')
+  })
+  it('says so when no intake is bound', async () => {
+    const response = await worker.fetch(new Request('https://ids.mkpo.li/api/report', { method: 'POST', body: 'a=1' }), {
+      ASSETS: { fetch: async () => new Response(shell) },
+    })
+    expect(response.status).toBe(503)
+    expect((await response.json()).error).toContain('not connected')
+  })
   it('revalidates its HTML', async () => {
     const response = await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8')
     expect(response.headers.get('cache-control')).toBe('max-age=0, must-revalidate')
