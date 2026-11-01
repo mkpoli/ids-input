@@ -1426,7 +1426,7 @@ usage is a terminal link, so shared components do not connect unrelated words.
 
 `IdsInput` shows these details on character hover, on keyboard focus, and on a click or
 tap. A click keeps the card in place while the pointer travels to it, so the parts in it
-can be used, and marks it with a dot beside the ×; Esc, its × or a click elsewhere
+can be used; Esc, its × or a click elsewhere
 dismisses it, and a click on the card's own surface reaches whatever it covers. Press F1
 to move into the card. Related characters
 and emoji insert into the chosen slot, or replace the inspected character in the tree or

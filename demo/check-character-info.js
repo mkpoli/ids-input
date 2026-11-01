@@ -116,12 +116,7 @@ try {
     await page.waitForTimeout(600)
     // A press on the card's bare surface closes it and reaches the tile it covers.
     await paletteHorse.scrollIntoViewIfNeeded()
-    // A hovered card follows the pointer without a mark; a clicked one is kept and says so.
-    await paletteHorse.locator('.part-text').hover();await panel.waitFor({state:'visible'})
-    assert.equal(await panel.locator('.pin').count(),0,'a hovered card carries no mark')
     await paletteHorse.click();await page.waitForTimeout(200)
-    assert.equal(await panel.locator('.pin').count(),1,'a clicked card shows the mark')
-    assert.equal(await panel.locator('.pin').getAttribute('aria-label'),'Kept open')
     const covered=await page.evaluate(()=>{
       const card=document.querySelector('.ids-character-info').getBoundingClientRect()
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
