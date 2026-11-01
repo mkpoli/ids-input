@@ -1,8 +1,13 @@
 # The report intake
 
 `ids-reports` is the Cloudflare Worker behind the workshop's bug report form. A reporter needs no
-account: the Worker takes what the browser collected, files it as an issue on
-[mkpoli/ids-input](https://github.com/mkpoli/ids-input), and answers with the issue's number and URL.
+account: the Worker takes what the browser collected and has it filed as an issue on
+[mkpoli/ids-input](https://github.com/mkpoli/ids-input), then answers with the issue's number and URL.
+
+The issue is opened by `.github/workflows/file-report.yml`, the repository's own action, so the
+`github-actions[bot]` is its author and the report names the person behind it. The Worker dispatches
+the report to that run, which asks the site for the drawing the reporter saw, files the issue, and
+dispatches its answer back; the Worker hands the answer to the dialog waiting on it.
 
 ## The endpoint
 
@@ -55,6 +60,10 @@ An error is `{"error": "<code>", "message": "<sentence>"}`:
 | 429 | `rate_limited` |
 | 502 | `upstream_error` |
 
+The answer takes as long as the action takes, usually half a minute while Chromium starts and the
+site composes its drawing. A reporter whose answer has not come after three minutes is told so and
+can try again.
+
 ### `GET /health`
 
 `{"ok": true}`.
@@ -95,6 +104,28 @@ on every report. Counting is best effort throughout: KV is eventually consistent
 burst across edges can slip one or two past a limit, and a rejected counter write is logged rather
 than charged to the reporter.
 
+## Filing the report
+
+`repository_dispatch` with `event_type: report` carries the report's text fields and the origin the
+dialog was served from; the image does not travel, because the action photographs the drawing from
+the site itself. The Worker waits on the queue `ids-reports-answers` for the `report_answer` dispatch
+the run sends back.
+
+GitHub takes a payload under 64 KB, so a report whose fields come to more than 30 KB is answered
+`413` and never dispatched.
+
+| What | Where |
+| --- | --- |
+| The action that files and answers | `.github/workflows/file-report.yml` |
+| The run's work | `workers/reports/intake/` |
+| The queue that carries the answer | `wrangler.queue.jsonc`, consumed by this Worker |
+
+`ensureLabels` runs in the Worker before the dispatch, so the issue is labelled the moment it
+exists. The run asks the site in the report's `link` for the drawing and photographs the output
+panel once the composer has composed it; the picture waits in `.cache/report` until the browser has
+closed, and a later step commits it to `bug-attachments` with the checkout's token. The issue names
+the address it lands on.
+
 ## Configuration
 
 Vars live in `wrangler.jsonc`: `REPO` and `SITE_ORIGIN`, plus the `REPORTS` KV binding.
@@ -121,6 +152,9 @@ bunx wrangler deploy
 printf 'GITHUB_TOKEN=%s\n' "$(gh auth token)" > .dev.vars
 ```
 
+A local run dispatches to the real repository, so a report from `wrangler dev` files a real issue
+once the action runs.
+
 A report by hand:
 
 ```sh
@@ -144,7 +178,10 @@ is enough. Two repository secrets have to exist first:
 | Secret | What it is |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit**, **Workers KV Storage: Edit** and, for the custom domain, **Workers Routes: Edit** on the zone |
-| `REPORTS_GITHUB_TOKEN` | The Worker's fine-grained `GITHUB_TOKEN`, re-applied on every deploy |
+| `REPORTS_GITHUB_TOKEN` | The Worker's own token: it labels the issue, dispatches the report and counts repeats. Needs **Contents: Write** (a repository dispatch asks for it) and **Issues: Write** (the labels), re-applied on every deploy |
+
+The action files with the `GITHUB_TOKEN` GitHub gives it, which on a dispatch is the workshop's own
+bot; no secret of the repository's stands behind the issue's author.
 
 Until both are set the job skips itself and the deploy stays manual; the token is re-applied before
 each deploy, so a version never goes out without it. The Worker answers on

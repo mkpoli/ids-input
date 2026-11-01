@@ -77,6 +77,16 @@ export async function createIssue(env, issue) {
   return { number: created.number, url: created.html_url }
 }
 
+/**
+ * Ask the workshop's Action to file a report: the report rides in the payload as base64, and the
+ * Action answers through the queue.
+ * @param {GitHubEnv} env @param {{ event_type: string, client_payload: Record<string, unknown> }} event
+ * @returns {Promise<void>}
+ */
+export async function dispatch(env, event) {
+  await call(env, `/repos/${env.REPO}/dispatches`, { method: 'POST', body: event })
+}
+
 /** @param {GitHubEnv} env @param {number} number @param {string} body @returns {Promise<void>} */
 export async function commentOnIssue(env, number, body) {
   await call(env, `/repos/${env.REPO}/issues/${number}/comments`, { method: 'POST', body: { body } })
