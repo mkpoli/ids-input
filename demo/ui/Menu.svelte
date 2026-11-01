@@ -73,7 +73,12 @@
     const at = list.findIndex(group => group.heading === heading)
     const buttons = box?.querySelectorAll('button.heading') ?? []
     const target = /** @type {HTMLElement | undefined} */ (buttons[at])
-    target?.scrollIntoView({ block: 'start' })
+    // The chip row wraps, so the sticky head is taller than the fixed margin allows for. Measure it.
+    if (target && box) {
+      target.style.scrollMarginTop = `${box.querySelector('.menu-head')?.getBoundingClientRect().height ?? 0}px`
+      target.scrollIntoView({ block: 'start' })
+      target.style.scrollMarginTop = ''
+    }
     active = heading
   }
   // The chip of the section at the top of the scrollport is marked.
@@ -361,7 +366,6 @@
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
   .sep{height:1px;margin:5px 4px;background:var(--ui-color-border)}
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:left;cursor:pointer}
-  .heading{scroll-margin-top:92px}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .heading:hover{color:var(--ui-color-ink)}
