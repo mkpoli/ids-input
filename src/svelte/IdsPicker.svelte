@@ -51,25 +51,25 @@
   /** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed', items: import('../adapter/types.js').Found[] }} */
   let found = $state({ status: 'idle', items: [] })
   // A stroke count narrows the found characters, and every hit's tooltip says how many strokes it
-  // has and which stroke it starts with; the table loads on first use, once for both.
+  // has and which stroke it starts with. The table is 285 KB gzipped, so it loads once there is
+  // something to say it about: a stroke count asked for, or characters found.
   let strokeLimit = $state('')
   let strokeRecords = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
   $effect(() => {
-    if (strokeRecords) return
+    if (strokeRecords || (strokeLimit === '' && !found.items.length)) return
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
-  const strokeCounts = $derived(strokeRecords && new Map([...strokeRecords].map(([char, record]) => [char, record.strokes])))
   const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
+  // Each hit with the title its button carries: its label, then its stroke count and first stroke.
   const foundItems = $derived.by(() => {
-    const counts = strokeCounts, wanted = wantedStrokes
-    if (wanted === null || !counts) return found.items
-    return found.items.filter(item => counts.get(item.char) === wanted)
+    const records = strokeRecords, wanted = wantedStrokes
+    const items = wanted === null || !records ? found.items
+      : found.items.filter(item => (records.get(item.char)?.strokes ?? null) === wanted)
+    return items.map(item => ({ ...item, title: [
+      item.label ? `${item.char} ${item.label}` : item.char,
+      strokeSummary(t, records?.get(item.char)),
+    ].filter(Boolean).join(' · ') }))
   })
-  /** What a found character's tooltip says: its label, then its stroke count and first stroke. */
-  const hitTitle = (/** @type {import('../adapter/types.js').Found} */ item) => [
-    item.label ? `${item.char} ${item.label}` : item.char,
-    strokeSummary(t, strokeRecords?.get(item.char)),
-  ].filter(Boolean).join(' · ')
   $effect(() => {
     const asked = query.trim(), search = adapter.search, stroke = strokeLimit
     if (!asked || !search) { found = { status: 'idle', items: [] }; return }
@@ -122,7 +122,7 @@
                 {:else if foundItems.length}
                   <div class="ids-found">
                     {#each foundItems as item (item.char)}
-                      <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={hitTitle(item)}
+                      <button type="button" class="ids-hit" data-character={item.char} disabled={editor.disabled} lang="ja" title={item.title}
                         draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)}
                         onclick={() => { query = ''; editor.take(item.char) }}><span class="ids-hit-char">{item.char}</span>{#if item.label}<span class="ids-hit-label">{item.label}</span>{/if}</button>
                     {/each}
@@ -141,15 +141,17 @@
 
 <style>
   .ids-search{
-    --_ink:var(--ids-ink,light-dark(#1d1d21,#ececf1));--_ink-soft:var(--ids-ink-soft,light-dark(#44444c,#c6c6ce));
-    --_muted:var(--ids-muted,light-dark(#696973,#9c9ca8));--_line:var(--ids-line,light-dark(#d8d8de,#3a3a43));
-    --_line-strong:var(--ids-line-strong,light-dark(#b0b0ba,#5c5c67));--_surface:var(--ids-surface,light-dark(#fff,#202026));
-    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_surface-selected:var(--ids-surface-selected,light-dark(#e8e8ee,#30303a));
-    --_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));--_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));
-    --_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
+    --_ink:var(--ids-ink,light-dark(#1c1c22,#ececf2));--_ink-soft:var(--ids-ink-soft,light-dark(#44444c,#c6c6ce));
+    --_muted:var(--ids-muted,light-dark(#686874,#9d9daa));--_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));
+    --_control-border:var(--ids-control-border,light-dark(#8a8a96,#6f6f7e));
+    --_line-strong:var(--ids-line-strong,light-dark(#c2c2cc,#4a4a55));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
+    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
+    --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
+    --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
     display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-search) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
+  :where(.ids-search) input{border-color:var(--_control-border)}
   :where(.ids-search) button{cursor:pointer}
   :where(.ids-search) :is(button,input):focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .ids-title{font-size:11px;color:var(--_muted)}

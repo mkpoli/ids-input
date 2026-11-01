@@ -90,14 +90,14 @@
 
 <style>
   .starter{position:relative;display:flex;flex:none}
-  .starter-trigger{display:grid;place-items:center;width:20px;height:28px;padding:0;border:0;border-radius:8px;background:none;color:var(--muted);cursor:pointer}
-  .starter-trigger:hover,.starter-trigger[aria-expanded="true"]{background:var(--hover);color:var(--ink)}
-  .starter-trigger:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
+  .starter-trigger{display:grid;place-items:center;width:20px;height:28px;padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
+  .starter-trigger:hover,.starter-trigger[aria-expanded="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .starter-trigger:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
   .starter-panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;display:flex;flex-direction:column;width:min(960px,calc(100vw - 24px));max-height:min(82vh,760px);
-    overflow:auto;padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-pop)}
-  .starter-tabs{position:sticky;top:-6px;z-index:2;display:flex;gap:2px;margin:0 0 5px;padding:3px;border-radius:9px;background:var(--surface)}
-  .starter-tab{flex:1;padding:5px 10px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
-  .starter-tab[aria-selected="true"]{background:var(--hover);color:var(--ink)}
-  .starter-tab:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+    overflow:auto;padding:6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-2)}
+  .starter-tabs{position:sticky;top:-6px;z-index:2;display:flex;gap:2px;margin:0 0 5px;padding:3px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
+  .starter-tab{flex:1;padding:5px 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+  .starter-tab[aria-selected="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .starter-tab:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .starter-body{padding:4px 4px 2px}
 </style>

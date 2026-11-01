@@ -42,7 +42,7 @@ try {
   assert.equal(await item('Reopen closed tab').isDisabled(), true, 'nothing has been closed')
   const labels = await page.locator('.menu > [role="menuitem"]').evaluateAll(els => els.map(el => el.textContent.trim()))
   assert.deepEqual(labels.slice(0, 9), ['New sequence', 'Open document…', 'Save document…', 'Document title…', 'Recent', 'Reopen closed tab', 'Duplicate tab', 'Share', 'Export'], 'the File menu runs from documents through Recent and tabs to sharing')
-  assert.equal(labels.length, 9, 'Export ends the menu')
+  assert.deepEqual(labels.slice(9), ['Report a problem'], 'the File menu ends with the problem report')
   await waitExport()
   await item('Export').click()
   assert.deepEqual(await submenu().allInnerTexts(), ['SVG', 'PNG'], 'Export opens its formats')

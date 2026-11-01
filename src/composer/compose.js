@@ -1159,6 +1159,13 @@ export class Composer {
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       let box = boxes[i]
+      // Under a cover, a child with no glyph of its own is drawn from its sequence: a host cut can
+      // meet the cover's bar through a turning stroke and leave a wedge (定's 𤴓 cut from 是).
+      if (i === 1 && op === '⿱' && typeof children[0] === 'string' && COVERS.has(children[0])
+        && typeof child === 'string' && !this.excluded(child) && !this.glyph(child) && this.sequenceOf(child)) {
+        groups.push(this.node(child, box))
+        continue
+      }
       let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
         && stretchOf(part.piece.box, box) > C.ENCLOSING_STRETCH) part = null
