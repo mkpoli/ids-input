@@ -2,7 +2,7 @@
 import { isSmallSeal } from './seal-data.js'
 
 /** Which kind each source record is; the card names the site and the note by this key. */
-export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSource', 'sealSource', 'wiktionary', 'unihan', 'component'])
+export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSource', 'sealSource', 'wiktionary', 'unihan', 'component', 'tangutIds'])
 /** @typedef {(typeof SOURCE_KINDS)[number]} SourceKind */
 /** @typedef {{ label: string, url: string, license?: string, note?: SourceKind }} InfoSource */
 /** @typedef {{ en: string[], han: string[], emoji: string }} MeaningAid */
@@ -83,7 +83,7 @@ export function createCharacterInfo(doc, seal = null) {
       result.association = component.en
       result.emoji.push({ text: component.emoji, meaning: component.en })
       result.relations.push(...component.han.map(han => ({ char: han, kind: /** @type {const} */ ('han'), meaning: component.en })))
-      result.sources.push({ ...component.source, note: 'component' })
+      result.sources.push({ ...component.source, note: /** @type {const} */ ('component') })
     }
     if (script === 'han') {
       result.relations.push(...(translations.get(char) ?? []))
