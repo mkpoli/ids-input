@@ -1,5 +1,5 @@
 <script module>
-  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void } | { heading: string } | { separator: true }} Item */
+  /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void, submenu?: Item[] } | { heading: string } | { separator: true }} Item */
 </script>
 
 <script>
@@ -29,6 +29,10 @@
   /** @type {Set<string>} */
   let collapsed = $state(new Set())
   let active = $state('')
+  // The label of the one submenu shown inline, or ''.
+  // The index of the one submenu shown inline, or -1.
+  let openSubmenu = $state(-1)
+  $effect(() => { if (!open) openSubmenu = -1 })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {Item} item */
   function matches(item) {
@@ -113,10 +117,25 @@
     query = ''
     mode = 'all'
     collapsed = new Set()
+    openSubmenu = -1
     setOpen(true)
     if (focus) { await tick(); if (open) enabled().at(last ? -1 : 0)?.focus() }
   }
-  function hide() { setOpen(false); trigger?.focus() }
+  function hide() { openSubmenu = -1; setOpen(false); trigger?.focus() }
+  /** Open one submenu inline, keep it in the menu's scrollport, and optionally take its first item. @param {number} i @param {boolean} [focus] */
+  async function expand(i, focus = false) {
+    openSubmenu = i
+    await tick()
+    const group = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu'))
+    if (!group) return
+    group.scrollIntoView({ block: 'nearest' })
+    if (focus) /** @type {HTMLElement | null} */ (group.querySelector('[role="menuitem"]:not([disabled])'))?.focus()
+  }
+  /** @param {number} i */
+  function toggleSubmenu(i) {
+    if (openSubmenu === i) openSubmenu = -1
+    else void expand(i)
+  }
   /** Focus a menubar entry, optionally opening its menu. @param {boolean} [expand] */
   export function focus(expand = false) { trigger?.focus(); if (expand) show(true) }
   // A wide menu can start left of the window when its trigger sits near that edge, as a short
@@ -143,7 +162,31 @@
     if (event.target instanceof HTMLInputElement && event.key !== 'Escape') return
     const all = enabled()
     const at = all.indexOf(/** @type {HTMLElement} */ (document.activeElement))
-    if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); hide() }
+    if (event.key === 'ArrowLeft' && openSubmenu >= 0) {
+      const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+      const group = box?.querySelector('.submenu')
+      if (parent === document.activeElement || group?.contains(document.activeElement)) {
+        event.preventDefault()
+        openSubmenu = -1
+        parent?.focus()
+        return
+      }
+      openSubmenu = -1
+    }
+    if (event.key === 'ArrowRight' && openSubmenu >= 0 && box?.querySelector('.submenu')?.contains(document.activeElement)) {
+      event.preventDefault()
+      return
+    }
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      event.stopPropagation()
+      if (openSubmenu >= 0) {
+        const parent = /** @type {HTMLElement | null} */ (box?.querySelector('.submenu-item[aria-expanded="true"]'))
+        openSubmenu = -1
+        parent?.focus()
+      } else hide()
+      return
+    }
     else if (event.key === 'ArrowDown') { event.preventDefault(); all[(at + 1) % all.length]?.focus() }
     else if (event.key === 'ArrowUp') { event.preventDefault(); all[(at - 1 + all.length) % all.length]?.focus() }
     else if (event.key === 'Home' || event.key === 'End') { event.preventDefault(); all.at(event.key === 'End' ? -1 : 0)?.focus() }
@@ -178,6 +221,28 @@
   </button>
 {/snippet}
 
+<!-- Inline disclosure: the trigger uses aria-expanded and aria-controls for the group, which is
+     not a popup, so it carries no aria-haspopup. -->
+{#snippet submenuRow(item, i)}
+  {@const open = openSubmenu === i}
+  <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+    disabled={item.disabled} onclick={() => toggleSubmenu(i)}
+    onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(i, true) } }}>
+    <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
+    <span class="label">{item.label}</span>
+    <span class="chev" class:open><Icon name="chevron" size={14} /></span>
+  </button>
+  {#if open}
+    <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
+      {#each item.submenu as sub, j (j)}
+        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
+        {:else}{@render listRow(sub)}{/if}
+      {/each}
+    </div>
+  {/if}
+{/snippet}
+
 {#snippet listRow(item)}
   <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
     class:rich={item.sequence !== undefined} disabled={item.disabled}
@@ -197,7 +262,7 @@
 {/snippet}
 
 <div class="menu-wrap">
-  <button type="button" class="tool" class:menubar class:on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} role={menubar ? 'menuitem' : undefined} tabindex={tabIndex} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? `${uid}-menu` : undefined}
+  <button type="button" class="ui-button" class:menubar class:is-on={open} class:key-hint={Boolean(keys?.length)} bind:this={trigger} role={menubar ? 'menuitem' : undefined} tabindex={tabIndex} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? `${uid}-menu` : undefined}
     title={label} aria-label={ariaLabel ?? (text ? undefined : label)} onclick={() => open ? setOpen(false) : show(true)} {onfocus} onpointerenter={onhover}
     onkeydown={event => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); show(true, event.key === 'ArrowUp') }
@@ -208,7 +273,13 @@
     {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}{#if !menubar}<Icon name="chevron" size={14} />{/if}{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
-    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}>
+    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
+      onfocusin={event => {
+        if (openSubmenu < 0) return
+        const parent = box?.querySelector('.submenu-item[aria-expanded="true"]')
+        const group = box?.querySelector('.submenu')
+        if (parent !== event.target && !group?.contains(/** @type {Node} */ (event.target))) openSubmenu = -1
+      }}>
       {#if view}
         <div class="menu-head">
           <div class="views" role="group" aria-label={label}>
@@ -247,6 +318,7 @@
         {#each items as item, i (i)}
           {#if 'separator' in item}<div class="sep" role="separator"></div>
           {:else if 'heading' in item}<p class="heading">{item.heading}</p>
+          {:else if 'submenu' in item && item.submenu}{@render submenuRow(item, i)}
           {:else}{@render listRow(item)}{/if}
         {/each}
       {/if}
@@ -255,69 +327,75 @@
 </div>
 
 <style>
-  .tool.menubar{padding:0 8px;border-color:transparent;background:none;border-radius:6px;color:var(--muted)}
-  .tool.menubar:is(:hover,:focus-visible,.on){color:var(--ink)}
+  .ui-button.menubar{padding:0 8px;border-color:transparent;background:none;border-radius:var(--ui-radius-sm);color:var(--ui-color-ink-muted)}
+  .ui-button.menubar:is(:hover,:focus-visible,.is-on){color:var(--ui-color-ink)}
   .menu-wrap{position:relative}
   .menu{position:absolute;z-index:40;top:calc(100% + 6px);left:0;min-width:220px;max-width:min(340px,calc(100vw - 32px));max-height:min(70vh,520px);overflow:auto;
-    padding:6px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:var(--shadow-pop)}
+    padding:6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-2)}
   .menu.wide{width:min(960px,calc(100vw - 48px));max-width:min(960px,calc(100vw - 48px));max-height:min(82vh,760px)}
   @media (min-width:1500px){.menu.wide{width:min(1280px,calc(100vw - 96px));max-width:min(1280px,calc(100vw - 96px))}}
   .menu.compact{min-width:150px;padding:4px}
-  .menu.compact .item{padding:4px 8px;font-size:13px;gap:8px;border-radius:7px}
+  .menu.compact .item{padding:4px 8px;font-size:13px;gap:8px;border-radius:var(--ui-radius-sm)}
   .menu.compact .mark{width:14px}
   @media (max-width:1000px){.menu.wide{left:auto;right:0}}
   .menu.end{left:auto;right:0}
-  .item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:8px;background:none;color:var(--ink);font:inherit;font-size:13.5px;text-align:left;cursor:pointer}
-  .item.rich{min-height:52px;padding:5px 8px;gap:11px;border-radius:10px}
-  .item:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
-  .item.rich:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .item{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:13.5px;text-align:left;cursor:pointer}
+  .item.rich{min-height:52px;padding:5px 8px;gap:11px;border-radius:var(--ui-radius-lg)}
+  .item:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
+  .item[aria-disabled='true']{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
+  .item.rich:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .item:disabled{opacity:.45;cursor:default}
-  .mark{display:grid;place-items:center;width:16px;color:var(--muted)}
-  .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ink);font-family:var(--cjk);font-size:26px;line-height:1}
+  .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--ui-color-ink-muted);transform:rotate(-90deg);transition:transform .12s}
+  .item.submenu-item .chev.open{transform:none}
+  .submenu{margin:0 0 4px 26px;padding:2px 0 2px 6px;border-left:1px solid var(--ui-color-border)}
+  .submenu .item{padding:6px 8px;font-size:13px;border-radius:7px}
+  .submenu .sep{margin:4px 2px}
+  .mark{display:grid;place-items:center;width:16px;color:var(--ui-color-ink-muted)}
+  .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
   .label:is(:lang(ja),:lang(txg),:lang(swi)){font-family:var(--cjk)}
-  .note{flex:none;color:var(--muted);font:500 11px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.02em;white-space:nowrap}
+  .note{flex:none;color:var(--ui-color-ink-muted);font:500 11px/1.5 ui-monospace,"SF Mono",Menlo,Consolas,monospace;letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:12px;font-style:italic}
-  kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
-  .sep{height:1px;margin:5px 4px;background:var(--line)}
-  .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);text-align:left;cursor:pointer}
+  kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
+  .sep{height:1px;margin:5px 4px;background:var(--ui-color-border)}
+  .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:left;cursor:pointer}
   .heading{scroll-margin-top:92px}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
-  .heading:hover{color:var(--ink)}
-  .heading:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  .empty{margin:14px 10px;color:var(--muted);font-size:12.5px}
+  .heading:hover{color:var(--ui-color-ink)}
+  .heading:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .empty{margin:14px 10px;color:var(--ui-color-ink-muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
   .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
-  .chip{flex:none;padding:4px 8px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
-  .chip:hover{color:var(--ink);border-color:var(--ink)}
-  .chip[aria-current="true"]{border-color:var(--ink);background:var(--ink);color:var(--surface)}
-  .chip:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-  .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--surface)}
-  .views{display:flex;gap:2px;padding:3px;border-radius:9px;background:var(--surface)}
+  .chip{flex:none;padding:4px 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .chip:hover{color:var(--ui-color-ink);border-color:var(--ui-color-ink)}
+  .chip[aria-current="true"]{border-color:var(--ui-color-ink);background:var(--ui-color-ink);color:var(--ui-color-surface)}
+  .chip:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--ui-color-surface)}
+  .views{display:flex;gap:2px;padding:3px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
   .filter{display:flex;align-items:center;gap:6px}
-  .filter-input{flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12.5px}
-  .filter-input:focus-visible{outline:2px solid var(--focus);outline-offset:-1px}
-  .modes{display:flex;flex:none;gap:2px;padding:2px;border-radius:8px;background:var(--hover)}
-  .mode{padding:4px 7px;border:0;border-radius:6px;background:none;color:var(--muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
-  .mode[aria-checked="true"]{background:var(--surface);color:var(--ink)}
-  .mode:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
-  .view{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;padding:4px 8px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
-  .view[aria-checked="true"]{background:var(--hover);color:var(--ink)}
-  .view:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .filter-input{flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12.5px}
+  .filter-input:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
+  .modes{display:flex;flex:none;gap:2px;padding:2px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-hover)}
+  .mode{padding:4px 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
+  .mode[aria-checked="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink)}
+  .mode:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  .view{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;padding:4px 8px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
+  .view[aria-checked="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .view:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px;padding:4px 6px 8px}
-  .card{display:flex;align-items:center;gap:9px;min-width:0;min-height:60px;padding:7px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
-  .card:not(:disabled):is(:hover,:focus-visible){background:var(--hover);outline:none}
-  .card:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+  .card{display:flex;align-items:center;gap:9px;min-width:0;min-height:60px;padding:7px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
+  .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
+  .card:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .card:disabled{opacity:.45;cursor:default}
-  .card-art{display:block;flex:none;width:46px;height:46px;color:var(--ink)}
+  .card-art{display:block;flex:none;width:46px;height:46px;color:var(--ui-color-ink)}
   .card-art path{fill:currentColor}
-  .card-glyph{display:block;flex:none;width:46px;height:46px;overflow:hidden;font-family:var(--cjk);font-size:25px;line-height:46px;color:var(--ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
+  .card-glyph{display:block;flex:none;width:46px;height:46px;overflow:hidden;font-family:var(--cjk);font-size:25px;line-height:46px;color:var(--ui-color-ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
   .card-text{display:flex;flex:1;flex-direction:column;gap:2px;min-width:0}
-  .card-label{font-family:var(--cjk);font-size:11.5px;line-height:1.35;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .card-note{color:var(--muted);font:500 10.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-label{font-family:var(--cjk);font-size:11.5px;line-height:1.35;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-note{color:var(--ui-color-ink-muted);font:500 10.5px/1.4 ui-monospace,"SF Mono",Menlo,Consolas,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note.unencoded{font:inherit;font-size:11px;font-style:italic}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 </style>

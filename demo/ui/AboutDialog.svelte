@@ -50,15 +50,15 @@
 <style>
   .about{font-size:13.5px}
   .lead{margin:0 0 6px;font-size:14px}
-  .links{margin:0 0 4px;color:var(--muted)}
-  h3{margin:18px 0 6px;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+  .links{margin:0 0 4px;color:var(--ui-color-ink-muted)}
+  h3{margin:18px 0 6px;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
   ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
-  li{padding:8px 10px;border-radius:10px;background:var(--surface-2)}
-  a{color:var(--accent);font-weight:600;text-underline-offset:2px}
-  .by,.licence{margin-left:8px;font-size:12px;color:var(--muted)}
-  .licence{padding:1px 6px;border-radius:999px;border:1px solid var(--line)}
-  p{margin:2px 0 0;color:var(--muted);font-size:12.5px;line-height:1.45}
+  li{padding:8px 10px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
+  a{color:var(--ui-color-accent);font-weight:600;text-underline-offset:2px}
+  .by,.licence{margin-left:8px;font-size:12px;color:var(--ui-color-ink-muted)}
+  .licence{padding:1px 6px;border-radius:var(--ui-radius-pill);border:1px solid var(--ui-color-border)}
+  p{margin:2px 0 0;color:var(--ui-color-ink-muted);font-size:12.5px;line-height:1.45}
   .bib{margin:0;padding-left:1.6em}
-  .bib li{padding:8px 10px;border-radius:10px;background:var(--surface-2)}
+  .bib li{padding:8px 10px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
   .bib li + li{margin-top:8px}
 </style>

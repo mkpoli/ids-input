@@ -21,7 +21,7 @@
   ],
   "type": "module",
   "sideEffects": [
-    "*.css"
+    "**/*.css"
   ],
   "exports": {
     ".": {
@@ -46,6 +46,8 @@
     },
     "./messages/*": "./messages/*",
     "./fonts.css": "./fonts/fonts.css",
+    "./design.css": "./design/index.css",
+    "./design/*": "./design/*",
     "./fonts/*": "./fonts/*",
     "./data/*": "./data/*",
     "./package.json": "./package.json"
@@ -57,6 +59,7 @@
     "fonts",
     "messages",
     "scripts",
+    "design",
     "LICENSE",
     "README.md",
     "docs/document-format.md",
@@ -76,13 +79,14 @@
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
-    "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs",
+    "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs && bun scripts/build-sitemap.mjs",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
     "dev:worker": "bunx wrangler dev",
     "prepack": "node scripts/emit-types.mjs",
-    "build:tangut-layers": "node scripts/build_tangut_layers.mjs"
+    "build:tangut-layers": "node scripts/build_tangut_layers.mjs",
+    "check:demo": "bun scripts/check-demo.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "6.2.4",

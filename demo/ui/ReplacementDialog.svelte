@@ -48,10 +48,10 @@
 
 <style>
   .replacement{display:flex;flex-direction:column;gap:12px}
-  p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+  p{margin:0;color:var(--ui-color-ink-muted);font-size:13px;line-height:1.5}
   label{display:flex;flex-direction:column;gap:4px;font-size:13px}
-  input{min-width:0;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:18px}
-  button{align-self:flex-start;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;cursor:pointer}
+  input{min-width:0;padding:7px 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font:inherit;font-size:18px}
+  button{align-self:flex-start;padding:8px 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;cursor:pointer}
   button:disabled{opacity:.5;cursor:default}
-  :is(button,input):focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  :is(button,input):focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
 </style>

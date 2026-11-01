@@ -433,6 +433,24 @@ describe('drawing a pyramid', () => {
     expect(composer.pyramid(composer.parse(pyramidSequence('口', 3)))?.layers).toBe(3)
     expect(composer.pyramid(composer.parse(pyramidSequence('口', 3, { direction: 'left' })))?.direction).toBe('left')
     expect(composer.pyramid(composer.parse(pyramidSequence('口', 2, { direction: 'right' })))).toBeNull()
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 2, { direction: 'bottom' })))).toBeNull()
+    // An empty slot has no designed form; the cells lay it out.
+    expect(composer.pyramid(composer.parse(pyramidSequence('', 2)))?.layers).toBe(2)
+  })
+
+  it('draws a two-layer slot scaffold in the pyramid\'s cells', async () => {
+    const source = sourceOf()
+    for (const direction of ['top', 'bottom', 'left', 'right']) {
+      const drawn = await compose(source, pyramidSequence('', 2, { direction }))
+      expect(drawn.parts).toHaveLength(0)
+      expect(drawn.slots).toHaveLength(3)
+      expect(drawn.slots.map(slot => slot.index)).toEqual([0, 1, 2])
+      const boxes = drawn.slots.map(slot => slot.box)
+      for (const box of boxes) {
+        expect(box[2]).toBeCloseTo(boxes[0][2], 6)
+        expect(box[3]).toBeCloseTo(boxes[0][3], 6)
+      }
+    }
   })
 
   it('draws a pyramid nested in another description', async () => {
