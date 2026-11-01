@@ -12,7 +12,7 @@ try {
   await page.goto(url)
   await page.waitForTimeout(3000)
   await page.locator('.ids-field input').waitFor({ timeout: 20000 })
-  const tabs = () => page.locator('.tabbar [role="tab"]').count()
+  const tabs = () => page.locator('.tabbar .tabs [role="tab"]').count()
   const opened = await tabs()
   const trigger = page.getByTitle('Templates and examples', { exact: true })
   const dialog = page.getByRole('dialog', { name: 'Templates and examples' })
