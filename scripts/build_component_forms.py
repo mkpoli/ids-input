@@ -260,23 +260,34 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # Reopening the contour at the band's inner top: the splice starts on the right
     # leg's inner edge and `closePath` draws the flat edge back from the left one.
     band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
-    # The splice must close along the band's inner top, and 艹 must sit well above it.
-    assert frame[keep][-1][1][-1][1] == inner_top[1], 'The 萬 splice does not end on the band inner top'
-    assert min(p[1] for _, values in cao[0] for p in values) > inner_top[1], 'That contour of 萬 is not its 艹'
 
-    def fitted_into(recording, box):
-        """`recording` scaled into `box`, keeping its own winding and corner order."""
-        points = [p for _, values in recording for p in values if p is not None]
+    def path_of(recordings):
+        path = pathops.Path()
+        for recording in recordings: replayRecording(recording, path.getPen())
+        return path
+
+    # The command indices are not safe to take on trust: a slice that starts one command late
+    # still closes along the band's inner top, and only nicks a leg. Compare against 萬 itself.
+    native, spliced = path_of(wan), path_of([band] + cao + counters)
+    assert pathops.op(spliced, native, pathops.PathOp.DIFFERENCE).area < 0.1, 'The 萬 splice draws outside 萬'
+    removed = pathops.op(native, spliced, pathops.PathOp.DIFFERENCE)
+    assert removed.area > 1000, 'The 萬 splice removes no 禸 pencil'
+    assert removed.bounds[3] <= inner_top[1] + 0.1, 'The 萬 splice reaches above the band inner top'
+
+    def fitted_into(recordings, box):
+        """`recordings` scaled together into `box`, keeping their winding and corner order."""
+        points = [p for recording in recordings for _, values in recording for p in values if p is not None]
         x0, y0 = min(p[0] for p in points), min(p[1] for p in points)
         x1, y1 = max(p[0] for p in points), max(p[1] for p in points)
         sx, sy = (box[2] - box[0]) / (x1 - x0), (box[3] - box[1]) / (y1 - y0)
-        return [(op, tuple(None if p is None else (box[0] + (p[0] - x0) * sx, box[1] + (p[1] - y0) * sy)
-                           for p in values)) for op, values in recording]
+        return [[(op, tuple(None if p is None else (box[0] + (p[0] - x0) * sx, box[1] + (p[1] - y0) * sy)
+                            for p in values)) for op, values in recording] for recording in recordings]
 
-    # 萬's ink winds one way in both faces and its 田 counters the other; the spliced
-    # band keeps the frame's direction and 山 is placed as ink, so the loader reads the
-    # group's largest contour as its outline and the counters as holes.
-    shan = [fitted_into(contour, shan_box) for contour in cs('山')]
+    # 萬's ink winds one way in both faces and its 田 counters the other; the spliced band
+    # keeps the frame's direction and 山 is placed as ink, so 田's counters read as holes
+    # against it. 山 has to clear the hook's tongue as well as the legs.
+    shan = fitted_into(cs('山'), shan_box)
+    assert pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION).area < 0.1, '山 runs into 萬'
     forms['⿳艹田⿵冂山'] = [group([band] + cao + counters), group(shan)]
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.

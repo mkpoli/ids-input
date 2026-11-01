@@ -50,8 +50,9 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
 })
 
 // 萬 carries its outer edge, 田's box, the legs and the 禸 pencil in one contour, and the
-// prepared form splices the pencil out of it. The band it leaves is checked point by point:
-// a winding that disagrees between contours fills 田's counters or hollows the frame out.
+// prepared form splices the pencil out of it. The band it leaves is checked point by point,
+// which is also what tells 田's counters apart from the band: a counter that winds with the
+// band rather than against it fills in.
 const WAN_SHAN = '⿳艹田⿵冂山'
 const inked = (contours, x, y) => {
   let winding = 0
@@ -67,11 +68,13 @@ const inked = (contours, x, y) => {
   }
   return winding !== 0
 }
-// The band as 萬 draws it: the legs' outer and inner edges, the floor they stand on and the
-// flat inner top the splice closes the opening with.
+// The band as 萬 draws it: the legs' outer edges, the floor they stand on, the left leg's inner
+// edge, the flat inner top the splice closes the opening with, and how far the hook's tongue
+// reaches in along the bottom of the right leg. On the right the tongue, not the leg, is what
+// limits 山's width.
 const BAND = {
-  sans: { floor: -80, legs: [110, 899], inner: [182, 826], innerTop: 208 },
-  serif: { floor: -78, legs: [127, 920], inner: [190, 814], innerTop: 240 },
+  sans: { floor: -80, legs: [110, 899], innerLeft: 182, innerTop: 208, hook: 713 },
+  serif: { floor: -78, legs: [127, 920], innerLeft: 190, innerTop: 240, hook: 664 },
 }
 const SAMPLES = {
   sans: {
@@ -106,17 +109,17 @@ it('draws 萬 with 山 where its 禸 sits', () => {
     expect(wan).toHaveLength(6)
     expect(shan).toHaveLength(1)
     expect([...wan, ...shan].flatMap(([, points]) => points).every(Number.isFinite)).toBe(true)
-    const { floor, legs, inner, innerTop } = BAND[style]
+    const { floor, legs, innerLeft, innerTop, hook } = BAND[style]
     const box = points => [Math.min(...points.filter((_, i) => !(i % 2))), Math.min(...points.filter((_, i) => i % 2)),
       Math.max(...points.filter((_, i) => !(i % 2))), Math.max(...points.filter((_, i) => i % 2))]
     // The spliced outline comes first: its legs still stand on the band floor at 萬's own width.
     const outline = box(wan[0][1])
     expect([outline[0], outline[1], outline[2]]).toEqual([legs[0], floor, legs[1]])
-    // 山 stands on that floor, clear of both legs and of the band over it.
+    // 山 stands on that floor, clear of the left leg, of the hook's tongue and of the band over it.
     const [x0, y0, x1, y1] = box(shan[0][1])
     expect(y0).toBe(floor)
-    expect(x0).toBeGreaterThan(inner[0])
-    expect(x1).toBeLessThan(inner[1])
+    expect(x0).toBeGreaterThan(innerLeft)
+    expect(x1).toBeLessThan(hook)
     expect(y1).toBeLessThan(innerTop)
     const contours = [...wan, ...shan]
     for (const [where, [x, y]] of Object.entries(SAMPLES[style].ink)) {
