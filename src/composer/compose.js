@@ -47,6 +47,7 @@ const MODIFIABLE = new Set(['⿻', '⿴', '⿵', '⿶', '⿷', '⿼', '㇯'])
 
 // Covers whose bar below is drawn inside their width: 宀, 冖, 穴, 雨.
 const COVERS = new Set(['宀', '冖', '穴', '雨'])
+const COVER_ROOTS = new Set(['冖', '宀', '穴', '雨'])
 // How much of a designed body a run of a flat stack needs before it is drawn as one (`bodySupport`).
 // One cut is a single accident of one character; from two the font is drawing the pair as a body.
 // Measured over 178 stacked characters scored against their own glyphs: at one witness the rule
@@ -59,6 +60,8 @@ const BAR_ASPECT = 5
 const SIDE_COVERS = new Set(['宀', '冖'])
 // Width of the bar under a cover, as a share of the cover's width (0.70 in 定, 0.72 in 甍).
 const COVER_BAR = 0.72
+/** How far a middle 冖's ink overlaps the parts above and below it, in font units. */
+const COVER_GAP = -24
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
@@ -209,6 +212,7 @@ export class Composer {
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
     this.approximate = new Set()
+    this.coverCache = new Map()
     // Characters whose glyph the export lacks and whose sequence stands in for it.
     this.missingGlyphs = new Set()
     this.pyramids = new WeakMap()
@@ -1561,11 +1565,32 @@ export class Composer {
     return groups.flat()
   }
 
+  /** Whether a component is 冖-shaped: a root, or a sequence ending in one. */
+  isCover(ch, seen = new Set()) {
+    if (typeof ch !== 'string') return false
+    if (COVER_ROOTS.has(ch)) return true
+    if (this.coverCache.has(ch)) return this.coverCache.get(ch)
+    if (seen.has(ch)) return false
+    seen.add(ch)
+    let out = false
+    const sequence = this.sequenceOf(ch)
+    if (sequence) {
+      try {
+        const tree = this.parse(sequence)
+        if (Array.isArray(tree) && tree[0] === '⿱' && typeof tree[2] === 'string') out = this.isCover(tree[2], seen)
+      } catch { /* unreadable: not a cover */ }
+    }
+    this.coverCache.set(ch, out)
+    return out
+  }
+
   /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
-    const pairs = op === '⿱' ? (COVERS.has(children[0]) ? [[0, 1]] : [])
-      : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && COVERS.has(children[i])).map(i => [i, i + 1]) : []
+    if (this?.partial) return
+    const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
+    const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
+      : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
     for (const [above, below] of pairs) {
       const cover = groups[above] ?? [], lower = groups[below] ?? []
       if (!cover.length || !lower.length) continue
@@ -1602,6 +1627,23 @@ export class Composer {
         }
         p.part = derived(p.part, contours)
         break
+      }
+    }
+    if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && children[1] === '冖') {
+      const a = inkBounds(groups[0]), b = inkBounds(groups[1]), gap = a[1] - b[3]
+      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && gap > COVER_GAP) {
+        const shift = Math.min(gap - COVER_GAP, 0.25 * (b[3] - b[1]))
+        if (shift > 0) for (const group of groups.slice(1)) for (const p of group)
+          p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
+      }
+    }
+    for (const [above, below] of pairs) {
+      const cover = groups[above] ?? [], lower = groups[below] ?? []
+      if (!cover.length || !lower.length) continue
+      const coverInk = inkBounds(cover), lowerInk = inkBounds(lower), gap = coverInk[1] - lowerInk[3]
+      if (op === '⿳' && children[1] === '冖' && lowerInk[2] - lowerInk[0] >= 0.9 * (coverInk[2] - coverInk[0]) && gap > COVER_GAP) {
+        const shift = Math.min(gap - COVER_GAP, 0.25 * (lowerInk[3] - lowerInk[1]))
+        for (const p of lower) p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
       }
     }
   }
@@ -1706,6 +1748,16 @@ function bounds(group) {
   const boxes = group.map(drawnBox)
   return [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
     Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
+}
+
+/** The box of a group's ink, from the contours as drawn. */
+function inkBounds(group) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const p of group) for (const points of drawnContours(p)) {
+    const b = pointsBox(points)
+    x0 = Math.min(x0, b[0]); y0 = Math.min(y0, b[1]); x1 = Math.max(x1, b[2]); y1 = Math.max(y1, b[3])
+  }
+  return [x0, y0, x1, y1]
 }
 
 /** Whether a group leads with a wide flat top: its ink reaches both sides of its box within the
