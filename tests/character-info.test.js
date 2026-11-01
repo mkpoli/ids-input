@@ -56,6 +56,9 @@ describe('sourced character meanings', () => {
     expect(kinds).toContain('component')
     expect(new Set(kinds).size).toBe(kinds.length)
     expect(found.sourceSites).toEqual(kinds)
+    // The association and the list that describes the examples are two records, each linked once.
+    expect(found.sources.find(source => source.note === 'component').url).toContain('TangutSea')
+    expect(found.sources.find(source => source.note === 'tangutIds').url).toContain('TangutIDS.txt')
   })
   test('seal links have drawable coverage and both data-source credits', () => {
     const drawable = new Set([...Object.keys(seal.table), ...seal.parts.map(p=>p.part)])
