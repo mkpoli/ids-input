@@ -341,5 +341,20 @@
   "parts.gongche.seirakuSource": "Ký hiệu phách Thanh nhạc · Toru Kato",
   "info.copy": "Sao chép {char}",
   "info.copied": "Đã sao chép",
-  "info.copyFailed": "Lỗi sao chép"
+  "info.copyFailed": "Lỗi sao chép",
+  "info.sources": "Nguồn",
+  "info.sources.open": "Mở {site}",
+  "info.note.editorial": "Nghĩa, gợi nhớ bằng emoji và dữ liệu nét do trang này viết.",
+  "info.note.unicodeSealSource": "Các chữ tương ứng của Tiểu triện do Unicode tổng hợp.",
+  "info.note.sealSource": "Tự dạng và mô tả Tiểu triện theo CHISE (MORIOKA Tomohiko) và bản Thuyết văn giải tự Cấp Cổ Các; chise.org tra cứu cùng các ghi chép đó.",
+  "info.note.wiktionary": "Nghĩa của chữ Tây Hạ ghi trong Wiktionary tiếng Anh.",
+  "info.note.unihan": "Định nghĩa tiếng Anh trong cơ sở dữ liệu Unihan của Unicode.",
+  "info.site.wiktionary": "Wiktionary",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "Phụ trợ trình bày",
+  "info.site.component": "Andrew West",
+  "info.sources.also": "Còn dựa vào: {sites}.",
+  "info.note.component": "Các ghi chép cấu tạo chữ Tây Hạ do Andrew West công bố trong BabelStone IDS và các bài trên TangutSea."
 }
