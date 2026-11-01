@@ -649,7 +649,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         /** @type {import('./character-info.js').InfoSource[]} */
         const added = []
         for (const row of info.relations.filter(r => r.kind === 'usage')) added.push({ ...tangutGlossSource(row.char), note: 'wiktionary' })
-        if (info.relations.some(r => r.kind === 'usage')) added.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: 'component' })
+        if (info.relations.some(r => r.kind === 'usage')) added.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: 'tangutIds' })
         info.sources = mergeSources([...info.sources, ...added])
         info.sourceSites = /** @type {import('./character-info.js').SourceKind[]} */ (info.sources.map(source => source.note))
       }

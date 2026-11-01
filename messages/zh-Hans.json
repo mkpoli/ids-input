@@ -349,5 +349,6 @@
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
   "info.site.editorial": "用字助记",
-  "info.site.component": "Andrew West"
+  "info.site.component": "Andrew West",
+  "info.site.tangutIds": "Tangut IDS 表"
 }
