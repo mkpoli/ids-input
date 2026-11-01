@@ -14,6 +14,16 @@ export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
  * numbers has no reflection.
  * @param {{ box?: number[], flip?: [boolean, boolean] } | null | undefined} item
  */
+/** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection. */
+export function emojiText(item, attribute = '') {
+  const box = (item?.box ?? []).slice(0, 4).map(Number)
+  if (box.length < 4 || box.some(value => !Number.isFinite(value)) || typeof item?.text !== 'string') return ''
+  const [x, y, width, height] = box
+  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const reflect = emojiTransform(item)
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+}
+
 export function emojiTransform(item) {
   const [flipX, flipY] = item?.flip ?? []
   if (!flipX && !flipY) return ''
@@ -186,15 +196,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
   const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
-  /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
-  const textOf = (item, attribute = '') => {
-    const box = (item.box ?? []).slice(0, 4).map(v => num(v, 0))
-    if (box.length < 4 || typeof item.text !== 'string') return ''
-    const [x, y, width, height] = box
-    const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const reflect = emojiTransform(item)
-    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
-  }
+    const textOf = emojiText
   if (hasCut) {
     if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
     out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/>`)

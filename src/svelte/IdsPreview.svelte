@@ -26,10 +26,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -95,6 +95,7 @@
     slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
     emoji = view?.scopes ? shown?.drawn?.emoji ?? null : null
+    cut = view?.scopes ? shown?.drawn?.cut ?? null : null
   })
   const chosenLayer = $derived.by(() => {
     if (!localDoc || !chosen) return null

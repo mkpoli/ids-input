@@ -10,10 +10,11 @@
   /** @type {{ open: boolean, endpoint: string, sequence: string, link: string,
    *   drawing: import('../../src/adapter/types.js').Drawing | null,
    *   scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][],
+   *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null,
    *   preview: () => Element | null, workspace: () => unknown, version?: number,
    *   locale: string, theme: string, face: string, composer: string,
    *   t: (key: string, params?: Record<string, string | number>) => string }} */
-  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
+  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], emoji = null, cut = null, preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
   // The output panel draws either the composed drawing or the scoped document; the report attaches
   // whichever it has, as the export does. Where a composition failed there is still the preview's
   // own picture, which is the one a maintainer most wants to see.
@@ -41,7 +42,7 @@
   const thumbnail = $derived.by(() => {
     if (!open || !drawn) return ''
     const settings = { ...DEFAULTS, size: 256, background: /** @type {const} */ ('white'), placeholders: true }
-    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots) : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
+    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots, emoji ?? [], cut ?? '') : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
   })
   const along = $derived([
     t('app.report.version', { version: build }),
@@ -76,7 +77,7 @@
     // screen when Send was pressed.
     const said = symptom, reach = contact, image = withImage
     try {
-      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, preview: preview(), locale, theme, face, composer })
+      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, emoji, cut, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
       // The form is gone with the focused Send button; the issue is what to look at now.
       tick().then(() => requestAnimationFrame(() => saved?.focus()))
