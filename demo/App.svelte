@@ -1336,7 +1336,7 @@
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
-<SponsorDialog bind:open={sponsorOpen} {t} />
+<SponsorDialog bind:open={sponsorOpen} {locale} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
