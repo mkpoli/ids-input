@@ -341,5 +341,20 @@
   "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹",
   "info.copy": "{char}をコピー",
   "info.copied": "コピーしました",
-  "info.copyFailed": "コピー失敗"
+  "info.copyFailed": "コピー失敗",
+  "info.sources": "出典",
+  "info.sources.open": "{site}を開く",
+  "info.note.editorial": "このサイトが書いた語義、絵文字の記憶補助、筆画情報。",
+  "info.note.unicodeSealSource": "Unicodeがまとめた小篆の対応字。",
+  "info.note.sealSource": "CHISE（守岡知彦）とその汲古閣本《説文解字》による小篆の字形と記述。chise.org でも同じ記録を検索できます。",
+  "info.note.wiktionary": "英語版ウィクショナリーに記された西夏文字の意味。",
+  "info.note.unihan": "UnicodeのUnihanデータベースに記された英語の定義。",
+  "info.site.wiktionary": "ウィクショナリー",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "表記の補助",
+  "info.site.component": "Andrew West",
+  "info.sources.also": "{sites}も参照しています。",
+  "info.note.component": "Andrew WestがBabelStone IDSとTangutSeaの投稿で公開する西夏文字の構成記述。"
 }
