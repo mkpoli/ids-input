@@ -52,8 +52,10 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
 it('draws 山 inside the 萬 frame without closing it', () => {
   for (const style of ['sans', 'serif']) {
     expect(isComponentForm('⿳艹田⿵冂山', style)).toBe(true)
+    expect(isGroupedForm('⿳艹田⿵冂山', style)).toBe(true)
     const drawing = componentDrawing('⿳艹田⿵冂山', style)
     expect(drawing.d).not.toMatch(/NaN|Infinity/)
+    expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
     // Nothing is drawn below the 山: no bar closes 萬's box along its bottom.
     const points = data.forms[style]['⿳艹田⿵冂山'].flat().flatMap(([, coords]) => coords)
     const ys = points.filter((_, i) => i % 2 === 1)
