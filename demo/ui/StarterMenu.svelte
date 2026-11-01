@@ -1,7 +1,7 @@
 <script>
   // The tab strip's starter: the chevron opens a popover whose Template tab is the editor's full
-  // template catalogue (the same component the input pane shows) and whose Examples tab is the same
-  // list the phone's menu sheet uses. A template or example opens a new tab.
+  // template catalogue (the same component the input pane shows) and whose Examples tab lists the
+  // examples the toolbar menu draws. A template or example opens a new tab.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
   import MenuList from './MenuList.svelte'
