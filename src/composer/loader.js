@@ -129,7 +129,7 @@ const ROUNDS = 64
 /** The largest description drawn. Every sequence BabelStone lists fits: the deepest nest six levels
  *  (𰻞, 𦧄) and the largest holds 21 operators (𦧄). */
 export const LIMITS = { nodes: 24, depth: 8 }
-/** The most rows a pyramid preview draws. Each row adds a cell, so 64 rows is 2,080 cells. */
+/** The most layers a pyramid preview draws. Each layer adds a cell, so 64 layers is 2,080 cells. */
 export const PYRAMID_LAYERS = 64
 
 /** How many operators a tree has, and how deep they nest: a parsed tree (['⿰', …]) or the editor's
@@ -141,7 +141,7 @@ export function size(tree) {
   return { nodes: 1 + sizes.reduce((s, k) => s + k.nodes, 0), depth: 1 + Math.max(0, ...sizes.map(k => k.depth)) }
 }
 /** Whether a tree is larger than a preview draws (`LIMITS`), unless it is a pyramid within
- *  `PYRAMID_LAYERS`. A pyramid of two rows counts too: its cells are laid out apart, never merged
+ *  `PYRAMID_LAYERS`. A pyramid of two layers counts too: its cells are laid out apart, never merged
  *  into the overlapping parts the limits guard against. */
 export const tooLarge = tree => {
   const pyramid = pyramidRows(tree, { minLayers: 2 })

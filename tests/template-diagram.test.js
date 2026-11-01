@@ -2,15 +2,39 @@ import { expect, test } from 'bun:test'
 import { templateDiagram } from '../src/svelte/template-diagram.js'
 import { pyramidSequence } from '../src/core/pyramid.js'
 
-test('pyramid diagrams follow row direction with equal square cells', () => {
-  for (const reverse of [false, true]) for (const layers of [3, 4, 5, 6, 8, 24]) {
-    const shapes = templateDiagram(pyramidSequence('口', layers, { reverse }))
-    const rows = Map.groupBy(shapes, shape => shape.y)
-    expect([...rows.values()].map(row => row.length)).toEqual(
-      Array.from({ length: layers }, (_, i) => reverse ? layers - i : i + 1))
+test('pyramid diagrams turn with the direction, with equal square cells', () => {
+  for (const direction of ['top', 'bottom', 'left', 'right']) for (const layers of [3, 4, 5, 6, 8, 24]) {
+    const shapes = templateDiagram(pyramidSequence('口', layers, { direction }))
+    expect(shapes).toHaveLength(layers * (layers + 1) / 2)
+    const along = direction === 'left' || direction === 'right' ? 'x' : 'y'
+    const groups = [...Map.groupBy(shapes, shape => shape[along])].sort((a, b) => a[0] - b[0]).map(([, group]) => group.length)
+    const expected = direction === 'bottom' || direction === 'right'
+      ? Array.from({ length: layers }, (_, i) => layers - i)
+      : Array.from({ length: layers }, (_, i) => i + 1)
+    expect(groups).toEqual(expected)
     for (const shape of shapes) {
       expect(shape.width).toBeCloseTo(shape.height)
       expect(shape.width).toBeGreaterThan(0)
+    }
+    const center = shape => [shape.x + shape.width / 2, shape.y + shape.height / 2]
+    if (direction === 'top') {
+      expect(center(shapes[0])[0]).toBeCloseTo(12)
+      expect(center(shapes[0])[1]).toBeLessThan(center(shapes[1])[1])
+    }
+    if (direction === 'bottom') {
+      const apex = center(shapes.at(-1))
+      expect(apex[0]).toBeCloseTo(12)
+      expect(apex[1]).toBeGreaterThan(center(shapes[0])[1])
+    }
+    if (direction === 'left') {
+      const apex = center(shapes[0])
+      expect(apex[0]).toBeLessThan(center(shapes.at(-1))[0])
+      expect(apex[1]).toBeCloseTo(12)
+    }
+    if (direction === 'right') {
+      const apex = center(shapes.at(-1))
+      expect(apex[0]).toBeGreaterThan(center(shapes[0])[0])
+      expect(apex[1]).toBeCloseTo(12)
     }
   }
 })

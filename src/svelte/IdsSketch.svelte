@@ -33,6 +33,10 @@
   let characters = $state.raw([])
   /** @type {{ part: string, strokes: number | null }[]} */
   let results = $state.raw([])
+  /** @type {{ part: string, strokes: number | null }[]} */
+  let tangut = $state.raw([])
+  /** Tangut parts are ranked apart so they do not bury Han components. */
+  const TANGUT = /[\p{Script=Tangut}]/u
   let preparing = $state(true)
   let progress = $state(/** @type {{ done: number, total: number }} */ ({ done: 0, total: 0 }))
   let failed = $state(false)
@@ -116,6 +120,7 @@
     clearTimeout(timer)
     characters = []
     results = []
+    tangut = []
     asks++
     looked = false
     strokes = [...strokes, [point(event)]]
@@ -177,23 +182,27 @@
 
   function schedule() {
     clearTimeout(timer)
-    if (!strokes.length) { characters = []; results = []; return }
+    if (!strokes.length) { characters = []; results = []; tangut = []; return }
     timer = setTimeout(recognize, 220)
   }
 
   /** The closest characters and parts to the strokes, after the palette's shapes are ready. */
   function recognize() {
-    if (!strokes.length) { characters = []; results = []; searching = false; return }
-    if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; searching = false; return }
+    if (!strokes.length) { characters = []; results = []; tangut = []; searching = false; return }
+    if (!templates.length && !adapter.recognizeDrawing) { characters = []; results = []; tangut = []; searching = false; return }
     searching = true
+    characters = []
     const id = ++asks
     const strokesAt = strokes
     // Let the searching note paint before the comparison runs.
     clearTimeout(compute)
     compute = setTimeout(async () => {
       if (id !== asks) return
-      const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: 24, strokes: strokesAt.length }) : []
-      results = ranked.map(template => ({ part: template.part, strokes: template.strokes }))
+      const ranked = templates.length ? rank(shapesOf(strokesAt, { size: PITCH }), templates, { limit: templates.length, strokes: strokesAt.length }) : []
+      /** @param {import('./sketch-templates.js').SketchTemplate} template */
+      const isTangut = template => TANGUT.test(template.part)
+      results = ranked.filter(template => !isTangut(template)).map(template => ({ part: template.part, strokes: template.strokes }))
+      tangut = ranked.filter(isTangut).map(template => ({ part: template.part, strokes: template.strokes }))
       looked = true
       searching = false
       const recognizeDrawing = adapter.recognizeDrawing
@@ -207,9 +216,9 @@
         drawn = []
       }
       if (id !== asks) return
-      characters = [...new Set(drawn)].slice(0, 24).map(part => ({ part }))
+      characters = [...new Set(drawn)].map(part => ({ part }))
       const seen = new Set(characters.map(character => character.part))
-      results = ranked.filter(template => !seen.has(template.part)).map(template => ({ part: template.part, strokes: template.strokes }))
+      results = ranked.filter(template => !seen.has(template.part) && !isTangut(template)).map(template => ({ part: template.part, strokes: template.strokes }))
     }, 0)
   }
 
@@ -218,6 +227,7 @@
     strokes = strokes.slice(0, -1)
     characters = []
     results = []
+    tangut = []
     looked = false
     asks++
     paint()
@@ -228,6 +238,7 @@
     strokes = []
     characters = []
     results = []
+    tangut = []
     looked = false
     asks++
     clearTimeout(timer)
@@ -250,7 +261,7 @@
     event.stopPropagation()
     onclose()
   }
-  const total = $derived(characters.length + results.length)
+  const total = $derived(characters.length + results.length + tangut.length)
   const status = $derived(preparing ? t('ids.draw.preparing') : failed ? t('ids.draw.failed')
     : searching ? t('ids.from.searching') : total ? t('ids.search.count', { count: total })
     : looked && strokes.length ? t('ids.draw.none') : '')
@@ -273,7 +284,7 @@
     <p class="group">{t('ids.draw.characters')}</p>
     <div class="found" role="group" aria-label={t('ids.draw.characters')}>
       {#each characters as result (result.part)}
-        <button type="button" class="hit" disabled={disabled} lang="ja" title={result.part}
+        <button type="button" class="hit" disabled={disabled} lang={locale} title={result.part}
           draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
           onclick={() => take(result.part)}><span class="char">{result.part}</span></button>
       {/each}
@@ -290,13 +301,24 @@
       {/each}
     </div>
   {/if}
+  {#if tangut.length}
+    <p class="group">{t('ids.draw.tangut')}</p>
+    <div class="found" role="group" aria-label={t('ids.draw.tangut')}>
+      {#each tangut as result (result.part)}
+        <button type="button" class="hit" disabled={disabled} lang="txg"
+          title={`${result.part}${result.strokes === null ? '' : ` · ${t('parts.strokeCount', { count: result.strokes })}`}`}
+          draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', result.part)}
+          onclick={() => take(result.part)}><span class="char">{result.part}</span></button>
+      {/each}
+    </div>
+  {/if}
 </div>
 
 <style>
-  .ids-sketch{--_ink:var(--ids-ink,light-dark(#1d1d21,#ececf1));--_muted:var(--ids-muted,light-dark(#696973,#9c9ca8));
-    --_line:var(--ids-line,light-dark(#d8d8de,#3a3a43));--_surface:var(--ids-surface,light-dark(#fff,#202026));
-    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
-    --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
+  .ids-sketch{--_ink:var(--ids-ink,light-dark(#1c1c22,#ececf2));--_muted:var(--ids-muted,light-dark(#686874,#9d9daa));
+    --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
+    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
+    --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));--_font:var(--ids-font,sans-serif);
     display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink);font-family:var(--_font)}
   .hint{margin:0;font-size:11px;line-height:1.45;color:var(--_muted)}
@@ -316,7 +338,7 @@
   .group{margin:2px 0 0;font-size:10.5px;letter-spacing:.03em;color:var(--_muted)}
   .bar{height:3px;border-radius:2px;background:var(--_surface-subtle);overflow:hidden}
   .bar span{display:block;height:100%;background:var(--_accent);transition:width .15s}
-  .found{display:flex;flex-wrap:wrap;gap:4px}
+  .found{display:flex;flex-wrap:wrap;gap:4px;max-height:40vh;overflow-y:auto;overscroll-behavior:contain}
   .hit{display:flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;padding:2px 8px;border:1px solid transparent;
     border-radius:8px;background:var(--_surface-subtle);color:inherit;cursor:pointer;font:inherit}
   .hit:not(:disabled):hover{border-color:var(--_accent)}

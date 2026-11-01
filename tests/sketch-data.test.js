@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it, setDefaultTimeout } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { rank, readSketchTemplates, shapesOf } from '../src/core/index.js'
 import { babelStoneAdapter, paletteRows, smallSealAdapter } from '../src/adapter/index.js'
 import { sketchParts } from '../src/svelte/sketch-templates.js'
+
+setDefaultTimeout(15000)
 
 const document = JSON.parse(gunzipSync(readFileSync(new URL('../data/sketch-parts.json.gz', import.meta.url))))
 const templates = readSketchTemplates(document)
@@ -16,7 +18,7 @@ describe('the prepared sketch shapes', () => {
   it('hold the palette parts with two shapes each', () => {
     expect(document.format).toBe('ids-input/sketch-parts')
     expect(document.size).toBe(40)
-    expect(templates.length).toBeGreaterThan(780)
+    expect(templates.length).toBeGreaterThan(10000)
     for (const template of templates) {
       expect([...template.part].length).toBe(1)
       expect(template.shapes.length).toBeGreaterThan(0)

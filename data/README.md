@@ -180,8 +180,8 @@ Notes on the columns:
 
 ## `sketch-parts.json.gz`
 
-The drawing search's prepared glyph shapes: the palette's 803 parts, each fitted to the 40×40
-square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 104 KB
+The drawing search's prepared glyph shapes: the palette's 11,417 parts, each fitted to the 40×40
+square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 1.8 MB
 gzipped. Format:
 
 ```json
@@ -191,9 +191,10 @@ gzipped. Format:
 
 Rebuild with `uv run scripts/build_sketch_parts.py` (or `bun run build:sketch-parts`). The script
 draws each part with Noto Sans CJK JP 2.004 at `/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc`
-(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3 and the Plangothic P1/P2
-palette subset. If none of those faces has a glyph, it uses the `IDS Fallback` shards in
-`fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and provenance are recorded in
+(override with `NOTO_SANS_CJK`), then GenZui Sans 0.105, Kureedo 0.4.3, the Plangothic P1/P2
+palette subset and Noto Serif Tangut for Tangut parts. If none of those faces has a glyph, it uses
+the `IDS Fallback` shards in `fonts/unicode/`, selected by `fonts/unicode.css`, whose hashes and
+provenance are recorded in
 `fonts/unicode.json`; it skips a part drawn as the notdef box. The script checks Noto's SHA-256
 against the build it came from and records the primary font hashes and the `unicode.json` manifest
 hash in the file. The shapes derive from those fonts and fallback shards; their SIL OFL 1.1 terms
@@ -509,7 +510,9 @@ and two parts of the block, written left before right, top before bottom, outer 
 Shuishu writing order is undocumented in these sources, so the order follows the glyph. The entries
 aid display and search and sit outside the encoding proposal, and the count keeps to the unambiguous
 cases. A search finds a character by its whole description, and a typed part also lists the
-characters written with it.
+characters written with it. The adapter reads the entries as the characters' descriptions, with no
+source region, so the structure search, the component panel and the tree reach them; a failed
+decomposition file costs those descriptions only.
 `scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
 or the character itself.
 
@@ -971,22 +974,35 @@ catalog cannot be loaded. A configured composer export or font can have differen
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the
-export's `base` and `commit` and a stroke count for each (`strokes`, one entry per key). Unihan
-18.0.0 supplies most; a radical form it does not list takes the count of the unified character
-`component-forms.tsv` names, and the 25 marks and Hangzhou numerals it lacks carry counts the
-project supplies from their shapes. The pinned export records 95,899 of them; the
-bundled fallback outlines add 7,434 and the palette's own fallback outlines 19, so the list matches
-what the preview can compose rather than what one export happens to hold. The Components tab offers
-it as **All characters**, beside the curated components and their stroke-count groups, paged at 120,
-searchable by character or `U+` code point and filterable by stroke count: single counts up to 22,
-then one 23+ group.
+export's `base` and `commit`, a stroke count for each (`strokes`, one entry per key) and the class of
+its first stroke (`firsts`, one entry per key). Unihan 18.0.0 supplies most counts; a radical form it
+does not list takes the count of the unified character `component-forms.tsv` names, and the 25 marks
+and Hangzhou numerals it lacks carry counts the project supplies from their shapes. The pinned export
+records 95,899 of them; the bundled fallback outlines add 7,434 and the palette's own fallback
+outlines 19, so the list matches what the preview can compose rather than what one export happens to
+hold.
 
-Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip]`. It reads all 4,096 record shards from
-the export, the bundled outline index and palette outlines, and the pinned Unihan archive
-(`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
-`4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`); pass a local copy to skip the
-download. The export's outlines come from Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and its
-records from han-compose (MIT). Unihan is distributed under the Unicode License v3.
+`firsts` gives 横, 豎, 撇, 點 or 折, the class of the first stroke Rime's five-stroke dictionary
+records, for 102,584 of the characters, read as the parts palette's `first` column is; the two agree
+wherever both record a class. The remaining 768 hold `null`, because the dictionary does not name
+them: 451 CJK compatibility ideographs (plus 12 in the compatibility supplement), 281 Kangxi radical
+and Radicals Supplement forms, 23 marks and Hangzhou numerals that take a stroke count the project
+supplies but no stroke order, and one 𫠞. A search hit's tooltip and the character card show these
+two facts; the dictionary's stroke order follows Chinese order, which can differ from Japanese order.
+
+The Components tab offers the list as **All characters**, beside the curated components and their
+stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
+stroke count: single counts up to 22, then one 23+ group.
+
+Rebuild with `node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]`. It reads all 4,096
+record shards from the export, the bundled outline index and palette outlines, and the pinned Unihan
+archive (`https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip`, SHA-256
+`4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`) and the Rime five-stroke
+dictionary (`https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml`,
+SHA-256 `b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791`); pass local copies to skip
+the download. The export's outlines come from Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and its
+records from han-compose (MIT). Unihan is distributed under the Unicode License v3, and the Rime
+dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 
 
 ## Preview coverage audit

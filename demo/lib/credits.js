@@ -30,6 +30,9 @@ export const SOURCES = [
   { name: 'DaKanji', by: 'Dariyooo (DaAppLab)', licence: 'MIT', url: 'https://github.com/dariyooo/DaKanji-Single-Kanji-Recognition', key: 'daKanji' },
   { name: 'ONNX Runtime', by: 'Microsoft', licence: 'MIT', url: 'https://github.com/microsoft/onnxruntime', key: 'onnxRuntime' },
   { name: 'ETL Character Database', by: 'AIST', url: 'http://etlcdb.db.aist.go.jp/', key: 'etl' },
+  { name: 'GlyphWeave', by: '13536309143', licence: 'MIT', url: 'https://github.com/13536309143/GlyphWeave', key: 'glyphWeave' },
+  { name: 'CASIA-HWDB', by: 'NLPR, CASIA', licence: 'Research use', url: 'https://nlpr.ia.ac.cn/databases/handwriting/Download.html', key: 'casia' },
+  { name: 'EMNIST', by: 'NIST', licence: 'Public domain', url: 'https://www.nist.gov/itl/products-and-services/emnist-dataset', key: 'emnist' },
 ]
 
 /** @type {Credit[]} Tools whose ideas the workshop takes. */

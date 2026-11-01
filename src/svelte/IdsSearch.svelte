@@ -6,6 +6,7 @@
   // dropped. A hit opens its description (`onopen`), hands its character on (`ontake`), or is
   // dragged as its character.
   import { untrack } from 'svelte'
+  import { loadStrokes } from './strokes.js'
   import { translator } from './i18n.js'
 
   /** @typedef {import('../adapter/types.js').IdsHit} IdsHit */
@@ -13,14 +14,31 @@
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
   let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, mode = 'ids', onopen, ontake } = $props()
   const t = $derived(translator(messages, locale))
+  const uid = $props.id()
   const asked = $derived(query.trim())
+  // A stroke count narrows the hits; the palette's character counts load on first use.
+  let strokeLimit = $state('')
+  /** @type {Map<string, number | null> | null} */
+  let strokeCounts = $state.raw(null)
+  let strokeLoading = false
+  $effect(() => {
+    if (strokeLimit === '' || strokeCounts || strokeLoading) return
+    strokeLoading = true
+    loadStrokes().then(counts => { strokeCounts = counts }).catch(() => { strokeCounts = new Map() })
+  })
+  const wantedStrokes = $derived(strokeLimit === '' ? null : Number(strokeLimit))
+  const visibleHits = $derived.by(() => {
+    const counts = strokeCounts, wanted = wantedStrokes
+    if (wanted === null || !counts) return found.hits
+    return found.hits.filter(hit => counts.get(hit.char) === wanted)
+  })
   let found = $state.raw(/** @type {{ status: 'idle' | 'loading' | 'ready' | 'failed' | 'extra' | 'pattern', hits: IdsHit[], total: number, characters: string }} */ ({ status: 'idle', hits: [], total: 0, characters: '' }))
   let asks = 0
   let shown = $state(60)
   let copied = $state(false)
   let copying = $state(false)
   let copyFailed = $state(false)
-  $effect(() => { asked; mode; shown = limit; copied = false; copyFailed = false })
+  $effect(() => { asked; mode; strokeLimit; shown = limit; copied = false; copyFailed = false })
   async function copyAll() {
     const id = asks
     copying = true
@@ -31,7 +49,8 @@
     finally { copying = false }
   }
   $effect(() => {
-    const text = asked, find = mode === 'structure' ? adapter.findByStructure : mode === 'similar' ? adapter.findSimilar : adapter.findByIds, most = shown
+    const text = asked, find = mode === 'structure' ? adapter.findByStructure : mode === 'similar' ? adapter.findSimilar : adapter.findByIds
+    const most = strokeLimit === '' ? shown : Math.max(shown, 600)
     const id = ++asks
     if (!text || !find) { found = { status: 'idle', hits: [], total: 0, characters: '' }; return }
     const controller = new AbortController()
@@ -59,11 +78,17 @@
 </script>
 
 <section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
+  <div class="stroke-limit">
+    <label for={`${uid}-strokes`}>{t('ids.search.strokes')}</label>
+    <input id={`${uid}-strokes`} type="number" min="1" max="40" inputmode="numeric" autocomplete="off"
+      placeholder={t('ids.search.strokesAny')} value={strokeLimit}
+      oninput={event => { strokeLimit = event.currentTarget.value }} />
+  </div>
   <p class="count" aria-live="polite">
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
     {:else if found.status === 'pattern'}<span class="fault">{t('ids.structural.invalid')}</span>
     {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
-    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: found.total })}{/if}
+    {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: strokeLimit === '' ? found.total : visibleHits.length })}{/if}
   </p>
   {#if mode === 'structure' && found.status === 'ready' && found.total > 0}
     <div class="result-actions">
@@ -71,9 +96,9 @@
       {#if copyFailed}<span role="status">{t('ids.structural.copyFailed')}</span>{/if}
     </div>
   {/if}
-  {#if found.hits.length}
+  {#if visibleHits.length}
     <ol class="hits" class:stale={found.status === 'loading'}>
-      {#each found.hits as hit (hit.char)}
+      {#each visibleHits as hit (hit.char)}
         <li class="hit">
           <button type="button" class="open" data-character={hit.char} title={`${t('ids.search.open', { sequence: hit.sequence })} · ${cp(hit.char)}`} draggable="true"
             ondragstart={event => event.dataTransfer?.setData('text/plain', hit.char)} onclick={() => onopen?.(hit)}>
@@ -97,15 +122,18 @@
 
 <style>
   .ids-search-results{
-    --_ink:var(--ids-ink,light-dark(#1d1d21,#ececf1));--_muted:var(--ids-muted,light-dark(#696973,#9c9ca8));
-    --_line:var(--ids-line,light-dark(#d8d8de,#3a3a43));--_surface:var(--ids-surface,light-dark(#fff,#202026));
-    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f5f5f7,#18181d));--_accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff));
-    --_accent-light:var(--ids-accent-light,light-dark(#e7edfc,#24304f));--_focus:var(--ids-focus,light-dark(#2f5fd0,#8fb0ff));
+    --_ink:var(--ids-ink,light-dark(#1c1c22,#ececf2));--_muted:var(--ids-muted,light-dark(#686874,#9d9daa));
+    --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
+    --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
+    --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
     --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
   button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}
+  .stroke-limit{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--_muted);justify-content:flex-end}
+  .stroke-limit input{width:56px;padding:4px 6px;border:1px solid var(--_line);border-radius:6px;background:var(--_surface);color:var(--_ink);font:inherit;text-align:center}
+  .stroke-limit input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .result-actions{display:flex;align-items:center;gap:8px;font-size:12px}
   .result-actions button,.more{border:1px solid var(--_line);background:var(--_surface);color:var(--_ink);border-radius:6px;padding:5px 10px;font:inherit;cursor:pointer}
   .more{align-self:center}
