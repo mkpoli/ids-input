@@ -70,9 +70,10 @@ function renderGallery(){
   count.textContent=`${rows.length} of ${DATA.gallery.length}`;
 }
 let compPart=null;
+const APPROVED=["⿱甶儿", "⿳卝罒冖", "⿴𦥑同", "㇯鹿比", "⿰工几", "⿴囗夊", "⿱𠆢虫", "⿰氵氵", "⿻甲一", "⿳亠口冖", "㇯馬灬", "⿱⺀㐅", "⿱一血", "㇯鳥灬", "⿱皿亅", "⿳亠㐅厂", "⿱士冖", "⿻𢶶戈", "⿱丿乚"];
 function renderComponents(){
   const rows=pick(DATA.components);
-  const fine=new Set('⿱甶儿,⿳卝罒冖,⿴𦥑同,㇯鹿比,⿰工几,⿴囗夊,⿱𠆢虫,⿰氵氵,⿻甲一,⿳亠口冖,㇯馬灬,⿱⺀㐅,⿱一血,㇯鳥灬,⿱皿亅,⿳亠㐅厂,⿱士冖,⿻𢶶戈,⿱丿乚'.split(','));
+  const fine=new Set(APPROVED);
   const bad=rows.filter(r=>!fine.has(r.ids));
   const parts=[...new Set(rows.map(r=>r.ids[0]))];
   const shown=compPart?bad.filter(r=>r.ids.startsWith(compPart)):bad;
@@ -89,7 +90,7 @@ function renderComponents(){
       ${faces}</div>`;
   };
   view.innerHTML=`<div class="tabs" style="margin-bottom:10px">${chip(null,'All',!compPart)}${parts.map(p=>chip(p,p,compPart===p)).join('')}</div>
-    <details class="fine"><summary>Fine as drawn (${rows.filter(r=>fine.has(r.ids)).length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${rows.filter(r=>fine.has(r.ids)).map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
+    <details class="fine"><summary>Approved as drawn — resolved (${rows.filter(r=>fine.has(r.ids)).length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${rows.filter(r=>fine.has(r.ids)).map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
     <div class="gridwrap">${shown.map(card).join('')}</div>`;
   view.querySelectorAll('[data-part]').forEach(b=>b.addEventListener('click',()=>{compPart=b.dataset.part||null;render()}));
   count.textContent=`${shown.length} to redesign${compPart?' ('+compPart+')':''} of ${DATA.components.length}`;
