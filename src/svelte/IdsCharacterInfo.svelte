@@ -19,7 +19,7 @@
   let restoringFocus = false
   let pointerX = NaN, pointerY = NaN
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
-  let pinned = false
+  let pinned = $state(false)
   /** @type {Element | null} */
   let press = null
   let generation = 0
@@ -315,7 +315,7 @@
         {#if strokes?.strokes != null}<span class="strokes">{t('parts.strokeCount', { count: strokes.strokes })}</span>{/if}
         {#if strokeGlyph}<span class="strokes">{t('info.firstStroke')}: <span class="stroke-glyph" lang="ja">{strokeGlyph}</span> {strokeName}</span>{/if}
       </div>
-      <button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>
+      {#if pinned}<button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>{/if}
     </header>
     {#if identity}
       <p class="unicode-name" lang="en">{identity.name}</p>
