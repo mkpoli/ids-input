@@ -23,6 +23,15 @@ describe('palette stroke metadata', () => {
     expect(parts.filter(part => part.kind !== 't' && part.strokes == null)).toEqual([])
   })
 
+  it('carries the cover independent components as unencoded palette parts', () => {
+    const runs = { '⿱一血': 7, '⿱一𧘇': 5, '⿱罒夫': 9, '⿱日𧘇': 8, '⿱皿亅': 6, '⿱八亠': 4, '⿱臼火': 10, '⿱𠂊巾': 5, '⿳丅口丄': 7, '⿱八人': 4 }
+    for (const [part, strokes] of Object.entries(runs)) {
+      expect(byPart.get(part)?.strokes).toBe(strokes)
+      expect(byPart.get(part)?.kind).toBe('c')
+      expect(byPart.get(part)?.derived).toBe(1)
+    }
+  })
+
   it('classifies every Han component while leaving the circle stroke outside the five classes', () => {
     const classes = new Set(['横', '豎', '撇', '點', '折'])
     const han = parts.filter(part => [...part.part].length === 1 && (part.kind === 'c' || part.kind === 'd'))

@@ -643,8 +643,10 @@ Common also shows hard-to-type components used by at least 50 characters
 (287 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The sixteen manual entries
-bring the compound total to thirty-two. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The twenty-six manual entries
+bring the compound total to forty-two. Ten of them are the cover components 一血, 一𧘇, 罒夫, 日𧘇,
+皿亅, 八亠, 臼火, 𠂊巾, 丅口丄 and 八人: unencoded runs the cover layouts need as one part, each with an
+additive (derived) stroke count, inserted as a subtree and searchable with the numeric filter. Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
