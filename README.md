@@ -1141,10 +1141,9 @@ menu: the operator templates, each opening a tab with that operator’s empty sl
 every starter sequence with its character and code point, an abbreviated character, or a mark when
 they have none. The examples open as cards or a list, filter by sequence, character, reading or code
 point, keep only forms with or without a code point, fold each section, and jump to a section from a
-chip that also marks the one in view. An example opens a tab. The toolbar also holds a share link with
-its QR code, the language, settings and the sources. Settings hold the system, light and dark themes,
-key hints, the preview data source; they open beside the toolbar button on desktop and in a bottom
-drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
+chip that also marks the one in view. An example opens a tab. Settings hold the system, light and dark
+themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
+bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
 the older `#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the parser
 rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link that opens it as a
 draft; text built from a sequence's letters goes on to the editor first. A document that holds more
