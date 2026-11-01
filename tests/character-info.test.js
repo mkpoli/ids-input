@@ -40,6 +40,13 @@ describe('sourced character meanings', () => {
     }
     expect(info('馬').sources.map(source => source.note)).toEqual(['unihan', 'wiktionary', 'sealSource', 'unicodeSealSource', 'editorial'])
   })
+  test('a Wiktionary record links to a page that carries what it cites', () => {
+    // A Tangut character's own page has its glosses; a Han character's Wiktionary record says where
+    // its Tangut translation comes from, and a Tangut page would be no use to the reader.
+    expect(info('𘆽').sources.find(source => source.note === 'wiktionary').url).toContain(encodeURIComponent('𘆽'))
+    const han = info('馬').sources.find(source => source.note === 'wiktionary')
+    expect(han.url).toBe('https://en.wiktionary.org/')
+  })
   test('sources the adapter adds for component examples keep their kind and appear once', async () => {
     // The adapter adds a Wiktionary record for each example and the Tangut IDS list after lookup.
     const adapter = babelStoneAdapter({ table: new Map([['𘆽', [{ text: '⿰𘥇𘨬', regions: '' }]]]), characterInfo: 'https://example.test/info.gz', fetch: async () => new Response(JSON.stringify(document)) })
