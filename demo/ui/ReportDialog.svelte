@@ -134,7 +134,7 @@
   .shot-text{display:flex;flex-direction:column;gap:var(--ui-space-3xs);min-width:0}
   .report-heading{margin:var(--ui-space-2xs) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);letter-spacing:var(--ui-tracking-caps);text-transform:uppercase}
   .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.45;overflow-wrap:anywhere}
-  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .send{align-self:flex-start}
   .sent{display:flex;flex-direction:column;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}
   .thanks{margin:0}
