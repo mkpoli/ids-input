@@ -319,7 +319,6 @@
   "info.script.component": "Tangut component",
   "info.title": "Character information",
   "info.firstStroke": "First stroke",
-  "info.unicodeReference": "Unicode reference",
   "info.relation.seal": "Small seal",
   "info.script.han": "Han character",
   "info.script.seal": "Small Seal character",
@@ -347,12 +346,12 @@
   "info.copied": "Copied",
   "info.copyFailed": "Copy failed",
   "info.source.sections": "Sources",
-  "info.source.open": "Open {site}",
   "info.site.wiktionary": "Wiktionary",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
   "info.site.editorial": "Editorial aids",
   "info.site.component": "Andrew West",
-  "info.site.tangutIds": "Tangut IDS list"
+  "info.site.tangutIds": "Tangut IDS list",
+  "info.site.course": "Unicode"
 }
