@@ -1,16 +1,34 @@
 <script>
-  // The author's portrait, what a tip pays for, then three steps that end at the Ko-fi button. Ko-fi handles the
-  // amount and the payment; companies can write in to sponsor. The header's Sponsor
+  // The author's portrait, what a tip pays for, then three steps that end at the tip buttons: Ko-fi
+  // (one-time or monthly) and OFUSE (a tip with a message), OFUSE first in Japanese. Each service
+  // handles the amount and the payment; companies can write in to sponsor. The header's Sponsor
   // button opens it.
   import Dialog from './Dialog.svelte'
   import Icon from './Icon.svelte'
-  /** @type {{ open: boolean, t: (key: string, params?: Record<string, string | number>) => string }} */
-  let { open = $bindable(false), t } = $props()
+  /** @type {{ open: boolean, locale: string, t: (key: string, params?: Record<string, string | number>) => string }} */
+  let { open = $bindable(false), locale, t } = $props()
+  const ofuseFirst = $derived(locale.split('-')[0] === 'ja')
 </script>
 
 <svelte:head>
   <script type="module" src="https://supporters.mkpo.li/roll.js"></script>
 </svelte:head>
+
+{#snippet kofi()}
+  <a class="tip kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer">
+    <span class="mark" aria-hidden="true"><Icon name="coffee" size={20} /></span>
+    <span class="copy"><strong>Ko-fi</strong><small>{t('app.sponsor.kofi')}</small></span>
+    <Icon name="arrow-right" />
+  </a>
+{/snippet}
+
+{#snippet ofuse()}
+  <a class="tip ofuse" href="https://ofuse.me/mkpoli" target="_blank" rel="noreferrer">
+    <span class="mark" aria-hidden="true"><Icon name="letter" size={20} /></span>
+    <span class="copy"><strong>OFUSE</strong><small>{t('app.sponsor.ofuse')}</small></span>
+    <Icon name="arrow-right" />
+  </a>
+{/snippet}
 
 <Dialog bind:open title={t('app.sponsor.label')} closeLabel={t('app.close')}>
   <div class="sheet">
@@ -34,11 +52,9 @@
         <li>{t('app.sponsor.step3')}</li>
       </ol>
     </section>
-    <a class="kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer">
-      <span class="mark" aria-hidden="true"><Icon name="coffee" size={20} /></span>
-      <span class="copy"><strong>Ko-fi</strong><small>{t('app.sponsor.kofi')}</small></span>
-      <Icon name="arrow-right" />
-    </a>
+    <div class="tips">
+      {#if ofuseFirst}{@render ofuse()}{@render kofi()}{:else}{@render kofi()}{@render ofuse()}{/if}
+    </div>
     <a class="company" href="mailto:mkpoli@mkpo.li?subject=Sponsorship%20on%20ids.mkpo.li">
       <Icon name="mail" size={16} />
       <span class="copy"><strong>{t('app.sponsor.company')}</strong><small>{t('app.sponsor.companyHint')}</small></span>
@@ -74,15 +90,17 @@
   .steps li{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.45;counter-increment:step}
   .steps li::before{content:counter(step);display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;
     background:var(--sp-ink);color:var(--sp-soft);font-size:11px;font-weight:700;line-height:1;transform:translateY(-1px)}
-  .kofi{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
-    background:linear-gradient(135deg,#d81b60,#b0124f);color:#fff;text-decoration:none;box-shadow:0 6px 16px rgb(216 27 96 / .32);
-    transition:transform .18s ease,box-shadow .18s ease}
-  .kofi:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgb(216 27 96 / .42)}
-  .kofi:active{transform:scale(.98)}
-  .kofi:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
-  .kofi .mark{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:rgb(255 255 255 / .22)}
-  .kofi .copy strong{font-size:15px}
-  .kofi .copy small{color:#fff}
+  .tips{display:flex;flex-direction:column;gap:10px}
+  .tip{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
+    color:#fff;text-decoration:none;box-shadow:0 6px 16px var(--tip-glow);transition:transform .18s ease,box-shadow .18s ease}
+  .kofi{--tip-glow:rgb(216 27 96 / .32);--tip-glow-hover:rgb(216 27 96 / .42);background:linear-gradient(135deg,#d81b60,#b0124f)}
+  .ofuse{--tip-glow:rgb(123 63 176 / .3);--tip-glow-hover:rgb(123 63 176 / .42);background:linear-gradient(135deg,#8a4fc4,#6a2f9e)}
+  .tip:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--tip-glow-hover)}
+  .tip:active{transform:scale(.98)}
+  .tip:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
+  .tip .mark{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:rgb(255 255 255 / .22)}
+  .tip .copy strong{font-size:15px}
+  .tip .copy small{color:#fff}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
   .copy strong{font-size:13.5px;font-weight:700}
   .copy small{font-size:12px;line-height:1.4}
@@ -92,5 +110,5 @@
   .company .copy strong{font-size:12.5px;color:var(--ui-color-ink)}
   supporters-roll{--sp-text:var(--ui-color-ink);--sp-muted:var(--ui-color-ink-muted)}
   .thanks{margin:0;font-size:12.5px;line-height:1.5;color:var(--ui-color-ink-muted);text-align:center}
-  @media (prefers-reduced-motion:reduce){.heart,.spark,.kofi{animation:none;transition:none}}
+  @media (prefers-reduced-motion:reduce){.heart,.spark,.tip{animation:none;transition:none}}
 </style>
