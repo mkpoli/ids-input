@@ -76,8 +76,7 @@
     target?.scrollIntoView({ block: 'start' })
     active = heading
   }
-  // The chip of the section at the top of the scrollport is marked. The row wraps, so the menu
-  // scrolls to show a chip that lands outside the head instead of nudging the row sideways.
+  // The chip of the section at the top of the scrollport is marked.
   $effect(() => {
     const menu = box
     if (!open || !menu || !view) return
@@ -99,11 +98,12 @@
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
       const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.chip')[at])
-      if (chip && head) {
-        const chipRect = chip.getBoundingClientRect(), headRect = head.getBoundingClientRect()
-        if (chipRect.top < headRect.top || chipRect.bottom > headRect.bottom) {
-          menu.scrollTop += chipRect.top - headRect.top - 4
-        }
+      const row = chip?.parentElement
+      if (chip && row) {
+        const chipRect = chip.getBoundingClientRect()
+        const rowRect = row.getBoundingClientRect()
+        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
+        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
       }
     }
     update()
@@ -199,7 +199,7 @@
   onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
 
 {#snippet groupHeading(heading, count)}
-  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} aria-label={`${heading}, ${count}`} onclick={() => toggle(heading)}>
     <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}

@@ -66,21 +66,27 @@
     /** @type {HTMLElement | undefined} */ (buttons[at])?.scrollIntoView({ block: 'start' })
     active = heading
   }
+  // The outermost ancestor that actually scrolls. A wrapper can declare `overflow:auto` and still
+  // hold its whole content, so a wrapper that merely fits is not the scrollport.
   /** @param {HTMLElement | null} el */
   function scrollParent(el) {
+    let found = null
     for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
-      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) return node
+      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) found = node
     }
-    return null
+    return found
   }
   $effect(() => {
     const list = root
     if (!list || !view) return
-    const scroller = scrollParent(list) ?? window
+    // The scrollport is resolved on each pass: the dialog only overflows once its content lays out,
+    // which happens after this effect first runs.
+    let scroller = /** @type {HTMLElement | null} */ (null)
     const update = () => {
-      const top = scroller === window ? 8 : /** @type {HTMLElement} */ (scroller).getBoundingClientRect().top + 8
+      scroller = scrollParent(list) ?? scroller
+      const box = scroller ?? (/** @type {HTMLElement} */ (document.documentElement))
+      const top = scroller ? scroller.getBoundingClientRect().top + 8 : 8
       const headings = [...list.querySelectorAll('button.heading')]
-      const box = scroller === window ? document.documentElement : /** @type {HTMLElement} */ (scroller)
       let current = ''
       if (box.scrollHeight > box.clientHeight + 4 && box.scrollTop + box.clientHeight >= box.scrollHeight - 4) {
         current = /** @type {HTMLElement | undefined} */ (headings.at(-1))?.dataset.heading ?? ''
@@ -95,23 +101,31 @@
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
       const chip = /** @type {HTMLElement | undefined} */ (list.querySelectorAll('.chip')[at])
-      // The chip row wraps, so the sheet scrolls the active chip into its own viewport.
-      if (chip && scroller !== window) {
-        const chipRect = chip.getBoundingClientRect(), boxRect = /** @type {HTMLElement} */ (scroller).getBoundingClientRect()
-        if (chipRect.top < boxRect.top + 8) /** @type {HTMLElement} */ (scroller).scrollTop -= boxRect.top + 8 - chipRect.top
-        else if (chipRect.bottom > boxRect.bottom - 8) /** @type {HTMLElement} */ (scroller).scrollTop += chipRect.bottom - (boxRect.bottom - 8)
+      const row = chip?.parentElement
+      if (chip && row) {
+        const chipRect = chip.getBoundingClientRect()
+        const rowRect = row.getBoundingClientRect()
+        if (chipRect.left < rowRect.left) row.scrollLeft -= rowRect.left - chipRect.left
+        else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
       }
     }
+    // Listen on the document: scroll does not bubble, but it reaches the capture phase, so the
+    // scroller is heard wherever it turns out to be.
+    const listen = event => {
+      const box = scrollParent(list)
+      if (box && (event.target === box || box.contains(/** @type {Node} */ (event.target)))) update()
+      else if (!box) update()
+    }
     const frame = requestAnimationFrame(update)
-    scroller.addEventListener('scroll', update, { passive: true })
+    document.addEventListener('scroll', listen, { passive: true, capture: true })
     const observer = new ResizeObserver(update)
     observer.observe(list)
-    return () => { cancelAnimationFrame(frame); scroller.removeEventListener('scroll', update); observer.disconnect() }
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('scroll', listen, { capture: true }); observer.disconnect() }
   })
 </script>
 
 {#snippet groupHeading(heading, count)}
-  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} aria-label={`${heading}, ${count}`} onclick={() => toggle(heading)}>
     <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}
