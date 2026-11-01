@@ -11,6 +11,7 @@ import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 const shipped = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 const components = readNumberedComponents(readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8'))
 const table = expandNumberedComponents(shipped, components)
+const drawings = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
 /** The characters BabelStone describes with each sequence. */
 const described = new Map()
 for (const [char, sequences] of table) for (const { text } of sequences) {
@@ -63,6 +64,14 @@ describe('the demo examples', () => {
             // by the sequence and the table records it.
             expect(example.refs).toEqual([sourceNumber('erjian')])
             expect(found.some(other => other !== char)).toBe(false)
+          } else if ('source' in example && example.source === 'data/shuishu/ids.json') {
+            const ids = JSON.parse(readFileSync(new URL('../data/shuishu/ids.json', import.meta.url), 'utf8'))
+            expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
+            const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
+            const parts = new Set(shui.parts.map(part => part.part))
+            for (const part of leaves(parse(sequence).tree)) expect(parts.has(part.char)).toBe(true)
+            expect(example.modern).toBe(shui.parts.find(part => part.part === char)?.modern?.[0])
+            expect(drawings.drawings[sequence]?.drawn.d.length).toBeGreaterThan(10)
           } else if (example.sequence === '⿱無⿰無無') {
             // Unicode 17.0 encoded the character after the BabelStone edition, which has no row.
             expect(example.refs).toContain(sourceNumber('irg-ws2021-uk-20565'))

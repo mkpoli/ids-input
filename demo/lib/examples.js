@@ -651,6 +651,28 @@ export const EXAMPLE_GROUPS = [
     { "sequence": "𛌈", "char": "𛌈", "modern": "酉", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌉", "char": "𛌉", "modern": "戌", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌶", "char": "𛌶", "modern": "亥", "source": "data/shuishu.json.gz" },
+    // Composed characters: the editorial decompositions in data/shuishu/ids.json. Neither the charts
+    // nor Shuishu.xlsx states a decomposition, so each sequence is a reading of the glyph. `modern`
+    // stays the Han character the data names, which six of these have none of; their meaning shows in
+    // the character information panel.
+    { "sequence": "⿱𛔀𛔥", "char": "𛌉", "modern": "戌", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔀𛔤", "char": "𛌑", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔁𛔀", "char": "𛌘", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿴𛔉𛔁", "char": "𛍢", "modern": "甲", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿰𛔛𛔛", "char": "𛍫", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔊𛔔", "char": "𛍭", "modern": "本", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔛𛔈", "char": "𛍳", "modern": "离", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿵𛔅𛔐", "char": "𛎷", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔒𛔉", "char": "𛏓", "modern": "吉", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔚𛔈", "char": "𛐐", "modern": "冬", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔛𛔠", "char": "𛐖", "modern": "石", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔜𛔗", "char": "𛐚", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔒𛔫", "char": "𛐨", "modern": "床", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔍𛔦", "char": "𛐬", "modern": "睡", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔤𛔇", "char": "𛑺", "modern": "忌", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔩𛔞", "char": "𛑾", "modern": "坏", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔪𛔙", "char": "𛒁", "modern": "要", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔀𛔩", "char": "𛒌", "source": "data/shuishu/ids.json" },
   ] },
   // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
   // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).
