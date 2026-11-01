@@ -342,19 +342,12 @@
   "info.copy": "複製{char}",
   "info.copied": "已複製",
   "info.copyFailed": "複製失敗",
-  "info.sources.title": "出處",
-  "info.sources.open": "打開{site}",
-  "info.note.editorial": "本站撰寫的釋義、表情助記與筆畫資料。",
-  "info.note.unicodeSealSource": "Unicode整理的小篆對應字。",
-  "info.note.sealSource": "CHISE（守岡知彦）及其汲古閣本《説文解字》的小篆字形與構形描述；chise.org 可檢索同一批記錄。",
-  "info.note.wiktionary": "英語維基詞典記錄的西夏文字義。",
-  "info.note.unihan": "Unicode的Unihan資料庫收錄的英文釋義。",
+  "info.source.sections": "出處",
+  "info.source.open": "打開{site}",
   "info.site.wiktionary": "維基詞典",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
-  "info.site.editorial": "表記輔助",
-  "info.site.component": "Andrew West",
-  "info.sources.also": "另據：{sites}。",
-  "info.note.component": "Andrew West在BabelStone IDS與TangutSea帖子中公開的西夏文字構形記錄。"
+  "info.site.editorial": "用字助記",
+  "info.site.component": "Andrew West"
 }
