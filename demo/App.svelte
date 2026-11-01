@@ -349,6 +349,8 @@
   $effect(() => save('split', split === 60 ? undefined : split))
 
   let workWidth = $state(innerWidth)
+  // The phone tabs stay in view under the toolbar, so what the toolbar and the tabs take is measured.
+  let chromeHeight = $state(0), tabsHeight = $state(51)
   let inputWidth = $state(storedWidth(load('inputWidth', null)))
   let outputWidth = $state(storedWidth(load('outputWidth', null)))
   const columns = $derived(columnWidths(workWidth, inputWidth, outputWidth))
@@ -1112,8 +1114,9 @@
   onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
 <svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
-<div class="app" lang={locale} data-composer={base}>
-  <div class="chrome">
+<div class="app" lang={locale} data-composer={base}
+  style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
+  <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
       <a class="brand" href="/" aria-label={t('app.title')}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
@@ -1162,7 +1165,7 @@
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
+      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')} bind:offsetHeight={tabsHeight}>
         <button type="button" role="tab" id="phone-input-tab" aria-controls="input-panel" aria-selected={phonePane === 'input'} tabindex={phonePane === 'input' ? 0 : -1} onclick={() => phoneTab('input')} onkeydown={phoneKey}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
         <button type="button" role="tab" id="phone-compose-tab" aria-controls="compose-panel" aria-selected={phonePane === 'compose'} tabindex={phonePane === 'compose' ? 0 : -1} onclick={() => phoneTab('compose')} onkeydown={phoneKey}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
         <button type="button" role="tab" id="phone-output-tab" aria-controls="output-panel" aria-selected={phonePane === 'output'} tabindex={phonePane === 'output' ? 0 : -1} onclick={() => phoneTab('output')} onkeydown={phoneKey}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
@@ -1546,7 +1549,10 @@
   .phone-tabs{display:none}
   /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
   @media (max-width:879px){
-    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border)}
+    /* Below the toolbar, and because the page scrolls rather than the pane, they keep their place to
+       the row's end. Pinned, they leave the grid, so the canvas and their height are set here. */
+    .work{background:linear-gradient(to bottom,var(--ui-color-canvas) calc(var(--chrome-height,0px) + var(--phone-tabs-height,51px)),transparent 0)}
+    .phone-tabs{display:flex;position:sticky;top:var(--chrome-height,0px);z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border);align-self:start}
     .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:13px;cursor:pointer}
     .phone-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
     .phone-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
