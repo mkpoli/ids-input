@@ -27,18 +27,16 @@ han-compose, not in `src/composer/`.
 - Everything that decides a drawing is checked in han-compose. `tests/composer.test.js` here checks
   what an editor gets back — a drawing, its slots, a sketch, a refused sequence — never how the
   notes, rooms or turns are chosen.
-- `src/composer/` is a copy of han-compose's JavaScript package while that package is unpublished.
-  Fix a drawing in han-compose, then update the copy byte for byte; a difference between them is a
-  bug, and the parity run finds one.
+- The engine is the dependency `@han-compose/composer`, read from `node_modules/` and nowhere else.
+  Nothing in this package draws: fix a drawing in han-compose, and its tests there find it.
 - Only draw with the export's own operator set. An operator the export does not draw is refused with
   its drawing, so the badge can say which ones.
 
 ```sh
-bun test tests
-COMPOSER_EXPORT=<export-web folder> bun test tests/composer-parity.test.js
+bun test tests      # the editor; every drawing it shows is the engine's, tested there
+bun run verify      # tests, the type checks and the message catalogues
 ```
 
-Until han-compose publishes the package, a change to `src/composer/` without the parity run is
-unverified. Today the copy draws ⿾ ⿿ 〾 ㇯ ⿼ ⿽ by rooms and turns of its own, marks such a drawing
-approximate, and lays out empty slots that the Python composer has no rule for; all of it belongs
-in han-compose.
+The engine's own tests, its parity run against the Python composer's drawings, and its examples
+live in han-compose. A change here that makes a drawing look different means the engine changed:
+bump the dependency, not a copy of it.

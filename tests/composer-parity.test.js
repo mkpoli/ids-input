@@ -8,8 +8,8 @@
 import { describe, expect, it } from 'bun:test'
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { compose, createSource } from '../src/composer/loader.js'
-import { iou, pathMask } from '../src/composer/geometry.js'
+import { compose, createSource } from '@han-compose/composer'
+import { iou, pathMask } from '@han-compose/composer/geometry'
 
 // Mean agreement below which the port has drifted from the composer, on the held-out set where the
 // export has one.

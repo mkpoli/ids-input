@@ -38,7 +38,7 @@ function script(char) {
   while (lo <= hi) { const mid = (lo + hi) >> 1, [first, last, name] = ranges[mid]; if (cp < first) hi = mid - 1; else if (cp > last) lo = mid + 1; else return ({ Hani: 'han', Latn: 'latin', Cyrl: 'cyrillic', Hang: 'hangul', Bopo: 'bopomofo', Tang: 'tangut', Zyyy: null, Zinh: null })[name] ?? (name === 'Zyyy' || name === 'Zinh' ? null : name) }
   return null
 }
-const coverage = JSON.parse(readFileSync(new URL('../data/unicode-coverage.json', import.meta.url)))
+const coverage = JSON.parse(readFileSync(new URL('../node_modules/@han-compose/composer/data/unicode/coverage.json', import.meta.url)))
 const entries = new Set()
 const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
 const seal = JSON.parse(gunzipSync(readFileSync(new URL('../data/small-seal.json.gz', import.meta.url))))

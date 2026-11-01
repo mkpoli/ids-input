@@ -3,7 +3,7 @@
 import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { chromium } from 'playwright-core'
-import { compose, fromUrl } from '../src/composer/loader.js'
+import { compose, fromUrl } from '@han-compose/composer/loader'
 import { drawingSvg } from '../src/core/preview.js'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 

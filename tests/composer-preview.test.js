@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { composerPreview } from '../src/composer/index.js'
+import { composerPreview } from '@han-compose/composer'
 import { roughLayout, runPreview } from '../src/core/preview.js'
 
 // A worker that answers each drawing when told to, and notes when it is ended.
@@ -19,8 +19,9 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     expect(worker.posted[0]).toMatchObject({ sequence: '⿰木⬚', base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }] })
-    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] } })
-    expect(await drawing).toEqual({ d: 'M0 0Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }] })
+    const drawn = { d: 'M0 0Z', sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }], slots: [{ index: 0, box: [500, 0, 500, 1000] }] }
+    worker.answer({ id: worker.posted[0].id, drawn })
+    expect(await drawing).toEqual(drawn)
     expect(sketches).toHaveLength(1)
   })
   it('answers a sequence it has drawn before from memory, sketch included', async () => {
@@ -29,9 +30,9 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     const sketch = [{ index: 0, box: [0, 0, 500, 1000], empty: false }]
     worker.answer({ id: worker.posted[0].id, sketch })
-    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
-    expect(await first).toEqual({ d: 'M0 0Z' })
-    expect(await draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })).toEqual({ d: 'M0 0Z' })
+    worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z', sketch } })
+    expect(await first).toEqual({ d: 'M0 0Z', sketch })
+    expect(await draw('⿱木林', { onSketch: leaves => sketches.push(leaves) })).toEqual({ d: 'M0 0Z', sketch })
     expect(worker.posted).toHaveLength(1)
     expect(sketches).toEqual([sketch, sketch])
   })
@@ -41,6 +42,7 @@ describe('the composer preview', () => {
     const [worker] = FakeWorker.made
     expect(worker.posted[0]).toMatchObject({ warm: true, base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, warm: true })
+    // A drawing answers in the worker that warmed: nothing is asked of the export twice.
     const drawing = draw('⿱木口')
     expect(FakeWorker.made).toHaveLength(1)
     worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M2 2Z' } })
@@ -84,14 +86,16 @@ describe('the composer preview', () => {
 
 it('draws Tangut after an invalid Han warmup while still rejecting Han requests', async () => {
   FakeWorker.made = []
-  const draw = composerPreview({ base: 'http://[', worker: () => new FakeWorker() })
+  const draw = composerPreview({ base: 'https://example.org/composer/v1', worker: () => new FakeWorker() })
   draw.warm()
-  expect(FakeWorker.made).toHaveLength(0)
+  expect(FakeWorker.made).toHaveLength(1)
   const request = draw('⿰𘠀𘠁')
-  const worker = FakeWorker.made[0]
-  worker.answer({ id: worker.posted[0].id, drawn: { d: 'M0 0Z' } })
+  const worker = FakeWorker.made.at(-1)
+  worker.answer({ id: worker.posted.at(-1).id, drawn: { d: 'M0 0Z' } })
   expect(await request).toEqual({ d: 'M0 0Z' })
-  expect((await draw('⿰木口').catch(error => error)).name).toBe('UnavailableError')
+  const han = draw('⿰木口')
+  worker.answer({ id: worker.posted.at(-1).id, error: 'manifest.json: 404', unavailable: true })
+  expect((await han.catch(error => error)).name).toBe('UnavailableError')
 })
 
 describe('the rough layout', () => {
@@ -119,7 +123,7 @@ describe('an export that cannot be read', () => {
     const fails = reach('⿱木口')
     const next = FakeWorker.made.at(-1)
     next.answer({ id: next.posted.at(-1).id, error: 'No glyph or sequence draws 㐀.' })
-    expect((await fails.catch(e => e)).name).toBe('Error')
+    expect((await fails.catch(e => e)).name).toBe('LookupError')
   })
 })
 

@@ -6,24 +6,24 @@
 //   bun run build:example-drawings
 import { readFileSync, writeFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
-import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
-import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
-import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
-import { hasShuishu, shuishuSource } from '../../src/composer/shuishu.js'
-import { onlyBundled } from '../../src/composer/local.js'
-import { bundledSource } from '../../src/composer/bundled.js'
-import { compose, fromUrl } from '../../src/composer/loader.js'
+import { hasTangut, tangutSource } from '@han-compose/composer/tangut'
+import { hasBopomofo, bopomofoSource } from '@han-compose/composer'
+import { hasSmallSeal, smallSealSource } from '@han-compose/composer'
+import { hasShuishu, shuishuSource } from '@han-compose/composer'
+import { onlyBundled } from '@han-compose/composer'
+import { bundledSource } from '@han-compose/composer'
+import { compose, fromUrl } from '@han-compose/composer'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
 // Examples whose parts are all bundled draw from a local source, not the export.
 const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
-const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
+const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/tangut/outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
-const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))))
-const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
+const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/shuishu/outlines.json.gz', import.meta.url))))
+const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/bopomofo/outlines.json.gz', import.meta.url))))
 const bopomofoSources = new Map()
 await source.ready()
 const drawings = {}
@@ -36,7 +36,7 @@ for (const example of EXAMPLES) {
       if (!bopomofoSources.has(selected)) bopomofoSources.set(selected, bopomofoSource({ load: loadBopomofo, fallback: selected }))
       selected = bopomofoSources.get(selected)
     }
-    if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
+    if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/small-seal/outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
     const drawn = await compose(selected, example.char || example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }

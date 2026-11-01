@@ -10,7 +10,8 @@
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
   import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
-  import { documentView } from '../composer/index.js'
+  import { documentView } from '@han-compose/composer/document-view'
+  import { layerFrames, renderScopes } from '../document/index.js'
   import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
 
@@ -87,7 +88,7 @@
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
-    return documentView(localDoc, drawn, sketched.leaves)
+    return documentView(localDoc, drawn, sketched.leaves, { renderer: { layerFrames, renderScopes } })
   })
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {

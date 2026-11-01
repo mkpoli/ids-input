@@ -3,8 +3,8 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { cachedAuditSource } from '../scripts/lib/glyph-audit-source.mjs'
-import { files } from './fixtures/composer-export.js'
-import { compose } from '../src/composer/loader.js'
+import { files } from './fixtures/small-export.js'
+import { compose } from '@han-compose/composer'
 
 it('pins source hashes and reuses an on-disk export cache', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'glyph-audit-cache-'))
@@ -39,7 +39,7 @@ it('loads bundled Unicode shards without treating fallback fonts as native refer
     expect(source.hasExportGlyph('A')).toBe(false)
     await compose(source, '木')
     expect(source.hasExportGlyph('木')).toBe(true)
-    expect(manager.provenance().files['data/unicode-outlines/000.json.gz']).toMatch(/^[a-f0-9]{64}$/)
+    expect(manager.provenance().files['node_modules/@han-compose/composer/data/unicode/outlines/000.json.gz']).toMatch(/^[a-f0-9]{64}$/)
   } finally { await rm(directory, { recursive: true }) }
 })
 

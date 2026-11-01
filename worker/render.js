@@ -2,9 +2,9 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { compose } from '../src/composer/loader.js'
-import { unpack } from '../src/composer/loader.js'
-import { sourceFor } from '../src/composer/source.js'
+import { compose } from '@han-compose/composer'
+import { unpack } from '@han-compose/composer'
+import { sourceFor } from '@han-compose/composer/source'
 import { cardSvg, SIZE } from './card.js'
 import { OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
@@ -29,22 +29,16 @@ const read = async (env, path) => {
   return answer.arrayBuffer()
 }
 
-/** Outlines as `JSON.parse(await unpack(bytes))`, or an empty set where the file is missing. */
-const outlines = (env, path) => async () => {
-  const bytes = await read(env, path)
+/**
+ * How a source reads the outlines this deployment serves under `/og/data/`; a file that is not there
+ * reads as no outlines.
+ * @param {any} env
+ */
+const loadFor = env => async path => {
+  const name = path.replace(/^sources\/([a-z-]+)\/outlines\.json\.gz$/, '$1-outlines.json.gz').replace('unicode/outlines/', 'unicode-outlines/')
+  const bytes = await read(env, `data/${name}`)
   return bytes === null ? { records: {} } : JSON.parse(await unpack(bytes))
 }
-
-/** The overlay loaders, reading this deployment's own copies of the outline files. @param {any} env */
-const loadersFor = env => ({
-  tangut: { load: outlines(env, 'data/tangut-outlines.json.gz') },
-  bopomofo: { load: outlines(env, 'data/bopomofo-outlines.json.gz') },
-  seal: { load: outlines(env, 'data/small-seal-outlines.json.gz') },
-  newKorean: { load: outlines(env, 'data/new-korean-outlines.json.gz') },
-  shuishu: { load: outlines(env, 'data/shuishu-outlines.json.gz') },
-  palette: { load: outlines(env, 'data/palette-outlines.json.gz') },
-  unicode: { load: async name => { const bytes = await read(env, `data/${name.replace('unicode/', 'unicode-outlines/')}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
-})
 
 /** @type {Promise<Record<string, string>> | null} */
 let index = null
@@ -65,7 +59,7 @@ export async function characterOf(env, sequence) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, load: loadFor(env) })
   await source.ready()
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }

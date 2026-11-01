@@ -31,8 +31,9 @@ The package has four layers, and an optional preview:
   find a part by drawing it) and the preview, each placeable on its own
   or together as `IdsInput`, with message catalogues in English, Japanese, Simplified Chinese,
   Traditional Chinese, Korean and Vietnamese.
-- **composer** (optional): a preview that draws a sequence, empty slots included, with
-  [han-compose](https://github.com/mkpoli/han-compose) in a Web Worker.
+- **preview**: `IdsPreview` shows a description drawn by
+  [han-compose](https://github.com/mkpoli/han-compose)'s composing engine, used as the adapter's
+  `preview`. The engine is its own package, `@han-compose/composer`; this package holds the editor.
 
 The bundled data holds BabelStone's Han and Tangut decompositions and unannotated descriptions
 from Yi Bai's IDS dataset, and the palette has a Tangut
@@ -451,11 +452,12 @@ each layer's box, local-to-canvas frame and conversion frame for handles and fie
 keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
-`documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
+`documentSource(document, drawing, sketch)` turns a separated drawing into the geometry and
 placement source the document renderer takes. `composeDocumentSource(document, preview)` draws and
-builds it in one call; the preview must use `separate: true`. `documentView(document, drawing, sketch)`
-adds the scoped drawing, frames and combined issues in one pass, for a preview that needs both the
-picture and its handles. When the composer omits leaf ownership, the source infers it only from one
+builds it in one call; the preview must use `separate: true`. `documentView(document, drawing, sketch,
+{ renderer })` adds the scoped drawing, frames and combined issues in one pass, for a preview that
+needs both the picture and its handles; `renderer` is this package's `{ layerFrames, renderScopes }`.
+When the drawing omits leaf ownership, the source infers it only from one
 non-cut part per component in reading order; anything else leaves the source incomplete. Session
 records live in [`src/document/store.js`](src/document/store.js); file bindings live in
 [`demo/lib/documents.js`](demo/lib/documents.js).
@@ -520,7 +522,7 @@ back to the merged drawing, and editing is unavailable.
 
 A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
 each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
-source together. The composer's leaf ownership is used when present; without it, one non-cut part per
+source together. The engine's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
 `babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
@@ -759,39 +761,35 @@ recognition falls back to them.
 
 ## Preview
 
-`ids-input/composer` draws sequences with han-compose (<https://github.com/mkpoli/han-compose>,
-MIT), ported to the browser. Tangut, Bopomofo, Small Seal and Unicode fallback outlines are
-bundled and loaded on demand. Han and mixed descriptions also read the static files han-compose's `export-web` writes (format 5):
-a manifest, the learned layout, and the records of every character and the host lists of every
-(place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
-(`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. An export that
-carries no host list has no part to cut; its descriptions are laid out by the composer's plain shares
-instead of the learned boxes, which are where cut parts go. Drawing runs in a Web Worker,
+A description is drawn by [han-compose](https://github.com/mkpoli/han-compose)'s composing engine,
+published as `@han-compose/composer` (MIT): the same engine that draws it in the terminal and in the
+static files its `export-web` writes. Han descriptions read that export — a manifest, the learned
+layout, and the records of every character and the host lists of every (place, operand), packed into
+gzipped shards by the first three hex digits of their SHA-256 (`g/<hhh>.json`, `p/<hhh>.json`) — so a
+sequence loads only the shards its parts fall in. Tangut, Bopomofo, New Korean, Shuishu, Small Seal
+and Unicode fallback outlines ship with the engine and load on demand. Drawing runs in a Web Worker,
 one sequence at a time; a newer sequence ends the drawing before it.
 
 ```js
-import { composerPreview } from 'ids-input/composer'
+import { composerPreview, dataUrls } from '@han-compose/composer'
+
+// The outlines the engine draws without the export, as URLs your bundler emits.
+import tangut from '@han-compose/composer/data/sources/tangut/outlines.json.gz?url'
+const loaders = { ...dataUrls, 'sources/tangut/outlines.json.gz': tangut }
 
 const adapter = { ...babelStoneAdapter({ ids, parts }),
-  preview: composerPreview({ base: 'https://example.org/composer/<version>/' }) }
+  preview: composerPreview({ base: 'https://example.org/composer/<version>/', loaders }) }
 ```
 
-`base` is the folder holding the export's `manifest.json`. The host serving it must allow the page's
-origin by CORS. If the export is unavailable, descriptions whose parts all have bundled outlines
-can still render. Other previews keep their placeholders. When the export loads but a part has
-no outline in either source, its badge reads
-"Could not compose". Sequences over 24 operators or 8 levels are not drawn, except pyramids of up
-to 64 rows, which are laid out as equal cells. Under
-Vite, keep the package out of dependency pre-bundling (`optimizeDeps: { exclude: ['ids-input'] }`)
-so the worker's URL resolves; `composerPreview({ base, worker })` takes a function making the Worker
-for other bundlers.
-
-`fromUrl(base)` uses a selected export's own glyphs first, then loads bundled fallback glyphs for
-missing components. `unicodeSource()` supplies only bundled Unicode glyphs with geometric layout.
-For Node, pass `unicodeSource({ load })`, where `load('unicode/030')` returns the parsed records
-from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file URLs.
-`hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
-with the source font's design; they do not imitate a selected serif or handwritten face.
+`base` is the folder holding the export's `manifest.json`; the host serving it must allow the page's
+origin by CORS. `dataUrls` names the bundled files by their path under the package's `data/`, and
+`loaders` says where your build serves each of them; a page that serves the package's `data/` as it
+is needs neither. Without an export, descriptions whose parts all have bundled outlines still draw.
+When the export loads but a part has no outline in either source, its badge reads "Could not
+compose". Sequences over 24 operators or 8 levels are not drawn, except pyramids of up to 64 rows,
+which are laid out as equal cells. Under Vite, keep both packages out of dependency pre-bundling
+(`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
+`composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
 Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
@@ -875,12 +873,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (458 KB together), Noto Serif Tangut (1 MB),
   Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
-- `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
-  (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
-- `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
-  outlines of Noto Sans CJK JP and Plangothic (SIL OFL 1.1, texts in
-  `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`); a drawing with a part cut along
-  KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike under CC BY-SA 3.0.
+- `@han-compose/composer`: han-compose's composing engine, MIT, with its own outlines of Noto Serif
+  Tangut, Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and its Unicode fallback. A drawing with a
+  part cut along KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike
+  under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
 `scripts/build_ids_data.py`, `scripts/build_ids_parts.py`, `scripts/build_component_names.py` and
@@ -924,7 +920,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   spellings of component names and their folds.
 - Rime five-stroke dictionary, LGPL-3.0, <https://github.com/rime/rime-stroke>: first-stroke classes.
 - KanjiVG r20260714, Ulrich Apel, CC BY-SA 3.0, <https://kanjivg.tagaini.net/>: component cuts
-  used by the composer.
+  used by the engine's drawings.
 - Noto Sans CJK JP 2.004, Adobe, and Plangothic V2.9.5795, Fitzgerald P. Köeingsegg, both SIL OFL
   1.1.
 - Noto Serif Tangut 2.168, Google LLC, SIL OFL 1.1,
@@ -932,10 +928,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - Kureedo v0.4.3, Copyright The Klee Project Authors, SIL OFL 1.1,
   <https://github.com/mkpoli/kureedo>: the Kaisho glyph face.
 - GenZui Sans 0.105, SIL OFL 1.1, <https://github.com/mkpoli/GenZui>: the Kaisho fallback.
-- han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>, composer at commit bd0829b,
-  export format 5 (`export-web`): the composer `src/composer/` ports. Its export draws on Noto Sans
-  CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and KanjiVG (CC BY-SA 3.0),
-  as its `docs/licensing.md` states.
+- han-compose, mkpoli, MIT, <https://github.com/mkpoli/han-compose>: the composing engine
+  `@han-compose/composer`, which draws the preview, and the `export-web` files it reads. Its export
+  draws on Noto Sans CJK JP and Plangothic (SIL OFL 1.1), BabelStone IDS, hfhchan/ids (MIT) and
+  KanjiVG (CC BY-SA 3.0), as its `docs/licensing.md` states.
 - Unicode EquivalentUnifiedIdeograph.txt 18.0.0, Unicode, Inc., Unicode License v3, and
   cjkvi-variants `radical-variants.txt` (at e4f1da2), Kawabata Taichi (川幡太一), public domain,
   <https://github.com/cjkvi/cjkvi-variants>: the radical and positional forms the search folds, by
@@ -1341,8 +1337,7 @@ on their use.
 
 ```sh
 bun install
-bun test tests          # core, adapter, composer and catalogue tests
-COMPOSER_EXPORT=DIR bun test tests/composer-parity.test.js   # the port against han-compose's own drawings
+bun test tests          # core, adapter, components and catalogue tests
 bun run check           # tsrs and svelte-check
 bun run verify          # tests, tsrs and svelte-check, and the i18n check; run before pushing
 bun run dev             # the demo on a dev server

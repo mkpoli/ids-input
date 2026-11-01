@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
-import { fromUrl } from '../src/composer/loader.js'
+import { fromUrl } from '@han-compose/composer'
 
 // A format-5 export over HTTP as a static host serves it: record and host-list shards are gzip bytes
 // under a .json name, sent as application/octet-stream, each an object from the full SHA-256 to the

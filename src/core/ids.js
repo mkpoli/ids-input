@@ -65,8 +65,8 @@ export const EMPTY_MARKS = [EMPTY, '＋']
 /**
  * The four letters the New Korean Orthography added to Hangul, in the initial, final and medial
  * positions proposed in OBAYASHI Muneaki, L2/19-230R (2019-06-24). Unicode 18.0.0 leaves them
- * unassigned; the editor accepts them with the bundled outlines in `data/new-korean-outlines.json.gz`
- * and the `IDS New Korean` font, as it does for the Small Seal allocation.
+ * unassigned; the editor accepts them, the drawing engine draws them from outlines that ship with it,
+ * and the `IDS New Korean` font covers them in text, as it does for the Small Seal allocation.
  */
 export const NEW_KOREAN = /[\u{A97D}-\u{A97F}\u{D7C7}\u{D7FC}-\u{D7FE}]/u
 /** Whether `text` contains a New Korean Orthography letter. @param {string | null | undefined} text */
@@ -75,8 +75,8 @@ export const isNewKorean = text => NEW_KOREAN.test(text ?? '')
 /**
  * The Shuishu characters, at the tentative allocations of the proposed block: logograms
  * U+1B300..U+1B4E5 and its 47 radicals U+1B500..U+1B52E. Unicode 18.0.0 leaves them unassigned; the
- * editor accepts them with the bundled outlines in `data/shuishu-outlines.json.gz` and the
- * `IDS Shuishu` font, as it does for the Small Seal and New Korean allocations.
+ * editor accepts them, the drawing engine draws them from outlines that ship with it, and the
+ * `IDS Shuishu` font covers them in text, as it does for the Small Seal and New Korean allocations.
  */
 export const SHUISHU = /[\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}]/u
 /** Whether `text` contains a Shuishu character. @param {string | null | undefined} text */

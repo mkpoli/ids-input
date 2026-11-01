@@ -8,9 +8,9 @@
   import { tick, untrack } from 'svelte'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
-  import { APPROXIMATE } from '../src/composer/compose.js'
-  import { hasTangut } from '../src/composer/tangut.js'
-  import { composerPreview } from '../src/composer/index.js'
+  import { APPROXIMATE } from '@han-compose/composer/compose'
+  import { hasTangut } from '@han-compose/composer/tangut'
+  import { composerPreview, dataUrls } from '@han-compose/composer'
   import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -118,9 +118,12 @@
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
+  // The outlines the engine draws without the export are served beside the workshop (`bun run
+  // build:demo` copies them); the package says which path each is imported at.
+  const bundles = Object.fromEntries(Object.entries(dataUrls).map(([path, url]) => [path, url]))
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, load: bundles }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */

@@ -4,15 +4,17 @@ import { gunzipSync } from 'node:zlib'
 import { GONGCHE_PARTS } from '../src/core/gongche.js'
 import { paletteRows } from '../src/adapter/babelstone.js'
 import { isNode, parse, write } from '../src/core/ids.js'
-import { isComponentForm } from '../src/composer/component-forms.js'
-import { fromUrl } from '../src/composer/loader.js'
-import { hasUnicodeGlyph } from '../src/composer/unicode.js'
-import { hasPaletteGlyph } from '../src/composer/palette.js'
+import { isComponentForm } from '@han-compose/composer/component-forms'
+import { fromUrl } from '@han-compose/composer/loader'
+import { hasUnicodeGlyph } from '@han-compose/composer/unicode'
+import { hasPaletteGlyph } from '@han-compose/composer/palette'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
 const gz = name => JSON.parse(gunzipSync(readFileSync(new URL(`../data/${name}`, import.meta.url))))
+const fromEngine = name => JSON.parse(gunzipSync(readFileSync(new URL(`../${name}`, import.meta.url))))
 const rows = [...GONGCHE_PARTS, ...paletteRows(read('ids-parts.json')), ...gz('small-seal.json.gz').parts]
-const local = ['tangut-outlines.json.gz', 'small-seal-outlines.json.gz', 'bopomofo-outlines.json.gz'].map(name => gz(name).records)
+const ENGINE = 'node_modules/@han-compose/composer/data/sources/'
+const local = ['tangut', 'small-seal', 'bopomofo'].map(name => fromEngine(`${ENGINE}${name}/outlines.json.gz`).records)
 const needed = new Set()
 const visit = node => {
   if (node === null || isComponentForm(write(node))) return

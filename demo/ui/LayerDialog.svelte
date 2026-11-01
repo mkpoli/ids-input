@@ -1,7 +1,7 @@
 <script>
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
-  import { documentSource } from '../../src/composer/index.js'
+  import { documentSource } from '@han-compose/composer/document-source'
   import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 

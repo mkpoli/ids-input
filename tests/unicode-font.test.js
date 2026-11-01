@@ -7,7 +7,7 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url))
 const record = JSON.parse(read('fonts/unicode.json'))
 const css = read('fonts/unicode.css').toString()
 
-const shard = name => JSON.parse(gunzipSync(read(`data/unicode-outlines/${name}.json.gz`)).toString())
+const shard = name => JSON.parse(gunzipSync(read(`node_modules/@han-compose/composer/data/unicode/outlines/${name}.json.gz`)).toString())
 const expand = ranges => ranges.split(',').flatMap(part => {
   const [, from, to] = part.trim().match(/^U\+([0-9A-F]+)(?:-([0-9A-F]+))?$/)
   return Array.from({ length: parseInt(to ?? from, 16) - parseInt(from, 16) + 1 }, (_, k) => parseInt(from, 16) + k)

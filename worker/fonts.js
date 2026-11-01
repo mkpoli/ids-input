@@ -3,7 +3,7 @@
 // two subsets for strokes and supplementary parts, the characters' own script faces, and the shard
 // face that draws a component no general face has. Which face a character takes is decided here, so
 // `card.js` only asks.
-import { hasUnicodeGlyph } from '../src/composer/unicode.js'
+import { hasUnicodeGlyph } from '@han-compose/composer/unicode'
 
 const GENERAL = 'general'
 const SHARDS = 'unicode'

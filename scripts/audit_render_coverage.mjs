@@ -65,7 +65,7 @@ await Promise.all(Array.from({ length: 4 }, async () => {
 }))
 let messages = []
 globalThis.self = { postMessage: message => messages.push(message) }
-await import('../src/composer/worker.js')
+await import('@han-compose/composer/worker')
 const ranges = points => {
   const rows = []
   for (const cp of points) {
@@ -108,9 +108,11 @@ const blocks = blocksText.split('\n').map(line => line.split('#')[0].trim()).fil
 const root = new URL('../', import.meta.url)
 const inputFiles = [
   'src/core/ids.js', 'src/core/unicode.js', 'demo/lib/composer.js',
-  'data/unicode-properties.json', 'data/unicode-coverage.json', 'data/bundled-coverage.json',
-  'data/palette-fallback-characters.json', 'scripts/audit_render_coverage.mjs',
-  ...(await readdir(new URL('src/composer/', root))).filter(name => /\.(js|json)$/.test(name)).map(name => `src/composer/${name}`),
+  'data/unicode-properties.json',
+  'node_modules/@han-compose/composer/data/unicode/coverage.json',
+  'node_modules/@han-compose/composer/data/palette/bundled-coverage.json',
+  'node_modules/@han-compose/composer/data/palette/fallback-characters.json', 'scripts/audit_render_coverage.mjs',
+  ...(await readdir(new URL('node_modules/@han-compose/composer/src/', root))).map(name => `node_modules/@han-compose/composer/src/${name}`),
 ]
 const implementationHashes = Object.fromEntries(await Promise.all(inputFiles.sort().map(async name => [name, digest(await readFile(new URL(name, root)))])))
 const report = {

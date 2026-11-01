@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { auditGlyphMetrics, auditGlyphMetricCoverage, GLYPH_AUDIT_THRESHOLDS as T } from '../scripts/lib/glyph-audit-metrics.mjs'
-import { compose, createSource } from '../src/composer/loader.js'
-import { files } from './fixtures/composer-export.js'
+import { compose, createSource } from '@han-compose/composer'
+import { files } from './fixtures/small-export.js'
 
 const overlay = ['⿻', '木', '口']
 const part = (leaf, box = [100, 100, 300, 300], extra = {}) => ({ leaf, box, d: 'M100 100L400 400Z', ...extra })

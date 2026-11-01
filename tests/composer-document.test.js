@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { fromSequence, renderLayers } from '../src/document/index.js'
-import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '../src/composer/index.js'
-import { files } from './fixtures/composer-export.js'
+import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '@han-compose/composer'
+import { files } from './fixtures/small-export.js'
 
 const square = (x, width) => `M${x} 0L${x + width} 0L${x + width} 1000L${x} 1000Z`
 const sketch = (boxes) => boxes.map((box, index) => ({ index, box, empty: false }))
@@ -102,7 +102,7 @@ describe('a composer-backed document source', () => {
   it('rejects path data the transform engine cannot read', () => {
     const made = sourceOf('木', [[0, 0, 1000, 1000]], [{ leaf: 0, d: 'M0 0H100' }])
     expect(made.complete).toBe(false)
-    expect(made.issues).toContain('part leaf 0 has path data the transform engine cannot read')
+    expect(made.issues).toContain('part leaf 0 has path data that is not a path')
   })
   it('draws a document through a preview and forwards its sketch', async () => {
     const document = fromSequence('⿰木口')

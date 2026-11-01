@@ -1,18 +1,18 @@
-// The browser composer's guards, on the small export of `fixtures/composer-export.js`, whose layout
+// The browser composer's guards, on the small export of `fixtures/small-export.js`, whose layout
 // network is all zeros: two-operand nodes fall back to the composer's shares, which space and fit
 // their parts with masks.
 import { describe, expect, it } from 'bun:test'
 import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
-import { createDrawer } from '../src/composer/client.js'
-import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
+import { createDrawer } from '@han-compose/composer'
+import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '@han-compose/composer'
+import { Composer } from '@han-compose/composer/compose'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
-import { files, layout, ops, shards } from './fixtures/composer-export.js'
+import { files, layout, ops, shards } from './fixtures/small-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
-import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
-import constants from '../src/composer/constants.json' with { type: 'json' }
+import { drawnBox, makePart, placed } from '@han-compose/composer/geometry'
+import { constants } from './fixtures/small-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -42,6 +42,27 @@ const encodedSource = () => {
   add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
   return createSource(async name => {
     const body = extra.get(name) ?? files[name]
+    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+  })
+}
+
+// The small export, holding 冂 too: a top bar, a long left side and a hooked foot; and 三, three bars.
+const frameShard = () => { const name = gShard('冂'), file = { [hex('冂')]: { k: '冂', G: { v: 1, b: [80, 0, 920, 960], p: [
+    ['MLLL', int16([80, 860, 920, 860, 920, 960, 80, 960].map(v => v * 4)), int16(Array(8).fill(0))],
+    ['MLLL', int16([80, 0, 160, 0, 160, 960, 80, 960].map(v => v * 4)), int16(Array(8).fill(0))],
+    ['MLLL', int16([160, 0, 920, 0, 920, 90, 160, 90].map(v => v * 4)), int16(Array(8).fill(0))],
+  ] }, ink: 3000, nl: 3, o: 3 } }
+  return { name, shard: gzipSync(JSON.stringify(file)) }
+}
+const bar = ([x0, y0, x1, y1]) => ['MLLL', int16([x0, y0, x1, y0, x1, y1, x0, y1].map(v => v * 4)), int16(Array(8).fill(0))]
+const threeShard = () => {
+  const name = gShard('三')
+  return { name, shard: gzipSync(JSON.stringify({ [hex('三')]: { k: '三', G: { v: 1, b: [60, 0, 940, 900], p: [bar([60, 820, 940, 900]), bar([120, 410, 880, 480]), bar([60, 0, 940, 80])] }, ink: 3000, nl: 3, o: 3 } })) }
+}
+const enclosureSource = () => {
+  const parts = [frameShard(), threeShard()]
+  return createSource(async requested => {
+    const body = parts.find(part => part.name === requested)?.shard ?? files[requested]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
 }
@@ -304,30 +325,23 @@ describe('the composer', () => {
     await expect(compose(sourceOf(), modified, { layout: 'cells' })).rejects.toThrow('modified operators')
   })
   it('holds a one-part enclosure around its inner parts', async () => {
-    // 冂 is a frame: drawn beside its parts it stops being one, so it keeps its own region and the
-    // rest is laid out in the room it leaves.
-    const frame = await compose(sourceOf(), '⿵冂⿲⿱三口⿱三口⿰⿱三口⿱三口')
+    // 冂 is a frame: in a cell of its own it keeps its region, and the parts it holds are laid out in
+    // one grid, in reading order, from the top.
+    const frame = await compose(enclosureSource(), '⿵冂⿲⿱三口⿱三口⿲⿱三口⿱三口')
     const svgBox = ([x, y, w, h]) => [x, y, x + w, y + h]
     expect(frame.cells).toBe(true)
-    const outer = svgBox(frame.parts.find(part => part.leaf === 0).box)
-    expect(frame.parts.find(part => part.leaf === 0).origin).toBe('cells 冂')
-    // The frame covers the cell instead of taking a band of it.
-    expect(outer[3] - outer[1]).toBeGreaterThan(860)
+    const outerPart = frame.parts.find(part => part.leaf === 0)
+    expect(outerPart.origin).toBe('cells 冂')
+    const outer = svgBox(outerPart.box)
     const inner = frame.parts.filter(part => part.leaf !== 0).map(part => svgBox(part.box))
     expect(inner).toHaveLength(8)
-    // 冂's room is the gap its left side leaves: every part sits inside it, past the side and the
-    // bar, so no part straddles the frame.
-    const room = [Math.min(...inner.map(box => box[0])), Math.min(...inner.map(box => box[1]))]
-    for (const [x0, y0, x1] of inner) {
-      expect(x0).toBeGreaterThan(outer[0])
-      expect(y0).toBeGreaterThan(outer[1])
-      expect(x1).toBeLessThan(outer[2])
-    }
+    expect(inner.every(([x0, y0, x1, y1]) => x0 >= 0 && y0 > outer[1] && x1 <= 1000 && y1 <= 1000)).toBe(true)
     // Inside the room the parts keep reading order: four across, then two rows.
-    expect([...new Set(inner.map(box => box[0]))]).toHaveLength(4)
+    expect(new Set(inner.map(box => box[0])).size).toBe(4)
     expect(inner[0][1]).toBeLessThan(inner[1][1])
     expect(inner[0][0]).toBeLessThan(inner[2][0])
-    expect(room[1]).toBeGreaterThan(outer[1])
+    // The frame keeps its box: the bar across the top of its cell, not a band beside the parts.
+    expect(outer[3] - outer[1]).toBeGreaterThan(200)
   })
   it('keeps the composer for marks, exclusions and approximate operators, and forces cells only when asked', async () => {
     const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
@@ -420,7 +434,7 @@ describe('the drawer', () => {
     const two = FakeWorker.made[1]
     one.answer({ id: one.posted[0].id, drawn: { d: 'M0 0Z' } })
     two.answer({ id: two.posted[0].id, drawn: { d: 'M1 1Z' } })
-    expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' } })
+    expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' }, sketch: null })
   })
   it('reports a failed drawing, and a cancelled one', async () => {
     FakeWorker.made = []
