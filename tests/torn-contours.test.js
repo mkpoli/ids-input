@@ -22,10 +22,10 @@ describe('a contour the light master closes', () => {
     expect(y0).toBeCloseTo(y1, 6)
   })
 
-  it('is left as stored away from the first point', () => {
+  it('is left as stored away from the repeated points', () => {
     const [contour] = partOf(record(closed(156))).contours
     const light = contour.light, heavy = contour.heavy
-    for (let i = 2; i < light.length; i++) expect(heavy[i]).toBeCloseTo(light[i], 6)
+    for (let i = 2; i < light.length - 2; i++) expect(heavy[i]).toBeCloseTo(light[i], 6)
   })
 
   it('leaves a contour that closes on an implied point alone', () => {
