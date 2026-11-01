@@ -1533,10 +1533,10 @@
     .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
-    .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
-    .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color .12s,width .12s}
+    .split{display:grid;place-items:center;min-height:var(--ui-space-lg);cursor:row-resize;touch-action:none}
+    .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color var(--ui-duration-fast),width var(--ui-duration-fast)}
     .split:hover .grip,.split:focus-visible .grip{background:var(--ui-color-accent);width:72px}
-    .split:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
+    .split:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width));border-radius:var(--ui-radius-md)}
     .tree{flex:none;justify-content:flex-start;container-type:size}
     .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
