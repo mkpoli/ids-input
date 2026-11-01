@@ -139,7 +139,7 @@
   .none{margin:0;color:var(--muted);font-size:12px}
   h3{margin:4px 0 0;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
   .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
-  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .fault{margin:0;color:var(--fault);font-size:12.5px}
   .send{align-self:flex-start;height:36px;padding:0 16px;border:1px solid transparent;border-radius:9px;background:var(--accent);color:var(--on-accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
   .send:hover:not(:disabled){filter:brightness(1.05)}
