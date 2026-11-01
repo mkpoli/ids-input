@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'bun:test'
 import { composerPreview } from '@han-compose/composer'
 import { roughLayout, runPreview } from '../src/core/preview.js'
+import { files as smallExport } from './fixtures/small-export.js'
+import { drawingWorker } from './fixtures/drawing-worker.js'
 
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {
@@ -231,4 +233,30 @@ it('rejects an overlay with emoji it cannot order, subtraction or not', async ()
   worker.answer({ id, sketch: [{ index: 0, box: [0, 0, 1000, 1000], empty: false }, { index: 1, box: [0, 0, 1000, 1000], empty: false }] })
   worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 1000, 1000] }], parts: [{ box: [0, 0, 1000, 1000], d: 'M0 0Z', leaf: 0 }, { box: [0, 0, 1000, 1000], d: 'M1 1Z', leaf: 1 }] } })
   await expect(result).rejects.toThrow('Cannot determine emoji stacking order')
+})
+
+describe('the composer preview against a real drawing', () => {
+  /** A preview whose worker draws in this process from `files`, answering as a browser's worker does. */
+  const drawing = (files = smallExport) => composerPreview({ base: 'https://example.org/composer/v/', worker: () => drawingWorker(files) })
+
+  it('draws a description the export holds', async () => {
+    const drawn = await drawing()('⿰木口')
+    expect(drawn.d.length).toBeGreaterThan(10)
+    expect(drawn.slots).toEqual([])
+  })
+  it('draws a draft with its slot in the box the layout gives it', async () => {
+    const drawn = await drawing()('⿰木⬚')
+    expect(drawn.slots).toHaveLength(1)
+    expect(drawn.slots[0].box.every(Number.isFinite)).toBe(true)
+  })
+  it('fails a description the export cannot draw, with the reason', async () => {
+    const error = await drawing()('⿰木龘').catch(caught => caught)
+    expect(error.name).toBe('LookupError')
+    expect(error.message).toContain('龘')
+  })
+  it('rejects as unavailable when the export has no manifest', async () => {
+    const missing = { ...smallExport }
+    delete missing['manifest.json']
+    expect((await drawing(missing)('⿰木口').catch(caught => caught)).name).toBe('UnavailableError')
+  })
 })
