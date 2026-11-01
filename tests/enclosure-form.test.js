@@ -61,6 +61,22 @@ describe('a glyph drawn as one outline with its counters', () => {
     expect(Math.max(...boxes.slice(1).map(b => b[2]))).toBeCloseTo(100 + 500 * 0.485 * 700 / 900, 1)
     expect(Math.max(...boxes.slice(1).map(b => b[2]))).toBeLessThan(100 + 500 * 0.485)
   })
+  it("runs the foot through the Möbius map, not the box's linear slope", () => {
+    // The outline carries a vertex at 0.95 of the width: halfway along the foot (the box ends at 0.9).
+    const glyph = stood(makePart([
+      contour('MLLLL', [0, 0, 0, 800, 1000, 800, 1000, 0, 950, 0], [50, 40]),
+      counter(200, 200, 400, 380),
+      counter(500, 200, 700, 380),
+      counter(200, 420, 400, 600),
+      counter(500, 420, 700, 600),
+    ]))
+    const light = press(glyph, 0).part.contours[0].light
+    // footMap(0.5) = 0.6, so the foot's midpoint sits at 0.485 + 0.515 · 0.6 = 0.794 of the width;
+    // the linear foot map would leave it at 0.7425.
+    expect(light[8]).toBeCloseTo(794, 6)
+    expect(light[8]).toBeGreaterThan(742.5)
+    expect(light[6]).toBeCloseTo(1000, 6)
+  })
   it('is left alone when it has no separate counters to press', () => {
     const glyph = stood(makePart([clockwise(0, 0, 1000, 800, [50, 40])]))
     expect(press(glyph, 0)).toBeNull()
