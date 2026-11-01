@@ -21,7 +21,7 @@
   ],
   "type": "module",
   "sideEffects": [
-    "*.css"
+    "**/*.css"
   ],
   "exports": {
     ".": {
@@ -46,6 +46,8 @@
     },
     "./messages/*": "./messages/*",
     "./fonts.css": "./fonts/fonts.css",
+    "./design.css": "./design/index.css",
+    "./design/*": "./design/*",
     "./fonts/*": "./fonts/*",
     "./data/*": "./data/*",
     "./package.json": "./package.json"
@@ -57,6 +59,7 @@
     "fonts",
     "messages",
     "scripts",
+    "design",
     "LICENSE",
     "README.md",
     "docs/document-format.md",

@@ -166,9 +166,31 @@ component of one stroke count, including compound IDS, grouped by first stroke. 
 compound cells show their sequence and expose the stroke count on hover. `adapter.icon` supplies their outlines;
 without it, the cells use a font-based layout. Icon rendering must accept concurrent
 requests independently of the main preview. The components take colours from CSS custom properties with light and dark defaults
-(`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
+(`--ids-ink`, `--ids-muted`, `--ids-line`, `--ids-control-border`, `--ids-surface`, `--ids-accent`, `--ids-fault`,
 `--ids-font`, `--ids-glyph-fallback` and others; see the top of each component's style). The defaults
-use `light-dark()`, so the page needs `color-scheme: light dark` for its dark scheme.
+use `light-dark()`, so the page needs `color-scheme: light dark` for its dark scheme. The workshop
+maps these tokens onto the `--ui-*` tokens of its design system, below.
+
+### Design system
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/images/design-dark.png">
+  <img src="docs/images/design-light.png" alt="The design system page: the palette with measured contrast ratios in the light scheme">
+</picture>
+
+The workshop's colours, states and form controls live in `design/` and are published with the
+package as `ids-input/design.css`:
+
+- **Tokens** — semantic colours as `light-dark()` pairs, the type scale, spacing, radii, control
+  heights, focus ring, motion and layers.
+- **Controls** — native checkbox, radio, switch, text field, select, textarea, range and colour
+  input, with buttons, a segmented control, a swatch group and cards. The browser keeps the
+  semantics and keyboard behaviour; one stylesheet draws every state.
+- **Checks** — `demo/check-design.js` verifies accessible names, keyboard operation, focus rings,
+  contrast, 24 px targets, reduced motion and forced colours in Chromium.
+
+The reference page is built to `design.html` (on the workshop site, <https://ids.mkpo.li/design.html>), and the rules for choosing and applying a
+control are in [design/README.md](design/README.md).
 
 ### Core
 
