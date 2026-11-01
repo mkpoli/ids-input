@@ -106,9 +106,13 @@ than charged to the reporter.
 
 ## Filing the report
 
-`repository_dispatch` with `event_type: report` carries the report and the headers it was posted
-with; the Worker waits on the queue `ids-reports-answers` for the `report_answer` dispatch the run
-sends back.
+`repository_dispatch` with `event_type: report` carries the report's text fields and the origin the
+dialog was served from; the image does not travel, because the action photographs the drawing from
+the site itself. The Worker waits on the queue `ids-reports-answers` for the `report_answer` dispatch
+the run sends back.
+
+GitHub takes a payload under 64 KB, so a report whose fields come to more than 30 KB is answered
+`413` and never dispatched.
 
 | What | Where |
 | --- | --- |
@@ -174,7 +178,7 @@ is enough. Two repository secrets have to exist first:
 | Secret | What it is |
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A token with **Workers Scripts: Edit**, **Workers KV Storage: Edit** and, for the custom domain, **Workers Routes: Edit** on the zone |
-| `REPORTS_GITHUB_TOKEN` | The Worker's own token: it labels the issue, dispatches the report and counts repeats. Needs **Actions: Write** (the dispatch) and **Issues: Write** (the labels), re-applied on every deploy |
+| `REPORTS_GITHUB_TOKEN` | The Worker's own token: it labels the issue, dispatches the report and counts repeats. Needs **Contents: Write** (a repository dispatch asks for it) and **Issues: Write** (the labels), re-applied on every deploy |
 
 The action files with the `GITHUB_TOKEN` GitHub gives it, which on a dispatch is the workshop's own
 bot; no secret of the repository's stands behind the issue's author.

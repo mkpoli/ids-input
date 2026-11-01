@@ -2,7 +2,6 @@
 // opened by this action: the workshop's own bot is its author, and the report names the reporter.
 
 import { readFile } from 'node:fs/promises'
-import { join } from 'node:path'
 
 import { getOctokit } from '@actions/github'
 import { fileReport } from './file.js'

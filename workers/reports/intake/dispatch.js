@@ -1,24 +1,16 @@
-// The opening of a report as the intake reads it: the request headers the cross-origin post had,
-// and the body as the base64 a `repository_dispatch` may carry. Node-only, so it loads no browser.
-
-/** The header a dispatch carries the request headers under. */
-export const HEADERS = 'x-report-headers'
+// The report as the dispatch carries it: the fields the dialog sent, as strings, and the origin it
+// was served from. The uploaded image stays behind, since the action takes the drawing from the site
+// itself, and nothing else of the request travels.
 
 /**
- * The request headers a dispatched report was posted with, as JSON.
- * @param {Record<string, unknown>} headers
- */
-export const encodeHeaders = headers => Buffer.from(JSON.stringify(headers), 'utf8').toString('base64')
-
-/**
- * The request a `repository_dispatch` payload stands for: the cross-origin post as the dialog made
- * it. `x-report-headers` holds the encoded headers, every other header is the dispatch's own.
+ * The report a `repository_dispatch` carries, in the shape the action reads it.
  * @param {Record<string, unknown>} payload the `client_payload`
- * @returns {Request}
+ * @returns {{ origin: string, form: FormData }}
  */
-export function requestOf(payload) {
-  const form = typeof payload?.report === 'string' ? Buffer.from(payload.report, 'base64') : null
-  if (!form) throw new Error('The dispatch carried no report.')
-  const headers = typeof payload?.[HEADERS] === 'string' ? JSON.parse(Buffer.from(payload[HEADERS], 'base64').toString('utf8')) : {}
-  return new Request('https://report.invalid/', { method: 'POST', headers: /** @type {Record<string, string>} */ (headers), body: form })
+export function formOf(payload) {
+  const fields = payload?.report
+  if (!fields || typeof fields !== 'object' || Array.isArray(fields)) throw new Error('The dispatch carried no report.')
+  const form = new FormData()
+  for (const [name, value] of Object.entries(fields)) if (typeof value === 'string') form.set(name, value)
+  return { origin: typeof payload.origin === 'string' ? payload.origin : '', form }
 }

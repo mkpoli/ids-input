@@ -8,8 +8,9 @@ import { join } from 'node:path'
 
 import { ensureLabels, createIssue } from '../src/github.js'
 import { issueBody, issueTitle, labelsFor } from '../src/issue.js'
+import { GitHubError } from '../src/github.js'
 import { intake } from './pipeline.js'
-import { requestOf } from './dispatch.js'
+import { formOf } from './dispatch.js'
 
 /** The site the dialog is served from, and the previews of it. */
 const SITE = 'https://ids.mkpo.li'
@@ -37,7 +38,7 @@ export async function fileReport({ github, context, cwd = process.cwd() }) {
   /** @type {WebhookResponse} */
   let answer
   try {
-    const read = await intake(requestOf(payload), { allow })
+    const read = await intake(formOf(payload), { allow })
     if (!read.ok) throw Object.assign(new Error('refused'), read)
     const { report, drawing } = read
     const repo = { owner: context.repo.owner, repo: context.repo.repo }
@@ -60,8 +61,13 @@ export async function fileReport({ github, context, cwd = process.cwd() }) {
     answer = { status: 201, body: `${JSON.stringify({ number: issue.number, url: issue.url, duplicate: false })}\n` }
   } catch (error) {
     const refused = /** @type {any} */ (error)
-    answer = refused.status ? { status: refused.status, body: refused.body } : fail({}, 502, 'upstream_error', 'The report could not be filed. Try again later.')
-    console.error(error)
+    // Only the pipeline's own refusal has a body to hand the dialog; GitHub's error is ours to log.
+    if (typeof refused.body === 'string') {
+      answer = { status: refused.status, body: refused.body }
+    } else {
+      answer = fail({}, 502, 'upstream_error', 'The report could not be filed. Try again later.')
+      if (!(error instanceof GitHubError)) console.error(error)
+    }
   }
   // The dialog has been waiting on this run since it posted; the endpoint holds the connection.
   await github.rest.repos.createDispatchEvent({

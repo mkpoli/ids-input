@@ -7,7 +7,7 @@
 // The issue is filed by the workshop's own GitHub Action rather than by a personal token, so it is
 // the action that opens it and the report names the reporter; the Worker dispatches the report to
 // that Action and waits on the answer it dispatches back.
-import { duplicateComment, issueTitle, labelsFor } from './issue.js'
+import { duplicateComment, labelsFor } from './issue.js'
 import { GitHubError, commentOnIssue, dispatch, ensureLabels } from './github.js'
 import { MAX_BODY, checkBodySize, checkMediaType, meterBody, parseReport } from './validate.js'
 import { checkRate, dedupeKey, findDuplicate, rememberIssue } from './limit.js'
@@ -26,6 +26,12 @@ const TURNSTILE_VERIFY = 'https://challenges.cloudflare.com/turnstile/v0/sitever
 
 /** How long a dialog waits on the Action filing its report before it is told to try again. */
 const ANSWER_WAIT = Number(/** @type {any} */ (globalThis).ANSWER_WAIT ?? 200_000)
+/** GitHub takes a dispatch payload under 64 KB; a report that carries more than half of that is
+ *  turned away with a `413` rather than sent to fail at GitHub. */
+const MAX_DISPATCH = 30_000
+
+/** A report too large for the dispatch, which is a `413` for the reporter rather than a `502`. */
+class DispatchTooLarge extends Error {}
 
 /** A preview version of the workshop, on the alias its pull request deploys to. */
 const PREVIEW = /^https:\/\/(?:[a-z0-9-]+-)?ids-input-workshop\.mkpoli\.workers\.dev$/
@@ -83,25 +89,21 @@ const answerKey = id => `answer:${id}`
  * Ask the workshop's Action to file the report, and hand back the issue it answered with. The
  * dialog waits on this call, so the wait is bounded: past `ANSWER_WAIT` the reporter is told to
  * try again, and the answer is left where a retry of the same report can find it.
- * @param {Env} env @param {{ headers: Headers, bytes: () => Uint8Array }} posted @param {Report} report
+ * @param {Env} env @param {{ headers: Headers, form: FormData }} posted @param {Report} report
  * @returns {Promise<{ number: number, url: string }>}
  */
 async function fileByAction(env, posted, report) {
   const id = crypto.randomUUID()
-  let form = ''
-  for (const byte of posted.bytes()) form += String.fromCharCode(byte)
+  // What the action reads: the fields the issue is written from, and the origin the dialog was
+  // served from. The drawing it takes for itself from the site, so no upload rides along.
   /** @type {Record<string, string>} */
-  const headers = {}
-  for (const [name, value] of posted.headers) if (!['host', 'content-length', 'cf-connecting-ip'].includes(name)) headers[name] = value
-  await dispatch(env, {
-    event_type: 'report',
-    client_payload: {
-      id,
-      report: btoa(form),
-      'x-report-headers': btoa(JSON.stringify(headers)),
-      title: issueTitle(report),
-    },
-  })
+  const carried = {}
+  for (const [name, value] of posted.form) if (typeof value === 'string') carried[name] = value
+  const origin = posted.headers.get('origin') ?? ''
+  if (Buffer.byteLength(JSON.stringify({ ...carried, origin }), 'utf8') > MAX_DISPATCH) {
+    throw new DispatchTooLarge()
+  }
+  await dispatch(env, { event_type: 'report', client_payload: { id, origin, report: carried } })
   const answer = await waitForAnswer(env, id, ANSWER_WAIT)
   if (!answer) throw new Error('the Action did not answer in time')
   const body = JSON.parse(answer)
@@ -223,8 +225,9 @@ async function route(request, env) {
   let issue
   try {
     await ensureLabels(env, labelsFor(report.context))
-    issue = await fileByAction(env, { headers: request.headers, bytes: metered.bytes }, report)
+    issue = await fileByAction(env, { headers: request.headers, form }, report)
   } catch (error) {
+    if (error instanceof DispatchTooLarge) return fail(413, 'too_large', 'This report is too large to send. Leave the document out and try again.', origin)
     console.error('filing the report failed', error)
     return fail(502, 'upstream_error', 'GitHub did not accept the report. Try again later.', origin)
   }

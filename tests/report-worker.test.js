@@ -544,15 +544,24 @@ describe('the endpoint', () => {
     const labels = stub.calls.filter(call => call.key === 'POST /repos/mkpoli/ids-input/labels').map(call => call.body.name)
     expect(labels).toEqual(['report', 'needs-triage', 'lang:ja'])
     expect(stub.calls.some(call => call.key === 'POST /repos/mkpoli/ids-input/issues')).toBe(false)
-    // The dispatch carries the form as the dialog sent it, with its headers, and the title.
+    // The dispatch carries the fields as text and the origin, and nothing of the image.
     expect(dispatch.event_type).toBe('report')
-    expect(Buffer.from(dispatch.client_payload.report, 'base64').length).toBeGreaterThan(0)
-    expect(JSON.parse(Buffer.from(dispatch.client_payload['x-report-headers'], 'base64').toString('utf8')).origin).toBe(SITE)
-    expect(dispatch.client_payload.title).toBe('report: ⿰亻哥 — The preview is blank.')
+    expect(dispatch.client_payload.origin).toBe(SITE)
+    expect(dispatch.client_payload.report).toMatchObject({ symptom: 'The preview is blank.', sequence: '⿰亻哥', context: '{"locale":"ja"}' })
+    expect('image' in dispatch.client_payload.report).toBe(false)
     expect(await env.REPORTS.get(`report:${await dedupeKey('⿰亻哥', 'The preview is blank.')}`, 'json')).toEqual({
       number: 123,
       url: 'https://github.com/mkpoli/ids-input/issues/123',
     })
+  })
+  it('turns away a report whose fields cannot ride a dispatch', async () => {
+    const env = fakeEnv()
+    stub = stubAction()
+    const document = JSON.stringify({ root: 'x'.repeat(40 * 1024) })
+    const response = await handle(postReport(reportForm({ document })), env)
+    expect(response.status).toBe(413)
+    expect(await response.json()).toMatchObject({ error: 'too_large' })
+    expect(stub.calls.some(call => call.key === 'POST /repos/mkpoli/ids-input/dispatches')).toBe(false)
   })
   it('says so when the action answers with a refusal', async () => {
     const env = fakeEnv()
