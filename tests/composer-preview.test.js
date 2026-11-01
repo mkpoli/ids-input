@@ -229,3 +229,27 @@ it('rejects an overlay with emoji it cannot order, subtraction or not', async ()
   worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 1000, 1000] }], parts: [{ box: [0, 0, 1000, 1000], d: 'M0 0Z', leaf: 0 }, { box: [0, 0, 1000, 1000], d: 'M1 1Z', leaf: 1 }] } })
   await expect(result).rejects.toThrow('Cannot determine emoji stacking order')
 })
+
+it('reads a drawing\'s slot numbers across an empty slot', async () => {
+  // ⿲⬚🚗木 draws two slots, numbered 0 and 1: the empty one, then the emoji's.
+  const draw = preview()
+  const result = draw('⿲⬚🚗木')
+  const [worker] = FakeWorker.made, id = worker.posted[0].id
+  expect(worker.posted[0].sequence).toBe('⿲⬚⬚木')
+  worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 0, box: [0, 0, 300, 1000] }, { index: 1, box: [300, 0, 300, 1000] }] } })
+  const found = await result
+  expect(found.emoji).toEqual([{ text: '🚗', box: [300, 0, 300, 1000], leaf: 1, part: 0 }])
+  expect(found.slots).toEqual([{ index: 0, box: [0, 0, 300, 1000] }])
+})
+
+it('places an emoji where the composer drew a whole character in its operand\'s place', async () => {
+  // ⿱車🚗 lays 車's lower half under 車 in the emoji's place, and the emoji replaces that half.
+  const draw = preview()
+  const result = draw('⿱車🚗')
+  const [worker] = FakeWorker.made, id = worker.posted[0].id
+  worker.answer({ id, sketch: [{ index: 0, box: [58, 47, 942, 482], empty: false }, { index: 1, box: [45, 484, 950, 959], empty: false }] })
+  worker.answer({ id, drawn: { d: 'M0 0Z', slots: [{ index: 1, box: [41, 456, 957, 960] }], parts: [{ box: [56, 42, 946, 472], d: 'M0 0Z', leaf: 0 }, { box: [41, 456, 957, 960], d: 'M1 1Z', leaf: 1 }] } })
+  const found = await result
+  expect(found.emoji).toEqual([{ text: '🚗', box: [41, 456, 957, 960], leaf: 1, part: 2 }])
+  expect(found.slots).toEqual([])
+})

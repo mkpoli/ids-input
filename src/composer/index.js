@@ -62,7 +62,41 @@ function emojiSlots(sequence) {
   return { sequence: write(result), slots, slotLeaves, flips, cuts, overlays, restorations }
 }
 
-/** How many drawings a preview keeps for a repeated sequence. */
+/**
+ * Where a drawing's slot `number` stands: the composer numbers the empty operands it draws in
+ * reading order, from the left of the root, and from the right under a mirrored or turned node
+ * ⿾ ⿿, then keeps on past the sequence's own slots for the leaves it drew instead of an operand
+ * (⿱車🚗 draws 車's lower half under 車). `place` is the place in `slotLeaves` of the slot there, and
+ * `leaf` the leaf it stands for. @param {import('../core/ids.js').Part} tree @param {number[]} slotLeaves
+ */
+function slotNumbers(tree, slotLeaves) {
+  /** @type {number[]} */
+  const order = []
+  /** @param {import('../core/ids.js').Part} node @param {boolean} across */
+  function read(node, across) {
+    if (!isNode(node)) { order.push(node === null ? 0 : -1); return }
+    const turned = across !== (node.op === '⿿')
+    for (const child of across ? [...node.parts].reverse() : node.parts) read(child, turned)
+  }
+  read(tree, false)
+  /** @type {number[]} */
+  const own = []
+  for (let index = 0; index < order.length; index++) if (order[index] === 0) own.push(index)
+  /** @param {number} number */
+  const leafAt = number => {
+    const offset = number - own.length
+    return offset < 0 ? own[number] : slotLeaves.length + offset
+  }
+  /** @param {number} number */
+  const placeAt = number => {
+    const leaf = leafAt(number)
+    for (let place = 0; place < slotLeaves.length; place++) if (slotLeaves[place] === leaf) return place
+    return -1
+  }
+  return { leafAt, placeAt }
+}
+
+/** How many drawings a preview keeps for a repeated sequence. *//** How many drawings a preview keeps for a repeated sequence. */
 const CACHE = 32
 
 /**
@@ -128,15 +162,21 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
       }, { separate, fontStyle })
       if (answer.status === 'composed') {
         const drawn = answer.drawn
+        // A slot's number counts the slots of the sequence in reading order, and a leaf past them
+        // where the composer drew one in place of an operand.
+        const { leafAt, placeAt } = slotNumbers(/** @type {import('../core/ids.js').Part} */ (parse(prepared.sequence, { open: true }).tree), prepared.slotLeaves)
+        // A slot's number counts the slots the sequence stands in, in reading order, and a leaf past
+        // them where the composer drew one in place of an operand (⿱車🚗).
         const emoji = (drawn.slots ?? []).flatMap(slot => {
-          const text = prepared.slots[slot.index]
+          const at = placeAt(slot.index)
+          const text = prepared.slots[at]
           if (!text) return []
           /** @type {{ text: string, box: number[], leaf: number, part: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} */
-          const item = { text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }
-          const flip = prepared.flips[slot.index]
+          const item = { text, box: slot.box, leaf: leafAt(slot.index), part: -1 }
+          const flip = prepared.flips[at]
           if (flip?.[0] || flip?.[1]) item.flip = flip
-          if (prepared.cuts[slot.index]) item.cut = true
-          else if (prepared.restorations[slot.index]) item.restored = true
+          if (prepared.cuts[at]) item.cut = true
+          else if (prepared.restorations[at]) item.restored = true
           return [item]
         })
         if (emoji.length) {
@@ -144,19 +184,26 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
           const originalSketch = /** @type {import('../adapter/types.js').SketchLeaf[] | null} */ (sketch)
           const oldSketch = originalSketch?.map(leaf => ({ ...leaf, empty: emoji.some(item => item.leaf === leaf.index) || leaf.empty })) ?? []
           const groups = existing.length ? groupParts(existing, oldSketch) : []
-          const overlaid = (drawn.slots ?? []).some(slot => prepared.slots[slot.index] && prepared.overlays[slot.index])
+          const overlaid = (drawn.slots ?? []).some(slot => prepared.overlays[placeAt(slot.index)])
           if (!groups && overlaid) throw new Error('Cannot determine emoji stacking order for this overlay.')
-          if (groups) {
-            const pieces = existing.map(part => ({ ...part }))
-            for (const group of groups) for (const index of group.parts) pieces[index].leaf = group.index
-            for (const item of emoji) {
-              item.part = pieces.length
-              pieces.push({ leaf: item.leaf, origin: 'emoji', box: item.box, d: '' })
-            }
-            drawn.parts = pieces
+          // An emoji is a piece of the drawing as any component is, where no sketch told the pieces
+          // apart too: it stands where the composer put it, after the pieces drawn.
+          const pieces = existing.map(part => ({ ...part }))
+          for (const group of groups ?? []) for (const index of group.parts) pieces[index].leaf = group.index
+          for (const item of emoji) {
+            item.part = pieces.length
+            pieces.push({ leaf: item.leaf, origin: 'emoji', box: item.box, d: '' })
           }
+          drawn.parts = pieces
           drawn.emoji = emoji
-          drawn.slots = (drawn.slots ?? []).filter(slot => !prepared.slots[slot.index]).map((slot, index) => ({ ...slot, index }))
+          // The emoji took the slot it stood in; a slot left out carries its number on.
+          const taken = new Set(emoji.map(item => item.leaf))
+          /** @type {number[]} */
+          const left = []
+          drawn.slots = (drawn.slots ?? []).flatMap(slot => {
+            if (taken.has(leafAt(slot.index))) { left.push(slot.index); return [] }
+            return [{ ...slot, index: slot.index - left.filter(number => number < slot.index).length }]
+          })
         }
         remember(sequence, drawn, sketch); return drawn
       }
