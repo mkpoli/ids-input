@@ -102,7 +102,8 @@ const CELL_AXIS = { '⿵': 1, '⿶': 1 }
  *  with an opening for it. Given a cell of its own such a glyph stands beside the part it should
  *  surround, so it takes the whole cell instead and the part goes inside. A housing such as 口 or 囗
  *  takes the cell itself, and a part like 厂 or 匚 is a stroke beside what it holds, so neither is
- *  listed. */
+ *  listed. Chosen from the descriptions the export holds, where these four are the only frames; a
+ *  listed frame with no glyph loaded falls back to the split like any other part. */
 const CELL_FRAMES = '冂勹弓辶'
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
@@ -451,8 +452,8 @@ export class Composer {
         return
       }
       if (op in this.ENCLOSE) {
-        // A frame takes the cell and the rest is laid out in the opening it leaves, so the two keep
-        // reading order and the frame keeps its leaf number.
+        // A frame takes the cell and the rest is laid out in the opening it leaves. Both go through
+        // `walk` in reading order, so the frame keeps the leaf number its place in the tree gives it.
         if (typeof kids[0] === 'string' && CELL_FRAMES.includes(kids[0])) {
           const glyph = this.glyph(kids[0])
           const region = target(box)
