@@ -68,21 +68,30 @@ function renderGallery(){
     <div style="display:flex;gap:8px;margin-top:6px">${draw(r.glyph,120)}${draw(r.old,120)}${draw(r.cur,120)}<div class="cap">glyph · original · current</div></div></div>`).join('')+'</div>';
   count.textContent=`${rows.length} of ${DATA.gallery.length}`;
 }
+let compPart=null;
 function renderComponents(){
   const rows=pick(DATA.components);
-  const fine=new Set('⿱甶儿,⿳卝罒冖,⿴𦥑同,㇯鹿比,⿰工几,⿴囗夊,⿱𠆢虫,⿰氵氵,⿻甲一,⿳亠口冖,㇯馬灬,⿱⺀㐅,⿱一血,㇯鳥灬,⿱皿亅,⿳亠㐅厂,⿱士冖,⿻𢆶戈,⿱丿乚'.split(','));
-  const fineRows=rows.filter(r=>fine.has(r.ids)), bad=rows.filter(r=>!fine.has(r.ids));
-  const card=r=>{const exact=(r.chars??[]).length?{label:'characters containing it',list:(r.chars??[]).slice(0,10),glyphs:r.charGlyphs??{}}:{label:'characters with the same operator and this operand',list:(r.slots??[]).slice(0,8),glyphs:r.slotGlyphs??{}};const hits=exact.list,glyphs=exact.glyphs;
-    const faces=(r.chars??[]).slice(0,1).map(ch=>`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(ch)}</div><div class="cap">${n}</div></div>`).join('')}</div>`).join('');
+  const fine=new Set('⿱甶儿,⿳卝罒冖,⿴𦥑同,㇯鹿比,⿰工几,⿴囗夊,⿱𠆢虫,⿰氵氵,⿻甲一,⿳亠口冖,㇯馬灬,⿱⺀㐅,⿱一血,㇯鳥灬,⿱皿亅,⿳亠㐅厂,⿱士冖,⿻𢶶戈,⿱丿乚'.split(','));
+  const bad=rows.filter(r=>!fine.has(r.ids));
+  const parts=[...new Set(rows.map(r=>r.ids[0]))];
+  const shown=compPart?bad.filter(r=>r.ids.startsWith(compPart)):bad;
+  const chip=(v,label,active)=>`<button class="tab" style="padding:4px 10px;font-size:12px" aria-selected="${active}" data-part="${v??''}">${esc(label)}</button>`;
+  const card=r=>{
+    const exact=(r.chars??[]).length?{label:'characters containing it',list:(r.chars??[]).slice(0,24),glyphs:r.charGlyphs??{}}:{label:'characters with the same operator and this operand',list:(r.slots??[]).slice(0,12),glyphs:r.slotGlyphs??{}};
+    const hits=exact.list,glyphs=exact.glyphs;
+    const faceOf=(r.chars??[])[0];
+    const faces=faceOf?`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(faceOf)}</div><div class="cap">${n}</div></div>`).join('')}</div>`:'';
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
       ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
       ${hits.length?`<div class="cap" style="margin-top:8px">${exact.label} (${hits.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${hits.map(ch=>`<div style="width:64px"><div style="font:26px 'Noto Serif CJK JP',serif">${esc(ch)}</div>${draw(glyphs[ch],64)}</div>`).join('')}</div>`:''}
       ${faces}</div>`;
   };
-  view.innerHTML=`<details class="fine"><summary>Fine as drawn (${fineRows.length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${fineRows.map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
-    <div class="gridwrap">${bad.map(card).join('')}</div>`;
-  count.textContent=`${bad.length} to redesign + ${fineRows.length} fine of ${DATA.components.length}`;
+  view.innerHTML=`<div class="tabs" style="margin-bottom:10px">${chip(null,'All',!compPart)}${parts.map(p=>chip(p,p,compPart===p)).join('')}</div>
+    <details class="fine"><summary>Fine as drawn (${rows.filter(r=>fine.has(r.ids)).length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${rows.filter(r=>fine.has(r.ids)).map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
+    <div class="gridwrap">${shown.map(card).join('')}</div>`;
+  view.querySelectorAll('[data-part]').forEach(b=>b.addEventListener('click',()=>{compPart=b.dataset.part||null;render()}));
+  count.textContent=`${shown.length} to redesign${compPart?' ('+compPart+')':''} of ${DATA.components.length}`;
 }
 function render(){ if(!DATA) return; if(tab==='caps') renderCaps(); else if(tab==='gallery') renderGallery(); else renderComponents();
   view.querySelectorAll('button.copy').forEach(b=>b.addEventListener('click',()=>copy(b.dataset.c,b.dataset.w))); }
