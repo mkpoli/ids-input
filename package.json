@@ -76,7 +76,7 @@
     "dev": "vite demo",
     "build:subtrees": "node scripts/build_subtree_parts.mjs",
     "build:demo": "vite build demo",
-    "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs",
+    "build:site": "bun run build:demo && bun scripts/og-assets.mjs && bun scripts/build-og-worker.mjs && bun scripts/build-sitemap.mjs",
     "build:example-drawings": "bun demo/scripts/build-example-drawings.mjs",
     "build:sketch-parts": "uv run scripts/build_sketch_parts.py",
     "preview": "vite preview demo",
