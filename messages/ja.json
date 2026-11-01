@@ -161,6 +161,8 @@
   "parts.relatedForms": "Unicodeの関連字形",
   "parts.idsUses": "IDS記録：{count}件",
   "parts.groups": "部品の分類",
+  "parts.compound.label": "複合",
+  "parts.compound.note": "文字のない部品。IDSで表します。",
   "parts.characters.label": "すべての漢字",
   "parts.characters.unavailable": "漢字の一覧を読み込めませんでした。",
   "parts.characters.fromStrokes": "{count}画以上",

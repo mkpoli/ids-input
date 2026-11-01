@@ -161,6 +161,8 @@
   "parts.relatedForms": "관련 유니코드 자형",
   "parts.idsUses": "IDS 기록: {count}건",
   "parts.groups": "구성 요소 분류",
+  "parts.compound.label": "복합",
+  "parts.compound.note": "해당 글자가 없는 구성 요소로, IDS로 적습니다.",
   "parts.characters.label": "모든 한자",
   "parts.characters.unavailable": "한자 목록을 불러오지 못했습니다.",
   "parts.characters.fromStrokes": "{count}획 이상",

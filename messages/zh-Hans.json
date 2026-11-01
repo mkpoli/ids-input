@@ -161,6 +161,8 @@
   "parts.relatedForms": "Unicode相关字形",
   "parts.idsUses": "IDS记录：{count}条",
   "parts.groups": "部件分组",
+  "parts.compound.label": "复合",
+  "parts.compound.note": "没有对应字的部件，以IDS表示。",
   "parts.characters.label": "全部汉字",
   "parts.characters.unavailable": "无法加载汉字列表。",
   "parts.characters.fromStrokes": "{count}画及以上",
