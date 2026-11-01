@@ -7,7 +7,9 @@
 // does not carry (teachers, KanjiVG's groups for overlays, the standalone model) falls back the way
 // the composer falls back without them: rows of three share their axis by `SHARES`.
 //
-// Beyond the composer, ⿾ mirrors its operand, ⿿ turns it half round, 〾 draws it as it is, ㇯
+// Beyond the composer, a stacked operand whose donor drew it into the component above it closes on
+// to the operand above wherever the two cuts leave a seam (`space`, `closed`), not only under a cover, ⿾
+// mirrors its operand, ⿿ turns it half round, 〾 draws it as it is, ㇯
 // draws its second operand as a cut out of the first, and ⿼ ⿽ enclose from the right and the lower
 // right, their inner part placed in the room the outer one leaves.
 //
@@ -1838,11 +1840,17 @@ export class Composer {
   }
 
   /** Neighbouring parts moved apart where they face each other closer than `FACING` (`_space`). */
+  /** Neighbouring parts moved apart where they face each other closer than `FACING` (`_space`), or,
+   *  down a stack, closed on each other where the donor drew them into each other: two cuts from
+   *  different glyphs meet where the layout put their boxes, which leaves the seam 芙 has no 夫 for
+   *  and the gap below the 一 of ⿱一𧘇. The gap the donor itself drew says which stacks the designer
+   *  closed, and the pair is settled one way or the other, never squeezed apart and then drawn back. */
   space(axis, groups) {
     if (this.partial) return
     const C = this.C
     for (let k = 0; k + 1 < groups.length; k++) {
       const a = groups[k], b = groups[k + 1]
+      if (axis === 1 && a?.length && b?.length && this.closed(b, a)) continue
       const gap = facing(a, b, axis)
       if (gap === null || gap >= C.FACING[axis]) continue
       const half = (C.FACING[axis] - gap) / 2
@@ -2005,26 +2013,33 @@ export class Composer {
     this.hang(rest)
   }
 
-  /** The last operand of the child under a cover closed on to the one above it, where a designer
-   *  drew it overlapping the component above (`gap` below zero: the lower half of 衣 as 袁 cuts it)
-   *  and it tapers to a point at the top, so it tucks under what it meets rather than running into
-   *  it. The operand is the one cut the stack placed itself, read from its own stack's gap, and it
-   *  grows no further than `STRETCH` allows: a wide gap is a sign the stack is not the one the
-   *  donor drew. */
+  /** The last operand of the child under a cover closed on to the one above it, where it tapers to
+   *  a point at the top, so it tucks under what it meets rather than running into it. The operand is
+   *  the one cut the stack placed itself, read from its own stack's gap. */
   hang(rest) {
     const held = rest.filter(part => Number.isInteger(part.branch?.[0]))
     const operands = [...new Set(held.map(part => part.branch[0]))].sort((a, b) => a - b)
     if (held.length < rest.length || operands.length < 2) return
     const last = held.filter(part => part.branch[0] === operands.at(-1))
     const above = held.filter(part => part.branch[0] === operands.at(-2))
-    if (last.length !== 1) return
-    const lastBox = bounds(last)
-    if (!(last[0].gap < 0) || flatTopped(last, lastBox)) return
-    const meet = bounds(above)[1]
-    if (meet <= lastBox[3] || lastBox[3] <= lastBox[1]) return
-    const to = [lastBox[0], lastBox[1], lastBox[2], meet]
-    if (stretchOf(lastBox, to) > this.C.STRETCH) return
-    for (const part of last) part.target = targetFor(part, mapped(drawnBox(part), lastBox, to))
+    if (last.length === 1) this.closed(last, above)
+  }
+
+  /** `below` raised until its top meets the bottom of `above`, where it is a single cut a designer
+   *  drew overlapping the component above it (`gap` below zero: 夫 as 芙 cuts it, the lower half of
+   *  衣 as 袁 does). The overlap a donor records comes from either side, so a flat-topped operand
+   *  stays where it is: there the gap is as likely to be a 艹 or a 亠 hanging into the component
+   *  below it, and raising a bar on to the bar above it welds the two. It grows no further than
+   *  `STRETCH` allows: a wide gap is a sign the stack is not the one the donor drew. Answers whether
+   *  it moved. */
+  closed(below, above) {
+    if (below.length !== 1 || !(below[0].gap < 0)) return false
+    const box = bounds(below), meet = bounds(above)[1]
+    if (meet <= box[3] || box[3] <= box[1] || flatTopped(below, box)) return false
+    const to = [box[0], box[1], box[2], meet]
+    if (stretchOf(box, to) > this.C.STRETCH) return false
+    for (const part of below) part.target = targetFor(part, mapped(drawnBox(part), box, to))
+    return true
   }
 
   /** A cover shortens what it covers, and the designer's own drawing leaves a band of white between
