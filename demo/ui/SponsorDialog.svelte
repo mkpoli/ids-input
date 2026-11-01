@@ -66,8 +66,8 @@
 
 <style>
   .sheet{--sp-ink:light-dark(#c2185b,#ffb3cd);--sp-heart:light-dark(#ff4f88,#ff7aa6);--sp-soft:light-dark(#fff1f5,#2f1822);
-    --sp-line:light-dark(#ffd0de,#5a2a3f);display:flex;flex-direction:column;gap:14px}
-  .hero{position:relative;display:grid;place-items:center;height:136px;margin:-4px -4px 0;border-radius:var(--ui-radius-3xl);
+    --sp-line:light-dark(#ffd0de,#5a2a3f);display:flex;flex-direction:column;gap:var(--ui-space-lg)}
+  .hero{position:relative;display:grid;place-items:center;height:136px;margin:calc(-1 * var(--ui-space-2xs)) calc(-1 * var(--ui-space-2xs)) 0;border-radius:var(--ui-radius-3xl);
     background:radial-gradient(closest-side,light-dark(#ffd9e5,#4a1e31),transparent)}
   .portrait{position:relative;width:112px;height:112px}
   .portrait img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;
@@ -81,18 +81,18 @@
   .s3{bottom:20px;left:calc(50% - 76px);font-size:11px;animation-delay:1.6s}
   @keyframes beat{0%,70%,100%{transform:scale(1)}78%{transform:scale(1.18)}86%{transform:scale(.96)}93%{transform:scale(1.1)}}
   @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.7)}50%{opacity:.9;transform:scale(1)}}
-  .lead{margin:0;font-size:14px;line-height:1.65}
-  .ask{margin:0;font-size:14.5px;font-weight:650;line-height:1.5;color:var(--sp-ink)}
+  .lead{margin:0;font-size:var(--ui-text-md);line-height:1.65}
+  .ask{margin:0;font-size:var(--ui-text-md);font-weight:var(--ui-weight-bold);line-height:var(--ui-leading-normal);color:var(--sp-ink)}
   .lead:lang(ko),.ask:lang(ko),.steps:lang(ko),.company small:lang(ko),.thanks:lang(ko){word-break:keep-all}
-  .how{padding:12px 14px;border:1px dashed var(--sp-line);border-radius:var(--ui-radius-2xl);background:var(--sp-soft)}
-  h3{margin:0 0 8px;font-size:12px;font-weight:700;color:var(--sp-ink)}
-  .steps{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;counter-reset:step}
-  .steps li{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.45;counter-increment:step}
+  .how{padding:var(--ui-space-lg) var(--ui-space-xl);border:1px dashed var(--sp-line);border-radius:var(--ui-radius-2xl);background:var(--sp-soft)}
+  h3{margin:0 0 var(--ui-space-sm);font-size:var(--ui-text-xs);font-weight:var(--ui-weight-bold);color:var(--sp-ink)}
+  .steps{display:flex;flex-direction:column;gap:var(--ui-space-xs);margin:0;padding:0;list-style:none;counter-reset:step}
+  .steps li{display:flex;align-items:baseline;gap:var(--ui-space-sm);font-size:var(--ui-text-sm);line-height:1.45;counter-increment:step}
   .steps li::before{content:counter(step);display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;
-    background:var(--sp-ink);color:var(--sp-soft);font-size:11px;font-weight:700;line-height:1;transform:translateY(-1px)}
-  .tips{display:flex;flex-direction:column;gap:10px}
-  .tip{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
-    color:#fff;text-decoration:none;box-shadow:0 6px 16px var(--tip-glow);transition:transform .18s ease,box-shadow .18s ease}
+    background:var(--sp-ink);color:var(--sp-soft);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);line-height:1;transform:translateY(-1px)}
+  .tips{display:flex;flex-direction:column;gap:var(--ui-space-sm)}
+  .tip{display:flex;align-items:center;gap:var(--ui-space-lg);padding:var(--ui-space-lg) var(--ui-space-xl) var(--ui-space-lg) var(--ui-space-lg);border-radius:var(--ui-radius-pill);
+    color:#fff;text-decoration:none;box-shadow:0 6px 16px var(--tip-glow);transition:transform var(--ui-duration) var(--ui-ease),box-shadow var(--ui-duration) var(--ui-ease)}
   .kofi{--tip-glow:rgb(32 32 32 / .28);--tip-glow-hover:rgb(32 32 32 / .38);background:#202020;border:1px solid light-dark(#202020,rgb(255 255 255 / .2))}
   /* OFUSE Blue (#2882a7) taken 4% darker, so the white labels reach 4.5:1. */
   .ofuse{--tip-glow:rgb(38 125 160 / .3);--tip-glow-hover:rgb(38 125 160 / .42);background:#267da0;border:1px solid #267da0}
@@ -100,16 +100,16 @@
   .tip:active{transform:scale(.98)}
   .tip:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .tip .mark{display:block;flex:none;width:38px;height:30px;object-fit:contain}
-  .tip .copy strong{font-size:15px}
+  .tip .copy strong{font-size:var(--ui-text-lg)}
   .tip .copy small{color:#fff}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
-  .copy strong{font-size:13.5px;font-weight:700}
-  .copy small{font-size:12px;line-height:1.4}
-  .company{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;border-radius:var(--ui-radius-xl);color:var(--ui-color-ink-muted);text-decoration:none}
+  .copy strong{font-size:var(--ui-text-md);font-weight:var(--ui-weight-bold)}
+  .copy small{font-size:var(--ui-text-xs);line-height:1.4}
+  .company{display:flex;align-items:flex-start;gap:var(--ui-space-md);padding:var(--ui-space-sm) var(--ui-space-lg);border-radius:var(--ui-radius-xl);color:var(--ui-color-ink-muted);text-decoration:none}
   .company:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
-  .company :global(.icon){flex:none;margin-top:2px}
-  .company .copy strong{font-size:12.5px;color:var(--ui-color-ink)}
+  .company :global(.icon){flex:none;margin-top:var(--ui-space-3xs)}
   supporters-roll{--sp-text:var(--ui-color-ink);--sp-muted:var(--ui-color-ink-muted)}
-  .thanks{margin:0;font-size:12.5px;line-height:1.5;color:var(--ui-color-ink-muted);text-align:center}
-  @media (prefers-reduced-motion:reduce){.heart,.spark,.tip{animation:none;transition:none}}
+  .company .copy strong{font-size:var(--ui-text-sm);color:var(--ui-color-ink)}
+  .thanks{margin:0;font-size:var(--ui-text-sm);line-height:var(--ui-leading-normal);color:var(--ui-color-ink-muted);text-align:center}
+  @media (prefers-reduced-motion:reduce){.heart,.spark,.tip,.kofi{animation:none;transition:none}}
 </style>
