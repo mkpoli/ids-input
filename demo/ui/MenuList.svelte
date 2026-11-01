@@ -1,9 +1,9 @@
 <script>
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
-  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean }} */
+  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean, chips?: boolean }} */
   import { tick, untrack } from 'svelte'
-  let { items, label, onpick, view = null, open = true } = $props()
+  let { items, label, onpick, view = null, open = true, chips = true } = $props()
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
@@ -14,7 +14,9 @@
   let active = $state('')
   // The index of the one submenu shown inline, or -1.
   let openSubmenu = $state(-1)
-  $effect(() => { if (!open) openSubmenu = -1 })
+  $effect(() => {
+    if (!open) openSubmenu = -1
+  })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -38,6 +40,16 @@
     }
     if (group.items.length) out.push(group)
     return out
+  })
+  // Without the category chips the headings are the whole map of the list, so every section starts
+  // folded and the reader opens the one they want. The chip row lets a wide panel keep them open.
+  // This runs once, when the list first has its sections; after that the reader owns the state.
+  let foldedOnce = false
+  $effect(() => {
+    const headings = chips || foldedOnce ? [] : groups.filter(group => group.heading).map(group => group.heading)
+    if (!headings.length) return
+    foldedOnce = true
+    collapsed = new Set(headings)
   })
   /** @param {string} heading */
   const expanded = heading => filtering || !collapsed.has(heading)
@@ -78,7 +90,7 @@
   }
   $effect(() => {
     const list = root
-    if (!list || !view) return
+    if (!list || !view || !chips) return
     // The scrollport is resolved on each pass: the dialog only overflows once its content lays out,
     // which happens after this effect first runs.
     let scroller = /** @type {HTMLElement | null} */ (null)
@@ -202,11 +214,11 @@
         {/each}
       </div>
     </div>
-    <div class="jump" role="group" aria-label={label}>
+    {#if chips}<div class="jump" role="group" aria-label={label}>
       {#each groups as group (group.heading)}
         {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
       {/each}
-    </div>
+    </div>{/if}
   {/if}
   {#if view && !groups.length}
     <p class="empty">{view.filter.empty}</p>

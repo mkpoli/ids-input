@@ -1318,7 +1318,7 @@
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
+    <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} chips={false} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },

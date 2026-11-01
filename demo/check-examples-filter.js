@@ -67,6 +67,7 @@ try {
   const lines = new Set(await chips.evaluateAll(nodes => nodes.map(node => Math.round(node.getBoundingClientRect().top))))
   assert.ok(lines.size > 1, 'the chips take more than one line')
   assert.ok(await jump.evaluate(node => node.scrollWidth <= node.clientWidth + 1), 'the wrapped row does not scroll sideways')
+  assert.ok(await jump.isVisible(), 'the dialog keeps its category chips')
   const jumpBox = await jump.boundingBox(), lastBox = await chips.last().boundingBox()
   assert.ok(lastBox.x + lastBox.width <= jumpBox.x + jumpBox.width + 1, 'the last chip stays inside the row')
   // Each collapsible heading says how many items its section holds.
@@ -164,27 +165,28 @@ try {
   await page.keyboard.press('Escape')
   await page.setViewportSize({ width: 1440, height: 900 })
 
-  // The phone's menu sheet scrolls as one thing: the marked chip follows the section in view, and
-  // reading past a later section must not pull the sheet back to the chip row.
+  // The phone sheet keeps every section folded, so its headings are the whole navigation: no
+  // category chips, a count on each heading, and scrolling that stays where it is put.
   const phone = await browser.newPage({ viewport: { width: 390, height: 844 } })
   await phone.goto(url)
   await phone.getByRole('button', { name: 'Menu', exact: true }).click()
   await phone.waitForTimeout(600)
-  const sheet = phone.locator('.list', { has: phone.locator('.jump') }).last()
-  const sheetState = () => sheet.evaluate(el => ({
-    top: Math.round(el.closest('dialog').scrollTop),
-    chip: el.querySelector('.chip[aria-current="true"]')?.textContent ?? '',
-  }))
-  assert.equal((await sheetState()).chip, 'Basic structures', 'the first section starts marked')
-  for (let i = 0; i < 15; i++) {
-    await phone.evaluate(() => { const open = document.querySelector('dialog[open]'); open.scrollTop += 200 })
-    await phone.waitForTimeout(80)
-  }
-  await phone.waitForTimeout(500)
-  const read = await sheetState()
-  assert.ok(read.top > 0, 'the phone sheet scrolls')
-  assert.notEqual(read.chip, 'Basic structures', 'the marked chip follows the section in view')
-  assert.ok(read.top >= 15 * 200 - 4, 'the phone sheet stays where it was scrolled')
+  const sheet = phone.locator('.list', { has: phone.locator('button.heading') }).last()
+  assert.equal(await sheet.locator('.jump, .chip').count(), 0, 'the phone sheet has no category chips')
+  const heads = sheet.locator('button.heading')
+  const headNames = await heads.locator('.heading-name').allTextContents()
+  assert.ok(headNames.length > 10, 'the sheet lists every section')
+  assert.equal(await heads.locator('.count').count(), headNames.length, 'every heading on the phone has a count')
+  assert.equal(await sheet.locator('.card').count(), 0, 'the sections start folded')
+  await heads.first().click()
+  await phone.waitForTimeout(300)
+  assert.ok(await sheet.locator('.card').count() > 0, 'a heading opens its section on the phone')
+  await phone.evaluate(() => { const open = document.querySelector('dialog[open]'); open.scrollTop += 600 })
+  await phone.waitForTimeout(400)
+  const moved = await sheet.evaluate(el => Math.round(el.closest('dialog').scrollTop))
+  await phone.waitForTimeout(400)
+  const stayed = await sheet.evaluate(el => Math.round(el.closest('dialog').scrollTop))
+  assert.ok(stayed >= moved - 4, 'the phone sheet stays where it was scrolled')
   await phone.close()
   console.log('PASS the starter dialog opens templates and examples in tabs, and the toolbar keeps its examples menu')
 } finally { await browser.close() }
