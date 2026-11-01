@@ -45,7 +45,7 @@ describe('sourced character meanings', () => {
     // its Tangut translation comes from, and a Tangut page would be no use to the reader.
     expect(info('𘆽').sources.find(source => source.note === 'wiktionary').url).toContain(encodeURIComponent('𘆽'))
     const han = info('馬').sources.find(source => source.note === 'wiktionary')
-    expect(han.url).toBe('https://en.wiktionary.org/')
+    expect(han.url).toBe('https://en.wiktionary.org/wiki/Main_Page')
   })
   test('sources the adapter adds for component examples keep their kind and appear once', async () => {
     // The adapter adds a Wiktionary record for each example and the Tangut IDS list after lookup.
