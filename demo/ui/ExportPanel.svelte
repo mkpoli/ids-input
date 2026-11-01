@@ -40,9 +40,16 @@
   async function copy() {
     if (!canExport) return
     const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
+    // WebKit drops the click's activation when the page awaits before clipboard.write, and then
+    // rejects with NotAllowedError; the PNG is handed over as a promise for the clipboard to settle.
     try {
       if (settings.format === 'svg') await navigator.clipboard.writeText(embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document))
-      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': await pngOutput(drawn, drawnScopes, settings, document) })])
+      else {
+        const png = pngOutput(drawn, drawnScopes, settings, document)
+        // A write WebKit refuses leaves the PNG it was handed unread; its failure is told by the note.
+        png.catch(() => {})
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+      }
       onnote(t('app.export.copied', { format }))
     } catch { onnote(t('app.copyFailed')) }
   }
