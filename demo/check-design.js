@@ -304,6 +304,7 @@ async function checkInteractions(page) {
   await page.waitForTimeout(3200)
   assert.equal(await action.isVisible(), true, 'hovering keeps an actionable note')
   await page.mouse.move(0, 0)
+  await page.waitForTimeout(500)
   await action.click()
   assert.equal(await page.getByText('Example item is present.', { exact: true }).isVisible(), true, 'Undo runs the action')
   pass('an actionable note waits for the pointer and undoes its change')
