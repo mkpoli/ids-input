@@ -54,8 +54,9 @@ outlines are the glyphs of the amendment's own code charts, bundled for previews
 `IDS Shuishu` face, and the tab filters them by name, reading, meaning, code point and description.
 Its groups follow the dictionary the index comes from: the characters that dictionary numbers, the
 rest, and the radicals. Eighteen of the characters carry an editorial IDS, printed on the tile and
-in their title; a description finds its character, and a typed part lists the characters written
-with it. The tab says the decompositions are ours, since no source gives them.
+in their title; a description finds its character, a typed part lists the characters written with
+it, and the structure panel treats the decomposition as the character's parts. The tab says the
+decompositions are ours, since no source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -438,7 +439,7 @@ editor owns structural undo. `setTransform` accepts a coalesce key, so one drag 
 `onListenerError` (or `reportError`) and does not undo the committed edit.
 
 `sessionRecord(session)` and `writeSession(session)` keep the document, chosen layer and every issued
-ID for a tab or draft; `readSession(text)` restores them. The record omits undo history. The document
+ID for a tab; `readSession(text)` restores them. The record omits undo history. The document
 itself is the `.ids.json` file, written by `writeDocument` and read by `readDocument`.
 
 `syncDocument(document, tree, { allocator })` reconciles the editor's positional tree into the
@@ -447,7 +448,7 @@ structural edits. Pass the long-lived session allocator so removed IDs do not re
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
 each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
-keeps a session with each tab and saved draft, so the document survives reloads. The preview,
+keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
 `documentSource(document, drawing, sketch)` turns a separated composer drawing into the geometry and
@@ -811,7 +812,7 @@ On the tree (outside text fields), keys go by where they sit, so every layout ha
 | `Menu`, `Shift+F10` | the chosen part's context menu |
 | any other character | goes to the part field; `Enter` puts it in the slot |
 
-Elsewhere, `Ctrl/⌘+S` saves a draft and `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
+Elsewhere, `Ctrl/⌘+,` opens settings. Toolbar buttons show their keys
 on hover. Outside text fields, `Ctrl/⌘+X`, `Ctrl/⌘+C` and `Ctrl/⌘+V` cut, copy and paste the selected
 part (the whole sequence when none is selected); `Ctrl/⌘+A` selects the whole tree. File and Edit
 menus support arrow keys, Home/End and Escape; `Right` opens a submenu on its first item, `Left`
@@ -1037,11 +1038,15 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   The gugyeol group is the article's second table, also in reading order: 亽 나, 亪 란, 爳 료,
   厼 며, 㢱 며, 丆 면, 厁 and 壭 산, 乛 and 𠃌 야, 仒 어, 丷 하, 兯 한, 乊 호 and 乥 홀. Some of
   those shapes also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
-- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the Japanese-made
-  characters in `demo/lib/examples.js`, the jōyō, jinmeiyō and hyōgai examples and 鰯, 鱈, 樫, 椙,
-  椛, 柾, 粁, 竏, 瓩 and 竓. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2,
-  <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>; the rest are the article's. 搾 is left out as
-  disputed there, and 鮟 as not a kokuji. The descriptions are BabelStone's.
+- [Kokuji](https://en.wikipedia.org/wiki/Kokuji), Wikipedia, read 2026-10-30: the twenty-four
+  characters it names in the table and the examples sections, with their readings; those of 鰯, 鱈,
+  樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2, <https://www.edrdg.org/kanjidic/kanjidic2.xml.gz>, and
+  the rest are the article's. 搾 is left out as disputed there, and 鮟 as not a kokuji. The
+  descriptions are BabelStone's.
+- [A list of kokuji (国字)](http://www.sljfaq.org/afaq/kokuji-list.html), SLJFAq, read 2026-10-31: the
+  group's other 132 characters and their first kana reading, with romaji and English meanings. 蟐 is
+  on that list and among the unresolved JIS characters, so it stays in the ghost group. The
+  descriptions are BabelStone's.
 - 笹原宏之, [第83回 漢字の音義の一人歩き](https://dictionary.sanseido-publ.co.jp/column/kanji_genzai083),
   三省堂「漢字の現在」, 2011-02-15 (read 2026-10-31): 妛's origin in 𡚴 and 彁's unidentified
   source at the time of writing. The ghost-kanji descriptions are BabelStone's Japanese forms.
@@ -1143,7 +1148,7 @@ opens the tab or group closed last; that history lasts for the page session. The
 panels in the middle column are divided by a draggable splitter, the tree starting larger; the
 arrow keys move it and a double-click restores the default. Vertical dividers resize the columns by
 dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their keys on
-hover. File groups documents, Recent, tab actions, sharing and export, and drafts; Recent lists the
+hover. File groups documents, Recent, tab actions, sharing and export; Recent lists the
 sequences opened in this browser, newest first. The Edit menu holds the editing commands. The
 Templates tab includes one-click pyramids of 3–24 rows. File → Duplicate tab copies the active
 document. Right-clicking a tab, or pressing Shift+F10 on it, opens its menu: reopen the tab or
@@ -1168,7 +1173,7 @@ copying the location keeps a placement and opening such a link keeps the token. 
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
 chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, drafts, the recent sequences, the theme and font choice stay
+the configured export’s font. Settings, the recent sequences, the theme and font choice stay
 in `localStorage`; the keys use the `ids-input:` prefix.
 
 ### Share cards
@@ -1180,7 +1185,8 @@ and a separate Unicode caption. Text size follows the sequence length; longer se
 at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
 use glyphs from the bundled GenZui Sans font.
 
-The Cloudflare Worker serves preview pages and images alongside the workshop's static assets.
+The Cloudflare Worker serves preview pages and images alongside the workshop's static assets, and
+forwards `/api/report` to the report intake.
 Cards use the editor's composition source, `@cf-wasm/resvg` and a one-day cache.
 An unavailable drawing reads `Preview unavailable`; an unmatched sequence reads `No Unicode match`.
 Rendering failures return an uncached 500. `/og/default.png` supplies the home page's example.
@@ -1193,6 +1199,25 @@ by SHA-256; font assets ship with their license notices. Run `node tests/worker-
 after the build to test the bundled handler and PNG renderer. `bun run dev:worker` runs
 `wrangler dev` to serve the Worker and built assets locally.
 
+### Reporting a problem
+
+File → Report a problem, the same entry in the More sheet, and `?report=1` open a report dialog.
+It asks what happened and, if the reporter wants an answer, how to reach them; the drawing goes
+along as a 1024 px PNG unless the checkbox is cleared, and the dialog lists the rest in plain text.
+The request is `multipart/form-data` to `/api/report` on the site's own origin, which the worker
+hands over the `REPORT` binding to the `ids-reports` service (`?endpoint=` points it elsewhere from
+a local host, which the published site ignores so a shared link cannot collect reports of its own).
+It carries the active sequence, its share link, the workspace as JSON (every tab with its layer
+transforms, the active tab, the view, face, theme, language and panel widths) and a context
+document: the version and build commit (`__APP_VERSION__` and `__BUILD_COMMIT__`, the commit the CI
+built), the route without its query, the viewport, pixel ratio, user agent, loaded font families,
+the preview's step and label, and the last twenty console warnings, errors and failed requests
+collected by the ring `demo/main.js` installs before the app mounts. Anything naming the reporter's
+own machine — a local address, a `file:` URL, a `/@fs/` or home path, wherever it appears, including
+inside a logged line — is taken out before the report leaves, and the share link is rebuilt on the
+published site with only the parameters that open the sequence. The answer replaces the form with
+the issue it became; a report matching an open issue says so and links to it, and a refused or
+timed-out one keeps the text and offers another try.
 
 ### Comparison with KAGE
 
@@ -1330,6 +1355,10 @@ bun run build:sketch-parts       # the drawing search's glyph masks, after a fon
 CI runs verification and builds the workshop and share-card Worker. Production deployment is
 gated to `main` through `.github/workflows/deploy.yml`.
 
+The workshop's bug report form posts to `ids-reports`, a Cloudflare Worker in `workers/reports/`
+that turns a report into an issue on this repository. `workers/reports/README.md` has the endpoint's
+fields, the secrets it needs and how to run and deploy it.
+
 ### The demo's browser checks
 
 `demo/check-*.js` drives the workshop in a headless Chromium, one file per feature. It needs a dev
@@ -1344,7 +1373,25 @@ CHROMIUM_PATH="$HOME/.cache/ms-playwright/chromium-1247/chrome-linux64/chrome" \
 
 `CHROMIUM_PATH` is the browser the checks launch; `bunx playwright-core install chromium` puts one
 in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`. Each file prints
-`PASS` and exits non-zero on a failure, so a shell loop over `demo/check-*.js` runs them all.
+`PASS` and exits non-zero on a failure. `demo/check-report.js` also takes `IDS_COMPOSER`, a
+composer export to draw from, so it need not wait on the live one.
+
+`bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
+page load, runs every `demo/check-*.js` against it, and stops the server and its children again.
+Its flags:
+
+- `--only <text>` — only checks whose file name contains it.
+- `--skip a,b` — leave those out, e.g. the six-minute `check-gongche`.
+- `--port <n>` — the port to try first; Vite takes the next free one.
+- `--retries <n>` — attempts per check (one retry by default), so a check that only lost a race
+  with the dev server does not fail the run.
+- `--timeout <s>` — the page timeout each check gets (120 by default; `0` keeps the check file's
+  own). A busy machine can take longer than Playwright's 30-second default to serve a page, and a
+  check that fails for that reason says nothing about the app.
+- `--watchdog <min>` — stop the run when no check has finished for that long (15 by default).
+
+The checks see the raised timeout through `scripts/check-demo-preload.mjs`, which `bun --preload`
+loads before each check; the check files themselves keep Playwright's defaults.
 
 The demo deploys as a Cloudflare Worker with static assets from every push to `main`, through
 `.github/workflows/deploy.yml`; pull requests build test artifacts. Deployment needs

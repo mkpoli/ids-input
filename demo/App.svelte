@@ -36,7 +36,6 @@
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
-  import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
@@ -59,6 +58,8 @@
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
+  import ReportDialog from './ui/ReportDialog.svelte'
+  import { reportEndpoint } from './lib/report-endpoint.js'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
@@ -729,14 +730,6 @@
     }
     openSequence(record.sequence)
   }
-  /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
-  function openDraft(draft) {
-    flush()
-    const tab = makeTab(draft.sequence, draft.sequence, draft.document)
-    tabs.push(tab)
-    recents = remember(tab.sequence, tab.document)
-    activate(tab.id)
-  }
   /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
@@ -868,18 +861,6 @@
     tabs.splice(to, 0, tab)
   }
 
-  // Saved drafts.
-  let drafts = $state(storedDrafts())
-  function keepDraft() {
-    if (editor.tree === null) return
-    const tab = current()
-    if (tab) keepTabSession(tab)
-    drafts = keep(editor.whole, tab?.document)
-    // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
-    if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
-    store()
-    note(t('app.drafts.kept', { sequence: editor.whole }))
-  }
   /** Save the active tab's document as .ids.json. */
   function saveDocument() {
     const tab = current()
@@ -950,12 +931,7 @@
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
     { label: t('app.file.exportAs'), icon: 'download', disabled: !canExport, submenu: /** @type {const} */ (['svg', 'png']).map(format => ({ label: format.toUpperCase(), disabled: !canExport, run: () => { exportPanel?.save(format) } })) },
     { separator: /** @type {const} */ (true) },
-    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
-    { label: t('app.drafts.heading'), icon: 'folder', disabled: !drafts.length, submenu: drafts.length ? [
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
-      { separator: /** @type {const} */ (true) },
-      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } },
-    ] : [] },
+    { label: t('app.report.title'), icon: 'mail', run: () => reportOpen = true },
   ])
 
   const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
@@ -1025,6 +1001,27 @@
   })
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
+  // A problem report: the menus open it, and `?report=1` opens it on arrival.
+  let reportOpen = $state(params.get('report') === '1')
+  const endpoint = reportEndpoint(location)
+  // The deep link opens the dialog once: the address drops it, so a reload lands in the workshop.
+  if (reportOpen) {
+    const arrived = new URL(location.href)
+    arrived.searchParams.delete('report')
+    history.replaceState(null, '', arrived.href)
+  }
+  /** The whole workspace as the report carries it: every tab with its drawing adjustments, the tab
+   *  shown, and the settings the page is being seen with. */
+  function reportWorkspace() {
+    const tab = current()
+    if (tab) keepTabSession(tab)
+    return {
+      tabs: tabs.map(item => ({ id: item.id, sequence: item.sequence, document: item.document ? JSON.parse(JSON.stringify(item.document)) : undefined })),
+      activeTab: activeId,
+      view, face, theme, locale,
+      widths: { input: columns.input, output: columns.output, split },
+    }
+  }
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -1060,7 +1057,6 @@
       else if (inEditor) focusActiveEditor()
       return
     }
-    if (mod && event.key.toLowerCase() === 's') { event.preventDefault(); keepDraft(); return }
     if (target.closest('input, textarea, select, [contenteditable="true"], [role="menu"]')) return
     if (mod && ['c', 'x', 'v', 'a'].includes(event.key.toLowerCase())) {
       if (['c', 'x'].includes(event.key.toLowerCase()) && !getSelection()?.isCollapsed) return
@@ -1317,6 +1313,7 @@
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
+      { label: t('app.report.title'), icon: 'mail', run: () => reportOpen = true },
     ]} />
   </div>
 </Dialog>
@@ -1327,6 +1324,9 @@
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
+<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
+  {drawing} {scopes} {slots} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
+  {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}

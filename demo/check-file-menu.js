@@ -1,5 +1,5 @@
-// The File menu: document actions, then Recent, the tab actions, sharing and export, and the draft
-// actions, with Recent, Export and Browser drafts as submenus. A sequence opened in the workshop is
+// The File menu: document actions, then Recent, the tab actions, sharing and export, with Recent and
+// Export as submenus. A sequence opened in the workshop is
 // remembered in Recent, which survives a reload. Run against a devrun server:
 //   IDS_URL=http://localhost:5199 CHROMIUM_PATH=/path/to/chrome bun demo/check-file-menu.js
 import { chromium } from 'playwright-core'
@@ -36,15 +36,13 @@ try {
   }
   const submenu = () => page.locator('.submenu [role="menuitem"]')
 
-  // The top level groups documents, Recent, tab actions, sharing and drafts.
+  // The top level groups documents, Recent, tab actions, sharing and export.
   await openFile()
   assert.equal(await item('Recent').isDisabled(), true, 'Recent starts empty')
   assert.equal(await item('Reopen closed tab').isDisabled(), true, 'nothing has been closed')
-  assert.equal(await item('Browser drafts').isDisabled(), true, 'no drafts yet')
   const labels = await page.locator('.menu > [role="menuitem"]').evaluateAll(els => els.map(el => el.textContent.trim()))
   assert.deepEqual(labels.slice(0, 9), ['New sequence', 'Open document…', 'Save document…', 'Document title…', 'Recent', 'Reopen closed tab', 'Duplicate tab', 'Share', 'Export'], 'the File menu runs from documents through Recent and tabs to sharing')
-  assert.match(labels[9], /^Keep draft in browser/, 'the draft action follows export')
-  assert.equal(labels[10], 'Browser drafts', 'the drafts submenu ends the menu')
+  assert.equal(labels.length, 9, 'Export ends the menu')
   await waitExport()
   await item('Export').click()
   assert.deepEqual(await submenu().allInnerTexts(), ['SVG', 'PNG'], 'Export opens its formats')
@@ -112,16 +110,6 @@ try {
   assert.equal(await item('Recent').getAttribute('aria-expanded'), 'false', 'opening Export closes Recent')
   await close()
 
-  // Saving the open sequence gives the drafts submenu its item.
-  await page.keyboard.press('Control+s')
-  await openFile()
-  assert.equal(await item('Browser drafts').isDisabled(), false, 'a saved draft enables the drafts submenu')
-  await item('Browser drafts').click()
-  const drafts = await submenu().allInnerTexts()
-  assert.equal(drafts[0], '⿱日木', 'the drafts submenu lists the saved sequence')
-  assert.match(drafts.at(-1) ?? '', /^Remove/, 'the drafts submenu can remove it')
-  await close()
-
   // A layer change replaces the recent document rather than leaving the version first opened.
   const document = fromSequence('⿱艹半')
   document.title = 'Recent document'
@@ -172,12 +160,11 @@ try {
   // The phone sheet carries the same submenus; a reopened sheet starts with them closed.
   const phone = await browser.newContext({ viewport: { width: 375, height: 812 } })
   const many = ['ⱱ日木', ...Array.from({ length: 13 }, (_, i) => `recent-${i}`), 'recent-0']
-  await phone.addInitScript(({ tabs, recent, drafts }) => {
+  await phone.addInitScript(({ tabs, recent }) => {
     localStorage.setItem('ids-input:tabs', JSON.stringify(tabs))
     localStorage.setItem('ids-input:activeTab', JSON.stringify(tabs[1].id))
     localStorage.setItem('ids-input:recent', JSON.stringify(recent))
-    localStorage.setItem('ids-input:drafts', JSON.stringify(drafts))
-  }, { tabs: records, recent: many, drafts: [{ id: 'phone-draft', sequence: 'ⱱ日木', saved: Date.now() }] })
+  }, { tabs: records, recent: many })
   const small = await phone.newPage()
   const phoneErrors = []
   small.on('pageerror', error => phoneErrors.push(error.message))
@@ -193,8 +180,6 @@ try {
   await sheet.getByRole('button', { name: 'Export', exact: true }).click()
   assert.deepEqual(await sheet.locator('.submenu .item').allInnerTexts(), ['SVG', 'PNG'], 'the phone Export submenu offers both formats')
   assert.equal(await sheet.getByRole('button', { name: 'Recent', exact: true }).getAttribute('aria-expanded'), 'false', 'one submenu is open at a time on the phone')
-  await sheet.getByRole('button', { name: 'Browser drafts', exact: true }).click()
-  assert.equal(await sheet.locator('.submenu .item').filter({ hasText: 'Remove' }).count(), 1, 'the phone drafts submenu can remove its draft')
   await small.keyboard.press('Escape')
   await small.locator('dialog[open]').waitFor({ state: 'detached' })
   await small.getByRole('button', { name: 'Menu', exact: true }).click()
@@ -205,5 +190,5 @@ try {
   assert.deepEqual(phoneErrors, [])
   await phone.close()
 
-  console.log('PASS the File menu groups its actions and opens Recent, Export and drafts as submenus')
+  console.log('PASS the File menu groups its actions and opens Recent and Export as submenus')
 } finally { await browser.close() }
