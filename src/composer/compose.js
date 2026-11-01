@@ -1163,12 +1163,15 @@ export class Composer {
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       let box = boxes[i]
-      // Under a cover, a child with no glyph of its own is drawn from its sequence: a host cut can
-      // meet the cover's bar through a turning stroke and leave a wedge (定's 𤴓 cut from 是).
+      // Under a cover, a child whose own glyph fits the box is drawn from it: a host cut can meet
+      // the cover's bar through a turning stroke and leave a wedge (定's 𤴓 cut from 是).
       if (i === 1 && op === '⿱' && typeof children[0] === 'string' && COVERS.has(children[0])
-        && typeof child === 'string' && !this.excluded(child) && !this.glyph(child) && this.sequenceOf(child)) {
-        groups.push(this.node(child, box))
-        continue
+        && typeof child === 'string' && !this.excluded(child) && this.sequenceOf(child)) {
+        const own = this.glyph(child)
+        if (own && stretchOf(own.box, box) <= C.STRETCH) {
+          groups.push([this.place(own, box, this.ink(child), `glyph ${child}`)])
+          continue
+        }
       }
       let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
