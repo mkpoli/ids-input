@@ -282,16 +282,16 @@
       }}>
       {#if view}
         <div class="menu-head">
-          <div class="views" role="group" aria-label={label}>
-            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={14} /><span>{view.list}</span></button>
-            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={14} /><span>{view.cards}</span></button>
+          <div class="ui-switch-bar views" role="group" aria-label={label}>
+            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={14} /><span>{view.list}</span></button>
+            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={14} /><span>{view.cards}</span></button>
           </div>
           <div class="filter">
             <input class="ui-input filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query}
               onkeydown={event => { if (event.key !== 'Escape') event.stopPropagation() }} />
-            <div class="modes" role="group" aria-label={view.filter.label}>
+            <div class="ui-switch-bar modes" role="group" aria-label={view.filter.label}>
               {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
-                <button type="button" class="ui-button mode" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
+                <button type="button" class="ui-button mode" data-size="sm" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
               {/each}
             </div>
           </div>
@@ -371,12 +371,13 @@
   .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
   .ui-chip{flex:none}
   .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--ui-color-surface)}
-  .views{display:flex;gap:var(--ui-space-3xs);padding:3px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
+  .views{flex:1;padding:3px}
+  .views > .ui-button{min-block-size:28px}
   .filter{display:flex;align-items:center;gap:6px}
   .filter-input{flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12.5px}
   .filter-input:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
-  .modes{display:flex;flex:none;gap:var(--ui-space-3xs)}
-  .view{flex:1}
+  .modes{flex:none}
+  .view{flex:1;white-space:nowrap}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px;padding:4px 6px 8px}
   .card{display:flex;align-items:center;gap:9px;min-width:0;min-height:60px;padding:7px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}

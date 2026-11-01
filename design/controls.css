@@ -131,23 +131,65 @@
   padding-inline: 0;
 }
 
-.ui-button[aria-checked='true'] {
-  --_bg: var(--ui-color-accent-soft);
-  --_bg-hover: var(--ui-color-accent-soft);
-  --_ink: var(--ui-color-accent);
-  --_border: var(--ui-color-accent);
-  --_border-hover: var(--ui-color-accent);
-  box-shadow: inset 0 0 0 1px var(--ui-color-accent);
-}
-
+.ui-button[aria-checked='true'],
 .ui-button[aria-pressed='true'],
 .ui-button.is-on {
   --_bg: var(--ui-color-accent-soft);
   --_bg-hover: var(--ui-color-accent-soft);
   --_ink: var(--ui-color-accent);
-  --_border: var(--ui-color-accent);
-  --_border-hover: var(--ui-color-accent);
-  box-shadow: inset 0 0 0 1px var(--ui-color-accent);
+  --_border: transparent;
+  --_border-hover: transparent;
+}
+
+/* The raised half of a segmented switch: the fill lifts off the track and a hairline keeps the
+   edge, so the choice reads by shape even where the tint is light. */
+.ui-button[aria-checked='true']:not([data-variant='quiet']),
+.ui-button[aria-pressed='true']:not([data-variant='quiet']),
+.ui-button.is-on:not([data-variant='quiet']) {
+  box-shadow:
+    inset 0 0 0 1px var(--ui-color-accent),
+    var(--ui-shadow-1);
+}
+
+/* ---------- Segmented switch ---------- */
+
+.ui-switch-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 2px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-color-surface-hover);
+}
+
+.ui-switch-bar > .ui-button {
+  flex: 1;
+  justify-content: center;
+  border-radius: var(--ui-radius-sm);
+  background: none;
+  color: var(--ui-color-ink-muted);
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-switch-bar > .ui-button:not(:disabled):hover {
+  background: color-mix(in srgb, var(--ui-color-surface) 60%, transparent);
+  color: var(--ui-color-ink);
+}
+
+/* The raised half takes the ink fill, so the choice reads as the strongest mark in the bar. */
+.ui-switch-bar > .ui-button[aria-pressed='true'],
+.ui-switch-bar > .ui-button[aria-checked='true'],
+.ui-switch-bar > .ui-button.is-on {
+  background: var(--ui-color-ink);
+  color: var(--ui-color-surface);
+  box-shadow: none;
+}
+
+.ui-switch-bar > .ui-button[aria-pressed='true']:not(:disabled):hover,
+.ui-switch-bar > .ui-button[aria-checked='true']:not(:disabled):hover,
+.ui-switch-bar > .ui-button.is-on:not(:disabled):hover {
+  background: var(--ui-color-ink);
+  color: var(--ui-color-surface);
 }
 
 /* ---------- Menus and option lists ---------- */

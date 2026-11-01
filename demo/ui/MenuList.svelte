@@ -174,18 +174,18 @@
   <div class="title-row">
     <p class="title">{label}</p>
     {#if view}
-      <div class="views">
-        <button type="button" class="ui-button view" data-size="xs" data-variant="quiet" aria-pressed={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
-        <button type="button" class="ui-button view" data-size="xs" data-variant="quiet" aria-pressed={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
+      <div class="ui-switch-bar views">
+        <button type="button" class="ui-button view" data-size="xs" aria-pressed={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
+        <button type="button" class="ui-button view" data-size="xs" aria-pressed={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
       </div>
     {/if}
   </div>
   {#if view}
     <div class="filter">
       <input class="ui-input filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query} />
-      <div class="modes" role="group" aria-label={view.filter.label}>
+      <div class="ui-switch-bar modes" role="group" aria-label={view.filter.label}>
         {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
-          <button type="button" class="ui-button mode" data-size="xs" data-variant="quiet" aria-pressed={mode === key} onclick={() => { mode = key }}>{text}</button>
+          <button type="button" class="ui-button mode" data-size="xs" aria-pressed={mode === key} onclick={() => { mode = key }}>{text}</button>
         {/each}
       </div>
     </div>
@@ -249,9 +249,9 @@
   .heading{scroll-margin-top:8px}
   .filter{display:flex;flex-direction:column;align-items:stretch;gap:5px;margin:0 0 4px}
   .filter-input{flex:1;min-width:0}
-  .modes{display:flex;align-self:flex-start;gap:var(--ui-space-3xs)}
+  .modes{align-self:flex-start}
   .title-row + .heading{margin-top:4px}
-  .views{display:flex;gap:var(--ui-space-3xs)}
+
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;padding:2px 2px 6px}
   .card{display:flex;align-items:center;gap:6px;min-width:0;min-height:48px;padding:6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
