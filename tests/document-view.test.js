@@ -46,6 +46,13 @@ describe('a document view', () => {
 })
 
 describe('scoped markup', () => {
+  it('stays complete for an emoji part, which carries no path', () => {
+    const document = fromSequence('⿰木口')
+    const view = documentView(document, drawing([{ leaf: 0, d: '' }, { leaf: 1, d: square(500, 500) }]), sketch(boxes))
+    expect(view.complete).toBe(true)
+    expect(view.scopes?.complete).toBe(true)
+    expect(view.issues).toEqual([])
+  })
   it('returns defs and body without the svg wrapper', () => {
     const view = documentView(fromSequence('⿰木口'), drawing(parts), sketch(boxes))
     const markup = scopesMarkup(view.scopes, { idPrefix: 'preview' })

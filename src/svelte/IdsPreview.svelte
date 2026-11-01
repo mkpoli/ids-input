@@ -257,36 +257,36 @@
               onpointercancel={interactive ? endDrag : undefined}
               onkeydown={interactive ? adjustKey : undefined}
 >
+              {#if hasCut}
+                {#if drawn.emoji?.some(item => item.cut)}
+                  <filter id="{uid}-{name}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
+                {/if}
+                <mask id="{uid}-{name}">
+                  <rect width="1000" height="1000" fill="#fff" />
+                  {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
+                  {#each drawn.emoji ?? [] as item}
+                    {#if item.cut}
+                      {@const box = emojiBox(item)}
+                      <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                    {/if}
+                  {/each}
+                </mask>
+              {/if}
               {#if view?.scopes}
                 {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}` })}
-                <g class="document" style:color="var(--_ink)">
+                <g class="document" style:color="var(--_ink)" mask={hasCut ? `url(#${uid}-${name})` : undefined}>
                   {@html markup.defs}
                   {@html markup.body}
                 </g>
               {:else}
-                {#if hasCut}
-                  {#if drawn.emoji?.some(item => item.cut)}
-                    <filter id="{uid}-{name}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
-                  {/if}
-                  <mask id="{uid}-{name}">
-                    <rect width="1000" height="1000" fill="#fff" />
-                    {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
-                    {#each drawn.emoji ?? [] as item}
-                      {#if item.cut}
-                        {@const box = emojiBox(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
-                      {/if}
-                    {/each}
-                  </mask>
-                {/if}
                 <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
-                {#each drawn.emoji ?? [] as item}
-                  {#if !item.cut}
-                    {@const box = emojiBox(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
-                  {/if}
-                {/each}
               {/if}
+              {#each drawn.emoji ?? [] as item}
+                {#if !item.cut}
+                  {@const box = emojiBox(item)}
+                  <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                {/if}
+              {/each}
               {#each drawn.slots ?? [] as s (s.index)}
                 {@render slot(s.box, drawn.stroke?.[0] ?? STROKE, inChosen(slotLeaf(s.index)), false)}
               {/each}
