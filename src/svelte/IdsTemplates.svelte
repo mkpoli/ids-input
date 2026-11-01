@@ -11,6 +11,11 @@
   const picking = $derived(onpick !== null)
   /** @param {string} sequence */
   const openLabel = sequence => t('ids.templates.open', { sequence })
+  /** A complete layout picked for a new tab must still read as a whole description. @param {string} sequence */
+  function usable(sequence) {
+    const draft = parse(sequence, { open: true })
+    return !draft.problem && draft.tree !== undefined && (nextEmpty(draft.tree) !== null || isDescription(sequence))
+  }
   const t = $derived(editor.t)
   const uid = $props.id()
   /** @param {string} sequence */
@@ -67,8 +72,12 @@
     for (const layers of sizes) {
       if (layers < MIN_PYRAMID || layers > MAX_PYRAMID) continue
       try {
-        const found = parse(pyramidSequence(generatorPart, layers, { direction }), { open: true })
-        if (found.tree !== undefined && (picking || fits(found.tree))) available.add(layers)
+        const sequence = pyramidSequence(generatorPart, layers, { direction })
+        if (picking) { if (usable(sequence)) available.add(layers) }
+        else {
+          const found = parse(sequence, { open: true })
+          if (found.tree !== undefined && fits(found.tree)) available.add(layers)
+        }
       } catch { /* too long for the slot, or unreadable */ }
     }
     return available
@@ -78,6 +87,7 @@
   const pyramidTitle = layers => {
     if (picking) {
       if (!pyramidPartSupported) return t('ids.templates.pyramidUnsupported')
+      if (!availablePyramids.has(layers)) return t('ids.templates.pyramidTooLong')
       try { return openLabel(pyramidSequence(generatorPart, layers, { direction })) }
       catch { return t('ids.templates.pyramidTooLong') }
     }
@@ -106,8 +116,12 @@
     if (!repeatPartsSupported || (!picking && target === null)) return available
     try {
       for (const rows of REPEATS) {
-        const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
-        if (found.tree && (picking || fits(found.tree))) available.add(rows.join('+'))
+        const sequence = repeatSequence(generatorPart, rows, { bottom: repeatBottom })
+        if (picking) { if (usable(sequence)) available.add(rows.join('+')) }
+        else {
+          const found = parse(sequence, { open: true })
+          if (found.tree && fits(found.tree)) available.add(rows.join('+'))
+        }
       }
     } catch { /* this part cannot fill a row */ }
     return available
@@ -123,6 +137,7 @@
   const repeatTitle = rows => {
     if (!repeatPartsSupported) return t('ids.templates.repeatUnsupported')
     if (picking) {
+      if (!availableRepeats.has(rows.join('+'))) return t('ids.templates.repeatTooLong')
       try { return openLabel(repeatSequence(generatorPart, rows, { bottom: repeatBottom })) }
       catch { return t('ids.templates.repeatTooLong') }
     }
@@ -143,8 +158,10 @@
   const customRepeatAvailable = $derived.by(() => {
     if (!customRows || (!picking && target === null) || !repeatPartsSupported) return false
     try {
-      const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
-      return found.tree !== undefined && (picking || fits(found.tree))
+      const sequence = repeatSequence(generatorPart, customRows, { bottom: repeatBottom })
+      if (picking) return usable(sequence)
+      const found = parse(sequence, { open: true })
+      return found.tree !== undefined && fits(found.tree)
     } catch { return false }
   })
   const customRepeatTitle = $derived(!repeatPartsSupported
@@ -177,10 +194,12 @@
     const available = new Set()
     if (!fivePartSupported || (!picking && target === null)) return available
     try {
-      const inner = parse(repeatSequence(generatorPart, FIVE_ROWS)).tree
-      if (inner !== undefined && (picking || fits(inner))) available.add('212')
-      const enclosed = parse(enclosedRepeatSequence(fiveHost, generatorPart)).tree
-      if (fiveHostSupported && enclosed !== undefined && (picking || fits(enclosed))) available.add('enclosed')
+      const inner = repeatSequence(generatorPart, FIVE_ROWS)
+      const innerTree = parse(inner).tree
+      if (innerTree !== undefined && (picking ? usable(inner) : fits(innerTree))) available.add('212')
+      const enclosed = enclosedRepeatSequence(fiveHost, generatorPart)
+      const enclosedTree = parse(enclosed).tree
+      if (fiveHostSupported && enclosedTree !== undefined && (picking ? usable(enclosed) : fits(enclosedTree))) available.add('enclosed')
     } catch { /* this part cannot fill a five-copy layout */ }
     return available
   })
@@ -188,7 +207,10 @@
   const fiveTitle = key => {
     if (!fivePartSupported) return t('ids.templates.fiveUnsupported')
     if (key === 'enclosed' && !fiveHostSupported) return t('ids.templates.fiveHostUnsupported')
-    if (picking) return openLabel(key === '212' ? repeatSequence(generatorPart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, generatorPart))
+    if (picking) {
+      if (!availableFive.has(key)) return t('ids.templates.fiveTooLong')
+      return openLabel(key === '212' ? repeatSequence(generatorPart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, generatorPart))
+    }
     return target === null ? t('ids.templates.fiveTarget')
       : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
   }

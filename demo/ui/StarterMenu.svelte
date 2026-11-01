@@ -9,9 +9,9 @@
   /**
    * @type {{ t: (key: string, params?: Record<string, string | number>) => string, editor: any,
    *   items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null,
-   *   onstart: (sequence: string) => void }}
+   *   onstart: (sequence: string) => void, onstarted?: () => void }}
    */
-  let { t, editor, items, view, onstart } = $props()
+  let { t, editor, items, view, onstart, onstarted } = $props()
   const uid = $props.id()
   let open = $state(false)
   /** @type {'templates' | 'examples'} */ let tab = $state('templates')
@@ -19,6 +19,11 @@
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
   /** @type {HTMLDivElement | null} */ let panel = $state(null)
 
+  // MenuList treats an example's menu item like a menu entry; route its run through the same focus
+  // the template picker uses for the new tab.
+  const exampleItems = $derived(items.map(item => item.sequence !== undefined
+    ? { ...item, run: () => { item.run?.(); onstarted?.() } }
+    : item))
   async function show() {
     open = true
     await tick()
@@ -57,7 +62,7 @@
       if (!panel) return
       panel.style.transform = ''
       const rect = panel.getBoundingClientRect()
-      panel.style.maxHeight = `${Math.max(240, Math.min(760, innerHeight - rect.top - pad))}px`
+      panel.style.maxHeight = `${Math.max(0, Math.min(760, innerHeight - rect.top - pad))}px`
       const dx = rect.left < pad ? pad - rect.left : rect.right > innerWidth - pad ? innerWidth - pad - rect.right : 0
       if (dx) panel.style.transform = `translateX(${dx}px)`
     }
@@ -94,7 +99,7 @@
         </div>
       {:else}
         <div class="starter-body" role="tabpanel" id={`${uid}-panel-examples`} aria-labelledby={`${uid}-tab-examples`} tabindex="0">
-          <MenuList label={t('app.examples.label')} {items} {view} onpick={() => hide(true)} />
+          <MenuList label={t('app.examples.label')} items={exampleItems} {view} onpick={() => hide(true)} />
         </div>
       {/if}
     </div>

@@ -992,12 +992,11 @@
   })
   // A blank tab comes from the strip's +; the chevron beside it opens the full template catalogue
   // and the examples, each starting a new tab with the focus in its sequence field.
+  const focusNewTab = () => tick().then(() => /** @type {HTMLInputElement | null} */ (work?.querySelector('.ids-field input'))?.focus())
   const starter = $derived({
     editor, items: exampleItems, view: exampleView,
-    onstart: sequence => {
-      addTab(sequence)
-      tick().then(() => /** @type {HTMLInputElement | null} */ (work?.querySelector('.ids-field input'))?.focus())
-    },
+    onstart: sequence => { addTab(sequence); focusNewTab() },
+    onstarted: focusNewTab,
   })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {

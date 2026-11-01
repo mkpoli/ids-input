@@ -16,7 +16,7 @@
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
    *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
    *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void,
-   *   starter: { editor: any, items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, onstart: (sequence: string) => void } }}
+   *   starter: { editor: any, items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, onstart: (sequence: string) => void, onstarted?: () => void } }}
    */
   let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
@@ -302,7 +302,7 @@
   </div>
   <div class="tab-new">
     <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
-    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} />
+    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
   </div>
 </div>
 

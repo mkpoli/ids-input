@@ -94,6 +94,19 @@ try {
   const shown = await dialog.locator('.item').count()
   assert.ok(shown > 0 && shown < rows, 'the list view filters too')
   assert.ok((await dialog.locator('.note').allTextContents()).some(note => note.includes('돌')), 'a reading matches the query')
+
+  // An example opens its tab and leaves the focus in that tab's sequence field.
+  await dialog.getByRole('button', { name: 'Cards', exact: true }).click()
+  await dialog.locator('.filter-input').fill('')
+  await page.waitForTimeout(300)
+  const card = dialog.locator('.card').first()
+  const cardText = (await card.locator('.card-label').textContent()).trim()
+  await card.click()
+  await page.waitForTimeout(400)
+  assert.equal(await dialog.count(), 0, 'the dialog closes after an example')
+  assert.equal(await page.locator('.ids-field input').inputValue(), cardText, 'the example opens its tab')
+  assert.equal(await page.evaluate(() => document.activeElement?.closest('.ids-field') !== null), true, 'the focus moves into the example tab')
+
   await page.keyboard.press('Escape')
   await page.waitForTimeout(200)
 
