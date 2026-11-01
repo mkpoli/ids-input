@@ -356,6 +356,14 @@ try {
       color: getComputedStyle(el).color,
     })))
     assert.notEqual(faces[0].background, faces[1].background, 'the selected segment keeps its system highlight in forced colours')
+    const themeSegment = page.locator('.top .ui-segment > input:checked')
+    await themeSegment.focus()
+    await page.keyboard.press('Shift')
+    const checkedRing = await themeSegment.evaluate(el => ({
+      outline: getComputedStyle(el.nextElementSibling).outlineColor,
+      background: getComputedStyle(el.nextElementSibling).backgroundColor,
+    }))
+    assert.notEqual(checkedRing.outline, checkedRing.background, 'a focused checked segment draws its ring clear of the highlight in forced colours')
     const selectedSwatch = page.locator('.ui-swatches input:checked').first()
     await selectedSwatch.focus()
     await page.keyboard.press('Shift')

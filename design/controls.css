@@ -873,6 +873,15 @@
     forced-color-adjust: none;
   }
 
+  /* The ring sits on the face, so on a checked face it takes the text colour. */
+  .ui-segment > input:focus-visible + .ui-segment-face {
+    outline-color: Highlight;
+  }
+
+  .ui-segment > input:checked:focus-visible + .ui-segment-face {
+    outline-color: HighlightText;
+  }
+
   .ui-swatch-tile {
     border: 1px solid ButtonBorder;
     forced-color-adjust: none;
