@@ -7,14 +7,34 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 /** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
 
-/** Reflect an emoji around the centre of its layout box; a box that is not four finite numbers has no reflection. */
+/** The share of an emoji's box its glyph takes, sides and all: the em square of Noto Emoji is 2,784 units of its 2,048, and its glyphs span 2,256. */
+export const EMOJI_FILL = 0.81
+
+/**
+ * Where an emoji stands in its box: `{ x, y, size }`, the glyph's middle and its font size, every
+ * number finite. The glyph spans `EMOJI_FILL` of the box's shorter side, so it centers between the
+ * drawn parts as a component does, clear of their strokes.
+ * @param {{ box?: number[] } | null | undefined} item
+ */
+export function emojiPlace(item) {
+  const [x, y, width, height] = (item?.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+  return { x: x + width / 2, y: y + height / 2, size: Math.max(0, Math.min(width, height) * EMOJI_FILL) }
+}
+
+/**
+ * The transform of an emoji mirrored or turned within its box, about the centre of the box, which the
+ * whole drawing's reflection leaves in place, so a flipped emoji is flipped about its own ink. A box
+ * that is not four finite numbers has no reflection.
+ * @param {{ box?: number[], flip?: [boolean, boolean] } | null | undefined} item
+ */
 export function emojiTransform(item) {
-  const [flipX, flipY] = item.flip ?? []
+  const [flipX, flipY] = item?.flip ?? []
   if (!flipX && !flipY) return ''
-  const box = Array.isArray(item.box) ? item.box.slice(0, 4) : []
+  const box = Array.isArray(item?.box) ? item.box.slice(0, 4) : []
   if (box.length < 4 || !box.every(value => Number.isFinite(Number(value)))) return ''
-  const [x, y, width, height] = box.map(value => Math.round(Number(value) * 1000) / 1000)
-  return `translate(${flipX ? 2 * x + width : 0} ${flipY ? 2 * y + height : 0}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
+  const { x, y } = emojiPlace(item)
+  const round = value => Math.round(value * 1000) / 1000
+  return `translate(${round(flipX ? -x : 0)} ${round(flipY ? -y : 0)}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
 }
 
 /**
@@ -43,7 +63,6 @@ export const FACE = [38.42, 39.94, 928.36, 921.56]
 
 /** The stroke width a placeholder is drawn with where no drawing gives one: the font's at weight 400. */
 export const STROKE = 80
-
 /**
  * A placeholder in `box` ([x, y, width, height], y down): a rounded rectangle inset by half a stroke,
  * outlined in dots a stroke wide, with nothing at its centre that could read as a stroke. `stroke` is
@@ -180,12 +199,11 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     && pieces?.every(piece => typeof piece.d === 'string')
   /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
   const textOf = (item, attribute = '') => {
-    const box = (item.box ?? []).slice(0, 4).map(v => num(v, 0))
-    if (box.length < 4 || typeof item.text !== 'string') return ''
-    const [x, y, width, height] = box
+    if (typeof item.text !== 'string') return ''
+    const { x, y, size } = emojiPlace(item)
     const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const reflect = emojiTransform(item)
-    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
   }
   if (hasCut) {
     if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
