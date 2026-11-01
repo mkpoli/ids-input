@@ -12,14 +12,21 @@ const ORIGIN = 'https://ids.mkpo.li'
 const PAGES = ['/', '/compare', '/engines']
 
 /** @param {string} path */
-const loc = path => `<url>\n    <loc>${ORIGIN}${path.replace(/&/g, '&amp;')}</loc>\n  </url>`
+const url = path => `<url>\n    <loc>${ORIGIN}${path}</loc>\n  </url>`
 
-const paths = [...new Set([...PAGES, ...EXAMPLES.map(example => pathOf(example.sequence))])]
-const xml = `<?xml version="1.0" encoding="UTF-8"?>
+/** The sitemap, which lists each shared page once. */
+export function sitemapXml() {
+  const paths = [...new Set([...PAGES, ...EXAMPLES.map(example => pathOf(example.sequence))])]
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  ${paths.map(loc).join('\n  ')}
+  ${paths.map(url).join('\n  ')}
 </urlset>
 `
-mkdirSync(join(import.meta.dirname, '../dist'), { recursive: true })
-writeFileSync(join(import.meta.dirname, '../dist/sitemap.xml'), xml)
-console.log(`sitemap: ${paths.length} pages`)
+}
+
+if (import.meta.main) {
+  const xml = sitemapXml()
+  mkdirSync(join(import.meta.dirname, '../dist'), { recursive: true })
+  writeFileSync(join(import.meta.dirname, '../dist/sitemap.xml'), xml)
+  console.log(`sitemap: ${xml.split('<url>').length - 1} pages`)
+}
