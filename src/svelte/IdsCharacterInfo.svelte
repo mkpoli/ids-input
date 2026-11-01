@@ -1,6 +1,6 @@
 <script>
   import { tick } from 'svelte'
-  import { characterScript, SOURCE_NOTES } from '../adapter/character-info.js'
+  import { characterScript } from '../adapter/character-info.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { translator } from './i18n.js'
 
@@ -34,49 +34,63 @@
   const identity = $derived(componentIdentity(char))
   /** @type {number | null} */ let uses = $state(null)
   // A source's tooltip rests on its button, 400 ms into a hover or at once on keyboard focus, and
-  // leaves with it, so a click reaches the site rather than a covered control.
+  // leaves with it, so a click reaches the site rather than a covered control. `tipFocusKept` holds
+  // a note opened by focus while it stays with that button, whatever the pointer does.
   /** @type {{ title: string, body: string[], x: number, y: number } | null} */ let tip = $state.raw(null)
-  /** @type {HTMLElement | null} */ let tipAnchor = null
+  /** @type {HTMLElement | null} */ let tipAnchor = $state.raw(null)
+  /** @type {HTMLElement | null} */ let tipNode = $state.raw(null)
+  let tipFocusKept = false
   /** @type {ReturnType<typeof setTimeout> | undefined} */ let tipTimer
-  // What the pointer is on, then the other sites the card is built from, named once each.
-  /** @param {HTMLElement} button */
+  const tipId = `${uid}-tip`
+  /** The button of each source kind, so the note can describe the one it is attached to. */
+  /** @type {Record<string, HTMLElement | undefined>} */ let chips = $state.raw({})
+  /** The note under the button, then the other sources the card is built from, named once each.
+   *  @param {HTMLElement} button */
   function tipBody(button) {
-    const source = info?.sources.find(item => item.url === button.dataset.url)
-    const sites = (info?.sourceSites ?? []).map(key => t(`info.site.${key}`))
-    const others = sites.filter(site => site !== t(`info.site.${source?.note ?? 'component'}`))
-    const note = t(`info.note.${source?.note ?? 'component'}`)
-    return [note, others.length ? t('info.sources.also', { sites: new Intl.ListFormat(locale, { type: 'conjunction' }).format(others) }) : ''].filter(Boolean)
+    const here = button.dataset.note ?? 'component'
+    const others = (info?.sourceSites ?? []).filter(kind => kind !== here).map(kind => t(`info.site.${kind}`))
+    const also = others.length ? t('info.sources.also', { sites: new Intl.ListFormat(locale, { type: 'conjunction' }).format(others) }) : ''
+    return [t(`info.note.${here}`), also].filter(Boolean)
   }
   /** @param {HTMLElement} button */
   async function tipOpen(button) {
-    tip = { title: t('info.sources.open', { label: button.dataset.label ?? '' }), body: tipBody(button), x: 0, y: 0 }
+    tip = { title: t('info.sources.open', { site: t(`info.site.${button.dataset.note ?? 'component'}`) }), body: tipBody(button), x: 0, y: 0 }
     tipAnchor = button
     await tick(); tipPlace(button)
   }
-  /** @type {HTMLElement | null} */ let tipNode = $state.raw(null)
-  /** The pointer on the line being read, which keeps it up while it stays there. @param {PointerEvent} event */
-  function tipHover(event) {
-    if (!(event.target instanceof Element) || !tipAnchor || !tip) return
-    // Moving between the button and its note, or between the note's lines, keeps it.
-    if (tipAnchor.contains(event.target) || tipNode?.contains(event.target)) keep()
-    else tipClose()
-  }
-  /** @param {HTMLElement} button */
+  /** Beside the open card, on the side with room, clear of the card's own content.
+   *  @param {HTMLElement} button */
   function tipPlace(button) {
     if (!tip || !tipNode) return
     const box = button.getBoundingClientRect(), note = tipNode.getBoundingClientRect()
     const gap = 8, fits = (/** @type {number} */ x) => x >= 8 && x + note.width <= innerWidth - 8
     const y = Math.max(8, Math.min(box.top, innerHeight - note.height - 8))
-    // Beside the open card, on the side with room, clear of the card's own content.
     const card = panel?.getBoundingClientRect()
     const right = Math.max(box.right, card?.right ?? 0) + gap, left = Math.min(box.left, card?.left ?? innerWidth) - gap - note.width
     tip = { ...tip, x: fits(right) || !fits(left) ? Math.max(8, Math.min(right, innerWidth - note.width - 8)) : left, y }
   }
+  function tipClose() {
+    clearTimeout(tipTimer); tipTimer = undefined
+    tip = null; tipAnchor = null; tipFocusKept = false
+    // A note hidden from under the pointer must not leave the card waiting to close.
+    if (open) keep()
+  }
+  /** The pointer moved: it stays up on the button or on the note, and goes once it is off both.
+   *  @param {PointerEvent} event */
+  function tipHover(event) {
+    if (!tip || !tipAnchor) return
+    const node = /** @type {Node} */ (event.target)
+    if (tipAnchor.contains(node) || tipNode?.contains(node)) keep()
+    else tipClose()
+  }
   /** @param {FocusEvent & { currentTarget: HTMLElement }} event */
   function tipFocus(event) {
-    if (!event.currentTarget.matches(':focus-visible')) return
+    // Tab and programmatic focus carry a note; a press's focus is the pointer's case.
+    if (!event.currentTarget.matches(':focus-visible') && !(event.relatedTarget instanceof HTMLInputElement)) return
     clearTimeout(tipTimer)
-    tipTimer = setTimeout(() => tipOpen(/** @type {HTMLElement} */ (event.currentTarget)), 0)
+    const button = event.currentTarget
+    tipFocusKept = true
+    tipTimer = setTimeout(() => tipOpen(button), 0)
   }
   /** @param {PointerEvent & { currentTarget: HTMLElement }} event */
   function tipEnter(event) {
@@ -89,11 +103,16 @@
     if (!tipAnchor) return
     // A focus that moves within the same button is that button's business.
     if (event.type === 'focusout' && /** @type {FocusEvent} */ (event).relatedTarget instanceof Node && tipAnchor.contains(/** @type {Node} */ (/** @type {FocusEvent} */ (event).relatedTarget))) return
-    // The pointer leaving a button that still has focus keeps the note up.
-    if (event.type === 'pointerleave' && tipAnchor === document.activeElement) return
+    // While the button keeps focus, the pointer may come and go and arrive on the note.
+    if (tipFocusKept && tipAnchor === document.activeElement) return
+    if (event.type === 'pointerleave') {
+      // Off the button: the pointer may be on its way to the note.
+      clearTimeout(tipTimer)
+      tipTimer = setTimeout(() => { if (!tipNode?.matches(':hover') && !tipAnchor?.matches(':hover') && !tipFocusKept) tipClose() }, 200)
+      return
+    }
     tipClose()
   }
-  function tipClose() { clearTimeout(tipTimer); tipTimer = undefined; tip = null; tipAnchor = null }
 
   function close() {
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer); clearTimeout(copyTimer); copyTimer = undefined; tipClose()
@@ -140,7 +159,7 @@
     clearTimeout(showTimer); showTimer = undefined; clearTimeout(hideTimer)
     // Keep waiting while the pointer is still on its way to the card, and give up once it is gone.
     hideTimer = setTimeout(function look() {
-      if (pinned || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+      if (pinned || panel?.matches(':hover') || tipNode?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
       if (nearAnchor()) { hideTimer = setTimeout(look, 200); return }
       close()
     }, 220)
@@ -149,6 +168,7 @@
   // A focusout caused by the card emptying is not focus leaving it.
   function cardFocusOut() { if (open) leave() }
   function position() {
+    if (tip && tipAnchor) tipPlace(tipAnchor)
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     x = Math.max(8, Math.min(box.left, innerWidth - card.width - 8))
@@ -402,8 +422,8 @@
           <div class="relations" role="group" aria-labelledby={`${uid}-sources`}>
             {#each info.sources as source (source.url)}
               <span class="source">
-                <button type="button" class="chip" data-label={source.label} data-url={source.url}
-                  aria-label={t('info.sources.open', { label: source.label })} onfocusin={tipFocus} onpointerenter={tipEnter} onpointerleave={tipHide} onfocusout={tipHide} onclick={() => window.open(source.url, '_blank', 'noopener,noreferrer')}>{t(`info.site.${source.note ?? 'component'}`)}<span class="chip-icon" aria-hidden="true">↗</span></button>
+                <button type="button" class="chip" data-note={source.note ?? 'component'} data-url={source.url} bind:this={chips[source.note ?? 'component']} aria-describedby={tip && tipAnchor === chips[source.note ?? 'component'] ? tipId : undefined}
+                  aria-label={t('info.sources.open', { site: t(`info.site.${source.note ?? 'component'}`) })} onfocusin={tipFocus} onpointerenter={tipEnter} onpointerleave={tipHide} onfocusout={tipHide} onclick={() => window.open(source.url, '_blank', 'noopener,noreferrer')}>{t(`info.site.${source.note ?? 'component'}`)}<span class="chip-icon" aria-hidden="true">↗</span></button>
               </span>
             {/each}
           </div>
@@ -413,7 +433,7 @@
   {/if}
 </div>
 {#if open && tip}
-  <div class="ids-info-tip" role="tooltip" bind:this={tipNode} onpointermove={tipHover} style:left={`${tip.x}px`} style:top={`${tip.y}px`}><span class="tip-title">{tip.title}</span>{#each tip.body as line}<span class="tip-body">{line}</span>{/each}</div>
+  <div class="ids-info-tip" id={tipId} role="tooltip" bind:this={tipNode} onpointermove={tipHover} style:left={`${tip.x}px`} style:top={`${tip.y}px`}><span class="tip-title">{tip.title}</span>{#each tip.body as line}<span class="tip-body">{line}</span>{/each}</div>
 {/if}
 
 <style>

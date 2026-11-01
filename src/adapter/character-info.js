@@ -1,17 +1,10 @@
 // @ts-check
 import { isSmallSeal } from './seal-data.js'
 
-/** @typedef {{ label: string, url: string, license?: string, note?: keyof typeof SOURCE_NOTES }} InfoSource */
-/** What each data source is, keyed by the message the card shows as the tooltip on its name.
- *  `chise.org`, `zi.tools` and `glyphwiki.org` publish the same records the card reads.
- *  @type {Record<string, string>} */
-export const SOURCE_NOTES = {
-  editorial: 'Glosses and emoji mnemonics written for this site.',
-  unicodeSealSource: 'The list of small-seal correspondences the Unicode Consortium publishes.',
-  sealSource: 'Small Seal forms and descriptions from CHISE\'s Jiguge Shuowen; chise.org searches the same records.',
-  wiktionary: 'The meanings Wiktionary records for Tangut characters.',
-  unihan: 'The English definitions in Unicode\'s Unihan database.',
-}
+/** Which kind each source record is; the card names the site and the note by this key. */
+export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSource', 'sealSource', 'wiktionary', 'unihan', 'component'])
+/** @typedef {(typeof SOURCE_KINDS)[number]} SourceKind */
+/** @typedef {{ label: string, url: string, license?: string, note?: SourceKind }} InfoSource */
 /** @typedef {{ en: string[], han: string[], emoji: string }} MeaningAid */
 /** @typedef {{ en: string[], source: 'unihan' | 'wiktionary', aids?: number[] }} GlossEntry */
 /** @typedef {{ format: string, entries: Record<string, GlossEntry>, aids: MeaningAid[], components: Record<string, { en: string, sense?: string, han: string[], emoji: string, source: InfoSource }> }} CharacterInfoData */
@@ -28,9 +21,23 @@ const editorial = { label: 'Editorial meaning aids', url: 'https://github.com/mk
 const unicodeSealSource = { label: 'Unicode · SealSources', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/third_party/unicode/ucd/SealSources.txt', license: 'Unicode License v3', note: /** @type {const} */ ('unicodeSealSource') }
 const sealSource = { label: 'CHISE · Jiguge Small Seal', url: 'https://gitlab.chise.org/CHISE/ids', license: 'GPL-2.0-or-later', note: /** @type {const} */ ('sealSource') }
 /** @param {string} char */
-const wiktionary = char => ({ label: 'Wiktionary contributors', url: `https://en.wiktionary.org/wiki/${encodeURIComponent(char)}#Tangut`, license: 'CC BY-SA 4.0', note: /** @type {const} */ ('wiktionary') })
+const wiktionary = char => /** @type {const} */ ({ label: 'Wiktionary contributors', url: `https://en.wiktionary.org/wiki/${encodeURIComponent(char)}#Tangut`, license: 'CC BY-SA 4.0', note: 'wiktionary' })
 /** @param {string} char */
-const unihan = char => ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3', note: /** @type {const} */ ('unihan') })
+const unihan = char => /** @type {const} */ ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3', note: 'unihan' })
+
+/** Every record a character is built from, tagged with its kind and deduplicated the way the card
+ *  shows them: one entry per kind, named by its first record, so Unihan, Wiktionary, CHISE, the
+ *  Unicode seal list and the editorial aids each appear once whatever number of records feed them.
+ *  @param {InfoSource[]} records @returns {InfoSource[]} */
+export function mergeSources(records) {
+  /** @type {InfoSource[]} */
+  const merged = []
+  for (const record of records) {
+    const kind = record.note ?? 'component'
+    if (!merged.some(other => (other.note ?? 'component') === kind)) merged.push({ ...record, note: kind })
+  }
+  return merged
+}
 
 /** @param {CharacterInfoData} doc @param {import('./seal-data.js').SmallSealData | null} [seal] */
 export function createCharacterInfo(doc, seal = null) {
@@ -89,14 +96,8 @@ export function createCharacterInfo(doc, seal = null) {
     if (result.emoji.length || result.relations.some(r => r.kind === 'tangut')) result.sources.push(editorial)
     result.emoji = result.emoji.filter((e, i, all) => all.findIndex(v => v.text === e.text && v.meaning === e.meaning) === i)
     result.relations = result.relations.filter((r, i, all) => all.findIndex(v => v.char === r.char && v.kind === r.kind && v.meaning === r.meaning) === i)
-    result.sources = result.sources.filter((s, i, all) => all.findIndex(v => v.url === s.url) === i)
-    // The card shows which kind each source is, so every button is labelled by its kind and its
-    // tooltip says where the records are read.
-    if (entry) result.sources[0] = { ...result.sources[0], note: entry.source }
-    /** @type {string[]} */
-    const sites = []
-    for (const source of result.sources) if (!sites.includes(source.note ?? 'component')) sites.push(source.note ?? 'component')
-    if (sites.length) result.sourceSites = sites
+    result.sources = mergeSources(result.sources)
+    result.sourceSites = /** @type {SourceKind[]} */ (result.sources.map(source => source.note))
     return result
   }
 }
