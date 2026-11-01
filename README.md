@@ -1135,13 +1135,13 @@ all tabs. Close all asks first, and Undo after a group close restores the tabs i
 with the tab that was being edited. Duplicate opens the copy beside its source with its selection,
 undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
-transform steps before the editor’s structural steps, a share link with its QR code, the language,
-settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it opens a
-menu: the operator templates, each opening a tab with that operator’s empty slots, then the examples —
-every starter sequence with its character and code point, an abbreviated character, or a mark when
-they have none. The examples open as cards or a list, filter by sequence, character, reading or code
-point, keep only forms with or without a code point, fold each section, and jump to a section from a
-chip that also marks the one in view. An example opens a tab. Settings hold the system, light and dark
+transform steps before the editor’s structural steps, examples, a share link with its QR code, the
+language, settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it
+opens a starter dialog in two tabs: Templates is the same full catalogue the input pane offers
+(structures, pyramids and repeats), and Examples is the list the menu sheet uses — every starter
+sequence with its character and code point, an abbreviated character, or a mark when it has none,
+opening as cards or a list with its filters and folding. A template or an example opens a tab.
+Settings hold the system, light and dark
 themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
 bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
 the older `#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the parser

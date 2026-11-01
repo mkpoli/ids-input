@@ -8,7 +8,7 @@
   // first. The sequence is in the tab's tooltip and its name.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
-  import Menu from './Menu.svelte'
+  import StarterMenu from './StarterMenu.svelte'
   import TabIcon from './TabIcon.svelte'
   /**
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
@@ -16,7 +16,7 @@
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
    *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
    *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void,
-   *   starter: { items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, templates: { heading: string, items: import('./Menu.svelte').Item[] } | null } }}
+   *   starter: { editor: any, items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, onstart: (sequence: string) => void } }}
    */
   let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
@@ -302,7 +302,7 @@
   </div>
   <div class="tab-new">
     <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
-    <Menu label={t('app.tabs.start')} text={false} items={starter.items} view={starter.view} templates={starter.templates} keyHints={false} wide />
+    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} />
   </div>
 </div>
 
