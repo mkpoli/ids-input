@@ -71,7 +71,9 @@ function outline(ops, light, delta, weight) {
 }
 
 /** A record's own contours as `partOf` reads them: the gap their heavy master leaves before the
- *  repair, and the gap the drawn part still has after it.
+ *  repair, and the gap the drawn part still has after it. A stroke's end is as wide as the stroke,
+ *  so a contour whose light master never closes carries an end-width gap wherever its light and
+ *  heavy masters join; only the excess over that width is ink lost at a corner.
  *  @param {any} record */
 function openings(record) {
   const found = { repaired: [], stored: [], near: [], faulty: [], contours: 0 }
@@ -85,12 +87,14 @@ function openings(record) {
     const drawn = part.contours[index]
     const n = drawn.heavy.length
     const left = Math.hypot(drawn.heavy[0] - drawn.heavy[n - 2], drawn.heavy[1] - drawn.heavy[n - 1])
+    const end = Math.hypot(drawn.light[0] - drawn.light[n - 2], drawn.light[1] - drawn.light[n - 1])
+    const excess = left - end
     // What `partOf` repaired is the difference between the record's heavy gap and the drawn one.
     // What is left is a contour whose light master never closed, drawn as stored.
     if (left <= OPENING && gap > OPENING) found.repaired.push(+gap.toFixed(2))
     else if (left > OPENING) {
       if (lo.length >= 4 && lo[0] === lo[lo.length - 2] && lo[1] === lo[lo.length - 1]) found.near.push(+left.toFixed(2))
-      else found.stored.push(+left.toFixed(2))
+      else found.stored.push({ gap: +left.toFixed(2), end: +end.toFixed(2), excess: +excess.toFixed(2) })
     }
   })
   return found
