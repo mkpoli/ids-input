@@ -308,6 +308,7 @@
   "info.loading": "意味を読み込み中…",
   "info.relation.modern": "今字",
   "info.close": "文字情報を閉じる",
+  "info.pinned": "開いたまま",
   "info.missing": "意味の記録がありません。",
   "info.relation.usage": "用例",
   "info.relation.han": "漢字",

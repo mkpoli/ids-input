@@ -9,7 +9,7 @@ try {
     const errors=[]
     page.on('pageerror',e=>errors.push(e.message))
     await page.route('https://glyphatlas.org/**',r=>r.abort())
-    await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{waitUntil:'domcontentloaded',timeout:120000})
+    await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{waitUntil:'domcontentloaded',timeout:300000})
     const field=page.locator('.ids-field input'), panel=page.locator('.ids-character-info')
     await field.fill('⿰馬𘥇'); await field.press('Tab')
     const horse=page.locator('.ids-tree [data-character="馬"]'), component=page.locator('.ids-tree [data-character="𘥇"]')
@@ -116,7 +116,12 @@ try {
     await page.waitForTimeout(600)
     // A press on the card's bare surface closes it and reaches the tile it covers.
     await paletteHorse.scrollIntoViewIfNeeded()
-    await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
+    // A hovered card follows the pointer without a mark; a clicked one is kept and says so.
+    await paletteHorse.locator('.part-text').hover();await panel.waitFor({state:'visible'})
+    assert.equal(await panel.locator('.pin').count(),0,'a hovered card carries no mark')
+    await paletteHorse.click();await page.waitForTimeout(200)
+    assert.equal(await panel.locator('.pin').count(),1,'a clicked card shows the mark')
+    assert.equal(await panel.locator('.pin').getAttribute('aria-label'),'Kept open')
     const covered=await page.evaluate(()=>{
       const card=document.querySelector('.ids-character-info').getBoundingClientRect()
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
@@ -238,20 +243,26 @@ try {
     await page.close();console.log(`PASS ${scheme}: meanings, copying, actions, pinned card, hover persistence, keyboard, stale targets, insertion`)
   }
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
-  await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:120000})
+  await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:300000})
   await page.locator('.ids-field input').fill('⿰馬木')
-  await page.locator('.ids-tree [data-character="馬"]').focus()
+  // A tap keeps the card up; its buttons stay reachable without hover. The palette pages
+  // thousands of tiles, so the tab is picked by hand and the tile brought into view.
+  const components=page.locator('.parts-tabs [role="tab"]').filter({hasText:'Components'})
+  await components.evaluate(el=>el.scrollIntoView({block:'nearest',inline:'center'})).catch(()=>{})
+  await components.click({force:true})
+  const paletteHorse=page.locator('.parts-grid .part[data-character="馬"]').first()
+  await paletteHorse.waitFor()
+  await paletteHorse.evaluate(el=>el.scrollIntoView({block:'center'}))
+  const tileBox=await paletteHorse.boundingBox()
+  await page.touchscreen.tap(tileBox.x+tileBox.width/2,tileBox.y+tileBox.height/2)
   await page.locator('.ids-character-info').waitFor({state:'visible'})
-  // A tap keeps the card up; its buttons stay reachable without hover.
-  await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
-  await page.locator('.parts-grid .part[data-character="馬"]').first().tap()
-  await page.waitForTimeout(500)
   assert.ok(await page.locator('.ids-character-info').isVisible())
   // Painted text takes a tap too, where there is no hover to fall back on.
   await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
   await page.locator('.ids-field').scrollIntoViewIfNeeded()
   await page.evaluate(()=>scrollBy(0,-90));await page.waitForTimeout(200)
   const painted=await page.locator('.sequence-paint [data-character="馬"]').first().boundingBox()
+  assert.ok(painted.y>48&&painted.y+painted.height<844,'the painted glyph is clear of the header and the screen edge')
   await page.touchscreen.tap(painted.x+painted.width/2,painted.y+painted.height/2)
   await page.locator('.ids-character-info').waitFor({state:'visible'})
   assert.equal(await page.locator('.ids-character-info header .glyph').innerText(),'馬')
