@@ -298,7 +298,7 @@ async function settled(preview, ms = 6000) {
 /** The drawing as a PNG — the scoped document's where it has one, as the export does — else the
  *  preview's own SVG rasterized the same way; null when neither works, so a report still goes
  *  without one. @param {Drawn} drawn @param {Element | null} preview @returns {Promise<Blob | null>} */
-export async function reportImage({ drawing, scopes, slots = [], emoji = [], cut = '' }, preview) {
+export async function reportImage({ drawing, scopes, slots = [], emoji, cut }, preview) {
   if (scopes ?? drawing) {
     try {
       const png = scopes ? await scopedPngOf(scopes, SHOT, slots, emoji ?? [], cut ?? '') : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), SHOT)

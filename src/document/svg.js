@@ -18,7 +18,7 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
 /** @typedef {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} EmojiItem */
-/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[], cut?: string }} SvgOptions */
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
 /**
@@ -29,7 +29,7 @@ const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fil
  * @param {ScopeTree} drawing @param {SvgOptions} [options]
  * @returns {ScopedMarkup}
  */
-export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = [], cut = '' } = {}) {
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = null, cut = '' } = {}) {
   const fill = ink === 'currentColor' ? 'currentColor' : colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
   const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
@@ -99,8 +99,9 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   const slotsMarkup = slots.map(slotRect).join('')
   // Emoji are text in the page's font, which the composer leaves to the page. Cut ones only erase:
   // they join a mask the ink takes and stay out of the visible pass.
-  const cutEmoji = emoji.filter(item => item.cut), shownEmoji = emoji.filter(item => !item.cut)
-  const cutPath = String(cut ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
+  const all = emoji ?? []
+  const cutEmoji = all.filter(item => item.cut), shownEmoji = all.filter(item => !item.cut)
+  const cutPath = pathData(cut ?? '')
   let emojiMask = ''
   if (cutEmoji.length || cutPath) {
     const id = `${prefix}-emoji`
@@ -109,7 +110,10 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
     emojiMask = ` mask="url(#${id})"`
   }
   // A restored emoji is put back by a nested subtraction and keeps clear of the mask.
-  const emojiMarkup = shownEmoji.map(item => emojiText(item, emojiMask && !item.restored ? emojiMask : '')).join('')
+  const emojiMarkup = shownEmoji.map(item => {
+    const text = emojiText(item)
+    return emojiMask && !item.restored ? `<g${emojiMask}>${text}</g>` : text
+  }).join('')
   const clipped = `<g clip-path="url(#${clipId})"><g${emojiMask}>${body}</g>${emojiMarkup}${slotsMarkup}</g>`
   return { defs: defs.length ? `<defs>${defs.join('')}</defs>` : '', body: `${backgroundRect}${clipped}`, background: back ?? '', width, padding: pad, span }
 }
