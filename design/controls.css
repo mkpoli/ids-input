@@ -176,20 +176,21 @@
   color: var(--ui-color-ink);
 }
 
-/* The raised half takes the ink fill, so the choice reads as the strongest mark in the bar. */
+/* The raised half takes a full-strength fill: ink in light, the light surface in dark, with
+   text that clears 4.5:1 either way. */
 .ui-switch-bar > .ui-button[aria-pressed='true'],
 .ui-switch-bar > .ui-button[aria-checked='true'],
 .ui-switch-bar > .ui-button.is-on {
-  background: var(--ui-color-ink);
-  color: var(--ui-color-surface);
+  background: var(--ui-color-switch-highlight);
+  color: var(--ui-color-on-switch-highlight);
   box-shadow: none;
 }
 
 .ui-switch-bar > .ui-button[aria-pressed='true']:not(:disabled):hover,
 .ui-switch-bar > .ui-button[aria-checked='true']:not(:disabled):hover,
 .ui-switch-bar > .ui-button.is-on:not(:disabled):hover {
-  background: var(--ui-color-ink);
-  color: var(--ui-color-surface);
+  background: var(--ui-color-switch-highlight);
+  color: var(--ui-color-on-switch-highlight);
 }
 
 /* ---------- Menus and option lists ---------- */
