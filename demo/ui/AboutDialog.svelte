@@ -48,17 +48,16 @@
 </Dialog>
 
 <style>
-  .about{font-size:13.5px}
-  .lead{margin:0 0 6px;font-size:14px}
-  .links{margin:0 0 4px;color:var(--ui-color-ink-muted)}
-  h3{margin:18px 0 6px;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
-  ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
-  li{padding:8px 10px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
-  a{color:var(--ui-color-accent);font-weight:600;text-underline-offset:2px}
-  .by,.licence{margin-left:8px;font-size:12px;color:var(--ui-color-ink-muted)}
-  .licence{padding:1px 6px;border-radius:var(--ui-radius-pill);border:1px solid var(--ui-color-border)}
-  p{margin:2px 0 0;color:var(--ui-color-ink-muted);font-size:12.5px;line-height:1.45}
+  .about{font-size:var(--ui-text-sm)}
+  .lead{margin:0 0 var(--ui-space-xs);font-size:var(--ui-text-md)}
+  .links{margin:0 0 var(--ui-space-2xs);color:var(--ui-color-ink-muted)}
+  h3{margin:var(--ui-space-xl) 0 var(--ui-space-xs);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
+  ul{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--ui-space-sm)}
+  li{padding:var(--ui-space-sm) var(--ui-space-md);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
+  a{color:var(--ui-color-accent);font-weight:var(--ui-weight-semibold);text-underline-offset:2px}
+  .by,.licence{margin-left:var(--ui-space-sm);font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
+  .licence{padding:1px var(--ui-space-xs);border-radius:var(--ui-radius-pill);border:1px solid var(--ui-color-border)}
+  p{margin:var(--ui-space-3xs) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:1.45}
   .bib{margin:0;padding-left:1.6em}
-  .bib li{padding:8px 10px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
-  .bib li + li{margin-top:8px}
+  .bib li + li{margin-top:var(--ui-space-sm)}
 </style>

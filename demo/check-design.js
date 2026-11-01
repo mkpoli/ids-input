@@ -1,9 +1,11 @@
 // Checks the design system page in a browser: accessible names, keyboard operation, focus rings,
 // contrast, target sizes, the theme switch, reduced motion and forced colours. It uses the same
-// checks a person would make, not a snapshot.
+// checks a person would make, not a snapshot. The workshop's dialogs are not on the design page,
+// so they are opened from the workshop itself and measured the same way.
 //
 //   IDS_URL=http://localhost:5178 CHROMIUM_PATH=/path/to/chrome bun demo/check-design.js
 //   IDS_DESIGN_SHOTS=shots bun demo/check-design.js
+//   IDS_COMPOSER=<composer export> draws the workshop's preview without the live composer
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 import { mkdirSync } from 'node:fs'
@@ -15,6 +17,49 @@ if (shots) mkdirSync(shots, { recursive: true })
 const pass = message => console.log('PASS', message)
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 
+/** Colour arithmetic for the page: colours as they reach the screen, after every translucent
+ *  layer below them is composited, and the WCAG contrast ratio between two of them. */
+function colourHelpers() {
+  /** @param {string} value @returns {[number, number, number, number] | null} */
+  const parse = value => {
+    const match = value.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)(?:\s*[,/]\s*([\d.]+%?))?/)
+    if (!match) return null
+    const alpha = match[4] === undefined ? 1 : match[4].endsWith('%') ? parseFloat(match[4]) / 100 : Number(match[4])
+    return [Number(match[1]), Number(match[2]), Number(match[3]), alpha]
+  }
+  const over = (top, below) => top.slice(0, 3).map((c, i) => c * top[3] + below[i] * (1 - top[3]))
+  /** The opaque colour behind an element, compositing translucent fills on the way down. Null when
+   *  a gradient or image lies under the text, where one colour cannot stand for the background. */
+  const backdrop = el => {
+    const layers = []
+    for (let node = el; node; node = node.parentElement ?? node.getRootNode().host ?? null) {
+      const style = getComputedStyle(node)
+      if (style.backgroundImage !== 'none') return null
+      const fill = parse(style.backgroundColor)
+      if (fill && fill[3] > 0) layers.push(fill)
+      if (fill && fill[3] >= 1) break
+    }
+    let colour = [255, 255, 255]
+    for (const layer of layers.reverse()) colour = over(layer, colour)
+    return colour
+  }
+  const luminance = rgb => {
+    const [r, g, b] = rgb.map(value => {
+      const c = value / 255
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+    })
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+  }
+  /** @param {string} foreground a computed colour @param {number[]} behind an opaque colour */
+  const ratio = (foreground, behind) => {
+    const fg = parse(foreground)
+    if (!fg || !behind) return 0
+    const [light, dark] = [luminance(over(fg, behind)), luminance(behind)].sort((x, y) => y - x)
+    return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100
+  }
+  Object.assign(window, { __colour: { parse, backdrop, ratio } })
+}
+
 /** @param {{ scheme?: 'light' | 'dark', reducedMotion?: 'reduce' | 'no-preference', forcedColors?: 'active' | 'none' }} [options] */
 async function open(options = {}) {
   const context = await browser.newContext({
@@ -24,6 +69,7 @@ async function open(options = {}) {
     reducedMotion: options.reducedMotion ?? 'no-preference',
     forcedColors: options.forcedColors ?? 'none',
   })
+  await context.addInitScript(colourHelpers)
   const page = await context.newPage()
   page.errors = []
   page.on('pageerror', error => page.errors.push(error.message))
@@ -179,30 +225,9 @@ async function checkStates(page) {
 async function checkContrast(page) {
   await page.getByLabel('Copy the outline', { exact: true }).focus()
   const results = await page.evaluate(() => {
-    const parse = value => {
-      const match = value.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/)
-      return match ? [Number(match[1]), Number(match[2]), Number(match[3])] : null
-    }
-    const luminance = rgb => {
-      const [r, g, b] = rgb.map(value => {
-        const c = value / 255
-        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
-      })
-      return 0.2126 * r + 0.7152 * g + 0.0722 * b
-    }
-    const ratio = (one, two) => {
-      const [a, b] = [parse(one), parse(two)]
-      if (!a || !b) return 0
-      const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x)
-      return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100
-    }
-    const background = el => {
-      for (let node = el; node; node = node.parentElement) {
-        const value = getComputedStyle(node).backgroundColor
-        if (value && value !== 'rgba(0, 0, 0, 0)' && value !== 'transparent') return value
-      }
-      return getComputedStyle(document.body).backgroundColor
-    }
+    const { parse, backdrop, ratio } = window.__colour
+    const background = el => backdrop(el)
+    const fill = el => parse(getComputedStyle(el).backgroundColor)?.slice(0, 3) ?? null
     const one = selector => document.querySelector(selector)
     const checks = []
     const add = (name, selector, foreground, threshold, against) => {
@@ -218,10 +243,10 @@ async function checkContrast(page) {
     add('input border', '.ui-input', el => getComputedStyle(el).borderTopColor, 3)
     add('unchecked checkbox border', '.ui-checkbox:not(:checked):not(:disabled)', el => getComputedStyle(el).borderTopColor, 3)
     add('checked checkbox fill', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el).backgroundColor, 3, el => background(el.parentElement))
-    add('checked checkbox mark', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el, '::before').borderRightColor, 4.5, el => getComputedStyle(el).backgroundColor)
+    add('checked checkbox mark', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el, '::before').borderRightColor, 4.5, fill)
     add('checked radio fill', '.ui-radio:checked', el => getComputedStyle(el).backgroundColor, 3, el => background(el.parentElement))
     add('switch track', '.ui-switch:not(:disabled)', el => getComputedStyle(el).backgroundColor, 3, el => background(el.parentElement))
-    add('switch thumb', '.ui-switch:not(:disabled)', el => getComputedStyle(el, '::before').backgroundColor, 3, el => getComputedStyle(el).backgroundColor)
+    add('switch thumb', '.ui-switch:not(:disabled)', el => getComputedStyle(el, '::before').backgroundColor, 3, fill)
     add('button label', '.ui-button:not([data-variant])', el => getComputedStyle(el).color, 4.5)
     add('primary button label', '.ui-button[data-variant="primary"]', el => getComputedStyle(el).color, 4.5)
     add('danger button label', '.ui-button[data-variant="danger"]', el => getComputedStyle(el).color, 4.5)
@@ -310,7 +335,156 @@ async function checkInteractions(page) {
   pass('an actionable note waits for the pointer and undoes its change')
 }
 
+const SEQUENCE = '%E2%BF%B0%E6%9C%A8%E5%8F%A3'
+const composer = process.env.IDS_COMPOSER ? `composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''
+
+/** The workshop with a drawn sequence, in one scheme. @param {'light' | 'dark'} scheme @param {string} [query] */
+async function openWorkshop(scheme, query = '') {
+  const context = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2, colorScheme: scheme })
+  await context.addInitScript(colourHelpers)
+  await context.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
+  const page = await context.newPage()
+  page.errors = []
+  page.on('pageerror', error => page.errors.push(error.message))
+  const search = [query, composer].filter(Boolean).join('&')
+  await page.goto(`${base}/${SEQUENCE}${search ? `?${search}` : ''}`, { waitUntil: 'domcontentloaded' })
+  await page.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').waitFor({ timeout: 60000 })
+  return { context, page }
+}
+
+/** Each workshop dialog: how to open it, and what to fill so its controls are in their working state.
+ *  @type {{ name: string, query?: string, open: (page: import('playwright-core').Page) => Promise<void>, fill?: (dialog: import('playwright-core').Locator) => Promise<void> }[]} */
+const DIALOGS = [
+  { name: 'Document title…', open: async page => {
+    await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+    await page.getByRole('menuitem', { name: 'Document title…', exact: true }).click()
+  } },
+  { name: 'Report a problem', query: `report=1&endpoint=${encodeURIComponent('https://report.invalid/intake')}`, open: async () => {},
+    fill: async dialog => { await dialog.getByLabel('What happened', { exact: true }).fill('The preview overlaps the tab strip.') } },
+  { name: 'Share', open: async page => { await page.getByRole('button', { name: 'Share', exact: true }).first().click() } },
+  { name: 'About', open: async page => { await page.getByRole('button', { name: 'About', exact: true }).first().click() } },
+  { name: 'Sponsor', open: async page => { await page.getByRole('button', { name: 'Sponsor', exact: true }).first().click() } },
+  { name: 'Settings', open: async page => { await page.getByRole('button', { name: 'Settings', exact: true }).first().click() } },
+  { name: 'Layers', open: async page => { await page.getByRole('button', { name: 'Layers', exact: true }).first().click() },
+    fill: async dialog => {
+      await dialog.locator('.canvas img').waitFor({ timeout: 30000 })
+      await dialog.getByRole('treeitem').first().click()
+      await dialog.locator('.transform').waitFor()
+    } },
+  { name: 'Replace a component', open: async page => { await page.locator('.replacement-link').first().click() },
+    fill: async dialog => {
+      await dialog.getByLabel('Character or IDS', { exact: true }).fill('林')
+      await dialog.getByLabel('Replace', { exact: true }).fill('木')
+      await dialog.getByLabel('With', { exact: true }).fill('火')
+    } },
+]
+
+/** Contrast, target sizes and the boundaries of fields inside one open dialog. Text inside a disabled
+ *  control and decoration hidden from assistive technology are exempt, as WCAG exempts them; text
+ *  over a gradient or image is reported as unmeasured rather than guessed. */
+function measureDialog() {
+  const { backdrop, ratio } = window.__colour
+  const dialog = document.querySelector('dialog[open]')
+  if (!dialog) return null
+  const visible = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden'
+  const exempt = el => el.closest('[aria-hidden="true"], :disabled, [aria-disabled="true"]')
+  const describe = el => `${el.tagName.toLowerCase()}${el.className && typeof el.className === 'string' ? `.${el.className.trim().split(/\s+/)[0]}` : ''} "${(el.getAttribute('aria-label') ?? el.textContent ?? '').trim().slice(0, 32)}"`
+  const failures = [], unmeasured = []
+  let checked = 0
+  const check = (what, el, foreground, behind, threshold) => {
+    if (behind === null) { unmeasured.push(`${what}: ${describe(el)}`); return }
+    const value = ratio(foreground, behind)
+    checked++
+    if (value < threshold) failures.push(`${what} ${value}:1 < ${threshold}:1: ${describe(el)}`)
+  }
+  for (const el of dialog.querySelectorAll('*')) {
+    if (!visible(el) || exempt(el)) continue
+    const style = getComputedStyle(el)
+    const text = [...el.childNodes].some(node => node.nodeType === Node.TEXT_NODE && node.textContent.trim())
+    if (text) {
+      const size = parseFloat(style.fontSize), weight = Number(style.fontWeight)
+      const large = size >= 24 || (size >= 18.66 && weight >= 700)
+      check('text', el, style.color, backdrop(el), large ? 3 : 4.5)
+    }
+    if (el.matches('input:placeholder-shown, textarea:placeholder-shown')) check('placeholder', el, getComputedStyle(el, '::placeholder').color, backdrop(el), 4.5)
+    if (el.matches('.ui-input, .ui-textarea, .ui-select, .ui-checkbox:not(:checked)')) check('boundary', el, style.borderTopColor, backdrop(el.parentElement), 3)
+  }
+  const small = [...dialog.querySelectorAll('button, input, select, textarea, summary, [role="treeitem"], a[href]')]
+    .filter(el => visible(el) && !(el.matches('a') && getComputedStyle(el).display === 'inline'))
+    .map(el => el.matches('input[type="checkbox"], input[type="radio"]') && el.closest('label') ? el.closest('label') : el)
+    .filter(el => { const rect = el.getBoundingClientRect(); return rect.height < 24 || rect.width < 24 })
+    .map(el => `${describe(el)}: ${Math.round(el.getBoundingClientRect().width)}×${Math.round(el.getBoundingClientRect().height)}px`)
+  return { checked, failures, unmeasured, small }
+}
+
+/** Tab through the open dialog and read the ring on every stop. @param {import('playwright-core').Page} page */
+async function measureRings(page) {
+  const seen = new Set(), rings = []
+  for (let step = 0; step < 240; step++) {
+    await page.keyboard.press('Tab')
+    const ring = await page.evaluate(() => {
+      const host = document.activeElement
+      const dialog = document.querySelector('dialog[open]')
+      if (!host || !dialog?.contains(host) || host === dialog) return null
+      // A widget with a shadow root keeps its focused control inside it.
+      let el = host
+      while (el.shadowRoot?.activeElement) el = el.shadowRoot.activeElement
+      if (!el.dataset.ringProbe) el.dataset.ringProbe = String(Math.random()).slice(2)
+      // A segment or swatch hides its native input and rings the face drawn beside it.
+      const face = el.matches('.ui-segment > input, .ui-swatch-option > input') ? el.nextElementSibling : el
+      const style = getComputedStyle(face)
+      const offset = parseFloat(style.outlineOffset)
+      const behind = window.__colour.backdrop(offset < 0 ? face : face.parentElement)
+      return {
+        id: el.dataset.ringProbe,
+        foreign: el !== host ? host.tagName.toLowerCase() : null,
+        name: `${el.tagName.toLowerCase()} "${(el.getAttribute('aria-label') ?? el.textContent ?? el.getAttribute('placeholder') ?? '').trim().slice(0, 32)}"`,
+        visible: el.matches(':focus-visible'), style: style.outlineStyle, width: parseFloat(style.outlineWidth),
+        contrast: behind ? window.__colour.ratio(style.outlineColor, behind) : null,
+      }
+    })
+    if (!ring) continue
+    if (seen.has(ring.id)) break
+    seen.add(ring.id)
+    rings.push(ring)
+  }
+  return rings
+}
+
+/** @param {'light' | 'dark'} scheme */
+async function checkDialogs(scheme) {
+  for (const entry of DIALOGS) {
+    const { context, page } = await openWorkshop(scheme, entry.query)
+    await entry.open(page)
+    const dialog = page.getByRole('dialog', { name: entry.name, exact: true })
+    await dialog.waitFor()
+    await entry.fill?.(dialog)
+    await page.waitForTimeout(300)
+    const measured = await page.evaluate(measureDialog)
+    assert.ok(measured, `${entry.name}: the dialog is open`)
+    assert.deepEqual(measured.failures, [], `${entry.name} (${scheme}) contrast below target:\n${measured.failures.join('\n')}`)
+    assert.deepEqual(measured.small, [], `${entry.name} (${scheme}) targets under 24px:\n${measured.small.join('\n')}`)
+    // Shot before the Tab walk: leaving a popover dialog closes it.
+    if (shots) await dialog.screenshot({ path: join(shots, `dialog-${entry.name.replace(/\W+/g, '-').replace(/-$/, '').toLowerCase()}-${scheme}.png`) })
+    await page.evaluate(() => document.querySelector('dialog[open]')?.focus())
+    const rings = await measureRings(page)
+    assert.ok(rings.length > 0, `${entry.name}: Tab reaches the dialog's controls`)
+    const weak = ring => !ring.visible || ring.style !== 'solid' || ring.width < 2 || (ring.contrast !== null && ring.contrast < 3)
+    // A third-party element draws its own ring inside its shadow root, out of the workshop's reach.
+    // It is named on every run so the gap stays visible, but it is fixed where that element is built.
+    for (const ring of rings.filter(ring => ring.foreign && weak(ring))) console.log('NOTE', `${entry.name} (${scheme}): <${ring.foreign}> draws its own focus ring (${ring.style} ${ring.width}px) on ${ring.name}`)
+    const faint = rings.filter(ring => !ring.foreign && weak(ring))
+    assert.deepEqual(faint, [], `${entry.name} (${scheme}) focus rings missing or under 3:1:\n${faint.map(ring => JSON.stringify(ring)).join('\n')}`)
+    assert.deepEqual(page.errors, [], `${entry.name}: page errors: ${page.errors.join(', ')}`)
+    const skipped = measured.unmeasured.length ? `; ${measured.unmeasured.length} over a gradient unmeasured` : ''
+    pass(`${entry.name} (${scheme}): ${measured.checked} contrast checks, every target 24px, ${rings.length} focus rings${skipped}`)
+    await context.close()
+  }
+}
+
 try {
+  for (const scheme of ['light', 'dark']) await checkDialogs(scheme)
+
   for (const scheme of ['light', 'dark']) {
     const { context, page } = await open({ scheme })
     assert.deepEqual(page.errors, [], `page errors: ${page.errors.join(', ')}`)

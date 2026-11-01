@@ -394,46 +394,48 @@
     {/if}
     {#if splitMessage}<p class="note" role="alert">{splitMessage}</p>{/if}
     {#if selected}
-      <fieldset class="transform" disabled={nonlinear}>
+      <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
-        <div class="modes" role="group" aria-label={t('app.layers.mode')}>
-          <button type="button" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
-          <button type="button" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
-          <button type="button" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
+        <div class="transform-body">
+          <div class="modes" role="group" aria-label={t('app.layers.mode')}>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
+          </div>
+          {#if mode === 'affine'}
+            <div class="affine">
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.x')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={x} onchange={apply} /></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.y')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={y} onchange={apply} /></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleX')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleY')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field rotate"><span class="ui-label">{t('app.layers.rotate')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={rotate} onchange={apply} /><span class="unit">°</span></span></label>
+            </div>
+          {:else if mode === 'matrix'}
+            <div class="matrix">
+              {#each ['a', 'b', 'c', 'd', 'e', 'f'] as name, index (name)}
+                <label class="ui-field field"><span class="ui-label">{name}</span><span class="control"><input class="ui-input num" data-mono aria-label={`${t('app.layers.matrix')} ${name}`} type="number" step="0.001" bind:value={matrix[index]} onchange={apply} /></span></label>
+              {/each}
+            </div>
+            <p class="note">{t('app.layers.matrixHint')}</p>
+          {:else}
+            <div class="mobius">
+              {#each ['a', 'b', 'c', 'd'] as name (name)}
+                <div class="coef">
+                  <span class="coef-name">{name}</span>
+                  <label class="ui-field field"><span class="ui-label">{t('app.layers.real')}</span><span class="control"><input class="ui-input num" data-mono aria-label={`${name} ${t('app.layers.real')}`} type="number" step="0.001" bind:value={mobius[name][0]} onchange={apply} /></span></label>
+                  <label class="ui-field field"><span class="ui-label">{t('app.layers.imag')}</span><span class="control"><input class="ui-input num" data-mono aria-label={`${name} ${t('app.layers.imag')}`} type="number" step="0.001" bind:value={mobius[name][1]} onchange={apply} /></span></label>
+                </div>
+              {/each}
+            </div>
+          {/if}
         </div>
-        {#if mode === 'affine'}
-          <div class="affine">
-            <label class="field">{t('app.layers.x')}<span class="control"><input class="num" type="number" step="1" bind:value={x} onchange={apply} /></span></label>
-            <label class="field">{t('app.layers.y')}<span class="control"><input class="num" type="number" step="1" bind:value={y} onchange={apply} /></span></label>
-            <label class="field">{t('app.layers.scaleX')}<span class="control"><input class="num" type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} onchange={apply} /><span class="unit">×</span></span></label>
-            <label class="field">{t('app.layers.scaleY')}<span class="control"><input class="num" type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} onchange={apply} /><span class="unit">×</span></span></label>
-            <label class="field rotate">{t('app.layers.rotate')}<span class="control"><input class="num" type="number" step="1" bind:value={rotate} onchange={apply} /><span class="unit">°</span></span></label>
-          </div>
-        {:else if mode === 'matrix'}
-          <div class="matrix">
-            {#each ['a', 'b', 'c', 'd', 'e', 'f'] as name, index (name)}
-              <label class="field">{name}<span class="control"><input class="num" aria-label={`${t('app.layers.matrix')} ${name}`} type="number" step="0.001" bind:value={matrix[index]} onchange={apply} /></span></label>
-            {/each}
-          </div>
-          <p class="note">{t('app.layers.matrixHint')}</p>
-        {:else}
-          <div class="mobius">
-            {#each ['a', 'b', 'c', 'd'] as name (name)}
-              <div class="coef">
-                <span class="coef-name">{name}</span>
-                <label class="field">{t('app.layers.real')}<span class="control"><input class="num" aria-label={`${name} ${t('app.layers.real')}`} type="number" step="0.001" bind:value={mobius[name][0]} onchange={apply} /></span></label>
-                <label class="field">{t('app.layers.imag')}<span class="control"><input class="num" aria-label={`${name} ${t('app.layers.imag')}`} type="number" step="0.001" bind:value={mobius[name][1]} onchange={apply} /></span></label>
-              </div>
-            {/each}
-          </div>
-        {/if}
       </fieldset>
       {#if nonlinear}<p class="note">{t('app.layers.nonlinear')}</p>{/if}
       {#if applyError}<p class="note" role="alert">{applyError}</p>{/if}
       {@const history = doc && session ? { done: [...session.steps.done], undone: [...session.steps.undone] } : { done: [], undone: [] }}
       <div class="actions">
-        <button type="button" class="reset" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
-        <button type="button" class="reset canvas" onclick={() => { open = false; oncanvas?.() }}>{t('app.layers.oncanvas')}</button>
+        <button type="button" class="ui-button" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
+        <button type="button" class="ui-button" onclick={() => { open = false; oncanvas?.() }}>{t('app.layers.oncanvas')}</button>
       </div>
       {#if history.done.length || history.undone.length}
         <details class="history">
@@ -457,8 +459,8 @@
 </Dialog>
 
 <style>
-  .layers{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px;align-items:start}
-  .figure{display:grid;place-items:center;min-height:220px;padding:10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:#fff}
+  .layers{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:var(--ui-space-lg);align-items:start}
+  .figure{display:grid;place-items:center;min-height:220px;padding:var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:#fff}
   .canvas{position:relative;width:min(100%,48vh);aspect-ratio:1}
   .canvas img{display:block;width:100%;height:100%;object-fit:contain}
   .handles{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:all;touch-action:none}
@@ -468,47 +470,48 @@
   .handle.move{cursor:move}
   .handle.rotate{cursor:crosshair}
   .handle.scale{cursor:nwse-resize}
-  .list{display:flex;flex-direction:column;gap:2px;max-height:48vh;overflow:auto}
-  .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:6px;align-items:center;width:100%;padding:5px 6px;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
-  .list button:hover{background:color-mix(in srgb,var(--ui-color-accent) 10%,transparent)}
-  .list button.chosen{background:color-mix(in srgb,var(--ui-color-accent) 18%,transparent)}
-  .list button{padding-left:calc(6px + var(--depth) * 10px)}
-  .glyph{font-size:1.05rem}
+  /* The same white figure keeps its notes in the light scheme's muted ink. */
+  .figure .note{color:#686874}
+  .list{display:flex;flex-direction:column;gap:var(--ui-space-3xs);max-height:48vh;overflow:auto}
+  .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:var(--ui-space-xs);align-items:center;width:100%;min-height:var(--ui-control-h-lg);
+    padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
+  .list button:hover{background:var(--ui-color-surface-hover)}
+  .list button.chosen{background:var(--ui-color-accent-soft)}
+  .glyph{font-size:var(--ui-text-lg)}
   .layer-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .list code{font:10px ui-monospace,monospace;color:var(--ui-color-ink-muted)}
-  .transform{border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-2xl);padding:12px;margin-top:14px;background:var(--ui-color-surface-sunken)}
-  .transform legend{padding:0 6px;font-size:12px;color:var(--ui-color-ink-muted)}
-  .modes{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
-  .modes button{height:26px;padding:0 11px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;cursor:pointer}
-  .modes button[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent);font-weight:600}
-  .affine{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
-  .field{display:grid;gap:4px;min-width:0;font-size:11px;font-weight:600;letter-spacing:.02em;color:var(--ui-color-ink-muted)}
+  .list code{font-family:var(--ui-font-mono);font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
+  .transform{margin-top:var(--ui-space-lg)}
+  .transform legend{padding:0 var(--ui-space-xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
+  .transform-body{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
+  .transform-body .note{margin:0}
+  .modes{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs)}
+  .affine{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--ui-space-md)}
   .field.rotate{grid-column:2/4}
-  .control{display:flex;align-items:center;gap:4px;height:34px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
-  .control:focus-within{border-color:var(--ui-color-accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--ui-color-accent) 18%,transparent)}
-  .num{width:100%;min-width:0;border:0;outline:0;background:none;color:var(--ui-color-ink);font:12.5px ui-monospace,"SF Mono",Menlo,Consolas,monospace;text-align:right;appearance:textfield;-moz-appearance:textfield}
+  /* The unit sits inside the field's box, after the number. */
+  .control{position:relative;display:block}
+  .num{text-align:right;appearance:textfield;-moz-appearance:textfield}
   .num::-webkit-inner-spin-button,.num::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-  .unit{flex:none;font-size:11px;color:var(--ui-color-ink-muted)}
-  .matrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
-  .mobius{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
-  .coef{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);align-items:end;gap:8px;padding:8px 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
-  .coef-name{font:italic 600 15px ui-serif,serif;color:var(--ui-color-ink-muted);align-self:center;padding-bottom:2px}
-  .splits{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:12px;padding:8px 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
-  .splits span{font-size:12px;color:var(--ui-color-ink-muted)}
-  .splits button{height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:13px;cursor:pointer}
+  .control:has(.unit) .num{padding-inline-end:calc(var(--ui-space-md) + 1em)}
+  .unit{position:absolute;inset-inline-end:var(--ui-space-md);top:50%;transform:translateY(-50%);color:var(--ui-color-ink-muted);font-size:var(--ui-text-2xs);pointer-events:none}
+  .matrix{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ui-space-md)}
+  .mobius{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--ui-space-md)}
+  .coef{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1fr);align-items:end;gap:var(--ui-space-sm);padding:var(--ui-space-sm) var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
+  .coef-name{align-self:center;padding-bottom:var(--ui-space-3xs);color:var(--ui-color-ink-muted);font:italic var(--ui-weight-semibold) var(--ui-text-lg) ui-serif,serif}
+  .splits{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs);margin-top:var(--ui-space-lg);padding:var(--ui-space-sm) var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
+  .splits span{font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
+  .splits button{height:var(--ui-control-h-sm);padding:0 var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:var(--ui-text-sm);cursor:pointer}
   .splits button:hover{background:var(--ui-color-surface-hover)}
-  .actions{display:flex;gap:8px;margin-top:12px}
-  .history{margin-top:10px;font-size:12px;color:var(--ui-color-ink-muted)}
+  .actions{display:flex;gap:var(--ui-space-sm);margin-top:var(--ui-space-lg)}
+  .history{margin-top:var(--ui-space-md);font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .history summary{cursor:pointer}
-  .history summary span{margin-left:4px;color:var(--ui-color-ink-muted)}
-  .history-list{display:flex;flex-direction:column;gap:2px;margin-top:6px;max-height:140px;overflow:auto}
-  .history-list button{padding:4px 8px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink);font:inherit;font-size:12px;text-align:left;cursor:pointer}
+  .history summary span{margin-left:var(--ui-space-2xs);color:var(--ui-color-ink-muted)}
+  .history-list{display:flex;flex-direction:column;gap:var(--ui-space-3xs);margin-top:var(--ui-space-xs);max-height:140px;overflow:auto}
+  .history-list button{min-height:var(--ui-control-h-xs);padding:var(--ui-space-2xs) var(--ui-space-sm);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-xs);text-align:left;cursor:pointer}
   .history-list button:hover{background:var(--ui-color-surface-hover)}
-  .history-list p{margin:6px 0 0;font-size:11px;color:var(--ui-color-ink-muted)}
-  .reset{height:32px;padding:0 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
-  .note,.hint{margin:8px 0 0;color:var(--ui-color-ink-muted);font-size:12px}
+  .history-list p{margin:var(--ui-space-xs) 0 0;font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
+  .note,.hint{margin:var(--ui-space-sm) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .hint{grid-column:1/-1}
-  .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--ui-color-ink-muted) 30%,transparent);border-top-color:var(--ui-color-accent);border-radius:50%;animation:spin .8s linear infinite}
+  .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--ui-color-ink-muted) 30%,transparent);border-top-color:var(--ui-color-accent);border-radius:var(--ui-radius-pill);animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(1turn)}}
   @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.mobius{grid-template-columns:1fr}}
 </style>
