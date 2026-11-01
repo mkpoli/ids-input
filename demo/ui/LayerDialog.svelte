@@ -345,7 +345,7 @@
       <div class="figure">
         <div class="canvas">
           {#if step === 'loading'}
-            <span class="spinner" aria-hidden="true"></span>
+            <span class="ui-spinner" aria-hidden="true"></span>
             <p class="note">{t('app.layers.prepare')}</p>
           {:else if step === 'failed'}
             <p class="note">{failed || t('app.layers.failed')}</p>
@@ -508,7 +508,5 @@
   .reset{height:32px;padding:0 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
   .note,.hint{margin:8px 0 0;color:var(--ui-color-ink-muted);font-size:12px}
   .hint{grid-column:1/-1}
-  .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--ui-color-ink-muted) 30%,transparent);border-top-color:var(--ui-color-accent);border-radius:50%;animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(1turn)}}
   @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.mobius{grid-template-columns:1fr}}
 </style>

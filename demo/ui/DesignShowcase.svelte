@@ -80,16 +80,31 @@
       { token: '--ui-color-control-border', name: 'Control border', pair: '--ui-color-surface', pairName: 'surface', threshold: 3 },
       { token: '--ui-color-control-border-hover', name: 'Control hover', pair: '--ui-color-surface', pairName: 'surface', threshold: 3 },
     ] },
-    { title: 'Accent and danger', items: [
+    { title: 'Accent', items: [
       { token: '--ui-color-accent', name: 'Accent', pair: '--ui-color-surface', pairName: 'surface', threshold: 4.5 },
       { token: '--ui-color-accent-hover', name: 'Accent hover', pair: '--ui-color-surface', pairName: 'surface', threshold: 4.5 },
+      { token: '--ui-color-accent-active', name: 'Accent pressed', pair: '--ui-color-surface', pairName: 'surface', threshold: 4.5 },
       { token: '--ui-color-accent-soft', name: 'Accent soft', pair: '--ui-color-accent', pairName: 'accent', threshold: 4.5 },
       { token: '--ui-color-on-accent', name: 'On accent', pair: '--ui-color-accent', pairName: 'accent', threshold: 4.5 },
+      { token: '--ui-color-selection', name: 'Selection', pair: '--ui-color-selection-ink', pairName: 'selection ink', threshold: 4.5 },
+    ] },
+    { title: 'Danger and feedback', items: [
       { token: '--ui-color-danger', name: 'Danger', pair: '--ui-color-surface', pairName: 'surface', threshold: 4.5 },
+      { token: '--ui-color-danger-hover', name: 'Danger hover', pair: '--ui-color-surface', pairName: 'surface', threshold: 4.5 },
       { token: '--ui-color-danger-soft', name: 'Danger soft', pair: '--ui-color-danger', pairName: 'danger', threshold: 4.5 },
+      { token: '--ui-color-on-danger', name: 'On danger', pair: '--ui-color-danger', pairName: 'danger', threshold: 4.5 },
+      { token: '--ui-color-toast-surface', name: 'Toast', pair: '--ui-color-toast-ink', pairName: 'toast ink', threshold: 4.5 },
+      { token: '--ui-color-toast-ink', name: 'Toast ink', pair: '--ui-color-toast-surface', pairName: 'toast', threshold: 4.5 },
     ] },
   ]
 
+  const SPACE = [['3xs', 2], ['2xs', 4], ['xs', 6], ['sm', 8], ['md', 10], ['lg', 12], ['xl', 16], ['2xl', 20], ['3xl', 24], ['4xl', 32]]
+  const RADII = [['xs', '--ui-radius-xs'], ['sm', '--ui-radius-sm'], ['md', '--ui-radius-md'], ['lg', '--ui-radius-lg'], ['xl', '--ui-radius-xl'], ['2xl', '--ui-radius-2xl'], ['3xl', '--ui-radius-3xl']]
+  const MOTION = [
+    { token: '--ui-duration-fast', use: '120 ms, for hover, focus and checked states' },
+    { token: '--ui-duration', use: '160 ms, for the switch, a card lift and a notice' },
+    { token: '--ui-ease', use: 'The curve every transition shares' },
+  ]
   const TYPE = [
     { token: '2xl', size: '28px', use: 'A sequence, a dialog title' },
     { token: 'xl', size: '20px', use: 'A page section' },
@@ -288,6 +303,90 @@
       </div>
     </section>
 
+    <section id="layout" class="section" aria-labelledby="layout-title">
+      <div class="section-head">
+        <h2 id="layout-title">Space, shape and motion</h2>
+        <p>One step per need; components take these tokens rather than raw pixels.</p>
+      </div>
+      <div class="grid">
+        <div class="ui-card">
+          <h3>Space</h3>
+          <div class="space-scale">
+            {#each SPACE as [token, size] (token)}
+              <div class="space-row"><code>--ui-space-{token}</code><span class="space-bar" style:inline-size="{size * 2}px"></span><span class="value">{size}px</span></div>
+            {/each}
+          </div>
+        </div>
+        <div class="ui-card">
+          <h3>Radius</h3>
+          <div class="radius-scale">
+            {#each RADII as [token, variable] (token)}
+              <div class="radius-item"><span class="radius-box" style:border-radius={`var(${variable})`}></span><code>{token}</code></div>
+            {/each}
+          </div>
+        </div>
+        <div class="ui-card">
+          <h3>Motion</h3>
+          <ul class="motion-list">
+            {#each MOTION as item (item.token)}<li><code>{item.token}</code><span>{item.use}</span></li>{/each}
+          </ul>
+          <p class="note">Transitions collapse under <code>prefers-reduced-motion</code>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="states" class="section" aria-labelledby="states-title">
+      <div class="section-head">
+        <h2 id="states-title">States</h2>
+        <p>Hover, press and Tab through the column; the same tokens drive every control.</p>
+      </div>
+      <div class="grid">
+        <div class="ui-card">
+          <h3>Buttons</h3>
+          <div class="row">
+            <button type="button" class="ui-button">Default</button>
+            <button type="button" class="ui-button" data-variant="primary" aria-busy="true">Saving</button>
+            <button type="button" class="ui-button" aria-pressed="true">Pressed</button>
+            <button type="button" class="ui-button" aria-disabled="true">Unavailable</button>
+          </div>
+          <h3>Fields</h3>
+          <div class="row">
+            <input class="ui-input" aria-label="A disabled field" value="Disabled" disabled />
+            <input class="ui-input" aria-label="A read-only field" value="Read only" readonly />
+            <input class="ui-input" aria-label="An invalid field" aria-invalid="true" value="Missing a part" />
+          </div>
+        </div>
+        <div class="ui-card">
+          <h3>Chips and progress</h3>
+          <div class="row">
+            <span class="ui-chip">Default</span>
+            <span class="ui-chip" data-variant="accent">Accent</span>
+            <span class="ui-chip" data-variant="danger">Needs a part</span>
+            <button type="button" class="ui-chip" data-interactive aria-current="true">Current</button>
+          </div>
+          <div class="row progress-row"><span class="ui-spinner" aria-hidden="true"></span><span class="ui-progress" style:--ui-progress="64%" role="progressbar" aria-label="Example progress" aria-valuenow="64" aria-valuemin="0" aria-valuemax="100"></span></div>
+          <h3>Menu and list</h3>
+          <div class="ui-menu sample-menu" role="menu" aria-label="An example menu">
+            <button type="button" class="ui-menu-item" role="menuitem">Open document…</button>
+            <button type="button" class="ui-menu-item" role="menuitem" aria-checked="true">Show hints</button>
+            <div class="ui-menu-separator" role="separator"></div>
+            <button type="button" class="ui-menu-item" role="menuitem" disabled>Unavailable</button>
+          </div>
+          <div class="ui-card" data-variant="flat" data-padding="none">
+            <ul class="ui-list" aria-label="An example list">
+              <li class="ui-list-row" data-interactive><span class="ui-list-row-label">木</span><span class="ui-list-row-note">U+6728</span></li>
+              <li class="ui-list-row" data-interactive aria-selected="true"><span class="ui-list-row-label">林</span><span class="ui-list-row-note">U+6797</span></li>
+              <li class="ui-list-row"><span class="ui-list-row-label">森</span><span class="ui-list-row-note">U+68EE</span></li>
+            </ul>
+          </div>
+          <div class="ui-empty">
+            <span>No parts match this search.</span>
+            <button type="button" class="ui-button" data-size="sm">Clear the filter</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="buttons" class="section" aria-labelledby="buttons-title">
       <div class="section-head">
         <h2 id="buttons-title">Buttons</h2>
@@ -482,6 +581,20 @@
   .field{display:flex;flex-direction:column;gap:6px;min-width:0}
   .tall{display:flex;flex-direction:column;gap:6px}
   .note{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.5}
+  .space-scale{display:flex;flex-direction:column;gap:var(--ui-space-xs)}
+  .space-row{display:grid;grid-template-columns:128px minmax(0,1fr) 44px;align-items:center;gap:var(--ui-space-sm)}
+  .space-row code,.radius-item code,.motion-list code{color:var(--ui-color-ink-muted);font-family:var(--ui-font-mono);font-size:11px}
+  .space-bar{block-size:8px;border-radius:var(--ui-radius-xs);background:var(--ui-color-accent)}
+  .space-row .value{color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);font-variant-numeric:tabular-nums;text-align:end}
+  .radius-scale{display:flex;flex-wrap:wrap;gap:var(--ui-space-lg)}
+  .radius-item{display:flex;flex-direction:column;align-items:center;gap:var(--ui-space-2xs)}
+  .radius-box{display:block;inline-size:48px;block-size:40px;border:1px solid var(--ui-color-control-border);background:var(--ui-color-surface-sunken)}
+  .motion-list{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--ui-space-xs);font-size:var(--ui-text-xs)}
+  .motion-list li{display:flex;flex-direction:column;gap:1px}
+  .motion-list span{color:var(--ui-color-ink-muted)}
+  .progress-row{flex:1}
+  .progress-row .ui-progress{flex:1}
+  .sample-menu{box-shadow:none}
   .kicker{color:var(--ui-color-accent);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-semibold);letter-spacing:.06em;text-transform:uppercase}
   .card-title{margin:0;color:var(--ui-color-ink);font-size:var(--ui-text-lg);font-weight:var(--ui-weight-semibold);letter-spacing:-.01em;text-transform:none}
   .linkish{color:var(--ui-color-accent);font-size:var(--ui-text-sm);font-weight:var(--ui-weight-medium)}

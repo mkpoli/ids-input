@@ -113,6 +113,11 @@ use a disabled class: use the `disabled` attribute.
 
 | Need | Control | Why |
 | --- | --- | --- |
+| A label for a value or a filter state | Chip (`.ui-chip`) | Compact, with `data-variant="accent" \| "danger" \| "selected"`; interactive chips take `data-interactive` and `aria-current` |
+| A list of options in a popup | Menu (`.ui-menu`, `.ui-menu-item`) | Roving focus, roles and the checked marker in one layer |
+| A row that opens or selects something | List row (`.ui-list-row`) | `data-interactive`, `aria-selected` or `aria-current` show the state |
+| Work in progress | Spinner (`.ui-spinner`), progress (`.ui-progress`), `aria-busy` on a button | Motion collapses under reduced motion; forced colours keep the shapes |
+| Nothing to show | Empty state (`.ui-empty`) | Centred text with an optional action |
 | One option among several, submitted or saved together | Checkbox | Independent state; Space toggles |
 | An immediate on/off setting | Switch | `role="switch"`, the change applies at once |
 | One choice out of a few visible options | Radio group | Arrow keys move the choice |
@@ -140,6 +145,7 @@ keyboard all come with the element.
 | Hover | Border darkens; surface shifts |
 | Pressed | `--ui-color-surface-active`; toggle buttons use `aria-pressed="true"` |
 | Checked | Accent fill, `--ui-color-on-accent` mark; the shape changes as well as the colour |
+| Busy | `aria-busy="true"` on a button shows a spinner beside the label and keeps its colour legacy |
 | Indeterminate | Native `indeterminate`; a horizontal mark |
 | Focus | One 2 px ring, 2 px offset, `--ui-color-focus` |
 | Disabled | `disabled` plus 45% opacity; the label stays readable |

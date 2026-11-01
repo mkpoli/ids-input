@@ -215,7 +215,7 @@ async function checkContrast(page) {
     add('body text', 'body', el => getComputedStyle(el).color, 4.5)
     add('label', '.ui-label', el => getComputedStyle(el).color, 4.5)
     add('hint', '.ui-hint', el => getComputedStyle(el).color, 4.5)
-    add('input border', '.ui-input', el => getComputedStyle(el).borderTopColor, 3)
+    add('input border', '.ui-input:not(:disabled)', el => getComputedStyle(el).borderTopColor, 3)
     add('unchecked checkbox border', '.ui-checkbox:not(:checked):not(:disabled)', el => getComputedStyle(el).borderTopColor, 3)
     add('checked checkbox fill', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el).backgroundColor, 3, el => background(el.parentElement))
     add('checked checkbox mark', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el, '::before').borderRightColor, 4.5, el => getComputedStyle(el).backgroundColor)
@@ -323,6 +323,32 @@ try {
     await checkInteractions(page)
     await checkTheme(page, scheme)
     if (shots) await page.screenshot({ path: join(shots, `design-${scheme}.png`), fullPage: true })
+    await context.close()
+  }
+
+  {
+    const { context, page } = await open({})
+    await page.emulateMedia({ contrast: 'more' })
+    await page.waitForTimeout(300)
+    const more = await page.evaluate(() => {
+      const el = document.querySelector('.ui-input:not(:disabled)')
+      const parse = value => value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/).slice(1, 4).map(Number)
+      const luminance = rgb => rgb.map(value => {
+        const c = value / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+      const ratio = (a, b) => {
+        const [light, dark] = [luminance(parse(a)), luminance(parse(b))].sort((x, y) => y - x)
+        return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100
+      }
+      return {
+        border: ratio(getComputedStyle(el).borderTopColor, getComputedStyle(el).backgroundColor),
+        ring: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-ring-width')),
+      }
+    })
+    assert.ok(more.border >= 3, `more contrast strengthens the field boundary (${more.border}:1)`)
+    assert.equal(more.ring, 3, 'more contrast widens the focus ring')
+    pass('more contrast strengthens boundaries and the focus ring')
     await context.close()
   }
 

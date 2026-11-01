@@ -1340,19 +1340,14 @@
 <Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
   <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
   <div class="confirm-actions">
-    <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
-    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
+    <button type="button" class="ui-button" data-size="lg" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
+    <button type="button" class="ui-button" data-size="lg" data-variant="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
   </div>
 </Dialog>
 
 <style>
-  .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
-  .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
-  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--ui-color-border);border-radius:9px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
-  .confirm-actions button:hover{background:var(--ui-color-surface-hover)}
-  .confirm-actions .danger{border-color:var(--ui-color-danger);color:var(--ui-color-danger)}
-  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--ui-color-danger) 10%,transparent)}
-  .confirm-actions button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .confirm-text{margin:0 0 var(--ui-space-xl);font-size:var(--ui-text-md);line-height:var(--ui-leading-normal)}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:var(--ui-space-sm)}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
@@ -1444,14 +1439,14 @@
   .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
-  .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
+  .large-dialog :global(.ids-preview-large){width:100%;border-radius:var(--ui-radius-xl)}
   .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
   .large-bar .font-switch{order:1}
   .large-bar .large-close{order:4}
-  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
   .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden}
   .large-actions{order:3;display:flex;align-items:center;gap:4px}
-  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--ui-color-border);border-radius:7px;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
   .large-copy:hover{border-color:var(--ui-color-border-strong)}
   .large-copy:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .large-close:hover{border-color:var(--ui-color-border-strong)}
@@ -1464,7 +1459,7 @@
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
-  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:8px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
   .adjust button:hover:not(:disabled){border-color:var(--ui-color-accent)}
   .adjust button[aria-pressed="true"]{border-color:var(--ui-color-accent);color:var(--ui-color-accent)}
   .adjust button:disabled{opacity:.45;cursor:default}
@@ -1530,7 +1525,7 @@
   /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
   @media (max-width:879px){
     .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border)}
-    .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:13px;cursor:pointer}
+    .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:var(--ui-space-xs);flex:1;height:var(--ui-control-h-lg);border:0;border-radius:var(--ui-radius-md);background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:var(--ui-text-sm);cursor:pointer}
     .phone-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
     .phone-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
     .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}

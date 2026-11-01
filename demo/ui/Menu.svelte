@@ -97,7 +97,7 @@
       if (current === untrack(() => active)) return
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
-      const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.chip')[at])
+      const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.ui-chip')[at])
       const row = chip?.parentElement
       if (chip && row) {
         const chipRect = chip.getBoundingClientRect()
@@ -205,7 +205,7 @@
 {/snippet}
 
 {#snippet cardItem(item)}
-  <button type="button" role="menuitem" class="card" disabled={item.disabled}
+  <button type="button" role="menuitem" class="ui-menu-item card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
     {#if item.drawing?.d}
@@ -225,7 +225,7 @@
      not a popup, so it carries no aria-haspopup. -->
 {#snippet submenuRow(item, i)}
   {@const open = openSubmenu === i}
-  <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+  <button type="button" role="menuitem" class="ui-menu-item item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
     disabled={item.disabled} onclick={() => toggleSubmenu(i)}
     onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(i, true) } }}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
@@ -235,7 +235,7 @@
   {#if open}
     <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
       {#each item.submenu as sub, j (j)}
-        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {#if 'separator' in sub}<div class="ui-menu-separator sep" role="separator"></div>
         {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
         {:else}{@render listRow(sub)}{/if}
       {/each}
@@ -244,7 +244,7 @@
 {/snippet}
 
 {#snippet listRow(item)}
-  <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
+  <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="ui-menu-item item"
     class:rich={item.sequence !== undefined} disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
@@ -273,7 +273,7 @@
     {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}{#if !menubar}<Icon name="chevron" size={14} />{/if}{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
-    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
+    <div class="ui-menu menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
       onfocusin={event => {
         if (openSubmenu < 0) return
         const parent = box?.querySelector('.submenu-item[aria-expanded="true"]')
@@ -283,21 +283,21 @@
       {#if view}
         <div class="menu-head">
           <div class="views" role="group" aria-label={label}>
-            <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
-            <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
+            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={14} /><span>{view.list}</span></button>
+            <button type="button" class="ui-button view" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={14} /><span>{view.cards}</span></button>
           </div>
           <div class="filter">
-            <input class="filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query}
+            <input class="ui-input filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query}
               onkeydown={event => { if (event.key !== 'Escape') event.stopPropagation() }} />
             <div class="modes" role="group" aria-label={view.filter.label}>
               {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
-                <button type="button" class="mode" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
+                <button type="button" class="ui-button mode" data-size="sm" data-variant="quiet" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
               {/each}
             </div>
           </div>
           <div class="jump" role="group" aria-label={label}>
             {#each groups as group (group.heading)}
-              {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+              {#if group.heading}<button type="button" class="ui-chip" data-interactive data-variant={active === group.heading ? 'selected' : undefined} aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
             {/each}
           </div>
         </div>
@@ -316,7 +316,7 @@
         {/each}
       {:else}
         {#each items as item, i (i)}
-          {#if 'separator' in item}<div class="sep" role="separator"></div>
+          {#if 'separator' in item}<div class="ui-menu-separator sep" role="separator"></div>
           {:else if 'heading' in item}<p class="heading">{item.heading}</p>
           {:else if 'submenu' in item && item.submenu}{@render submenuRow(item, i)}
           {:else}{@render listRow(item)}{/if}
@@ -369,22 +369,14 @@
   .empty{margin:14px 10px;color:var(--ui-color-ink-muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
   .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
-  .chip{flex:none;padding:4px 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
-  .chip:hover{color:var(--ui-color-ink);border-color:var(--ui-color-ink)}
-  .chip[aria-current="true"]{border-color:var(--ui-color-ink);background:var(--ui-color-ink);color:var(--ui-color-surface)}
-  .chip:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  .ui-chip{flex:none}
   .menu-head{position:sticky;top:-6px;z-index:2;display:flex;flex-direction:column;gap:5px;margin:0 0 5px;background:var(--ui-color-surface)}
-  .views{display:flex;gap:2px;padding:3px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
+  .views{display:flex;gap:var(--ui-space-3xs);padding:3px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
   .filter{display:flex;align-items:center;gap:6px}
   .filter-input{flex:1;min-width:0;height:30px;padding:0 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12.5px}
   .filter-input:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
-  .modes{display:flex;flex:none;gap:2px;padding:2px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-hover)}
-  .mode{padding:4px 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
-  .mode[aria-checked="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink)}
-  .mode:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
-  .view{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;padding:4px 8px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
-  .view[aria-checked="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
-  .view:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  .modes{display:flex;flex:none;gap:var(--ui-space-3xs)}
+  .view{flex:1}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:8px;padding:4px 6px 8px}
   .card{display:flex;align-items:center;gap:9px;min-width:0;min-height:60px;padding:7px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
