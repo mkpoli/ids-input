@@ -330,8 +330,8 @@
 {/if}
 
 <style>
-  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--ui-color-border);border-radius:10px;background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
-  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
+  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
+  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
   .tab-menu hr{border:0;border-top:1px solid var(--ui-color-border);margin:4px 2px}
   .tab-menu button:not(:disabled):hover,.tab-menu button:focus-visible{background:var(--ui-color-surface-hover);outline:none}
   .tab-menu button:disabled{opacity:.45;cursor:default}
@@ -341,14 +341,14 @@
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
   .tabs.dragging{user-select:none}
-  .tab{position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:12px 12px 0 0;color:var(--ui-color-ink-muted)}
+  .tab{position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:var(--ui-radius-xl) var(--ui-radius-xl) 0 0;color:var(--ui-color-ink-muted)}
+  .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px var(--ui-shadow-color-1))}
+  .tab.dragging .tab-main{cursor:grabbing}
   .tab:not(.on):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .tab.on{background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 2px 0 var(--ui-color-accent)}
   .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
   .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
   .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
-  .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px var(--ui-shadow-color-1))}
-  .tab.dragging .tab-main{cursor:grabbing}
   .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
   .tab:not(.on) .tab-main{padding-inline:12px}
   .tab-main:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-3px}
