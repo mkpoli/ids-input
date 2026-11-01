@@ -262,6 +262,7 @@
   "ids.pick.templates": "Bố cục",
   "ids.group.4": "4 bộ phận",
   "ids.templates.insert": "Chèn bố cục {sequence}",
+  "ids.templates.open": "Mở {sequence} trong thẻ mới",
   "ids.templates.repeats": "Lặp",
   "ids.templates.repeatBottom": "Hàng dưới",
   "ids.templates.repeatBottomHint": "Để trống để dùng bộ phận trên.",
@@ -340,5 +341,13 @@
   "parts.gongche.seirakuSource": "Ký hiệu phách Thanh nhạc · Toru Kato",
   "info.copy": "Sao chép {char}",
   "info.copied": "Đã sao chép",
-  "info.copyFailed": "Lỗi sao chép"
+  "info.copyFailed": "Lỗi sao chép",
+  "info.source.sections": "Nguồn",
+  "info.source.open": "Mở {site}",
+  "info.site.wiktionary": "Wiktionary",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "Phụ trợ biên tập",
+  "info.site.component": "Andrew West"
 }

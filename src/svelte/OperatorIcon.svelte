@@ -54,7 +54,7 @@
 
 <style>
   .ids-icon{display:block;flex:none;overflow:visible;
-    --_icon-ink:var(--ids-icon-ink,light-dark(#3a3a42,#d4d4dc));--_icon-accent:var(--ids-accent,light-dark(#2f5fd0,#8fb0ff))}
+    --_icon-ink:var(--ids-icon-ink,light-dark(#44444c,#c6c6ce));--_icon-accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
   .ids-icon :is(rect,path){vector-effect:non-scaling-stroke;stroke-linejoin:round;stroke-linecap:round}
   .part{fill:color-mix(in srgb,var(--_icon-ink) 22%,transparent);stroke:var(--_icon-ink);stroke-width:1.25}
   [data-op="⿻"] .part:last-of-type{fill:color-mix(in srgb,var(--_icon-accent) 22%,transparent);stroke:var(--_icon-accent)}
@@ -63,5 +63,5 @@
   .accent{fill:none;stroke:var(--_icon-accent);stroke-width:2.2}
   .axis{fill:none;stroke:var(--_icon-accent);stroke-width:1.1;stroke-dasharray:2 1.6}
   .dot{fill:var(--_icon-accent)}
-  .hole{fill:var(--ids-surface,light-dark(#fff,#202026));stroke:var(--_icon-accent);stroke-width:1.4}
+  .hole{fill:var(--ids-surface,light-dark(#fff,#1b1b20));stroke:var(--_icon-accent);stroke-width:1.4}
 </style>

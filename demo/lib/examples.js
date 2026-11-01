@@ -6,6 +6,12 @@
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
 // gukja's reading in Hangul.
+/**
+ * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string }} Example
+ * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
+ */
+
+/** @type {ExampleGroup[]} */
 export const EXAMPLE_GROUPS = [
   { key: 'basic', refs: [1], examples: [
     { sequence: '⿾正', refs: [1,2], char: '𣥄' },
@@ -128,7 +134,36 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', refs: [26], char: '' },
     { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
+    { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '' },
+    { sequence: '⿰讠冓', refs: [59], char: '講', parts: '讠冓' },
+    { sequence: '⿱艹果', refs: [1], char: '菓' },
+    { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
+    { sequence: '⿰讠正', refs: [59], char: '証', parts: '讠正' },
   ] },
+  // 二简字 from the draft's table as West records it, written with each component's own description,
+  // since a component runs its own description in its own IDS. Each names the character it writes,
+  // which BabelStone has no row for. 弹 keeps 单's IDS ⿱丷甲, so its arrow strokes are not drawn.
+  // 多 and 皆 are left out: ⿱夕夕 and ⿱比白 are the ordinary descriptions of the modern characters,
+  // which the composer then draws. 诅 (⿰讠且) is left out because 且's own description is ⿱𠃌夕.
+  { key: 'erjian', refs: [3], examples: [
+    { sequence: '⿰忄井', refs: [3], char: '警' },
+    { sequence: '⿱艹么', refs: [3], char: '蘑' },
+    { sequence: '⿱千田', refs: [3], char: '臿' },
+    { sequence: '⿸厂九', refs: [3], char: '厩' },
+    { sequence: '⿱亠公', refs: [3], char: '衮' },
+    { sequence: '⿰彳力', refs: [3], char: '律' },
+    { sequence: '⿱力十', refs: [3], char: '率' },
+    { sequence: '⿱入寸', refs: [3], char: '辱' },
+    { sequence: '⿱甲弓', refs: [3], char: '弹' },
+    { sequence: '⿻弓冫', refs: [3], char: '弱' },
+    { sequence: '⿱犬一', refs: [3], char: '然' },
+    { sequence: '⿱大手', refs: [3], char: '攀' },
+    { sequence: '⿰亻彐', refs: [3], char: '侵' },
+    { sequence: '⿱由攵', refs: [3], char: '数' },
+    { sequence: '⿸疒力', refs: [3], char: '痢' },
+    { sequence: '⿺辶欠', refs: [3], char: '遣' },
+  ] },
+
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
   // with no code point; for an encoded character it names that character, which `encoded` reports.
   // The entries cover the article's single-character tables, one form per row. Left out: the
