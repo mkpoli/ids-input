@@ -1,9 +1,14 @@
 // Build `data/han-parts.json.gz`: every Han-script character the composer can draw, with the stroke
-// count Unihan records for each, or the count of the unified form a radical stands for. The export's records are sharded by hash, so those keys come from
+// count Unihan records for each, or the count of the unified form a radical stands for, and the class
+// of its first stroke. The export's records are sharded by hash, so those keys come from
 // their stored entries; the bundled fallback outlines and the palette outlines add the characters the
 // export lacks. Unicode alone would claim glyphs no source draws.
 //
-//   node scripts/build_han_parts.mjs [Unihan.zip]   # a local copy skips the download
+// The first stroke is the one Rime's five-stroke dictionary records, written as the class a reader
+// knows it by (横, 豎, 撇, 點, 折); the dictionary is LGPL-3.0, and its Chinese stroke order can
+// differ from Japanese order. A character the dictionary lacks has no first stroke recorded.
+//
+//   node scripts/build_han_parts.mjs [Unihan.zip] [stroke.dict.yaml]   # local copies skip the download
 import { readFileSync, writeFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { gzipSync, gunzipSync, inflateRawSync } from 'node:zlib'
@@ -13,6 +18,11 @@ import { characterScript } from '../src/core/scripts.js'
 const UNIHAN = {
   url: 'https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip',
   sha256: '4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e',
+}
+// The revision `scripts/build_ids_parts.py` pins, so a part's first stroke reads the same in both.
+const RIME = {
+  url: 'https://raw.githubusercontent.com/rime/rime-stroke/1e8fff9b9494ddec23b0cbc526bcfd8171a6fd48/stroke.dict.yaml',
+  sha256: 'b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791',
 }
 
 /** One entry of a zip archive, inflated when stored deflated. */
@@ -101,6 +111,54 @@ const MARK_COUNTS = new Map([
   ['𖿢', 1], ['𖿣', 2], ['𖿰', 3], ['𖿱', 1], ['𖿲', 2], ['𖿳', 7], ['𖿴', 3], ['𖿵', 4], ['𖿶', 2],
 ])
 const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? MARK_COUNTS.get(key) ?? null)
-const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes })
+
+// Rime's dictionary writes each stroke of a character as one letter: h 横, s 豎, p 撇, n or d 點,
+// z 折. A character's first stroke is the first letter of its first complete code, except that codes
+// starting with s and with z and nothing else both count as 豎 (a vertical hook), as
+// `build_ids_parts.py` reads them.
+const CLASS_OF = { h: '横', s: '豎', p: '撇', n: '點', d: '點', z: '折' }
+const rimePath = process.argv[3]
+const rime = rimePath ? readFileSync(rimePath) : Buffer.from(await (await fetch(RIME.url)).arrayBuffer())
+if (createHash('sha256').update(rime).digest('hex') !== RIME.sha256) throw Error(`Unexpected rime-stroke: ${RIME.url}`)
+/** @type {Map<string, string[]>} */
+const rimeCodes = new Map()
+for (const line of rime.toString().split('\n')) {
+  const [char, code] = line.split('\t')
+  if (!char || !code || [...char].length !== 1 || !/^[hspnz]+$/.test(code)) continue
+  const codes = rimeCodes.get(char)
+  if (codes) codes.push(code); else rimeCodes.set(char, [code])
+}
+/** @param {string} char */
+function firstStroke(char) {
+  const codes = rimeCodes.get(char)
+  if (!codes) return null
+  const starts = new Set(codes.map(code => code[0]))
+  // A vertical stroke and a vertical hook as the only starts are one class, 豎; otherwise the first
+  // complete code decides. Read as `first_strokes` in `build_ids_parts.py` reads it.
+  return CLASS_OF[starts.size === 2 && starts.has('s') && starts.has('z') ? 's' : codes[0][0]]
+}
+
+// The class of each CJK stroke character, from the letters of its Unicode name (CJK STROKE <letters>)
+// as `build_ids_parts.py` reads them: a horizontal stroke and a rising one are 横, a vertical one and
+// its hook 豎, the two falls 撇, the dot and the rightward dot 點, a turning stroke 折.
+const STROKE_CLASS_OF = new Map([
+  ['㇀', '横'], ['㇁', '折'], ['㇂', '折'], ['㇃', '折'], ['㇄', '折'], ['㇅', '折'], ['㇆', '折'], ['㇇', '折'], ['㇈', '折'], ['㇉', '折'], ['㇊', '折'], ['㇋', '折'], ['㇌', '折'], ['㇍', '折'], ['㇎', '折'], ['㇏', '點'], ['㇐', '横'], ['㇑', '豎'], ['㇒', '撇'], ['㇓', '撇'], ['㇔', '點'], ['㇕', '折'], ['㇖', '折'], ['㇗', '折'], ['㇘', '折'], ['㇙', '折'], ['㇚', '豎'], ['㇛', '折'], ['㇜', '折'], ['㇝', '點'], ['㇞', '折'], ['㇟', '折'], ['㇠', '折'], ['㇡', '折'], ['㇢', '折'], ['㇤', '折'], ['㇥', '折'],
+])
+// A CJK stroke character and the character it is an equivalent of (㇕ and 𠃍, ㇏ and 乀) are one
+// stroke, so that character takes the stroke's class. Rows are read in order and the last wins, as
+// `first_strokes` in `build_ids_parts.py` reads them.
+const EQUIVALENT = new Map()
+for (const line of readFileSync(new URL('../data/component-forms.tsv', import.meta.url), 'utf8').split('\n')) {
+  const [form, char, source, detail] = line.split('\t')
+  if (!form || !char || source !== 'unicode-ucd' || detail !== 'EquivalentUnifiedIdeograph') continue
+  const cls = STROKE_CLASS_OF.get(form)
+  if (cls) EQUIVALENT.set(char, cls)
+}
+// The four-stroke grass radical begins with a horizontal; CJK RADICAL SECOND ONE (⺂) is a single
+// horizontal-fold stroke, which the five classes call 折.
+const OVERRIDES = new Map([['⻀', '横'], ['⺂', '折']])
+const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char))
+
+const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes, firsts })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))
-console.log(`${list.length} Han characters, ${strokes.filter(count => count !== null).length} with stroke counts`)
+console.log(`${list.length} Han characters, ${strokes.filter(count => count !== null).length} with stroke counts, ${firsts.filter(cls => cls !== null).length} with first strokes`)

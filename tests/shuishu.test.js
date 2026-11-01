@@ -13,6 +13,8 @@ import { hasShuishu, shuishuSource } from '../src/composer/shuishu.js'
 import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import { shuishuAdapter } from '../src/adapter/shuishu.js'
 import { shuishuLabel, shuishuNames } from '../src/adapter/shuishu-data.js'
+import { searchParts } from '../src/core/decompose.js'
+import { load as loadSearchWorker } from '../src/adapter/search-worker.js'
 
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
 const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu-outlines.json.gz', import.meta.url))))
@@ -91,6 +93,43 @@ describe('Shuishu', () => {
     expect(viaAdapter).toHaveLength(533)
     // The table stands on its own, without an ids table behind it.
     expect(await adapter.table()).toBeInstanceOf(Map)
+  })
+
+  it('reads the decompositions as descriptions', async () => {
+    const adapter = shuishuAdapter({ data, palette: [] })
+    const table = await adapter.table()
+    const built = data.parts.find(part => part.ids === `⿱${String.fromCodePoint(0x1b501)}${String.fromCodePoint(0x1b500)}`)
+    expect(table.get(built.part)).toEqual([{ text: built.ids, regions: '' }])
+    // A part finds the characters written with it, and the character finds its own parts.
+    const holding = await adapter.containing(String.fromCodePoint(0x1b501) + String.fromCodePoint(0x1b500))
+    expect(holding.items).toContain(built.part)
+    // The description search and the parts a containing query asks for read it too.
+    const found = await adapter.findByIds(String.fromCodePoint(0x1b500))
+    expect(found.hits.map(hit => hit.char)).toContain(built.part)
+  })
+
+  it("asks for a Shuishu character's parts", async () => {
+    const adapter = shuishuAdapter({ data, palette: [] })
+    const built = data.parts.find(part => part.ids)
+    const known = { [built.part]: { status: 'ready', sequences: await adapter.structure(built.part) } }
+    expect(searchParts([{ kind: 'char', char: built.part }], known)).toBe(built.ids.slice(1))
+  })
+
+  it('carries the decompositions into the search worker', async () => {
+    const gibberish = { format: 1, parts: [{ part: '𛌘', ids: '⿱𛔁𛔀' }, { part: '𛔀', ids: null }, { part: '𛔁', ids: null }] }
+    const search = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, gibberish)
+    expect(search.search('𛔀', { limit: 3 }).hits.map(hit => hit.char)).toEqual(['𛌘'])
+  })
+
+  it('keeps the worker search standing without a readable decomposition file', async () => {
+    const broken = Buffer.from('{oops').toString('base64')
+    const unreadable = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${broken}`)
+    expect(unreadable.search('𛔀', { limit: 3 }).hits).toEqual([])
+    const other = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, { format: 2, parts: [] })
+    expect(other.search('𛔀', { limit: 3 }).hits).toEqual([])
+    const wrong = Buffer.from('{"format":2,"parts":[]}').toString('base64')
+    const versioned = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${wrong}`)
+    expect(versioned.search('𛔀', { limit: 3 }).hits).toEqual([])
   })
 
   it('finds the parts by name, reading, meaning and character', () => {
