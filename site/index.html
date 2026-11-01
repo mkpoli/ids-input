@@ -78,13 +78,14 @@ function renderComponents(){
   const shown=compPart?bad.filter(r=>r.ids.startsWith(compPart)):bad;
   const chip=(v,label,active)=>`<button class="tab" style="padding:4px 10px;font-size:12px" aria-selected="${active}" data-part="${v??''}">${esc(label)}</button>`;
   const card=r=>{
-    const hits=(r.containers??[]).slice(0,24);
+    const hits=(r.held??[]).slice(0,24);
     const faceOf=hits[0]?.ch;
     const faces=faceOf?`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(faceOf)}</div><div class="cap">${n}</div></div>`).join('')}</div>`:'';
+    const list=(label,items)=>items.length?`<div class="cap" style="margin-top:8px">${label} (${items.length}):</div><div class="hits">${items.map(h=>`<div class="hit"><div style="font:24px 'Noto Serif CJK JP',serif">${esc(h.ch)}</div>${draw(h.d,56)}<div class="ids tiny">${esc(h.ids)}</div></div>`).join('')}</div>`:'';
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
       ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
-      ${hits.length?`<div class="cap" style="margin-top:8px">characters holding it (${hits.length}):</div><div class="hits">${hits.map(h=>`<div class="hit"><div style="font:24px 'Noto Serif CJK JP',serif">${esc(h.ch)}</div>${draw(h.d,56)}<div class="ids tiny">${esc(h.ids)}</div></div>`).join('')}</div>`:''}
+      ${list('characters holding it', hits)}
       ${faces}</div>`;
   };
   view.innerHTML=`<div class="tabs" style="margin-bottom:10px">${chip(null,'All',!compPart)}${parts.map(p=>chip(p,p,compPart===p)).join('')}</div>
