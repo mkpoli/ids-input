@@ -435,7 +435,7 @@
       {/each}
       {#if info.sources.length}
         <section class="sources">
-          <p class="label" id={`${uid}-sources`}>{t('info.sources')}</p>
+          <p class="label" id={`${uid}-sources`}>{t('info.sources.title')}</p>
           <div class="relations" role="group" aria-labelledby={`${uid}-sources`}>
             {#each info.sources as source (source.url)}
               <span class="source">
