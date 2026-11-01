@@ -14,6 +14,11 @@
   import { layerFrames, renderScopes } from '../document/index.js'
   import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
+  /** @typedef {import('../document/frames.js').LayerFrame} LayerFrame */
+  /** @typedef {import('../document/model.js').Document} LocalDocument */
+  /** @typedef {import('@han-compose/composer/document-view').DocumentView} DocumentView */
+  /** The engine's view, with the frames and the scoped drawing this file's renderer makes.
+   *  @typedef {Omit<DocumentView, 'scopes' | 'frames'> & { scopes: import('../document/render.js').ScopeTree | null, frames: Map<string, LayerFrame> }} View */
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -88,7 +93,7 @@
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null
-    return documentView(localDoc, drawn, sketched.leaves, { renderer: { layerFrames, renderScopes } })
+    return /** @type {View} */ (/** @type {unknown} */ (documentView(/** @type {LocalDocument} */ (localDoc), drawn, sketched.leaves, { renderer: { layerFrames, renderScopes } })))
   })
   const adjustNote = $derived(editable && step === 'composed' && shown?.drawn && !view?.complete ? t('ids.adjust.unavailable') : '')
   $effect(() => {

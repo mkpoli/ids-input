@@ -2,8 +2,7 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { compose } from '@han-compose/composer'
-import { unpack } from '@han-compose/composer'
+import { compose, dataUrls, unpack } from '@han-compose/composer'
 import { sourceFor } from '@han-compose/composer/source'
 import { cardSvg, SIZE } from './card.js'
 import { OPERATORS } from '../src/core/ids.js'
@@ -30,14 +29,26 @@ const read = async (env, path) => {
 }
 
 /**
- * How a source reads the outlines this deployment serves under `/og/data/`; a file that is not there
- * reads as no outlines.
+ * How a source reads the outlines this deployment serves under `/og/data/`, where `og-assets.mjs`
+ * copies the drawing engine's files: each by the name of the engine's `data/` path it answers for.
+ * The loader leaves a file out unless it is copied to `data/`.
  * @param {any} env
  */
-const loadFor = env => async path => {
-  const name = path.replace(/^sources\/([a-z-]+)\/outlines\.json\.gz$/, '$1-outlines.json.gz').replace('unicode/outlines/', 'unicode-outlines/')
-  const bytes = await read(env, `data/${name}`)
-  return bytes === null ? { records: {} } : JSON.parse(await unpack(bytes))
+const loadFor = env => {
+  const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$/
+  /** @type {Record<string, string>} */
+  const loaders = {}
+  for (const path of Object.keys(dataUrls)) {
+    if (!SERVED.test(path)) continue
+    const name = path.replace(SERVED, (_, script, shard) => script ? `${script}-outlines.json.gz` : `unicode-outlines/${shard}`)
+    loaders[path] = new URL(`/og/data/${name}`, 'https://assets/').href
+  }
+  return async input => {
+    const answer = await env.ASSETS.fetch(input)
+    // A missing file is answered with the app's page, so the type says whether the file is there.
+    if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return new Response(null, { status: 404 })
+    return answer
+  }
 }
 
 /** @type {Promise<Record<string, string>> | null} */
@@ -59,7 +70,7 @@ export async function characterOf(env, sequence) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, load: loadFor(env) })
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadFor(env) })
   await source.ready()
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }

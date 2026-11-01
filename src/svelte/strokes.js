@@ -1,7 +1,7 @@
 // The stroke counts of the characters a description can draw, loaded once from `data/han-parts.json.gz`
 // and shared by the search boxes that narrow their results by stroke count and the tooltips that
 // say how many strokes a character has and which stroke it begins with.
-import { unpack } from './unpack.js'
+import { unpack } from '@han-compose/composer'
 
 /**
  * @typedef {object} StrokeRecord

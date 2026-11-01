@@ -19,7 +19,7 @@
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
   import coverage from '../../node_modules/@han-compose/composer/data/unicode/coverage.json' with { type: 'json' }
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
-  import { unpack } from './unpack.js'
+  import { unpack } from '@han-compose/composer'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'

@@ -1,11 +1,11 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { drawingSvg, groupParts } from '@han-compose/composer'
+import { EMOJI_CUT_MATRIX, drawingSvg, emojiTransform, groupParts } from '@han-compose/composer'
 import { entryDescription, isDescription as isWhole } from './ids.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
 // leaf, the placeholder of a slot — is the engine's (han-compose's package).
-export { drawingSvg, groupParts }
+export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts }
 
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
 // part not drawn yet) becomes, in the drawing's 1000-unit box.
