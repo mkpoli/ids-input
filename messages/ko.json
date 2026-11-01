@@ -341,5 +341,13 @@
   "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루",
   "info.copy": "{char} 복사",
   "info.copied": "복사됨",
-  "info.copyFailed": "복사 실패"
+  "info.copyFailed": "복사 실패",
+  "info.source.sections": "출처",
+  "info.source.open": "{site} 열기",
+  "info.site.wiktionary": "위키낱말사전",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "표기 보조",
+  "info.site.component": "Andrew West"
 }

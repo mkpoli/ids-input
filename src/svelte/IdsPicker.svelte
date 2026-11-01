@@ -5,6 +5,7 @@
   // part picked goes in `editor`'s chosen slot, or the first empty one; parts can also be dragged
   // onto the tree. Arrow keys, Home and End move between the tabs.
   import { tick, untrack } from 'svelte'
+  import { watchFallback } from './fallback-font.js'
   import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
@@ -89,10 +90,13 @@
     return () => { clearTimeout(timer); controller.abort() }
   })
   const picked = $derived(editor.picked)
+  /** @type {HTMLDivElement | null} */
+  let panel = $state(null)
+  $effect(() => { if (panel) return watchFallback(panel) })
 </script>
 
 {#if shown.length}
-  <div class="ids-search">
+  <div class="ids-search" bind:this={panel}>
     {#if title}<span class="ids-title">{editor.chosen && picked !== null && picked !== undefined ? t('ids.replace', { part: editor.text(picked) }) : t('ids.insert')}</span>{/if}
     <div class="ids-pick-tabs" role="tablist" aria-label={t('ids.pick.label')}>
       {#each shown as name, index (name)}

@@ -29,6 +29,11 @@
     await tick()
     wrap?.querySelector('.starter-tab[aria-selected="true"]')?.focus()
   }
+  /** Open the starter on a tab, for a menu entry elsewhere. @param {'templates' | 'examples'} [which] */
+  export function openAt(which = 'templates') {
+    tab = which
+    show()
+  }
   /** @param {boolean} [refocus] */
   function hide(refocus = false) {
     open = false
