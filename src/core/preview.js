@@ -7,14 +7,22 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 /** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
 
-/** Reflect an emoji around the centre of its layout box; a box that is not four finite numbers has no reflection. */
+/**
+ * The transform of an emoji mirrored or turned within its box, about the centre of the box: a glyph
+ * lies inside its box, so this only turns the glyph, and the whole drawing's reflection leaves its
+ * centre where it was, so a flipped emoji is flipped about its own ink. A box that is not four finite
+ * numbers has no reflection.
+ * @param {{ box?: number[], flip?: [boolean, boolean] } | null | undefined} item
+ */
 export function emojiTransform(item) {
-  const [flipX, flipY] = item.flip ?? []
+  const [flipX, flipY] = item?.flip ?? []
   if (!flipX && !flipY) return ''
-  const box = Array.isArray(item.box) ? item.box.slice(0, 4) : []
+  const box = Array.isArray(item?.box) ? item.box.slice(0, 4) : []
   if (box.length < 4 || !box.every(value => Number.isFinite(Number(value)))) return ''
-  const [x, y, width, height] = box.map(value => Math.round(Number(value) * 1000) / 1000)
-  return `translate(${flipX ? 2 * x + width : 0} ${flipY ? 2 * y + height : 0}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
+  const [x, y, width, height] = box
+  const round = value => Math.round(value * 1000) / 1000
+  const cx = x + width / 2, cy = y + height / 2
+  return `translate(${round(flipX ? -cx : 0)} ${round(flipY ? -cy : 0)}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
 }
 
 /**
