@@ -1262,6 +1262,7 @@
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+            <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>

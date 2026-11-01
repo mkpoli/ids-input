@@ -55,7 +55,8 @@ async function open(viewport, scheme, deepLink = false, sequence = '%E2%BF%B0%E6
   if (clean) await page.addInitScript(() => { localStorage.clear(); sessionStorage.clear() })
   const address = `${base}/${sequence}?endpoint=${encodeURIComponent(INTAKE)}${deepLink ? '&report=1' : ''}${process.env.IDS_COMPOSER ? `&composer=${encodeURIComponent(process.env.IDS_COMPOSER)}` : ''}`
   await page.goto(address, { waitUntil: 'domcontentloaded' })
-  await page.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').waitFor({ timeout: 30000 })
+  // The output panel starts hidden on a phone, so the preview is only required to be drawn.
+  await page.locator('.ids-preview:is([data-step="composed"], [data-step="idle"])').first().waitFor({ state: 'attached', timeout: 60000 })
   return { page, errors, body: () => ({ body: sent ?? Buffer.alloc(0), boundary }) }
 }
 
@@ -68,10 +69,20 @@ try {
     console.error = (...args) => outer(...args)
     console.error('a part could not be drawn from http://localhost:5186/@fs/home/someone/secret.js?token=abc')
   })
-  // The File menu opens it.
+  // The output panel has the button, under the drawing it reports.
+  const output = page.locator('#output-panel')
+  const panelButton = output.getByRole('button', { name: 'Report a problem', exact: true })
+  assert.equal(await panelButton.count(), 1, 'the output panel has a report button')
+  const panelBox = await output.boundingBox(), buttonBox = await panelButton.boundingBox()
+  assert.ok(panelBox && buttonBox && buttonBox.y > panelBox.y + panelBox.height / 2, 'the report button sits in the panel below the drawing')
+  await panelButton.click()
+  const dialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Report a problem' }) })
+  await dialog.waitFor({ timeout: 5000 })
+  await dialog.getByRole('button', { name: 'Close', exact: true }).click()
+  await dialog.waitFor({ state: 'hidden', timeout: 5000 })
+  // The File menu opens the same dialog.
   await page.getByRole('menuitem', { name: 'File', exact: true }).click()
   await page.getByRole('menuitem', { name: 'Report a problem', exact: true }).click()
-  const dialog = page.getByRole('dialog').filter({ has: page.getByRole('heading', { name: 'Report a problem' }) })
   await dialog.waitFor({ timeout: 5000 })
   const account = dialog.locator('textarea')
   assert.equal(await account.evaluate(el => el === document.activeElement), true, 'the account of the problem has the focus')
