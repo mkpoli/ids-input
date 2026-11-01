@@ -117,6 +117,12 @@ export function derived(from, contours, box) {
   return part
 }
 
+const repeat = (light, heavy, at, first) => {
+  if (light[2 * at] !== light[2 * first] || light[2 * at + 1] !== light[2 * first + 1]) return
+  heavy[2 * at] = heavy[2 * first]
+  heavy[2 * at + 1] = heavy[2 * first + 1]
+}
+
 /** A part record of the export (`b`, `p`, `w`) read as a part, decoded once. */
 export function partOf(record, quant = 4) {
   if (record._part) return record._part
@@ -127,15 +133,15 @@ export function partOf(record, quant = 4) {
     for (let i = 0; i < lo.length; i++) { l[i] = lo[i] / quant; h[i] = (lo[i] + d[i]) / quant }
     // A font may write one vertex twice, closing a contour on its first point or repeating a corner.
     // An export grown before han-compose#46 moved the copies apart at heavy, where they are one
-    // vertex: a contour's last point takes its first, a repeated point the one it repeats, and a
-    // point the run that opens with it. One closing on an implied point starts on a control point
-    // instead, so it is left alone.
+    // vertex: each copy takes the first of the run it closes. One closing on an implied point starts
+    // on a control point instead, so it is left alone.
     const n = lo.length >> 1
-    if (!(n >= 2 && cmds.at(-1)[2]) && l[2 * n - 2] === l[0] && l[2 * n - 1] === l[1]) { h[2 * n - 2] = h[0]; h[2 * n - 1] = h[1] }
+    const implied = n >= 2 && cmds.at(-1)[2]
     for (let i = 1; i < n; i++) {
-      const a = 2 * (i - 1), b = 2 * i
-      if (l[a] === l[b] && l[a + 1] === l[b + 1]) { h[b] = h[a]; h[b + 1] = h[a + 1] }
+      if (i === n - 1 && implied) continue
+      repeat(l, h, i, i - 1)
     }
+    if (!implied && n >= 2) repeat(l, h, n - 1, 0)
     return { ops: cmds, light: l, heavy: h, width }
   })
   const part = wound(makePart(contours, record.b.slice()))

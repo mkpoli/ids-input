@@ -1,5 +1,6 @@
-// Count the contours an export stores torn at their start: the heavy master's first point apart from
-// its last, where the light master repeats its first point as its last. Run it against a local export
+// Count the points an export stores torn: a point the light master writes twice, the copies of it
+// grown apart at heavy. A contour's closing return and a sharp corner are both written that way, and
+// han-compose#46 grows each copy once, so nothing should come out torn. Run it against a local export
 // before uploading it, and against the published one to see what clients still read:
 //   bun scripts/audit_open_contours.mjs EXPORT_DIR_OR_URL KEYS_FILE [SUFFIX]
 // `KEYS_FILE` is a JSON list of keys (han-compose `export-web` records the letters and digits of
@@ -64,13 +65,16 @@ for (const key of keys) {
     const lo = new Int16Array(lb.buffer, lb.byteOffset, lb.length / 2)
     const d = new Int16Array(db.buffer, db.byteOffset, db.length / 2)
     const n = lo.length / 2
-    if (n < 4 || ops.endsWith('*')) continue
-    if (lo[0] !== lo[lo.length - 2] || lo[1] !== lo[lo.length - 1]) continue
-    closed++
-    const hx0 = lo[0] + d[0], hy0 = lo[1] + d[1]
-    const hx1 = lo[lo.length - 2] + d[lo.length - 2], hy1 = lo[lo.length - 1] + d[lo.length - 1]
-    const gap = Math.hypot(hx0 - hx1, hy0 - hy1) / 4
-    if (gap > 0.01) { torn++; if (gap > worst) { worst = gap; worstKey = key } }
+    const implied = ops.endsWith('*')
+    const pairs = []
+    for (let i = 1; i < n; i++)
+      if (!(i === n - 1 && implied) && lo[2 * i] === lo[2 * (i - 1)] && lo[2 * i + 1] === lo[2 * (i - 1) + 1]) pairs.push([i, i - 1])
+    if (!implied && n >= 2 && lo[0] === lo[lo.length - 2] && lo[1] === lo[lo.length - 1]) pairs.push([n - 1, 0])
+    for (const [at, first] of pairs) {
+      closed++
+      const gap = Math.hypot((lo[2 * at] + d[2 * at]) - (lo[2 * first] + d[2 * first]), (lo[2 * at + 1] + d[2 * at + 1]) - (lo[2 * first + 1] + d[2 * first + 1])) / 4
+      if (gap > 0.01) { torn++; if (gap > worst) { worst = gap; worstKey = key } }
+    }
   }
 }
 console.log(JSON.stringify({ keys: keys.length, closed, torn, worst: +worst.toFixed(2), worstKey }))
