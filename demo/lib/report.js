@@ -198,6 +198,10 @@ function loadedFonts() {
  *  @param {Element | null} preview @param {string} name */
 const attribute = (preview, name) => redact(preview?.getAttribute(name) ?? '').slice(0, ATTRIBUTE)
 
+/** Whether the page was served by a pull request's preview: their Workers addresses end in
+ *  `-ids-input-workshop.<account>.workers.dev`. @param {string} hostname */
+export const isPreviewHost = hostname => /(?:^|-)ids-input-workshop\.[^.]+\.workers\.dev$/.test(hostname)
+
 /** What the page is and where it stands, without its query.
  *  @param {{ locale: string, theme: string, face: string, composer: string }} settings
  *  @param {Element | null} preview @returns {Record<string, unknown>} */
@@ -218,7 +222,7 @@ export function reportContext(settings, preview) {
     fonts: loadedFonts(),
     local: location.protocol === 'file:' || isLocalHost(location.hostname) || undefined,
     // A pull request's preview is not the published page, and a report from one should say so.
-    previewVersion: location.hostname.endsWith('.workers.dev') || undefined,
+    previewVersion: isPreviewHost(location.hostname) || undefined,
     historyLength: history.length,
   }
 }
