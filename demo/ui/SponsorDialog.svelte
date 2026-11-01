@@ -1,8 +1,8 @@
 <script>
   // The author's portrait, what a tip pays for, then three steps that end at the tip buttons: Ko-fi
-  // (one-time or monthly) and OFUSE (a tip with a message), OFUSE first in Japanese. Each service
-  // handles the amount and the payment; companies can write in to sponsor. The header's Sponsor
-  // button opens it.
+  // and OFUSE, OFUSE first in Japanese. Each button carries its service's own mark and colour,
+  // unaltered as both brand kits require. Each service handles the amount and the payment;
+  // companies can write in to sponsor. The header's Sponsor button opens it.
   import Dialog from './Dialog.svelte'
   import Icon from './Icon.svelte'
   /** @type {{ open: boolean, locale: string, t: (key: string, params?: Record<string, string | number>) => string }} */
@@ -16,7 +16,7 @@
 
 {#snippet kofi()}
   <a class="tip kofi" href="https://ko-fi.com/mkpoli" target="_blank" rel="noreferrer">
-    <span class="mark" aria-hidden="true"><Icon name="coffee" size={20} /></span>
+    <img class="mark" src="/brand/kofi-symbol.svg" alt="" width="34" height="27" />
     <span class="copy"><strong>Ko-fi</strong><small>{t('app.sponsor.kofi')}</small></span>
     <Icon name="arrow-right" />
   </a>
@@ -24,7 +24,7 @@
 
 {#snippet ofuse()}
   <a class="tip ofuse" href="https://ofuse.me/mkpoli" target="_blank" rel="noreferrer">
-    <span class="mark" aria-hidden="true"><Icon name="letter" size={20} /></span>
+    <img class="mark" src="/brand/ofuse-icon.svg" alt="" width="26" height="28" />
     <span class="copy"><strong>OFUSE</strong><small>{t('app.sponsor.ofuse')}</small></span>
     <Icon name="arrow-right" />
   </a>
@@ -93,12 +93,12 @@
   .tips{display:flex;flex-direction:column;gap:10px}
   .tip{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
     color:#fff;text-decoration:none;box-shadow:0 6px 16px var(--tip-glow);transition:transform .18s ease,box-shadow .18s ease}
-  .kofi{--tip-glow:rgb(216 27 96 / .32);--tip-glow-hover:rgb(216 27 96 / .42);background:linear-gradient(135deg,#d81b60,#b0124f)}
-  .ofuse{--tip-glow:rgb(123 63 176 / .3);--tip-glow-hover:rgb(123 63 176 / .42);background:linear-gradient(135deg,#8a4fc4,#6a2f9e)}
+  .kofi{--tip-glow:rgb(32 32 32 / .28);--tip-glow-hover:rgb(32 32 32 / .38);background:#202020;border:1px solid light-dark(#202020,rgb(255 255 255 / .2))}
+  .ofuse{--tip-glow:rgb(40 130 167 / .3);--tip-glow-hover:rgb(40 130 167 / .42);background:#2882a7;border:1px solid #2882a7}
   .tip:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--tip-glow-hover)}
   .tip:active{transform:scale(.98)}
   .tip:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
-  .tip .mark{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:50%;background:rgb(255 255 255 / .22)}
+  .tip .mark{display:block;flex:none;width:38px;height:30px;object-fit:contain}
   .tip .copy strong{font-size:15px}
   .tip .copy small{color:#fff}
   .copy{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
