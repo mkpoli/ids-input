@@ -12,6 +12,7 @@
    *   onstart: (sequence: string) => void }}
    */
   let { t, editor, items, view, onstart } = $props()
+  const uid = $props.id()
   let open = $state(false)
   /** @type {'templates' | 'examples'} */ let tab = $state('templates')
   /** @type {HTMLDivElement | null} */ let wrap = $state(null)
@@ -30,7 +31,7 @@
   }
   /** @param {string} sequence */
   function choose(sequence) {
-    hide()
+    hide(true)
     onstart(sequence)
   }
   /** @param {KeyboardEvent} event */
@@ -38,13 +39,17 @@
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault()
       tab = tab === 'templates' ? 'examples' : 'templates'
-      tick().then(() => wrap?.querySelector(`.starter-tab[data-tab="${tab}"]`)?.focus())
+    } else if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault()
+      tab = event.key === 'Home' ? 'templates' : 'examples'
     } else if (event.key === 'Escape') {
       event.preventDefault()
       hide(true)
-    }
+      return
+    } else return
+    tick().then(() => wrap?.querySelector(`.starter-tab[data-tab="${tab}"]`)?.focus())
   }
-  // Keep the wide panel inside the window when the strip sits near the left edge.
+  // Keep the wide panel inside the window, and above its bottom edge, wherever the strip sits.
   $effect(() => {
     if (!open || !panel) return
     const pad = 8
@@ -52,6 +57,7 @@
       if (!panel) return
       panel.style.transform = ''
       const rect = panel.getBoundingClientRect()
+      panel.style.maxHeight = `${Math.max(240, Math.min(760, innerHeight - rect.top - pad))}px`
       const dx = rect.left < pad ? pad - rect.left : rect.right > innerWidth - pad ? innerWidth - pad - rect.right : 0
       if (dx) panel.style.transform = `translateX(${dx}px)`
     }
@@ -59,14 +65,15 @@
     const observer = new ResizeObserver(place)
     observer.observe(panel)
     addEventListener('resize', place)
-    return () => { observer.disconnect(); removeEventListener('resize', place); if (panel) panel.style.transform = '' }
+    return () => { observer.disconnect(); removeEventListener('resize', place); if (panel) { panel.style.transform = ''; panel.style.maxHeight = '' } }
   })
 </script>
 
 <svelte:window onpointerdown={event => { if (open && !wrap?.contains(/** @type {Node} */ (event.target))) hide() }}
   onkeydown={event => { if (open && event.key === 'Escape') { event.preventDefault(); hide(true) } }} />
 
-<div class="starter" bind:this={wrap}>
+<div class="starter" bind:this={wrap}
+  onfocusout={event => { if (open && event.relatedTarget instanceof Node && !wrap?.contains(event.relatedTarget)) hide() }}>
   <button type="button" class="starter-trigger" bind:this={trigger} title={t('app.tabs.start')} aria-label={t('app.tabs.start')}
     aria-haspopup="dialog" aria-expanded={open} onclick={() => open ? hide() : show()}>
     <Icon name="chevron" size={14} />
@@ -74,15 +81,21 @@
   {#if open}
     <div class="starter-panel" role="dialog" aria-label={t('app.tabs.start')} bind:this={panel}>
       <div class="starter-tabs" role="tablist" aria-label={t('app.tabs.start')}>
-        <button type="button" class="starter-tab" role="tab" data-tab="templates" aria-selected={tab === 'templates'}
-          tabindex={tab === 'templates' ? 0 : -1} onclick={() => tab = 'templates'} onkeydown={tabKey}>{t('app.tabs.templates')}</button>
-        <button type="button" class="starter-tab" role="tab" data-tab="examples" aria-selected={tab === 'examples'}
-          tabindex={tab === 'examples' ? 0 : -1} onclick={() => tab = 'examples'} onkeydown={tabKey}>{t('app.examples.label')}</button>
+        <button type="button" class="starter-tab" role="tab" data-tab="templates" id={`${uid}-tab-templates`}
+          aria-controls={`${uid}-panel-templates`} aria-selected={tab === 'templates'} tabindex={tab === 'templates' ? 0 : -1}
+          onclick={() => tab = 'templates'} onkeydown={tabKey}>{t('app.tabs.templates')}</button>
+        <button type="button" class="starter-tab" role="tab" data-tab="examples" id={`${uid}-tab-examples`}
+          aria-controls={`${uid}-panel-examples`} aria-selected={tab === 'examples'} tabindex={tab === 'examples' ? 0 : -1}
+          onclick={() => tab = 'examples'} onkeydown={tabKey}>{t('app.examples.label')}</button>
       </div>
       {#if tab === 'templates'}
-        <div class="starter-body" role="tabpanel"><IdsTemplates {editor} onpick={choose} /></div>
+        <div class="starter-body" role="tabpanel" id={`${uid}-panel-templates`} aria-labelledby={`${uid}-tab-templates`} tabindex="0">
+          <IdsTemplates {editor} onpick={choose} />
+        </div>
       {:else}
-        <div class="starter-body" role="tabpanel"><MenuList label={t('app.examples.label')} {items} {view} onpick={() => hide()} /></div>
+        <div class="starter-body" role="tabpanel" id={`${uid}-panel-examples`} aria-labelledby={`${uid}-tab-examples`} tabindex="0">
+          <MenuList label={t('app.examples.label')} {items} {view} onpick={() => hide(true)} />
+        </div>
       {/if}
     </div>
   {/if}
@@ -100,4 +113,5 @@
   .starter-tab[aria-selected="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .starter-tab:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
   .starter-body{padding:4px 4px 2px}
+  .starter-body:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
 </style>

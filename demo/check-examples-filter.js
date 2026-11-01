@@ -32,7 +32,7 @@ try {
   assert.ok(await dialog.locator('[data-pyramid]').count() >= 10, 'the pyramid sizes are here')
   assert.equal(await dialog.locator('.ids-repeat-grid button[data-repeat]').count(), 4, 'the repeat templates are here')
 
-  const sequence = (await structures.first().getAttribute('title')).split(' · ')[0]
+  const sequence = await structures.first().getAttribute('data-sequence')
   await structures.first().click()
   await page.waitForTimeout(400)
   assert.equal(await tabs(), opened + 2, 'a template opens a new tab')
@@ -94,5 +94,42 @@ try {
   const shown = await dialog.locator('.item').count()
   assert.ok(shown > 0 && shown < rows, 'the list view filters too')
   assert.ok((await dialog.locator('.note').allTextContents()).some(note => note.includes('돌')), 'a reading matches the query')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
+
+  // Keyboard: the chevron opens on Templates, the arrow keys and Home switch tabs, Escape gives the focus back.
+  await page.getByTitle('New tab', { exact: true }).focus()
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Enter')
+  await dialog.waitFor()
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'tab', 'Enter opens the dialog on a starter tab')
+  await page.keyboard.press('Home')
+  assert.equal(await templatesTab.getAttribute('aria-selected'), 'true', 'Home selects Templates')
+  await page.keyboard.press('ArrowRight')
+  assert.equal(await examplesTab.getAttribute('aria-selected'), 'true', 'Right moves to Examples')
+  await page.keyboard.press('ArrowLeft')
+  assert.equal(await templatesTab.getAttribute('aria-selected'), 'true', 'Left returns to Templates')
+  await page.keyboard.press('Escape')
+  assert.equal(await dialog.count(), 0, 'Escape closes the dialog')
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Templates and examples', 'Escape returns the focus to the chevron')
+
+  // Picking a template leaves the focus in the new tab's sequence field.
+  await trigger.click()
+  await dialog.waitFor()
+  await dialog.locator('[data-template]').first().click()
+  await page.waitForTimeout(400)
+  assert.equal(await page.evaluate(() => document.activeElement?.closest('.ids-field') !== null), true, 'the focus moves into the new tab')
+
+  // The panel stays inside a phone-sized window, bottom included.
+  await page.setViewportSize({ width: 375, height: 640 })
+  await page.waitForTimeout(300)
+  await trigger.click()
+  await dialog.waitFor()
+  await page.waitForTimeout(400)
+  const box = await dialog.boundingBox()
+  assert.ok(box && box.x >= 0 && box.x + box.width <= 375 && box.y >= 0 && box.y + box.height <= 640, `the panel fits a phone: ${JSON.stringify(box)}`)
+  await page.keyboard.press('Escape')
+  await page.setViewportSize({ width: 1440, height: 900 })
+
   console.log('PASS the starter dialog opens templates and examples in tabs, and the toolbar keeps its examples menu')
 } finally { await browser.close() }

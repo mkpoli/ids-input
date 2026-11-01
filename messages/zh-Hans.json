@@ -262,6 +262,7 @@
   "ids.pick.templates": "构字式",
   "ids.group.4": "4个部件",
   "ids.templates.insert": "插入构字式：{sequence}",
+  "ids.templates.open": "在新标签页中打开{sequence}",
   "ids.templates.repeats": "重复",
   "ids.templates.repeatBottom": "下排",
   "ids.templates.repeatBottomHint": "留空则使用上排部件。",

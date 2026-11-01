@@ -262,6 +262,7 @@
   "ids.pick.templates": "Bố cục",
   "ids.group.4": "4 bộ phận",
   "ids.templates.insert": "Chèn bố cục {sequence}",
+  "ids.templates.open": "Mở {sequence} trong thẻ mới",
   "ids.templates.repeats": "Lặp",
   "ids.templates.repeatBottom": "Hàng dưới",
   "ids.templates.repeatBottomHint": "Để trống để dùng bộ phận trên.",

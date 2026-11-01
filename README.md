@@ -1160,7 +1160,7 @@ The toolbar holds Undo and Redo with the history of named steps, consuming the d
 transform steps before the editor’s structural steps, examples, a share link with its QR code, the
 language, settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it
 opens a starter dialog in two tabs: Templates is the same full catalogue the input pane offers
-(structures, pyramids and repeats), and Examples is the list the menu sheet uses — every starter
+(structures, pyramids, repeats and five-copy layouts), and Examples is the list the menu sheet uses — every starter
 sequence with its character and code point, an abbreviated character, or a mark when it has none,
 opening as cards or a list with its filters and folding. A template or an example opens a tab.
 Settings hold the system, light and dark
