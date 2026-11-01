@@ -1,6 +1,7 @@
 <script>
   import { replacementQuery, resolveReplacement, write } from '../../src/core/index.js'
   import Dialog from './Dialog.svelte'
+  import TextField from './controls/TextField.svelte'
 
   /** @type {{ open: boolean, adapter: import('../../src/adapter/types.js').IdsAdapter,
    * t: (key: string) => string, onopen: (sequence: string) => void }} */
@@ -37,21 +38,21 @@
   <form class="replacement" onsubmit={event => { event.preventDefault(); submit() }}>
     <p>{t('app.replacement.help')}</p>
     <p>{t('app.replacement.nestedHint')}</p>
-    <label>{t('app.replacement.source')}<input bind:value={source} oninput={() => status = ''} placeholder="林" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>
-    <label>{t('app.replacement.target')}<input bind:value={target} oninput={() => status = ''} placeholder="木" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>
-    <label>{t('app.replacement.replacement')}<input bind:value={replacement} oninput={() => status = ''} placeholder="火" disabled={status === 'loading'} autocomplete="off" spellcheck="false" /></label>
+    <div class="operands">
+      <TextField label={t('app.replacement.source')} bind:value={source} placeholder="林" disabled={status === 'loading'} autocomplete="off" spellcheck={false} oninput={() => status = ''} />
+      <TextField label={t('app.replacement.target')} bind:value={target} placeholder="木" disabled={status === 'loading'} autocomplete="off" spellcheck={false} oninput={() => status = ''} />
+      <TextField label={t('app.replacement.replacement')} bind:value={replacement} placeholder="火" disabled={status === 'loading'} autocomplete="off" spellcheck={false} oninput={() => status = ''} />
+    </div>
     {#if operandsValid && !query}<p role="status">{t('app.replacement.tooLong')}</p>{/if}
     {#if status}<p role="status">{t(`app.replacement.${status}`)}</p>{/if}
-    <button type="submit" disabled={!valid || status === 'loading'}>{t('app.replacement.submit')}</button>
+    <button type="submit" class="ui-button" data-variant="primary" data-size="lg" disabled={!valid || status === 'loading'} aria-busy={status === 'loading' || undefined}>{t('app.replacement.submit')}</button>
   </form>
 </Dialog>
 
 <style>
-  .replacement{display:flex;flex-direction:column;gap:12px}
-  p{margin:0;color:var(--ui-color-ink-muted);font-size:13px;line-height:1.5}
-  label{display:flex;flex-direction:column;gap:4px;font-size:13px}
-  input{min-width:0;padding:7px 10px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font:inherit;font-size:18px}
-  button{align-self:flex-start;padding:8px 12px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;cursor:pointer}
-  button:disabled{opacity:.5;cursor:default}
-  :is(button,input):focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
+  .replacement{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
+  p{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:var(--ui-leading-normal)}
+  .operands{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--ui-space-sm)}
+  button{align-self:flex-start}
+  @media (max-width:640px){.operands{grid-template-columns:minmax(0,1fr)}}
 </style>
