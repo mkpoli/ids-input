@@ -44,6 +44,10 @@ export default defineConfig({
   },
   plugins: [svelte(), ortAssets()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
+  // The drawing engine starts its Worker from `new URL('./worker.js', import.meta.url)`. Inside
+  // `node_modules` Vite would pre-bundle that module without its worker file, so the engine is
+  // bundled as its sources are.
+  optimizeDeps: { exclude: ['@han-compose/composer'] },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
     rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
   // The drawing engine is a package in `node_modules`, its own files outside this checkout's root.
