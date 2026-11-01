@@ -17,8 +17,9 @@ import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
-// Examples whose parts are all bundled draw from a local source, not the export.
-const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
+// Examples whose parts are all bundled draw from a local source, with the export behind it for the
+// character itself, which the bundled records do not hold.
+const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false, fallback: source })
 const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
