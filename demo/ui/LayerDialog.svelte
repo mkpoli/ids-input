@@ -470,6 +470,8 @@
   .handle.move{cursor:move}
   .handle.rotate{cursor:crosshair}
   .handle.scale{cursor:nwse-resize}
+  /* The same white figure keeps its notes in the light scheme's muted ink. */
+  .figure .note{color:#686874}
   .list{display:flex;flex-direction:column;gap:var(--ui-space-3xs);max-height:48vh;overflow:auto}
   .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:var(--ui-space-xs);align-items:center;width:100%;min-height:var(--ui-control-h-lg);
     padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
