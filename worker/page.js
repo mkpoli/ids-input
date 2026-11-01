@@ -52,12 +52,22 @@ export function routeFor(url, defaultSequence) {
  * The title, description, tags and image of a shared sequence.
  * @param {{ sequence: string, char: string | null, origin: string }} share
  */
-export function metaFor({ sequence, char, origin }) {
+/**
+ * `char` is the character the description composes, and `base` the character whose code point the
+ * sequence is to be read with: one an example names, or the table's, whichever is given first.
+ * @param {{ sequence: string, char: string | null, base?: string | null, origin: string }} given
+ */
+export function metaFor({ sequence, char, base, origin }) {
   const url = `${origin}${pathOf(sequence)}`
-  const title = char ? `${sequence} = ${char} (${codePoint(char)}) — IDS Workshop` : `${sequence} — IDS Workshop`
+  const named = base ?? char
+  const title = char
+    ? `${sequence} = ${char} (${codePoint(named ?? char)}) — IDS Workshop`
+    : named ? `${sequence} = ${named} — IDS Workshop` : `${sequence} — IDS Workshop`
   const description = char
-    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
-    : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
+    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(named ?? char)}). Drawn by IDS Workshop.`
+    : named
+      ? `The ideographic description sequence ${sequence}, read with the character ${named} (${codePoint(named)}). Drawn by IDS Workshop.`
+      : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
   const image = `${origin}/og/${encodeURIComponent(sequence)}.png`
   return {
     title,
@@ -73,7 +83,7 @@ export function metaFor({ sequence, char, origin }) {
       `<meta property="og:image:type" content="image/png">`,
       `<meta property="og:image:width" content="${OG_WIDTH}">`,
       `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
+      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(named ?? char)})` : named ? `The sequence ${sequence}, read with the character ${named} (${codePoint(named)})` : `The sequence ${sequence} composed`)}">`,
       `<meta name="twitter:card" content="summary_large_image">`,
       `<meta name="twitter:title" content="${escaped(title)}">`,
       `<meta name="twitter:description" content="${escaped(description)}">`,

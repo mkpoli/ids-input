@@ -4,7 +4,7 @@
 import { EMPTY_MARKS, OPERATORS, UNKNOWN, isComponent, isSelector, parse } from '../src/core/ids.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
 import { shareHtml, routeFor } from './page.js'
-import { cardResponse, characterOf } from './render.js'
+import { cardResponse, characterOf, namedFor } from './render.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
 const failure = (message, status) => new Response(message, { status, headers: { 'cache-control': 'no-store' } })
@@ -149,7 +149,8 @@ export default {
           const html = await template.text()
           if (!html.includes('<title>IDS Workshop — Ideographic Description Sequence Editor</title>')) response = render(request, notFound(url, route.sequence), 404)
           else response = new Response(shareHtml(html, {
-            sequence: route.sequence, char: await characterOf(env, route.sequence), origin: ORIGIN,
+            sequence: route.sequence, char: await characterOf(env, route.sequence),
+            base: namedFor(route.sequence), origin: ORIGIN,
           }), { headers: {
             'content-type': 'text/html; charset=utf-8',
             'cache-control': 'max-age=0, must-revalidate',

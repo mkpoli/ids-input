@@ -5,13 +5,14 @@
 import { compose } from '../src/composer/loader.js'
 import { unpack } from '../src/composer/loader.js'
 import { sourceFor } from '../src/composer/source.js'
-import { cardSvg, SIZE } from './card.js'
+import { cardSvg, SIZE, codePoint } from './card.js'
 import { OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
+import { EXAMPLES } from '../demo/lib/examples.js'
 
 // The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v10'
+const VERSION = 'v11'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // Metadata requests do not need the rasterizer.
@@ -63,6 +64,11 @@ export async function characterOf(env, sequence) {
   return (await idsIndex(env))[sequence] ?? null
 }
 
+/** The drawing of each unit, composed on its own, or null where one could not be. @param {any} env @param {string[]} units */
+async function drawUnits(env, units) {
+  return await Promise.all(units.map(unit => draw(env, unit).catch(() => null)))
+}
+
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
   const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
@@ -71,10 +77,11 @@ async function draw(env, sequence) {
 }
 
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
-async function png(env, sequence, drawing, char) {
+async function png(env, sequence, drawing, char, shown = null) {
   const Resvg = await ready()
-  const { buffers, familyOf } = await facesFor(env, sequence + (char ?? ''))
-  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf }), {
+  const units = shown?.units ?? [sequence]
+  const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? ''))
+  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
@@ -82,6 +89,43 @@ async function png(env, sequence, drawing, char) {
     const image = render.render()
     try { return image.asPng() } finally { image.free() }
   } finally { render.free() }
+}
+
+/**
+ * The character an example names for a sequence: the one it writes, or the standard character an
+ * abbreviation stands for. A description can be read with the code point of a character it does not
+ * compose, such as the 講 the sign writes with a full 讠; the card names that character.
+ * @param {string} sequence
+ */
+export function namedFor(sequence) {
+  const example = EXAMPLES.find(example => example.sequence === sequence)
+  const named = example?.abbreviates || example?.char
+  return named && [...named].length === 1 ? named : null
+}
+
+/**
+ * The units a card draws a named sequence in: the characters the sequence writes, each composed on
+ * its own, when a component would otherwise stand in for one — 快 where the composer takes the 忄
+ * from it, say. Each unit is the character it draws, so the card names it beside its code point. A
+ * sequence that already writes its named character, or whose parts are not all plain characters,
+ * stays one unit.
+ * @param {any} env @param {string} sequence @param {string | null} named
+ * @returns {Promise<string[]>}
+ */
+export async function unitsFor(env, sequence, named) {
+  if (!named || !sequence.includes('⿰') || !sequence.startsWith('⿰')) return [sequence]
+  const pieces = [...sequence]
+  // One operator, two plain characters: 3 pieces, with the operator first.
+  if (pieces.length !== 3) return [sequence]
+  const parts = pieces.slice(1)
+  if (parts.some((part) => part === named)) return [sequence]
+  const index = await idsIndex(env)
+  const characters = parts.map((part) => {
+    const drawn = index[part] ?? part
+    return [...drawn].length === 1 ? drawn : part
+  })
+  if (characters.includes(named)) return [sequence]
+  return [named, ...characters]
 }
 
 /**
@@ -93,9 +137,15 @@ export async function cardResponse(env, ctx, sequence) {
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
-  const char = await characterOf(env, sequence)
-  const drawing = await draw(env, sequence).catch(() => null)
-  const body = await png(env, sequence, drawing, char)
+  // An example names the character its sequence is read with; otherwise the table gives it. A
+  // sequence read with a character it does not compose is shown as the characters it writes.
+  const named = namedFor(sequence)
+  const composed = await characterOf(env, sequence)
+  const char = named ?? composed
+  const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
+  const drawings = await drawUnits(env, units)
+  const shown = units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
+  const body = await png(env, sequence, drawings[0], char, shown)
   const answer = new Response(body, { headers: { 'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer

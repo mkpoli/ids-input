@@ -29,6 +29,34 @@ describe('a workshop share card', () => {
     expect(svg).toContain('ids.mkpo.li')
     expect(svg).toContain('U+93B6')
   })
+  it('sets the sequence in the IDC face and each character row in its own', () => {
+    // A face named for a character draws that character only; the operators after it are the IDC face's.
+    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing], familyOf: c => (c === '设' || c === '冓' ? 'a' : 'b') })
+    expect(svg).toContain('font-family="a, IDS Operators" font-size="88"')
+    expect(svg).not.toContain('font-family="b, IDS Operators" font-size="88"')
+  })
+  it('shows the character of a sequence read with one it does not compose, at that code point', () => {
+    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing] })
+    expect(svg).toContain('Characters of the description, each drawn on its own')
+    expect(svg).toContain('>講</text>')
+    expect(svg).toContain('U+8B1B')
+    expect(svg.match(/data-character="true"/g)).toHaveLength(1)
+  })
+  it('names a sequence with no character instead of leaving its character row blank', () => {
+    const svg = cardSvg({ sequence: '⿺廴占', drawing })
+    expect(svg).toContain('>Composes</text>')
+    expect(svg).toContain('No character at this code point')
+    expect(svg).not.toContain('data-character="true"')
+  })
+  it('puts the character left of its code point even when it has none', () => {
+    const svg = cardSvg({ sequence: '⿰木子', char: '子' })
+    const row = svg.slice(svg.indexOf('data-character="true"'), svg.indexOf('data-codepoint'))
+    expect(row).toContain('>子</text>')
+    const none = cardSvg({ sequence: '⿰木', drawing, char: '设', codepoint: 'U+8BBE', familyOf: () => 'IDS Operators' })
+    expect(none).toContain('>设</text>')
+    expect(none).toContain('U+8BBE')
+    expect(none).toContain('data-codepoint="true"')
+  })
   it('renders every IDC as a text glyph, never a button icon', () => {
     for (const [operator] of OPERATORS) {
       const svg = cardSvg({ sequence: operator + '木', drawing })
@@ -40,7 +68,7 @@ describe('a workshop share card', () => {
   it('labels unavailable previews and unknown code points without a false Unicode claim', () => {
     const svg = cardSvg({ sequence: '⿰木' })
     expect(svg).toContain('Preview unavailable')
-    expect(svg).toContain('No Unicode match')
+    expect(svg).toContain('No character at this code point')
     expect(svg).not.toContain('U+')
   })
   it('keeps seven characters on one line', () => {
@@ -91,6 +119,6 @@ describe('a workshop share card', () => {
     expect(svg).toContain('>&lt;</text>')
     expect(svg).toContain('>&amp;</text>')
     expect(svg).toContain('>&gt;</text>')
-    expect(svg).toContain('font-family="a&quot;&lt;b"')
+    expect(svg).toContain('font-family="a&quot;&lt;b, IDS Operators"')
   })
 })
