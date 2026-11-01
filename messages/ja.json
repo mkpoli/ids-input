@@ -341,5 +341,13 @@
   "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹",
   "info.copy": "{char}をコピー",
   "info.copied": "コピーしました",
-  "info.copyFailed": "コピー失敗"
+  "info.copyFailed": "コピー失敗",
+  "info.source.sections": "出典",
+  "info.source.open": "{site}を開く",
+  "info.site.wiktionary": "ウィクショナリー",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "編集部の補助",
+  "info.site.component": "Andrew West"
 }

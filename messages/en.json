@@ -345,5 +345,13 @@
   "parts.gongche.seirakuSource": "Seiraku rhythm marks · Toru Kato",
   "info.copy": "Copy {char}",
   "info.copied": "Copied",
-  "info.copyFailed": "Copy failed"
+  "info.copyFailed": "Copy failed",
+  "info.source.sections": "Sources",
+  "info.source.open": "Open {site}",
+  "info.site.wiktionary": "Wiktionary",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "Editorial aids",
+  "info.site.component": "Andrew West"
 }

@@ -1,12 +1,15 @@
 // @ts-check
 import { isSmallSeal } from './seal-data.js'
 
-/** @typedef {{ label: string, url: string, license?: string }} InfoSource */
+/** Which kind each source record is; the card names the site and the note by this key. */
+export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSource', 'sealSource', 'wiktionary', 'unihan', 'component'])
+/** @typedef {(typeof SOURCE_KINDS)[number]} SourceKind */
+/** @typedef {{ label: string, url: string, license?: string, note?: SourceKind }} InfoSource */
 /** @typedef {{ en: string[], han: string[], emoji: string }} MeaningAid */
 /** @typedef {{ en: string[], source: 'unihan' | 'wiktionary', aids?: number[] }} GlossEntry */
 /** @typedef {{ format: string, entries: Record<string, GlossEntry>, aids: MeaningAid[], components: Record<string, { en: string, sense?: string, han: string[], emoji: string, source: InfoSource }> }} CharacterInfoData */
 /** @typedef {{ char: string, kind: 'han' | 'tangut' | 'seal' | 'modern' | 'usage', meaning?: string }} CharacterRelation */
-/** @typedef {{ char: string, script: 'han' | 'tangut' | 'component' | 'seal', glosses: string[], association?: string, emoji: { text: string, meaning: string }[], relations: CharacterRelation[], sources: InfoSource[] }} CharacterInfo */
+/** @typedef {{ char: string, script: 'han' | 'tangut' | 'component' | 'seal', glosses: string[], association?: string, emoji: { text: string, meaning: string }[], relations: CharacterRelation[], sources: InfoSource[], sourceSites?: string[] }} CharacterInfo */
 
 /** @param {string} char */
 export const characterScript = char => [...char].length !== 1 ? null : isSmallSeal(char) ? 'seal'
@@ -14,13 +17,27 @@ export const characterScript = char => [...char].length !== 1 ? null : isSmallSe
   : /^[\u{17000}-\u{187FF}\u{18D00}-\u{18DFF}]$/u.test(char) ? 'tangut'
   : /^[\p{Unified_Ideograph}\p{Radical}\uF900-\uFAFF\u{2F800}-\u{2FA1F}〇]$/u.test(char) ? 'han' : null
 
-const editorial = { label: 'Editorial meaning aids', url: 'https://github.com/mkpoli/ids-input/blob/main/data/README.md#character-information-panels' }
-const unicodeSealSource = { label: 'Unicode · SealSources', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/third_party/unicode/ucd/SealSources.txt', license: 'Unicode License v3' }
-const sealSource = { label: 'CHISE · Jiguge Small Seal', url: 'https://gitlab.chise.org/CHISE/ids', license: 'GPL-2.0-or-later' }
+const editorial = { label: 'Editorial meaning aids', url: 'https://github.com/mkpoli/ids-input/blob/main/data/README.md#character-information-panels', note: /** @type {const} */ ('editorial') }
+const unicodeSealSource = { label: 'Unicode · SealSources', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/third_party/unicode/ucd/SealSources.txt', license: 'Unicode License v3', note: /** @type {const} */ ('unicodeSealSource') }
+const sealSource = { label: 'CHISE · Jiguge Small Seal', url: 'https://gitlab.chise.org/CHISE/ids', license: 'GPL-2.0-or-later', note: /** @type {const} */ ('sealSource') }
 /** @param {string} char */
-const wiktionary = char => ({ label: 'Wiktionary contributors', url: `https://en.wiktionary.org/wiki/${encodeURIComponent(char)}#Tangut`, license: 'CC BY-SA 4.0' })
+const wiktionary = char => /** @type {const} */ ({ label: 'Wiktionary contributors', url: `https://en.wiktionary.org/wiki/${encodeURIComponent(char)}#Tangut`, license: 'CC BY-SA 4.0', note: 'wiktionary' })
 /** @param {string} char */
-const unihan = char => ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3' })
+const unihan = char => /** @type {const} */ ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3', note: 'unihan' })
+
+/** Every record a character is built from, tagged with its kind and deduplicated the way the card
+ *  shows them: one entry per kind, named by its first record, so Unihan, Wiktionary, CHISE, the
+ *  Unicode seal list and the editorial aids each appear once whatever number of records feed them.
+ *  @param {InfoSource[]} records @returns {InfoSource[]} */
+export function mergeSources(records) {
+  /** @type {InfoSource[]} */
+  const merged = []
+  for (const record of records) {
+    const kind = record.note ?? 'component'
+    if (!merged.some(other => (other.note ?? 'component') === kind)) merged.push({ ...record, note: kind })
+  }
+  return merged
+}
 
 /** @param {CharacterInfoData} doc @param {import('./seal-data.js').SmallSealData | null} [seal] */
 export function createCharacterInfo(doc, seal = null) {
@@ -66,11 +83,13 @@ export function createCharacterInfo(doc, seal = null) {
       result.association = component.en
       result.emoji.push({ text: component.emoji, meaning: component.en })
       result.relations.push(...component.han.map(han => ({ char: han, kind: /** @type {const} */ ('han'), meaning: component.en })))
-      result.sources.push(component.source)
+      result.sources.push({ ...component.source, note: 'component' })
     }
     if (script === 'han') {
       result.relations.push(...(translations.get(char) ?? []))
-      for (const relation of result.relations) result.sources.push(wiktionary(relation.char))
+      // Wiktionary gives the Tangut relation its Han translation; the Han character's own page is
+      // the reader's way in, so its own entry links there and a translation alone names the site.
+      for (const relation of result.relations) result.sources.push({ ...wiktionary(relation.char), url: 'https://en.wiktionary.org/' })
       result.relations.push(...(seals.get(char) ?? []).map(old => ({ char: old, kind: /** @type {const} */ ('seal') })))
     } else if (script === 'seal') {
       result.relations.push(...directModern(seal?.modern[char] ?? []).map(han => ({ char: han, kind: /** @type {const} */ ('modern') })))
@@ -79,7 +98,8 @@ export function createCharacterInfo(doc, seal = null) {
     if (result.emoji.length || result.relations.some(r => r.kind === 'tangut')) result.sources.push(editorial)
     result.emoji = result.emoji.filter((e, i, all) => all.findIndex(v => v.text === e.text && v.meaning === e.meaning) === i)
     result.relations = result.relations.filter((r, i, all) => all.findIndex(v => v.char === r.char && v.kind === r.kind && v.meaning === r.meaning) === i)
-    result.sources = result.sources.filter((s, i, all) => all.findIndex(v => v.url === s.url) === i)
+    result.sources = mergeSources(result.sources)
+    result.sourceSites = /** @type {SourceKind[]} */ (result.sources.map(source => source.note))
     return result
   }
 }

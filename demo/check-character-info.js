@@ -117,6 +117,8 @@ try {
     // A press on the card's bare surface closes it and reaches the tile it covers.
     await paletteHorse.scrollIntoViewIfNeeded()
     await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
+    // A click keeps the card up, so it is the one that carries the close button.
+    assert.equal(await panel.getByRole('button',{name:'Close character information'}).count(),1,'a pinned card offers the close button')
     const covered=await page.evaluate(()=>{
       const card=document.querySelector('.ids-character-info').getBoundingClientRect()
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
