@@ -45,6 +45,7 @@ describe('example sources', () => {
     expect(ids.get('⿴囗⿱エン')).toEqual(['x-kygna', 'x-kechilee', 'x-ryakjiten', 'x-kingko', 'x-sc2rm', 'x-vivanon', 'x-privjj'])
     expect(ids.get('⿰言ギ')).toEqual(['geba-wp', 'x-miho'])
     expect(ids.get('⿱月朋')).toEqual(['x-uteta'])
+    expect(ids.get('⿺廴占')).toEqual(['x-eonway-sign', 'erjian-draft-1977', 'irg-ws2024-01372', 'stitutes-short-forms', 'cjkvi-variants-ids'])
     expect(ids.get('⿱天𭑈')).toEqual(['babelstone', 'x-uteta-pinzi-ten-chi'])
     expect(ids.get('⿱地⿰地地')).toEqual(['x-uteta-pinzi-ten-chi'])
     expect(ids.get('⿱里⿰里里')).toEqual(['x-uteta-pinzi-ri-mo'])
