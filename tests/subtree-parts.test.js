@@ -62,7 +62,7 @@ it('keeps every manual shortcut a component no character of the corpus is writte
   for (const text of MANUAL_PARTS) expect(subtrees(text).at(-1).op).toBeTruthy()
   // The corpus and han-compose entries describe no character of the corpus, so none of them doubles
   // for a component a character already encodes.
-  for (const text of [...MANUAL_SOURCES.corpus, ...MANUAL_SOURCES.hanCompose]) expect(spellings.has(text)).toBe(false)
+  expect([...MANUAL_SOURCES.corpus, ...MANUAL_SOURCES.hanCompose].filter(text => spellings.has(text))).toEqual([])
 })
 
 it('counts source placeholders and literal shortcuts once per character', () => {

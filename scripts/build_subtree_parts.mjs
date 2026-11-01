@@ -114,14 +114,27 @@ export const SOURCE_ALIASES = {
   '⿳亠口冖': ['{87}'], '⿳𰀉冖木': ['⿱{38}木'], '⿱丿乚': ['⿱㇒乚'],
 }
 
+/** Every spelling the table writes, kept beside it so a count over many parts parses the corpus once. */
+const spellingsCache = new WeakMap()
+/** @param {Map<string, { text: string }[]>} table */
+function spellingsOf(table) {
+  let spellings = spellingsCache.get(table)
+  if (!spellings) {
+    spellings = new Map()
+    for (const sequences of table.values()) {
+      spellings.set(sequences, [...new Set(sequences.flatMap(({ text }) => {
+        try { return subtrees(text).map(node => node.text) } catch { return [] }
+      }))])
+    }
+    spellingsCache.set(table, spellings)
+  }
+  return spellings
+}
+
 export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
   const spellings = new Set([text, ...aliases])
   let uses = 0
-  for (const sequences of table.values()) {
-    if (sequences.some(({ text }) => {
-      try { return subtrees(text).some(node => spellings.has(node.text)) } catch { return false }
-    })) uses++
-  }
+  for (const nodes of spellingsOf(table).values()) if (nodes.some(node => spellings.has(node))) uses++
   return uses
 }
 
