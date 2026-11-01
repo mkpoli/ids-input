@@ -46,5 +46,6 @@ export default defineConfig({
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
     rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
-  server: { fs: { allow: ['..'] } },
+  // The drawing engine is a package in `node_modules`, its own files outside this checkout's root.
+  server: { fs: { allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },
 })

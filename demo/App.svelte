@@ -117,13 +117,13 @@
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
+  // The outlines the engine draws without the export, as the page serves the package's `data/`: the
+  // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
+  const bundles = dataUrls
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
-  // The outlines the engine draws without the export are served beside the workshop (`bun run
-  // build:demo` copies them); the package says which path each is imported at.
-  const bundles = Object.fromEntries(Object.entries(dataUrls).map(([path, url]) => [path, url]))
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, load: bundles }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, loaders: bundles }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
@@ -245,9 +245,9 @@
   const iconDrawings = new Map()
   /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
   const drawerAt = (at, style) => {
-    const composed = composerPreview({ base: at, fontStyle: style })
+    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundles })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
-    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans' })
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundles })
     return async (/** @type {string} */ sequence) => {
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
