@@ -10,6 +10,9 @@ describe('share links', () => {
     expect(sequenceFrom(url)).toBe('⿰木口')
     expect(documentFrom(url)?.root.children[0].transform).toEqual([{ type: 'affine', matrix: [1, 0, 0, 1, 9, 0] }])
   })
+  it('keeps a sequence still being typed in the path', () => {
+    expect(new URL(linkTo('⿰木', new URL('https://example.org/'))).pathname).toBe('/%E2%BF%B0%E6%9C%A8')
+  })
   it('leaves the path to say it all for a document nothing was done to', () => {
     const url = new URL(linkTo('⿺电尼', new URL('https://example.org/'), fromSequence('⿺电尼')))
     expect(url.searchParams.has('doc')).toBe(false)
@@ -24,8 +27,8 @@ describe('share links', () => {
     expect(clean.searchParams.has('doc')).toBe(false)
     expect(sequenceFrom(clean)).toBe('⿰')
   })
-  it('keeps a text with a dot or a slash in `ids` and reads it back', () => {
-    for (const text of ['.', '..', '⿰木.', 'a/b', '[. ']) {
+  it('keeps a text that is no sequence in `ids` and reads it back', () => {
+    for (const text of ['.', '..', '⿰木.', 'a/b', '[. ', 'abc', 'Buy cheap']) {
       const url = new URL(linkTo(text, new URL('https://example.org/')))
       expect(url.pathname).toBe('/')
       expect(sequenceFrom(url)).toBe(text)

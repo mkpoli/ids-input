@@ -1,0 +1,1626 @@
+{
+ "format": "ids-component-identity-1",
+ "unicodeVersion": "18.0.0",
+ "sources": [
+  {
+   "label": "Unicode · EquivalentUnifiedIdeograph.txt 18.0.0",
+   "url": "https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt",
+   "sha256": "c86c80f6a0d1d47c9a5aadfbf1c26f1a732d662d9ccb0ed2d397919ecc47bf72",
+   "license": "Unicode License v3"
+  },
+  {
+   "label": "Unicode · UnicodeData.txt 18.0.0",
+   "url": "https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt",
+   "sha256": "0736451de439ae7baf1425136617da495e09ee5afbe6e394374db7009ea08950",
+   "license": "Unicode License v3"
+  },
+  {
+   "label": "The Unicode Standard 18.0, §18.1.16 CJK Strokes",
+   "url": "https://www.unicode.org/versions/Unicode18.0.0/core-spec/chapter-18/",
+   "license": "Unicode License v3"
+  },
+  {
+   "label": "The Unicode Standard 15.1, Appendix F: Documentation of CJK Strokes",
+   "url": "https://www.unicode.org/versions/Unicode15.1.0/appF.pdf",
+   "license": "Unicode License v3"
+  },
+  {
+   "label": "Unicode · CJK Strokes code chart (18.0)",
+   "url": "https://www.unicode.org/charts/PDF/U31C0.pdf",
+   "license": "Unicode License v3"
+  },
+  {
+   "label": "Unicode 18.0 · CJK stroke names",
+   "url": "https://www.unicode.org/versions/Unicode18.0.0/core-spec/appendix-f/",
+   "figures": [
+    "https://www.unicode.org/versions/Unicode18.0.0/core-spec/figures/uni31E4.svg",
+    "https://www.unicode.org/versions/Unicode18.0.0/core-spec/figures/uni31E5.svg"
+   ],
+   "license": "Unicode License v3"
+  }
+ ],
+ "families": {
+  "5382": [
+   "2E81",
+   "2F1A"
+  ],
+  "4E5B": [
+   "2E82",
+   "31D6"
+  ],
+  "4E5A": [
+   "2E83",
+   "31DF"
+  ],
+  "4E59": [
+   "2E84",
+   "2F04",
+   "31E0"
+  ],
+  "4EBB": [
+   "2E85"
+  ],
+  "5182": [
+   "2E86",
+   "2F0C"
+  ],
+  "20628": [
+   "2E87"
+  ],
+  "5200": [
+   "2E88",
+   "2F11"
+  ],
+  "5202": [
+   "2E89"
+  ],
+  "535C": [
+   "2E8A",
+   "2F18"
+  ],
+  "353E": [
+   "2E8B"
+  ],
+  "5C0F": [
+   "2E8C",
+   "2E8D",
+   "2F29"
+  ],
+  "5140": [
+   "2E8E"
+  ],
+  "5C23": [
+   "2E8F"
+  ],
+  "5C22": [
+   "2E90",
+   "2F2A"
+  ],
+  "21BC2": [
+   "2E91"
+  ],
+  "5DF3": [
+   "2E92"
+  ],
+  "5E7A": [
+   "2E93",
+   "2F33"
+  ],
+  "5F51": [
+   "2E94"
+  ],
+  "2B739": [
+   "2E95"
+  ],
+  "5FC4": [
+   "2E96"
+  ],
+  "5FC3": [
+   "2E97",
+   "2F3C"
+  ],
+  "624C": [
+   "2E98"
+  ],
+  "6535": [
+   "2E99"
+  ],
+  "65E1": [
+   "2E9B"
+  ],
+  "65E5": [
+   "2E9C",
+   "2F47"
+  ],
+  "6708": [
+   "2E9D",
+   "2F49"
+  ],
+  "6B7A": [
+   "2E9E"
+  ],
+  "6BCD": [
+   "2E9F"
+  ],
+  "6C11": [
+   "2EA0"
+  ],
+  "6C35": [
+   "2EA1"
+  ],
+  "6C3A": [
+   "2EA2"
+  ],
+  "706C": [
+   "2EA3"
+  ],
+  "722B": [
+   "2EA4",
+   "2EA5"
+  ],
+  "4E2C": [
+   "2EA6"
+  ],
+  "725B": [
+   "2EA7",
+   "2F5C"
+  ],
+  "72AD": [
+   "2EA8"
+  ],
+  "738B": [
+   "2EA9"
+  ],
+  "24D14": [
+   "2EAA"
+  ],
+  "76EE": [
+   "2EAB",
+   "2F6C"
+  ],
+  "793A": [
+   "2EAC",
+   "2F70"
+  ],
+  "793B": [
+   "2EAD"
+  ],
+  "25AD7": [
+   "2EAE"
+  ],
+  "7CF9": [
+   "2EAF"
+  ],
+  "7E9F": [
+   "2EB0"
+  ],
+  "7F53": [
+   "2EB1"
+  ],
+  "7F52": [
+   "2EB2"
+  ],
+  "34C1": [
+   "2EB3"
+  ],
+  "5197": [
+   "2EB4"
+  ],
+  "2626B": [
+   "2EB5"
+  ],
+  "7F8A": [
+   "2EB6",
+   "2F7A"
+  ],
+  "2634C": [
+   "2EB7"
+  ],
+  "2634B": [
+   "2EB8"
+  ],
+  "8002": [
+   "2EB9"
+  ],
+  "8080": [
+   "2EBA"
+  ],
+  "807F": [
+   "2EBB",
+   "2F80"
+  ],
+  "8089": [
+   "2EBC",
+   "2F81"
+  ],
+  "26951": [
+   "2EBD"
+  ],
+  "8279": [
+   "2EBE",
+   "2EBF",
+   "2EC0"
+  ],
+  "864E": [
+   "2EC1"
+  ],
+  "8864": [
+   "2EC2"
+  ],
+  "8980": [
+   "2EC3"
+  ],
+  "897F": [
+   "2EC4"
+  ],
+  "89C1": [
+   "2EC5"
+  ],
+  "89D2": [
+   "2EC6",
+   "2F93"
+  ],
+  "278B2": [
+   "2EC7"
+  ],
+  "8BA0": [
+   "2EC8"
+  ],
+  "8D1D": [
+   "2EC9"
+  ],
+  "27FB7": [
+   "2ECA"
+  ],
+  "8F66": [
+   "2ECB"
+  ],
+  "8FB6": [
+   "2ECC",
+   "2ECD",
+   "2ECE"
+  ],
+  "9091": [
+   "2ECF",
+   "2FA2"
+  ],
+  "9485": [
+   "2ED0"
+  ],
+  "9577": [
+   "2ED1",
+   "2FA7"
+  ],
+  "9578": [
+   "2ED2"
+  ],
+  "957F": [
+   "2ED3"
+  ],
+  "95E8": [
+   "2ED4"
+  ],
+  "28E0F": [
+   "2ED5"
+  ],
+  "961D": [
+   "2ED6"
+  ],
+  "96E8": [
+   "2ED7",
+   "2FAC"
+  ],
+  "9752": [
+   "2ED8"
+  ],
+  "97E6": [
+   "2ED9"
+  ],
+  "9875": [
+   "2EDA"
+  ],
+  "98CE": [
+   "2EDB"
+  ],
+  "98DE": [
+   "2EDC"
+  ],
+  "98DF": [
+   "2EDD",
+   "2FB7"
+  ],
+  "2967F": [
+   "2EDE"
+  ],
+  "98E0": [
+   "2EDF"
+  ],
+  "9963": [
+   "2EE0"
+  ],
+  "29810": [
+   "2EE1"
+  ],
+  "9A6C": [
+   "2EE2"
+  ],
+  "9AA8": [
+   "2EE3",
+   "2FBB"
+  ],
+  "9B3C": [
+   "2EE4",
+   "2FC1"
+  ],
+  "9C7C": [
+   "2EE5"
+  ],
+  "9E1F": [
+   "2EE6"
+  ],
+  "5364": [
+   "2EE7"
+  ],
+  "9EA6": [
+   "2EE8"
+  ],
+  "9EC4": [
+   "2EE9"
+  ],
+  "9EFE": [
+   "2EEA"
+  ],
+  "6589": [
+   "2EEB"
+  ],
+  "9F50": [
+   "2EEC"
+  ],
+  "6B6F": [
+   "2EED"
+  ],
+  "9F7F": [
+   "2EEE"
+  ],
+  "7ADC": [
+   "2EEF"
+  ],
+  "9F99": [
+   "2EF0"
+  ],
+  "9F9C": [
+   "2EF1",
+   "2FD4"
+  ],
+  "4E80": [
+   "2EF2"
+  ],
+  "9F9F": [
+   "2EF3"
+  ],
+  "4E00": [
+   "2F00",
+   "31D0"
+  ],
+  "4E28": [
+   "2F01",
+   "31D1"
+  ],
+  "4E36": [
+   "2F02",
+   "31D4"
+  ],
+  "4E3F": [
+   "2F03",
+   "31D2",
+   "31D3"
+  ],
+  "4E85": [
+   "2F05",
+   "31DA"
+  ],
+  "4E8C": [
+   "2F06"
+  ],
+  "4EA0": [
+   "2F07"
+  ],
+  "4EBA": [
+   "2F08"
+  ],
+  "513F": [
+   "2F09"
+  ],
+  "5165": [
+   "2F0A"
+  ],
+  "516B": [
+   "2F0B"
+  ],
+  "5196": [
+   "2F0D"
+  ],
+  "51AB": [
+   "2F0E"
+  ],
+  "51E0": [
+   "2F0F"
+  ],
+  "51F5": [
+   "2F10"
+  ],
+  "529B": [
+   "2F12"
+  ],
+  "52F9": [
+   "2F13"
+  ],
+  "5315": [
+   "2F14"
+  ],
+  "531A": [
+   "2F15"
+  ],
+  "5338": [
+   "2F16"
+  ],
+  "5341": [
+   "2F17"
+  ],
+  "5369": [
+   "2F19"
+  ],
+  "53B6": [
+   "2F1B"
+  ],
+  "53C8": [
+   "2F1C"
+  ],
+  "53E3": [
+   "2F1D"
+  ],
+  "56D7": [
+   "2F1E"
+  ],
+  "571F": [
+   "2F1F"
+  ],
+  "58EB": [
+   "2F20"
+  ],
+  "5902": [
+   "2F21"
+  ],
+  "590A": [
+   "2F22"
+  ],
+  "5915": [
+   "2F23"
+  ],
+  "5927": [
+   "2F24"
+  ],
+  "5973": [
+   "2F25"
+  ],
+  "5B50": [
+   "2F26"
+  ],
+  "5B80": [
+   "2F27"
+  ],
+  "5BF8": [
+   "2F28"
+  ],
+  "5C38": [
+   "2F2B"
+  ],
+  "5C6E": [
+   "2F2C"
+  ],
+  "5C71": [
+   "2F2D"
+  ],
+  "5DDB": [
+   "2F2E"
+  ],
+  "5DE5": [
+   "2F2F"
+  ],
+  "5DF1": [
+   "2F30"
+  ],
+  "5DFE": [
+   "2F31"
+  ],
+  "5E72": [
+   "2F32"
+  ],
+  "5E7F": [
+   "2F34"
+  ],
+  "5EF4": [
+   "2F35"
+  ],
+  "5EFE": [
+   "2F36"
+  ],
+  "5F0B": [
+   "2F37"
+  ],
+  "5F13": [
+   "2F38"
+  ],
+  "5F50": [
+   "2F39"
+  ],
+  "5F61": [
+   "2F3A"
+  ],
+  "5F73": [
+   "2F3B"
+  ],
+  "6208": [
+   "2F3D"
+  ],
+  "6236": [
+   "2F3E"
+  ],
+  "624B": [
+   "2F3F"
+  ],
+  "652F": [
+   "2F40"
+  ],
+  "6534": [
+   "2F41"
+  ],
+  "6587": [
+   "2F42"
+  ],
+  "6597": [
+   "2F43"
+  ],
+  "65A4": [
+   "2F44"
+  ],
+  "65B9": [
+   "2F45"
+  ],
+  "65E0": [
+   "2F46"
+  ],
+  "66F0": [
+   "2F48"
+  ],
+  "6728": [
+   "2F4A"
+  ],
+  "6B20": [
+   "2F4B"
+  ],
+  "6B62": [
+   "2F4C"
+  ],
+  "6B79": [
+   "2F4D"
+  ],
+  "6BB3": [
+   "2F4E"
+  ],
+  "6BCB": [
+   "2F4F"
+  ],
+  "6BD4": [
+   "2F50"
+  ],
+  "6BDB": [
+   "2F51"
+  ],
+  "6C0F": [
+   "2F52"
+  ],
+  "6C14": [
+   "2F53"
+  ],
+  "6C34": [
+   "2F54"
+  ],
+  "706B": [
+   "2F55"
+  ],
+  "722A": [
+   "2F56"
+  ],
+  "7236": [
+   "2F57"
+  ],
+  "723B": [
+   "2F58"
+  ],
+  "723F": [
+   "2F59"
+  ],
+  "7247": [
+   "2F5A"
+  ],
+  "7259": [
+   "2F5B"
+  ],
+  "72AC": [
+   "2F5D"
+  ],
+  "7384": [
+   "2F5E"
+  ],
+  "7389": [
+   "2F5F"
+  ],
+  "74DC": [
+   "2F60"
+  ],
+  "74E6": [
+   "2F61"
+  ],
+  "7518": [
+   "2F62"
+  ],
+  "751F": [
+   "2F63"
+  ],
+  "7528": [
+   "2F64"
+  ],
+  "7530": [
+   "2F65"
+  ],
+  "758B": [
+   "2F66"
+  ],
+  "7592": [
+   "2F67"
+  ],
+  "7676": [
+   "2F68"
+  ],
+  "767D": [
+   "2F69"
+  ],
+  "76AE": [
+   "2F6A"
+  ],
+  "76BF": [
+   "2F6B"
+  ],
+  "77DB": [
+   "2F6D"
+  ],
+  "77E2": [
+   "2F6E"
+  ],
+  "77F3": [
+   "2F6F"
+  ],
+  "79B8": [
+   "2F71"
+  ],
+  "79BE": [
+   "2F72"
+  ],
+  "7A74": [
+   "2F73"
+  ],
+  "7ACB": [
+   "2F74"
+  ],
+  "7AF9": [
+   "2F75"
+  ],
+  "7C73": [
+   "2F76"
+  ],
+  "7CF8": [
+   "2F77"
+  ],
+  "7F36": [
+   "2F78"
+  ],
+  "7F51": [
+   "2F79"
+  ],
+  "7FBD": [
+   "2F7B"
+  ],
+  "8001": [
+   "2F7C"
+  ],
+  "800C": [
+   "2F7D"
+  ],
+  "8012": [
+   "2F7E"
+  ],
+  "8033": [
+   "2F7F"
+  ],
+  "81E3": [
+   "2F82"
+  ],
+  "81EA": [
+   "2F83"
+  ],
+  "81F3": [
+   "2F84"
+  ],
+  "81FC": [
+   "2F85"
+  ],
+  "820C": [
+   "2F86"
+  ],
+  "821B": [
+   "2F87"
+  ],
+  "821F": [
+   "2F88"
+  ],
+  "826E": [
+   "2F89"
+  ],
+  "8272": [
+   "2F8A"
+  ],
+  "8278": [
+   "2F8B"
+  ],
+  "864D": [
+   "2F8C"
+  ],
+  "866B": [
+   "2F8D"
+  ],
+  "8840": [
+   "2F8E"
+  ],
+  "884C": [
+   "2F8F"
+  ],
+  "8863": [
+   "2F90"
+  ],
+  "897E": [
+   "2F91"
+  ],
+  "898B": [
+   "2F92"
+  ],
+  "8A00": [
+   "2F94"
+  ],
+  "8C37": [
+   "2F95"
+  ],
+  "8C46": [
+   "2F96"
+  ],
+  "8C55": [
+   "2F97"
+  ],
+  "8C78": [
+   "2F98"
+  ],
+  "8C9D": [
+   "2F99"
+  ],
+  "8D64": [
+   "2F9A"
+  ],
+  "8D70": [
+   "2F9B"
+  ],
+  "8DB3": [
+   "2F9C"
+  ],
+  "8EAB": [
+   "2F9D"
+  ],
+  "8ECA": [
+   "2F9E"
+  ],
+  "8F9B": [
+   "2F9F"
+  ],
+  "8FB0": [
+   "2FA0"
+  ],
+  "8FB5": [
+   "2FA1"
+  ],
+  "9149": [
+   "2FA3"
+  ],
+  "91C6": [
+   "2FA4"
+  ],
+  "91CC": [
+   "2FA5"
+  ],
+  "91D1": [
+   "2FA6"
+  ],
+  "9580": [
+   "2FA8"
+  ],
+  "961C": [
+   "2FA9"
+  ],
+  "96B6": [
+   "2FAA"
+  ],
+  "96B9": [
+   "2FAB"
+  ],
+  "9751": [
+   "2FAD"
+  ],
+  "975E": [
+   "2FAE"
+  ],
+  "9762": [
+   "2FAF"
+  ],
+  "9769": [
+   "2FB0"
+  ],
+  "97CB": [
+   "2FB1"
+  ],
+  "97ED": [
+   "2FB2"
+  ],
+  "97F3": [
+   "2FB3"
+  ],
+  "9801": [
+   "2FB4"
+  ],
+  "98A8": [
+   "2FB5"
+  ],
+  "98DB": [
+   "2FB6"
+  ],
+  "9996": [
+   "2FB8"
+  ],
+  "9999": [
+   "2FB9"
+  ],
+  "99AC": [
+   "2FBA"
+  ],
+  "9AD8": [
+   "2FBC"
+  ],
+  "9ADF": [
+   "2FBD"
+  ],
+  "9B25": [
+   "2FBE"
+  ],
+  "9B2F": [
+   "2FBF"
+  ],
+  "9B32": [
+   "2FC0"
+  ],
+  "9B5A": [
+   "2FC2"
+  ],
+  "9CE5": [
+   "2FC3"
+  ],
+  "9E75": [
+   "2FC4"
+  ],
+  "9E7F": [
+   "2FC5"
+  ],
+  "9EA5": [
+   "2FC6"
+  ],
+  "9EBB": [
+   "2FC7"
+  ],
+  "9EC3": [
+   "2FC8"
+  ],
+  "9ECD": [
+   "2FC9"
+  ],
+  "9ED1": [
+   "2FCA"
+  ],
+  "9EF9": [
+   "2FCB"
+  ],
+  "9EFD": [
+   "2FCC"
+  ],
+  "9F0E": [
+   "2FCD"
+  ],
+  "9F13": [
+   "2FCE"
+  ],
+  "9F20": [
+   "2FCF"
+  ],
+  "9F3B": [
+   "2FD0"
+  ],
+  "9F4A": [
+   "2FD1"
+  ],
+  "9F52": [
+   "2FD2"
+  ],
+  "9F8D": [
+   "2FD3"
+  ],
+  "9FA0": [
+   "2FD5"
+  ],
+  "200CC": [
+   "31C6"
+  ],
+  "4E40": [
+   "31CF",
+   "31DD"
+  ],
+  "200CD": [
+   "31D5"
+  ],
+  "200CA": [
+   "31D7"
+  ],
+  "200CE": [
+   "31D8"
+  ],
+  "2010C": [
+   "31D9"
+  ],
+  "21FE8": [
+   "31DB"
+  ],
+  "200CB": [
+   "31DC"
+  ],
+  "200D1": [
+   "31DE"
+  ],
+  "2010E": [
+   "31E1"
+  ]
+ },
+ "unmapped": [
+  "2E80",
+  "31C0",
+  "31C1",
+  "31C2",
+  "31C3",
+  "31C4",
+  "31C5",
+  "31C7",
+  "31C8",
+  "31C9",
+  "31CA",
+  "31CB",
+  "31CC",
+  "31CD",
+  "31CE",
+  "31E2",
+  "31E3",
+  "31E4",
+  "31E5"
+ ],
+ "names": {
+  "2E80": "CJK RADICAL REPEAT",
+  "2E81": "CJK RADICAL CLIFF",
+  "2E82": "CJK RADICAL SECOND ONE",
+  "2E83": "CJK RADICAL SECOND TWO",
+  "2E84": "CJK RADICAL SECOND THREE",
+  "2E85": "CJK RADICAL PERSON",
+  "2E86": "CJK RADICAL BOX",
+  "2E87": "CJK RADICAL TABLE",
+  "2E88": "CJK RADICAL KNIFE ONE",
+  "2E89": "CJK RADICAL KNIFE TWO",
+  "2E8A": "CJK RADICAL DIVINATION",
+  "2E8B": "CJK RADICAL SEAL",
+  "2E8C": "CJK RADICAL SMALL ONE",
+  "2E8D": "CJK RADICAL SMALL TWO",
+  "2E8E": "CJK RADICAL LAME ONE",
+  "2E8F": "CJK RADICAL LAME TWO",
+  "2E90": "CJK RADICAL LAME THREE",
+  "2E91": "CJK RADICAL LAME FOUR",
+  "2E92": "CJK RADICAL SNAKE",
+  "2E93": "CJK RADICAL THREAD",
+  "2E94": "CJK RADICAL SNOUT ONE",
+  "2E95": "CJK RADICAL SNOUT TWO",
+  "2E96": "CJK RADICAL HEART ONE",
+  "2E97": "CJK RADICAL HEART TWO",
+  "2E98": "CJK RADICAL HAND",
+  "2E99": "CJK RADICAL RAP",
+  "2E9B": "CJK RADICAL CHOKE",
+  "2E9C": "CJK RADICAL SUN",
+  "2E9D": "CJK RADICAL MOON",
+  "2E9E": "CJK RADICAL DEATH",
+  "2E9F": "CJK RADICAL MOTHER",
+  "2EA0": "CJK RADICAL CIVILIAN",
+  "2EA1": "CJK RADICAL WATER ONE",
+  "2EA2": "CJK RADICAL WATER TWO",
+  "2EA3": "CJK RADICAL FIRE",
+  "2EA4": "CJK RADICAL PAW ONE",
+  "2EA5": "CJK RADICAL PAW TWO",
+  "2EA6": "CJK RADICAL SIMPLIFIED HALF TREE TRUNK",
+  "2EA7": "CJK RADICAL COW",
+  "2EA8": "CJK RADICAL DOG",
+  "2EA9": "CJK RADICAL JADE",
+  "2EAA": "CJK RADICAL BOLT OF CLOTH",
+  "2EAB": "CJK RADICAL EYE",
+  "2EAC": "CJK RADICAL SPIRIT ONE",
+  "2EAD": "CJK RADICAL SPIRIT TWO",
+  "2EAE": "CJK RADICAL BAMBOO",
+  "2EAF": "CJK RADICAL SILK",
+  "2EB0": "CJK RADICAL C-SIMPLIFIED SILK",
+  "2EB1": "CJK RADICAL NET ONE",
+  "2EB2": "CJK RADICAL NET TWO",
+  "2EB3": "CJK RADICAL NET THREE",
+  "2EB4": "CJK RADICAL NET FOUR",
+  "2EB5": "CJK RADICAL MESH",
+  "2EB6": "CJK RADICAL SHEEP",
+  "2EB7": "CJK RADICAL RAM",
+  "2EB8": "CJK RADICAL EWE",
+  "2EB9": "CJK RADICAL OLD",
+  "2EBA": "CJK RADICAL BRUSH ONE",
+  "2EBB": "CJK RADICAL BRUSH TWO",
+  "2EBC": "CJK RADICAL MEAT",
+  "2EBD": "CJK RADICAL MORTAR",
+  "2EBE": "CJK RADICAL GRASS ONE",
+  "2EBF": "CJK RADICAL GRASS TWO",
+  "2EC0": "CJK RADICAL GRASS THREE",
+  "2EC1": "CJK RADICAL TIGER",
+  "2EC2": "CJK RADICAL CLOTHES",
+  "2EC3": "CJK RADICAL WEST ONE",
+  "2EC4": "CJK RADICAL WEST TWO",
+  "2EC5": "CJK RADICAL C-SIMPLIFIED SEE",
+  "2EC6": "CJK RADICAL SIMPLIFIED HORN",
+  "2EC7": "CJK RADICAL HORN",
+  "2EC8": "CJK RADICAL C-SIMPLIFIED SPEECH",
+  "2EC9": "CJK RADICAL C-SIMPLIFIED SHELL",
+  "2ECA": "CJK RADICAL FOOT",
+  "2ECB": "CJK RADICAL C-SIMPLIFIED CART",
+  "2ECC": "CJK RADICAL SIMPLIFIED WALK",
+  "2ECD": "CJK RADICAL WALK ONE",
+  "2ECE": "CJK RADICAL WALK TWO",
+  "2ECF": "CJK RADICAL CITY",
+  "2ED0": "CJK RADICAL C-SIMPLIFIED GOLD",
+  "2ED1": "CJK RADICAL LONG ONE",
+  "2ED2": "CJK RADICAL LONG TWO",
+  "2ED3": "CJK RADICAL C-SIMPLIFIED LONG",
+  "2ED4": "CJK RADICAL C-SIMPLIFIED GATE",
+  "2ED5": "CJK RADICAL MOUND ONE",
+  "2ED6": "CJK RADICAL MOUND TWO",
+  "2ED7": "CJK RADICAL RAIN",
+  "2ED8": "CJK RADICAL BLUE",
+  "2ED9": "CJK RADICAL C-SIMPLIFIED TANNED LEATHER",
+  "2EDA": "CJK RADICAL C-SIMPLIFIED LEAF",
+  "2EDB": "CJK RADICAL C-SIMPLIFIED WIND",
+  "2EDC": "CJK RADICAL C-SIMPLIFIED FLY",
+  "2EDD": "CJK RADICAL EAT ONE",
+  "2EDE": "CJK RADICAL EAT TWO",
+  "2EDF": "CJK RADICAL EAT THREE",
+  "2EE0": "CJK RADICAL C-SIMPLIFIED EAT",
+  "2EE1": "CJK RADICAL HEAD",
+  "2EE2": "CJK RADICAL C-SIMPLIFIED HORSE",
+  "2EE3": "CJK RADICAL BONE",
+  "2EE4": "CJK RADICAL GHOST",
+  "2EE5": "CJK RADICAL C-SIMPLIFIED FISH",
+  "2EE6": "CJK RADICAL C-SIMPLIFIED BIRD",
+  "2EE7": "CJK RADICAL C-SIMPLIFIED SALT",
+  "2EE8": "CJK RADICAL SIMPLIFIED WHEAT",
+  "2EE9": "CJK RADICAL SIMPLIFIED YELLOW",
+  "2EEA": "CJK RADICAL C-SIMPLIFIED FROG",
+  "2EEB": "CJK RADICAL J-SIMPLIFIED EVEN",
+  "2EEC": "CJK RADICAL C-SIMPLIFIED EVEN",
+  "2EED": "CJK RADICAL J-SIMPLIFIED TOOTH",
+  "2EEE": "CJK RADICAL C-SIMPLIFIED TOOTH",
+  "2EEF": "CJK RADICAL J-SIMPLIFIED DRAGON",
+  "2EF0": "CJK RADICAL C-SIMPLIFIED DRAGON",
+  "2EF1": "CJK RADICAL TURTLE",
+  "2EF2": "CJK RADICAL J-SIMPLIFIED TURTLE",
+  "2EF3": "CJK RADICAL C-SIMPLIFIED TURTLE",
+  "2F00": "KANGXI RADICAL ONE",
+  "2F01": "KANGXI RADICAL LINE",
+  "2F02": "KANGXI RADICAL DOT",
+  "2F03": "KANGXI RADICAL SLASH",
+  "2F04": "KANGXI RADICAL SECOND",
+  "2F05": "KANGXI RADICAL HOOK",
+  "2F06": "KANGXI RADICAL TWO",
+  "2F07": "KANGXI RADICAL LID",
+  "2F08": "KANGXI RADICAL MAN",
+  "2F09": "KANGXI RADICAL LEGS",
+  "2F0A": "KANGXI RADICAL ENTER",
+  "2F0B": "KANGXI RADICAL EIGHT",
+  "2F0C": "KANGXI RADICAL DOWN BOX",
+  "2F0D": "KANGXI RADICAL COVER",
+  "2F0E": "KANGXI RADICAL ICE",
+  "2F0F": "KANGXI RADICAL TABLE",
+  "2F10": "KANGXI RADICAL OPEN BOX",
+  "2F11": "KANGXI RADICAL KNIFE",
+  "2F12": "KANGXI RADICAL POWER",
+  "2F13": "KANGXI RADICAL WRAP",
+  "2F14": "KANGXI RADICAL SPOON",
+  "2F15": "KANGXI RADICAL RIGHT OPEN BOX",
+  "2F16": "KANGXI RADICAL HIDING ENCLOSURE",
+  "2F17": "KANGXI RADICAL TEN",
+  "2F18": "KANGXI RADICAL DIVINATION",
+  "2F19": "KANGXI RADICAL SEAL",
+  "2F1A": "KANGXI RADICAL CLIFF",
+  "2F1B": "KANGXI RADICAL PRIVATE",
+  "2F1C": "KANGXI RADICAL AGAIN",
+  "2F1D": "KANGXI RADICAL MOUTH",
+  "2F1E": "KANGXI RADICAL ENCLOSURE",
+  "2F1F": "KANGXI RADICAL EARTH",
+  "2F20": "KANGXI RADICAL SCHOLAR",
+  "2F21": "KANGXI RADICAL GO",
+  "2F22": "KANGXI RADICAL GO SLOWLY",
+  "2F23": "KANGXI RADICAL EVENING",
+  "2F24": "KANGXI RADICAL BIG",
+  "2F25": "KANGXI RADICAL WOMAN",
+  "2F26": "KANGXI RADICAL CHILD",
+  "2F27": "KANGXI RADICAL ROOF",
+  "2F28": "KANGXI RADICAL INCH",
+  "2F29": "KANGXI RADICAL SMALL",
+  "2F2A": "KANGXI RADICAL LAME",
+  "2F2B": "KANGXI RADICAL CORPSE",
+  "2F2C": "KANGXI RADICAL SPROUT",
+  "2F2D": "KANGXI RADICAL MOUNTAIN",
+  "2F2E": "KANGXI RADICAL RIVER",
+  "2F2F": "KANGXI RADICAL WORK",
+  "2F30": "KANGXI RADICAL ONESELF",
+  "2F31": "KANGXI RADICAL TURBAN",
+  "2F32": "KANGXI RADICAL DRY",
+  "2F33": "KANGXI RADICAL SHORT THREAD",
+  "2F34": "KANGXI RADICAL DOTTED CLIFF",
+  "2F35": "KANGXI RADICAL LONG STRIDE",
+  "2F36": "KANGXI RADICAL TWO HANDS",
+  "2F37": "KANGXI RADICAL SHOOT",
+  "2F38": "KANGXI RADICAL BOW",
+  "2F39": "KANGXI RADICAL SNOUT",
+  "2F3A": "KANGXI RADICAL BRISTLE",
+  "2F3B": "KANGXI RADICAL STEP",
+  "2F3C": "KANGXI RADICAL HEART",
+  "2F3D": "KANGXI RADICAL HALBERD",
+  "2F3E": "KANGXI RADICAL DOOR",
+  "2F3F": "KANGXI RADICAL HAND",
+  "2F40": "KANGXI RADICAL BRANCH",
+  "2F41": "KANGXI RADICAL RAP",
+  "2F42": "KANGXI RADICAL SCRIPT",
+  "2F43": "KANGXI RADICAL DIPPER",
+  "2F44": "KANGXI RADICAL AXE",
+  "2F45": "KANGXI RADICAL SQUARE",
+  "2F46": "KANGXI RADICAL NOT",
+  "2F47": "KANGXI RADICAL SUN",
+  "2F48": "KANGXI RADICAL SAY",
+  "2F49": "KANGXI RADICAL MOON",
+  "2F4A": "KANGXI RADICAL TREE",
+  "2F4B": "KANGXI RADICAL LACK",
+  "2F4C": "KANGXI RADICAL STOP",
+  "2F4D": "KANGXI RADICAL DEATH",
+  "2F4E": "KANGXI RADICAL WEAPON",
+  "2F4F": "KANGXI RADICAL DO NOT",
+  "2F50": "KANGXI RADICAL COMPARE",
+  "2F51": "KANGXI RADICAL FUR",
+  "2F52": "KANGXI RADICAL CLAN",
+  "2F53": "KANGXI RADICAL STEAM",
+  "2F54": "KANGXI RADICAL WATER",
+  "2F55": "KANGXI RADICAL FIRE",
+  "2F56": "KANGXI RADICAL CLAW",
+  "2F57": "KANGXI RADICAL FATHER",
+  "2F58": "KANGXI RADICAL DOUBLE X",
+  "2F59": "KANGXI RADICAL HALF TREE TRUNK",
+  "2F5A": "KANGXI RADICAL SLICE",
+  "2F5B": "KANGXI RADICAL FANG",
+  "2F5C": "KANGXI RADICAL COW",
+  "2F5D": "KANGXI RADICAL DOG",
+  "2F5E": "KANGXI RADICAL PROFOUND",
+  "2F5F": "KANGXI RADICAL JADE",
+  "2F60": "KANGXI RADICAL MELON",
+  "2F61": "KANGXI RADICAL TILE",
+  "2F62": "KANGXI RADICAL SWEET",
+  "2F63": "KANGXI RADICAL LIFE",
+  "2F64": "KANGXI RADICAL USE",
+  "2F65": "KANGXI RADICAL FIELD",
+  "2F66": "KANGXI RADICAL BOLT OF CLOTH",
+  "2F67": "KANGXI RADICAL SICKNESS",
+  "2F68": "KANGXI RADICAL DOTTED TENT",
+  "2F69": "KANGXI RADICAL WHITE",
+  "2F6A": "KANGXI RADICAL SKIN",
+  "2F6B": "KANGXI RADICAL DISH",
+  "2F6C": "KANGXI RADICAL EYE",
+  "2F6D": "KANGXI RADICAL SPEAR",
+  "2F6E": "KANGXI RADICAL ARROW",
+  "2F6F": "KANGXI RADICAL STONE",
+  "2F70": "KANGXI RADICAL SPIRIT",
+  "2F71": "KANGXI RADICAL TRACK",
+  "2F72": "KANGXI RADICAL GRAIN",
+  "2F73": "KANGXI RADICAL CAVE",
+  "2F74": "KANGXI RADICAL STAND",
+  "2F75": "KANGXI RADICAL BAMBOO",
+  "2F76": "KANGXI RADICAL RICE",
+  "2F77": "KANGXI RADICAL SILK",
+  "2F78": "KANGXI RADICAL JAR",
+  "2F79": "KANGXI RADICAL NET",
+  "2F7A": "KANGXI RADICAL SHEEP",
+  "2F7B": "KANGXI RADICAL FEATHER",
+  "2F7C": "KANGXI RADICAL OLD",
+  "2F7D": "KANGXI RADICAL AND",
+  "2F7E": "KANGXI RADICAL PLOW",
+  "2F7F": "KANGXI RADICAL EAR",
+  "2F80": "KANGXI RADICAL BRUSH",
+  "2F81": "KANGXI RADICAL MEAT",
+  "2F82": "KANGXI RADICAL MINISTER",
+  "2F83": "KANGXI RADICAL SELF",
+  "2F84": "KANGXI RADICAL ARRIVE",
+  "2F85": "KANGXI RADICAL MORTAR",
+  "2F86": "KANGXI RADICAL TONGUE",
+  "2F87": "KANGXI RADICAL OPPOSE",
+  "2F88": "KANGXI RADICAL BOAT",
+  "2F89": "KANGXI RADICAL STOPPING",
+  "2F8A": "KANGXI RADICAL COLOR",
+  "2F8B": "KANGXI RADICAL GRASS",
+  "2F8C": "KANGXI RADICAL TIGER",
+  "2F8D": "KANGXI RADICAL INSECT",
+  "2F8E": "KANGXI RADICAL BLOOD",
+  "2F8F": "KANGXI RADICAL WALK ENCLOSURE",
+  "2F90": "KANGXI RADICAL CLOTHES",
+  "2F91": "KANGXI RADICAL WEST",
+  "2F92": "KANGXI RADICAL SEE",
+  "2F93": "KANGXI RADICAL HORN",
+  "2F94": "KANGXI RADICAL SPEECH",
+  "2F95": "KANGXI RADICAL VALLEY",
+  "2F96": "KANGXI RADICAL BEAN",
+  "2F97": "KANGXI RADICAL PIG",
+  "2F98": "KANGXI RADICAL BADGER",
+  "2F99": "KANGXI RADICAL SHELL",
+  "2F9A": "KANGXI RADICAL RED",
+  "2F9B": "KANGXI RADICAL RUN",
+  "2F9C": "KANGXI RADICAL FOOT",
+  "2F9D": "KANGXI RADICAL BODY",
+  "2F9E": "KANGXI RADICAL CART",
+  "2F9F": "KANGXI RADICAL BITTER",
+  "2FA0": "KANGXI RADICAL MORNING",
+  "2FA1": "KANGXI RADICAL WALK",
+  "2FA2": "KANGXI RADICAL CITY",
+  "2FA3": "KANGXI RADICAL WINE",
+  "2FA4": "KANGXI RADICAL DISTINGUISH",
+  "2FA5": "KANGXI RADICAL VILLAGE",
+  "2FA6": "KANGXI RADICAL GOLD",
+  "2FA7": "KANGXI RADICAL LONG",
+  "2FA8": "KANGXI RADICAL GATE",
+  "2FA9": "KANGXI RADICAL MOUND",
+  "2FAA": "KANGXI RADICAL SLAVE",
+  "2FAB": "KANGXI RADICAL SHORT TAILED BIRD",
+  "2FAC": "KANGXI RADICAL RAIN",
+  "2FAD": "KANGXI RADICAL BLUE",
+  "2FAE": "KANGXI RADICAL WRONG",
+  "2FAF": "KANGXI RADICAL FACE",
+  "2FB0": "KANGXI RADICAL LEATHER",
+  "2FB1": "KANGXI RADICAL TANNED LEATHER",
+  "2FB2": "KANGXI RADICAL LEEK",
+  "2FB3": "KANGXI RADICAL SOUND",
+  "2FB4": "KANGXI RADICAL LEAF",
+  "2FB5": "KANGXI RADICAL WIND",
+  "2FB6": "KANGXI RADICAL FLY",
+  "2FB7": "KANGXI RADICAL EAT",
+  "2FB8": "KANGXI RADICAL HEAD",
+  "2FB9": "KANGXI RADICAL FRAGRANT",
+  "2FBA": "KANGXI RADICAL HORSE",
+  "2FBB": "KANGXI RADICAL BONE",
+  "2FBC": "KANGXI RADICAL TALL",
+  "2FBD": "KANGXI RADICAL HAIR",
+  "2FBE": "KANGXI RADICAL FIGHT",
+  "2FBF": "KANGXI RADICAL SACRIFICIAL WINE",
+  "2FC0": "KANGXI RADICAL CAULDRON",
+  "2FC1": "KANGXI RADICAL GHOST",
+  "2FC2": "KANGXI RADICAL FISH",
+  "2FC3": "KANGXI RADICAL BIRD",
+  "2FC4": "KANGXI RADICAL SALT",
+  "2FC5": "KANGXI RADICAL DEER",
+  "2FC6": "KANGXI RADICAL WHEAT",
+  "2FC7": "KANGXI RADICAL HEMP",
+  "2FC8": "KANGXI RADICAL YELLOW",
+  "2FC9": "KANGXI RADICAL MILLET",
+  "2FCA": "KANGXI RADICAL BLACK",
+  "2FCB": "KANGXI RADICAL EMBROIDERY",
+  "2FCC": "KANGXI RADICAL FROG",
+  "2FCD": "KANGXI RADICAL TRIPOD",
+  "2FCE": "KANGXI RADICAL DRUM",
+  "2FCF": "KANGXI RADICAL RAT",
+  "2FD0": "KANGXI RADICAL NOSE",
+  "2FD1": "KANGXI RADICAL EVEN",
+  "2FD2": "KANGXI RADICAL TOOTH",
+  "2FD3": "KANGXI RADICAL DRAGON",
+  "2FD4": "KANGXI RADICAL TURTLE",
+  "2FD5": "KANGXI RADICAL FLUTE",
+  "31C0": "CJK STROKE T",
+  "31C1": "CJK STROKE WG",
+  "31C2": "CJK STROKE XG",
+  "31C3": "CJK STROKE BXG",
+  "31C4": "CJK STROKE SW",
+  "31C5": "CJK STROKE HZZ",
+  "31C6": "CJK STROKE HZG",
+  "31C7": "CJK STROKE HP",
+  "31C8": "CJK STROKE HZWG",
+  "31C9": "CJK STROKE SZWG",
+  "31CA": "CJK STROKE HZT",
+  "31CB": "CJK STROKE HZZP",
+  "31CC": "CJK STROKE HPWG",
+  "31CD": "CJK STROKE HZW",
+  "31CE": "CJK STROKE HZZZ",
+  "31CF": "CJK STROKE N",
+  "31D0": "CJK STROKE H",
+  "31D1": "CJK STROKE S",
+  "31D2": "CJK STROKE P",
+  "31D3": "CJK STROKE SP",
+  "31D4": "CJK STROKE D",
+  "31D5": "CJK STROKE HZ",
+  "31D6": "CJK STROKE HG",
+  "31D7": "CJK STROKE SZ",
+  "31D8": "CJK STROKE SWZ",
+  "31D9": "CJK STROKE ST",
+  "31DA": "CJK STROKE SG",
+  "31DB": "CJK STROKE PD",
+  "31DC": "CJK STROKE PZ",
+  "31DD": "CJK STROKE TN",
+  "31DE": "CJK STROKE SZZ",
+  "31DF": "CJK STROKE SWG",
+  "31E0": "CJK STROKE HXWG",
+  "31E1": "CJK STROKE HZZZG",
+  "31E2": "CJK STROKE PG",
+  "31E3": "CJK STROKE Q",
+  "31E4": "CJK STROKE HXG",
+  "31E5": "CJK STROKE SZP"
+ },
+ "strokes": {
+  "31C0": {
+   "acronym": "T",
+   "pinyin": "tí",
+   "english": "rising",
+   "pinyinTier": "appendix-f"
+  },
+  "31C1": {
+   "acronym": "WG",
+   "pinyin": "wān-gōu",
+   "english": "curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31C2": {
+   "acronym": "XG",
+   "pinyin": "xié-gōu",
+   "english": "slanted hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31C3": {
+   "acronym": "BXG",
+   "pinyin": "biǎn-xié-gōu",
+   "english": "flat slanted hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31C4": {
+   "acronym": "SW",
+   "pinyin": "shù-wān",
+   "english": "vertical curve",
+   "pinyinTier": "appendix-f"
+  },
+  "31C5": {
+   "acronym": "HZZ",
+   "pinyin": "héng-zhé-zhé",
+   "english": "horizontal turn turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31C6": {
+   "acronym": "HZG",
+   "pinyin": "héng-zhé-gōu",
+   "english": "horizontal turn hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31C7": {
+   "acronym": "HP",
+   "pinyin": "héng-piě",
+   "english": "horizontal left-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31C8": {
+   "acronym": "HZWG",
+   "pinyin": "héng-zhé-wān-gōu",
+   "english": "horizontal turn curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31C9": {
+   "acronym": "SZWG",
+   "pinyin": "shù-zhé-wān-gōu",
+   "english": "vertical turn curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31CA": {
+   "acronym": "HZT",
+   "pinyin": "héng-zhé-tí",
+   "english": "horizontal turn rising",
+   "pinyinTier": "appendix-f"
+  },
+  "31CB": {
+   "acronym": "HZZP",
+   "pinyin": "héng-zhé-zhé-piě",
+   "english": "horizontal turn turn left-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31CC": {
+   "acronym": "HPWG",
+   "pinyin": "héng-piě-wān-gōu",
+   "english": "horizontal left-falling curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31CD": {
+   "acronym": "HZW",
+   "pinyin": "héng-zhé-wān",
+   "english": "horizontal turn curve",
+   "pinyinTier": "appendix-f"
+  },
+  "31CE": {
+   "acronym": "HZZZ",
+   "pinyin": "héng-zhé-zhé-zhé",
+   "english": "horizontal turn turn turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31CF": {
+   "acronym": "N",
+   "pinyin": "nà",
+   "english": "right-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31D0": {
+   "acronym": "H",
+   "pinyin": "héng",
+   "english": "horizontal",
+   "pinyinTier": "appendix-f"
+  },
+  "31D1": {
+   "acronym": "S",
+   "pinyin": "shù",
+   "english": "vertical",
+   "pinyinTier": "appendix-f"
+  },
+  "31D2": {
+   "acronym": "P",
+   "pinyin": "piě",
+   "english": "left-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31D3": {
+   "acronym": "SP",
+   "pinyin": "shù-piě",
+   "english": "vertical left-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31D4": {
+   "acronym": "D",
+   "pinyin": "diǎn",
+   "english": "dot",
+   "pinyinTier": "appendix-f"
+  },
+  "31D5": {
+   "acronym": "HZ",
+   "pinyin": "héng-zhé",
+   "english": "horizontal turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31D6": {
+   "acronym": "HG",
+   "pinyin": "héng-gōu",
+   "english": "horizontal hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31D7": {
+   "acronym": "SZ",
+   "pinyin": "shù-zhé",
+   "english": "vertical turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31D8": {
+   "acronym": "SWZ",
+   "pinyin": "shù-wān-zuǒ",
+   "english": "vertical curve leftward",
+   "pinyinTier": "appendix-f"
+  },
+  "31D9": {
+   "acronym": "ST",
+   "pinyin": "shù-tí",
+   "english": "vertical rising",
+   "pinyinTier": "appendix-f"
+  },
+  "31DA": {
+   "acronym": "SG",
+   "pinyin": "shù-gōu",
+   "english": "vertical hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31DB": {
+   "acronym": "PD",
+   "pinyin": "piě-diǎn",
+   "english": "left-falling dot",
+   "pinyinTier": "appendix-f"
+  },
+  "31DC": {
+   "acronym": "PZ",
+   "pinyin": "piě-zhé",
+   "english": "left-falling turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31DD": {
+   "acronym": "TN",
+   "pinyin": "tí-nà",
+   "english": "rising right-falling",
+   "pinyinTier": "appendix-f"
+  },
+  "31DE": {
+   "acronym": "SZZ",
+   "pinyin": "shù-zhé-zhé",
+   "english": "vertical turn turn",
+   "pinyinTier": "appendix-f"
+  },
+  "31DF": {
+   "acronym": "SWG",
+   "pinyin": "shù-wān-gōu",
+   "english": "vertical curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31E0": {
+   "acronym": "HXWG",
+   "pinyin": "héng-xié-wān-gōu",
+   "english": "horizontal slanted curve hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31E1": {
+   "acronym": "HZZZG",
+   "pinyin": "héng-zhé-zhé-zhé-gōu",
+   "english": "horizontal turn turn turn hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31E2": {
+   "acronym": "PG",
+   "pinyin": "piě-gōu",
+   "english": "left-falling hook",
+   "pinyinTier": "appendix-f"
+  },
+  "31E3": {
+   "acronym": "Q",
+   "pinyin": "quān",
+   "english": "circle",
+   "pinyinTier": "appendix-f"
+  },
+  "31E4": {
+   "acronym": "HXG",
+   "pinyin": "héng-xié-gōu",
+   "english": "horizontal slanted hook",
+   "pinyinTier": "appendix-f-18"
+  },
+  "31E5": {
+   "acronym": "SZP",
+   "pinyin": "shù-zhé-piě",
+   "english": "vertical turn left-falling",
+   "pinyinTier": "appendix-f-18"
+  }
+ }
+}

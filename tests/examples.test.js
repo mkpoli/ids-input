@@ -123,7 +123,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'nom', 'seal', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -175,9 +175,15 @@ it('reads the Korean gukja as the source does', () => {
     '⿱直𠮟': '짓', '⿱次乙': '찰', '⿱吐乙': '톨', '⿱土乙': '톨',
     '⿱巴𠮟': '팟', '⿱坪乙': '펼', '⿱甫𠮟': '폿', '⿱下乙': '할',
     '⿱呼乙': '홀', '⿱禾乙': '활',
+    // The article's last row gives 𬼝 no reading, so it carries none.
+    '⿱去乙': undefined,
   }
   expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
-  for (const example of korean) expect(example.reading).toBe(readings[example.sequence])
+  for (const example of korean) {
+    expect(example.reading).toBe(readings[example.sequence])
+    expect(Object.hasOwn(example, 'reading')).toBe(readings[example.sequence] !== undefined)
+  }
+  expect(korean.find(example => example.sequence === '⿱去乙')).toEqual({ sequence: '⿱去乙', char: '𬼝' })
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
@@ -202,17 +208,71 @@ it('reads the Korean gugyeol as the source does', () => {
 it('reads the Japanese kokuji in kana', () => {
   const kokuji = EXAMPLE_GROUPS.find(group => group.key === 'kokuji').examples
   const readings = {
-    '⿰亻動': 'はたらく', '⿺辶入': 'こむ', '⿹勹匕': 'におう', '⿰火田': 'はたけ', '⿰月泉': 'せん',
-    '⿰山𠧗': 'とうげ', '⿰木卆': 'わく', '⿰土屏': 'へい', '⿰木神': 'さかき', '⿺辶十': 'つじ',
-    '⿻勹乂': 'もんめ', '⿰身美': 'しつけ', '⿰魚弱': 'いわし', '⿰魚雪': 'たら', '⿰木堅': 'かし',
-    '⿰木昌': 'すぎ', '⿰木⿱艹⿰亻𠤎': 'もみじ', '⿰木正': 'まさき', '⿰米千': 'キロメートル',
-    '⿰立千': 'キロリットル', '⿺瓦千': 'キログラム', '⿰立毛': 'ミリリットル', '⿰魚康': 'コウ',
-    '⿰釒武': 'ぶりき',
+    '⿰土下': 'あくつ', '⿰魚利': 'あさり', '⿺辶南': 'あっぱれ', '⿱海土': 'あま',
+    '⿵𠘨巾': 'いかのぼり', '⿰角鳥': 'いかる', '⿰土入': 'いり', '⿰木入': 'いり',
+    '⿰魚弱': 'いわし', '⿱𥫗丸': 'うつぼ', '⿰𩙿𥁕': 'うどん', '⿰虫老': 'えび',
+    '⿰火貢': 'おおづつ', '⿰糹威': 'おどす', '⿰亻弟': 'おもかげ', '⿱下風': 'おろし',
+    '⿰女鼻': 'かか', '⿰石花': 'かき', '⿰土行': 'がけ', '⿰釒芳': 'かざり',
+    '⿰木島': 'かし', '⿰木堅': 'かし', '⿰魚石': 'かじか', '⿰釒送': 'かすがい',
+    '⿰魚希': 'かずのこ', '⿰糹齊': 'かすり', '⿰糸忍': 'かせ', '⿱艹縵': 'かつら',
+    '⿰口入': 'かます', '⿰衤𠧗': 'かみしも', '⿰魚喜': 'きす', '⿺瓦千': 'キログラム',
+    '⿰米千': 'キロメートル', '⿰立千': 'キロリットル', '⿰口食': 'くう', '⿰木門': 'くぬぎ',
+    '⿰木到': 'くぬぎ', '⿱久米': 'くめ', '⿰山弁': 'くら', '⿰亻車': 'くるま',
+    '⿰田衣': 'けさ', '⿰糹頝': 'コウ', '⿰魚康': 'コウ', '⿰米花': 'こうじ',
+    '⿵𠘨木': 'こがらし', '⿱艹座': 'ござ', '⿰魚甬': 'こち', '⿰魚冬': 'このしろ',
+    '⿰革𠧗': 'こはぜ', '⿰土花': 'ごみ', '⿺辶入': 'こむ', '⿰忄永': 'こらえる',
+    '⿰木神': 'さかき', '⿺辶谷': 'さこ', '⿱𥫗世': 'ささ', '⿱𥫗彫': 'ささら',
+    '⿰口行': 'さそう', '⿰扌刃': 'さて', '⿰耳定': 'しか', '⿰田鳥': 'しぎ',
+    '⿱雨下': 'しずく', '⿰身美': 'しつけ', '⿰木典': 'しで', '⿸疒積': 'しゃく',
+    '⿰魚虎': 'しゃちほこ', '⿰口贈': 'しょう', '⿰訁定': 'ジョウ', '⿰月萃': 'スイ',
+    '⿰木昌': 'すぎ', '⿰米合': 'すくも', '⿰米家': 'すくも', '⿺辶一': 'すべる',
+    '⿰月泉': 'せん', '⿰米厘': 'センチ', '⿺瓦厘': 'センチグラム', '⿰立厘': 'センチリットル',
+    '⿰木山': 'そま', '⿰舟雪': 'そり', '⿰車雪': 'そり', '⿰衤擧': 'たすき',
+    '⿰火達': 'タツ', '⿰木府': 'たぶ', '⿰魚雪': 'たら', '⿰土𠧗': 'たわ',
+    '⿲彳鳥亍': 'ちどり', '⿰木母': 'つが', '⿵門山': 'つかえる', '⿰木觀': 'つき',
+    '⿰柬鳥': 'つぐみ', '⿺辶十': 'つじ', '⿰衤妻': 'つま', '⿱弓一': 'テ',
+    '⿺瓦十': 'デカグラム', '⿰米十': 'デカメートル', '⿰立十': 'デカリットル', '⿺瓦分': 'デシグラム',
+    '⿰立分': 'デシリットル', '⿰山𠧗': 'とうげ', '⿰魚於': 'どじょう', '⿰木万': 'とち',
+    '⿰木⿸𠂆万': 'とち', '⿺辶中': 'とても', '⿰革丙': 'とも', '⿰口頓': 'トン',
+    '⿺瓦屯': 'トン', '⿵𠘨止': 'なぎ', '⿰木知': 'なぎ', '⿱山刀': 'なた',
+    '⿰魚念': 'なまず', '⿰入鳥': 'にお', '⿹勹匕': 'におう', '⿱代土': 'ぬた',
+    '⿰氵土': 'ねた', '⿰魚危': 'はえ', '⿰石谷': 'はざま', '⿰火田': 'はたけ',
+    '⿱白田': 'はたけ', '⿰魚神': 'はたはた', '⿰亻動': 'はたらく', '⿰口新': 'はなし',
+    '⿰木泉': 'はんぞう', '⿰釒兵': 'びょう', '⿱林下': 'ふむと', '⿰釒武': 'ぶりき',
+    '⿰土屏': 'へい', '⿺瓦百': 'ヘクトグラム', '⿰米百': 'ヘクトメートル', '⿰立百': 'ヘクトリットル',
+    '⿰木䙳': 'ほくそ', '⿱母衣': 'ほろ', '⿰木正': 'まさき', '⿰木升': 'ます',
+    '⿰木舛': 'ます', '⿰亻吴': 'また', '⿰土山': 'まま', '⿸麻呂': 'まろ',
+    '⿰米毛': 'ミリ', '⿺瓦毛': 'ミリグラム', '⿰立毛': 'ミリリットル', '⿱少毛': 'むしる',
+    '⿰木室': 'むろ', '⿰魚休': 'めばる', '⿱木工': 'もく', '⿰米刃': 'もみ',
+    '⿰木⿱艹⿰亻𠤎': 'もみじ', '⿻勹乂': 'もんめ', '⿰身雁': 'やがて', '⿰身應': 'やがて',
+    '⿱艹泡': 'やち', '⿱𥫗梁': 'やな', '⿰釒遣': 'やり', '⿰月雪': 'ゆき',
+    '⿰衤行': 'ゆき', '⿰山平': 'ゆり', '⿵門水': 'ゆり', '⿰木卆': 'わく',
   }
+
+
   expect(kokuji.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
   for (const example of kokuji) {
     expect(example.reading).toBe(readings[example.sequence])
     expect(example.reading).toMatch(/^[\u3040-\u30FFー]+$/)
+  }
+})
+
+it('keeps the sourced JIS ghost kanji with Japanese IDS and no assigned readings', () => {
+  const group = EXAMPLE_GROUPS.find(group => group.key === 'ghost')
+  expect(group.refs).toEqual([sourceNumber('babelstone'), sourceNumber('sanseido-ghost')])
+  expect(group.examples).toEqual([
+    { sequence: '⿳山一女', char: '妛' },
+    { sequence: '⿰弓哥', char: '彁' },
+    { sequence: '⿰木劵', refs: [sourceNumber('babelstone'), sourceNumber('kanken-ghost')], char: '椦' },
+    ...[
+      ['墸', '⿰土⿱艹⿻者丶'], ['壥', '⿰土㕓'], ['挧', '⿰扌羽'],
+      ['暃', '⿱日非'], ['槞', '⿰木竜'], ['蟐', '⿰虫常'],
+      ['袮', '⿰衤尓'], ['閠', '⿵門玉'], ['駲', '⿰馬州'],
+    ].map(([char, sequence]) => ({ sequence, refs: [sourceNumber('babelstone'), sourceNumber('wdic-ghost'), sourceNumber('ja-wp-ghost')], char })),
+  ])
+  for (const example of group.examples) {
+    expect(example).not.toHaveProperty('reading')
+    expect(table.get(example.char).some(entry => entry.text === example.sequence && entry.regions.includes('J'))).toBe(true)
   }
 })
 

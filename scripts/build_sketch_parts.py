@@ -4,8 +4,8 @@
 # ///
 """Build `data/sketch-parts.json.gz`, the glyph masks the Find tab's drawing search compares with.
 
-The palette's parts used in at least 50 descriptions, and every CJK stroke, are drawn once at 64 px
-from Noto Sans CJK JP and the bundled faces. Each glyph is fitted to the 40×40 square twice, stretched and with its own
+Every palette part and CJK stroke is drawn once at 64 px from Noto Sans CJK JP and the bundled
+faces. Each glyph is fitted to the 40×40 square twice, stretched and with its own
 proportions, and packed as 200 bytes of bits. The page decodes the masks and describes them for
 matching, so the drawing pad does not depend on the host's loaded fonts.
 
@@ -31,13 +31,13 @@ RENDER = 64
 FONT_SIZE = round(RENDER * 0.86)
 MARGIN = 2
 THRESHOLD = 24
-MIN_USES = 50
 EXPECTED_NOTO = 'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a'
 FONTS = [
     ('Noto Sans CJK JP', os.environ.get('NOTO_SANS_CJK', '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc')),
     ('GenZui Sans', 'fonts/GenZuiSans-Regular.woff2'),
     ('Kureedo', 'fonts/Kureedo-Regular.woff2'),
     ('IDS Parts', 'fonts/Plangothic-ids-parts.woff2'),
+    ('Noto Serif Tangut', 'fonts/NotoSerifTangut-Regular.woff2'),
 ]
 # Decompressed faces live here until the process exits.
 TEMPS = tempfile.TemporaryDirectory()
@@ -166,10 +166,7 @@ def main():
     parts, skipped = [], 0
     for row in rows:
         part = row['part']
-        kind = row.get('kind')
-        if len(part) != 1 or kind not in ('c', 'd', 's'):
-            continue
-        if kind != 's' and row.get('uses') is not None and row['uses'] < MIN_USES:
+        if len(part) != 1:
             continue
         chosen = next(((name, font, mask) for name, font, cmap, _ in faces
                        if ord(part) in cmap and (mask := fit(render(part, font), True)) is not None), None)

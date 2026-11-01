@@ -4,7 +4,7 @@
 import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
-import { shuishuNames, shuishuTable } from './shuishu-data.js'
+import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -242,13 +242,15 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const asked = new Map()
   let asks = 0
   /** The description search on this thread, over the table and the forms. */
-  const localSearch = () => {
-    if (local && localGeneration === searchGeneration) return local
-    local = Promise.all([readSearch(), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
-      localGeneration = searchGeneration
+  const localSearch = async () => {
+    const { table, generation } = await readSearch()
+    if (local && localGeneration === generation) return local
+    const building = local = Promise.all([Promise.resolve(table), formsText !== undefined ? formsText : forms ? load(forms).then(r => r.text()) : '', readSeal()]).then(([found, text, doc]) => {
+      localGeneration = generation
       return createSearch(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { forms: sealForms(text, doc), structuralForms: readStructuralForms(text) })
     }).catch(error => { local = null; throw error })
-    return local
+    localGeneration = generation
+    return building
   }
   /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
@@ -278,7 +280,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         additionalIds: extraIds.length ? extraIds.map(url => new URL(String(url), base).href) : undefined,
         components: components ? new URL(String(components), base).href : undefined, componentsText,
         forms: forms ? new URL(String(forms), base).href : undefined, formsText,
-        layers: layers ? new URL(String(layers), base).href : undefined, layersText, smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal })
+        layers: layers ? new URL(String(layers), base).href : undefined, layersText,
+        smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal,
+        shuishu: shuishu instanceof URL || typeof shuishu === 'string' ? new URL(String(shuishu), base).href : shuishu })
     })
   }
 
@@ -350,29 +354,77 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     .then(parseLayers)
     .catch(error => { layered = null; throw error })
 
-  /** The source table and the derived descriptions, for the description search and `encoded`. The
-   * derived reading is an alternative description, so a layered sequence finds its character.
-   * A failed layer file leaves the source descriptions standing and is tried again on the next
-   * call, instead of turning the failure into a source-only table for the life of the adapter.
-   * @type {Promise<Map<string, Sequence[]>> | null} */
+  /** The source table with the extra readings, and the generation it was built at.
+   * @type {{ generation: number, table: Promise<Map<string, Sequence[]>> } | null} */
   let searchTable = null
-  const readSearch = () => {
-    if (searchTable) return searchTable
-    searchTable = read().then(async found => {
-      /** @type {Map<string, string>} */
-      let derived
-      try { derived = await readLayers() }
-      catch { searchTable = null; return found }
-      searchGeneration++
-      if (!derived.size) return found
+  /** The extra readings the table was built from, to notice a retried file bringing something else.
+   * @type {{ derived: Map<string, string>, shui: Map<string, string> }} */
+  let searchUsed = { derived: new Map(), shui: new Map() }
+  /** The optional readings still missing, and the retry running for them. */
+  let lostLayers = false
+  let lostShui = false
+  /** @type {Promise<void> | null} */
+  let retrying = null
+  /** The readings as comparable text. @param {Map<string, { text: string }[]>} sequences */
+  const byText = sequences => new Map([...sequences].map(([char, texts]) => [char, texts.map(text => text.text).join('|')]))
+  /** @param {Map<string, string>} next @param {Map<string, string>} had */
+  const differs = (next, had) => next.size !== had.size || [...next].some(([char, text]) => had.get(char) !== text)
+  // A missing reading is retried before the next answer, so the rebuild happens as soon as the file
+  // comes back; a file that stays away costs one request.
+  const retryLost = () => retrying ??= Promise.all([
+    lostLayers ? readLayers().then(derived => derived, () => null) : null,
+    lostShui ? readShuishu().then(shuiDoc => shuiDoc, () => null) : null,
+  ]).then(([derived, shuiDoc]) => {
+    let changed = false
+    if (derived) {
+      lostLayers = false
+      if (differs(derived, searchUsed.derived)) { searchUsed.derived = derived; changed = true }
+    }
+    if (shuiDoc) {
+      lostShui = false
+      const shui = byText(shuishuSequences(shuiDoc))
+      if (differs(shui, searchUsed.shui)) { searchUsed.shui = shui; changed = true }
+    }
+    if (changed) searchTable = null
+  }, () => {}).finally(() => { retrying = null })
+  /**
+   * The search table with the extra readings and the generation it was built at. A build carries its
+   * own generation, so a cache built while it was pending can never be mistaken for a newer one.
+   * @returns {Promise<{ generation: number, table: Map<string, Sequence[]> }>}
+   */
+  const readSearch = async () => {
+    if (searchTable) {
+      if (lostLayers || lostShui) await retryLost()
+      if (searchTable) return { generation: searchTable.generation, table: await searchTable.table }
+    }
+    lostLayers = false
+    lostShui = false
+    const generation = ++searchGeneration
+    const table = Promise.all([
+      read(),
+      readLayers().catch(() => { lostLayers = true; return new Map() }),
+      readShuishu().catch(() => { lostShui = true; return null }),
+    ]).then(([found, derived, shuiDoc]) => {
+      /** @type {Map<string, Sequence[]>} */
       const merged = new Map(found)
       for (const [char, text] of derived) {
         const sequences = merged.get(char) ?? []
-        if (!sequences.some(sequence => sequence.text === text)) merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
+        if (sequences.some(sequence => sequence.text === text)) continue
+        merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
       }
+      // The Shuishu decompositions are editorial and carry no source region; a source description
+      // of the same character stays behind them.
+      /** @type {Map<string, Sequence[]>} */
+      const shui = shuiDoc ? shuishuSequences(shuiDoc) : new Map()
+      for (const [char, sequences] of shui) {
+        const had = merged.get(char) ?? []
+        merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
+      }
+      searchUsed = { derived, shui: byText(shui) }
       return merged
     }).catch(error => { searchTable = null; throw error })
-    return searchTable
+    searchTable = { generation, table }
+    return { generation, table: await table }
   }
 
   /** @type {Promise<import('../core/sketch-data.js').SketchTemplate[]> | null} */
@@ -381,11 +433,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const readSketches = (options = {}) => sketchTemplates ??= (async () => {
     const document = typeof sketches === 'string' || sketches instanceof URL
       ? JSON.parse(await readText(await load(sketches, options))) : sketches
-    const prepared = readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     // A prepared file belongs to the palette it was made for; a host's own palette keeps only the
     // parts it holds, with that palette's counts.
-    if (!givenPalette && !parts && !smallSeal) return prepared
+    if (!givenPalette && !parts && !smallSeal && !shuishu) return readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const rows = await readPalette()
+    const prepared = readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const by = new Map(rows.map(row => [row.part, row]))
     return prepared.filter(template => by.has(template.part)).map(template => {
       const row = by.get(template.part)
@@ -573,18 +625,25 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   /** @type {Promise<ReturnType<typeof createRelationSearch>> | null} */
   let relations = null
-  const relationIndex = () => relations ??= Promise.all([readInformation(), given || ids || smallSeal ? read() : new Map()])
-    .then(([{ doc, seal }, table]) => createRelationSearch(doc, seal, table))
-    .catch(error => { relations = null; throw error })
+  let relationsGeneration = -1
+  const relationIndex = async () => {
+    const built = given || ids || smallSeal || shuishu ? await readSearch() : { generation: searchGeneration, table: new Map() }
+    if (relations && relationsGeneration === built.generation) return relations
+    const building = relations = Promise.all([readInformation(), Promise.resolve(built.table)])
+      .then(([{ doc, seal }, found]) => createRelationSearch(doc, seal, found))
+      .catch(error => { relations = null; throw error })
+    relationsGeneration = built.generation
+    return building
+  }
 
   return {
-    table: read,
+    async table() { return (await readSearch()).table },
     ...(characterInfo ? { async characterInfo(/** @type {string} */ char, /** @type {import('./types.js').Options} */ { signal } = {}) {
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
-      if (info?.script === 'component' && (given || ids || smallSeal)) {
-        info.relations.push(...componentExamples(char, doc, await read()))
+      if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
+        info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
         for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
         if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
       }
@@ -593,7 +652,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     } } : {}),
     /** @param {string} char @param {import('./types.js').Options} [options] */
     async structure(char, { signal } = {}) {
-      const found = (await readSearch()).get(char) ?? []
+      const found = (await readSearch()).table.get(char) ?? []
       signal?.throwIfAborted()
       // A computed character-first description replaces its source in the decomposition tree;
       // both remain indexed for search. Preserve malformed descriptions as source text.
@@ -693,9 +752,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     async encoded(sequence, { exact: onlyTagged = false, signal } = {}) {
       // Rebuilt when the search table gains a reading of the layer file; a failed load is tried
       // again on the next call, and the source index serves until then.
-      if (!described || describedGeneration !== searchGeneration) {
-        described = readSearch().then(found => {
-          const generation = searchGeneration
+      const search = await readSearch()
+      if (!described || describedGeneration !== search.generation) {
+        described = Promise.resolve(search.table).then(found => {
           /** @type {Map<string, string[]>} */
           const by = new Map()
           const prefixes = new Set()
@@ -706,9 +765,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
             const chars = by.get(text)
             if (chars) { if (!chars.includes(char)) chars.push(char) } else by.set(text, [char])
           }
-          describedGeneration = generation
           return { by, prefixes }
         }).catch(error => { described = null; throw error })
+        describedGeneration = search.generation
       }
 
       const { by, prefixes } = await described
@@ -778,10 +837,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       return result
     },
     async containing(asked, { limit = 24 } = {}) {
-      const [found, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
-      if (!index || indexGeneration !== searchGeneration) {
-        index = componentIndex(new Map([...found].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
-        indexGeneration = searchGeneration
+      const [built, search] = await Promise.all([readSearch(), smallSeal ? localSearch() : null])
+      if (!index || indexGeneration !== built.generation) {
+        index = componentIndex(new Map([...built.table].map(([char, sequences]) => [char, sequences.map(s => s.text)])), { fold: search?.fold })
+        indexGeneration = built.generation
       }
       return index.search(asked, limit)
     },

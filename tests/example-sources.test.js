@@ -45,6 +45,7 @@ describe('example sources', () => {
     expect(ids.get('⿴囗⿱エン')).toEqual(['x-kygna', 'x-kechilee', 'x-ryakjiten', 'x-kingko', 'x-sc2rm', 'x-vivanon', 'x-privjj'])
     expect(ids.get('⿰言ギ')).toEqual(['geba-wp', 'x-miho'])
     expect(ids.get('⿱月朋')).toEqual(['x-uteta'])
+    expect(ids.get('⿺廴占')).toEqual(['x-eonway-sign', 'erjian-draft-1977', 'irg-ws2024-01372', 'stitutes-short-forms', 'cjkvi-variants-ids'])
     expect(ids.get('⿱天𭑈')).toEqual(['babelstone', 'x-uteta-pinzi-ten-chi'])
     expect(ids.get('⿱地⿰地地')).toEqual(['x-uteta-pinzi-ten-chi'])
     expect(ids.get('⿱里⿰里里')).toEqual(['x-uteta-pinzi-ri-mo'])
@@ -56,6 +57,13 @@ describe('example sources', () => {
     // The examples come from the spreadsheet and the charts, and their readings from the database.
     expect(groupRefs('shuishu')).toEqual(['shuishu', 'shuishu-db'])
     expect(groupRefs('nom')).toEqual(['babelstone', 'en-wp-nom'])
+    expect(groupRefs('ghost')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿳山一女')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿰弓哥')).toEqual(['babelstone', 'sanseido-ghost'])
+    expect(ids.get('⿰木劵')).toEqual(['babelstone', 'kanken-ghost'])
+    for (const sequence of ['⿰土⿱艹⿻者丶', '⿰土㕓', '⿰扌羽', '⿱日非', '⿰木竜', '⿰虫常', '⿰衤尓', '⿵門玉', '⿰馬州']) {
+      expect(ids.get(sequence)).toEqual(['babelstone', 'wdic-ghost', 'ja-wp-ghost'])
+    }
   })
 
   test('every example is cited or listed as unrecorded', () => {

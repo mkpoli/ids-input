@@ -3,7 +3,8 @@
   // below the toolbar; under it the input at the start (the sequence, the operators, where
   // parts come from), the tree and search in the middle, and the output at the end (the drawing, the
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
-  // the toolbar holds undo, redo, examples, sharing, the language, settings and sources.
+  // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
+  // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
   import { tick, untrack } from 'svelte'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
@@ -36,9 +37,9 @@
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
-  import { drafts as storedDrafts, forget, keep } from './lib/projects.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
@@ -46,6 +47,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
   import KeyHint from './ui/KeyHint.svelte'
@@ -57,6 +59,8 @@
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
+  import ReportDialog from './ui/ReportDialog.svelte'
+  import { reportEndpoint } from './lib/report-endpoint.js'
   import TabStrip from './ui/TabStrip.svelte'
   import Toast from './ui/Toast.svelte'
   import ColumnSplitter from './ui/ColumnSplitter.svelte'
@@ -81,6 +85,10 @@
   } }
   // Direct layer editing belongs to the active document tab.
   let adjusting = $state(false)
+  let titleOpen = $state(false)
+  /** @type {'input' | 'compose' | 'output'} */
+  let phonePane = $state('input')
+  const PHONE_PANES = /** @type {const} */ (['input', 'compose', 'output'])
   // The drawing at the full window, for a description too dense for the output column. A modal
   // dialog traps focus and keeps the workshop behind it inert; the browser restores focus on close.
   let large = $state(false)
@@ -393,6 +401,13 @@
   const initial = fromLink ?? (keptTab && linked && keptTab.sequence === linked ? keptTab : linkedTab) ?? keptTab ?? opening[0]
   let tabs = $state(opening)
   let activeId = $state(initial.id)
+  /** Tabs closed this session, oldest first, for reopening.
+   * @typedef {{ tabs: { tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[], active: string | null, fresh?: string }} ClosedGroup
+   * @type {ClosedGroup[]} */
+  let closedGroups = $state.raw([])
+  // Sequences opened in this browser, newest first, for File -> Recent.
+  let recents = $state(readRecent())
+  if (linked) recents = remember(linked, linkedRecord)
   const activeTab = $derived(/** @type {import('./lib/tabs.js').Tab} */ (tabs.find(tab => tab.id === activeId) ?? tabs[0]))
   /** @type {Map<string, ReturnType<typeof editor.snapshot>>} */
   const states = new Map()
@@ -438,7 +453,7 @@
   untrack(store)
 
   // A note at the foot of the page, with Undo after a change that threw something away.
-  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number } | null} */
+  /** @type {{ id: number, text: string, action?: string, run?: () => void, duration?: number, close?: boolean } | null} */
   let toast = $state(null)
   let notes = 0
   /** @param {string} text */
@@ -489,6 +504,18 @@
     const tab = current()
     return tab ? sessionFor(tab) : null
   }
+  /** Keep a tab's Recent entry on its latest document after a layer change. @param {import('./lib/tabs.js').Tab} tab */
+  /** @type {Map<string, ReturnType<typeof setTimeout>>} */
+  const recentTimers = new Map()
+  function keepRecent(tab = current()) {
+    if (!tab || !tab.document || !recents.some(item => item.sequence === tab.sequence)) return
+    clearTimeout(recentTimers.get(tab.id))
+    recentTimers.set(tab.id, setTimeout(() => {
+      recentTimers.delete(tab.id)
+      if (!tabs.some(kept => kept.id === tab.id) || !tab.document) return
+      recents = remember(tab.sequence, tab.document)
+    }, 250))
+  }
   /** Keep the active tab's document after the layer dialog changes its session. */
   function layerChanged() {
     const tab = current()
@@ -497,6 +524,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
   }
   /** The layer panel decomposed a component; make the core tree follow the document. */
   function layerStructureChanged() {
@@ -507,6 +535,7 @@
     tab.document = sessionRecord(session)
     documentTick++
     store()
+    keepRecent(tab)
   }
   /** Undo or redo the latest layer transform before falling back to the editor history. */
   /** @param {boolean} undo */
@@ -534,6 +563,7 @@
     documentTick++
     store()
     syncAddress()
+    keepRecent(tab)
     return true
   }
   function undoAction() { if (!travelLayer(true)) editor.undo() }
@@ -547,6 +577,67 @@
   function currentDocument() {
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
+  }
+  $effect(() => { activeId; phonePane = 'input' })
+  /** @param {'input' | 'compose' | 'output'} pane */
+  function phoneTab(pane) {
+    phonePane = pane
+    requestAnimationFrame(() => window.scrollTo({ top: 0 }))
+  }
+  /** Move between the phone tabs with the keyboard. @param {KeyboardEvent} event */
+  function phoneKey(event) {
+    const at = PHONE_PANES.indexOf(phonePane)
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? PHONE_PANES.length - 1
+      : event.key === 'ArrowRight' ? at + 1 : event.key === 'ArrowLeft' ? at - 1 : null
+    if (next === null || next < 0 || next >= PHONE_PANES.length) return
+    event.preventDefault()
+    phoneTab(PHONE_PANES[next])
+    requestAnimationFrame(() => /** @type {HTMLElement | null} */ (event.currentTarget.parentElement?.querySelectorAll('[role="tab"]')[next])?.focus())
+  }
+  /** A pointer that may become a horizontal tab swipe. @type {{ id: number, x: number, y: number } | null} */
+  let swipe = null
+  const SWIPE_EXCLUDE = 'button,a,input,select,textarea,[contenteditable="true"],[role="slider"],dialog,.phone-tabs,.handle,.parts-grid,.hits,.results,.tree-box,.tree-list'
+  /** @param {PointerEvent} event */
+  function swipeStart(event) {
+    swipe = null
+    if (!event.isPrimary || event.pointerType === 'mouse' || !matchMedia('(max-width: 879px)').matches) return
+    if (event.target instanceof Element && event.target.closest(SWIPE_EXCLUDE)) return
+    if (adjusting && event.target instanceof Element && event.target.closest('.ids-preview')) return
+    swipe = { id: event.pointerId, x: event.clientX, y: event.clientY }
+  }
+  /** @param {PointerEvent} event */
+  function swipeEnd(event) {
+    const start = swipe
+    if (!start || start.id !== event.pointerId) return
+    swipe = null
+    const dx = event.clientX - start.x, dy = event.clientY - start.y
+    if (Math.abs(dx) < 56 || Math.abs(dx) <= Math.abs(dy) * 1.4) return
+    const next = PHONE_PANES[PHONE_PANES.indexOf(phonePane) + (dx < 0 ? 1 : -1)]
+    if (next) phoneTab(next)
+  }
+  function swipeCancel() { swipe = null }
+  /** The active tab's document title, kept current by the document revision. */
+  const currentTitle = $derived.by(() => {
+    documentTick
+    const tab = current()
+    return tab ? sessionFor(tab).document.title ?? '' : ''
+  })
+  function openTitle() {
+    const tab = current()
+    if (!tab) return
+    keepTabSession(tab)
+    titleOpen = true
+  }
+  /** @param {string} value */
+  function saveTitle(value) {
+    const tab = current()
+    if (!tab) return
+    const session = sessionFor(tab)
+    session.setTitle(value)
+    tab.document = sessionRecord(session)
+    documentTick++
+    store()
+    syncAddress()
   }
   /** Keep the open tabs and the chosen one for the next visit. */
   function store() { writeTabs(tabs, activeId) }
@@ -582,6 +673,7 @@
     toast = null
     editor.reset(sequence)
     adjusting = false
+    if (tab.sequence && !EMPTY_MARKS.includes(tab.sequence)) recents = remember(tab.sequence)
     store()
     return tab
   }
@@ -600,7 +692,11 @@
   function openSequence(sequence) {
     const text = canonical(sequence)
     const open = tabs.find(tab => tab.sequence === text)
-    if (open) { activate(open.id); return }
+    if (open) {
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text, open.document)
+      activate(open.id)
+      return
+    }
     const tab = current()
     // Only an empty tab is reused: an unreadable draft, or one with history, keeps its tab.
     if (tab && !editor.canUndo && !editor.canRedo && (!tab.sequence || EMPTY_MARKS.includes(tab.sequence))) {
@@ -608,68 +704,38 @@
       editor.reset(text)
       adjusting = false
       if (editor.draft === editor.whole) tab.saved = tab.sequence
+      if (!EMPTY_MARKS.includes(text)) recents = remember(text)
       store()
       return
     }
     addTab(text)
   }
-  /** Open a saved draft with its document session. @param {import('./lib/projects.js').Draft} draft */
-  function openDraft(draft) {
-    flush()
-    const tab = makeTab(draft.sequence, draft.sequence, draft.document)
-    tabs.push(tab)
-    activate(tab.id)
+  /** Open a recent sequence, with its document when it has one. @param {import('./lib/recent.js').Recent} record */
+  function openRecent(record) {
+    // A recent document opens its own tab; a tab with another document for the same sequence is
+    // not the one this entry stands for.
+    const open = tabs.find(tab => tab.sequence === record.sequence
+      && (!record.document || sameShare(tab.document?.document, record.document.document)))
+    if (open) {
+      recents = remember(record.sequence, open.document)
+      activate(open.id)
+      return
+    }
+    if (record.document) {
+      flush()
+      const tab = makeTab(record.sequence, record.sequence, record.document)
+      tabs.push(tab)
+      recents = remember(record.sequence, tab.document)
+      activate(tab.id)
+      return
+    }
+    openSequence(record.sequence)
   }
-  /** Close a tab, showing its neighbour or a fresh tab when it was the last; the note brings it back. @param {string} id */
+  /** Close a tab, showing its neighbour; the note and the reopen history bring it back. @param {string} id */
   function closeTab(id) {
     const at = tabs.findIndex(tab => tab.id === id)
     if (at < 0) return
-    const tab = tabs[at]
-    const state = id === activeId ? editor.snapshot() : states.get(id)
-    states.delete(id)
-    sessions.delete(id)
-    tabs.splice(at, 1)
-    /** @type {import('./lib/tabs.js').Tab | undefined} */
-    let fresh
-    if (id === activeId) {
-      const next = tabs[at] ?? tabs[at - 1]
-      if (next) {
-        activeId = next.id
-        const saved = states.get(next.id)
-        states.delete(next.id)
-        if (saved) editor.restore(saved)
-        else editor.reset(next.sequence)
-      } else {
-        // One tab always stays open: closing the last one leaves a new empty tab in its place.
-        fresh = makeTab()
-        tabs.push(fresh)
-        activeId = fresh.id
-        editor.reset('')
-        adjusting = false
-      }
-    }
-    toast = { id: ++notes, text: t('app.tabs.closed', { name: tab.sequence || t('app.tabs.untitled') }), action: t('ids.undo.label'),
-      run: () => reopen(tab, state, at, fresh?.id) }
-    store()
-  }
-  /**
-   * Put a closed tab back where it was, taking back the empty tab that replaced it.
-   * @param {import('./lib/tabs.js').Tab} tab
-   * @param {ReturnType<typeof editor.snapshot> | undefined} state
-   * @param {number} at
-   * @param {string} [replacement]
-   */
-  function reopen(tab, state, at, replacement) {
-    if (tabs.some(kept => kept.id === tab.id)) return
-    const fresh = tabs.find(kept => kept.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
-      tabs.splice(tabs.indexOf(fresh), 1)
-      states.delete(fresh.id)
-      sessions.delete(fresh.id)
-    }
-    tabs.splice(Math.min(at, tabs.length), 0, tab)
-    if (state) states.set(tab.id, state)
-    activate(tab.id)
+    closeTabs([id], id === activeId ? tabs[at + 1]?.id ?? tabs[at - 1]?.id : activeId)
   }
   /**
    * Close several tabs at once, showing `show` when it survives, else a fresh tab. The note brings
@@ -715,10 +781,13 @@
       if (saved) editor.restore(saved)
       else editor.reset(kept.sequence)
     }
+    /** @type {ClosedGroup} */
+    const group = { tabs: removed, active: wasActive ? before : null, ...(fresh ? { fresh: fresh.id } : {}) }
+    closedGroups = [...closedGroups, group].slice(-10)
     const name = removed.length === 1 ? removed[0].tab.sequence || t('app.tabs.untitled') : ''
     toast = { id: ++notes, text: removed.length === 1 ? t('app.tabs.closed', { name }) : t('app.tabs.closedMany', { count: removed.length }),
-      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000,
-      run: () => reopenTabs(removed, wasActive ? before : null, fresh?.id) }
+      action: t('ids.undo.label'), duration: removed.length > 1 ? 10000 : 6000, close: true,
+      run: () => restoreClosed(group) }
     store()
   }
   /**
@@ -726,10 +795,13 @@
    * @param {{ tab: import('./lib/tabs.js').Tab, at: number, state?: ReturnType<typeof editor.snapshot> }[]} removed
    * @param {string | null} wasActive
    * @param {string} [replacement]
+   * @param {boolean} [first] show the first restored tab when the tab that was active is not back
    */
-  function reopenTabs(removed, wasActive, replacement) {
+  function reopenTabs(removed, wasActive, replacement, first = false) {
     const fresh = tabs.find(tab => tab.id === replacement)
-    if (fresh && tabs.length === 1 && !fresh.sequence && !editor.canUndo && !editor.canRedo) {
+    // The replacement is a placeholder: take it back while it is empty and untouched, even if
+    // another tab has been opened since the close.
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
       tabs.splice(tabs.indexOf(fresh), 1)
       states.delete(fresh.id)
       sessions.delete(fresh.id)
@@ -739,8 +811,22 @@
       tabs.splice(Math.min(at, tabs.length), 0, tab)
       if (state) states.set(tab.id, state)
     }
-    if (wasActive && wasActive !== activeId && tabs.some(tab => tab.id === wasActive)) activate(wasActive)
+    const target = wasActive && tabs.some(tab => tab.id === wasActive) ? wasActive
+      : first ? removed[0]?.tab.id
+      : null
+    if (target && target !== activeId) activate(target)
     else store()
+  }
+  /** Put a closed group back and take it off the reopen history. @param {ClosedGroup} group @param {boolean} [first] */
+  function restoreClosed(group, first = false) {
+    closedGroups = closedGroups.filter(entry => entry !== group)
+    if (toast?.close) toast = null
+    reopenTabs(group.tabs, group.active, group.fresh, first)
+  }
+  /** Reopen the tab or group closed last, showing it. */
+  function reopenClosed() {
+    const group = closedGroups.at(-1)
+    if (group) restoreClosed(group, true)
   }
   /** Close every tab but `id`, showing it. @param {string} id */
   function closeOthers(id) {
@@ -776,18 +862,6 @@
     tabs.splice(to, 0, tab)
   }
 
-  // Saved drafts.
-  let drafts = $state(storedDrafts())
-  function keepDraft() {
-    if (editor.tree === null) return
-    const tab = current()
-    if (tab) keepTabSession(tab)
-    drafts = keep(editor.whole, tab?.document)
-    // The tab is saved when its field holds the tree saved: a draft it cannot read stays marked.
-    if (tab && editor.draft === editor.whole) tab.saved = tab.sequence
-    store()
-    note(t('app.drafts.kept', { sequence: editor.whole }))
-  }
   /** Save the active tab's document as .ids.json. */
   function saveDocument() {
     const tab = current()
@@ -805,6 +879,7 @@
       const session = createDocumentSession(document)
       const tab = makeTab(toSequence(document.root), toSequence(document.root), sessionRecord(session))
       tabs.push(tab)
+      recents = remember(tab.sequence, tab.document)
       activate(tab.id)
     } catch {
       note(t('app.file.openFailed', { name: file.name }))
@@ -842,19 +917,22 @@
     if (!event.relatedTarget) dropping = false
   }
 
+  const recentItems = $derived(recents.map(record => ({ label: record.sequence, lang: 'ja', hint: record.sequence, run: () => openRecent(record) })))
   const fileItems = $derived([
     { label: t('app.file.new'), icon: 'plus', run: () => addTab() },
     { label: t('app.file.openDocument'), icon: 'download', run: () => documentInput?.click() },
     { label: t('app.file.saveDocument'), icon: 'save', disabled: editor.tree === null, run: saveDocument },
+    { label: t('app.file.title'), disabled: editor.tree === null, run: openTitle },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.file.recent'), icon: 'history', disabled: !recentItems.length, submenu: recentItems },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.tabs.reopen'), icon: 'history', disabled: !closedGroups.length, run: reopenClosed },
     { label: t('app.tabs.duplicate'), icon: 'copy', run: () => duplicateTab(activeId) },
-    { label: t('app.drafts.save'), icon: 'save', shortcut: shortcut('mod+s'), disabled: editor.tree === null, run: keepDraft },
     { separator: /** @type {const} */ (true) },
     { label: t('app.share.label'), icon: 'share', disabled: editor.tree === null, run: () => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true } },
-    .../** @type {const} */ (['svg', 'png']).map(format => ({ label: t('app.file.export', { format: format.toUpperCase() }), icon: 'download', disabled: !canExport, run: () => { exportPanel?.save(format) } })),
-    ...(drafts.length ? [{ separator: /** @type {const} */ (true) }, { heading: t('app.drafts.heading') },
-      ...drafts.slice(0, 12).map(d => ({ label: d.sequence, lang: 'ja', hint: new Date(d.saved).toLocaleString(locale), run: () => openDraft(d) })),
-      { separator: /** @type {const} */ (true) },
-      { label: t('app.drafts.forget', { sequence: drafts[0].sequence }), icon: 'trash', lang: 'ja', run: () => { drafts = forget(drafts[0].id) } }] : []),
+    { label: t('app.file.exportAs'), icon: 'download', disabled: !canExport, submenu: /** @type {const} */ (['svg', 'png']).map(format => ({ label: format.toUpperCase(), disabled: !canExport, run: () => { exportPanel?.save(format) } })) },
+    { separator: /** @type {const} */ (true) },
+    { label: t('app.report.title'), icon: 'mail', run: () => reportOpen = true },
   ])
 
   const selectedText = $derived(editor.chosen ? editor.sequenceAt(editor.chosen) : editor.whole)
@@ -912,6 +990,14 @@
       unencoded: t('app.examples.unencoded'), empty: t('app.examples.noMatch'),
     },
   })
+  // A blank tab comes from the strip's +; the chevron beside it opens the full template catalogue
+  // and the examples, each starting a new tab with the focus in its sequence field.
+  const focusNewTab = () => tick().then(() => /** @type {HTMLInputElement | null} */ (work?.querySelector('.ids-field input'))?.focus())
+  const starter = $derived({
+    editor, items: exampleItems, view: exampleView,
+    onstart: sequence => { addTab(sequence); focusNewTab() },
+    onstarted: focusNewTab,
+  })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
     const { done, undone } = editor.steps
@@ -924,6 +1010,27 @@
   })
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
+  // A problem report: the menus open it, and `?report=1` opens it on arrival.
+  let reportOpen = $state(params.get('report') === '1')
+  const endpoint = reportEndpoint(location)
+  // The deep link opens the dialog once: the address drops it, so a reload lands in the workshop.
+  if (reportOpen) {
+    const arrived = new URL(location.href)
+    arrived.searchParams.delete('report')
+    history.replaceState(null, '', arrived.href)
+  }
+  /** The whole workspace as the report carries it: every tab with its drawing adjustments, the tab
+   *  shown, and the settings the page is being seen with. */
+  function reportWorkspace() {
+    const tab = current()
+    if (tab) keepTabSession(tab)
+    return {
+      tabs: tabs.map(item => ({ id: item.id, sequence: item.sequence, document: item.document ? JSON.parse(JSON.stringify(item.document)) : undefined })),
+      activeTab: activeId,
+      view, face, theme, locale,
+      widths: { input: columns.input, output: columns.output, split },
+    }
+  }
   async function focusActiveEditor() {
     await tick()
     if (!work) return
@@ -940,6 +1047,15 @@
     const command = (event.ctrlKey || event.metaKey) && !event.altKey
     const mod = command && !event.shiftKey
     if (mod && event.key === ',') { event.preventDefault(); prefsOpen = true; return }
+    // The browser may keep Ctrl+Shift+T for its own closed tabs; where it does not, this reopens one.
+    if (command && event.shiftKey && event.key.toLowerCase() === 't' && closedGroups.length
+      && !target.closest('[role="menu"], [role="menubar"]')) {
+      event.preventDefault()
+      const inStrip = Boolean(target.closest('.tabbar'))
+      reopenClosed()
+      if (inStrip) tick().then(() => /** @type {HTMLElement | null} */ (document.querySelector('.tabbar .tab.on [role="tab"]'))?.focus())
+      return
+    }
     // The browser may keep Ctrl+Tab for itself; where it does not, it moves between the tabs.
     if (command && tabs.length > 1 && (event.key === 'Tab' || event.key === 'PageDown' || event.key === 'PageUp')) {
       event.preventDefault()
@@ -950,7 +1066,6 @@
       else if (inEditor) focusActiveEditor()
       return
     }
-    if (mod && event.key.toLowerCase() === 's') { event.preventDefault(); keepDraft(); return }
     if (target.closest('input, textarea, select, [contenteditable="true"], [role="menu"]')) return
     if (mod && ['c', 'x', 'v', 'a'].includes(event.key.toLowerCase())) {
       if (['c', 'x'].includes(event.key.toLowerCase()) && !getSelection()?.isCollapsed) return
@@ -988,22 +1103,23 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
-<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument} />
-<svelte:head><title>{t('app.title')} — {t('ids.label')}</title></svelte:head>
+<svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
+  onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
+<svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
 <div class="app" lang={locale} data-composer={base}>
   <div class="chrome">
     <header class="bar">
       <a class="brand" href="/" aria-label={t('app.title')}>
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--on-accent)" /></svg>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
         <span>{t('app.title')}</span>
       </a>
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
-          <button type="button" class="tool key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
+          <button type="button" class="ui-button key-hint" disabled={!canUndo} title={undoTitle} aria-label={undoTitle} aria-keyshortcuts="Control+Z Meta+Z" onclick={undoAction}>
             <Icon name="undo" />{#if keyHints}<KeyHint combos={['mod+z']} />{/if}</button>
-          <button type="button" class="tool key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
+          <button type="button" class="ui-button key-hint" disabled={!canRedo} title={redoTitle} aria-label={redoTitle} aria-keyshortcuts="Control+Shift+Z Control+Y Meta+Shift+Z Meta+Y" onclick={redoAction}>
             <Icon name="redo" />{#if keyHints}<KeyHint combos={['mod+shift+z', 'mod+y']} />{/if}</button>
           <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
@@ -1024,23 +1140,29 @@
         <span class="sponsor-label">{t('app.sponsor.label')}</span>
       </button>
       <div class="end">
-        <button type="button" class="tool" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
+        <button type="button" class="ui-button" disabled={editor.tree === null} title={t('app.share.label')} aria-label={t('app.share.label')} onclick={() => { const tab = current(); if (tab) keepTabSession(tab); shareOpen = true }}><Icon name="share" /><span class="wide">{t('app.share.label')}</span></button>
         <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
-        <button type="button" class="tool key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
-        <button type="button" class="tool" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
+        <button type="button" class="ui-button key-hint" bind:this={settingsButton} aria-haspopup="dialog" aria-expanded={prefsOpen} title={t('app.prefs.title')} aria-label={t('app.prefs.title')} aria-keyshortcuts="Control+, Meta+," onclick={() => prefsOpen = !prefsOpen}><Icon name="settings" />{#if keyHints}<KeyHint combos={['mod+,']} />{/if}</button>
+        <button type="button" class="ui-button" title={t('app.about.title')} aria-label={t('app.about.title')} onclick={() => aboutOpen = true}><Icon name="info" /></button>
       </div>
-      <button type="button" class="tool more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
+      <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
       <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
-        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll} onmove={moveTab} oncommit={store} />
+        oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
+        onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
   </div>
 
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-      <section class="pane input" id="input-panel" aria-label={t('app.input')}>
+      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
+        <button type="button" role="tab" id="phone-input-tab" aria-controls="input-panel" aria-selected={phonePane === 'input'} tabindex={phonePane === 'input' ? 0 : -1} onclick={() => phoneTab('input')} onkeydown={phoneKey}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
+        <button type="button" role="tab" id="phone-compose-tab" aria-controls="compose-panel" aria-selected={phonePane === 'compose'} tabindex={phonePane === 'compose' ? 0 : -1} onclick={() => phoneTab('compose')} onkeydown={phoneKey}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
+        <button type="button" role="tab" id="phone-output-tab" aria-controls="output-panel" aria-selected={phonePane === 'output'} tabindex={phonePane === 'output' ? 0 : -1} onclick={() => phoneTab('output')} onkeydown={phoneKey}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
+      </div>
+      <section class="pane input" class:phone-active={phonePane === 'input'} id="input-panel" aria-label={t('app.input')}>
         <div class="block">
           <div class="label-row">
             <h2 class="label">{t('ids.label')}</h2>
@@ -1050,7 +1172,7 @@
           </div>
           <div class="seq-line">
             <IdsSequence {editor} label={false} />
-            <button type="button" class="tool seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
+            <button type="button" class="ui-button seq-copy" disabled={!editor.whole} title={t('app.copySequence')} aria-label={t('app.copySequence')} onclick={() => copy(editor.whole)}><Icon name="copy" /></button>
           </div>
           <button type="button" class="replacement-link" onclick={() => replacementOpen = true}>{t('app.replacement.title')}</button>
           {#if editor.problem}<p class="status fault" role="status">{editor.problem}</p>
@@ -1065,7 +1187,7 @@
           controls="input-panel" onchange={width => resizeColumn('input', width)} onreset={() => resizeColumn('input', null)} />
       </div>
 
-      <div class="middle" bind:this={middleEl} style:--upper="{split}%">
+      <div class="middle" id="compose-panel" class:phone-active={phonePane === 'compose'} bind:this={middleEl} style:--upper="{split}%">
         <section class="pane tree" aria-label={t('ids.structure')}>
           <div class="view-tabs" role="tablist" aria-label={t('ids.view.label')}>
             <button type="button" role="tab" id="shape-tab" aria-selected={view === 'shape'} aria-controls="shape-panel" tabindex={view === 'shape' ? 0 : -1}
@@ -1116,7 +1238,7 @@
         <ColumnSplitter value={columns.output} min={MIN_OUTPUT} max={columns.outputMax} label={t('app.panels.resizeWidth', { panel: t('app.output') })}
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
-      <section class="pane output" id="output-panel" aria-label={t('app.output')}>
+      <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
         <div class="preview">
           {#if !large}
             {#key activeId}
@@ -1194,21 +1316,26 @@
       <Menu label={localeName} ariaLabel={`${t('app.language')}: ${localeName}`} icon="globe" items={localeItems} align="end" {keyHints} compact />
     </div>
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.file.label')} items={fileItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
+      { label: t('app.report.title'), icon: 'mail', run: () => reportOpen = true },
     ]} />
   </div>
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
+<TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
+<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
+  {drawing} {scopes} {slots} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
+  {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
@@ -1216,7 +1343,7 @@
 <Dialog bind:open={pointsOpen} title={t('app.codePoints', { count: points.length })} closeLabel={t('app.close')}>
   <div class="point-sheet">
     <ol class="point-list">{#each points as p, i (i)}<li><span lang="ja">{p.ch}</span><code>{p.cp}</code></li>{/each}</ol>
-    <button type="button" class="tool" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
+    <button type="button" class="ui-button" onclick={() => copy(points.map(p => p.cp).join(' '))}><Icon name="copy" /><span>{t('app.copyPoints')}</span></button>
   </div>
 </Dialog>
 <Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
@@ -1230,37 +1357,37 @@
 <style>
   .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
   .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
-  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:inherit;font-size:13px;cursor:pointer}
-  .confirm-actions button:hover{background:var(--hover)}
-  .confirm-actions .danger{border-color:var(--fault);color:var(--fault)}
-  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--fault) 10%,transparent)}
-  .confirm-actions button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--ui-color-border);border-radius:9px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
+  .confirm-actions button:hover{background:var(--ui-color-surface-hover)}
+  .confirm-actions .danger{border-color:var(--ui-color-danger);color:var(--ui-color-danger)}
+  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--ui-color-danger) 10%,transparent)}
+  .confirm-actions button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
-  .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--line)}
-  .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit;cursor:pointer}
-  .search-modes button[aria-pressed=true]{background:var(--surface-2);font-weight:600}
+  .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
+  .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
+  .search-modes button[aria-pressed=true]{background:var(--ui-color-surface-sunken);font-weight:600}
 
   .app{display:flex;flex-direction:column;min-height:100dvh}
-  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px)}
+  .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
+  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
-  .group{gap:0;height:32px;border-radius:9px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
-  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface)}
-  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{font-size:14px;line-height:1;color:var(--ink);font-family:var(--cjk-sans)}
+  .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
+  .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
+  .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
+  .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-sans)}
   .font-choice .aa.serif{font-family:var(--cjk-serif)}
   .font-choice[aria-pressed="true"] .aa.klee{font-family:var(--cjk-klee)}
-  .font-choice:hover{color:var(--ink)}
-  .font-choice[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
-  .font-choice:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .font-choice:hover{color:var(--ui-color-ink)}
+  .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
+  .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   @media (max-width:1100px){.font-choice .wide{display:none}}
-  .group :global(.tool){height:32px;border:0;border-left:1px solid var(--line);border-radius:0;background:none}
-  .group > :global(.tool:first-child){border-left:0;border-radius:9px 0 0 9px}
-  .group .wide-only:last-child :global(.tool){border-radius:0 9px 9px 0}
-  .group :global(.tool:focus-visible){outline-offset:-2px}
+  .group :global(.ui-button){height:32px;border:0;border-left:1px solid var(--ui-color-border);border-radius:0;background:none}
+  .group > :global(.ui-button:first-child){border-left:0;border-radius:var(--ui-radius-md) 0 0 var(--ui-radius-md)}
+  .group .wide-only:last-child :global(.ui-button){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
+  .group :global(.ui-button:focus-visible){outline-offset:-2px}
   .end{margin-left:0}
   /* The sponsor button: a soft pink pill led by the author's face, with a small heart on it that beats
      now and then, so it stands out from the grey toolbar without shouting. Hovering makes the heart
@@ -1268,11 +1395,11 @@
   .sponsor{--sp-from:light-dark(#ffe6ef,#3d1a2b);--sp-to:light-dark(#fff0e0,#3a2318);
     --sp-ink:light-dark(#c2185b,#ffb3cd);--sp-line:light-dark(#ffc2d6,#6b2c47);--sp-heart:light-dark(#ff4f88,#ff7aa6);
     display:inline-flex;align-items:center;justify-content:center;gap:9px;flex:none;height:32px;padding:0 14px 0 4px;margin-inline:auto;
-    border:1px solid var(--sp-line);border-radius:999px;background:linear-gradient(135deg,var(--sp-from),var(--sp-to));color:var(--sp-ink);font:inherit;font-size:13px;font-weight:650;
+    border:1px solid var(--sp-line);border-radius:var(--ui-radius-pill);background:linear-gradient(135deg,var(--sp-from),var(--sp-to));color:var(--sp-ink);font:inherit;font-size:13px;font-weight:650;
     cursor:pointer;white-space:nowrap;box-shadow:0 1px 2px rgb(194 24 91 / .12);transition:transform .18s ease,box-shadow .18s ease}
   .sponsor:hover,.sponsor:focus-visible{transform:translateY(-1px);box-shadow:0 4px 12px rgb(255 79 136 / .28)}
   .sponsor:active{transform:translateY(0) scale(.97)}
-  .sponsor:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+  .sponsor:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .sponsor-face{position:relative;flex:none;width:24px;height:24px}
   .sponsor-face img{display:block;width:100%;height:100%;border-radius:50%;object-fit:cover;box-shadow:0 0 0 1.5px light-dark(#fff,#3d1a2b),0 0 0 2.5px var(--sp-line)}
   .sponsor-heart{position:absolute;right:-4px;bottom:-3px;width:12px;height:12px;fill:var(--sp-heart);stroke:light-dark(#fff,#3d1a2b);stroke-width:2.5;paint-order:stroke;
@@ -1291,84 +1418,79 @@
     .sponsor{order:1;margin-inline:0;margin-left:auto}
   }
   @media (prefers-reduced-motion:reduce){.sponsor,.sponsor-heart{animation:none!important;transition:none}}
-  :global(.tool){display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 9px;border:1px solid var(--line);border-radius:9px;background:var(--surface);
-    color:var(--ink);font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
-  :global(.tool:not(:disabled):hover),:global(.tool.on){background:var(--hover)}
-  :global(.tool:disabled){color:var(--muted);background:var(--surface-2);cursor:default}
-  :global(.tool:focus-visible){outline:2px solid var(--focus);outline-offset:1px}
   .wide-only{display:contents}
   .phone-only{display:none}
   .more-sheet{display:flex;flex-direction:column;gap:14px}
   .more-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
 
-  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:hidden;background:var(--surface)}
+  .tabs-slot{display:flex;height:48px;min-width:0;padding-inline:max(6px,env(safe-area-inset-left)) max(16px,env(safe-area-inset-right));overflow:visible;background:var(--ui-color-surface)}
   .workspace{display:flex;flex-direction:column;flex:1;min-width:0;min-height:0}
   .work{flex:1;display:grid;gap:16px;padding:16px;grid-template-columns:minmax(0,1fr);min-width:0}
-  .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow)}
+  .pane{display:flex;flex-direction:column;gap:16px;min-width:0;padding:16px;border-radius:var(--ui-radius-2xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-1)}
   .block{display:flex;flex-direction:column;gap:6px;min-width:0}
-  .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
+  .label{margin:0;font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--ui-color-ink-muted)}
   .label-glyph{font-family:var(--ids-font)}
   .label-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
   .seq-line :global(.ids-field input){padding-right:44px}
-  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--muted);cursor:pointer}
-  .seq-line .seq-copy:hover{background:var(--surface-2);color:var(--ink)}
-  .seq-line .seq-copy:disabled{color:var(--muted);background:none;cursor:default}
-  .status{margin:0;font-size:12px;line-height:1.45;color:var(--muted)}
-  .status.fault{color:var(--fault)}
-  .view-tabs{display:flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2)}
-  .view-tabs button{height:26px;padding:0 10px;border:0;border-radius:7px;background:none;color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
-  .view-tabs button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
-  .view-tabs button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
-  .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:12px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
+  .seq-line .seq-copy:hover{background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
+  .seq-line .seq-copy:disabled{color:var(--ui-color-ink-muted);background:none;cursor:default}
+  .status{margin:0;font-size:12px;line-height:1.45;color:var(--ui-color-ink-muted)}
+  .status.fault{color:var(--ui-color-danger)}
+  .view-tabs{display:flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken)}
+  .view-tabs button{height:26px;padding:0 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;cursor:pointer}
+  .view-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
+  .view-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
+  .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken);border:1px solid var(--ui-color-border);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
   .tree-box{--ids-part-size:clamp(32px,4.2vw,56px)}
   .preview{position:relative;display:grid;width:100%;--ids-preview-size:100%}
-  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);overflow:auto;box-shadow:0 24px 80px rgb(0 0 0 / .35)}
+  .large-dialog{width:min(80vh,92vw);width:min(80dvh,92vw);max-width:100vw;max-height:100dvh;margin:auto;padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(16px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);overflow:auto;box-shadow:var(--ui-shadow-2)}
   .large-dialog[open]{display:flex;flex-direction:column;gap:12px}
   .large-dialog::backdrop{background:rgb(0 0 0 / .55)}
   .large-dialog :global(.ids-preview){width:100%;max-width:100%}
   .large-dialog :global(.ids-preview-large){width:100%;border-radius:12px}
-  .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--surface)}
+  .large-bar{position:sticky;top:max(0px,env(safe-area-inset-top));z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:4px;background:var(--ui-color-surface)}
   .large-bar .font-switch{order:1}
   .large-bar .large-close{order:4}
-  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:50%;background:var(--surface);color:var(--ink);cursor:pointer}
-  .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ink);white-space:nowrap;overflow:hidden}
+  .large-close{display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0;border:1px solid var(--ui-color-border);border-radius:50%;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-ids{order:2;flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:1px;font-family:var(--ids-font);font-size:16px;line-height:1.3;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden}
   .large-actions{order:3;display:flex;align-items:center;gap:4px}
-  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);cursor:pointer}
-  .large-copy:hover{border-color:var(--line-strong)}
-  .large-copy:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .large-close:hover{border-color:var(--line-strong)}
-  .large-close:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--muted)}
+  .large-copy{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid var(--ui-color-border);border-radius:7px;background:var(--ui-color-surface);color:var(--ui-color-ink);cursor:pointer}
+  .large-copy:hover{border-color:var(--ui-color-border-strong)}
+  .large-copy:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
+  .large-close:hover{border-color:var(--ui-color-border-strong)}
+  .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
+  .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
   .encoded-character code{font:11px ui-monospace,monospace}
-  .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:5px;background:transparent;color:var(--muted);cursor:pointer}
-  .encoded-character button:hover{color:var(--ink);background:var(--hover)}
-  .encoded-character button:focus-visible{outline:2px solid var(--focus)}
+  .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
+  .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
+  .encoded-character button:focus-visible{outline:2px solid var(--ui-color-focus)}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
-  .preview :global(.ids-preview-large){border-radius:12px;background:var(--surface-2)}
+  .preview :global(.ids-preview-large){border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
-  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;font-size:12px;cursor:pointer}
-  .adjust button:hover:not(:disabled){border-color:var(--accent)}
-  .adjust button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  .adjust button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border:1px solid var(--ui-color-border);border-radius:8px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:12px;cursor:pointer}
+  .adjust button:hover:not(:disabled){border-color:var(--ui-color-accent)}
+  .adjust button[aria-pressed="true"]{border-color:var(--ui-color-accent);color:var(--ui-color-accent)}
   .adjust button:disabled{opacity:.45;cursor:default}
-  .adjust button:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  .adjust-hint{font-size:11px;color:var(--muted)}
+  .adjust button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .adjust-hint{font-size:11px;color:var(--ui-color-ink-muted)}
   .details{display:flex;flex-direction:column;gap:16px;min-width:0}
-  .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--accent);font:inherit;font-size:12px;cursor:pointer}
+  .replacement-link{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--ui-color-accent);font:inherit;font-size:12px;cursor:pointer}
   .replacement-link:hover{text-decoration:underline}
-  .replacement-link:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
-  .points-btn{height:24px;padding:0 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--muted);font:inherit;font-size:12px;cursor:pointer}
-  .points-btn:hover{color:var(--ink);border-color:var(--line-strong)}
-  .points-btn:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+  .replacement-link:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
+  .points-btn{height:24px;padding:0 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;cursor:pointer}
+  .points-btn:hover{color:var(--ui-color-ink);border-color:var(--ui-color-border-strong)}
+  .points-btn:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .point-sheet{display:flex;flex-direction:column;gap:14px}
   .point-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px 10px;margin:0;padding:0;list-style:none}
-  .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--line);border-radius:7px}
+  .point-list li{display:flex;align-items:baseline;gap:5px;padding:4px 6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm)}
   .point-list li span{font-family:var(--cjk);font-size:18px}
-  code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--muted)}
+  code{font:12px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
 
   .middle{display:flex;flex-direction:column;gap:16px;min-width:0}
   .column-gap{display:none}
@@ -1401,9 +1523,9 @@
     .pane{overflow:auto;min-height:0}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
     .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
-    .split .grip{width:56px;height:5px;border-radius:999px;background:var(--line-strong);transition:background-color .12s,width .12s}
-    .split:hover .grip,.split:focus-visible .grip{background:var(--accent);width:72px}
-    .split:focus-visible{outline:2px solid var(--focus);outline-offset:-2px;border-radius:8px}
+    .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color .12s,width .12s}
+    .split:hover .grip,.split:focus-visible .grip{background:var(--ui-color-accent);width:72px}
+    .split:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
     .tree{flex:none;justify-content:flex-start;container-type:size}
     .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
@@ -1413,17 +1535,30 @@
     .results :global(.hits){flex:none;min-height:0;overflow:visible}
     .results :global(.empty){margin:auto}
   }
-  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
+  .phone-tabs{display:none}
+  /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
+  @media (max-width:879px){
+    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border)}
+    .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:13px;cursor:pointer}
+    .phone-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
+    .phone-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+    .work > .pane:not(.phone-active),.work > .middle:not(.phone-active){display:none}
+    .work{touch-action:pan-y}
+    .work :global(.ids-preview){touch-action:pan-y}
+    .output.adjusting :global(.ids-preview){touch-action:none}
+  }
+  .drop-overlay{position:fixed;inset:0;display:grid;place-items:center;background:color-mix(in srgb,var(--ui-color-canvas) 72%,transparent);backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .12s ease;z-index:100}
   .drop-overlay.show{opacity:1}
-  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--accent);border-radius:18px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:600;box-shadow:var(--shadow-pop)}
+  .drop-overlay p{margin:0;padding:24px 32px;border:2px dashed var(--ui-color-accent);border-radius:var(--ui-radius-3xl);background:var(--ui-color-surface);color:var(--ui-color-ink);font-size:15px;font-weight:600;box-shadow:var(--ui-shadow-2)}
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
     .brand{margin-right:auto}
     .brand span,.wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
-    .group > :global(.tool:last-of-type){border-radius:0 9px 9px 0}
+    .group > :global(.ui-button:last-of-type){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
     .work{padding:12px;gap:12px}
+    .phone-tabs{margin:0 -12px;padding:8px 12px}
     .pane{padding:14px}
     .sponsor{padding:0 12px 0 4px}
   }

@@ -29,8 +29,9 @@ try {
   const record = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').at(-1))
   assert.equal(record?.document?.document?.title, 'Opened document')
   await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Export', exact: true }).click()
   const svgWait = page.waitForEvent('download')
-  await page.getByRole('menuitem', { name: 'Export SVG', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'SVG', exact: true }).click()
   const svgDownload = await svgWait
   const svgPath = await svgDownload.path()
   assert.ok(svgPath, 'SVG download path')
@@ -44,8 +45,9 @@ try {
   const svgRecord = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]').at(-1))
   assert.equal(svgRecord?.document?.document?.format, 'ids-input/document')
   await page.getByRole('menuitem', { name: 'File', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'Export', exact: true }).click()
   const pngWait = page.waitForEvent('download')
-  await page.getByRole('menuitem', { name: 'Export PNG', exact: true }).click()
+  await page.getByRole('menuitem', { name: 'PNG', exact: true }).click()
   const pngDownload = await pngWait
   const pngPath = await pngDownload.path()
   assert.ok(pngPath, 'PNG download path')

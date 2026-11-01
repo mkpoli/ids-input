@@ -49,14 +49,14 @@ try {
     await page.getByRole('tab', { name: 'Templates', exact: true }).click()
     assert.equal(await part.inputValue(), '木')
     await preset.click()
-    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { cell: '木', layers: 3, count: 6, reverse: false })
+    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { cell: '木', layers: 3, count: 6, direction: 'top' })
     assert.equal(await part.inputValue(), '木', 'insertion keeps the typed component')
     await field.fill('')
     await field.press('Tab')
-    await group.getByRole('checkbox', { name: 'Reverse', exact: true }).check()
+    await group.locator('[data-direction="bottom"]').click()
     await rows.fill('5')
     await part.press('Enter')
-    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { cell: '木', layers: 5, count: 15, reverse: true })
+    assert.deepEqual(pyramidRows(parse(await field.inputValue()).tree), { cell: '木', layers: 5, count: 15, direction: 'bottom' })
     await page.locator('.ids-preview[data-step="composed"]').waitFor()
     await capture('after')
     await field.fill('')
@@ -88,7 +88,7 @@ try {
     await page.locator('[data-five="212"]').click()
     assert.equal(await field.inputValue(), '⿳⿰木木木⿰木木')
     // A part may be a whole description, or nothing for a pyramid of empty slots.
-    await group.getByRole('checkbox', { name: 'Reverse', exact: true }).uncheck()
+    await group.locator('[data-direction="top"]').click()
     await field.fill('')
     await field.press('Tab')
     await part.fill('⿱众⿰众众')
@@ -120,7 +120,7 @@ try {
       assert.equal(pyramidRows(parse(await field.inputValue()).tree)?.cell, component)
     }
     assert.deepEqual(errors, [])
-    console.log(`PASS ${colorScheme}: typed parts and descriptions, slots, validation, presets, 2-row pyramids, custom rows, reverse, Enter, tab persistence, Unicode components`)
+    console.log(`PASS ${colorScheme}: typed parts and descriptions, slots, validation, presets, 2-row pyramids, custom rows, pyramid directions, Enter, tab persistence, Unicode components`)
     await page.close()
   }
 } finally { await browser.close() }
