@@ -346,19 +346,12 @@
   "info.copy": "Copy {char}",
   "info.copied": "Copied",
   "info.copyFailed": "Copy failed",
-  "info.sources": "Sources",
-  "info.sources.open": "Open {site}",
-  "info.note.editorial": "Glosses, emoji mnemonics and stroke data written for this site.",
-  "info.note.unicodeSealSource": "The big-seal correspondences of small-seal characters, as the Unicode Consortium lists them.",
-  "info.note.sealSource": "Small-seal glyphs and descriptions from CHISE (MORIOKA Tomohiko) and its Jiguge edition of the Shuowen; chise.org searches the same records.",
-  "info.note.wiktionary": "Tangut meanings recorded in English Wiktionary.",
-  "info.note.unihan": "The English definition in Unicode’s Unihan database.",
+  "info.source.sections": "Sources",
+  "info.source.open": "Open {site}",
   "info.site.wiktionary": "Wiktionary",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
   "info.site.sealSource": "CHISE",
-  "info.site.editorial": "Appearance aids",
-  "info.site.component": "Andrew West",
-  "info.sources.also": "Also built from: {sites}.",
-  "info.note.component": "The Tangut decomposition records Andrew West publishes as BabelStone IDS and in his TangutSea posts."
+  "info.site.editorial": "Editorial aids",
+  "info.site.component": "Andrew West"
 }
