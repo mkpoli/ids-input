@@ -49,7 +49,9 @@
   function tipBody(button) {
     const here = button.dataset.note ?? 'component'
     const others = (info?.sourceSites ?? []).filter(kind => kind !== here).map(kind => t(`info.site.${kind}`))
-    const also = others.length ? t('info.sources.also', { sites: new Intl.ListFormat(locale, { type: 'conjunction' }).format(others) }) : ''
+    // One name needs no conjunction; two or more take the locale's own.
+    const joined = others.length > 1 ? new Intl.ListFormat(locale, { type: 'conjunction' }).format(others) : others[0] ?? ''
+    const also = joined ? t('info.sources.also', { sites: joined }) : ''
     return [t(`info.note.${here}`), also].filter(Boolean)
   }
   /** @param {HTMLElement} button */
