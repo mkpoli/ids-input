@@ -49,12 +49,81 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
   }
 })
 
-it('draws 萬 with the bottom of 両 as one prepared form', () => {
+// 萬 carries its outer edge, 田's box, the legs and the 禸 pencil in one contour, and the
+// prepared form splices the pencil out of it. The band it leaves is checked point by point:
+// a winding that disagrees between contours fills 田's counters or hollows the frame out.
+const WAN_SHAN = '⿳艹田⿵冂山'
+const inked = (contours, x, y) => {
+  let winding = 0
+  for (const [, points] of contours) {
+    const n = points.length / 2
+    for (let i = 0; i < n; i++) {
+      const j = (i + 1) % n
+      const [x1, y1, x2, y2] = [points[2 * i], points[2 * i + 1], points[2 * j], points[2 * j + 1]]
+      if (y1 <= y ? y2 > y : y2 <= y) {
+        if (x1 + (y - y1) / (y2 - y1) * (x2 - x1) > x) winding += y2 > y1 ? 1 : -1
+      }
+    }
+  }
+  return winding !== 0
+}
+// The band as 萬 draws it: the legs' outer and inner edges, the floor they stand on and the
+// flat inner top the splice closes the opening with.
+const BAND = {
+  sans: { floor: -80, legs: [110, 899], inner: [182, 826], innerTop: 208 },
+  serif: { floor: -78, legs: [127, 920], inner: [190, 814], innerTop: 240 },
+}
+const SAMPLES = {
+  sans: {
+    ink: { 'the left leg': [146, 50], 'the right leg': [862, 50], 'the band over the opening': [500, 240],
+      "田's left stem": [200, 480], "田's middle bar": [500, 480], "艹's bar": [300, 735],
+      "山's stem": [470, 100], "山's left foot": [260, -60] },
+    clear: { "田's upper-left counter": [350, 420], "田's lower-right counter": [650, 550],
+      "the 禸 pencil's body": [620, 140], "the 禸 pencil's sweep": [400, 60],
+      'the opening left of 山': [205, 50], 'the opening right of 山': [760, 100],
+      "the gap between 山's strokes": [350, 80] },
+  },
+  serif: {
+    ink: { 'the left leg': [155, 50], 'the right leg': [850, 50], 'the band over the opening': [500, 300],
+      "田's left stem": [230, 480], "田's middle bar": [500, 480], "艹's bar": [300, 735],
+      "山's stem": [447, 100], "山's left foot": [255, -60] },
+    clear: { "田's upper-left counter": [350, 420], "田's lower-right counter": [650, 550],
+      "the 禸 pencil's body": [600, 160], "the 禸 pencil's sweep": [400, 80],
+      'the opening left of 山': [210, 50], 'the opening right of 山': [740, 100],
+      "the gap between 山's strokes": [330, 80] },
+  },
+}
+
+it('draws 萬 with 山 where its 禸 sits', () => {
   for (const style of ['sans', 'serif']) {
-    expect(isComponentForm('⿳艹田⿵冂山', style)).toBe(true)
-    expect(isGroupedForm('⿳艹田⿵冂山', style)).toBe(true)
-    const drawing = componentDrawing('⿳艹田⿵冂山', style)
-    expect(drawing.d).not.toMatch(/NaN|Infinity/)
-    expect(componentParts('⿳艹田⿵冂山', undefined, style)).toHaveLength(2)
+    expect(isComponentForm(WAN_SHAN, style)).toBe(true)
+    expect(isGroupedForm(WAN_SHAN, style)).toBe(true)
+    expect(componentDrawing(WAN_SHAN, style).d).not.toMatch(/NaN|Infinity/)
+    const parts = componentParts(WAN_SHAN, undefined, style)
+    expect(parts).toHaveLength(2)
+    const [wan, shan] = data.forms[style][WAN_SHAN]
+    // 萬's spliced outline, its 艹 and 田's four counters; 山 is the second group.
+    expect(wan).toHaveLength(6)
+    expect(shan).toHaveLength(1)
+    expect([...wan, ...shan].flatMap(([, points]) => points).every(Number.isFinite)).toBe(true)
+    const { floor, legs, inner, innerTop } = BAND[style]
+    const box = points => [Math.min(...points.filter((_, i) => !(i % 2))), Math.min(...points.filter((_, i) => i % 2)),
+      Math.max(...points.filter((_, i) => !(i % 2))), Math.max(...points.filter((_, i) => i % 2))]
+    // The spliced outline comes first: its legs still stand on the band floor at 萬's own width.
+    const outline = box(wan[0][1])
+    expect([outline[0], outline[1], outline[2]]).toEqual([legs[0], floor, legs[1]])
+    // 山 stands on that floor, clear of both legs and of the band over it.
+    const [x0, y0, x1, y1] = box(shan[0][1])
+    expect(y0).toBe(floor)
+    expect(x0).toBeGreaterThan(inner[0])
+    expect(x1).toBeLessThan(inner[1])
+    expect(y1).toBeLessThan(innerTop)
+    const contours = [...wan, ...shan]
+    for (const [where, [x, y]] of Object.entries(SAMPLES[style].ink)) {
+      expect(`${where}: ${inked(contours, x, y) ? 'ink' : 'clear'}`).toBe(`${where}: ink`)
+    }
+    for (const [where, [x, y]] of Object.entries(SAMPLES[style].clear)) {
+      expect(`${where}: ${inked(contours, x, y) ? 'ink' : 'clear'}`).toBe(`${where}: clear`)
+    }
   }
 })

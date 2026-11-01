@@ -237,21 +237,47 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
-    # 萬 with 両's bottom: 萬's 艹田 over the 冂 and 山 of 両. The two pieces meet at the bar
-    # under 田; 両's lower body is narrowed and lowered into the 禸 band.
-    top_y = 200 if style == 'sans' else 280
-    bot_y = 452 if style == 'sans' else 530
-    sy = 0.526 if style == 'sans' else 0.59
-    top = crop_group(cs('萬'), (-2000, top_y, 3000, 2000))
-    bot = crop_group(cs('両'), (-2000, -2000, 3000, bot_y))
-    def lower(group):
-        ops, points = group
-        out = []
-        for i in range(0, len(points), 2):
-            out.append((points[i] - 500) * 0.9 + 500)
-            out.append((points[i + 1] - bot_y) * sy + top_y)
-        return [ops, out]
-    forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
+    # 萬's own outline with 山 where its 禸 sits. One contour of 萬 carries the outer
+    # edge, 田's box, the legs and the 禸 pencil as a single run of filled ink, so a
+    # boolean cut cannot lift the pencil out. Splice it out of that contour instead:
+    # the run from the right leg's inner edge round to the left leg's inner edge keeps
+    # 艹, 田, the bar under 田, the legs and the hook untouched, and closing it flat
+    # across the band's inner top drops the pencil. 山 then stands on the band floor.
+    wan = cs('萬')
+    if style == 'sans':
+        # 萬's own contour order differs between the two faces.
+        cao, counters, frame = wan[5:6], wan[:4], wan[4]
+        # The band's inner top, the frame commands between its two ends, and 山's box:
+        # it rests on the band floor and stops short of the inner top and of the hook's
+        # tongue, which reaches in to x=713 along the bottom of the right leg.
+        inner_top, keep = (826, 208), slice(5, 25)
+        shan_box = (238, -80, 700, 180)
+    else:
+        cao, counters, frame = wan[0:1], wan[1:5], wan[5]
+        # The serif hook reaches further in, to x=664, so 山 is narrower here.
+        inner_top, keep = (814, 240), slice(6, 42)
+        shan_box = (240, -78, 655, 215)
+    # Reopening the contour at the band's inner top: the splice starts on the right
+    # leg's inner edge and `closePath` draws the flat edge back from the left one.
+    band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
+    # The splice must close along the band's inner top, and 艹 must sit well above it.
+    assert frame[keep][-1][1][-1][1] == inner_top[1], 'The 萬 splice does not end on the band inner top'
+    assert min(p[1] for _, values in cao[0] for p in values) > inner_top[1], 'That contour of 萬 is not its 艹'
+
+    def fitted_into(recording, box):
+        """`recording` scaled into `box`, keeping its own winding and corner order."""
+        points = [p for _, values in recording for p in values if p is not None]
+        x0, y0 = min(p[0] for p in points), min(p[1] for p in points)
+        x1, y1 = max(p[0] for p in points), max(p[1] for p in points)
+        sx, sy = (box[2] - box[0]) / (x1 - x0), (box[3] - box[1]) / (y1 - y0)
+        return [(op, tuple(None if p is None else (box[0] + (p[0] - x0) * sx, box[1] + (p[1] - y0) * sy)
+                           for p in values)) for op, values in recording]
+
+    # 萬's ink winds one way in both faces and its 田 counters the other; the spliced
+    # band keeps the frame's direction and 山 is placed as ink, so the loader reads the
+    # group's largest contour as its outline and the counters as holes.
+    shan = [fitted_into(contour, shan_box) for contour in cs('山')]
+    forms['⿳艹田⿵冂山'] = [group([band] + cao + counters), group(shan)]
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
