@@ -98,6 +98,12 @@ const CELL_MIDDLE_INSET = 0.08
  *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
  *  enclosure would put them on, since they no longer surround each other. */
 const CELL_AXIS = { '⿵': 1, '⿶': 1 }
+/** The characters drawn as a frame: one glyph whose strokes close round what the enclosure holds,
+ *  with an opening for it. Given a cell of its own such a glyph stands beside the part it should
+ *  surround, so it takes the whole cell instead and the part goes inside. A housing such as 口 or 囗
+ *  takes the cell itself, and a part like 厂 or 匚 is a stroke beside what it holds, so neither is
+ *  listed. */
+const CELL_FRAMES = '冂勹弓辶'
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
@@ -445,9 +451,9 @@ export class Composer {
         return
       }
       if (op in this.ENCLOSE) {
-        // An enclosure whose outer operand is one part holds that part around the rest: cells that
-        // split the two apart stand the frame away from what it holds (𠕲's 冂 above its rows).
-        if (typeof kids[0] === 'string' && !isEmpty(kids[0])) {
+        // A frame takes the cell and the rest is laid out in the opening it leaves, so the two keep
+        // reading order and the frame keeps its leaf number.
+        if (typeof kids[0] === 'string' && CELL_FRAMES.includes(kids[0])) {
           const glyph = this.glyph(kids[0])
           const region = target(box)
           if (glyph) {
@@ -455,8 +461,7 @@ export class Composer {
             const outer = placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(kids[0]), `cells ${kids[0]}`)
             const room = this.room(op, [outer], region)
             if (room) {
-              outer.leaf = leaf++
-              out.push(outer)
+              walk(kids[0], box, depth + 1)
               const width = f[2] - f[0], height = f[3] - f[1]
               walk(kids[1], [(room[0] - f[0]) / width, 1 - (room[3] - f[1]) / height,
                 (room[2] - f[0]) / width, 1 - (room[1] - f[1]) / height], depth + 1)

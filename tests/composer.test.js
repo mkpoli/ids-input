@@ -329,6 +329,26 @@ describe('the composer', () => {
     expect(inner[0][0]).toBeLessThan(inner[2][0])
     expect(room[1]).toBeGreaterThan(outer[1])
   })
+  it('gives the cell to a listed frame, and splits one that is not', async () => {
+    const svgBox = ([x, y, w, h]) => [x, y, x + w, y + h]
+    const grid = '⿲⿱三口⿱三口⿰⿱三口⿱三口'
+    // A frame reads through its own leaf, and the parts keep reading order after it.
+    const frame = await compose(sourceOf(), `⿵冂${grid}`)
+    expect(frame.parts.map(part => part.leaf)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8])
+    const outer = svgBox(frame.parts[0].box)
+    expect(frame.parts[0].origin).toBe('cells 冂')
+    expect(outer[3] - outer[1]).toBeGreaterThan(700)
+    for (const part of frame.parts.slice(1)) {
+      expect(part.box[0]).toBeGreaterThan(outer[0])
+      expect(part.box[1]).toBeGreaterThan(outer[1])
+    }
+    // 口 is not a frame: it keeps its band, and the grid keeps the rest as before.
+    const housing = await compose(sourceOf(), `⿵口${grid}`)
+    const band = svgBox(housing.parts[0].box)
+    expect(housing.parts[0].origin).toBe('cells 口')
+    expect(band[3] - band[1]).toBeLessThan(300)
+    expect(housing.parts[1].box[1]).toBeGreaterThan(band[3])
+  })
   it('keeps the composer for marks, exclusions and approximate operators, and forces cells only when asked', async () => {
     const sequence = '⿱⿰⿰木口⿰木口⿰⿰木口⿰木口'
     expect((await compose(sourceOf(), `${sequence}ˊ`)).cells).toBeUndefined()
