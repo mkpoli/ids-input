@@ -163,6 +163,16 @@ try {
   const box = await dialog.boundingBox()
   assert.ok(box && box.x >= 0 && box.x + box.width <= 375 && box.y >= 0 && box.y + box.height <= 640, `the panel fits a phone: ${JSON.stringify(box)}`)
   await page.keyboard.press('Escape')
+
+  // The phone sheet keeps one Examples entry, and it opens the starter's Examples tab.
+  await page.getByRole('button', { name: 'Menu', exact: true }).click()
+  const sheet = page.locator('dialog[open]')
+  await sheet.waitFor()
+  await sheet.getByRole('button', { name: 'Open the examples', exact: true }).click()
+  await dialog.waitFor()
+  assert.equal(await examplesTab.getAttribute('aria-selected'), 'true', 'the phone menu opens the Examples tab')
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(200)
   await page.setViewportSize({ width: 1440, height: 900 })
 
   // The phone sheet keeps every section folded, so its headings are the whole navigation: no

@@ -20,6 +20,7 @@
    */
   let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
+  /** @type {{ openAt: (tab?: 'templates' | 'examples') => void } | null} */ let starterMenu = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
   /** @param {import('../lib/tabs.js').Tab} tab */
@@ -121,6 +122,10 @@
     items[next].focus()
   }
 
+  /** Open the starter's dialog from a menu entry elsewhere. @param {'templates' | 'examples'} [tab] */
+  export function openStarter(tab = 'templates') {
+    starterMenu?.openAt(tab)
+  }
   /** @param {string} id */
   function focus(id) {
     const found = /** @type {HTMLElement | undefined} */ ([...(strip?.children ?? [])].find(child => /** @type {HTMLElement} */ (child).dataset.tabId === id))
@@ -302,7 +307,7 @@
   </div>
   <div class="tab-new">
     <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
-    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
+    <StarterMenu bind:this={starterMenu} {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
   </div>
 </div>
 
