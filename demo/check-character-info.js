@@ -97,6 +97,9 @@ try {
     // into view, so the pane is already at its end; go back to the top, then restore the reading
     // position for the steps after this one.
     const reading = await page.locator('.pane.input').evaluate(el=>el.scrollTop)
+    // The card now carries source notes under the pointer, so a scroll must move the pane like a
+    // wheel does: the pointer then leaves the card and the tile goes with the scroll.
+    await page.mouse.move(10,10)
     await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
     await panel.waitFor({state:'hidden'})
     await page.locator('.pane.input').evaluate((el,top)=>{el.scrollTop=top},reading)
@@ -145,11 +148,12 @@ try {
     await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
     await page.waitForTimeout(500)
     assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
+    // The next press opens whatever sits under the card, so the pointer is moved off the card first.
+    await page.mouse.move(10,10)
     await panel.waitFor({state:'hidden'})
-    await page.mouse.click(1300,120);await panel.waitFor({state:'hidden'})
-    await page.waitForTimeout(600)
     // A pinned card goes when its tile is scrolled out of the grid.
     await paletteHorse.click();await panel.waitFor({state:'visible'})
+    await page.mouse.move(10,10)
     await page.locator('.pane.input').evaluate(el=>{el.scrollTop=0})
     await panel.waitFor({state:'hidden'})
     await page.waitForTimeout(600)
