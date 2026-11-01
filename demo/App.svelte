@@ -372,6 +372,7 @@
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
+  /** @type {{ openStarter: (tab?: 'templates' | 'examples') => void } | null} */ let tabStrip = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   /** @type {HTMLInputElement | null} */ let documentInput = $state(null)
   let fromText_ = $state('')
@@ -1148,7 +1149,7 @@
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
+      <TabStrip bind:this={tabStrip} {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
         oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
         onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
@@ -1318,7 +1319,9 @@
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
-    <MenuList label={t('app.examples.label')} items={exampleItems} onpick={() => moreOpen = false} view={exampleView} />
+    <MenuList label={t('app.examples.label')} onpick={() => moreOpen = false} items={[
+      { label: t('app.examples.open'), icon: 'book', run: () => tabStrip?.openStarter('examples') },
+    ]} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },

@@ -27,6 +27,7 @@
   "app.edit.selectAll": "すべて選択",
   "app.encoded": "該当する文字",
   "app.examples.label": "例",
+  "app.examples.open": "例を開く",
   "app.examples.basic": "基本的な構造",
   "app.examples.complex": "複雑な構造",
   "app.examples.repeated": "部品の繰り返し",
