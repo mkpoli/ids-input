@@ -94,7 +94,8 @@
   .tip{display:flex;align-items:center;gap:12px;padding:12px 16px 12px 12px;border-radius:var(--ui-radius-pill);
     color:#fff;text-decoration:none;box-shadow:0 6px 16px var(--tip-glow);transition:transform .18s ease,box-shadow .18s ease}
   .kofi{--tip-glow:rgb(32 32 32 / .28);--tip-glow-hover:rgb(32 32 32 / .38);background:#202020;border:1px solid light-dark(#202020,rgb(255 255 255 / .2))}
-  .ofuse{--tip-glow:rgb(40 130 167 / .3);--tip-glow-hover:rgb(40 130 167 / .42);background:#2882a7;border:1px solid #2882a7}
+  /* OFUSE Blue (#2882a7) taken 4% darker, so the white labels reach 4.5:1. */
+  .ofuse{--tip-glow:rgb(38 125 160 / .3);--tip-glow-hover:rgb(38 125 160 / .42);background:#267da0;border:1px solid #267da0}
   .tip:hover{transform:translateY(-1px);box-shadow:0 8px 22px var(--tip-glow-hover)}
   .tip:active{transform:scale(.98)}
   .tip:focus-visible,.company:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
