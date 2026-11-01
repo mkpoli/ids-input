@@ -41,9 +41,10 @@
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
-  // The class named as a message writes the stroke glyph first, then its name (㇐ Horizontal).
+  // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
+  // the glyph is the first character and the name is what follows it.
   const strokeLabel = $derived(strokeClassName(t, strokes?.first))
-  const strokeGlyph = $derived(strokeLabel.split(' ')[0] ?? '')
+  const strokeGlyph = $derived(Array.from(strokeLabel)[0] ?? '')
   const strokeName = $derived(strokeLabel.slice(strokeGlyph.length).trim())
 
   function close() {
@@ -353,7 +354,7 @@
 </div>
 
 <style>
-  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif}
+  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.strokes{font-size:12px;color:var(--info-muted);font-variant-numeric:tabular-nums}.stroke-glyph{font-family:var(--info-font)}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:3px}

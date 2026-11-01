@@ -128,6 +128,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰木き', refs: [26], char: '' },
     { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
+    { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '' },
   ] },
   // `abbreviates` names the standard character a Geba form stands for. `char` is empty for a form
   // with no code point; for an encoded character it names that character, which `encoded` reports.

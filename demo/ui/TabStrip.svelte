@@ -8,15 +8,17 @@
   // first. The sequence is in the tab's tooltip and its name.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
+  import StarterMenu from './StarterMenu.svelte'
   import TabIcon from './TabIcon.svelte'
   /**
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
    *   onselect: (id: string) => void, onclose: (id: string) => void, onnew: () => void, onduplicate: (id: string) => void,
    *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
-   *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void }}
+   *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void,
+   *   starter: { editor: any, items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, onstart: (sequence: string) => void, onstarted?: () => void } }}
    */
-  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit } = $props()
+  let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
@@ -298,7 +300,10 @@
       </div>
     {/each}
   </div>
-  <button type="button" class="tab-new" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
+  <div class="tab-new">
+    <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
+    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
+  </div>
 </div>
 
 {#if menu}
@@ -350,8 +355,9 @@
   .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .tab-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
-  .tab-new{display:grid;place-items:center;flex:none;width:28px;height:28px;margin:0 0 6px -6px;padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
-  .tab-new:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
-  .tab-new:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
+  .tab-new{display:flex;align-items:center;gap:1px;flex:none;margin:0 0 6px -6px}
+  .tab-add{display:grid;place-items:center;width:26px;height:28px;padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
+  .tab-add:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .tab-add:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
   @media (hover:none){.tab.on .tab-close{opacity:1;pointer-events:auto}}
 </style>
