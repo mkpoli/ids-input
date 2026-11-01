@@ -153,6 +153,14 @@ describe('report text escaping', () => {
     expect(escapeMarkdown('***')).toBe('\\*\\*\\*')
     expect(escapeMarkdown('===')).toBe('\\===')
   })
+  it('keeps what an object a page logged holds', () => {
+    const body = issueBody(emptyReport({ context: { console: ['plain line', { toString: null }, { message: 'boom', code: 3 }] } }), noAttachments)
+    expect(body).toContain('plain line')
+    // An object with no useful `toString` still says what it held.
+    expect(body).toContain('{"toString":null}')
+    expect(body).toContain('boom')
+    expect(body).not.toContain('[object Object]')
+  })
   it('renders a value whose toString throws', () => {
     expect(asText({ toString: null })).toBe('{"toString":null}')
     expect(cell({ toString: null })).toBe('\\{"toString":null\\}')

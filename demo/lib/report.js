@@ -28,7 +28,7 @@ export const isLocalHost = host => LOCAL.test(host)
 // address: a match runs to the next space, so a port, a query and a `/@fs/` path all go with it.
 // Free text cannot be filtered exactly; this takes out the shapes a page's own messages carry.
 const PRIVATE = [
-  [new RegExp(String.raw`\b(?:https?|wss?)://(?:${HOST})(?::\d+)?[^\s"']*`, 'gi'), '(local)'],
+  [new RegExp(String.raw`(?:file://)?(?:https?|wss?)://(?:${HOST})(?::\d+)?[^\s"']*`, 'gi'), '(local)'],
   [/\bfile:\/{1,3}[^\s"']*/gi, '(local)'],
   [/\/@fs\/[^\s"']*/gi, '(local)'],
   [/\b[A-Za-z]:\\[^\s"'`)\]]+/g, '(local)'],
@@ -325,9 +325,10 @@ export async function reportImage({ drawing, scopes, slots = [] }, preview) {
  * @returns {Promise<ReportSnapshot>}
  */
 export async function reportSnapshot(source) {
-  // An empty tab writes a mark of its own (or `＋`); the intake reads an empty sequence as no
-  // sequence, and nothing is drawing, so there is nothing to wait for.
-  const sequence = EMPTY_MARKS.includes(source.sequence) ? '' : source.sequence.slice(0, LIMITS.sequence)
+  // An empty tab writes a mark of its own (`⬚` or `＋`), or the caret (U+FFFE) before it is typed
+  // in; the intake reads an empty sequence as no sequence, and nothing is drawing to wait for.
+  const empty = EMPTY_MARKS.includes(source.sequence) || source.sequence === '\uFFFE'
+  const sequence = empty ? '' : source.sequence.slice(0, LIMITS.sequence)
   if (sequence) await settled(source.preview)
   const taken = {
     sequence,

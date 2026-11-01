@@ -33,3 +33,11 @@ describe('a line on its way into a report', () => {
       .toBe('GET https://glyphatlas.org/atlas/composer/ failed')
   })
 })
+
+describe('an address a log line mentions', () => {
+  it('takes a local address out of a line of CSS, which names its origin', () => {
+    const line = 'Failed to load resource: http://localhost:5186/@fs/home/someone/secret.js?token=abc'
+    expect(redact(line)).not.toContain('someone')
+    expect(redact('see file:///home/someone/x.css')).toBe('see (local)')
+  })
+})

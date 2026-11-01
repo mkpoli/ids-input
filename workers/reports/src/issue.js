@@ -163,7 +163,12 @@ export function issueBody(report, attachments) {
   const rows = ENVIRONMENT.map(([key, name]) => `| ${name} | ${cell(report.context[key])} |`)
   parts.push(['## Environment', '', '| Fact | Value |', '| --- | --- |', ...rows].join('\n'))
 
-  const lines = Array.isArray(report.context.console) ? report.context.console.map(asText) : []
+  // A line the page logged as a bare object: its JSON says more than `[object Object]` does.
+const logged = value => {
+  const text = asText(value)
+  return text === '[object Object]' ? asText(cell(value)) : text
+}
+const lines = Array.isArray(report.context.console) ? report.context.console.map(logged) : []
   const log = clip(lines.length ? lines.join('\n') : 'No console output was captured.', MAX_LOG_CHARS)
   const logParts = [fenced(log.clipped ? `${log.text}\n…` : log.text)]
   if (log.clipped) logParts.push(`_The console output was cut at ${MAX_LOG_CHARS} characters._`)
