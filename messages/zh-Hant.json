@@ -342,7 +342,7 @@
   "info.copy": "複製{char}",
   "info.copied": "已複製",
   "info.copyFailed": "複製失敗",
-  "info.sources": "出處",
+  "info.sources.title": "出處",
   "info.sources.open": "打開{site}",
   "info.note.editorial": "本站撰寫的釋義、表情助記與筆畫資料。",
   "info.note.unicodeSealSource": "Unicode整理的小篆對應字。",

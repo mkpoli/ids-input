@@ -342,7 +342,7 @@
   "info.copy": "{char} 복사",
   "info.copied": "복사됨",
   "info.copyFailed": "복사 실패",
-  "info.sources": "출처",
+  "info.sources.title": "출처",
   "info.sources.open": "{site} 열기",
   "info.note.editorial": "이 사이트에서 쓴 뜻풀이, 이모지 기억법, 필획 정보.",
   "info.note.unicodeSealSource": "Unicode가 정리한 소전 대응자.",

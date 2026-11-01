@@ -346,7 +346,7 @@
   "info.copy": "Copy {char}",
   "info.copied": "Copied",
   "info.copyFailed": "Copy failed",
-  "info.sources": "Sources",
+  "info.sources.title": "Sources",
   "info.sources.open": "Open {site}",
   "info.note.editorial": "Glosses, emoji mnemonics and stroke data written for this site.",
   "info.note.unicodeSealSource": "The big-seal correspondences of small-seal characters, as the Unicode Consortium lists them.",

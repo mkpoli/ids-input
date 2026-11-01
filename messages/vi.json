@@ -342,7 +342,7 @@
   "info.copy": "Sao chép {char}",
   "info.copied": "Đã sao chép",
   "info.copyFailed": "Lỗi sao chép",
-  "info.sources": "Nguồn",
+  "info.sources.title": "Nguồn",
   "info.sources.open": "Mở {site}",
   "info.note.editorial": "Nghĩa, gợi nhớ bằng emoji và dữ liệu nét do trang này viết.",
   "info.note.unicodeSealSource": "Các chữ tương ứng của Tiểu triện do Unicode tổng hợp.",

@@ -342,7 +342,7 @@
   "info.copy": "{char}をコピー",
   "info.copied": "コピーしました",
   "info.copyFailed": "コピー失敗",
-  "info.sources": "出典",
+  "info.sources.title": "出典",
   "info.sources.open": "{site}を開く",
   "info.note.editorial": "このサイトが書いた語義、絵文字の記憶補助、筆画情報。",
   "info.note.unicodeSealSource": "Unicodeがまとめた小篆の対応字。",
