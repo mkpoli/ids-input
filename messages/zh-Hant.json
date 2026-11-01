@@ -161,8 +161,6 @@
   "parts.relatedForms": "Unicode相關字形",
   "parts.idsUses": "IDS紀錄：{count}筆",
   "parts.groups": "部件分組",
-  "parts.compound.label": "複合",
-  "parts.compound.note": "沒有對應字的部件，以IDS表示。",
   "parts.characters.label": "全部漢字",
   "parts.characters.unavailable": "無法載入漢字清單。",
   "parts.characters.fromStrokes": "{count}畫及以上",

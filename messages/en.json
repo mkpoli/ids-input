@@ -163,8 +163,6 @@
   "parts.relatedForms": "Related Unicode forms",
   "parts.idsUses": "IDS records: {count}",
   "parts.groups": "Component groups",
-  "parts.compound.label": "Compound",
-  "parts.compound.note": "Components with no character of their own, written as an IDS.",
   "parts.characters.label": "All characters",
   "parts.characters.unavailable": "The composer's Han characters could not be loaded.",
   "parts.characters.fromStrokes": "{count} strokes and up",
