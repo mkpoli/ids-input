@@ -1,9 +1,9 @@
 <script>
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
-  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean }} */
+  /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean, chips?: boolean }} */
   import { tick, untrack } from 'svelte'
-  let { items, label, onpick, view = null, open = true } = $props()
+  let { items, label, onpick, view = null, open = true, chips = true } = $props()
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let root = $state(null)
   let query = $state('')
@@ -14,7 +14,9 @@
   let active = $state('')
   // The index of the one submenu shown inline, or -1.
   let openSubmenu = $state(-1)
-  $effect(() => { if (!open) openSubmenu = -1 })
+  $effect(() => {
+    if (!open) openSubmenu = -1
+  })
   const filtering = $derived(query.trim().length > 0 || mode !== 'all')
   /** @param {import('./Menu.svelte').Item} item */
   function matches(item) {
@@ -38,6 +40,16 @@
     }
     if (group.items.length) out.push(group)
     return out
+  })
+  // Without the category chips the headings are the whole map of the list, so every section starts
+  // folded and the reader opens the one they want. The chip row lets a wide panel keep them open.
+  // This runs once, when the list first has its sections; after that the reader owns the state.
+  let foldedOnce = false
+  $effect(() => {
+    const headings = chips || foldedOnce ? [] : groups.filter(group => group.heading).map(group => group.heading)
+    if (!headings.length) return
+    foldedOnce = true
+    collapsed = new Set(headings)
   })
   /** @param {string} heading */
   const expanded = heading => filtering || !collapsed.has(heading)
@@ -66,21 +78,27 @@
     /** @type {HTMLElement | undefined} */ (buttons[at])?.scrollIntoView({ block: 'start' })
     active = heading
   }
+  // The outermost ancestor that actually scrolls. A wrapper can declare `overflow:auto` and still
+  // hold its whole content, so a wrapper that merely fits is not the scrollport.
   /** @param {HTMLElement | null} el */
   function scrollParent(el) {
+    let found = null
     for (let node = el?.parentElement ?? null; node; node = node.parentElement) {
-      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) return node
+      if (/(auto|scroll)/.test(getComputedStyle(node).overflowY) && node.scrollHeight > node.clientHeight + 1) found = node
     }
-    return null
+    return found
   }
   $effect(() => {
     const list = root
-    if (!list || !view) return
-    const scroller = scrollParent(list) ?? window
+    if (!list || !view || !chips) return
+    // The scrollport is resolved on each pass: the dialog only overflows once its content lays out,
+    // which happens after this effect first runs.
+    let scroller = /** @type {HTMLElement | null} */ (null)
     const update = () => {
-      const top = scroller === window ? 8 : /** @type {HTMLElement} */ (scroller).getBoundingClientRect().top + 8
+      scroller = scrollParent(list) ?? scroller
+      const box = scroller ?? (/** @type {HTMLElement} */ (document.documentElement))
+      const top = scroller ? scroller.getBoundingClientRect().top + 8 : 8
       const headings = [...list.querySelectorAll('button.heading')]
-      const box = scroller === window ? document.documentElement : /** @type {HTMLElement} */ (scroller)
       let current = ''
       if (box.scrollHeight > box.clientHeight + 4 && box.scrollTop + box.clientHeight >= box.scrollHeight - 4) {
         current = /** @type {HTMLElement | undefined} */ (headings.at(-1))?.dataset.heading ?? ''
@@ -103,17 +121,24 @@
         else if (chipRect.right > rowRect.right) row.scrollLeft += chipRect.right - rowRect.right
       }
     }
+    // Listen on the document: scroll does not bubble, but it reaches the capture phase, so the
+    // scroller is heard wherever it turns out to be.
+    const listen = event => {
+      const box = scrollParent(list)
+      if (box && (event.target === box || box.contains(/** @type {Node} */ (event.target)))) update()
+      else if (!box) update()
+    }
     const frame = requestAnimationFrame(update)
-    scroller.addEventListener('scroll', update, { passive: true })
+    document.addEventListener('scroll', listen, { passive: true, capture: true })
     const observer = new ResizeObserver(update)
     observer.observe(list)
-    return () => { cancelAnimationFrame(frame); scroller.removeEventListener('scroll', update); observer.disconnect() }
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('scroll', listen, { capture: true }); observer.disconnect() }
   })
 </script>
 
-{#snippet groupHeading(heading)}
-  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
-    <Icon name="chevron" size={12} /><span>{heading}</span>
+{#snippet groupHeading(heading, count)}
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} aria-label={`${heading}, ${count}`} onclick={() => toggle(heading)}>
+    <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}
 
@@ -189,22 +214,22 @@
         {/each}
       </div>
     </div>
-    <div class="jump" role="group" aria-label={label}>
+    {#if chips}<div class="jump" role="group" aria-label={label}>
       {#each groups as group (group.heading)}
         {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
       {/each}
-    </div>
+    </div>{/if}
   {/if}
   {#if view && !groups.length}
     <p class="empty">{view.filter.empty}</p>
   {:else if view?.cardsSelected}
     {#each groups as group (group.heading)}
-      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
       {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
     {/each}
   {:else if view}
     {#each groups as group (group.heading)}
-      {#if group.heading}{@render groupHeading(group.heading)}{/if}
+      {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
       {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
     {/each}
   {:else}
@@ -243,8 +268,10 @@
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:left;cursor:pointer}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
+  .heading-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .count{flex:none;margin-left:auto;padding:1px 6px;border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-hover);color:var(--ui-color-ink-muted);font-size:10px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .empty{margin:14px 10px;color:var(--ui-color-ink-muted);font-size:13px}
-  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px}
+  .jump{display:flex;flex-wrap:wrap;gap:4px;padding:1px 1px 2px}
   .chip{flex:none;padding:4px 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;cursor:pointer}
   .chip:hover{color:var(--ui-color-ink);border-color:var(--ui-color-ink)}
   .chip[aria-current="true"]{border-color:var(--ui-color-ink);background:var(--ui-color-ink);color:var(--ui-color-surface)}

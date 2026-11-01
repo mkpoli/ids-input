@@ -73,10 +73,15 @@
     const at = list.findIndex(group => group.heading === heading)
     const buttons = box?.querySelectorAll('button.heading') ?? []
     const target = /** @type {HTMLElement | undefined} */ (buttons[at])
-    target?.scrollIntoView({ block: 'start' })
+    // The chip row wraps, so the sticky head is taller than the fixed margin allows for. Measure it.
+    if (target && box) {
+      target.style.scrollMarginTop = `${box.querySelector('.menu-head')?.getBoundingClientRect().height ?? 0}px`
+      target.scrollIntoView({ block: 'start' })
+      target.style.scrollMarginTop = ''
+    }
     active = heading
   }
-  // The chip of the section at the top of the scrollport is marked, and kept in view in its row.
+  // The chip of the section at the top of the scrollport is marked.
   $effect(() => {
     const menu = box
     if (!open || !menu || !view) return
@@ -198,9 +203,9 @@
 <svelte:window onpointerdown={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }}
   onfocusin={event => { if (open && !trigger?.parentElement?.contains(/** @type {Node} */ (event.target))) setOpen(false) }} />
 
-{#snippet groupHeading(heading)}
-  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} onclick={() => toggle(heading)}>
-    <Icon name="chevron" size={12} /><span>{heading}</span>
+{#snippet groupHeading(heading, count)}
+  <button type="button" class="heading" data-heading={heading} aria-expanded={expanded(heading)} aria-label={`${heading}, ${count}`} onclick={() => toggle(heading)}>
+    <Icon name="chevron" size={12} /><span class="heading-name">{heading}</span><span class="count" aria-hidden="true">{count}</span>
   </button>
 {/snippet}
 
@@ -306,12 +311,12 @@
         <p class="empty">{view.filter.empty}</p>
       {:else if view?.cardsSelected}
         {#each groups as group (group.heading)}
-          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
           {#if expanded(group.heading)}<div class="cards">{#each group.items as item (item.sequence ?? item.label)}{@render cardItem(item)}{/each}</div>{/if}
         {/each}
       {:else if view}
         {#each groups as group (group.heading)}
-          {#if group.heading}{@render groupHeading(group.heading)}{/if}
+          {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
           {#if expanded(group.heading)}{#each group.items as item (item.sequence ?? item.label)}{@render listRow(item)}{/each}{/if}
         {/each}
       {:else}
@@ -361,14 +366,15 @@
   kbd{font:500 11px ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-ink-muted)}
   .sep{height:1px;margin:5px 4px;background:var(--ui-color-border)}
   .heading{display:flex;align-items:center;gap:4px;width:calc(100% - 20px);margin:9px 10px 3px;padding:0;border:0;background:none;font:inherit;font-size:10.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:var(--ui-color-ink-muted);text-align:left;cursor:pointer}
-  .heading{scroll-margin-top:92px}
   .heading svg{flex:none;transition:transform .12s}
   .heading[aria-expanded="false"] svg{transform:rotate(-90deg)}
   .heading:hover{color:var(--ui-color-ink)}
   .heading:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .heading-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .count{flex:none;margin-left:auto;padding:1px 6px;border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-hover);color:var(--ui-color-ink-muted);font-size:10px;font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums}
   .empty{margin:14px 10px;color:var(--ui-color-ink-muted);font-size:12.5px}
   .heading:first-child{margin-top:4px}
-  .jump{display:flex;gap:4px;overflow-x:auto;padding:1px 1px 2px;scrollbar-width:thin}
+  .jump{display:flex;flex-wrap:wrap;gap:4px;padding:1px 1px 2px}
   .chip{flex:none;padding:4px 8px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);font:inherit;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer}
   .chip:hover{color:var(--ui-color-ink);border-color:var(--ui-color-ink)}
   .chip[aria-current="true"]{border-color:var(--ui-color-ink);background:var(--ui-color-ink);color:var(--ui-color-surface)}
