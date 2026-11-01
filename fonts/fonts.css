@@ -1,11 +1,14 @@
 @import "./gongche.css";
+@import url("./unicode.css");
 /* The parts few installed fonts draw: CJK strokes and the empty-slot mark ⬚ (IDS Strokes), CJK
    Radicals Supplement and the supplementary planes (IDS Parts), the New Korean Orthography
    letters (IDS New Korean) and the Shuishu characters (IDS Shuishu). gongche.css repeats 17 Gongche code points inside the supplementary
    range and is imported first; it is the face that carries those glyphs, since the general subset
-   omits them. The rest of the text falls through to the page's own fonts.
+   omits them. The fallback outlines (`IDS Fallback`, unicode.css) are not in the stylesheet: each
+   shard is a `FontFace` the app registers when a character it draws appears
+   (src/svelte/fallback-font.js), so a page never downloads all of them. The rest of the text falls
+   through to the page's own fonts.
    See fonts/README.md for their sources and licences. */
-@import url("./unicode.css");
 @font-face{font-family:"IDS Parts";src:url("./Plangothic-ids-parts.woff2") format("woff2");font-display:swap;
   unicode-range:U+2E80-2EFF,U+31E4-31EF,U+20000-3FFFF}
 @font-face{font-family:"IDS Project";src:url("./Plangothic-ids-project.woff2") format("woff2");font-display:swap;

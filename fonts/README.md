@@ -37,6 +37,17 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 
+## Fallback shards
+
+`fonts/unicode/` holds `IDS Fallback`, the composer's outlines as a webfont, one file per
+256-code-point shard listed in `fonts/unicode.json`. The faces are not in any stylesheet: the app
+registers a shard as a `FontFace` the first time a character in its range appears
+(`src/svelte/fallback-font.js`), so a page downloads only the shards it shows. A shard also carries
+the palette parts, the empty-slot mark ⬚ and the description characters that the composer has no
+outline for, drawn from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
+`LICENSE-Jigmo.txt`): 590 shards, 56,651 characters, 4,462 from Jigmo, 9.7 MB all together.
+`uv run scripts/build_unicode_font.py` rebuilds them and fetches Jigmo itself.
+
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google
 LLC, SIL Open Font License 1.1 (`OFL-NotoSerifTangut.txt`), from
