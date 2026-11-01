@@ -39,7 +39,7 @@ details.fine{margin:0 0 12px;color:var(--muted)}details.fine summary{cursor:poin
 <div id="view"></div>
 <div class="toast" id="toast"></div>
 </main><script>
-const FACES=[['Noto Serif CJK JP','serif JP'],['Noto Sans CJK JP','sans JP'],['Noto Serif CJK KR','serif KR'],['Noto Serif CJK TC','serif TC'],['FangSong','FangSong'],['KaiTi','KaiTi'],['MingLiU','MingLiU']];
+const FACES=[{f:'Noto Serif CJK JP',n:'serif JP'},{f:'Noto Sans CJK JP',n:'sans JP'},{f:'Noto Serif CJK KR',n:'serif KR'},{f:'Noto Serif CJK TC',n:'serif TC'},{f:'FangSong',n:'FangSong'},{f:'KaiTi',n:'KaiTi'},{f:'MingLiU',n:'MingLiU'}];
 let DATA=null, tab='caps';
 const view=document.getElementById('view'), q=document.getElementById('q'), count=document.getElementById('count'), sub=document.getElementById('sub');
 const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
@@ -72,13 +72,14 @@ function renderComponents(){
   const rows=pick(DATA.components);
   const fine=new Set('⿱甶儿,⿳卝罒冖,⿴𦥑同,㇯鹿比,⿰工几,⿴囗夊,⿱𠆢虫,⿰氵氵,⿻甲一,⿳亠口冖,㇯馬灬,⿱⺀㐅,⿱一血,㇯鳥灬,⿱皿亅,⿳亠㐅厂,⿱士冖,⿻𢆶戈,⿱丿乚'.split(','));
   const fineRows=rows.filter(r=>fine.has(r.ids)), bad=rows.filter(r=>!fine.has(r.ids));
-  const card=r=>{const hits=(r.slots??[]).slice(0,8);const glyphs=r.slotGlyphs??{};
-    const faces=(r.chars??[]).slice(0,1).map(ch=>`<div class="faces">${FACES.map(([f,n])=>`<div class="face" style="font-family:'${f}'">${esc(ch)}<div class="cap">${n}</div></div>`).join('')}</div>`).join('');
+  const card=r=>{const exact=(r.chars??[]).length?{label:'characters containing it',list:(r.chars??[]).slice(0,10),glyphs:r.charGlyphs??{}}:{label:'characters with the same operator and this operand',list:(r.slots??[]).slice(0,8),glyphs:r.slotGlyphs??{}};const hits=exact.list,glyphs=exact.glyphs;
+    const faces=(r.chars??[]).slice(0,1).map(ch=>`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(ch)}</div><div class="cap">${n}</div></div>`).join('')}</div>`).join('');
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
       ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
-      ${hits.length?`<div class="cap" style="margin-top:8px">characters with the same operator and this operand (${hits.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${hits.map(ch=>`<div style="width:64px"><div style="font:26px 'Noto Serif CJK JP',serif">${esc(ch)}</div>${draw(glyphs[ch],64)}</div>`).join('')}</div>`:''}
-      ${faces}</div>`};
+      ${hits.length?`<div class="cap" style="margin-top:8px">${exact.label} (${hits.length}):</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px">${hits.map(ch=>`<div style="width:64px"><div style="font:26px 'Noto Serif CJK JP',serif">${esc(ch)}</div>${draw(glyphs[ch],64)}</div>`).join('')}</div>`:''}
+      ${faces}</div>`;
+  };
   view.innerHTML=`<details class="fine"><summary>Fine as drawn (${fineRows.length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${fineRows.map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
     <div class="gridwrap">${bad.map(card).join('')}</div>`;
   count.textContent=`${bad.length} to redesign + ${fineRows.length} fine of ${DATA.components.length}`;
