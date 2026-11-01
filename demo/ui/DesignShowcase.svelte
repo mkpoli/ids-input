@@ -311,7 +311,11 @@
           <button type="button" class="ui-button" data-size="icon" aria-label="Copy"><Icon name="copy" /></button>
           <button type="button" class="ui-button"><Icon name="download" size={16} />With an icon</button>
         </div>
-        <p class="note">A pressed button is <code>aria-pressed="true"</code>; a disabled one is <code>disabled</code>, never a fake class.</p>
+        <div class="row field-row">
+          <input class="ui-input" data-size="lg" aria-label="A large field" placeholder="A large field" />
+          <button type="button" class="ui-button" data-size="lg" data-variant="primary">Beside it</button>
+        </div>
+        <p class="note">A pressed button is <code>aria-pressed="true"</code>; a disabled one is <code>disabled</code>, never a fake class. A field takes <code>data-size="lg"</code> to stand beside a large button.</p>
       </div>
     </section>
 
@@ -479,6 +483,8 @@
   h3{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-semibold);letter-spacing:.06em;text-transform:uppercase}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;align-items:start}
   .row{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .field-row{flex-wrap:nowrap;max-inline-size:420px}
+  .field-row .ui-input{flex:1}
   .field{display:flex;flex-direction:column;gap:6px;min-width:0}
   .tall{display:flex;flex-direction:column;gap:6px}
   .note{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.5}
