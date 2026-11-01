@@ -166,6 +166,8 @@
   "app.tabs.menu": "Tab actions",
   "app.tabs.new": "New tab",
   "app.tabs.reopen": "Reopen closed tab",
+  "app.tabs.start": "Templates and examples",
+  "app.tabs.templates": "Templates",
   "app.tabs.untitled": "Untitled",
   "app.theme.dark": "Dark",
   "app.theme.light": "Light",

@@ -1157,19 +1157,20 @@ all tabs. Close all asks first, and Undo after a group close restores the tabs i
 with the tab that was being edited. Duplicate opens the copy beside its source with its selection,
 undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
-transform steps before the editor’s structural steps. The Examples menu shows every starter sequence
-with its character and code point, an abbreviated character, or a mark when it has none. It opens as
-cards or a list, filters by sequence, character, reading or code point, keeps only forms with or
-without a code point, folds each section, and jumps to a section from a chip that also marks the one
-in view. An example opens a tab. The toolbar also holds a share link with its QR code, the language,
-settings and the sources. Settings hold the system, light and dark themes, key hints, the preview
-data source; they open beside the toolbar button on desktop and in a bottom drawer on mobile.
-The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it; the older
-`#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the
-parser rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link
-that opens it as a draft; text built from a sequence's letters goes on to the editor
-first. A document that holds more than its sequence rides along as `?doc=`, so
-copying the location keeps a placement and opening such a link keeps the token. Tabs use
+transform steps before the editor’s structural steps, examples, a share link with its QR code, the
+language, settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it
+opens a starter dialog in two tabs: Templates is the same full catalogue the input pane offers
+(structures, pyramids, repeats and five-copy layouts), and Examples is the list the menu sheet uses — every starter
+sequence with its character and code point, an abbreviated character, or a mark when it has none,
+opening as cards or a list with its filters and folding. A template or an example opens a tab.
+Settings hold the system, light and dark
+themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
+bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
+the older `#⿰亻哥` and `?ids=⿰亻哥` forms still open. Text holding `.` or `/`, or text the parser
+rejects, stays in `?ids=`. A path that names no sequence answers 404 with a link that opens it as a
+draft; text built from a sequence's letters goes on to the editor first. A document that holds more
+than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
+a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
 `localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
 chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use

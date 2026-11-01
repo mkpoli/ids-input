@@ -165,6 +165,8 @@
   "app.tabs.menu": "分頁操作",
   "app.tabs.new": "新增分頁",
   "app.tabs.reopen": "重新開啟關閉的分頁",
+  "app.tabs.start": "範本與範例",
+  "app.tabs.templates": "範本",
   "app.tabs.untitled": "無標題",
   "app.theme.dark": "深色",
   "app.theme.light": "淺色",
