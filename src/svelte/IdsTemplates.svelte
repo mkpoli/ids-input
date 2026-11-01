@@ -5,10 +5,21 @@
   import { STRUCTURE_TEMPLATES } from '../core/templates.js'
   import { pyramidDiagram, templateDiagram } from './template-diagram.js'
 
-  /** @type {{ editor: import('./editor.svelte.js').Editor }} */
-  let { editor } = $props()
+  /** @type {{ editor: import('./editor.svelte.js').Editor, onpick?: ((sequence: string) => void) | null }} */
+  let { editor, onpick = null } = $props()
+  // A starter menu picks a sequence for a new tab instead of placing the template in the open document.
+  const picking = $derived(onpick !== null)
+  /** @param {string} sequence */
+  const openLabel = sequence => t('ids.templates.open', { sequence })
+  /** A complete layout picked for a new tab must still read as a whole description. @param {string} sequence */
+  function usable(sequence) {
+    const draft = parse(sequence, { open: true })
+    return !draft.problem && draft.tree !== undefined && (nextEmpty(draft.tree) !== null || isDescription(sequence))
+  }
   const t = $derived(editor.t)
   const uid = $props.id()
+  /** @param {string} sequence */
+  const insertLabel = sequence => picking ? openLabel(sequence) : t('ids.templates.insert', { sequence })
   const groups = [2, 3, 4].map(slots => ({ slots, templates: STRUCTURE_TEMPLATES.filter(item => item.slots === slots)
     .map(item => ({ ...item, shapes: templateDiagram(item.sequence) })) }))
   const MIN_PYRAMID = 2, MAX_PYRAMID = 24
@@ -55,28 +66,42 @@
   const customNumber = $derived(Math.trunc(Number(customLayers)))
   const availablePyramids = $derived.by(() => {
     const available = new Set()
-    if (target === null || !pyramidPartSupported) return available
+    if (!pyramidPartSupported || (!picking && target === null)) return available
     // The preset sizes, and whichever count Custom asks for.
     const sizes = new Set([...PYRAMID_SIZES, Number.isSafeInteger(customNumber) ? customNumber : 0])
     for (const layers of sizes) {
       if (layers < MIN_PYRAMID || layers > MAX_PYRAMID) continue
       try {
-        const found = parse(pyramidSequence(generatorPart, layers, { direction }), { open: true })
-        if (found.tree !== undefined && fits(found.tree)) available.add(layers)
+        const sequence = pyramidSequence(generatorPart, layers, { direction })
+        if (picking) { if (usable(sequence)) available.add(layers) }
+        else {
+          const found = parse(sequence, { open: true })
+          if (found.tree !== undefined && fits(found.tree)) available.add(layers)
+        }
       } catch { /* too long for the slot, or unreadable */ }
     }
     return available
   })
   const customValid = $derived(Number.isInteger(Number(customLayers)) && customNumber >= MIN_PYRAMID && customNumber <= MAX_PYRAMID && availablePyramids.has(customNumber))
   /** What a size button says when it cannot insert, as its tooltip. @param {number} layers */
-  const pyramidTitle = layers => availablePyramids.has(layers) ? pyramidLabel(layers)
-    : !pyramidPartSupported ? t('ids.templates.pyramidUnsupported')
-    : target === null ? t('ids.templates.pyramidTarget')
-    : t('ids.templates.pyramidTooLong')
+  const pyramidTitle = layers => {
+    if (picking) {
+      if (!pyramidPartSupported) return t('ids.templates.pyramidUnsupported')
+      if (!availablePyramids.has(layers)) return t('ids.templates.pyramidTooLong')
+      try { return openLabel(pyramidSequence(generatorPart, layers, { direction })) }
+      catch { return t('ids.templates.pyramidTooLong') }
+    }
+    return availablePyramids.has(layers) ? pyramidLabel(layers)
+      : !pyramidPartSupported ? t('ids.templates.pyramidUnsupported')
+      : target === null ? t('ids.templates.pyramidTarget')
+      : t('ids.templates.pyramidTooLong')
+  }
   /** @param {number} layers */
   function addPyramid(layers) {
     if (editor.disabled || !availablePyramids.has(layers)) return
-    const found = parse(pyramidSequence(generatorPart, layers, { direction }), { open: true })
+    const sequence = pyramidSequence(generatorPart, layers, { direction })
+    if (onpick) { onpick(sequence); return }
+    const found = parse(sequence, { open: true })
     if (!found.tree) return
     editor.put(found.tree, target, pyramidLabel(layers))
   }
@@ -88,11 +113,15 @@
   const repeatPartsSupported = $derived(partSupported(generatorPart) && partSupported(repeatBottom))
   const availableRepeats = $derived.by(() => {
     const available = new Set()
-    if (target === null || !repeatPartsSupported) return available
+    if (!repeatPartsSupported || (!picking && target === null)) return available
     try {
       for (const rows of REPEATS) {
-        const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
-        if (found.tree && fits(found.tree)) available.add(rows.join('+'))
+        const sequence = repeatSequence(generatorPart, rows, { bottom: repeatBottom })
+        if (picking) { if (usable(sequence)) available.add(rows.join('+')) }
+        else {
+          const found = parse(sequence, { open: true })
+          if (found.tree && fits(found.tree)) available.add(rows.join('+'))
+        }
       }
     } catch { /* this part cannot fill a row */ }
     return available
@@ -105,34 +134,47 @@
       : t('ids.templates.repeatInsertTwo', { rows: text, top: partName(generatorPart), bottom: partName(repeatBottom) })
   }
   /** @param {[number, number]} rows */
-  const repeatTitle = rows => !repeatPartsSupported
-    ? t('ids.templates.repeatUnsupported')
-    : target === null ? t('ids.templates.repeatTarget')
-    : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.repeatTooLong')
+  const repeatTitle = rows => {
+    if (!repeatPartsSupported) return t('ids.templates.repeatUnsupported')
+    if (picking) {
+      if (!availableRepeats.has(rows.join('+'))) return t('ids.templates.repeatTooLong')
+      try { return openLabel(repeatSequence(generatorPart, rows, { bottom: repeatBottom })) }
+      catch { return t('ids.templates.repeatTooLong') }
+    }
+    return target === null ? t('ids.templates.repeatTarget')
+      : availableRepeats.has(rows.join('+')) ? repeatLabel(rows) : t('ids.templates.repeatTooLong')
+  }
   /** @param {[number, number]} rows */
   function addRepeat(rows) {
     if (editor.disabled || !availableRepeats.has(rows.join('+'))) return
-    const found = parse(repeatSequence(generatorPart, rows, { bottom: repeatBottom }), { open: true })
+    const sequence = repeatSequence(generatorPart, rows, { bottom: repeatBottom })
+    if (onpick) { onpick(sequence); return }
+    const found = parse(sequence, { open: true })
     if (!found.tree) return
     editor.put(found.tree, target, repeatLabel(rows))
   }
   let customRowsTyped = $state('')
   const customRows = $derived(parseRepeatRows(customRowsTyped))
   const customRepeatAvailable = $derived.by(() => {
-    if (!customRows || target === null || !repeatPartsSupported) return false
+    if (!customRows || (!picking && target === null) || !repeatPartsSupported) return false
     try {
-      const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
+      const sequence = repeatSequence(generatorPart, customRows, { bottom: repeatBottom })
+      if (picking) return usable(sequence)
+      const found = parse(sequence, { open: true })
       return found.tree !== undefined && fits(found.tree)
     } catch { return false }
   })
   const customRepeatTitle = $derived(!repeatPartsSupported
     ? t('ids.templates.repeatUnsupported')
     : !customRows ? (customRowsTyped.trim() ? t('ids.templates.repeatRowsInvalid') : t('ids.templates.repeatRowsHint'))
+    : picking ? (customRepeatAvailable ? openLabel(repeatSequence(generatorPart, customRows, { bottom: repeatBottom })) : t('ids.templates.repeatTooLong'))
     : target === null ? t('ids.templates.repeatTarget')
     : customRepeatAvailable ? repeatLabel(customRows) : t('ids.templates.repeatTooLong'))
   function addCustomRepeat() {
     if (editor.disabled || !customRows || !customRepeatAvailable) return
-    const found = parse(repeatSequence(generatorPart, customRows, { bottom: repeatBottom }), { open: true })
+    const sequence = repeatSequence(generatorPart, customRows, { bottom: repeatBottom })
+    if (onpick) { onpick(sequence); return }
+    const found = parse(sequence, { open: true })
     if (!found.tree) return
     editor.put(found.tree, target, repeatLabel(customRows))
   }
@@ -150,21 +192,28 @@
   })
   const availableFive = $derived.by(() => {
     const available = new Set()
-    if (target === null || !fivePartSupported) return available
+    if (!fivePartSupported || (!picking && target === null)) return available
     try {
-      const inner = parse(repeatSequence(generatorPart, FIVE_ROWS)).tree
-      if (inner !== undefined && fits(inner)) available.add('212')
-      const enclosed = parse(enclosedRepeatSequence(fiveHost, generatorPart)).tree
-      if (fiveHostSupported && enclosed !== undefined && fits(enclosed)) available.add('enclosed')
+      const inner = repeatSequence(generatorPart, FIVE_ROWS)
+      const innerTree = parse(inner).tree
+      if (innerTree !== undefined && (picking ? usable(inner) : fits(innerTree))) available.add('212')
+      const enclosed = enclosedRepeatSequence(fiveHost, generatorPart)
+      const enclosedTree = parse(enclosed).tree
+      if (fiveHostSupported && enclosedTree !== undefined && (picking ? usable(enclosed) : fits(enclosedTree))) available.add('enclosed')
     } catch { /* this part cannot fill a five-copy layout */ }
     return available
   })
   /** @param {'212' | 'enclosed'} key */
-  const fiveTitle = key => !fivePartSupported
-    ? t('ids.templates.fiveUnsupported')
-    : target === null ? t('ids.templates.fiveTarget')
-    : key === 'enclosed' && !fiveHostSupported ? t('ids.templates.fiveHostUnsupported')
-    : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
+  const fiveTitle = key => {
+    if (!fivePartSupported) return t('ids.templates.fiveUnsupported')
+    if (key === 'enclosed' && !fiveHostSupported) return t('ids.templates.fiveHostUnsupported')
+    if (picking) {
+      if (!availableFive.has(key)) return t('ids.templates.fiveTooLong')
+      return openLabel(key === '212' ? repeatSequence(generatorPart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, generatorPart))
+    }
+    return target === null ? t('ids.templates.fiveTarget')
+      : availableFive.has(key) ? fiveLabel(key) : t('ids.templates.fiveTooLong')
+  }
   /** @param {'212' | 'enclosed'} key */
   const fiveLabel = key => key === '212'
     ? t('ids.templates.fiveInsert', { part: partName(generatorPart) })
@@ -173,6 +222,7 @@
   function addFive(key) {
     if (editor.disabled || !availableFive.has(key)) return
     const sequence = key === '212' ? repeatSequence(generatorPart, FIVE_ROWS) : enclosedRepeatSequence(fiveHost, generatorPart)
+    if (onpick) { onpick(sequence); return }
     const found = parse(sequence, { open: true })
     if (!found.tree) return
     editor.put(found.tree, target, fiveLabel(key))
@@ -185,10 +235,10 @@
       <span class="ids-template-label" id={`${uid}-${group.slots}`}>{t(`ids.group.${group.slots}`)}</span>
       <div class="ids-template-grid">
         {#each group.templates as template (template.id)}
-          <button type="button" disabled={editor.disabled} data-template={template.id}
-            aria-label={t('ids.templates.insert', { sequence: template.sequence })} title={`${template.sequence} · ${template.label ? t(`ids.templates.${template.label}`) : t('ids.templates.usage', { count: template.count })}`}
+          <button type="button" disabled={editor.disabled} data-template={template.id} data-sequence={template.sequence}
+            aria-label={insertLabel(template.sequence)} title={picking ? openLabel(template.sequence) : `${template.sequence} · ${template.label ? t(`ids.templates.${template.label}`) : t('ids.templates.usage', { count: template.count })}`}
             draggable={!editor.disabled} ondragstart={event => event.dataTransfer?.setData('text/plain', template.sequence)}
-            onclick={() => editor.take(template.sequence)}>
+            onclick={() => onpick ? onpick(template.sequence) : editor.take(template.sequence)}>
             <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true">
               {#each template.shapes as shape, i (i)}
                 {#if shape.kind === 'slot'}
@@ -247,7 +297,9 @@
       <label class="ids-pyramid-custom-label" for={`${uid}-pyramid-rows`}>{t('ids.templates.pyramidCustom')}</label>
       <input id={`${uid}-pyramid-rows`} type="number" min={MIN_PYRAMID} max={MAX_PYRAMID} step="1" bind:value={customLayers} disabled={editor.disabled}
         aria-invalid={!customValid} placeholder={`${MIN_PYRAMID}–${MAX_PYRAMID}`} />
-      <button type="submit" disabled={editor.disabled || !customValid}>{t('ids.templates.pyramidAdd')}</button>
+      <button type="submit" disabled={editor.disabled || !customValid}
+        title={picking && customValid ? openLabel(pyramidSequence(generatorPart, customNumber, { direction })) : undefined}
+        aria-label={picking && customValid ? openLabel(pyramidSequence(generatorPart, customNumber, { direction })) : undefined}>{t('ids.templates.pyramidAdd')}</button>
     </form>
   </div>
   <div class="ids-pyramid ids-repeat" role="group" aria-labelledby={`${uid}-repeats`}>

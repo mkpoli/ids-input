@@ -5,6 +5,7 @@
   // part picked goes in `editor`'s chosen slot, or the first empty one; parts can also be dragged
   // onto the tree. Arrow keys, Home and End move between the tabs.
   import { tick, untrack } from 'svelte'
+  import { watchFallback } from './fallback-font.js'
   import { isMarks } from '../core/ids.js'
   import IdsFrom from './IdsFrom.svelte'
   import IdsParts from './IdsParts.svelte'
@@ -81,10 +82,13 @@
     return () => { clearTimeout(timer); controller.abort() }
   })
   const picked = $derived(editor.picked)
+  /** @type {HTMLDivElement | null} */
+  let panel = $state(null)
+  $effect(() => { if (panel) return watchFallback(panel) })
 </script>
 
 {#if shown.length}
-  <div class="ids-search">
+  <div class="ids-search" bind:this={panel}>
     {#if title}<span class="ids-title">{editor.chosen && picked !== null && picked !== undefined ? t('ids.replace', { part: editor.text(picked) }) : t('ids.insert')}</span>{/if}
     <div class="ids-pick-tabs" role="tablist" aria-label={t('ids.pick.label')}>
       {#each shown as name, index (name)}
@@ -148,7 +152,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
     display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-search) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:8px;background:var(--_surface)}
   :where(.ids-search) input{border-color:var(--_control-border)}
