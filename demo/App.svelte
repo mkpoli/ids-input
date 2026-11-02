@@ -11,7 +11,8 @@
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
-  import { composerPreview, dataUrls } from '@han-compose/composer'
+  import { composerPreview } from '@han-compose/composer'
+  import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -120,7 +121,7 @@
   const previews = new Map()
   // The outlines the engine draws without the export, as the page serves the package's `data/`: the
   // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
-  const bundles = dataUrls
+  const bundles = engineOutlines
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
