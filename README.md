@@ -155,7 +155,9 @@ dragged from the palette, the decomposition tree, a search or the swaps is put w
 and a part of the tree, or a whole group taken by the grip on its frame, dropped beside a sibling
 moves there while one dropped on any other part switches places with it. A finger drags the same way
 on a touch screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders
-siblings without a pointer. The context
+siblings without a pointer. `Space` lifts the focused box, a part or a group by its operator button,
+and `Space` on another box places it; `Escape` lets it go, and in the indented Tree view the arrows
+move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
