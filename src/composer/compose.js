@@ -162,6 +162,16 @@ const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[
 /** The operators this port draws beyond the composer's, with rooms and turns of its own choosing: a
  *  preview using them is approximate, and no stored drawing has them. */
 export const APPROXIMATE = ['⿾', '⿿', '〾', '㇯', '⿼', '⿽']
+
+/** The operators whose result no design can be checked against: a subtraction, an overlay, a
+ *  mirrored or turned form, and the two enclosures that crush what they hold. A character built from
+ *  one of these is only a guess, so a description carrying any of them is not composed at all.
+ *  Repeated characters where the drawing is unreviewable; the rest the layout places predictably. */
+export const UNPREDICTABLE = ['⿻', '㇯', '〾', '⿾', '⿼', '⿽', '⿴', '⿷']
+
+/** Whether `description` may be composed. The description is flat text, so this covers every layer
+ *  without walking the tree. @param {string} description */
+export const composableDescription = description => ![...description].some(char => UNPREDICTABLE.includes(char))
 const MIRROR = '⿾', ROTATE = '⿿', VARIANT = '〾', SUBTRACT = '㇯'
 const EXTRA_ENCLOSE = { '⿼': 'RBT', '⿽': 'RB' }
 const EXTRA_INSIDE = { '⿼': [0, 0.15, 0.8, 0.85], '⿽': [0, 0.25, 0.7, 1] }

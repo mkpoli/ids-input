@@ -100,6 +100,74 @@
     else if (swappable(held.path, to)) editor.swap(held.path, to)
   }
 
+  // A finger drag: touch fires no dragstart, so the same move and switch are tracked by pointer.
+  // The first movement past a few pixels starts it, so a tap still chooses the box.
+  /** @type {{ path: Path, pointer: number, x: number, y: number, moved: boolean } | null} */ let touch = null
+  /** @type {{ text: string, x: number, y: number } | null} */ let ghost = $state(null)
+  // A drag that ends on a box can still be followed by a click; the next one is the drag's, not a choice.
+  let swallowed = false
+
+  /** @param {PointerEvent} event */
+  function touchDown(event) {
+    if (event.pointerType !== 'touch' || editor.disabled) return
+    const box = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
+    if (!(box instanceof HTMLElement) || !rootEl?.contains(box) || box.closest('.inline-edit,input,textarea')) return
+    const written = box.getAttribute('data-hover-path') ?? ''
+    const path = written === '' ? [] : written.split('.').map(Number)
+    if (!path.length) return
+    touch = { path, pointer: event.pointerId, x: event.clientX, y: event.clientY, moved: false }
+  }
+
+  /** @param {PointerEvent} event */
+  function touchMove(event) {
+    if (!touch || event.pointerId !== touch.pointer) return
+    if (!touch.moved) {
+      if (Math.hypot(event.clientX - touch.x, event.clientY - touch.y) < 8) return
+      touch.moved = true
+      swallowed = true
+      dragging = { path: touch.path, tree: editor.tree }
+      ghost = { text: editor.sequenceAt(touch.path), x: event.clientX, y: event.clientY }
+    } else {
+      if (ghost) ghost = { ...ghost, x: event.clientX, y: event.clientY }
+    }
+    overAt(event.clientX, event.clientY)
+  }
+
+  /** The box under a point, as a drop target. @param {number} x @param {number} y */
+  function overAt(x, y) {
+    const from = dragging?.path
+    if (!from) return
+    const under = document.elementFromPoint(x, y)?.closest('[data-hover-path]')
+    const written = under instanceof HTMLElement ? under.getAttribute('data-hover-path') : null
+    if (written == null) { overPath = null; overSwap = false; return }
+    const path = written === '' ? [] : written.split('.').map(Number)
+    const move = siblings(from, path), swap = !move && swappable(from, path)
+    if (!move && !swap) { overPath = null; overSwap = false; return }
+    overPath = key(path); overSwap = swap
+  }
+
+  /** @param {PointerEvent} event */
+  function touchUp(event) {
+    if (!touch || event.pointerId !== touch.pointer) return
+    const from = touch.path, moved = touch.moved, landed = overPath
+    touch = null
+    if (!moved) return
+    dragging = null; overPath = null; overSwap = false; ghost = null
+    if (landed != null) {
+      const to = landed === '' ? [] : landed.split('.').map(Number)
+      if (siblings(from, to)) editor.reorder(from, to)
+      else if (swappable(from, to)) editor.swap(from, to)
+    }
+    setTimeout(() => { swallowed = false }, 400)
+  }
+
+  function touchCancel() {
+    if (!touch) return
+    touch = null
+    dragging = null; overPath = null; overSwap = false; ghost = null
+    setTimeout(() => { swallowed = false }, 400)
+  }
+
   // The context menu of a part: where it opened, and for which part.
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
@@ -219,10 +287,12 @@
 
 <div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}
   onpointermove={event => {
+    if (touch) { touchMove(event); return }
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)} onpointerdown={event => {
+  }} onpointerleave={() => editor.hover(null)} onpointerup={touchUp} onpointercancel={touchCancel} onpointerdown={event => {
+    touchDown(event)
     const target = /** @type {HTMLElement} */ (event.target)
     if (!editor.disabled && (target === event.currentTarget || target.classList.contains('ids-tree-root'))) {
       const active = document.activeElement
@@ -230,6 +300,7 @@
       editor.choose(null)
     }
   }} onclickcapture={event => {
+    if (swallowed) { swallowed = false; event.stopImmediatePropagation(); event.preventDefault(); return }
     if (event.detail !== 1) return
     const target = /** @type {HTMLElement} */ (event.target)
     clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
@@ -240,6 +311,9 @@
     if (anchor) { event.preventDefault(); editPart(path === '' ? [] : path.split('.').map(Number)) }
   }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
+  {#if ghost}
+    <div class="ids-touch-ghost" aria-hidden="true" style:left="{ghost.x}px" style:top="{ghost.y}px">{ghost.text}</div>
+  {/if}
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
     <!-- svelte-ignore a11y_interactive_supports_focus -->
@@ -287,6 +361,11 @@
   .ids-node[draggable="true"]{cursor:grab}
   .ids-node[draggable="true"]:active{cursor:grabbing}
   .ids-node.disabled{cursor:default}
+  /* A finger on a box drags it rather than scrolling the tree; the gaps still scroll. */
+  .ids-tree [data-hover-path]{touch-action:none}
+  .ids-touch-ghost{position:fixed;z-index:60;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;
+    padding:4px 10px;border:1px solid var(--_accent);border-radius:10px;background:var(--_surface);color:var(--_ink);
+    font-family:var(--_font);font-size:20px;line-height:1.3;box-shadow:0 8px 20px rgb(0 0 0 / .2);transform:translate(-50%,-50%)}
   :is(.ids-op,.ids-part)[draggable="true"]{cursor:grab}
   :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
