@@ -114,6 +114,79 @@ form, so the variant draws as 龍.
 `⿷⿺己一三` is zi.tools' stroke-level decomposition of 𳳳, not an IDS decomposition. Drawing it
 overwrites the operands with 𳳳's own outline, so the composition does not invent a form.
 
+## `donor-parts.json`
+
+A character written as a vertical stack standing on 山, with the font's drawing of it cut into the
+parts its description names. 117 of the 138 characters BabelStone describes that way, 654 KB. Each
+entry holds the character, its description, the face that drew it, the untouching outlines the font
+draws, those outlines labelled with the element each belongs to, and the description read back as
+layers:
+
+```json
+{"format":"ids-input/donor-parts","version":1,
+ "faces":[{"name":"Noto Sans CJK JP","version":"…","file":"…","sha256":"…"}],
+ "candidates":138,
+ "entries":[{"char":"㞪","ids":"⿱{42}山","face":"Noto Sans CJK JP","likeness":0.591,"ownFace":true,
+   "parts":[{"leaf":"{42} 彐","path":[["M",164,791],["L",164,728],["Z"]]}],
+   "first":["{42} 彐","山"],"terminal":["{42} 彐","山"],
+   "pieces":[[["M",164,791],["Z"]]],
+   "recursive":[{"leaf":"{42} 彐","children":[]}]}],
+ "skipped":[{"char":"𰎧","ids":"⿱阜山","reason":"…"}]}
+```
+
+Paths are command lists in glyph units on a 1000-unit em, `["M",x,y] ["L",x,y] ["Q",…4] ["C",…6]
+["Z"]`, one contour per list or a list of contours where a part has counters. `parts` and `pieces`
+cover the same ink: a part is one or more whole pieces, never a piece cut in two, so no boundary
+appears that the font does not already draw. `first` is the outer operator's operands written back
+out, `terminal` the elements the description ends in, and `recursive` each of those elements spelled
+out by its own first sequence, to the bottom. A numbered component is labelled `{42} 彐`, the
+reference with the fragment `ids-components.tsv` writes for it, and bare where that table has none.
+Where one element occurs twice, each part carries its position: 岀's two 山 are 山上 and 山下.
+
+Rebuild with `uv run scripts/build_donor_parts.py`, or add `--check` to verify the committed file;
+two runs write the same bytes. The script draws each character from the faces pinned in
+[`unicode-fonts.json`](unicode-fonts.json) — Noto Sans CJK JP 2.004 first, then Jigmo, Jigmo2 and
+Jigmo3 2025-09-12 for the extension blocks Noto leaves out — checking each against its pinned
+SHA-256 and fetching it into `cache/` when it is not already there. Pass `--font PATH` for a copy
+already on disk.
+
+A piece is one outline and everything its counters enclose is read with it, so a glyph that draws an
+island inside a counter — 回, or Jigmo's 母 — gives up that island as a piece of its own. Two pieces
+that meet at a single point are one piece, because the outline joins them there; that usually shows
+up as a piece count below the number of elements, and the character is skipped.
+
+Which element a piece belongs to is decided by shape. The pieces of a stack are sorted by height and
+cut into runs; each run is fingerprinted — the ink read as coverage over a 16×16 grid of its own
+bounding box — and compared with the element it would belong to as the font draws that element
+alone. The reading whose groups agree best wins, and it has to win by a margin. `likeness` records
+the weakest reading any element of the character was accepted at, borrowed or not, and runs from
+0.26 to 0.84 across the file.
+
+A Jigmo face draws none of the common elements its characters stand on, so those rows are recognised
+against another pinned face and marked `ownFace: false`. How closely two faces agree about one
+element is not a thing to hold a face to, so the floor on agreement is held only against elements
+the character's own face also draws; where it draws none of them, the floor falls to all of them.
+That is why a row can ship with a `likeness` under the floor: 峃 reads 0.26, on a 𰃮 that only Jigmo
+draws. Normalising a shape to its own box also means a single stroke carries no shape to recognise —
+Noto's 一 and 丨 fingerprint identically — so such an element is placed by the order of the stack
+and the floor says nothing about it.
+
+The 21 skipped characters are in `skipped`, each with its reason: a group of pieces does not look
+like the element it would belong to (18, all drawn by a Jigmo face, their top element heavily
+squashed), the glyph draws fewer pieces than the description has elements (𡸭 and 𰎧), or two
+readings fit the pieces equally well (𱻚). A character no pinned face draws would be skipped too;
+none is. Nothing is guessed at.
+
+Where a face refuses a character the next one is tried, so 岳, 嵍 and 嵆 — which Noto draws with the
+top element touching 山, leaving nothing to cut — ship from Jigmo, which draws them apart.
+
+`demo/donor-review.html` draws every row for checking, served by `bun run dev` at
+`/donor-review.html`; it stays out of the published demo, which has no use for the drawings.
+`tests/donor-parts.test.js` holds the
+invariants, and `tests/fixtures/donor-parts-reviewed.json` the 25 characters a reader has already
+signed off. The shapes derive from those fonts; Noto's SIL OFL 1.1 and Jigmo's CC0-1.0 terms apply
+(see `fonts/README.md`). The descriptions are public-domain facts from BabelStone IDS.
+
 ## `ids-parts.json`
 
 The parts palette (難輸入部件): every component BabelStone IDS names, with how many ideographs use
