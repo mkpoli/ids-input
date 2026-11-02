@@ -187,6 +187,7 @@
   "parts.tab.alphabet": "文字・数字",
   "parts.tab.hangul": "ハングル",
   "parts.hangul.group": "表示",
+  "parts.hangulIds": "構造",
   "parts.hangul.jamo": "字母",
   "parts.hangul.compose": "合成",
   "parts.hangul.syllable": "音節",

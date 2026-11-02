@@ -187,6 +187,7 @@
   "parts.tab.alphabet": "문자와 숫자",
   "parts.tab.hangul": "한글",
   "parts.hangul.group": "보기",
+  "parts.hangulIds": "구조",
   "parts.hangul.jamo": "자모",
   "parts.hangul.compose": "조합",
   "parts.hangul.syllable": "음절",

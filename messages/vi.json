@@ -185,6 +185,7 @@
   "parts.tab.alphabet": "Chữ cái và chữ số",
   "parts.tab.hangul": "Hangul",
   "parts.hangul.group": "Hiển thị",
+  "parts.hangulIds": "Cấu trúc",
   "parts.hangul.jamo": "Jamo",
   "parts.hangul.compose": "Ghép",
   "parts.hangul.syllable": "Âm tiết",
