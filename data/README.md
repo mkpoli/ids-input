@@ -1078,6 +1078,10 @@ records from han-compose (MIT). Unihan is distributed under the Unicode License 
 dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 
 
+## Unencoded components
+
+The design for a merged component catalogue — CHISE, BabelStone, the zi.tools forms and this project's own rows as one identity model — is in [the corpus note](../docs/ids-corpus.md). It is a design, not data: no artifact or build script exists yet, and the merged file would be GPL-2.0-or-later because CHISE's rows are.
+
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]` renders every
