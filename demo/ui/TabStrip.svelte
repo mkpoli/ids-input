@@ -18,7 +18,7 @@
    *   oncloseothers: (id: string) => void, oncloseleft: (id: string) => void, oncloseright: (id: string) => void, oncloseall: () => void,
    *   onreopen: () => void, canreopen: boolean, onmove: (from: number, to: number) => void, oncommit: () => void,
    *   starter: { editor: any, items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, onstart: (sequence: string) => void, onstarted?: () => void,
-   *     recent?: { key: string, names: string[], count: number, reopen: () => void }[] } }}
+   *     recent?: { key: string, names: string[], sequences: string[], count: number, reopen: () => void }[] } }}
    */
   let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
@@ -313,7 +313,7 @@
   </div>
   <div class="tab-new">
     <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
-    <StarterMenu bind:this={starterMenu} {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} recent={starter.recent ?? []} />
+    <StarterMenu bind:this={starterMenu} {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} {draw} recent={starter.recent ?? []} />
   </div>
 </div>
 

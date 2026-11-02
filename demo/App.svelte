@@ -1023,6 +1023,7 @@
     recent: [...closedGroups].reverse().map(group => ({
       key: group.tabs[0]?.tab.id ?? '',
       names: group.tabs.map(({ tab }) => tabName(tab) || t('app.tabs.untitled')),
+      sequences: group.tabs.map(({ tab }) => tab.whole || tab.sequence),
       count: group.tabs.length,
       reopen: () => reopenGroup(group),
     })),
