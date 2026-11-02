@@ -1048,68 +1048,15 @@ The About dialog and the comparison page link it.
 
 ## Inspired by
 
-Ideas the editor takes, each traced to the tool's own page as seen on 2026-10-25:
-
-- 字統网 zi.tools, <https://zi.tools/?secondary=ids>: an interactive editor with operator buttons
-  beside direct input, a palette of hard-to-type components, and the ASCII operator names.
-- 字海网 yedict, <http://www.yedict.com/search/ids>: choosing a cell and then an operator splits it,
-  an operator on an operator swaps it with its parts kept, × backs out one level, and a list of
-  hard-to-type components fills the chosen cell; the editor's split, swap and unwrap follow it.
-- Mojidata IDS Finder, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/idsfind>: searching
-  by several sequences at once, by a whole pattern with `？` as a wildcard, and by other query terms.
-- CHISE IDS 漢字検索, MORIOKA Tomohiko, <https://www.chise.org/ids-find>: listing the characters
-  that contain every component given.
-
-The data the editor runs on is catalogued at <https://ids.mkpo.li/sources> with its licences.
+The editor's operator palette, split, swap and unwrap follow 字統网 (zi.tools) and 字海网 (yedict);
+its search follows Mojidata and CHISE. The catalogue records each tool, what it supplied and where
+the editor uses it: <https://ids.mkpo.li/sources#group-prior>.
 
 ## Prior art
 
-### KAGE and GlyphWiki
-
-[KAGE](https://github.com/kamichikoichi/kage-engine), created by Koichi Kamichi, and the
-[GlyphWiki](https://glyphwiki.org/) contributors have developed a shared system for describing and
-drawing characters from reusable parts. Their work is an important predecessor to this project's
-character composition. The [KAGE engine](https://github.com/kurgm/kage-engine) renders descriptions
-of strokes and component references; han-compose assembles existing font outlines from an IDS,
-using placement learned from the font. Its serif export can include outlines from
-[Jigmo](https://kamichikoichi.github.io/jigmo/), generated with KAGE from glyphs contributed to
-GlyphWiki and released under CC0 1.0.
-
-### Mojidata
-
-Mojidata is "an open-source collection of Chinese character information databases", and the
-Mojidata Web App searches and displays them (<https://mojidata.ryusei.dev/about>). Its code is at
-<https://github.com/mandel59/mojidata>, <https://github.com/mandel59/mojidata-api> and
-<https://github.com/mandel59/mojidata-web-app>, by Ryusei Yamaguchi. The web app's source is MIT
-(its `LICENSE.md`, "Copyright (c) 2023-2024 Ryusei Yamaguchi"), as is `mojidata-api`; the
-`@mandel59/mojidata` database package declares `MIT AND BSD-3-Clause AND CC-BY-SA-2.1-JP AND
-Unicode-3.0 AND CC0-1.0` for its bundled data. Like this package, it takes its character structures
-from BabelStone IDS. Read on 2026-10-25.
-
-What Mojidata offers that this package does not:
-
-- In its IDS Finder (<https://mojidata.ryusei.dev/idsfind>): a whole-character mode (`§…§`),
-  variables (`x` matching the same subtree each time it appears, `⿱x⿰xx`), a count suffix (`耳*3`),
-  and query terms beyond structure, such as a code point, readings, stroke counts and other
-  properties (in `mojidata-web-app`'s `src/search/parseQuery.ts`), read from its source on
-  2026-10-25. This package's search (see [Search](#search)) takes from it several sequences at once,
-  all to match, `？` as a wildcard for a component or a subtree, and ⿻ matching its parts in either
-  order; it ranks its hits and marks the match, which Mojidata's finder does not do as far as its
-  source shows. No Mojidata data or code is used.
-- Many character databases beyond IDS, shown together, with Moji_Joho, regional and Adobe-Japan1
-  glyphs and glyph images from GlyphWiki.
-- Search backends on SQLite (sql.js, SQLite wasm, better-sqlite3, node:sqlite, Cloudflare D1), and a
-  library for structure manipulation (`@mandel59/idstool`, "Manipurate CJK ideograph structures").
-
-What this package offers that Mojidata, as far as its pages and repositories show, does not:
-
-- A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
-  by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of every component the IDS data names, by stroke count and first stroke, with the
-  most used parts first and font subsets for the parts few fonts draw, plus the composer's Han
-  characters and a Marks tab for combining and tone marks.
-- A keyboard-driven decomposition tree from which any part or node is taken into the editor.
-- Embeddable components behind an adapter interface, so a host keeps its own data and search.
+KAGE and GlyphWiki are the shared stroke-and-part system the composer is compared with; Mojidata is
+the nearest prior IDS search and database. Their entries, licences and what this project takes from
+each are in the same catalogue: <https://ids.mkpo.li/sources#group-prior>.
 
 ## Acknowledgments
 
