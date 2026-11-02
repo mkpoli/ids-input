@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer, parseTree } from '../src/composer/compose.js'
+import { Composer, composableDescription, parseTree } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
@@ -52,6 +52,18 @@ describe('the composer\u2019s parser', () => {
     // ᄋ + ᆞ + ᆯ and ᄅ + ᅡ are syllables, so the block takes two operands and has both.
     expect(parseTree('\u2ff1\u110b\u119e\u11af\u1105\u1161', arity)).toEqual(['\u2ff1', '\u110b\u119e\u11af', '\u1105\u1161'])
     expect(parseTree('\u110b\u119e\u11af', arity)).toBe('\u110b\u119e\u11af')
+  })
+})
+
+describe('what may be composed from a description', () => {
+  it('allows the operators whose placement is predictable', () => {
+    for (const description of ['⿰月句', '⿱一乙', '⿲丨丨丨', '⿳亠口一', '⿵冂夂', '⿶凵夕', '⿸广林', '⿹勹米', '⿺辶束', '⿿口正'])
+      expect(composableDescription(description)).toBe(true)
+  })
+  it('refuses a description carrying one anywhere in its layers', () => {
+    for (const description of ['⿻丂丿', '㇯丘丨', '〾車年', '⿾止', '⿼弓丨', '⿽中二', '⿴囗人', '⿷匚人',
+      '⿰亻⿱𭇁大㇯', '⿰木⿴囗木'])
+      expect(composableDescription(description)).toBe(false)
   })
 })
 

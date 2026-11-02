@@ -340,7 +340,7 @@
   </div>
 {/snippet}
 
-<figure class="ids-preview" data-step={step} data-label={said.label} data-adjusting={editable ? 'true' : undefined}
+<figure class="ids-preview" data-step={step} data-label={said.label} data-composed={shown?.drawn?.composed ? 'true' : undefined} data-adjusting={editable ? 'true' : undefined}
   aria-busy={step === 'loading'} aria-label={t('ids.preview.drawing', { sequence })}>
   <div class="ids-preview-large">
     {@render picture('large', editable)}
@@ -402,7 +402,8 @@
   .ids-preview-fallback{font-size:11px;color:var(--_muted);text-align:center}
   .ids-preview[data-label="loading"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 35%,var(--_line))}
   .ids-preview[data-label="final"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 45%,var(--_line))}
-  .ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}
+  .ids-preview[data-composed] .ink{fill:var(--_muted);opacity:.85}
+.ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}
   .ids-preview-note{margin:0;width:100%;font-size:11px;line-height:1.4;color:var(--_muted);text-align:center;overflow-wrap:anywhere}
   @keyframes ids-preview-spin{to{transform:rotate(1turn)}}
   @keyframes ids-preview-sweep{from{transform:translateX(-110%)}to{transform:translateX(260%)}}
