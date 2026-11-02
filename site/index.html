@@ -84,8 +84,9 @@ function renderComponents(){
     const faces=faceOf?`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(faceOf)}</div><div class="cap">${n}</div></div>`).join('')}</div>`:'';
     const list=(label,items)=>items.length?`<div class="cap" style="margin-top:8px">${label} (${items.length}):</div><div class="hits">${items.map(h=>`<div class="hit"><div style="font:24px 'Noto Serif CJK JP',serif">${esc(h.ch)}</div>${draw(h.d,56)}<div class="ids tiny">${esc(h.ids)}</div></div>`).join('')}</div>`:'';
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
-      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>
+      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>${r.note?`<div class="cap">${esc(r.note)}</div>`:''}
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
+      ${(r.variants??[]).length?`<div class="cap" style="margin-top:8px">variants (${r.variants.length}):</div><div class="hits">${r.variants.map(v=>`<div class="hit"><div style="font:13px 'Noto Sans CJK TC',serif">${esc(v.ids)}</div>${draw(v.d,104)}<div class="cap">${esc(v.label??'')}</div></div>`).join('')}</div>`:''}
       ${list('characters holding it', hits)}
       ${list('characters under the same enclosure', family)}
       ${faces}</div>`;
