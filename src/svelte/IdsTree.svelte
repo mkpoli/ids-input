@@ -144,7 +144,10 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} draggable={!editor.disabled && path.length > 0 && !(editing && samePath(editing.path, path))}
+      ondragstart={event => startDrag(event, path)} ondragend={endDrag}
+      title={path.length ? `${editor.name(part.op)} · ${t('ids.dragSibling')}` : undefined}
+      class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} aria-pressed={selected} disabled={editor.disabled}
@@ -245,6 +248,8 @@
      one pixel, shrinking together with the available width and height. */
   .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
+  .ids-node[draggable="true"]{cursor:grab}
+  .ids-node[draggable="true"]:active{cursor:grabbing}
   .ids-node.disabled{cursor:default}
   :is(.ids-op,.ids-part)[draggable="true"]{cursor:grab}
   :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
