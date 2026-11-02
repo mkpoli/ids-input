@@ -128,7 +128,7 @@
       svg = ''
       return
     }
-    svg = scopesSvg(scopes, { ink: '#1d1d21', background: '#ffffff' })
+    svg = scopesSvg(scopes, { ink: '#1d1d21', background: '#ffffff', emoji: drawing?.emoji ?? [], cut: drawing?.cut ?? '' })
     issue = ''
   })
 

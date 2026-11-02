@@ -62,16 +62,16 @@ it('keeps emoji and paths in operand order for overlays', () => {
 
 it('reflects emoji about the centre of its layout box', () => {
   const svg = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [true, false] }] })
-  expect(svg).toContain('transform="translate(-60 0) scale(-1 1)"')
+  expect(svg).toContain('transform="translate(120 0) scale(-1 1)"')
   const turned = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [false, true] }] })
-  expect(turned).toContain('transform="translate(0 -120) scale(1 -1)"')
+  expect(turned).toContain('transform="translate(0 240) scale(1 -1)"')
   const both = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [true, true] }] })
-  expect(both).toContain('transform="translate(-60 -120) scale(-1 -1)"')
+  expect(both).toContain('transform="translate(120 240) scale(-1 -1)"')
 })
 
 it('reflects a cut emoji inside the mask', () => {
   const svg = drawingSvg({ d: 'M0 0Z', emoji: [{ text: '😀', box: [0, 0, 100, 200], flip: [false, true], cut: true }] })
-  expect(svg).toContain('<text filter="url(#emoji-cut-ink)" transform="translate(0 -100) scale(1 -1)"')
+  expect(svg).toContain('<text filter="url(#emoji-cut-ink)" transform="translate(0 200) scale(1 -1)"')
 })
 
 it('masks emoji ink with a path cut and no emoji filter', () => {
