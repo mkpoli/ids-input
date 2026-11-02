@@ -4,7 +4,7 @@
 // stored because their light master never repeated its first point. A contour's gap is measured
 // through the pen's own points, so it matches what the drawing code reads.
 //
-//   bun scripts/audit_serif_openings.mjs OUT_DIR [RANGE...]
+//   bun scripts/audit_serif_openings.mjs OUT_DIR [RANGE...] [--base DIR_OR_URL]
 //
 // A range is `ascii`, `cjk`, `latin-ext`, `greek`, `cyrillic`, `all`, or `U+XXXX-U+YYYY`. The run
 // ends with a self-check on `o` and `6`, whose records are pinned in tests/serif-outlines.test.js.
@@ -25,11 +25,16 @@ const RANGES = {
  *  outline cannot avoid is 6.25, and the 39 quarter units the joined records carry is 9.75. */
 const OPENING = 4
 
-// In quarter units, as the pinned records store them.
+// In quarter units, as the pinned records store them: the tear the export carried before
+// han-compose#46, and the closed contour it carries after.
 const CHECKS = { o: 39, 6: 39 }
+const CLOSED = { o: 0, 6: 0 }
 
-const [dir, ...requested] = process.argv.slice(2)
-if (!dir) throw Error('Usage: bun scripts/audit_serif_openings.mjs OUT_DIR [RANGE...]')
+const argv = process.argv.slice(2)
+const baseAt = argv.indexOf('--base')
+const base = baseAt === -1 ? COMPOSER_BASES.serif : argv.splice(baseAt, 2)[1]
+const [dir, ...requested] = argv
+if (!dir) throw Error('Usage: bun scripts/audit_serif_openings.mjs OUT_DIR [RANGE...] [--base DIR_OR_URL]')
 const named = requested.length ? requested : ['ascii']
 const ranges = named.flatMap(name => {
   if (name === 'all') return Object.values(RANGES).flat()
@@ -39,7 +44,7 @@ const ranges = named.flatMap(name => {
   return [[parseInt(match[1], 16), parseInt(match[2], 16)]]
 })
 
-const source = fromUrl(COMPOSER_BASES.serif)
+const source = fromUrl(base)
 await source.ready()
 const store = source.store()
 
@@ -128,12 +133,16 @@ for (let start = 0; start < chars.length; start += BATCH) {
 // The scan has to be able to report a gap before its silence means anything.
 // The control is read from the export itself, whatever ranges were asked for.
 await source.load(source.filesOf(Object.keys(CHECKS)))
-const matched = Object.keys(CHECKS).every(key => {
+// An export grown before han-compose#46 still tears `o` and `6`; one grown after it closes them.
+const control = Object.keys(CHECKS).every(key => {
   const record = store.rec(key)
-  return hasOwn(record) && openings(record).repaired.some(gap => Math.abs(gap - CHECKS[key]) < 0.1)
+  if (!hasOwn(record)) return false
+  const found = openings(record)
+  return found.repaired.some(gap => Math.abs(gap - CHECKS[key]) < 0.1) || found.near.length === 0 && found.stored.length === 0
 })
+const matched = control
 const summary = {
-  export: COMPOSER_BASES.serif, ranges: named, asked, withOutlines, faulty,
+  export: base, ranges: named, asked, withOutlines, faulty,
   control: matched,
   // The gaps found in each bucket, largest first, so the threshold has a distribution to answer to.
   gaps: Object.fromEntries(['repaired', 'stored', 'near'].map(kind => [kind,
