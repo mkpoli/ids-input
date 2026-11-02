@@ -157,6 +157,9 @@
   .starter-tab{flex:1;padding:5px 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .starter-tab[aria-selected="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .starter-tab:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  /* The third tab's name is long; on phones it fits on one line at these sizes. */
+  @media (max-width:400px){.starter-tab{padding:5px 5px;font-size:11px}}
+  @media (max-width:340px){.starter-tab{font-size:10.5px}}
   .starter-body{padding:4px 4px 2px}
   .starter-body:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
   .starter-recent-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
