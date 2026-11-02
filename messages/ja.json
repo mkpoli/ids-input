@@ -16,7 +16,7 @@
   "ids.do.exchange": "{from}と{to}を入れ替え",
   "ids.do.open": "{sequence}を開く",
   "ids.do.put": "{part}を入れる",
-  "ids.dragSibling": "ドラッグで入れ替え、Alt+矢印キーで同じ階層の順序を変更",
+  "ids.dragSibling": "別の枝の部品にドラッグで入れ替え、Alt+矢印キーで同じ階層の順序を変更",
   "ids.do.reorder": "部品の順序を入れ替え",
   "ids.do.resolve": "「{char}」に解決",
   "ids.do.replace": "{from}を{part}に替える",

@@ -16,7 +16,7 @@
   "ids.do.exchange": "互換{from}與{to}",
   "ids.do.open": "開啟{sequence}",
   "ids.do.put": "放入{part}",
-  "ids.dragSibling": "拖動可與其他部件互換，Alt+方向鍵調整同層順序",
+  "ids.dragSibling": "拖動到其他分支的部件可互換，Alt+方向鍵調整同層順序",
   "ids.do.reorder": "調整部件順序",
   "ids.do.resolve": "解析為{char}",
   "ids.do.replace": "將{from}換成{part}",
