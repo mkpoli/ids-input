@@ -11,6 +11,13 @@ try {
     page.on('pageerror', error => errors.push(error.message))
     await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5183'}/?lang=en`, { waitUntil: 'domcontentloaded' })
     const panel = page.locator('.ids-parts[role=group]'), field = page.locator('.ids-field input')
+    const card = page.locator('.ids-character-info')
+    // A focused tile keeps its card until the pointer leaves it, and that card can sit over the
+    // structure; parking the pointer dismisses it before the next step aims at something behind it.
+    const park = async () => {
+      await page.mouse.move(2, 2)
+      await card.waitFor({ state: 'hidden', timeout: 3000 }).catch(() => {})
+    }
     await panel.getByRole('tab', { name: 'Gongche', exact: true }).click()
     assert.equal(await panel.locator('button.part').count(), GONGCHE_PARTS.length)
     assert.equal(await panel.locator('details[open]').count(), 0)
@@ -19,6 +26,7 @@ try {
       await field.press('ControlOrMeta+A')
       await field.press('Backspace')
       await field.fill('⿰⬚工')
+      await park()
       await page.locator('.ids-tree .ids-part.empty').click()
       const button = panel.locator(`button.part[data-character="${char}"]`)
       if ([...char].length === 1) assert.ok((await button.getAttribute('title')).includes(`U+${char.codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}`))
@@ -27,6 +35,7 @@ try {
       await page.waitForFunction(expected => document.querySelector('.ids-field input').value === expected, `⿰${char}工`)
       assert.equal(await field.inputValue(), `⿰${char}工`)
     }
+    await park()
     await panel.getByRole('tab', { name: 'Recent', exact: true }).click()
     assert.ok(await panel.locator(`button.part[data-character="${GONGCHE_PARTS.at(-1).part}"]`).count())
     await panel.getByRole('tab', { name: 'Gongche', exact: true }).click()
