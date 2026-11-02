@@ -1,6 +1,6 @@
 // @ts-check
 import { hangulClusterAt } from '../core/hangul.js'
-import { arity, isMark, isSelector, modifierLength, parse, takesModifier } from '../core/ids.js'
+import { EMPTY_MARKS, arity, isMark, isSelector, isToneMark, modifierLength, parse, takesModifier } from '../core/ids.js'
 import { emojiPrefix } from '../core/emoji.js'
 import { strokeChainLength } from '../core/strokes.js'
 
@@ -21,6 +21,7 @@ export function tokens(text) {
     if (chain) {
       at = start + chain
       if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+      while (isToneMark([...text.slice(at)][0])) at += 1
       out.push({ path, start, tokenEnd: at, end: at, text: text.slice(start, at) })
       return
     }
@@ -35,6 +36,9 @@ export function tokens(text) {
         if (note) { noteStart = at; at += note; noteEnd = at }
       } else if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
     }
+    // A tone mark is part of the syllable before it, so it stays in that component's token. An
+    // empty slot keeps the mark out, as it parses.
+    if (!n && !EMPTY_MARKS.includes(char)) while (isToneMark([...text.slice(at)][0])) at += 1
     const token = { path, start, tokenEnd: at, end: at, text: text.slice(start, at), ...(noteStart ? { noteStart, noteEnd } : {}) }
     out.push(token)
     for (let i = 0; i < n; i++) read([...path, i])

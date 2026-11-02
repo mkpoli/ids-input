@@ -13,7 +13,7 @@
   import { onMount } from 'svelte'
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
-  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
@@ -208,9 +208,10 @@
   const hanShown = $derived(hanMatches.slice(hanPage * PAGE_SIZE, (hanPage + 1) * PAGE_SIZE)
     .map(part => ({ part, kind: /** @type {const} */ ('extra'), strokes: hanStrokes.get(part) })))
 
-  // The jamo keyboard composes in the order the letters are clicked: initial, medial, final.
-  let initial = $state(''), medial = $state(''), final = $state('')
-  const composed = $derived(initial && medial ? composeHangul(initial, medial, final) : null)
+  // The jamo keyboard composes in the order the letters are clicked: initial, medial, final. A tone
+  // mark belongs to the syllable and follows it in the text.
+  let initial = $state(''), medial = $state(''), final = $state(''), tone = $state('')
+  const composed = $derived(initial && medial ? composeHangul(initial, medial, final, tone) : null)
   const preview = $derived(composed?.text ?? initial)
   /** @param {string | undefined} text */
   const codePoints = text => text ? [...text].map(char => `U+${(char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ') : ''
@@ -241,12 +242,31 @@
     if (!canFinal(char)) return
     final = /** @type {string} */ (toConjoiningJamo(char, 'T'))
   }
-  function backspace() {
-    if (final) final = ''
-    else if (medial) medial = ''
-    else initial = ''
+  /** @param {string} mark The tone mark to set, '' for none. */
+  function chooseTone(mark) { tone = mark }
+  /** The tone keys move as one radio group: arrows walk it, Home and End go to its ends.
+   * @param {KeyboardEvent} event */
+  function toneKeys(event) {
+    const order = ['', HANGUL_TONE_MARKS.high, HANGUL_TONE_MARKS.rising]
+    /** @type {Record<string, number>} */
+    const steps = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }
+    const at = order.indexOf(tone)
+    const step = steps[event.key]
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? order.length - 1 : step === undefined ? null : (at + step + order.length) % order.length
+    if (next === null) return
+    event.preventDefault()
+    tone = order[next]
+    const button = event.currentTarget instanceof HTMLElement ? event.currentTarget.querySelector(`[data-tone="${order[next]}"]`) : null
+    if (button instanceof HTMLElement) button.focus()
   }
-  function clearCompose() { initial = ''; medial = ''; final = '' }
+  function backspace() {
+    if (tone && composed) tone = ''
+    else if (final) final = ''
+    else if (medial) medial = ''
+    else if (initial) initial = ''
+    else tone = ''
+  }
+  function clearCompose() { initial = ''; medial = ''; final = ''; tone = '' }
   function pickComposed() {
     if (!composed || disabled) return
     const text = composed.text
@@ -637,10 +657,29 @@
       </button>
       <div class="compose-actions">
         <button type="button" class="compose-backspace" aria-label={t('parts.hangul.backspace')} title={t('parts.hangul.backspace')}
-          disabled={disabled || (!initial && !medial && !final)} onclick={backspace}>←</button>
-        <button type="button" class="compose-clear" disabled={disabled || (!initial && !medial && !final)} onclick={clearCompose}>{t('parts.hangul.clear')}</button>
+          disabled={disabled || (!initial && !medial && !final && !tone)} onclick={backspace}>←</button>
+        <button type="button" class="compose-clear" disabled={disabled || (!initial && !medial && !final && !tone)} onclick={clearCompose}>{t('parts.hangul.clear')}</button>
       </div>
     </div>
+    <section class="compose-tone" data-hangul-group="tone">
+      <h4 id={`${uid}-hangul-tone`}>{t('parts.hangul.tone')}</h4>
+      <!-- svelte-ignore a11y_interactive_supports_focus -->
+      <div class="tone-grid" role="radiogroup" aria-labelledby={`${uid}-hangul-tone`} onkeydown={toneKeys}>
+        <button type="button" class="tone-key" role="radio" data-tone="" aria-checked={!tone} tabindex={tone ? -1 : 0}
+          aria-label={`${t('parts.hangul.toneLow')}, ${t('parts.hangul.toneNone')}`}
+          disabled={disabled} onclick={() => chooseTone('')}>{t('parts.hangul.toneLow')}</button>
+        <button type="button" class="tone-key" role="radio" data-tone={HANGUL_TONE_MARKS.high} aria-checked={tone === HANGUL_TONE_MARKS.high}
+          tabindex={tone === HANGUL_TONE_MARKS.high ? 0 : -1} title={`U+302E`} aria-label={t('parts.hangul.toneHigh')}
+          disabled={disabled} onclick={() => chooseTone(HANGUL_TONE_MARKS.high)}>
+          <span class="tone-mark" aria-hidden="true">{HANGUL_TONE_MARKS.high}</span>{t('parts.hangul.toneHigh')}
+        </button>
+        <button type="button" class="tone-key" role="radio" data-tone={HANGUL_TONE_MARKS.rising} aria-checked={tone === HANGUL_TONE_MARKS.rising}
+          tabindex={tone === HANGUL_TONE_MARKS.rising ? 0 : -1} title={`U+302F`} aria-label={t('parts.hangul.toneRising')}
+          disabled={disabled} onclick={() => chooseTone(HANGUL_TONE_MARKS.rising)}>
+          <span class="tone-mark" aria-hidden="true">{HANGUL_TONE_MARKS.rising}</span>{t('parts.hangul.toneRising')}
+        </button>
+      </div>
+    </section>
     {#each JAMO_GROUPS as group (group.key)}
       <section class="jamo-group" data-hangul-group={group.key}>
         <h4>{t(group.label)}</h4>
@@ -936,6 +975,14 @@
   .compose-action{font-size:12px;color:var(--_accent)}
   .jamo-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .jamo-group h4{margin:2px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
+  .compose-tone{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .compose-tone h4{margin:2px 0 0;font-size:11px;font-weight:500;color:var(--_muted)}
+  .tone-grid{display:flex;gap:3px}
+  .tone-key{display:flex;align-items:center;gap:5px;padding:4px 9px;font-size:12px;color:var(--_muted);
+    border-color:transparent;background:var(--_surface-subtle);font-family:var(--ids-ui-font,system-ui,sans-serif)}
+  .tone-key[aria-checked="true"]{border-color:var(--_accent);background:var(--_accent-light);color:var(--_ink)}
+  .tone-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
+  .tone-mark{font-size:20px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}
   .jamo-key{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:19px;line-height:1;
     border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
