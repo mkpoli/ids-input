@@ -2,7 +2,7 @@
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
 import { createRelationSearch } from './character-relations.js'
-import { createCharacterInfo, componentExamples, tangutGlossSource } from './character-info.js'
+import { createCharacterInfo, componentExamples, mergeSources, tangutGlossSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
@@ -644,8 +644,14 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const info = lookup(char)
       if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
         info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
-        for (const row of info.relations.filter(r => r.kind === 'usage')) info.sources.push(tangutGlossSource(row.char))
-        if (info.relations.some(r => r.kind === 'usage')) info.sources.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt' })
+        // The examples are glossed from Wiktionary and described in BabelStone's Tangut IDS; the card
+        // shows each source once, so they join the record's own sources through the same merge.
+        /** @type {import('./character-info.js').InfoSource[]} */
+        const added = []
+        for (const row of info.relations.filter(r => r.kind === 'usage')) added.push({ ...tangutGlossSource(row.char), note: 'wiktionary' })
+        if (info.relations.some(r => r.kind === 'usage')) added.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: 'tangutIds' })
+        info.sources = mergeSources([...info.sources, ...added])
+        info.sourceSites = /** @type {import('./character-info.js').SourceKind[]} */ (info.sources.map(source => source.note))
       }
       signal?.throwIfAborted()
       return info

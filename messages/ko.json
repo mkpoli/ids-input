@@ -315,7 +315,6 @@
   "info.script.component": "서하 부품",
   "info.title": "문자 정보",
   "info.firstStroke": "첫 획",
-  "info.unicodeReference": "유니코드 참고 자료",
   "info.relation.seal": "소전",
   "info.script.han": "한자",
   "info.script.seal": "소전",
@@ -341,5 +340,14 @@
   "parts.gongche.seirakuSource": "청악 박자 기호 · 가토 도루",
   "info.copy": "{char} 복사",
   "info.copied": "복사됨",
-  "info.copyFailed": "복사 실패"
+  "info.copyFailed": "복사 실패",
+  "info.source.sections": "출처",
+  "info.site.wiktionary": "위키낱말사전",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "표기 보조",
+  "info.site.component": "Andrew West",
+  "info.site.tangutIds": "Tangut IDS 목록",
+  "info.site.course": "Unicode"
 }

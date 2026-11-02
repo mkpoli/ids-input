@@ -7,6 +7,17 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 // leaf, the placeholder of a slot — is the engine's (han-compose's package).
 export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts }
 
+/** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection.
+ * @param {{ text?: string, box?: number[], flip?: [boolean, boolean] } | null | undefined} item @param {string} [attribute] */
+export function emojiText(item, attribute = '') {
+  const box = (item?.box ?? []).slice(0, 4).map(v => Number.isFinite(Number(v)) ? Number(v) : 0)
+  if (box.length < 4 || typeof item?.text !== 'string') return ''
+  const [x, y, width, height] = box
+  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const reflect = emojiTransform(item)
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+}
+
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
 // part not drawn yet) becomes, in the drawing's 1000-unit box.
 

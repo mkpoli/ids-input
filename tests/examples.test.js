@@ -11,6 +11,7 @@ import { LONGEST, OPERATORS, parse, leaves } from '../src/core/index.js'
 const shipped = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString('utf8'))
 const components = readNumberedComponents(readFileSync(new URL('../data/ids-components.tsv', import.meta.url), 'utf8'))
 const table = expandNumberedComponents(shipped, components)
+const drawings = JSON.parse(readFileSync(new URL('../demo/lib/example-drawings.json', import.meta.url), 'utf8'))
 /** The characters BabelStone describes with each sequence. */
 const described = new Map()
 for (const [char, sequences] of table) for (const { text } of sequences) {
@@ -41,6 +42,10 @@ describe('the demo examples', () => {
           expect(typeof name).toBe('string')
           expect([...name]).toHaveLength(1)
           if (example.abbreviates) expect([...example.abbreviates]).toHaveLength(1)
+        } else if (example.parts !== undefined) {
+          // A character built from parts BabelStone knows apart and that no BabelStone row gives, such
+          // as the 講 the sign writes with 讠; the example names it by those parts.
+          expect([...example.parts.replace(/[⿰-⿿〾㇯]/g, '')]).toEqual(leaves(parse(sequence).tree).map(leaf => leaf.char))
         } else if (char) {
           expect([...char]).toHaveLength(1)
           if ('source' in example && example.source === 'data/small-seal.json.gz') {
@@ -54,11 +59,27 @@ describe('the demo examples', () => {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
             expect(shui.parts.find(part => part.part === char)?.shuiMeaning).toBe(example.modern)
+          } else if (group.key === 'erjian') {
+            // The table's forms name characters BabelStone has no row for, so the example names one
+            // by the sequence and the table records it.
+            expect(example.refs).toEqual([sourceNumber('erjian')])
+            expect(found.some(other => other !== char)).toBe(false)
+          } else if ('source' in example && example.source === 'data/shuishu/ids.json') {
+            const ids = JSON.parse(readFileSync(new URL('../data/shuishu/ids.json', import.meta.url), 'utf8'))
+            expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
+            const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
+            const parts = new Set(shui.parts.map(part => part.part))
+            for (const part of leaves(parse(sequence).tree)) expect(parts.has(part.char)).toBe(true)
+            expect(example.modern).toBe(shui.parts.find(part => part.part === char)?.modern?.[0])
+            expect(drawings.drawings[sequence]?.drawn.d.length).toBeGreaterThan(10)
           } else if (example.sequence === '⿱無⿰無無') {
             // Unicode 17.0 encoded the character after the BabelStone edition, which has no row.
             expect(example.refs).toContain(sourceNumber('irg-ws2021-uk-20565'))
             expect(table.has(char)).toBe(false)
           } else expect(found).toContain(char)
+        } else if (sequence === '⿰讠正') {
+          // BabelStone's only row for ⿰讠正 names the modern 证; the sign's character is its own form.
+          expect(found).toEqual(['证'])
         } else if (sequence === '⿱月朋') {
           // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
           // the example cites is a different, unencoded character.
@@ -123,7 +144,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'erjian', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

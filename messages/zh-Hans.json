@@ -315,7 +315,6 @@
   "info.script.component": "西夏部件",
   "info.title": "文字信息",
   "info.firstStroke": "首笔",
-  "info.unicodeReference": "Unicode参考资料",
   "info.relation.seal": "小篆",
   "info.script.han": "汉字",
   "info.script.seal": "小篆",
@@ -341,5 +340,14 @@
   "parts.gongche.seirakuSource": "清乐板眼符号 · 加藤彻",
   "info.copy": "复制{char}",
   "info.copied": "已复制",
-  "info.copyFailed": "复制失败"
+  "info.copyFailed": "复制失败",
+  "info.source.sections": "出处",
+  "info.site.wiktionary": "维基词典",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "用字助记",
+  "info.site.component": "Andrew West",
+  "info.site.tangutIds": "Tangut IDS 表",
+  "info.site.course": "Unicode"
 }

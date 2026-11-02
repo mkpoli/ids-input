@@ -60,9 +60,13 @@ it('keeps emoji and paths in operand order for overlays', () => {
 })
 
 
-it('reflects emoji about its layout box', () => {
+it('reflects emoji about the centre of its layout box', () => {
   const svg = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [true, false] }] })
   expect(svg).toContain('transform="translate(120 0) scale(-1 1)"')
+  const turned = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [false, true] }] })
+  expect(turned).toContain('transform="translate(0 240) scale(1 -1)"')
+  const both = drawingSvg({ d: '', emoji: [{ text: '😀', box: [10, 20, 100, 200], flip: [true, true] }] })
+  expect(both).toContain('transform="translate(120 240) scale(-1 -1)"')
 })
 
 it('reflects a cut emoji inside the mask', () => {

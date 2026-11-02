@@ -11,6 +11,7 @@
   // characters finds those parts or matching compound IDS, a number the parts of that many strokes.
   // Picking a part calls `onpick(part)`.
   import { onMount } from 'svelte'
+  import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
@@ -473,6 +474,7 @@
     if (part !== undefined) pick(part)
   }
   onMount(() => {
+    const stopWatching = watchFallback(document.querySelector('.ids-parts'))
     /** @param {PointerEvent} event */
     const pointer = event => {
       if (pendingTarget && !event.composedPath().includes(pendingTarget) && !(event.target instanceof Element && event.target.closest('.part'))) flushPick()
@@ -488,6 +490,7 @@
     window.addEventListener('pointerdown', pointer, true)
     window.addEventListener('keydown', keyboard, true)
     return () => {
+      stopWatching()
       clearTimeout(pickTimer)
       window.removeEventListener('pointerdown', pointer, true)
       window.removeEventListener('keydown', keyboard, true)

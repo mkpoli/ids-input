@@ -315,7 +315,6 @@
   "info.script.component": "西夏部件",
   "info.title": "文字情報",
   "info.firstStroke": "最初の画",
-  "info.unicodeReference": "Unicode参照情報",
   "info.relation.seal": "小篆",
   "info.script.han": "漢字",
   "info.script.seal": "小篆",
@@ -341,5 +340,14 @@
   "parts.gongche.seirakuSource": "清楽の拍節記号 · 加藤徹",
   "info.copy": "{char}をコピー",
   "info.copied": "コピーしました",
-  "info.copyFailed": "コピー失敗"
+  "info.copyFailed": "コピー失敗",
+  "info.source.sections": "出典",
+  "info.site.wiktionary": "ウィクショナリー",
+  "info.site.unihan": "Unihan",
+  "info.site.unicodeSealSource": "Unicode SealSources",
+  "info.site.sealSource": "CHISE",
+  "info.site.editorial": "編集部の補助",
+  "info.site.component": "Andrew West",
+  "info.site.tangutIds": "Tangut IDS 一覧",
+  "info.site.course": "Unicode"
 }

@@ -6,6 +6,7 @@
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
   import { tick, untrack } from 'svelte'
+  import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE } from '@han-compose/composer/compose'
@@ -351,6 +352,8 @@
   $effect(() => save('split', split === 60 ? undefined : split))
 
   let workWidth = $state(innerWidth)
+  // The phone tabs stay in view under the toolbar, so what the toolbar and the tabs take is measured.
+  let chromeHeight = $state(0), tabsHeight = $state(51)
   let inputWidth = $state(storedWidth(load('inputWidth', null)))
   let outputWidth = $state(storedWidth(load('outputWidth', null)))
   const columns = $derived(columnWidths(workWidth, inputWidth, outputWidth))
@@ -373,13 +376,21 @@
   let searchMode = $state('current')
   const wholeComponentLookup = $derived(componentQuery(editor.whole))
   const searchQuery = $derived(editor.tree === null ? '' : editor.chosen === null || (editor.picked === null && wholeComponentLookup) ? editor.whole : editor.picked === null ? '' : editor.sequenceAt(editor.chosen))
+  /** @type {HTMLElement | null} */
+  let resultsPane = $state(null)
+  $effect(() => { if (resultsPane) return watchFallback(resultsPane) })
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
+  /** @type {{ openStarter: (tab?: 'templates' | 'examples') => void } | null} */ let tabStrip = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   /** @type {HTMLInputElement | null} */ let documentInput = $state(null)
   let fromText_ = $state('')
   /** @type {import('../src/adapter/types.js').Drawing | null} */
   let drawing = $state.raw(null)
+  /** @type {NonNullable<import('../src/adapter/types.js').Drawing['emoji']> | null} */
+  let emoji = $state.raw(null)
+  /** @type {string | null} */
+  let cut = $state.raw(null)
   /** @type {{ save: (format?: 'svg' | 'png') => Promise<void> } | undefined} */
   let exportPanel = $state()
   /** @type {HTMLButtonElement | null} */ let settingsButton = $state(null)
@@ -1110,8 +1121,9 @@
   onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
 <svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
 
-<div class="app" lang={locale} data-composer={base}>
-  <div class="chrome">
+<div class="app" lang={locale} data-composer={base}
+  style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
+  <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
       <a class="brand" href="/" aria-label={t('app.title')}>
         <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
@@ -1151,7 +1163,7 @@
       <button type="button" class="ui-button more phone-only" title={t('app.menu')} aria-label={t('app.menu')} aria-haspopup="dialog" aria-expanded={moreOpen} onclick={() => moreOpen = true}><Icon name="menu" /></button>
     </header>
     <div class="tabs-slot">
-      <TabStrip {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
+      <TabStrip bind:this={tabStrip} {tabs} {activeId} panelId={uid} {t} draw={icons} onselect={activate} onclose={closeTab} onnew={() => addTab()} onduplicate={duplicateTab}
         oncloseothers={closeOthers} oncloseleft={closeLeft} oncloseright={closeRight} oncloseall={askCloseAll}
         onreopen={reopenClosed} canreopen={closedGroups.length > 0} onmove={moveTab} oncommit={store} {starter} />
     </div>
@@ -1160,7 +1172,7 @@
   <main class="workspace" bind:this={work}>
     <div class="work" id={uid} role="tabpanel" aria-labelledby={`${uid}-tab-${activeTab.id}`}
       bind:clientWidth={workWidth} style:--input-width="{columns.input}px" style:--output-width="{columns.output}px">
-      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')}>
+      <div class="phone-tabs" role="tablist" aria-label={t('app.phone.panels')} bind:offsetHeight={tabsHeight}>
         <button type="button" role="tab" id="phone-input-tab" aria-controls="input-panel" aria-selected={phonePane === 'input'} tabindex={phonePane === 'input' ? 0 : -1} onclick={() => phoneTab('input')} onkeydown={phoneKey}><Icon name="pencil" size={16} /><span>{t('app.input')}</span></button>
         <button type="button" role="tab" id="phone-compose-tab" aria-controls="compose-panel" aria-selected={phonePane === 'compose'} tabindex={phonePane === 'compose' ? 0 : -1} onclick={() => phoneTab('compose')} onkeydown={phoneKey}><Icon name="layers" size={16} /><span>{t('app.phone.compose')}</span></button>
         <button type="button" role="tab" id="phone-output-tab" aria-controls="output-panel" aria-selected={phonePane === 'output'} tabindex={phonePane === 'output' ? 0 : -1} onclick={() => phoneTab('output')} onkeydown={phoneKey}><Icon name="eye" size={16} /><span>{t('app.output')}</span></button>
@@ -1213,7 +1225,7 @@
           onkeydown={splitKey} ondblclick={splitReset}>
           <span class="grip" aria-hidden="true"></span>
         </div>
-        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')}>
+        <section class="pane results" class:structural={searchMode !== 'current'} aria-label={t('ids.search.title')} bind:this={resultsPane}>
           <div class="search-modes" aria-label={t('ids.search.title')}>
             <button type="button" aria-pressed={searchMode === 'current'} onclick={() => searchMode = 'current'}>{t('ids.search.title')}</button>
             <button type="button" aria-pressed={searchMode === 'component'} onclick={() => searchMode = 'component'}>{t('app.componentLookup.title')}</button>
@@ -1247,7 +1259,7 @@
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut>
                 {#snippet detailContent()}
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
@@ -1264,6 +1276,7 @@
             <button type="button" class="adjust-toggle" aria-pressed={adjusting} disabled={(!drawing && !scopes) || Boolean(drawing?.cut)}
               title={drawing?.cut ? t('ids.adjust.unavailable') : undefined}
               onclick={() => { adjusting = !adjusting }}>{t(adjusting ? 'ids.adjust.done' : 'ids.adjust.title')}</button>
+            <button type="button" class="adjust-toggle adjust-report" onclick={() => { reportOpen = true }}><Icon name="mail" size={15} />{t('app.report.title')}</button>
             {#if adjusting}
               <button type="button" disabled={!editor.chosen} onclick={resetChosen}>{t('ids.adjust.reset')}</button>
               <span class="adjust-hint">{t('ids.adjust.hint')}</span>
@@ -1302,7 +1315,7 @@
           {/if}
         </dialog>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -1321,6 +1334,9 @@
     <MenuList label={t('app.history.label')} items={historyItems} onpick={() => moreOpen = false} />
     <MenuList label={t('app.file.label')} items={fileItems} open={moreOpen} onpick={() => moreOpen = false} />
     <MenuList label={t('app.edit.label')} items={editItems} onpick={() => moreOpen = false} />
+    <MenuList label={t('app.examples.label')} onpick={() => moreOpen = false} items={[
+      { label: t('app.examples.open'), icon: 'book', run: () => tabStrip?.openStarter('examples') },
+    ]} />
     <MenuList label={t('app.more')} onpick={() => moreOpen = false} items={[
       { label: t('app.sponsor.label'), icon: 'heart', run: () => sponsorOpen = true },
       { label: t('app.about.title'), icon: 'info', run: () => aboutOpen = true },
@@ -1330,13 +1346,13 @@
 </Dialog>
 <AboutDialog bind:open={aboutOpen} {t} />
 <TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
-<SponsorDialog bind:open={sponsorOpen} {t} />
+<SponsorDialog bind:open={sponsorOpen} {locale} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
-  {drawing} {scopes} {slots} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
+  {drawing} {scopes} {slots} {emoji} {cut} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
@@ -1524,10 +1540,10 @@
     .output-gap{display:block;grid-column:4;grid-row:1}
     .pane{overflow:auto;min-height:0}
     .middle{display:grid;grid-template-rows:var(--upper,60%) 12px minmax(0,1fr);gap:0;min-height:0}
-    .split{display:grid;place-items:center;min-height:12px;cursor:row-resize;touch-action:none}
-    .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color .12s,width .12s}
+    .split{display:grid;place-items:center;min-height:var(--ui-space-lg);cursor:row-resize;touch-action:none}
+    .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color var(--ui-duration-fast),width var(--ui-duration-fast)}
     .split:hover .grip,.split:focus-visible .grip{background:var(--ui-color-accent);width:72px}
-    .split:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
+    .split:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width));border-radius:var(--ui-radius-md)}
     .tree{flex:none;justify-content:flex-start;container-type:size}
     .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
@@ -1540,7 +1556,10 @@
   .phone-tabs{display:none}
   /* The single-column workspace gets tabs on phones and small tablets, up to the two-column breakpoint. */
   @media (max-width:879px){
-    .phone-tabs{display:flex;position:sticky;top:0;z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border)}
+    /* Below the toolbar, and because the page scrolls rather than the pane, they keep their place to
+       the row's end. Pinned, they leave the grid, so the canvas and their height are set here. */
+    .work{background:linear-gradient(to bottom,var(--ui-color-canvas) calc(var(--chrome-height,0px) + var(--phone-tabs-height,51px)),transparent 0)}
+    .phone-tabs{display:flex;position:sticky;top:var(--chrome-height,0px);z-index:6;gap:2px;margin:0 -16px;padding:8px 16px;background:var(--ui-color-canvas);border-bottom:1px solid var(--ui-color-border);align-self:start}
     .phone-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1;height:34px;border:0;border-radius:8px;background:transparent;color:var(--ui-color-ink-muted);font:inherit;font-size:13px;cursor:pointer}
     .phone-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
     .phone-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}

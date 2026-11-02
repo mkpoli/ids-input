@@ -1200,7 +1200,8 @@ after the build to test the bundled handler and PNG renderer. `bun run dev:worke
 
 ### Reporting a problem
 
-File → Report a problem, the same entry in the More sheet, and `?report=1` open a report dialog.
+A Report a problem button under the drawing in the output panel opens a report dialog, as do
+File → Report a problem, the same entry in the More sheet, and `?report=1`.
 It asks what happened and, if the reporter wants an answer, how to reach them; the drawing goes
 along as a 1024 px PNG unless the checkbox is cleared, and the dialog lists the rest in plain text.
 The request is `multipart/form-data` to `/api/report` on the site's own origin, which the worker

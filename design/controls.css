@@ -87,6 +87,22 @@
   --_ink: var(--ui-color-ink);
 }
 
+/* An action on a toast. The toast surface inverts the scheme, so the fill is a tint of its ink and
+   the ring takes the toast ink: the accent does not reach 3:1 against it. */
+.ui-button[data-variant='toast'] {
+  --_bg: color-mix(in srgb, var(--ui-color-toast-ink) 16%, transparent);
+  --_bg-hover: color-mix(in srgb, var(--ui-color-toast-ink) 26%, transparent);
+  --_bg-active: color-mix(in srgb, var(--ui-color-toast-ink) 34%, transparent);
+  --_ink: var(--ui-color-toast-ink);
+  --_border: transparent;
+  --_border-hover: transparent;
+  font-weight: var(--ui-weight-semibold);
+}
+
+.ui-button[data-variant='toast']:focus-visible {
+  outline-color: var(--ui-color-toast-ink);
+}
+
 .ui-button[data-size='sm'] {
   min-block-size: var(--ui-control-h-sm);
   padding-inline: var(--ui-space-sm);
@@ -206,6 +222,12 @@
 .ui-input[readonly],
 .ui-textarea[readonly] {
   background-color: var(--ui-color-surface-sunken);
+}
+
+/* A field beside a large button, so the two share a height. */
+.ui-input[data-size='lg'],
+.ui-select[data-size='lg'] {
+  min-block-size: var(--ui-control-h-lg);
 }
 
 .ui-input[data-mono] {

@@ -19,7 +19,7 @@
   let restoringFocus = false
   let pointerX = NaN, pointerY = NaN
   // A card opened by a click stays while the pointer goes elsewhere, so its buttons can be reached.
-  let pinned = false
+  let pinned = $state(false)
   /** @type {Element | null} */
   let press = null
   let generation = 0
@@ -41,6 +41,28 @@
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
+
+  // One list of every source the card drew on: the data it is built from, then the records that name
+  // the character itself. A data record is named by its site; each course record keeps its own title.
+  /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
+  const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
+  /** @type {{ key: string, site: string, what: string, url: string }[]} */
+  const sources = $derived.by(() => {
+    /** @type {{ key: string, site: string, what: string, url: string }[]} */
+    const list = []
+    for (const source of info?.sources ?? []) if (source.note) list.push({ key: source.note, site: t(`info.site.${source.note}`), what: source.label, url: source.url })
+    // A course's records share its name. The one record that carries the whole title leads and takes
+    // the name on the row; the others follow with what is left once the name is said.
+    const course = t('info.site.course')
+    const records = (identity?.sources ?? []).map(source => ({ site: source.note === 'editorial' ? t('info.site.editorial') : course, what: source.note === 'editorial' ? source.label : left(source.label, 'Unicode'), url: source.url }))
+    const lead = records.findIndex(record => record.site === course && left(record.what, course).length > 0)
+    if (lead > 0) records.unshift(...records.splice(lead, 1))
+    for (const [index, record] of records.entries()) {
+      const what = record.what
+      list.push({ key: `${record.site}:${record.what}:${record.url}`, site: record.site, what, url: record.url })
+    }
+    return list
+  })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
   // the glyph is the first character and the name is what follows it.
   const strokeLabel = $derived(strokeClassName(t, strokes?.first))
@@ -93,6 +115,8 @@
     // Keep waiting while the pointer is still on its way to the card, and give up once it is gone.
     hideTimer = setTimeout(function look() {
       if (pinned || panel?.matches(':hover') || panel?.contains(document.activeElement) || anchor === document.activeElement) return
+      // A source link keeps focus when it opens a new tab, with the pointer gone from the card.
+      if (document.activeElement instanceof HTMLAnchorElement && panel?.contains(document.activeElement)) return
       if (nearAnchor()) { hideTimer = setTimeout(look, 200); return }
       close()
     }, 220)
@@ -104,7 +128,9 @@
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
     x = Math.max(8, Math.min(box.left, innerWidth - card.width - 8))
-    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : Math.max(8, box.top - card.height - 4)
+    // Below the anchor, or above it when the card would not fit; never above the top of the window.
+    const above = Math.max(8, box.top - card.height - 4)
+    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : above
   }
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
@@ -313,7 +339,7 @@
         {#if strokes?.strokes != null}<span class="strokes">{t('parts.strokeCount', { count: strokes.strokes })}</span>{/if}
         {#if strokeGlyph}<span class="strokes">{t('info.firstStroke')}: <span class="stroke-glyph" lang="ja">{strokeGlyph}</span> {strokeName}</span>{/if}
       </div>
-      <button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>
+      {#if pinned}<button class="close" type="button" aria-label={t('info.close')} onclick={() => { const el = anchor; close(); restoreFocus(el) }}>×</button>{/if}
     </header>
     {#if identity}
       <p class="unicode-name" lang="en">{identity.name}</p>
@@ -334,7 +360,6 @@
           </div>
         </section>
       {/if}
-      <details class="identity-sources"><summary>{t('info.unicodeReference')}</summary>{#each identity.sources as source}<a href={source.url} target="_blank" rel="noopener noreferrer">{source.label} ↗</a>{/each}</details>
     {/if}
     {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
     {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
@@ -350,6 +375,9 @@
         </div></section>{/if}
       {/each}
     {/if}
+    {#if sources.length}
+      <p class="sources" id={`${uid}-sources`}><span class="label">{t('info.source.sections')}</span>{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
+    {/if}
   {/if}
 </div>
 
@@ -362,5 +390,10 @@
   .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
-  .identity-sources{margin:8px 0 12px;font-size:11px;color:var(--info-muted)}.identity-sources summary{cursor:pointer}.identity-sources a{display:block;margin-top:4px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}
+  .sources{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:4px;row-gap:2px;margin:10px 0 0;font-size:11.5px;line-height:1.6;color:var(--info-muted)}
+  .sources .label{margin:0 4px 0 0;font-size:11px}
+  .sources a{color:var(--info-muted);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--info-muted) 55%,transparent);text-underline-offset:2px}
+  .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
+  .sources a:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:2px;border-radius:2px}
+  .sep{color:var(--ids-line,#d6d6de)}
 </style>

@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { translator } from '../src/svelte/i18n.js'
 import { STRUCTURAL_PRESETS } from '../src/core/structural-search.js'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
+import { SOURCE_KINDS } from '../src/adapter/character-info.js'
 
 const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.json`, import.meta.url), 'utf8'))
 const en = catalogue('en')
@@ -16,6 +17,14 @@ describe('the message catalogues', () => {
         expect(typeof label, `${locale}: ${key}`).toBe('string')
         expect(label.trim().length, `${locale}: ${key}`).toBeGreaterThan(0)
       }
+    }
+  })
+  it('name every kind of source the character card can list', () => {
+    // The card names a source by its kind, and the kinds extend the ones the adapter defines.
+    for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+      const messages = catalogue(name)
+      for (const kind of SOURCE_KINDS) expect(typeof messages[`info.site.${kind}`], `${name}: ${kind}`).toBe('string')
+      expect(typeof messages['info.site.course'], name).toBe('string')
     }
   })
   it('hold the keys the components build at runtime', () => {

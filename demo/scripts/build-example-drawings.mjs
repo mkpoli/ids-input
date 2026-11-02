@@ -17,8 +17,10 @@ import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
-// Examples whose parts are all bundled draw from a local source, not the export.
-const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
+// Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
+// whole sequence that matches a component form, then skips its parts, so the export stays behind
+// the source for the character's own glyph.
+const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false, fallback: source })
 const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/tangut/outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })

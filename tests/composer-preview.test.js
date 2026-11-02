@@ -18,7 +18,8 @@ describe('the composer preview', () => {
   it('draws in a worker from the export at its base, hearing the sketch first', async () => {
     const draw = preview(), sketches = []
     const drawing = draw('⿰木⬚', { onSketch: leaves => sketches.push(leaves) })
-    const [worker] = FakeWorker.made
+    // The worker made for this drawing: an earlier drawing's worker, ended, stays in the list.
+    const worker = FakeWorker.made.at(-1)
     expect(worker.posted[0]).toMatchObject({ sequence: '⿰木⬚', base: 'https://example.org/composer/v1/' })
     worker.answer({ id: worker.posted[0].id, sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }] })
     const drawn = { d: 'M0 0Z', sketch: [{ index: 0, box: [0, 0, 500, 1000], empty: false }], slots: [{ index: 0, box: [500, 0, 500, 1000] }] }
@@ -190,14 +191,14 @@ it('retains emoji subtraction operands as mask metadata', async () => {
 it('toggles the cut flag through nested subtraction', async () => {
   const cutter = preview()
   const cutDrawing = cutter('㇯口㇯😀木')
-  const [first] = FakeWorker.made
+  const first = FakeWorker.made.at(-1)
   expect(first.posted[0].sequence).toBe('㇯口㇯⬚木')
   first.answer({ id: first.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }] } })
   expect((await cutDrawing).emoji[0].cut).toBe(true)
 
   const ink = preview()
   const inkDrawing = ink('㇯口㇯木😀')
-  const [second] = FakeWorker.made
+  const second = FakeWorker.made.at(-1)
   expect(second.posted[0].sequence).toBe('㇯口㇯木⬚')
   second.answer({ id: second.posted[0].id, drawn: { d: '', slots: [{ index: 0, box: [0, 0, 500, 1000] }] } })
   expect((await inkDrawing).emoji[0].cut).toBeUndefined()

@@ -58,8 +58,10 @@ Use the system's classes rather than writing a local button or input style:
 </label>
 ```
 
-Variants are data attributes (`data-variant="primary" | "danger" | "quiet"`, `data-size="sm" | "lg" | "icon"`),
-not extra classes. A toggle button uses `aria-pressed="true"`; the system styles that state. Do not
+Variants are data attributes (`data-variant="primary" | "danger" | "quiet" | "toast"`, `data-size="sm" | "lg" | "icon"`),
+not extra classes. `data-variant="toast"` is for an action on a toast, whose surface inverts the
+scheme; there the ring takes the toast ink. A text field or select takes `data-size="lg"` to share
+the 36 px height of a large button beside it. A toggle button uses `aria-pressed="true"`; the system styles that state. Do not
 use a disabled class: use the `disabled` attribute.
 
 ## Tokens

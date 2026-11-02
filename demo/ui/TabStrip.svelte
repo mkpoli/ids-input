@@ -20,6 +20,7 @@
    */
   let { tabs, activeId, panelId, draw, t, onselect, onclose, onnew, onduplicate, oncloseothers, oncloseleft, oncloseright, oncloseall, onreopen, canreopen, onmove, oncommit, starter } = $props()
   /** @type {HTMLElement | null} */ let strip = $state(null)
+  /** @type {{ openAt: (tab?: 'templates' | 'examples') => void } | null} */ let starterMenu = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
   const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
   /** @param {import('../lib/tabs.js').Tab} tab */
@@ -121,6 +122,10 @@
     items[next].focus()
   }
 
+  /** Open the starter's dialog from a menu entry elsewhere. @param {'templates' | 'examples'} [tab] */
+  export function openStarter(tab = 'templates') {
+    starterMenu?.openAt(tab)
+  }
   /** @param {string} id */
   function focus(id) {
     const found = /** @type {HTMLElement | undefined} */ ([...(strip?.children ?? [])].find(child => /** @type {HTMLElement} */ (child).dataset.tabId === id))
@@ -302,7 +307,7 @@
   </div>
   <div class="tab-new">
     <button type="button" class="tab-add" title={t('app.tabs.new')} aria-label={t('app.tabs.new')} onclick={onnew}><Icon name="plus" size={16} /></button>
-    <StarterMenu {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
+    <StarterMenu bind:this={starterMenu} {t} editor={starter.editor} items={starter.items} view={starter.view} onstart={starter.onstart} onstarted={starter.onstarted} />
   </div>
 </div>
 
@@ -325,39 +330,41 @@
 {/if}
 
 <style>
-  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - 16px);padding:5px;border:1px solid var(--ui-color-border);border-radius:10px;background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
-  .tab-menu button{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;border:0;border-radius:6px;background:none;color:inherit;font:inherit;font-size:13px;text-align:left;cursor:pointer}
-  .tab-menu hr{border:0;border-top:1px solid var(--ui-color-border);margin:4px 2px}
+  .tab-menu{position:fixed;inset:auto;margin:0;min-width:160px;max-width:calc(100vw - var(--ui-space-xl));padding:var(--ui-space-xs);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-2)}
+  .tab-menu button{display:flex;align-items:center;gap:var(--ui-space-sm);width:100%;min-height:var(--ui-control-h-lg);padding:0 var(--ui-space-md);border:0;border-radius:var(--ui-radius-sm);background:none;color:inherit;font:inherit;font-size:var(--ui-text-sm);text-align:left;cursor:pointer}
+  .tab-menu hr{margin:var(--ui-space-2xs) var(--ui-space-3xs);border:0;border-top:1px solid var(--ui-color-border)}
   .tab-menu button:not(:disabled):hover,.tab-menu button:focus-visible{background:var(--ui-color-surface-hover);outline:none}
-  .tab-menu button:disabled{opacity:.45;cursor:default}
+  .tab-menu button:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
   .tab-menu .flip{display:grid;transform:rotate(180deg)}
-  .tabbar{display:flex;align-items:flex-end;gap:8px;flex:1;min-width:0;height:100%}
-  .tabs{position:relative;display:flex;align-items:flex-end;gap:4px;flex:0 1 auto;min-width:0;height:100%;padding-inline:10px;
+  .tabbar{display:flex;align-items:flex-end;gap:var(--ui-space-sm);flex:1;min-width:0;height:100%}
+  .tabs{position:relative;display:flex;align-items:flex-end;gap:var(--ui-space-2xs);flex:0 1 auto;min-width:0;height:100%;padding-inline:var(--ui-space-md);
     overflow-x:auto;overflow-y:hidden;scrollbar-width:none;overscroll-behavior-x:contain}
   .tabs::-webkit-scrollbar{display:none}
   .tabs.dragging{user-select:none}
-  .tab{position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:12px 12px 0 0;color:var(--ui-color-ink-muted)}
-  .tab:not(.on):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
-  .tab.on{background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 2px 0 var(--ui-color-accent)}
-  .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:10px;height:10px;pointer-events:none}
-  .tab.on::before{left:-10px;background:radial-gradient(circle at 0 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
-  .tab.on::after{right:-10px;background:radial-gradient(circle at 100% 0,transparent 10px,var(--ui-color-canvas) 10.5px)}
+  /* The tab's corner curves are drawn at the radius the tab top uses. */
+  .tab{--tab-curve:var(--ui-space-md);position:relative;isolation:isolate;flex:none;width:80px;height:40px;border:0;border-radius:var(--ui-radius-xl) var(--ui-radius-xl) 0 0;color:var(--ui-color-ink-muted)}
   .tab.dragging{z-index:4;color:var(--ui-color-ink);filter:drop-shadow(0 5px 9px var(--ui-shadow-color-1))}
   .tab.dragging .tab-main{cursor:grabbing}
-  .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:6px 32px 6px 8px;border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
-  .tab:not(.on) .tab-main{padding-inline:12px}
-  .tab-main:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-3px}
-  .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:28px;height:28px}
+  .tab:not(.on):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .tab.on{background:var(--ui-color-canvas);color:var(--ui-color-ink);box-shadow:inset 0 var(--ui-space-3xs) 0 var(--ui-color-accent)}
+  .tab.on::before,.tab.on::after{content:"";position:absolute;bottom:0;width:var(--tab-curve);height:var(--tab-curve);pointer-events:none}
+  .tab.on::before{left:calc(-1 * var(--tab-curve));background:radial-gradient(circle at 0 0,transparent var(--tab-curve),var(--ui-color-canvas) calc(var(--tab-curve) + .5px))}
+  .tab.on::after{right:calc(-1 * var(--tab-curve));background:radial-gradient(circle at 100% 0,transparent var(--tab-curve),var(--ui-color-canvas) calc(var(--tab-curve) + .5px))}
+  .tab-main{display:flex;align-items:center;justify-content:center;width:100%;height:100%;padding:var(--ui-space-xs) var(--ui-space-4xl) var(--ui-space-xs) var(--ui-space-sm);border:0;border-radius:inherit;background:none;color:inherit;cursor:pointer}
+  .tab:not(.on) .tab-main{padding-inline:var(--ui-space-lg)}
+  .tab-main:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width) - 1px)}
+  .tab-icon{position:relative;display:grid;place-items:center;flex:none;width:var(--ui-control-h-sm);height:var(--ui-control-h-sm)}
   .tab:not(.on) .tab-icon{opacity:.7}
-  .tab-dot{position:absolute;top:0;right:-4px;width:4px;height:4px;border-radius:50%;background:var(--ui-color-accent)}
-  .tab-close{position:absolute;z-index:2;top:8px;right:8px;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:var(--ui-radius-sm);
-    background:none;color:var(--ui-color-ink-muted);cursor:pointer;pointer-events:none;opacity:0;transition:opacity .1s,background-color .1s,color .1s}
+  .tab-dot{position:absolute;top:0;right:calc(-1 * var(--ui-space-2xs));width:var(--ui-space-2xs);height:var(--ui-space-2xs);border-radius:var(--ui-radius-pill);background:var(--ui-color-accent)}
+  .tab-close{position:absolute;z-index:2;top:var(--ui-space-sm);right:var(--ui-space-sm);display:grid;place-items:center;width:var(--ui-target-min);height:var(--ui-target-min);padding:0;border:0;border-radius:var(--ui-radius-sm);
+    background:none;color:var(--ui-color-ink-muted);cursor:pointer;pointer-events:none;opacity:0;
+    transition:opacity var(--ui-duration-fast),background-color var(--ui-duration-fast),color var(--ui-duration-fast)}
   .tab.on .tab-close,.tab-close:focus-visible{opacity:1;pointer-events:auto}
   .tab-close:not(:disabled):hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .tab-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
-  .tab-new{display:flex;align-items:center;gap:1px;flex:none;margin:0 0 6px -6px}
-  .tab-add{display:grid;place-items:center;width:26px;height:28px;padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
-  .tab-add:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .tab-add:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
+  .tab-new{display:flex;align-items:center;gap:1px;flex:none;margin:0 0 var(--ui-space-xs) calc(-1 * var(--ui-space-xs))}
+  .tab-add{display:grid;place-items:center;width:var(--ui-control-h-sm);height:var(--ui-control-h-sm);padding:0;border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink-muted);cursor:pointer}
+  .tab-add:hover{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   @media (hover:none){.tab.on .tab-close{opacity:1;pointer-events:auto}}
 </style>
