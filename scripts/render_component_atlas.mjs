@@ -27,8 +27,12 @@ const MARK = /^[\u0300-\u036F\u3099\u309A\u309B\u309C\u302E\u302F]$/u
 function leaves(value) {
   const found = new Set()
   for (const [, cid] of value.matchAll(/&([^;]+);/g)) found.add(cid)
-  for (const char of value.replace(/&[^;]+;/g, '')) {
+  // BabelStone writes a numbered component as `{94}` and zi.tools as `#(1-2-3)`; the digits are
+  // catalogue positions, not characters, and must not become components.
+  const text = value.replace(/\{[^}]*\}/g, '').replace(/#\([^)]*\)/g, '').replace(/&[^;]+;/g, '')
+  for (const char of text) {
     if (OPERATORS.has(char) || MARK.test(char)) continue
+    if (/[\x00-\x7F]/.test(char)) continue
     found.add(`ucs:${char.codePointAt(0).toString(16).toUpperCase()}`)
   }
   return found
@@ -64,9 +68,10 @@ const read = cid => {
   return Number.isFinite(point) ? String.fromCodePoint(point) : ''
 }
 
-const rows = [...uses.entries()]
-  .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-  .slice(0, LIMIT)
+// Unencoded components are the point of the catalogue but are used far less, so they are kept
+// regardless of the cap; without them the page shows only what every font already draws.
+const ranked = [...uses.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+const rows = [...ranked.slice(0, LIMIT), ...ranked.slice(LIMIT).filter(([cid]) => !cid.startsWith('ucs:'))]
   .map(([cid, count]) => ({
     cid, uses: count, char: read(cid),
     encoded: cid.startsWith('ucs:'),
@@ -94,32 +99,58 @@ const html = `<!doctype html>
   p.note { color: var(--muted); margin: 0 0 16px; max-width: 70ch }
   input { padding: 7px 10px; font: inherit; width: 260px; border: 1px solid var(--edge); border-radius: 7px; background: transparent; color: inherit }
   table { border-collapse: collapse; width: 100%; margin-top: 14px }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0 2px }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted) }
+  .controls input[type=number] { width: 84px }
   th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--edge); vertical-align: middle }
   th { font-size: 12px; color: var(--muted); font-weight: 600 }
   .form { font-size: 26px; line-height: 1 }
   .cid { font-family: ui-monospace, monospace; font-size: 11px; color: var(--muted) }
   .uses { font-variant-numeric: tabular-nums; text-align: right; width: 70px }
   .inside { font-size: 18px; letter-spacing: 1px; overflow-wrap: anywhere }
+  .check { display:inline-flex; gap:6px; align-items:center; color:var(--muted) }
+  .count { color:var(--muted); font-size:12px; margin:8px 0 10px }
+  .about { max-width:78ch; color:var(--muted); margin:0 0 14px }
+  .about p { margin:0 0 8px } .about b { color:var(--ink) }
   .tag { font-size: 10px; border: 1px solid var(--edge); border-radius: 9px; padding: 0 6px; color: var(--muted); margin-left: 6px }
 </style>
 <body>
 <h1>Component atlas</h1>
+<div class="about">
+  <p><b>What a cid is.</b> A component's identity, not its character. <code>ucs:53E3</code> is the Unicode
+  scalar U+53E3 in hexadecimal — 53E3 is 21475, the code point of 口. <code>chise:GT-K00059</code> is a part
+  CHISE names that no code point covers; it carries a private-use scalar internally. An old description could
+  name one part <code>bsp:22</code> (BabelStone's numbered component) and another <code>chise:GT-K00125</code>;
+  both are aliases of one cid.</p>
+  <p><b>Used in</b> counts descriptions naming this component, not characters: a character described two ways
+  counts twice. <b>Appears in</b> lists the characters those descriptions describe, capped at 120.
+  <b>Unencoded</b> marks a part with no code point, so no font draws it.</p>
+</div>
 <p class="note">
   Built ${data.built} from <code>data/ids-corpus.json.gz</code> (${data.counts.descriptions.toLocaleString()} descriptions,
   ${data.licence}). Every component a description uses, most used first. A count covers only what the corpus
   describes: a part named through a CHISE entity that is still unresolved is not yet counted, so treat
   these as a floor.
 </p>
-<input id="filter" placeholder="Filter by character, cid or contained character" autofocus>
+<input id="filter" type="search" placeholder="Character, cid, or a character it appears in" autofocus>
+<label class="check"><input id="onlyUnencoded" type="checkbox"> unencoded only</label>
+<label class="check"><input id="onlyEncoded" type="checkbox"> encoded only</label>
+<label class="check">at least <input id="minUses" type="number" min="0" step="10" value="0"> uses</label>
+<p class="count" id="count"></p>
 <table><thead><tr><th>Component</th><th>Used in</th><th>Appears in</th></tr></thead><tbody id="rows"></tbody></table>
 <script>
 const data = ${JSON.stringify(data)}
 const body = document.getElementById('rows')
 const escape = value => String(value).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
-function render(filter = '') {
-  const needle = filter.trim()
-  const rows = data.components.filter(row => !needle
-    || row.char === needle || row.cid.includes(needle) || row.subjects.some(char => char === needle))
+function render() {
+  const needle = document.getElementById('filter').value.trim()
+  const onlyU = document.getElementById('onlyUnencoded').checked
+  const onlyE = document.getElementById('onlyEncoded').checked
+  const min = Number(document.getElementById('minUses').value) || 0
+  const rows = data.components.filter(row => (!needle
+    || row.char === needle || row.cid.includes(needle) || row.subjects.includes(needle))
+    && (!onlyU || !row.encoded) && (!onlyE || row.encoded) && row.uses >= min)
+  document.getElementById('count').textContent = rows.length.toLocaleString() + ' components'
   body.innerHTML = rows.slice(0, 400).map(row => \`<tr>
     <td><span class="form">\${escape(row.char)}</span><div class="cid">\${escape(row.cid)}\${row.unencoded ? '<span class="tag">unencoded</span>' : ''}</div></td>
     <td class="uses">\${row.uses.toLocaleString()}</td>
@@ -127,7 +158,7 @@ function render(filter = '') {
   </tr>\`).join('')
   if (!rows.length) body.innerHTML = '<tr><td colspan="3">No component matches that.</td></tr>'
 }
-document.getElementById('filter').addEventListener('input', event => render(event.target.value))
+for (const id of ['filter','onlyUnencoded','onlyEncoded','minUses']) document.getElementById(id).addEventListener('input', render)
 render()
 </script>
 </body></html>
