@@ -354,5 +354,6 @@
   "info.site.editorial": "Phụ trợ biên tập",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Danh sách Tangut IDS",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "nét đầu"
 }

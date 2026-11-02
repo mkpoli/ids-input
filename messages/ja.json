@@ -354,5 +354,6 @@
   "info.site.editorial": "編集部の補助",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS 一覧",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "最初の画"
 }

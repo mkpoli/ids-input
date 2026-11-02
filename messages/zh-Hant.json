@@ -354,5 +354,6 @@
   "info.site.editorial": "用字助記",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS 表",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "首筆"
 }
