@@ -23,6 +23,7 @@ import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { isOutbound, markFace, markParts } from './marks.js'
+import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
 import componentConstants from './constants.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
@@ -110,7 +111,11 @@ export function parseTree(sequence, arity) {
     const n = arity(ch)
     if (!n) {
       if (isSelector(chars[at])) ch += chars[at++]
-      return ch
+      // A tone mark belongs to the syllable it follows, not to the whole description.
+      const end = toneMarksAt(chars, at)
+      const tones = chars.slice(at, end).join('')
+      at = end
+      return ch + tones
     }
     if (MODIFIABLE.has(ch) && chars[at] === '[') {
       const close = chars.indexOf(']', at + 1)
@@ -661,6 +666,12 @@ export class Composer {
       const redrawn = [...this.exclude].find(ch => this.sequenceOf(ch) === keyOf(node))
       if (redrawn) encoded = redrawn
     }
+    // A syllable with tone marks splits before any whole-character lookup, since no character
+    // carries a tone.
+    if (typeof node === 'string') {
+      const { rest, tones } = splitToneMarks(node)
+      if (tones) return this.toneLeaf(rest, tones, region)
+    }
     if (this.separate && Array.isArray(node)) encoded = null
     if (encoded && !this.expanding.has(encoded) && (typeof node === 'string' || !this.excluded(encoded))) {
       const glyph = this.glyph(encoded)
@@ -714,6 +725,20 @@ export class Composer {
       if (moved) return moved
     }
     return this.shares(op, children, region)
+  }
+
+  /** A syllable carrying tone marks: it keeps only the part of the box the marks leave free, at the
+   *  right, and the marks stand at the left as the tone of the syllable is written.
+   *  @param {string} base @param {string} tones @param {number[]} region */
+  toneLeaf(base, tones, region) {
+    const probe = markParts(this, tones, region, region)
+    const fitted = probe.length ? markFace(region, union(probe.map(part => part.target))) : { face: region, scale: 1 }
+    const glyph = this.glyph(base)
+    if (!glyph) throw new LookupError(`No glyph or sequence draws ${base}.`)
+    const marks = markParts(this, tones, region, fitted.face)
+    // A dot has no stem, so the weight pass leaves it its size.
+    for (const part of marks) part.fixed = true
+    return [this.place(glyph, fitted.face, this.ink(base), `glyph ${base}`), ...marks]
   }
 
   /** A designed enclosing form of a whole operand, where the export has no cut of it: 电 as ⿺'s

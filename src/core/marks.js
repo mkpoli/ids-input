@@ -18,6 +18,25 @@ const isSelector = (/** @type {string | undefined} */ char) => char !== undefine
  */
 export const isMark = char => unicodeProperty('marks', char)
 
+/** A Middle Korean tone mark, U+302E or U+302F. Unlike the other loose marks it names the tone of
+ * the syllable it follows, and stays on it inside a longer description. @param {string | undefined} char */
+export const isToneMark = char => char === '\u302E' || char === '\u302F'
+
+/** Where the tone marks running from `at` end. @param {string[]} chars @param {number} at */
+export function toneMarksAt(chars, at) {
+  let end = at
+  while (isToneMark(chars[end])) end++
+  return end
+}
+
+/** The tone marks ending `marks`, apart from what comes before them. @param {string} marks */
+export function splitToneMarks(marks) {
+  const chars = [...marks]
+  let at = chars.length
+  while (at > 0 && isToneMark(chars[at - 1])) at--
+  return { rest: chars.slice(0, at).join(''), tones: chars.slice(at).join('') }
+}
+
 /** Whether `text` is one or more loose marks and nothing else. @param {string | null | undefined} text */
 export const isMarks = text => {
   const chars = [...(text ?? '')]
@@ -68,6 +87,7 @@ export function withMarks(part, marks) {
  * `tree` with every loose mark hoisted to its root, in reading order, and none left inside. The
  * text of a description can only carry marks at its end, so a mark an edit leaves on an inner part
  * belongs to the whole: dropping a marked sequence into a slot annotates the description it joins.
+ * A tone mark is the exception, since it names the tone of one syllable and never of the whole.
  * @param {import('./ids.js').Part} tree
  * @returns {import('./ids.js').Part}
  */
@@ -79,8 +99,10 @@ export function normalizeMarks(tree) {
     if (part === null) return null
     if (typeof part === 'string') {
       const { base, marks } = splitMarks(part)
-      if (marks) found.push(marks)
-      return base
+      const chars = [...marks], tones = chars.filter(isToneMark).join(''), rest = chars.filter(ch => !isToneMark(ch)).join('')
+      if (!rest) return part
+      found.push(rest)
+      return base + tones
     }
     // A node's marks come after its children's, so collect the children first.
     const parts = part.parts.map(strip)

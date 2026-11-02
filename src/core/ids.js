@@ -2,7 +2,7 @@
 import { hangulClusterAt } from './hangul.js'
 import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from './emoji.js'
-import { isMark, normalizeMarks, marksOf, withMarks, withoutMarks } from './marks.js'
+import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
 import { strokeChain } from './strokes.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
@@ -237,9 +237,11 @@ export function parse(text, { open = false } = {}) {
         // An emoji sequence may hold zero-width joiners; other invisible characters are not components.
         if (!emoji && /[\p{Cc}\p{Cf}\p{Z}]/u.test(char)) throw 'character'
         if (!isComponent(char)) throw 'component'
+        // A tone mark names the tone of the syllable it follows, not of the whole description.
+        const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
         const cluster = hangulClusterAt(chars, at - 1)
-        if (cluster) { at = cluster.end; return cluster.text }
-        return !emoji && isSelector(chars[at]) ? char + chars[at++] : char
+        if (cluster) { at = cluster.end; return cluster.text + tones() }
+        return (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
       }
       const note = takesModifier(char) ? modifierAt(chars, at) : ''
       if (note) at += [...note].length + 2
@@ -284,15 +286,15 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
-  if (chain) return chain.end
+  if (chain) return toneMarksAt(chars, chain.end)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
     const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(char) ? emojiPrefix(chars.slice(at).join('')) : ''
-    if (emoji) return at + [...emoji].length
+    if (emoji) return toneMarksAt(chars, at + [...emoji].length)
     const cluster = hangulClusterAt(chars, at)
-    if (cluster) return cluster.end
-    return isSelector(chars[at + 1]) ? at + 2 : at + 1
+    if (cluster) return toneMarksAt(chars, cluster.end)
+    return toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1)
   }
   let end = at + 1
   const note = takesModifier(char) ? modifierAt(chars, end) : ''

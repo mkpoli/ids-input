@@ -44,7 +44,8 @@ historical forms, grouped by consonants, vowels and finals: click an initial con
 an optional final, and Insert puts the precomposed syllable or the Old Hangul jamo run into the
 editor. A tone row above the keyboard marks the syllable with a Middle Korean
 [bangjeom](https://encykorea.aks.ac.kr/Article/E0021781): one dot for the high tone, two for the
-rising one, the low tone unmarked. The mark follows the syllable in the description. Syllable
+rising one, the low tone unmarked. The mark stays on its syllable when the syllable goes into a
+description. Syllable
 searches the 11,172 modern syllables by character, jamo,
 [Revised Romanization](https://www.korean.go.kr/front_eng/roman/roman_01.do) (or normalized
 [McCune-Reischauer](https://en.wikipedia.org/wiki/McCune%E2%80%93Reischauer) initials and breves) or
