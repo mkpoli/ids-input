@@ -1337,7 +1337,10 @@ export class Composer {
       && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
       && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
     const weights = children.map((child, k) => this.ink(child) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
-    const gap = compactYan ? 0.01 : 0.04, fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
+    // A gap of its own width between rows of a dense stack reads as air around fine parts; keeping
+    // it to a share of the span leaves the parts the room instead (𰻞's 穴 and 心).
+    const gap = compactYan ? 0.01 : op === '⿳' && children.length === 3 ? 0.005 : 0.04
+    const fit = (1 - gap * (children.length - 1)) / weights.reduce((a, b) => a + b, 0)
     const lo = region[axis], span = region[axis + 2] - region[axis]
     const groups = []
     let yanBox = null
