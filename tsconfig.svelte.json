@@ -1,5 +1,5 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "noEmit": true, "emitDeclarationOnly": false, "declaration": false },
-  "include": ["src/**/*.js", "src/**/*.svelte"]
+  "include": ["src/**/*.js", "src/**/*.svelte", "src/**/*.d.ts"]
 }

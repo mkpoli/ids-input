@@ -5,6 +5,9 @@
 // names the files itself; `demo/vite.config.js` writes `unicode.json` with the published names.
 
 const FAMILY = 'IDS Fallback'
+// The shards are registered under `IDS Fallback Shared`, and `--fallback-font` names it in the
+// stacks: a family that a stylesheet also declares would match nothing in Firefox and WeChat.
+const SHARED = 'IDS Fallback Shared'
 // No element uses the oblique style, so the browser does not pull the faces for plain text.
 const STYLE = 'oblique 0deg'
 /** The shards, by the first byte of their range, read from the sheet that declares them. */
@@ -22,8 +25,30 @@ const ready = fetch(new URL('unicode.json', new URL('./', document.baseURI)))
   })
   .catch(() => { for (let shard = 0; shard < 0x400; shard++) SHARDS.add(shard.toString(16).padStart(3, '0')) })
 
+/** The dev server's addresses for the shards, the fonts directory's files as URL imports.
+ * @type {Record<string, string>} */
+const DEV_SHARDS = {}
+/** Each published shard's range, from the stylesheet the builder wrote. @type {Map<string, string>} */
+const RANGES = new Map()
+for (const [, name, range] of (await import('../../fonts/unicode.css?raw')).default.matchAll(/url\("\.\/unicode\/([0-9a-f]{3})\.woff2"\)[^}]*unicode-range:([^}]*)\}/g)) RANGES.set(name, range)
+// Each shard as a module URL the dev server serves; the build hashes them into its asset folder and
+// names them in `unicode.json` instead.
+const DEV = import.meta.glob('../../fonts/unicode/*.woff2', { query: '?url', import: 'default', eager: true })
+for (const [path, url] of Object.entries(DEV)) DEV_SHARDS[/\/([0-9a-f]{3})\.woff2$/.exec(path)?.[1] ?? path] = url
+
 /** @type {Map<string, Promise<FontFace>>} */
 const faces = new Map()
+
+/**
+ * Points `--fallback-font` at `IDS Fallback Shared`, a family the document now has a face of, so the
+ * stacks that ask for it draw with the shards before the installed fonts.
+ */
+function address() {
+  const style = document.getElementById('ids-fallback-font') ?? document.createElement('style')
+  style.id = 'ids-fallback-font'
+  style.textContent = `:root{--fallback-font:"${SHARED}"}`
+  if (!style.isConnected) document.head.append(style)
+}
 
 /**
  * Registers and loads the shard that draws `char`, once; a character in no shard stays the
@@ -36,11 +61,16 @@ export function loadFallback(char) {
   if (!face) {
     face = ready.then(() => {
       if (!SHARDS.has(name)) throw new Error('no shard')
-      const url = new URL(published[name] ?? `fonts/unicode/${name}.woff2`, new URL('./', document.baseURI)).href
-      const made = new FontFace(FAMILY, `url("${url}")`, { style: STYLE })
+      // The build writes `unicode.json` beside the page with the published shard files in it; the
+      // dev server publishes the shard as a URL import, which the bundler hands here as a file URL.
+      // A shard draws only its own range: a face without one covers every character, and a shard
+      // with no glyph for a character in its range would then hide the later faces for it.
+      const url = published[name] ?? DEV_SHARDS[name]
+      const made = new FontFace(SHARED, `url("${url}")`, { style: STYLE, unicodeRange: RANGES.get(name) })
       document.fonts.add(made)
+      address()
       return made.load()
-    }).catch(() => new FontFace(FAMILY, ''))
+    }).catch(() => new FontFace(SHARED, ''))
     faces.set(name, face)
   }
   face.catch(() => {})
