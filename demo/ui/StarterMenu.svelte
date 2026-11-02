@@ -164,11 +164,11 @@
   .starter-body{padding:4px 4px 2px}
   .starter-body:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
   .starter-recent-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-  .starter-recent-item{display:flex;align-items:center;gap:var(--ui-space-sm);width:100%;min-height:var(--ui-control-h-lg);padding:0 var(--ui-space-sm);
-    border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-sm);text-align:left;cursor:pointer}
+  .starter-recent-item{display:flex;align-items:center;gap:var(--ui-space-md);width:100%;min-height:52px;padding:var(--ui-space-2xs) var(--ui-space-sm);
+    border:0;border-radius:var(--ui-radius-lg);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-md);text-align:left;cursor:pointer}
   .starter-recent-item:hover{background:var(--ui-color-surface-hover)}
   .starter-recent-item:focus-visible{background:var(--ui-color-surface-hover);outline:2px solid var(--ui-color-focus);outline-offset:-2px}
-  .starter-recent-thumb{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:2px;border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink-muted)}
-  .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:14px}
+  .starter-recent-thumb{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink)}
+  .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:var(--ui-text-md)}
   .starter-recent-empty{margin:0;padding:var(--ui-space-md) var(--ui-space-sm);color:var(--ui-color-ink-muted);font-size:12.5px}
 </style>
