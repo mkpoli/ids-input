@@ -1548,8 +1548,9 @@
     /* The stage takes the height the tabs and the tools leave, so the square canvas can be sized
        from it. Sizing that box from the pane's whole height left the fixed cost of the tools out:
        once they wrapped to a second row the box stayed too wide for its row and squeezed the
-       canvas, cutting the padding above and below it. */
-    .tree-stage{flex:1;width:100%;min-height:0;place-items:center;container-type:size}
+       canvas, cutting the padding above and below it. The floor keeps a readable canvas when the
+       splitter leaves little height; the pane scrolls instead. */
+    .tree-stage{flex:1;width:100%;min-height:140px;place-items:center;container-type:size}
     .tree-box{width:min(100%,100cqh)}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:auto}
