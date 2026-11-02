@@ -42,7 +42,10 @@ export; mixed Han–Tangut descriptions also use the host's han-compose dataset.
 The Hangul tab has Jamo, Compose and Syllable views. Compose is one jamo keyboard of modern and
 historical forms, grouped by consonants, vowels and finals: click an initial consonant, a vowel and
 an optional final, and Insert puts the precomposed syllable or the Old Hangul jamo run into the
-editor. Syllable searches the 11,172 modern syllables by character, jamo,
+editor. A tone row above the keyboard marks the syllable with a Middle Korean
+[bangjeom](https://encykorea.aks.ac.kr/Article/E0021781): one dot for the high tone, two for the
+rising one, the low tone unmarked. The mark follows the syllable in the description. Syllable
+searches the 11,172 modern syllables by character, jamo,
 [Revised Romanization](https://www.korean.go.kr/front_eng/roman/roman_01.do) (or normalized
 [McCune-Reischauer](https://en.wikipedia.org/wiki/McCune%E2%80%93Reischauer) initials and breves) or
 code point; the romanization is a syllable spelling without the assimilation rules that cross
