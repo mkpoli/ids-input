@@ -31,7 +31,7 @@ export function inkOf(s) {
 export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, placeholders: s.placeholders })
 
 /** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] @param {number[][]} [slots] @param {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] @param {string} [cut] @param {number | null} [cutLeaf] */
-export const scopedSvgOf = (scopes, s, size = s.size, slots = [], emoji = [], cut = '', cutLeaf = null) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [], emoji, cut })
+export const scopedSvgOf = (scopes, s, size = s.size, slots = [], emoji = [], cut = '', cutLeaf = null) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [], emoji, cut, cutLeaf })
 
 /** The SVG string as a PNG blob at its pixel size, on `back` where a colour is given (an SVG drawn
  *  without a background of its own is transparent otherwise). @param {string} svg @param {number} size @param {string | null} [back] @returns {Promise<Blob>} */

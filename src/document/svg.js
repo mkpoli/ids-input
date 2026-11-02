@@ -115,7 +115,6 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   // The composer sends emoji boxes and the cut path in its own coordinates; the frame of the layer
   // each stands for puts them where the ink is after a layer is moved.
   /** @param {number | null | undefined} leaf @returns {number[] | null} */
-  /** @param {number | null | undefined} leaf @returns {number[] | null} */
   const frameOf = leaf => typeof leaf === 'number' ? drawing.leafFrames?.get(leaf) ?? null : null
   /** @param {number | null | undefined} leaf @param {string} [attribute] */
   const matrixOf = (leaf, attribute = 'transform') => {

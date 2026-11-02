@@ -257,7 +257,7 @@
 >
               {#if view?.scopes}
                 <!-- The scoped drawing carries its own ink, cut and emoji, as the export does. -->
-                {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}`, emoji: drawn.emoji, cut: drawn.cut, cutLeaf })}
+                {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}`, emoji: drawn.emoji, cut: drawn.cut, cutLeaf: drawn.parts?.find(part => part.cut)?.leaf ?? null })}
                 <g class="document" style:color="var(--_ink)">
                   {@html markup.defs}
                   {@html markup.body}
