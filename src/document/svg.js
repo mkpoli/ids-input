@@ -17,17 +17,18 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
-/** @typedef {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} EmojiItem */
+/** @typedef {{ text: string, box: number[], leaf?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} EmojiItem */
 
-/** An emoji as one SVG `<text>`, escaped and centred in its box at the size its font draws it, with any reflection.
- * @param {EmojiItem} item @param {string} [attribute] */
-const emojiText = (item, attribute = '') => {
+/** An emoji as one SVG `<text>`, escaped and centred in its box at the size its font draws it, with any
+ *  reflection and the canvas matrix of the layer it stands for.
+ * @param {EmojiItem} item @param {string} [attribute] @param {number[] | null} [matrix] */
+const emojiText = (item, attribute = '', matrix = null) => {
   const { x, y, size } = emojiPlace(item)
   const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const reflect = emojiTransform(item)
+  const reflect = [matrix ? `matrix(${matrix.map(value => Math.round(value * 1e4) / 1e4).join(' ')})` : '', emojiTransform(item)].filter(Boolean).join(' ')
   return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
 }
-/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null }} SvgOptions */
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null, cutLeaf?: number | null }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
 /**
@@ -38,7 +39,7 @@ const emojiText = (item, attribute = '') => {
  * @param {ScopeTree} drawing @param {SvgOptions} [options]
  * @returns {ScopedMarkup}
  */
-export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = null, cut = '' } = {}) {
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = null, cut = '', cutLeaf = null } = {}) {
   const fill = ink === 'currentColor' ? 'currentColor' : colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
   const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
@@ -111,16 +112,26 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   const all = emoji ?? []
   const cutEmoji = all.filter(item => item.cut), shownEmoji = all.filter(item => !item.cut)
   const cutPath = pathData(cut ?? '')
+  // The composer sends emoji boxes and the cut path in its own coordinates; the frame of the layer
+  // each stands for puts them where the ink is after a layer is moved.
+  /** @param {number | null | undefined} leaf @returns {number[] | null} */
+  /** @param {number | null | undefined} leaf @returns {number[] | null} */
+  const frameOf = leaf => typeof leaf === 'number' ? drawing.leafFrames?.get(leaf) ?? null : null
+  /** @param {number | null | undefined} leaf @param {string} [attribute] */
+  const matrixOf = (leaf, attribute = 'transform') => {
+    const matrix = frameOf(leaf)
+    return matrix ? ` ${attribute}="matrix(${matrix.map(value => Math.round(value * 1e4) / 1e4).join(' ')})"` : ''
+  }
   let emojiMask = ''
   if (cutEmoji.length || cutPath) {
     const id = `${prefix}-emoji`
     defs.push(`<filter id="${id}-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
-    defs.push(`<mask id="${id}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="#ffffff"/>${cutPath ? `<path d="${cutPath}" fill="#000000"/>` : ''}${cutEmoji.map(item => emojiText(item, ` filter="url(#${id}-cut)"`)).join('')}</mask>`)
+    defs.push(`<mask id="${id}" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000"><rect width="1000" height="1000" fill="#ffffff"/>${cutPath ? `<path d="${cutPath}" fill="#000000"${matrixOf(cutLeaf)}/>` : ''}${cutEmoji.map(item => emojiText(item, ` filter="url(#${id}-cut)"`, frameOf(item.leaf))).join('')}</mask>`)
     emojiMask = ` mask="url(#${id})"`
   }
   // A restored emoji is put back by a nested subtraction and keeps clear of the mask.
   const emojiMarkup = shownEmoji.map(item => {
-    const text = emojiText(item)
+    const text = emojiText(item, '', frameOf(item.leaf))
     return emojiMask && !item.restored ? `<g${emojiMask}>${text}</g>` : text
   }).join('')
   const clipped = `<g clip-path="url(#${clipId})"><g${emojiMask}>${body}</g>${emojiMarkup}${slotsMarkup}</g>`

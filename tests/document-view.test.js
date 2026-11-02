@@ -85,6 +85,20 @@ describe('scoped markup', () => {
     expect(markup.body).toContain('x="250"')
     expect(markup.body).toContain('y="500"')
   })
+  it('moves an emoji and the cut with the layer they stand for', () => {
+    const document = fromSequence('㇯口🚗')
+    document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 100, 0] }]
+    const view = documentView(document, { parts: [{ leaf: 0, d: square(0, 500), cut: true }, { leaf: 1, d: '' }], emoji: [{ text: '🚗', box: [500, 0, 500, 1000], leaf: 1 }] }, sketch(boxes))
+    expect(view.scopes?.leafFrames.get(0)?.[4]).toBe(50)
+    expect(view.scopes?.leafFrames.get(1)?.[4]).toBe(0)
+    // The cut follows the moved 口, the emoji stays with its own untouched layer.
+    const markup = scopesMarkup(view.scopes, { emoji: [{ text: '🚗', box: [500, 0, 500, 1000], leaf: 1 }], cut: square(0, 500), cutLeaf: 0 })
+    expect(markup.defs).toContain('<path d="M0 0L500 0L500 1000L0 1000Z" fill="#000000" transform="matrix(1 0 0 1 50 0)"')
+    expect(markup.body).toContain('>🚗</text>')
+    const moved = scopesMarkup(view.scopes, { emoji: [{ text: '🚗', box: [0, 0, 500, 1000], leaf: 0 }] })
+    expect(moved.body).toContain('transform="matrix(1 0 0 1 50 0)"')
+    expect(scopesMarkup(view.scopes, { emoji: [{ text: '🚗', box: [0, 0, 500, 1000] }] }).body).not.toContain('matrix(')
+  })
   it('returns defs and body without the svg wrapper', () => {
     const view = documentView(fromSequence('⿰木口'), drawing(parts), sketch(boxes))
     const markup = scopesMarkup(view.scopes, { idPrefix: 'preview' })

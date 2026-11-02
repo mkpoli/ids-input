@@ -411,6 +411,8 @@
   let emoji = $state.raw(null)
   /** @type {string | null} */
   let cut = $state.raw(null)
+  /** @type {number | null} */
+  let cutLeaf = $state.raw(null)
   /** @type {{ save: (format?: 'svg' | 'png') => Promise<void> } | undefined} */
   let exportPanel = $state()
   /** @type {HTMLButtonElement | null} */ let settingsButton = $state(null)
@@ -1329,7 +1331,7 @@
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
                 {#snippet detailContent()}
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
@@ -1385,7 +1387,7 @@
           {/if}
         </dialog>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -1420,9 +1422,9 @@
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
-<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, shareFrom, currentDocument())} sequence={editor.whole} {t} onnote={note} />
-<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, shareFrom, currentDocument())}
-  {drawing} {scopes} {slots} {emoji} {cut} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
+<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
+<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
+  {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}

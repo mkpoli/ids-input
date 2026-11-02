@@ -10,7 +10,7 @@ import { DESKTOP, SITE } from './desktop.js'
 /** What the output panel has drawn: the composed drawing, or the scoped document the export uses.
  *  @typedef {{ drawing: import('../../src/adapter/types.js').Drawing | null,
  *   scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][],
- *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null }} Drawn */
+ *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null }} Drawn */
 /** @typedef {{ sequence: string, link: string, document: string, context: string, image: Blob | null }} ReportSnapshot */
 /** @typedef {{ number: number, url: string, duplicate: boolean }} ReportAnswer */
 
@@ -296,10 +296,10 @@ async function settled(preview, ms = 6000) {
 /** The drawing as a PNG — the scoped document's where it has one, as the export does — else the
  *  preview's own SVG rasterized the same way; null when neither works, so a report still goes
  *  without one. @param {Drawn} drawn @param {Element | null} preview @returns {Promise<Blob | null>} */
-export async function reportImage({ drawing, scopes, slots = [], emoji, cut }, preview) {
+export async function reportImage({ drawing, scopes, slots = [], emoji, cut, cutLeaf }, preview) {
   if (scopes ?? drawing) {
     try {
-      const png = scopes ? await scopedPngOf(scopes, SHOT, slots, emoji ?? [], cut ?? '') : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), SHOT)
+      const png = scopes ? await scopedPngOf(scopes, SHOT, slots, emoji ?? [], cut ?? '', cutLeaf) : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), SHOT)
       if (png.size <= LIMITS.image) return png
     } catch { /* The preview's SVG below. */ }
   }

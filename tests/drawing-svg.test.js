@@ -108,3 +108,8 @@ it('uses an emoji cut as a luminance mask on paths and emoji', () => {
   expect(svg.indexOf('>👩🏽‍💻</text>')).toBeLessThan(svg.indexOf('</mask>'))
   expect(svg.indexOf('>😀</text>')).toBeGreaterThan(svg.indexOf('</mask>'))
 })
+
+it('moves the cut with the part it belongs to', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', cut: 'M0 0L10 0L10 10Z', parts: [{ leaf: 0, d: 'M0 0Z', cut: true }, { leaf: 1, d: '', }], transforms: ['translate(10 0)', null], emoji: [{ text: '😀', box: [0, 0, 100, 200], part: 1, cut: true }] })
+  expect(svg).toContain('transform="translate(10 0)"')
+})

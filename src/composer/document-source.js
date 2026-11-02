@@ -14,7 +14,7 @@ import { TransformError, parsePath, toSequence, transformPath } from '../documen
 /** @typedef {import('../adapter/types.js').SketchLeaf} SketchLeaf */
 /** @typedef {[number, number, number, number]} Box */
 /** @typedef {{ node: Node, leaf: number | null, region: Box | null }} LayerInfo */
-/** @typedef {{ source: LayerSource, complete: boolean, issues: string[] }} DocumentSource */
+/** @typedef {{ source: LayerSource, complete: boolean, issues: string[], info: Map<string, LayerInfo> }} DocumentSource */
 
 const CANVAS = /** @type {Box} */ ([0, 0, 1000, 1000])
 
@@ -169,6 +169,7 @@ export function documentSource(document, drawing, sketch) {
     source: { geometry, placement },
     complete: issues.length === 0,
     issues,
+    info,
   }
 }
 
