@@ -123,13 +123,19 @@ async function warm() {
 function run(file, limit = 600) {
   return new Promise(resolve => {
     const preload = join(root, 'scripts', 'check-demo-preload.mjs')
+    // Its own process group, so a check that hangs takes its browser down with it: killing the
+    // wrapper alone leaves the browser holding the pipes, and the run waits on them forever.
     const child = spawn('bun', ['--preload', preload, join('demo', file)], {
       cwd: root,
       env: { ...process.env, IDS_URL: url, CHROMIUM_PATH: chromium, CHECK_TIMEOUT: String(timeout * 1000) },
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     })
     let output = ''
-    const timer = setTimeout(() => { output += `\n(stopped after ${limit}s)`; child.kill('SIGKILL') }, limit * 1000)
+    const timer = setTimeout(() => {
+      output += `\n(stopped after ${limit}s)`
+      try { process.kill(-child.pid, 'SIGKILL') } catch { child.kill('SIGKILL') }
+    }, limit * 1000)
     child.stdout.on('data', chunk => { output += chunk })
     child.stderr.on('data', chunk => { output += chunk })
     child.on('error', error => { clearTimeout(timer); resolve({ code: 1, output: `${output}\n${error.message}` }) })
