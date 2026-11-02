@@ -1444,5 +1444,7 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation. Hosts without `characterInfo` retain
+the adapter records and the data documentation. The card keeps clear of surfaces marked
+`data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
+place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

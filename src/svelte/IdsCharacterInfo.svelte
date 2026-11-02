@@ -82,14 +82,33 @@
     panel?.hidePopover()
   }
   // The band between the anchor and the card: crossing the gap goes through neighbouring tiles,
-  // which must not take the card over until the pointer leaves the band.
+  // which must not take the card over until the pointer leaves the band. The card may sit on any
+  // side of the anchor, so the band runs along whichever sides face each other. A card placed far
+  // off to keep a surface clear has no such path, so only a short gap counts as on the way.
   function between() {
     if (!anchor || !panel) return false
-    const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
-    if (pointerX < Math.min(box.left, card.left) - 16 || pointerX > Math.max(box.right, card.right) + 16) return false
-    return card.bottom <= box.top
-      ? pointerY >= card.bottom - 16 && pointerY <= box.top + 16
-      : pointerY >= box.bottom - 16 && pointerY <= card.top + 16
+    const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect(), band = 16
+    if (card.bottom <= box.top) {
+      if (box.top - card.bottom > 48) return false
+      return pointerX >= Math.min(box.left, card.left) - band && pointerX <= Math.max(box.right, card.right) + band
+        && pointerY >= card.bottom - band && pointerY <= box.top + band
+    }
+    if (card.top >= box.bottom) {
+      if (card.top - box.bottom > 48) return false
+      return pointerX >= Math.min(box.left, card.left) - band && pointerX <= Math.max(box.right, card.right) + band
+        && pointerY >= box.bottom - band && pointerY <= card.top + band
+    }
+    if (card.right <= box.left) {
+      if (box.left - card.right > 48) return false
+      return pointerY >= Math.min(box.top, card.top) - band && pointerY <= Math.max(box.bottom, card.bottom) + band
+        && pointerX >= card.right - band && pointerX <= box.left + band
+    }
+    if (card.left >= box.right) {
+      if (card.left - box.right > 48) return false
+      return pointerY >= Math.min(box.top, card.top) - band && pointerY <= Math.max(box.bottom, card.bottom) + band
+        && pointerX >= box.right - band && pointerX <= card.left + band
+    }
+    return false
   }
   // The pointer on the anchor, on the card, or on the way between them.
   function nearAnchor() {
@@ -124,13 +143,62 @@
   function keep() { clearTimeout(hideTimer) }
   // A focusout caused by the card emptying is not focus leaving it.
   function cardFocusOut() { if (open) leave() }
+  /** The area two boxes share. @param {{ left: number, top: number, right: number, bottom: number }} a @param {{ left: number, top: number, right: number, bottom: number }} b */
+  const shared = (a, b) => Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+    * Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
+  /** The surfaces the card keeps clear of, which the host marks inside `root`. */
+  function keptClear() {
+    if (!root) return []
+    return [...root.querySelectorAll('[data-character-info-avoid]')].map(element => element.getBoundingClientRect())
+      .filter(box => box.width > 0 && box.height > 0 && box.bottom > 0 && box.right > 0 && box.top < innerHeight && box.left < innerWidth)
+  }
   function position() {
     if (!anchor || !panel) return
     const box = anchor.getBoundingClientRect(), card = panel.getBoundingClientRect()
-    x = Math.max(8, Math.min(box.left, innerWidth - card.width - 8))
-    // Below the anchor, or above it when the card would not fit; never above the top of the window.
-    const above = Math.max(8, box.top - card.height - 4)
-    y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : above
+    const margin = 8, gap = 4, width = card.width, height = card.height
+    // A spot is a place the card's top-left corner can take, clamped into the window; the last
+    // number marks one the window pushed in from where it would naturally sit.
+    /** @param {number} rawX @param {number} rawY @returns {number[]} */
+    const spot = (rawX, rawY) => [
+      Math.max(margin, Math.min(rawX, innerWidth - width - margin)),
+      Math.max(margin, Math.min(rawY, innerHeight - height - margin)),
+      rawX < margin || rawX > innerWidth - width - margin || rawY < margin || rawY > innerHeight - height - margin ? 1 : 0,
+    ]
+    // Below the anchor, then above it, then beside it; and around a surface the card must keep
+    // clear of when those spots land on it — beside it, or under the anchor shifted past its edge.
+    // Of the spots that cover neither the anchor nor a surface, one the window leaves where it sits
+    // beats one it pushes in, and the nearest wins; with none clear, the least covered one does.
+    /** @type {number[][]} */
+    const spots = [
+      spot(box.left, box.bottom + gap),
+      spot(box.left, box.top - gap - height),
+      spot(box.right + gap, box.top),
+      spot(box.left - gap - width, box.top),
+    ]
+    const clear = keptClear()
+    for (const block of clear) {
+      spots.push(
+        spot(block.left - gap - width, box.top),
+        spot(block.right + gap, box.top),
+        spot(box.left, block.top - gap - height),
+        spot(box.left, block.bottom + gap),
+        spot(Math.min(box.left, block.left - gap - width), box.bottom + gap),
+        spot(Math.max(box.left, block.right + gap), box.bottom + gap),
+        spot(Math.min(box.left, block.left - gap - width), box.top - gap - height),
+        spot(Math.max(box.left, block.right + gap), box.top - gap - height),
+      )
+    }
+    let best = spots[0], bestCover = Infinity, bestPushed = 1, bestDistance = Infinity
+    for (const [spotX, spotY, pushed] of spots) {
+      const place = { left: spotX, top: spotY, right: spotX + width, bottom: spotY + height }
+      const cover = clear.reduce((sum, block) => sum + shared(place, block), 0) + shared(place, box)
+      const distance = Math.hypot(spotX + width / 2 - box.left - box.width / 2, spotY + height / 2 - box.top - box.height / 2)
+      if (cover < bestCover - 0.5 || (Math.abs(cover - bestCover) <= 0.5
+        && (pushed < bestPushed || (pushed === bestPushed && distance < bestDistance)))) {
+        best = [spotX, spotY]; bestCover = cover; bestPushed = pushed; bestDistance = distance
+      }
+    }
+    x = best[0]; y = best[1]
   }
   // While a part is dragged the card stays shut: as a popover it would sit over the part the pointer aims at.
   let dragging = false
@@ -181,8 +249,10 @@
     pointerX = event.clientX; pointerY = event.clientY
     const element = target(event) ?? spanUnder(event, event.clientX, event.clientY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) { if (nearAnchor()) keep(); else leave(); return }
-    // On the way to the card the pointer passes over other parts; the open card stays until it leaves.
-    if (open && nearAnchor()) keep()
+    // On the way to the card the pointer passes over other parts; a pinned card stays until it
+    // leaves, while a hover card gives way to the part the pointer is on. The card can sit far from
+    // its anchor now, so the band between them must not hold a part the pointer is over.
+    if (open && nearAnchor() && (pinned || element === anchor)) keep()
     else schedule(element, element.dataset.character ?? '', 350)
   }
   /** The pointer leaving the window leaves no position behind. @param {PointerEvent} event */
@@ -297,12 +367,25 @@
     const node = root
     adapter.characterInfo
     if (!node) return
-    const changed = new MutationObserver(() => {
-      if (anchor && (!node.contains(anchor) || anchor.dataset.character !== char)) close()
-    })
-    changed.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-character'] })
     const resized = new ResizeObserver(position)
     if (panel) resized.observe(panel)
+    // A pane the host resizes moves the surfaces the card keeps clear of, even when the card itself
+    // keeps its size; watch them as well, and follow the markers as views come and go.
+    /** @type {Set<Element>} */
+    const watched = new Set()
+    function watchClear() {
+      const clear = new Set(node?.querySelectorAll('[data-character-info-avoid]') ?? [])
+      for (const element of watched) if (!clear.has(element)) { resized.unobserve(element); watched.delete(element) }
+      for (const element of clear) if (!watched.has(element)) { resized.observe(element); watched.add(element) }
+    }
+    watchClear()
+    const changed = new MutationObserver(() => {
+      watchClear()
+      if (!anchor) return
+      if (!node.contains(anchor) || anchor.dataset.character !== char) close()
+      else position()
+    })
+    changed.observe(node, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-character', 'data-character-info-avoid'] })
     // The card sits outside `root`, so the pointer position is read from the window.
     window.addEventListener('pointermove', pointer)
     window.addEventListener('pointerout', gone)

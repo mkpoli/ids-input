@@ -17,6 +17,12 @@ try {
     await page.getByText('associated with horses',{exact:true}).waitFor()
     assert.match(await panel.innerText(),/馬/); assert.match(await panel.innerText(),/🐎/)
     assert.match(await panel.innerText(),/Examples/)
+    // The card keeps every marked surface in view, taking a place beside it.
+    assert.ok(await page.evaluate(()=>{
+      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+      const shapes=[...document.querySelectorAll('[data-character-info-avoid]')].map(el=>el.getBoundingClientRect())
+      return shapes.length>0&&shapes.every(s=>card.right<=s.left||card.left>=s.right||card.bottom<=s.top||card.top>=s.bottom)
+    }),'the card leaves every marked surface uncovered')
     // Keep the card open while entering it; explanatory/source sections stay absent.
     await panel.hover();await page.waitForTimeout(300);assert.ok(await panel.isVisible())
     assert.equal(await panel.locator('details, footer').count(),0)
@@ -119,11 +125,16 @@ try {
     await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
     // A click keeps the card up, so it is the one that carries the close button.
     assert.equal(await panel.getByRole('button',{name:'Close character information'}).count(),1,'a pinned card offers the close button')
+    // A tile whose centre lies on the card's own surface, not on one of its controls: a press on a
+    // control belongs to the control, while a press on the surface reaches what the card covers.
     const covered=await page.evaluate(()=>{
-      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+      const panel=document.querySelector('.ids-character-info'), card=panel.getBoundingClientRect()
+      const control='button,a,input,select,textarea,summary,label,[role="button"]'
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
-        const box=n.getBoundingClientRect()
-        return box.top>card.top&&box.bottom<card.bottom&&box.left>card.left&&box.right<card.right&&n.dataset.character!=='馬'
+        const box=n.getBoundingClientRect(), x=box.x+box.width/2, y=box.y+box.height/2
+        if(x<=card.left||x>=card.right||y<=card.top||y>=card.bottom||n.dataset.character==='馬')return false
+        const hit=document.elementFromPoint(x,y)
+        return hit===panel||(panel.contains(hit)&&!hit.closest(control))
       })
       if(!node)return null
       const box=node.getBoundingClientRect()
