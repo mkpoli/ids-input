@@ -1,4 +1,5 @@
 <script>
+  import { untrack } from 'svelte'
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
@@ -75,6 +76,30 @@
     editor.take(given, path)
   }
 
+  // Lifting a box with the space bar: the keyboard way to switch a part with one in another branch.
+  // Space lifts the focused box, Space again on another box places it, Escape lets it go.
+  /** @type {{ path: Path, tree: Part } | null} */ let carry = $state.raw(null)
+  $effect(() => {
+    const tree = editor.tree
+    untrack(() => { if (carry && carry.tree !== tree) carry = null })
+  })
+  // Escape lets a lifted box go. The character card takes the first Escape (keydown) to close
+  // itself, so the release is read on keyup, where nothing has stopped the event.
+  $effect(() => {
+    /** @param {KeyboardEvent} event */
+    const release = event => { if (event.key === 'Escape' && carry) carry = null }
+    window.addEventListener('keyup', release)
+    return () => window.removeEventListener('keyup', release)
+  })
+  /** @param {Path} to */
+  function placeCarry(to) {
+    const held = carry
+    carry = null
+    if (!held || held.tree !== editor.tree) return
+    if (siblings(held.path, to)) editor.reorder(held.path, to)
+    else if (swappable(held.path, to)) editor.swap(held.path, to)
+  }
+
   // The context menu of a part: where it opened, and for which part.
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
@@ -96,6 +121,16 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === ' ' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.isComposing) {
+      event.preventDefault()
+      if (!path.length || editor.disabled) return
+      if (carry && samePath(carry.path, path)) { carry = null; return }
+      if (carry) { placeCarry(path); return }
+      carry = { path, tree: editor.tree }
+      editor.choose(path)
+      return
+    }
+    if (event.key === 'Escape' && carry) { event.preventDefault(); carry = null; return }
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
@@ -147,10 +182,10 @@
     <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} draggable={!editor.disabled && path.length > 0 && !(editing && samePath(editing.path, path))}
       ondragstart={event => startDrag(event, path)} ondragend={endDrag}
       title={path.length ? `${editor.name(part.op)} · ${t('ids.dragSibling')}` : undefined}
-      class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+      class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>
       <div class="ids-head">
-        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} aria-pressed={selected} disabled={editor.disabled}
+        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} aria-pressed={selected} aria-keyshortcuts="Space" disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
@@ -173,7 +208,7 @@
     {#if editing && samePath(editing.path, path)}
       {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
     {:else}
-    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected}
+    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected} aria-keyshortcuts="Space"
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
@@ -248,6 +283,7 @@
      one pixel, shrinking together with the available width and height. */
   .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
+  .ids-node.carried,.ids-part.carried{outline:2px dashed var(--_accent);outline-offset:2px}
   .ids-node[draggable="true"]{cursor:grab}
   .ids-node[draggable="true"]:active{cursor:grabbing}
   .ids-node.disabled{cursor:default}
