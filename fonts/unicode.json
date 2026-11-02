@@ -1,10 +1,10 @@
 {
  "family": "IDS Fallback",
- "count": 56651,
- "jigmo": 4462,
  "upem": 1000,
  "ascent": 880,
  "descent": -120,
+ "count": 56661,
+ "jigmo": 4572,
  "files": {
   "000": {
    "count": 188,
@@ -183,8 +183,8 @@
   },
   "023": {
    "count": 256,
-   "bytes": 12464,
-   "sha256": "f86801d6cc9b206dfcaf4c7454809304f6730b0d55ef29cb343f45c35661741f"
+   "bytes": 12448,
+   "sha256": "f58246b002b0b87e78987ad9462867499fcb25577d6c042c2f1d210886b5480c"
   },
   "024": {
    "count": 213,
@@ -193,8 +193,8 @@
   },
   "025": {
    "count": 256,
-   "bytes": 5176,
-   "sha256": "3933baa790763807f9e1b2d5f683a681231d4f18eb35c08ff4e3d391f1837fcf"
+   "bytes": 5052,
+   "sha256": "1480c7a8deb046e6d1a7075f1d58f8be848e740548e8effc83f64723841b4af6"
   },
   "026": {
    "count": 256,
@@ -203,8 +203,8 @@
   },
   "027": {
    "count": 256,
-   "bytes": 25308,
-   "sha256": "4f8a9bb449350f6cd179386e0200b0fcfd4aa70e752fc3659d9739dc69e36656"
+   "bytes": 25296,
+   "sha256": "d4f4b279801ebbbe176b874eb10cbbaadea34ee5cf2cc5f712ae7acf8541873d"
   },
   "028": {
    "count": 256,
@@ -238,10 +238,10 @@
    "sha256": "9c9ce4a14e5f81a662406f88e6c5ebf2dab516770077f0ef6e01340d59af8ee5"
   },
   "02e": {
-   "count": 201,
-   "bytes": 18076,
-   "sha256": "b8e7fe30a5f6bff6419ad284404e1d33ea4a2b48e894c27f48cd219581adc04a",
-   "jigmo": 12
+   "count": 199,
+   "bytes": 18112,
+   "sha256": "902ed762c4bc7c4bfff3d6d7630a94b5b96df21472be434bd268cca70af361ff",
+   "jigmo": 14
   },
   "02f": {
    "count": 214,
@@ -648,6 +648,12 @@
    "sha256": "70abc760bb3adab2ed8cb8f03543bf48aa591afbe05d71bc94fb23a5a528e419",
    "jigmo": 43
   },
+  "090": {
+   "count": 1,
+   "bytes": 23620,
+   "sha256": "b5d641d8efac4da3fd67b71285fa178ffb7025edf633b417e9573479ce032590",
+   "jigmo": 108
+  },
   "091": {
    "count": 1,
    "bytes": 15568,
@@ -661,9 +667,9 @@
    "jigmo": 20
   },
   "098": {
-   "count": 2,
-   "bytes": 22880,
-   "sha256": "0c808a35620065bd3afa095873697fcca3a5c5b7cbcb841332d909e7f45327b6",
+   "count": 3,
+   "bytes": 23004,
+   "sha256": "e95128ba38e8c5114012030d471236a0877f3db4218d52135dbb329c96ac58e7",
    "jigmo": 87
   },
   "09a": {
@@ -685,9 +691,9 @@
    "jigmo": 25
   },
   "09f": {
-   "count": 2,
-   "bytes": 13936,
-   "sha256": "c748b05df1e9be7f907c31d8ded64c9746be09746eb51d030df4d62bd262c695",
+   "count": 3,
+   "bytes": 14016,
+   "sha256": "f2c92624753743b67485f09e2e68e99f01c8aa7e51f50e60219aceb2815103d0",
    "jigmo": 46
   },
   "0a0": {
@@ -976,9 +982,9 @@
    "sha256": "5ee26ae79604f3431ae4a3daf31f68161f3c40233356b0d392336fe8b39a0ff9"
   },
   "0fa": {
-   "count": 203,
-   "bytes": 26088,
-   "sha256": "ad9166c86eea216a714f615f0eb8f7c7991cb666bb5b409f5c2c1a4faa200a23",
+   "count": 204,
+   "bytes": 26348,
+   "sha256": "d2b811c10160d4d28bd7ff22d1d3d451dfdab97863577e321446cf9ca304b6b7",
    "jigmo": 1
   },
   "0fb": {
@@ -1573,8 +1579,8 @@
   },
   "1f6": {
    "count": 248,
-   "bytes": 60588,
-   "sha256": "12c9a8d2a0c6c6835dbd7e982084e0f67cd7f6e1a0c3ce38aae35c5633e5a7f2"
+   "bytes": 60540,
+   "sha256": "48a81029a2fb972f9cb6187766281a360aa20d3e68241a329926208dc90e450e"
   },
   "1f7": {
    "count": 248,
@@ -1662,9 +1668,9 @@
    "sha256": "1bffbd06bb8e6dcd5b133ccc0519097db2d7db986f6769ed53822734eb314bc9"
   },
   "20c": {
-   "count": 4,
-   "bytes": 1624,
-   "sha256": "774f78dae1441ba4cfcc19cccbb24b88a4a4092ffe803c2b4dab2e273ca2b396"
+   "count": 5,
+   "bytes": 1856,
+   "sha256": "bf8f50283493d28d7a3d64d0fea5993706e8816ce0ed8b1191a66a80065d9156"
   },
   "20d": {
    "count": 4,
@@ -1682,9 +1688,9 @@
    "sha256": "9a7afdc02e9964f5c012956524b72f8e9ec722349eefd7952a055ba62a4866e5"
   },
   "210": {
-   "count": 4,
-   "bytes": 1888,
-   "sha256": "cd8124636a0127ddf249323427b908bea0302c0040ed993d8ac6a3e71a342fbd"
+   "count": 5,
+   "bytes": 2424,
+   "sha256": "eb67029675e963f44b2e5a0553c2477a6bcb64d60b15fd70536ec95b28cf5527"
   },
   "211": {
    "count": 5,
@@ -1707,9 +1713,9 @@
    "sha256": "915a28d0c732335068d57e0ac29cea903d23b1e57c81c96c2a9ac1d5f5bdf50b"
   },
   "215": {
-   "count": 11,
-   "bytes": 4148,
-   "sha256": "5bb4722be84a0de7aaf82bbf2d9e2232f5fb9d2d627daad61057ad10a2a03db9"
+   "count": 12,
+   "bytes": 4696,
+   "sha256": "1f461be743d05eecd5420274844ffc3f0df0d5e6949106392e1a0089c4e4d235"
   },
   "216": {
    "count": 8,
@@ -1852,9 +1858,9 @@
    "sha256": "b1078a00815b04b928716d8b94f8228f4724f048af5d426acb17faf18fc1391c"
   },
   "233": {
-   "count": 7,
-   "bytes": 2528,
-   "sha256": "a64386e6b9f961c50939b647ccbc42ea85e3d17c823c4cad19251fab27157d11"
+   "count": 8,
+   "bytes": 2872,
+   "sha256": "aba7f419c4c80651e6fe0bdd43d87de8915c23a978cc7e7dfb1f3865c40c2385"
   },
   "234": {
    "count": 10,
@@ -1902,9 +1908,9 @@
    "sha256": "937232231c5c5f138d1b64d9d5ba76159068dea6e217ee319227b423099802f1"
   },
   "23d": {
-   "count": 8,
-   "bytes": 3468,
-   "sha256": "3f1e150ce19811068910274d2e0b9f0ab4ef50a64f06906097fe1eafdbac1655"
+   "count": 9,
+   "bytes": 3828,
+   "sha256": "4686b351bdd0e28dc245d635739fe7cfec1d340416c7893545bb7167b93bda75"
   },
   "23e": {
    "count": 6,
@@ -1912,9 +1918,9 @@
    "sha256": "f1983875d87f2f1fc6f7481466f26a5ce9a4c655a3825342d01aa37a1dbea953"
   },
   "23f": {
-   "count": 9,
-   "bytes": 4108,
-   "sha256": "c66acc5fb723fcf009133e261b77474584380aa81f9da5f40fc88c9e2a56b30a"
+   "count": 10,
+   "bytes": 4468,
+   "sha256": "daef2c423ab9d6c00b836e7c45c41092c299d541b27e079b0a4630781fce60bd"
   },
   "240": {
    "count": 7,
@@ -1937,9 +1943,9 @@
    "sha256": "1c503d1b366e7a3a1e24c5fbfe5020283fe45737c7faa21b507b924a299c871b"
   },
   "244": {
-   "count": 7,
-   "bytes": 4228,
-   "sha256": "5efaedec450c0cbf8a9e953f5752372a42e04682ce36dd1dab4aea1907991378"
+   "count": 8,
+   "bytes": 4716,
+   "sha256": "d5c9c84788d2276f00ea003c12cc5e3fd59a861d3c57ce30f8e09f2de0bd6f97"
   },
   "245": {
    "count": 13,
@@ -2002,9 +2008,9 @@
    "sha256": "2cec649376bdceb9d2bc76e850a7b7bbc66c22c5afcb34e4526152dc3f968910"
   },
   "251": {
-   "count": 2,
-   "bytes": 1024,
-   "sha256": "ac65009d0ad4c65b3d2fdef7dacc0e59392e30e91f47d6a7e9f1de8e9f6f8d23"
+   "count": 3,
+   "bytes": 1240,
+   "sha256": "c206bbf3dacdf353999b83b538a3009f9066c752e054f1e2af1a616b3d8d606a"
   },
   "252": {
    "count": 8,
@@ -3028,8 +3034,8 @@
   },
   "334": {
    "count": 122,
-   "bytes": 42180,
-   "sha256": "a76f43c1e214b63ef375b91092c25f99e7d7b4622f4e4b7f912b868f96abf445"
+   "bytes": 42184,
+   "sha256": "eeafdaf567cc88348369303e0e5d61b788d3b06b16fdbcd37b3bd0cda74eac74"
   }
  },
  "sources": [
@@ -3044,7 +3050,7 @@
    "file": "NotoSansCJKjp-VF-2.004.ttf",
    "sha256": "240c9b83bf7b386edbae39995ae7e068ed4583f484d92e4a74c34158b5f27b1a",
    "url": "https://github.com/notofonts/noto-cjk/raw/Sans2.004/Sans/Variable/TTF/NotoSansCJKjp-VF.ttf",
-   "count": 14409,
+   "count": 14412,
    "copyright": "© 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'."
   },
   {
@@ -3580,13 +3586,6 @@
    "copyright": "Copyright 2018 Google Inc. All Rights Reserved."
   },
   {
-   "file": "NotoSansMono-Regular.ttf",
-   "sha256": "6b692c4b6d15ccf59f1c1fe8d11cb8a92f51960f3e9f1f523781755a3af7e29f",
-   "url": "https://archive.ubuntu.com/ubuntu/pool/universe/f/fonts-noto/fonts-noto-extra_20201225-2_all.deb",
-   "count": 70,
-   "copyright": "Copyright 2015 Google LLC. All Rights Reserved."
-  },
-  {
    "file": "NotoSansMro-Regular.ttf",
    "sha256": "6e054fa6b6a160e4ddd41fc9be84d6d62851b75e1e2872dcdfe5fd003958b33f",
    "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb",
@@ -3884,7 +3883,7 @@
    "file": "NotoSansSymbols2-Regular.ttf",
    "sha256": "876598db5f1e3bef2bc77c4d94c5b0d5d2c1620be4878a06f18fb5434e331688",
    "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb",
-   "count": 2360,
+   "count": 2423,
    "copyright": "Copyright 2017 Google Inc. All Rights Reserved."
   },
   {
@@ -4104,7 +4103,7 @@
    "sha256": "88d0a14d4aa9a96419720b39ba5da921a59560d76d4ec7d523acc06ed85cd3c2",
    "url": "https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf",
    "license": "SIL OFL 1.1",
-   "count": 375,
+   "count": 382,
    "copyright": "Copyright © 1998-2026 Roman Czyborra, Paul Hardy, Qianqian Fang, Andrew Miller, Johnnie Weaver, David Corbett, Ælla Chiana Moskopp, Rebecca Bettencourt, Ho-Seok Ee, et al."
   },
   {
@@ -4128,7 +4127,7 @@
    "sha256": "5da3582efe77e22073b86b3b86b556d7111148a76b957cfb53318a91da2efff0",
    "url": "https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip",
    "license": "CC0-1.0",
-   "count": 1790,
+   "count": 1797,
    "copyright": "Koichi Kamichi"
   },
   {
@@ -4146,15 +4145,6 @@
    "license": "GlyphWiki data terms",
    "copyright": "GlyphWiki contributors",
    "count": 4
-  },
-  {
-   "file": "PlangothicP2-Regular.ttf",
-   "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f",
-   "url": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP2-Regular.ttf",
-   "license": "SIL OFL 1.1",
-   "note": "sans fallback for this project's characters (Extension J)",
-   "count": 1,
-   "copyright": "Copyright (c) 2024 by Fitzgerald P. Köeingsegg. All rights reserved."
   }
  ],
  "build": {
