@@ -1621,6 +1621,25 @@ export class Composer {
     const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
     const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
       : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
+    if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && cover(children[0])) {
+      const coverBox = bounds(groups[0])
+      const H = this.face[3] - this.face[1]
+      const coverBottom = coverBox[3] - 0.30 * H
+      const middleTop = coverBottom + 0.11 * H
+      const middleBottom = middleTop - 0.43 * H
+      const bottomTop = middleBottom - 0.065 * H
+      const bottomBottom = bottomTop - 0.31 * H
+      const width = coverBox[2] - coverBox[0], bottomWidth = width * 0.66, centre = (coverBox[0] + coverBox[2]) / 2
+      const boxes = [
+        [coverBox[0], coverBottom, coverBox[2], coverBox[3]],
+        [coverBox[0], middleBottom, coverBox[2], middleTop],
+        [centre - bottomWidth / 2, bottomBottom, centre + bottomWidth / 2, bottomTop],
+      ]
+      groups.forEach((group, i) => {
+        const old = bounds(group)
+        for (const p of group) p.target = targetFor(p, mapped(drawnBox(p), old, boxes[i]))
+      })
+    }
     for (const [above, below] of pairs) {
       const cover = groups[above] ?? [], lower = groups[below] ?? []
       if (!cover.length || !lower.length) continue
@@ -1636,7 +1655,7 @@ export class Composer {
             y0 = Math.min(y0, pts[k + 1]); y1 = Math.max(y1, pts[k + 1])
           }
           const w = x1 - x0, h = y1 - y0
-          if (w < 0.5 * width || h > 0.2 * width || y1 < lowerBox[3] - 0.12 * height) return
+          if (w < 0.5 * width || h > 0.2 * width || y1 < lowerBox[3] - 0.3 * height) return
           if (!best || w > best.w) best = { w, index, centre: (x0 + x1) / 2 }
         })
         if (!best) continue

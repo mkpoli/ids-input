@@ -54,3 +54,17 @@ describe('a cover', () => {
     expect(lower[0].target[1]).toBeGreaterThan(-50)
   })
 })
+
+describe('a cover over two parts', () => {
+  it('splits the bands and narrows the bottom', () => {
+    const c = lonely()
+    c.face = [0, -100, 1000, 900]
+    const cover = [at(part(contour(50, 600, 950, 880)), [50, 600, 950, 880])]
+    const middle = [at(part(contour(60, 300, 940, 580)), [60, 300, 940, 580])]
+    const bottom = [at(part(contour(50, -80, 950, 280)), [50, -80, 950, 280])]
+    c.fitUnderCover('⿳', ['宀', '龶', '口'], [cover, middle, bottom])
+    expect(cover[0].target[1]).toBeCloseTo(580, 0)
+    expect(middle[0].target[3]).toBeCloseTo(690, 0)
+    expect(bottom[0].target[2] - bottom[0].target[0]).toBeCloseTo(0.66 * 900, 0)
+  })
+})
