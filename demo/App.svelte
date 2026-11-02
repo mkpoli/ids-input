@@ -1256,7 +1256,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-stage" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
+            <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
               <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
             </div>
           {:else}
@@ -1301,7 +1301,7 @@
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
-        <div class="preview">
+        <div class="preview" data-character-info-avoid>
           {#if !large}
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
