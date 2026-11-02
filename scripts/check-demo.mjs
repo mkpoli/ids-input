@@ -84,7 +84,9 @@ async function start() {
   server.stderr.on('data', chunk => { log += chunk })
   for (let i = 0; i < 180; i++) {
     if (server.exitCode !== null) break
-    const found = log.match(/Local:\s+(http:\/\/localhost:\d+)/)
+    // Vite colours its output when the environment asks for it, as CI does, and the escape codes
+    // sit inside the address line; read the line without them.
+    const found = log.replace(/\x1b\[[0-9;]*m/g, '').match(/Local:\s+(http:\/\/localhost:\d+)/)
     if (found) { url = found[1]; return }
     await Bun.sleep(500)
   }
@@ -102,12 +104,18 @@ const tail = () => log.trim().split('\n').slice(-8).map(line => `     ${line}`).
 
 /** Loads the workshop once, so the checks do not pay the dev server's first transform each run. */
 async function warm() {
-  const browser = await launchable.launch({ executablePath: chromium })
+  let browser
   try {
+    browser = await launchable.launch({ executablePath: chromium })
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 })
     await page.locator('.ids-field input').waitFor({ timeout: 180000 })
-  } finally { await browser.close() }
+  } catch (error) {
+    // A browser that cannot start or a page that never loads would otherwise end the run silently.
+    console.error(`The workshop did not load at ${url}: ${error?.message ?? error}`)
+    console.error(tail())
+    process.exit(1)
+  } finally { await browser?.close() }
 }
 
 /** Runs one check file and reports whether it passed, with what it printed. A check that hangs is
