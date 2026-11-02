@@ -36,18 +36,22 @@ const read = async (env, path) => {
  */
 const loadFor = env => {
   const SERVED = /^sources\/([a-z-]+)\/outlines\.json\.gz$|^unicode\/outlines\/([0-9a-f]+\.json\.gz)$/
+  /** The deployment's name for a file the engine names. @param {string} path */
+  const served = path => path.replace(SERVED, (_, script, shard) => script ? `${script}-outlines.json.gz` : `unicode-outlines/${shard}`)
   /** @type {Record<string, string>} */
   const loaders = {}
   for (const path of Object.keys(dataUrls)) {
-    if (!SERVED.test(path)) continue
-    const name = path.replace(SERVED, (_, script, shard) => script ? `${script}-outlines.json.gz` : `unicode-outlines/${shard}`)
-    loaders[path] = new URL(`/og/data/${name}`, 'https://assets/').href
+    if (SERVED.test(path)) loaders[path] = new URL(`/og/data/${served(path)}`, 'https://assets/').href
   }
-  return async input => {
-    const answer = await env.ASSETS.fetch(input)
-    // A missing file is answered with the app's page, so the type says whether the file is there.
-    if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return new Response(null, { status: 404 })
-    return answer
+  return {
+    loaders,
+    // The files are the deployment's own: read from its assets by the path the engine names. A
+    // missing one is answered with the app's page, which the type tells apart.
+    read: async path => {
+      const answer = await env.ASSETS.fetch(new URL(`/og/data/${served(path)}`, 'https://assets/'))
+      if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return new Response(null, { status: 404 })
+      return answer
+    },
   }
 }
 
@@ -70,7 +74,8 @@ export async function characterOf(env, sequence) {
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadFor(env) })
+  const { loaders, read } = loadFor(env)
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
   await source.ready()
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }

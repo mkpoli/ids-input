@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { fromUrl } from '@han-compose/composer'
 
-// A format-5 export over HTTP as a static host serves it: record and host-list shards are gzip bytes
+// A format-6 export over HTTP as a static host serves it: record and host-list shards are gzip bytes
 // under a .json name, sent as application/octet-stream, each an object from the full SHA-256 to the
 // record or list; a file the export lacks is a 404.
 const hex = text => createHash('sha256').update(text).digest('hex')
@@ -11,7 +11,7 @@ const shard = (folder, text) => `${folder}/${hex(text).slice(0, 3)}.json`
 const half = n => Buffer.alloc(2 * n).toString('base64')
 const manifest = format => Buffer.from(JSON.stringify({ format, files: { layout: { path: 'layout.json' } }, constants: {} }))
 const files = {
-  'manifest.json': manifest(5),
+  'manifest.json': manifest(6),
   'layout.json': Buffer.from(JSON.stringify({ ops: ['⿰'], defaults: {}, features: {}, seeds: [[{ shape: [23, 8], data: half(23 * 8) }, Buffer.alloc(32).toString('base64')]] })),
   [shard('g', '木')]: gzipSync(JSON.stringify({ [hex('木')]: { k: '木', ink: 3000, P: ['L'] } })),
   [shard('p', 'L\t木')]: gzipSync(JSON.stringify({ [hex('L\t木')]: { place: 'L', operand: '木', hosts: [{ h: '林', r: 3, c: null }, { h: '村', r: 1, c: { k: [0, 2], b: [10, 20, 300, 800] } }] } })),

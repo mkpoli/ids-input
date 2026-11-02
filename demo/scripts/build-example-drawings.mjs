@@ -5,27 +5,32 @@
 //
 //   bun run build:example-drawings
 import { readFileSync, writeFileSync } from 'node:fs'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { gunzipSync } from 'node:zlib'
 import { hasTangut, tangutSource } from '@han-compose/composer/tangut'
-import { hasBopomofo, bopomofoSource } from '@han-compose/composer'
-import { hasSmallSeal, smallSealSource } from '@han-compose/composer'
-import { hasShuishu, shuishuSource } from '@han-compose/composer'
-import { onlyBundled } from '@han-compose/composer'
-import { bundledSource } from '@han-compose/composer'
-import { compose, fromUrl } from '@han-compose/composer'
+import { hasBopomofo, bopomofoSource } from '@han-compose/composer/bopomofo'
+import { hasSmallSeal, smallSealSource } from '@han-compose/composer/small-seal'
+import { hasShuishu, shuishuSource } from '@han-compose/composer/shuishu'
+import { onlyBundled } from '@han-compose/composer/local'
+import { bundledSource } from '@han-compose/composer/bundled'
+import { compose, fromUrl } from '@han-compose/composer/loader'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
+// The outlines the engine carries, where its package keeps them.
+const DATA = join(dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json'))), 'data')
+const bundledOutlines = path => JSON.parse(gunzipSync(readFileSync(join(DATA, path))))
 const source = fromUrl(COMPOSER_BASE)
 // Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
 // whole sequence that matches a component form, then skips its parts, so the export stays behind
 // the source for the character's own glyph.
 const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false, fallback: source })
-const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/tangut/outlines.json.gz', import.meta.url))))
+const loadTangut = async () => bundledOutlines('sources/tangut/outlines.json.gz')
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
-const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/shuishu/outlines.json.gz', import.meta.url))))
-const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/bopomofo/outlines.json.gz', import.meta.url))))
+const loadShuishu = async () => bundledOutlines('sources/shuishu/outlines.json.gz')
+const loadBopomofo = async () => bundledOutlines('sources/bopomofo/outlines.json.gz')
 const bopomofoSources = new Map()
 await source.ready()
 const drawings = {}

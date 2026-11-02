@@ -8,7 +8,7 @@ import { createDrawer } from '@han-compose/composer'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '@han-compose/composer'
 import { Composer } from '@han-compose/composer/compose'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
-import { files, layout, ops, shards } from './fixtures/small-export.js'
+import { files, hosted, layout, ops, shards } from './fixtures/small-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 import { drawnBox, makePart, placed } from '@han-compose/composer/geometry'
@@ -471,10 +471,15 @@ describe('the preview badge', () => {
 const LEFT = [40, -80, 440, 840], RIGHT = [560, -80, 960, 840]
 const fixed = { ...layout, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') },
   Buffer.from(Float32Array.from([...LEFT, ...RIGHT].map(v => v / 1000)).buffer).toString('base64')]] }
-const fixedSource = () => createSource(async name => {
-  const body = name === 'layout.json' ? JSON.stringify(fixed) : files[name]
-  return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
-})
+// The export as a page reads it, hosted: its records name their host places, and ⿰ puts 木 and 口
+// where the learned boxes do.
+const fixedSource = () => {
+  const table = hosted({ bytes: 1 })
+  return createSource(async name => {
+    const body = name === 'layout.json' ? JSON.stringify(fixed) : table[name]
+    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+  })
+}
 
 // Boxes to a hundredth of a unit: the layout's boxes come through float32 weights.
 const near = box => box.map(v => Math.round(v * 100) / 100)
@@ -484,26 +489,19 @@ describe('a host-less export', () => {
   // The serif export carries no host list: its records and layout are there, but no part is cut
   // from another character. Its learned boxes would stretch whole glyphs into component shapes, so
   // the composer lays every sequence out by its plain shares.
-  const hostless = bytes => createSource(async name => {
-    if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(fixed))).buffer
-    if (name === 'manifest.json') {
-      const manifest = JSON.parse(files['manifest.json'])
-      return new Uint8Array(Buffer.from(JSON.stringify({ ...manifest, files: { ...manifest.files, hosts: { bytes } } }))).buffer
-    }
-    const body = files[name]
-    return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
-  })
+  const hostless = bytes => {
+    const table = hosted({ bytes })
+    return createSource(async name => {
+      const body = name === 'layout.json' ? JSON.stringify(fixed) : table[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+  }
 
   it('takes the plain shares for a node the host-place index leaves out', async () => {
-    // A hosted export names the places it carries lists for; ⿰木口 has none of them.
+    // A hosted export names the places its records carry lists for; ⿰木口 is in none of them.
+    const table = hosted({ bytes: 1, places: ['T'] })
     const source = createSource(async name => {
-      if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(fixed))).buffer
-      if (name === 'manifest.json') {
-        const manifest = JSON.parse(files['manifest.json'])
-        return new Uint8Array(Buffer.from(JSON.stringify({ ...manifest,
-          files: { ...manifest.files, hosts: { bytes: 1, places: ['L\t口'] } } }))).buffer
-      }
-      const body = files[name]
+      const body = name === 'layout.json' ? JSON.stringify(fixed) : table[name]
       return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
     })
     const [left] = (await compose(source, '⿰木口')).parts
@@ -513,11 +511,9 @@ describe('a host-less export', () => {
   it('narrows a left part to the share the learned boxes give it', async () => {
     const narrow = { ...layout, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') },
       Buffer.from(Float32Array.from([40, -80, 360, 840, 420, -80, 960, 840].map(v => v / 1000)).buffer).toString('base64')]] }
+    const table = hosted({ bytes: 0 })
     const source = createSource(async name => {
-      if (name === 'layout.json') return new Uint8Array(Buffer.from(JSON.stringify(narrow))).buffer
-      const body = name === 'manifest.json'
-        ? JSON.stringify({ ...JSON.parse(files['manifest.json']), files: { ...JSON.parse(files['manifest.json']).files, hosts: { bytes: 0 } } })
-        : files[name]
+      const body = name === 'layout.json' ? JSON.stringify(narrow) : table[name]
       return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
     })
     const [left, right] = (await compose(source, '⿰木口')).parts

@@ -18,7 +18,7 @@
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
-  import coverage from '../../node_modules/@han-compose/composer/data/unicode/coverage.json' with { type: 'json' }
+  import { UNICODE_COVERAGE as coverage } from '@han-compose/composer'
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
   import { unpack } from '@han-compose/composer'
   import IdsPartIcon from './IdsPartIcon.svelte'

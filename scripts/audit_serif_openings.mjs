@@ -10,8 +10,8 @@
 // ends with a self-check on `o` and `6`, whose records are pinned in tests/serif-outlines.test.js.
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { bytes, commands, partOf } from '../src/composer/geometry.js'
-import { fromUrl } from '../src/composer/loader.js'
+import { bytes, commands, partOf } from '@han-compose/composer/geometry'
+import { fromUrl } from '@han-compose/composer/loader'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 
 const RANGES = {

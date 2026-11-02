@@ -5,7 +5,7 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
 // leaf, the placeholder of a slot — is the engine's (han-compose's package).
-export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts }
+export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts, placeholder, STROKE } from '@han-compose/composer'
 
 /** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection.
  * @param {{ text?: string, box?: number[], flip?: [boolean, boolean] } | null | undefined} item @param {string} [attribute] */
@@ -45,26 +45,6 @@ export function badge(step, drawn = null) {
  *  box of full ideographs (han-compose's `Composer.face`), where placeholders stand before the layout
  *  has loaded. */
 export const FACE = [38.42, 39.94, 928.36, 921.56]
-
-/** The stroke width a placeholder is drawn with where no drawing gives one: the font's at weight 400. */
-export const STROKE = 80
-
-/**
- * A placeholder in `box` ([x, y, width, height], y down): a rounded rectangle inset by half a stroke,
- * outlined in dots a stroke wide, with nothing at its centre that could read as a stroke. `stroke` is
- * the stroke width of the drawing beside it. Answers `{ x, y, width, height, rx, dot, gap, dots }`:
- * the rectangle, the dots' width, their spacing and how many go round.
- */
-export function placeholder(box, stroke = STROKE) {
-  const [bx, by, bw, bh] = box
-  const s = Math.max(24, Math.min(stroke, Math.min(bw, bh) / 5))
-  const inset = Math.min(s / 2, bw / 4, bh / 4)
-  const width = Math.max(bw - 2 * inset, 1), height = Math.max(bh - 2 * inset, 1)
-  const rx = Math.min(Math.min(width, height) * 0.18, 3 * s)
-  // As many dots as fit the outline at about a stroke and a bit apart, so they close evenly round it.
-  const perimeter = 2 * (width + height) - 8 * rx + 2 * Math.PI * rx
-  return { x: bx + inset, y: by + inset, width, height, rx, dot: s * 0.42, gap: s * 1.15, dots: Math.max(4, Math.round(perimeter / (s * 1.15))) }
-}
 
 // A description laid out roughly, before even the composer's layout has loaded: each part in a box its
 // operators give it, in a unit square with y down, where the preview's placeholders stand. ⿰ ⿲ split it into columns,

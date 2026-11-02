@@ -112,34 +112,25 @@
     return () => controller.abort()
   })
 
-  /** The composer's drawing with each part's leaf named. A drawing that names none draws one part per
-   *  node in reading order, so the node before a part says which leaf it begins at, and a node left
-   *  before it does not take its place.
+  /** The composer's drawing with each part's leaf named. A drawing that names its leaves is taken
+   *  as it is; one that names none draws one part per leaf in reading order, so the parts are only
+   *  matched to leaves when there is a leaf for each and no more, and a drawing of another shape is
+   *  left to the engine's own inference.
    *  @param {import('../../src/document/model.js').Node} root @param {Drawing} drawing */
   function namedParts(root, drawing) {
     const parts = drawing.parts ?? []
-    if (parts.every(part => Number.isInteger(part.leaf))) return drawing
-    /** @type {import('../../src/document/model.js').Node[]} */
-    const nodes = root.kind === 'group' ? [root] : root.children
-    let at = 0
-    return { ...drawing, parts: parts.map(part => {
-      const node = nodes[at++] ?? root
-      const leaf = firstLeaf(root, node)
-      return { ...part, leaf }
-    }) }
+    if (!parts.length || parts.every(part => Number.isInteger(part.leaf))) return drawing
+    const leaves = leafCount(root)
+    if (leaves !== parts.length) return drawing
+    return { ...drawing, parts: parts.map((part, index) => ({ ...part, leaf: index })) }
   }
 
-  /** The leaf `target` begins at, counted over the leaves of `node`. @param {import('../../src/document/model.js').Node} node @param {import('../../src/document/model.js').Node} target */
-  function firstLeaf(node, target) {
-    let seen = 0
-    const walk = current => {
-      if (current === target) return seen
-      if (current.kind === 'component' || current.kind === 'slot') { seen++; return -1 }
-      if (current.kind === 'group') return walk(current.child)
-      for (const child of current.children) { const at = walk(child); if (at >= 0) return at }
-      return -1
-    }
-    return Math.max(0, walk(node))
+  /** How many leaves a document node holds: a component or a slot is one, a group its child's, an
+   *  operator its children's. @param {import('../../src/document/model.js').Node} node */
+  function leafCount(node) {
+    if (node.kind === 'group') return leafCount(node.child)
+    if (node.kind === 'operator') return node.children.reduce((sum, child) => sum + leafCount(child), 0)
+    return 1
   }
 
   // The scoped drawing follows the document, the composer drawing and its sketch.

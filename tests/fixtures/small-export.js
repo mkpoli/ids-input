@@ -38,3 +38,23 @@ export const files = {
   'layout.json': JSON.stringify(layout),
   ...shards('g', Object.entries(records)),
 }
+
+/**
+ * The same export, hosted or not: `bytes` the host lists it says it carries, `places` the places its
+ * records name a host list for (`P`). An export names hosts per record, so a node whose operand has
+ * no list in its place takes the plain shares.
+ * @param {{ bytes?: number, places?: string[] }} [options]
+ */
+export function hosted({ bytes = 1, places = ['L', 'R'] } = {}) {
+  const named = Object.fromEntries(Object.entries(records).map(([key, record]) => [key, { ...record, P: places }]))
+  const manifest = JSON.parse(files['manifest.json'])
+  // A record that names its places has a host list in `p/` for each; these carry none, so the parts
+  // take the learned boxes and no cut.
+  const lists = Object.keys(records).flatMap(key => places.map(place => [`${place}\t${key}`, { hosts: [] }]))
+  return {
+    ...files,
+    'manifest.json': JSON.stringify({ ...manifest, files: { ...manifest.files, hosts: { bytes } } }),
+    ...shards('g', Object.entries(named)),
+    ...(bytes ? shards('p', lists) : {}),
+  }
+}
