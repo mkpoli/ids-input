@@ -23,3 +23,20 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.3
       - run: bun install --frozen-lockfile
       - run: bun run verify
+
+  # The workshop's browser checks drive the demo in Chromium, so a check that stops parsing or
+  # loses its selector fails on the pull request instead of reaching `main`. `check-gongche` takes
+  # six minutes on its own and stays out; the rest of the suite takes about forty on a runner.
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx playwright-core install --with-deps chromium
+      - run: bun run check:demo -- --skip gongche
