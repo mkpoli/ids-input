@@ -687,7 +687,8 @@ export class Composer {
       if (!glyph) throw new LookupError(`No glyph or sequence draws ${node}.`)
       return [this.place(glyph, region, this.ink(node), `glyph ${node}`)]
     }
-    const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) ? null : this.instance(node, region)
+    const coverHead = Array.isArray(node) && typeof node[1] === 'string' && this.isCover(node[1])
+    const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) || coverHead ? null : this.instance(node, region)
     if (found) return [found]
     const written = this.respelled(node)
     // Once nothing draws this node whole, a run of it the export designs as one body is regrouped.
