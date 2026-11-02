@@ -36,6 +36,11 @@ def main():
     # Preserve existing fallbacks; omit host CJK glyphs only when an actual record exists.
     host = json.loads((ROOT / 'data/host-glyph-coverage.json').read_text())
     host_points = {cp for lo, hi in host['ranges'] for cp in range(lo, hi + 1)}
+    # A character earns an outline unless every export draws it directly. The serif export draws
+    # 42 single scalars fewer than the sans one, and a reader who chooses serif would otherwise see
+    # nothing where that export has no glyph.
+    serif = json.loads((ROOT / 'data/host-glyph-coverage-serif.json').read_text())
+    host_points &= {cp for lo, hi in serif['ranges'] for cp in range(lo, hi + 1)}
     host_ranges = [(0x2E80, 0x2FDF), (0x3400, 0x4DBF), (0x4E00, 0x9FFF),
                    (0xF900, 0xFAFF), (0x20000, 0x323AF), (0x33480, 0x3CFFF)]
     for lo, hi in host_ranges:

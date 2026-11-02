@@ -109,7 +109,6 @@ def ranges_of(points):
 JIGMO = 'https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip'
 JIGMO_CACHE = Path.home() / '.cache/ids-input/Jigmo-20250912'
 EMPTY = ROOT / 'fonts/NotoSansCJKjp-ids-operators.woff2'
-SHARDS = Path('/tmp/unicode-shards.json')
 
 
 def jigmo():
@@ -130,8 +129,8 @@ def characters_without_outline(metadata):
     the characters the palette draws from its own outlines, the empty-slot mark and the description
     characters."""
     drawn = set()
-    for chars in json.loads(SHARDS.read_text()).values():
-        drawn.update(chars)
+    for name in metadata['shards']:
+        drawn.update(json.loads(gzip.decompress((OUTLINES / f'{name}.json.gz').read_bytes())))
     palette = json.loads((ROOT / 'data/ids-parts.json').read_text())
     records = palette if isinstance(palette, list) else palette['parts']
     needed = {'⬚'}
