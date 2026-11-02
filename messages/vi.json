@@ -195,6 +195,11 @@
   "parts.hangul.clear": "Xoá hết",
   "parts.hangul.insert": "Chèn",
   "parts.hangul.oldCluster": "Hangul cổ được giữ dưới dạng chuỗi jamo.",
+  "parts.hangul.tone": "Dấu thanh",
+  "parts.hangul.toneNone": "Không có dấu",
+  "parts.hangul.toneLow": "Thanh bằng",
+  "parts.hangul.toneHigh": "Thanh cao",
+  "parts.hangul.toneRising": "Thanh thăng",
   "parts.hangul.find": "Tìm âm tiết theo ký tự, jamo, chữ Latinh hoặc mã U+",
   "parts.script.retry": "Thử lại",
   "parts.script.unavailable": "Không thể tải thêm bộ phận chữ viết.",
@@ -349,5 +354,6 @@
   "info.site.editorial": "Phụ trợ biên tập",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Danh sách Tangut IDS",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "nét đầu"
 }

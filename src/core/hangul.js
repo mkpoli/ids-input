@@ -1,7 +1,8 @@
 // @ts-check
 // Hangul jamo composition. A modern initial, medial and final compose to one precomposed syllable
 // in the Hangul Syllable block. Old Hangul combinations stay a run of conjoining jamo, which fonts
-// shape into one syllable; Unicode does not precompose them.
+// shape into one syllable; Unicode does not precompose them. A Middle Korean tone mark (bangjeom)
+// follows the syllable it marks.
 
 /** @typedef {'L' | 'V' | 'T'} JamoClass */
 /** @typedef {{ text: string, precomposed: boolean }} Composed */
@@ -70,20 +71,28 @@ export function hangulClusterAt(chars, at) {
   return { text: chars.slice(at, end).join(''), end }
 }
 
+/** Middle Korean tone marks (bangjeom), written after the syllable they mark and drawn at its left:
+ * one dot for the high tone, two for the rising one, neither for the low.
+ * https://www.unicode.org/Public/18.0.0/ucd/NamesList.txt (single and double dot Bangjeom)
+ * https://encykorea.aks.ac.kr/Article/E0021781 */
+export const HANGUL_TONE_MARKS = { high: '\u302E', rising: '\u302F' }
+
 /** Compose an initial, a medial and an optional final. A modern triple becomes one precomposed
- * syllable; any other valid combination becomes its conjoining jamo run.
- * @param {string} initial @param {string} medial @param {string} [final] @returns {Composed | null} */
-export function composeHangul(initial, medial, final = '') {
+ * syllable; any other valid combination becomes its conjoining jamo run. `tone` adds its mark.
+ * @param {string} initial @param {string} medial @param {string} [final] @param {string} [tone]
+ * @returns {Composed | null} */
+export function composeHangul(initial, medial, final = '', tone = '') {
   if ([...initial].length !== 1 || [...medial].length !== 1 || [...final].length > 1) return null
+  if (tone && !Object.values(HANGUL_TONE_MARKS).includes(tone)) return null
   const l = toConjoiningJamo(initial, 'L'), v = toConjoiningJamo(medial, 'V')
   const t = final ? toConjoiningJamo(final, 'T') : ''
   if (!l || !v || final && !t) return null
   const lc = l.codePointAt(0) ?? 0, vc = v.codePointAt(0) ?? 0, tc = t ? t.codePointAt(0) ?? 0 : 0
   if (lc >= 0x1100 && lc <= 0x1112 && vc >= 0x1161 && vc <= 0x1175 && (!t || tc >= 0x11a8 && tc <= 0x11c2)) {
     const syllable = 0xac00 + ((lc - 0x1100) * 21 + (vc - 0x1161)) * 28 + (t ? tc - 0x11a7 : 0)
-    return { text: String.fromCodePoint(syllable), precomposed: true }
+    return { text: String.fromCodePoint(syllable) + tone, precomposed: true }
   }
-  return { text: l + v + t, precomposed: false }
+  return { text: l + v + t + tone, precomposed: false }
 }
 
 /** One syllable composed from compatibility or conjoining jamo, or null. Used by filters that accept

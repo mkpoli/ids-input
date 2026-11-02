@@ -197,6 +197,11 @@
   "parts.hangul.clear": "清除",
   "parts.hangul.insert": "插入",
   "parts.hangul.oldCluster": "古諺文按字母序列處理。",
+  "parts.hangul.tone": "聲調",
+  "parts.hangul.toneNone": "不標點",
+  "parts.hangul.toneLow": "平聲",
+  "parts.hangul.toneHigh": "去聲",
+  "parts.hangul.toneRising": "上聲",
   "parts.hangul.find": "依字元、字母、羅馬字或U+碼位尋找音節",
   "parts.script.retry": "重試",
   "parts.script.unavailable": "無法載入其他文字部件。",
@@ -349,5 +354,6 @@
   "info.site.editorial": "用字助記",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS 表",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "首筆"
 }

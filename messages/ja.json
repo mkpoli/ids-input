@@ -197,6 +197,11 @@
   "parts.hangul.clear": "クリア",
   "parts.hangul.insert": "挿入",
   "parts.hangul.oldCluster": "古ハングルは字母列として扱います。",
+  "parts.hangul.tone": "声調",
+  "parts.hangul.toneNone": "点なし",
+  "parts.hangul.toneLow": "平声",
+  "parts.hangul.toneHigh": "去声",
+  "parts.hangul.toneRising": "上声",
   "parts.hangul.find": "音節を文字・字母・ローマ字・U+コードポイントで検索",
   "parts.script.retry": "再試行",
   "parts.script.unavailable": "追加の文字部品を読み込めませんでした。",
@@ -349,5 +354,6 @@
   "info.site.editorial": "編集部の補助",
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS 一覧",
-  "info.site.course": "Unicode"
+  "info.site.course": "Unicode",
+  "info.firstStrokeShort": "最初の画"
 }

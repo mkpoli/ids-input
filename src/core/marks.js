@@ -3,8 +3,10 @@
 // mark or a superscript does. They are Unicode characters, not operators; `data/unicode-properties.json`
 // pins the ones that count (combining marks and modifier letters, the accent and tone-letter symbols,
 // and superscript or subscript digits). A description is written as its operators and components,
-// then the marks in any order: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛.
+// then the marks in any order: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛. A Hangul tone mark is the exception: it
+// names the tone of the one syllable it follows and stays on it, ⿰가〮나〯.
 import { unicodeProperty } from './unicode.js'
+import { hangulClusterAt } from './hangul.js'
 
 /** A variation selector, as `isSelector` reads it in `ids.js`; kept here so the modules need not cycle. */
 const SELECTOR = /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u
@@ -17,6 +19,25 @@ const isSelector = (/** @type {string | undefined} */ char) => char !== undefine
  * @param {string | undefined} char
  */
 export const isMark = char => unicodeProperty('marks', char)
+
+/** A Middle Korean tone mark, U+302E or U+302F. Unlike the other loose marks it names the tone of
+ * the syllable it follows, and stays on it inside a longer description. @param {string | undefined} char */
+export const isToneMark = char => char === '\u302E' || char === '\u302F'
+
+/** Where the tone marks running from `at` end. @param {string[]} chars @param {number} at */
+export function toneMarksAt(chars, at) {
+  let end = at
+  while (isToneMark(chars[end])) end++
+  return end
+}
+
+/** The tone marks ending `marks`, apart from what comes before them. @param {string} marks */
+export function splitToneMarks(marks) {
+  const chars = [...marks]
+  let at = chars.length
+  while (at > 0 && isToneMark(chars[at - 1])) at--
+  return { rest: chars.slice(0, at).join(''), tones: chars.slice(at).join('') }
+}
 
 /** Whether `text` is one or more loose marks and nothing else. @param {string | null | undefined} text */
 export const isMarks = text => {
@@ -37,7 +58,8 @@ export function splitMarks(part) {
     return part.marks ? { base: { op: part.op, parts: part.parts }, marks: part.marks } : { base: part, marks: '' }
   }
   const chars = [...part]
-  let at = 1
+  // A conjoining jamo run is one component, not the initial jamo and a mark after it.
+  let at = hangulClusterAt(chars, 0)?.end ?? 1
   if (isSelector(chars[at])) at++
   return { base: chars.slice(0, at).join(''), marks: chars.slice(at).join('') }
 }
@@ -68,6 +90,7 @@ export function withMarks(part, marks) {
  * `tree` with every loose mark hoisted to its root, in reading order, and none left inside. The
  * text of a description can only carry marks at its end, so a mark an edit leaves on an inner part
  * belongs to the whole: dropping a marked sequence into a slot annotates the description it joins.
+ * A tone mark is the exception, since it names the tone of one syllable and never of the whole.
  * @param {import('./ids.js').Part} tree
  * @returns {import('./ids.js').Part}
  */
@@ -79,8 +102,10 @@ export function normalizeMarks(tree) {
     if (part === null) return null
     if (typeof part === 'string') {
       const { base, marks } = splitMarks(part)
-      if (marks) found.push(marks)
-      return base
+      const chars = [...marks], tones = chars.filter(isToneMark).join(''), rest = chars.filter(ch => !isToneMark(ch)).join('')
+      if (!rest) return part
+      found.push(rest)
+      return base + tones
     }
     // A node's marks come after its children's, so collect the children first.
     const parts = part.parts.map(strip)

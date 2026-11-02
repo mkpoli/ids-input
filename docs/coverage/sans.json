@@ -3,47 +3,57 @@
   "style": "sans",
   "base": "https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/",
   "implementationHashes": {
-    "data/bundled-coverage.json": "efadac27f48d6793fc0496c114d3a46b2e48d35762751294cfd66d6ff0923e00",
-    "data/palette-fallback-characters.json": "e692d26dc94f537e91fde95a2d93625abb0dc1dad74d73d645bf30a61073d4c9",
+    "data/bundled-coverage.json": "f5ac36c402607b0e95fc00d9c0a9de6e5db7ea7b866f704e57c244441e156719",
+    "data/palette-fallback-characters.json": "a71a69ed83c134afaec0600653930feddc7ed67a34c7340012a7d5fcd5553a4f",
     "data/unicode-coverage.json": "7b606726286bf5aa52efdd91576e1aa7e2b0a2bec95aff12d2f6bb06c6112559",
     "data/unicode-properties.json": "20763faa888f696bd7cf17d7f569a726c30f95f41528df15407bba0278a02722",
-    "demo/lib/composer.js": "908aa7a2c3cd89dc746de2513f5078a8aab1d846322e0b12d9915df75905d55e",
-    "scripts/audit_render_coverage.mjs": "f51ecb8ed6f46169cc3300ac6c7b9e4265af7a257dffe4be3f7e6d8ad6b9be4b",
+    "demo/lib/composer.js": "387356ccc082344b40a7f917c0d6eb077f33a5b3d765880aae0d165d00f6b14e",
+    "scripts/audit_render_coverage.mjs": "c3fa543fd3d95c06495da9e0d45ea66db9f39af8b87f06154cffc5c6d8c28bd1",
+    "scripts/lib/coverage-sources.mjs": "31808a9e5c3797017a44316c7656937d62015e4ccc0cd99a101144f5b6079c1d",
     "src/composer/bopomofo.js": "806a9313cf476551b65c66607108a3a4d280687feb85473eec42db9e365ae67b",
-    "src/composer/bundled-coverage.js": "21ff05c32bf7d0e42712a49643097ba9f977c4cf317b14d39b3bf334a8796113",
+    "src/composer/bundled-coverage.js": "fb1d1d40c8ac6b1f4794fbdfd6abf64f3a5df24849c59a6187cd12ba997b727f",
     "src/composer/bundled.js": "2556a389afab0e0530ec7e8c116e1a4c642939d52191f3eb991013fca0df3110",
     "src/composer/client.js": "bb5f236c856c3c6c4f238ee951feb15d19f5c01b7878e58b78d6e17f617c27e2",
-    "src/composer/component-forms.js": "4d359cc3ab79210bcc54f1811009fda10b6c75bf52cc4d541510858154590a89",
-    "src/composer/component-forms.json": "ec500030aacc2433e8c4feda09ebe89256db368e8b16bafc4d5088d0069e3678",
-    "src/composer/compose.js": "45cd6324837095b5c1769f43a465547be2e6aa1defabae351a67e9bee147ea59",
-    "src/composer/constants.json": "29b2392c0409e3e282cdb1a0c0e3802c6cb440dbd1467720eb1a99ecdd7bf370",
+    "src/composer/component-forms.js": "38ec82723e4e8ace1111f9396cebb8bc28eb81a8e0540e637da9097be441fac3",
+    "src/composer/component-forms.json": "736e47e2308ebf406fc21bd1b5cd434e1d8a1ef88e0eb8c937d3540872e855ae",
+    "src/composer/compose.js": "40af169c925e8b89b570f2af83779509fb3b53d7af7736a6329458ec3fcae125",
+    "src/composer/constants.json": "14e4113493eb93a352f890e3f9cee9b47b9348ec0043dd508b5c213edf7813a0",
+    "src/composer/constructs.js": "cdd549961cfbab7d0b64c8df7bc9675060b6f8cc5744ce57cc43bb9c751cc8de",
     "src/composer/document-source.js": "4a331b9bbd320df57a96fa041fa8acc99d9dd35fb90f3682746e57436b0ea33f",
-    "src/composer/geometry.js": "ae53807f919e47bc378f5f3c6d10856892ece942a01519ba0783301299ed84fc",
-    "src/composer/index.js": "79d7d639a932ed6f983e61a77df13810a30d238c54149508b0468a4e73bd3117",
+    "src/composer/document-view.js": "71bd083a61c0ad2c964446b59f96503a3008b0d9a71f5ad92d0b8dbfc44b5212",
+    "src/composer/geometry.js": "7615b170a36f937df94695fb16b0377e7c9643117c6838780283e553313b67e1",
+    "src/composer/index.js": "26fdead318c0d50ddb068e36debf797983eb0d8d8df28626a583fadb7a1b01f2",
     "src/composer/layout.js": "87cd2dfd5edb3703a61fb2ed86bc237c506ccc11d5ea67436c9e0d61050c1419",
-    "src/composer/loader.js": "fdd7a2e1489a43836482ab3726e7a1cfe9c3e7de16889848089ef1c79d08e5e0",
-    "src/composer/local.js": "d4df4064665974c4c5045f63b4997b85a88dddd85b2c18d7394d5fa57b647933",
+    "src/composer/loader.js": "c06693de1718c36c9416dfce4c3466b1ae7dfc926dced4e22311b4b0d7e6cac8",
+    "src/composer/local.js": "00d033cb4f341db9f93cc21a8b3ed003a8dcabb5cb4951a6a4ada4ac2a5bbda5",
     "src/composer/marks.js": "7b9df6c325d170f4d4de6e3299a3ed6a96a2ffbdc3a1bfe59f941437bfb93254",
     "src/composer/new-korean.js": "0f8473b9d48723254f58c57e0dbd025cf65a844c0660112fde9b65beccd8ff2b",
     "src/composer/palette.js": "b5cd0e0dc7179a7b369aa23360dbf3657f5bbe85cffa7a86988ce36e20dd9574",
     "src/composer/pyramid-glyphs.json": "4a8f55a1e77c70b6434d12ca64ffddb1d9b1a71ecc0d68a96a2932db31442678",
-    "src/composer/pyramid.js": "ca7a20564642b90e96c0f56a7f832e0c0868bf49436f2722296b14e36afe9592",
+    "src/composer/pyramid.js": "4956fd5a184b6c817e7108f64246f09f783753d8c4e7b6f412cce3e2fc42f904",
     "src/composer/repetition.js": "0ee73abc672979a6307b4cbba1bc78cac412d01ffa1079687eb4796a7a2bd771",
     "src/composer/sha256.js": "87748c8c59b5a53ca7467f731f28fc40fe61dcd255a73476af5ffc66a06a47ff",
+    "src/composer/shuishu.js": "41069f302e9fe8955c24cfc80a23e32f9f152904c2241826208eabf50732e83b",
     "src/composer/small-seal.js": "a5e63e304c9a8afddf5383b29ac3d9f0ea6d173e47f915b5d802521653dad811",
+    "src/composer/source.js": "6b932c18cb54b4b67fab046ffd70260bdb5df372c8a8f12d593263d70e4fa114",
+    "src/composer/strokes.js": "8a8c187c94bcfed0cd50b91c640203f9fd5704d3b689d44d203294f073537594",
     "src/composer/tangut.js": "60f3fcca3d6ba0516475a86a5b4b8c43ff1498d54a1283a6308d4c50452026a8",
     "src/composer/unicode.js": "9773c4b613dedba15a59043bb3b2a8734b530ceeb1ce319e631b6b4bbd83627e",
-    "src/composer/worker.js": "4781ee6764b543dafbcb64d42ea535927f43e5ae2ac27a16709f1ca096d349b6",
-    "src/core/ids.js": "56050dde0c3fd425ec76ed44813be497579c66b512acdb1bb0c4f3a904f33cf3",
+    "src/composer/worker.js": "2387e6ae15f97d12836626937eb69294b3ad9ecc7028269748b6e77e42e5308b",
+    "src/core/ids.js": "1683ae4a1ab5c2bab9922bcb378c4ada8082cf5cf22f134023824749cb9c3b80",
     "src/core/unicode.js": "246623e0f8016c19d434c99d431fdd6df2d4a280fbcb78ec4ff5cee012f19074"
   },
   "scope": "Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.",
-  "accepted": 172339,
-  "drawn": 160972,
-  "missing": 11367,
+  "accepted": 172872,
+  "drawn": 161503,
+  "missing": 11369,
   "invalid": 0,
   "privateUseExcluded": 137468,
   "missingRanges": [
+    [
+      12334,
+      12335
+    ],
     [
       75088,
       75398
@@ -2259,6 +2269,16 @@
   ],
   "invalidRanges": [],
   "blocks": [
+    {
+      "block": "CJK Symbols and Punctuation",
+      "missing": 2,
+      "ranges": [
+        [
+          12334,
+          12335
+        ]
+      ]
+    },
     {
       "block": "Archaic Cuneiform Numerals",
       "missing": 311,
@@ -4523,7 +4543,8 @@
   "localHashes": {
     "bopomofo-outlines.json.gz": "917bc5d56054e7c210b8ba488cd54a03899fe289cfd73676d56f7bad1b6bf623",
     "new-korean-outlines.json.gz": "377b3dfa3479be51248b29ea7c90a6e5b738ae00b8078e1b9dc94180c28444e0",
-    "palette-outlines.json.gz": "7351adfb9e96d820f6066a830e07c999845f1ecc9421f9877493c8d94685aa59",
+    "palette-outlines.json.gz": "c036ef79132d625355d6ffde990930c74848b8922e080073076bbd729a9c2743",
+    "shuishu-outlines.json.gz": "5b8cf0e1e5c87bc21f2f9ca7b78005b7dbc6ebe3fbefdc1c90e2d1c00f476d08",
     "small-seal-outlines.json.gz": "07df4bc756d38d9bb05c9a385916db66f4f63fed5e4da9c6be4aa11e2804f54b",
     "tangut-outlines.json.gz": "73af395332d0bc6956fad9bb16fcbbe08ea689cef597513f258a64f780ab3d92",
     "unicode-outlines/000.json.gz": "0e4733a827b1bc05d70a1cb4e45421df22d952f02ffacd880d711ac13c802a57",
@@ -5069,7 +5090,7 @@
     "unicode-outlines/331.json.gz": "eed5be1580c35d169eb50240afa42edf687d3137905820dd5cb43a85ef9652b5",
     "unicode-outlines/332.json.gz": "24903dc9d7ab214512e907c72b2adbbb090cfb21ee9494382cd89a1850564eb1",
     "unicode-outlines/333.json.gz": "323df8f54813ceebb31b20cfa7a1bf5d8bd706f7a1e521d90cea637550f0ab2b",
-    "unicode-outlines/334.json.gz": "2b402872594a4c83fc6568ddf8b1f7f3567d462ca0b4d1a65c9c3f3b50f8f96b"
+    "unicode-outlines/334.json.gz": "a1d02a10938c19479aa1aeac3b2411a3a8d7b295e323029276aa67f4f779b3f1"
   },
   "sourceHashes": {
     "g/000.json": "a4d3fc3511557cd4d458d71042e5aa369e653468a56f5e5d97d01f6e6d145400",

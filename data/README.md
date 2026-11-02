@@ -1019,6 +1019,13 @@ local bundle hashes and implementation hashes. They cover individual components,
 and source routing. They do not establish visual fidelity, variation-sequence support or successful
 layout of every possible IDS tree. Private-use characters need an explicit host mapping.
 
+Each report records the hashes of the files that decide what the preview draws, listed in
+`scripts/lib/coverage-sources.mjs`. `bun scripts/check_coverage_freshness.mjs` compares those
+hashes against the tree and fails on any difference, naming the changed files; `bun run verify`
+runs it, so a change to the preview's inputs has to carry refreshed reports. Re-render each style
+into `docs/coverage/` before opening the pull request. A stale report is worth a failed check:
+it is read as a statement about the current build.
+
 `python3 scripts/build_host_glyph_coverage.py CACHE_DIR` rebuilds the default export's exact
 direct-outline inventory from that cache. The fallback builder uses it to retain missing CJK
 outlines. `python3 scripts/build_bundled_coverage.py` rebuilds the dedicated bundles' scalar index;
