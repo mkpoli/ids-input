@@ -5,7 +5,7 @@ import { pathOf, routeFor } from '../worker/page.js'
 import worker from '../worker/index.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/compare', '/engines']
+const PAGES = ['/compare', '/engines', '/sources']
 const locs = [...sitemapXml().matchAll(/<loc>([^<]+)<\/loc>/g)].map(match => match[1])
 
 describe('the sitemap', () => {
@@ -23,7 +23,8 @@ describe('the sitemap', () => {
 })
 
 const shell = await Bun.file(new URL('../demo/index.html', import.meta.url)).text()
-// A comparison page is the shell with its own entry script; the build writes it beside the shell.
+// A comparison or catalogue page is the shell with its own entry script; the build writes it
+// beside the shell.
 const comparison = path => path === '/' ? shell : shell.replace('./main.js', `.${path}.js`)
 
 describe('the worker’s answer to a listed path', () => {
@@ -48,7 +49,7 @@ describe('the worker’s answer to a listed path', () => {
   })
 })
 
-it('points the comparison pages’ canonical at the URLs the sitemap lists', async () => {
+it('points each page’s canonical at the URL the sitemap lists', async () => {
   for (const path of PAGES) {
     expect(await Bun.file(new URL(`../demo${path}.html`, import.meta.url)).text())
       .toContain(`<link rel="canonical" href="${ORIGIN}${path}">`)

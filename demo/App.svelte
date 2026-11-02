@@ -1391,7 +1391,7 @@
     ]} />
   </div>
 </Dialog>
-<AboutDialog bind:open={aboutOpen} {t} />
+<AboutDialog bind:open={aboutOpen} {locale} {t} />
 <TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {locale} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />

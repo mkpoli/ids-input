@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-// `dist/sitemap.xml` from the pages the worker serves: the workshop, its two comparison pages, and
-// every starter sequence at the path a share link uses. Run from `build:site` after `build:demo`.
+// `dist/sitemap.xml` from the pages the worker serves: the workshop, its comparison pages, its
+// source catalogue, and every starter sequence at the path a share link uses. Run from
+// `build:site` after `build:demo`.
 //
 //   bun scripts/build-sitemap.mjs
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -9,7 +10,7 @@ import { EXAMPLES } from '../demo/lib/examples.js'
 import { pathOf } from '../worker/page.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
-const PAGES = ['/', '/compare', '/engines']
+const PAGES = ['/', '/compare', '/engines', '/sources']
 
 /** @param {string} path */
 const url = path => `<url>\n    <loc>${ORIGIN}${path}</loc>\n  </url>`
