@@ -84,7 +84,9 @@ async function start() {
   server.stderr.on('data', chunk => { log += chunk })
   for (let i = 0; i < 180; i++) {
     if (server.exitCode !== null) break
-    const found = log.match(/Local:\s+(http:\/\/localhost:\d+)/)
+    // Vite colours its output when the environment asks for it, as CI does, and the escape codes
+    // sit inside the address line; read the line without them.
+    const found = log.replace(/\x1b\[[0-9;]*m/g, '').match(/Local:\s+(http:\/\/localhost:\d+)/)
     if (found) { url = found[1]; return }
     await Bun.sleep(500)
   }
@@ -102,35 +104,59 @@ const tail = () => log.trim().split('\n').slice(-8).map(line => `     ${line}`).
 
 /** Loads the workshop once, so the checks do not pay the dev server's first transform each run. */
 async function warm() {
-  const browser = await launchable.launch({ executablePath: chromium })
+  let browser
   try {
+    browser = await launchable.launch({ executablePath: chromium })
     const page = await browser.newPage()
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 180000 })
     await page.locator('.ids-field input').waitFor({ timeout: 180000 })
-  } finally { await browser.close() }
+  } catch (error) {
+    // A browser that cannot start or a page that never loads would otherwise end the run silently.
+    console.error(`The workshop did not load at ${url}: ${error?.message ?? error}`)
+    console.error(tail())
+    process.exit(1)
+  } finally { await browser?.close() }
 }
 
 /** Runs one check file and reports whether it passed, with what it printed. A check that hangs is
  *  stopped after `limit` seconds, so one wedged browser cannot hold the whole run. */
-function run(file, limit = 600) {
+function run(file, limit = 240) {
   return new Promise(resolve => {
     const preload = join(root, 'scripts', 'check-demo-preload.mjs')
+    // Its own process group, so a check that hangs takes its browser down with it: killing the
+    // wrapper alone leaves the browser holding the pipes, and the run waits on them forever.
     const child = spawn('bun', ['--preload', preload, join('demo', file)], {
       cwd: root,
       env: { ...process.env, IDS_URL: url, CHROMIUM_PATH: chromium, CHECK_TIMEOUT: String(timeout * 1000) },
       stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
     })
     let output = ''
-    const timer = setTimeout(() => { output += `\n(stopped after ${limit}s)`; child.kill('SIGKILL') }, limit * 1000)
+    let settled = false
+    /** Reports the result once; a killed check and its late `close` cannot report twice. */
+    const finish = (code, note = '') => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve({ code, output: `${output}${note}` })
+    }
+    const timer = setTimeout(() => {
+      try { process.kill(-child.pid, 'SIGKILL') } catch { child.kill('SIGKILL') }
+      // Report the stop itself rather than waiting for `close`: a browser that outlived the kill
+      // still holds the pipes, and `close` may never come.
+      finish(1, `\n(stopped after ${limit}s)`)
+    }, limit * 1000)
     child.stdout.on('data', chunk => { output += chunk })
     child.stderr.on('data', chunk => { output += chunk })
-    child.on('error', error => { clearTimeout(timer); resolve({ code: 1, output: `${output}\n${error.message}` }) })
-    child.on('close', code => { clearTimeout(timer); resolve({ code, output }) })
+    child.on('error', error => finish(1, `\n${error.message}`))
+    child.on('close', code => finish(code ?? 1))
   })
 }
 
 // A safety net: every await below has its own bound, but a dev server or a browser can still wedge
-// something in a way that never settles, and a run that hangs is worse than one that fails.
+// something in a way that never settles, and a run that hangs is worse than one that fails. The
+// per-check limit stays well under it, so a wedged check is reported as a failure with its output
+// rather than stopping the run without a word.
 let lastProgress = Date.now()
 const progress = () => { lastProgress = Date.now() }
 setInterval(() => {
