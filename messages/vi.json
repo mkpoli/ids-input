@@ -16,6 +16,7 @@
   "ids.do.exchange": "Đổi chỗ {from} với {to}",
   "ids.do.open": "Mở {sequence}",
   "ids.do.put": "Chèn {part}",
+  "ids.dragHandle": "Kéo {name}",
   "ids.dragSibling": "Kéo sang bộ phận ở nhánh khác để đổi chỗ, Alt+phím mũi tên đổi thứ tự cùng cấp",
   "ids.do.reorder": "Đổi thứ tự bộ phận",
   "ids.do.resolve": "Giải thành {char}",

@@ -16,6 +16,7 @@
   "ids.do.exchange": "Switch {from} with {to}",
   "ids.do.open": "Open {sequence}",
   "ids.do.put": "Put {part}",
+  "ids.dragHandle": "Drag {name}",
   "ids.dragSibling": "Drag onto a part of another branch to switch places, or press Alt+arrow to reorder siblings",
   "ids.do.reorder": "Reorder parts",
   "ids.do.resolve": "Resolve to {char}",

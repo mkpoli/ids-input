@@ -159,6 +159,13 @@
         {:else}
           <span class="ids-subsequence" lang="ja" title={write(part)}>{write(part)}</span>
         {/if}
+        {#if path.length}
+          <button type="button" class="ids-grip" tabindex="-1" disabled={editor.disabled} draggable={!editor.disabled}
+            ondragstart={event => startDrag(event, path)} ondragend={endDrag}
+            aria-label={t('ids.dragHandle', { name: editor.name(part.op) })} title={t('ids.dragSibling')}>
+            <svg viewBox="0 0 12 12" aria-hidden="true"><g fill="currentColor"><circle cx="3.5" cy="3" r="1.1" /><circle cx="8.5" cy="3" r="1.1" /><circle cx="3.5" cy="6" r="1.1" /><circle cx="8.5" cy="6" r="1.1" /><circle cx="3.5" cy="9" r="1.1" /><circle cx="8.5" cy="9" r="1.1" /></g></svg>
+          </button>
+        {/if}
         <button type="button" class="ids-unwrap" tabindex="-1" disabled={editor.disabled} aria-label={t('ids.unwrapNode', { what })} title={t('ids.unwrapHint')}
           onclick={() => editor.remove(path)}>×</button>
       </div>
@@ -262,6 +269,11 @@
   .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 .545em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11em/1.4 var(--_font);color:var(--_muted)}
   .ids-op{display:grid;place-items:center;padding:1em 3em;border-width:1em;border-radius:6em;border-color:transparent;background:none}
   .ids-op:hover,.ids-op[aria-pressed="true"]{border-color:var(--_accent)}
+  /* The handle at the head of a group: a visible grip, since the parts fill the rest of the frame. */
+  .ids-grip{pointer-events:auto;display:grid;place-items:center;flex:none;width:16em;height:16em;padding:0;border-color:transparent;border-width:0;background:none;color:var(--_muted);cursor:grab}
+  .ids-grip svg{width:12em;height:12em}
+  .ids-grip:not(:disabled):hover{color:var(--_accent)}
+  .ids-grip:active{cursor:grabbing}
   .ids-unwrap{padding:0 .385em;font-size:13em;line-height:1.2;border-width:.077em;border-radius:.46em;color:var(--_muted);border-color:transparent;background:none}
   .ids-unwrap:not(:disabled):hover{color:var(--_fault);border-color:var(--_fault)}
   .ids-op :global(svg){width:16em;height:16em}

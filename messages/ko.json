@@ -16,6 +16,7 @@
   "ids.do.exchange": "{from}과(와) {to} 자리 바꾸기",
   "ids.do.open": "{sequence} 열기",
   "ids.do.put": "{part} 넣기",
+  "ids.dragHandle": "{name} 끌기",
   "ids.dragSibling": "다른 가지의 부품으로 끌어 자리 바꾸기, Alt+방향키로 같은 단계 순서 변경",
   "ids.do.reorder": "구성 요소 순서 변경",
   "ids.do.resolve": "“{char}”(으)로 해석",
