@@ -6,7 +6,9 @@
 //   bun run check:demo -- --port 5186      a port of your choosing
 //   bun run check:demo -- --retries 2      more attempts for a check that fails (one by default)
 //   bun run check:demo -- --skip gongche   leave the slow or focused checks out (comma separated)
-//   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (15 by default)
+//   bun run check:demo -- --limit 900      stop a check after fifteen minutes (600 seconds by default)
+//   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (by default a
+//                                          minute past every attempt at one check)
 //   bun run check:demo -- --timeout 30     the page timeout each check gets in seconds (120 by default;
 //                                          0 keeps whatever the check file asks for)
 //
@@ -27,10 +29,14 @@ import { chromium as launchable } from 'playwright-core'
 const arg = name => { const at = process.argv.indexOf(name); return at >= 0 ? process.argv[at + 1] : undefined }
 const only = arg('--only')
 const skip = (arg('--skip') ?? '').split(',').filter(Boolean)
-const watchdogMinutes = Number(arg('--watchdog') ?? 15)
 const timeout = Number(arg('--timeout') ?? 120)
 const port = Number(arg('--port') ?? 5186)
 const retries = Number(arg('--retries') ?? 1)
+/** One attempt at one check; a wedged check is stopped at this many seconds. A check that runs both
+ *  schemes over a long list needs minutes on a busy machine, so the bound is generous. */
+const CHECK_LIMIT = Number(arg('--limit') ?? 600)
+// A check may be tried `retries + 1` times, so the run's own guard has to outlast that.
+const watchdogMinutes = Number(arg('--watchdog') ?? Math.ceil((CHECK_LIMIT * (retries + 1) + 120) / 60))
 const root = join(import.meta.dirname, '..')
 
 /** The Chromium the checks launch: `CHROMIUM_PATH`, or the newest one the Playwright cache holds. */
@@ -120,7 +126,7 @@ async function warm() {
 
 /** Runs one check file and reports whether it passed, with what it printed. A check that hangs is
  *  stopped after `limit` seconds, so one wedged browser cannot hold the whole run. */
-function run(file, limit = 240) {
+function run(file, limit = CHECK_LIMIT) {
   return new Promise(resolve => {
     const preload = join(root, 'scripts', 'check-demo-preload.mjs')
     // Its own process group, so a check that hangs takes its browser down with it: killing the
