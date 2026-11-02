@@ -166,7 +166,8 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
+also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
+keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
 drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;

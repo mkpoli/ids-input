@@ -30,7 +30,7 @@
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').PalettePart} PalettePart
    */
-  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => void }} */
+  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
   let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
   const t = $derived(translator(messages, locale))
   const uid = $props.id()
@@ -271,8 +271,9 @@
   function pickComposed() {
     if (!composed || disabled) return
     const text = composed.text
+    // An insert with nowhere to go leaves the keyboard as it was; clearing it would lose the letters.
+    if (pick(text) === false) return
     clearCompose()
-    pick(text)
   }
   const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'shuishu' ? 'parts.shuishu.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
@@ -477,7 +478,7 @@
   function pick(part) {
     recent = [part, ...recent.filter(other => other !== part)].slice(0, RECENT_MAX)
     if (recentKey) remember(recentKey, recent)
-    onpick?.(part)
+    return onpick?.(part)
   }
   // Give a double-click time to select text without inserting its first click.
   /** @type {ReturnType<typeof setTimeout> | undefined} */

@@ -165,12 +165,13 @@ export function createEditor(options) {
     // A description's text can only carry marks at its end; keep them there.
     next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
-    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
-    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return }
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return false }
+    if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return false }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
     change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}), ...(swap ? { swap } : {}) }
     commit(next, select)
+    return true
   }
   function undo() {
     run = false
@@ -212,17 +213,18 @@ export function createEditor(options) {
   const target = () => chosen ?? (tree === null ? [] : nextEmpty(tree))
   /** @param {Part} part @param {string} [op] @param {string} [label] */
   function insert(part, op, label) {
-    if (disabled() || caret === null || typed.problem) return
+    if (disabled() || caret === null || typed.problem) return false
     const next = insertAt(tree, draft, caret, part, op)
     const valid = parse(write(next.tree), {open:true})
-    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return }
+    if (valid.problem) { note = t(`ids.problem.${valid.problem}`); return false }
     const change = op ? t('ids.do.split', { part: '⬚', op }) : t('ids.do.put', { part: text(part) })
     const gap = !op && isNode(part) ? nextEmpty(part) : null
-    apply(next.tree, next.operator ? next.path : gap ? [...next.path, ...gap] : null, label ?? change)
-    if (!next.operator && !gap) {
+    const applied = apply(next.tree, next.operator ? next.path : gap ? [...next.path, ...gap] : null, label ?? change)
+    if (applied && !next.operator && !gap) {
       const token = tokens(draft).find(token => samePath(token.path, next.path))
       caret = token?.end ?? draft.length
     }
+    return applied
   }
   /** An operator on the chosen part, or around the whole tree when nothing is chosen. @param {string} op @param {Path | null} [at] */
   function operator(op, at) {
@@ -235,20 +237,22 @@ export function createEditor(options) {
     const label = at === null && tree !== null ? t('ids.do.wrap', { op }) : isNode(before) ? t('ids.do.swap', { from: before.op, op }) : t('ids.do.split', { part: text(before) || '⬚', op })
     apply(done.tree, done.chosen, label)
   }
-  /** `part` in the chosen slot (or the first empty one), or at `at`. @param {Part} part @param {Path | null} [at] @param {string} [label] */
+  /** `part` in the chosen slot (or the first empty one), or at `at`; false when it could not go there.
+   * @param {Part} part @param {Path | null} [at] @param {string} [label] */
   function put(part, at, label) {
-    if (at === undefined && caret !== null && !typed.problem) { insert(part, undefined, label); return }
+    if (at === undefined && caret !== null && !typed.problem) return insert(part, undefined, label)
     at = at === undefined ? target() : at
-    if (disabled()) return
-    if (!at) { note = t('ids.chooseFirst'); return }
+    if (disabled()) return false
+    if (!at) { note = t('ids.chooseFirst'); return false }
     const before = partAt(tree, at)
     const next = placed(tree, at, part)
-    apply(next.tree, next.chosen, label ?? (before === null || before === undefined ? t('ids.do.put', { part: text(part) })
+    return apply(next.tree, next.chosen, label ?? (before === null || before === undefined ? t('ids.do.put', { part: text(part) })
       : t('ids.do.replace', { from: text(before), part: text(part) })), { destructive: isNode(before) })
   }
   /**
    * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
-   * With `loose`, a run of marks annotates the whole description instead of filling a slot.
+   * With `loose`, a run of marks annotates the whole description instead of filling a slot. False
+   * when the part could not be put anywhere, so a picker can keep what the reader was holding.
    * @param {string} written @param {Path | null} [at] @param {{ loose?: boolean }} [how]
    */
   function take(written, at, { loose = false } = {}) {
@@ -258,18 +262,15 @@ export function createEditor(options) {
         if (tree === null) {
           const read = parse(marks, { open: true })
           if (read.problem || read.tree === undefined) return false
-          apply(read.tree, [], t('ids.do.put', { part: marks }))
-          return true
+          return apply(read.tree, [], t('ids.do.put', { part: marks }))
         }
-        apply(withMarks(tree, marks), chosen, t('ids.do.put', { part: marks }))
-        return true
+        return apply(withMarks(tree, marks), chosen, t('ids.do.put', { part: marks }))
       }
     }
     const found = parse(unalias(written), { open: true })
     if (found.problem) { note = t(`ids.problem.${found.problem}`); return false }
     if (found.tree === null) return false
-    put(found.tree, at)
-    return true
+    return put(found.tree, at)
   }
   /** Move one sibling to another sibling's position. @param {Path} from @param {Path} to */
   function reorder(from, to) {

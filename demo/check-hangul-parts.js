@@ -117,6 +117,19 @@ try {
   assert.notEqual(await field.getAttribute('aria-invalid'), 'true')
   await draft.close()
 
+  // A description with no empty slot refuses the syllable and keeps the keyboard's letters.
+  const kept = await browser.newPage()
+  await kept.goto(new URL('/#' + encodeURIComponent('木'), process.env.IDS_URL ?? 'http://localhost:5173').href)
+  await kept.getByRole('tab', { name: 'Parts', exact: true }).click()
+  await kept.getByRole('tab', { name: 'Hangul', exact: true }).click()
+  await view(kept, 'Compose')
+  await key(kept, 'ㄱ').click()
+  await key(kept, 'ㅏ').click()
+  await result(kept).click()
+  assert.equal(await result(kept).getAttribute('data-character'), '가', 'a failed insert keeps the composition')
+  assert.equal(await kept.locator('.ids-field input').first().inputValue(), '木')
+  await kept.close()
+
   const adjacent = await browser.newPage()
   await adjacent.goto(new URL('/#' + encodeURIComponent('⿰⬚⬚'), process.env.IDS_URL ?? 'http://localhost:5173').href)
   await adjacent.getByRole('tab', { name: 'Parts', exact: true }).click()
