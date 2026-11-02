@@ -8,7 +8,7 @@
   // part dragged from a palette or a search drops onto the row; a row of the list dropped beside a
   // sibling moves there or on any other row switches places with it. Arrow keys move, ArrowRight
   // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
-  import { isNode, write } from '../core/ids.js'
+  import { isNode, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
 
   /** @typedef {import('../core/ids.js').Part} Part */
@@ -124,6 +124,29 @@
       if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(collapsed))
     }
   }
+  // Lifting a box with the space bar: Space lifts the focused row, Space on another row places it,
+  // Escape lets it go. The arrows move the focus between rows in the meantime.
+  /** @type {{ path: Path, tree: Part } | null} */ let carry = $state.raw(null)
+  $effect(() => {
+    const tree = editor.tree
+    untrack(() => { if (carry && carry.tree !== tree) carry = null })
+  })
+  // Escape lets a lifted box go. The character card takes the first Escape (keydown) to close
+  // itself, so the release is read on keyup, where nothing has stopped the event.
+  $effect(() => {
+    /** @param {KeyboardEvent} event */
+    const release = event => { if (event.key === 'Escape' && carry) carry = null }
+    window.addEventListener('keyup', release)
+    return () => window.removeEventListener('keyup', release)
+  })
+  /** @param {Path} to */
+  function placeCarry(to) {
+    const held = carry
+    carry = null
+    if (!held || held.tree !== editor.tree) return
+    if (siblings(held.path, to)) move(held.path, to)
+    else if (swappable(held.path, to)) exchange(held.path, to)
+  }
   /** @param {Row} row */
   function toggle(row) {
     const next = new Set(collapsed)
@@ -143,6 +166,16 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === ' ') {
+      event.preventDefault()
+      if (!row.path.length || editor.disabled) return
+      if (carry && samePath(carry.path, row.path)) { carry = null; return }
+      if (carry) { placeCarry(row.path); return }
+      carry = { path: row.path, tree: editor.tree }
+      editor.choose(row.path)
+      return
+    }
+    if (event.key === 'Escape' && carry) { event.preventDefault(); carry = null; return }
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editRow(row); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
@@ -150,7 +183,7 @@
       if (row.path.length && !editor.disabled) { event.preventDefault(); if (next) { move(row.path, next); focusRow(key(next)) } }
       return
     }
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
+    if (event.key === 'Enter') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = rows[index + (event.key === 'ArrowDown' ? 1 : -1)]
@@ -228,8 +261,8 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
-        aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
+      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:carried={carry !== null && carry.path.join('.') === row.key} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
+        aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined} aria-keyshortcuts="Space"
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
         onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
@@ -265,6 +298,7 @@
   li:hover{background:var(--_surface-subtle)}
   li.chosen{border-color:var(--_accent);background:var(--_accent-light)}
   li.over{border-color:var(--_accent)}
+  li.carried{outline:2px dashed var(--_accent);outline-offset:-2px}
   li.swap{border-color:var(--_accent);background:var(--_accent-light)}
   li.dragged{opacity:.45}
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
