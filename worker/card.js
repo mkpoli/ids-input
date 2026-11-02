@@ -102,28 +102,26 @@ function frame(p) {
  */
 const glyphemes = sequence => [...cluster.segment(sequence)].map(({ segment }) => segment)
 
-// The IDC font draws only the operators, so a cell whose faces draw nothing falls back to it.
-const OPERATOR_FAMILY = 'IDS Operators'
 const isOperator = (/** @type {string} */ cell) => /^[⿰-⿿〾㇯]$/u.test(cell) || cell === '\u{303E}' || cell === '\u{31EF}'
 /** @param {string} unit */
 const cellOf = unit => isOperator(unit) ? unit : [...unit][0]
 /**
- * The face each unit is set in: its own faces, the operator font last where it has no glyph for it.
- * `familyOf` answers for a character, so a description is asked for its units; the operator font is
- * appended only to a face this module chose, never to an assembled family.
+ * The face each unit is set in, as the font table answers for it: an operator in the IDC face, a
+ * character in its own face. `familyOf` answers for a character, so a description is asked for its
+ * units.
  * @param {{ units: string[], familyOf: (character: string) => string }} given
  */
 function faces({ units: given, familyOf }) {
-  const plain = given.filter(unit => !isOperator(cellOf(unit)))
-  const sample = plain[0] ?? given[0] ?? '⿰'
+  const sample = given.map(cellOf).find(cell => !isOperator(cell)) ?? ''
   return (/** @type {string | undefined} */ cell) => {
-    // An operator is set in the IDC face; a character in its own, with the IDC face after it.
-    if (cell === undefined || isOperator(cell)) {
-      return plain.length ? `${OPERATOR_FAMILY}, ${familyOf(sample)}` : OPERATOR_FAMILY
-    }
-    const face = familyOf(cell)
-    return face === OPERATOR_FAMILY ? face : `${face}, ${OPERATOR_FAMILY}`
+    if (cell === undefined || isOperator(cell)) return faceOfOperator(familyOf, cell ?? sample)
+    return familyOf(cell)
   }
+}
+/** The face an operator is set in; the characters of the sequence keep theirs beside it. @param {(character: string) => string} familyOf @param {string} cell */
+function faceOfOperator(familyOf, cell) {
+  const face = cell ? familyOf(cell) : 'IDS Operators'
+  return face
 }
 
 /**
@@ -147,7 +145,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
       + `<text data-character="true" x="568" y="441" font-family="${family(char)}" font-size="40" fill="${p.ink}">${escaped(char)}</text>`
       + `<path d="M628 397V437" stroke="${p.line}"/>`
       + `<text x="650" y="402" font-size="14" fill="${p.muted}">Unicode</text>`
-      + `<text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">${escaped(/** @type {string} */ (point))}</text>`
+      + `<text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">${escaped(point ?? '')}</text>`
     : `<text x="568" y="398" font-size="14" fill="${p.muted}">Composes</text>`
       + `<text x="568" y="436" font-size="20" fill="${p.muted}">No character at this code point</text>`
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Noto Sans CJK JP">`

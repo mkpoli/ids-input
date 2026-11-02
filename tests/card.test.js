@@ -29,11 +29,17 @@ describe('a workshop share card', () => {
     expect(svg).toContain('ids.mkpo.li')
     expect(svg).toContain('U+93B6')
   })
-  it('sets the sequence in the IDC face and each character row in its own', () => {
-    // A face named for a character draws that character only; the operators after it are the IDC face's.
-    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing], familyOf: c => (c === '设' || c === '冓' ? 'a' : 'b') })
-    expect(svg).toContain('font-family="a, IDS Operators" font-size="88"')
-    expect(svg).not.toContain('font-family="b, IDS Operators" font-size="88"')
+  it('asks the font table for every cell, the operators included', () => {
+    // The table answers IDS Operators for an operator and the character's own face for a character;
+    // a face is never assembled here.
+    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing], familyOf: c => (c === '⿰' ? 'IDS Operators' : c === '设' || c === '冓' ? 'a' : 'b') })
+    expect(svg).toContain('font-family="IDS Operators" font-size="88"')
+    expect(svg).toContain('font-family="a" font-size="88"')
+    expect(svg).not.toContain('font-family="a, IDS Operators"')
+  })
+  it('keeps the face the table gives an operator, including one the IDC face lacks', () => {
+    const svg = cardSvg({ sequence: '⿺木子', familyOf: () => 'IDS Strokes' })
+    expect(svg).toContain('font-family="IDS Strokes" font-size="88"')
   })
   it('shows the character of a sequence read with one it does not compose, at that code point', () => {
     const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing] })
@@ -119,6 +125,6 @@ describe('a workshop share card', () => {
     expect(svg).toContain('>&lt;</text>')
     expect(svg).toContain('>&amp;</text>')
     expect(svg).toContain('>&gt;</text>')
-    expect(svg).toContain('font-family="a&quot;&lt;b, IDS Operators"')
+    expect(svg).toContain('font-family="a&quot;&lt;b"')
   })
 })

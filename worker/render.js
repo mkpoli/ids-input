@@ -64,9 +64,13 @@ export async function characterOf(env, sequence) {
   return (await idsIndex(env))[sequence] ?? null
 }
 
-/** The drawing of each unit, composed on its own, or null where one could not be. @param {any} env @param {string[]} units */
-async function drawUnits(env, units) {
-  return await Promise.all(units.map(unit => draw(env, unit).catch(() => null)))
+/**
+ * The drawing of each unit, composed on its own, or null where one could not be. A single unit is
+ * the sequence itself, whose drawing is given. @param {any} env @param {string[]} units @param {any} first
+ */
+async function drawUnits(env, units, first) {
+  if (units.length === 1) return [first]
+  return await Promise.all(units.map((unit) => draw(env, unit).catch(() => null)))
 }
 
 /** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
@@ -92,15 +96,20 @@ async function png(env, sequence, drawing, char, shown = null) {
 }
 
 /**
- * The character an example names for a sequence: the one it writes, or the standard character an
- * abbreviation stands for. A description can be read with the code point of a character it does not
- * compose, such as the 講 the sign writes with a full 讠; the card names that character.
- * @param {string} sequence
+ * The character an example names for a sequence: the one it writes, or for an abbreviation the
+ * standard character it stands for. `composed` is the character the table says the sequence is, where
+ * the example writes none.
+ * @param {string} sequence @param {string | null} [composed]
  */
-export function namedFor(sequence) {
+export function namedFor(sequence, composed = null) {
   const example = EXAMPLES.find(example => example.sequence === sequence)
-  const named = example?.abbreviates || example?.char
-  return named && [...named].length === 1 ? named : null
+  const named = example?.char || example?.abbreviates || composed
+  return named && [...named].length === 1 ? [...named][0] : null
+}
+
+/** The character a card and its page both name: the example's, else the table's. @param {any} env @param {string} sequence */
+export async function characterFor(env, sequence) {
+  return namedFor(sequence, await characterOf(env, sequence))
 }
 
 /**
@@ -113,19 +122,16 @@ export function namedFor(sequence) {
  * @returns {Promise<string[]>}
  */
 export async function unitsFor(env, sequence, named) {
-  if (!named || !sequence.includes('⿰') || !sequence.startsWith('⿰')) return [sequence]
+  if (!named || !sequence.startsWith('⿰')) return [sequence]
   const pieces = [...sequence]
   // One operator, two plain characters: 3 pieces, with the operator first.
   if (pieces.length !== 3) return [sequence]
   const parts = pieces.slice(1)
-  if (parts.some((part) => part === named)) return [sequence]
-  const index = await idsIndex(env)
-  const characters = parts.map((part) => {
-    const drawn = index[part] ?? part
-    return [...drawn].length === 1 ? drawn : part
-  })
-  if (characters.includes(named)) return [sequence]
-  return [named, ...characters]
+  // The units are the character the sequence is read with, then the characters it writes; a written
+  // character that is the named one already says which character, so the sequence stays whole.
+  const written = parts.flatMap((part) => [...part].length === 1 ? [...part] : [])
+  if (written.includes(named)) return [sequence]
+  return [named, ...written]
 }
 
 /**
@@ -137,15 +143,16 @@ export async function cardResponse(env, ctx, sequence) {
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
-  // An example names the character its sequence is read with; otherwise the table gives it. A
-  // sequence read with a character it does not compose is shown as the characters it writes.
-  const named = namedFor(sequence)
+  // The example names the character, else the table does. A sequence read with a character it does
+  // not compose is shown as the characters it writes.
   const composed = await characterOf(env, sequence)
-  const char = named ?? composed
+  const named = namedFor(sequence, composed)
+  const char = named
   const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
-  const drawings = await drawUnits(env, units)
+  const sequenceDrawing = await draw(env, sequence).catch(() => null)
+  const drawings = await drawUnits(env, units, sequenceDrawing)
   const shown = units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
-  const body = await png(env, sequence, drawings[0], char, shown)
+  const body = await png(env, sequence, sequenceDrawing, char, shown)
   const answer = new Response(body, { headers: { 'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer

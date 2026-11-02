@@ -9,7 +9,11 @@ export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
 
 /** The code point of `char`, written `U+93B6`. @param {string} char */
-export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
+/** @param {string} char */
+export const codePoint = char => {
+  const point = char.codePointAt(0)
+  return point === undefined ? '' : `U+${point.toString(16).toUpperCase().padStart(4, '0')}`
+}
 
 /** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
  *  included and text the IDS parser rejects. A share link builds its address the same way.
@@ -49,25 +53,16 @@ export function routeFor(url, defaultSequence) {
 }
 
 /**
- * The title, description, tags and image of a shared sequence.
+ * The title, description, tags and image of a shared sequence. `char` is the character the card
+ * draws and names, so the page and its image say the same thing.
  * @param {{ sequence: string, char: string | null, origin: string }} share
  */
-/**
- * `char` is the character the description composes, and `base` the character whose code point the
- * sequence is to be read with: one an example names, or the table's, whichever is given first.
- * @param {{ sequence: string, char: string | null, base?: string | null, origin: string }} given
- */
-export function metaFor({ sequence, char, base, origin }) {
+export function metaFor({ sequence, char, origin }) {
   const url = `${origin}${pathOf(sequence)}`
-  const named = base ?? char
-  const title = char
-    ? `${sequence} = ${char} (${codePoint(named ?? char)}) — IDS Workshop`
-    : named ? `${sequence} = ${named} — IDS Workshop` : `${sequence} — IDS Workshop`
+  const title = char ? `${sequence} = ${char} (${codePoint(char)}) — IDS Workshop` : `${sequence} — IDS Workshop`
   const description = char
-    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(named ?? char)}). Drawn by IDS Workshop.`
-    : named
-      ? `The ideographic description sequence ${sequence}, read with the character ${named} (${codePoint(named)}). Drawn by IDS Workshop.`
-      : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
+    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
+    : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
   const image = `${origin}/og/${encodeURIComponent(sequence)}.png`
   return {
     title,
@@ -83,7 +78,7 @@ export function metaFor({ sequence, char, base, origin }) {
       `<meta property="og:image:type" content="image/png">`,
       `<meta property="og:image:width" content="${OG_WIDTH}">`,
       `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(named ?? char)})` : named ? `The sequence ${sequence}, read with the character ${named} (${codePoint(named)})` : `The sequence ${sequence} composed`)}">`,
+      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
       `<meta name="twitter:card" content="summary_large_image">`,
       `<meta name="twitter:title" content="${escaped(title)}">`,
       `<meta name="twitter:description" content="${escaped(description)}">`,
