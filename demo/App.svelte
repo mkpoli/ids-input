@@ -9,7 +9,7 @@
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
-  import { APPROXIMATE } from '../src/composer/compose.js'
+  import { APPROXIMATE, composableDescription } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview } from '../src/composer/index.js'
   import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
@@ -218,12 +218,14 @@
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
         }
-        // A character the face has no glyph for draws the description the adapter knows it by.
+        // A character the face has no glyph for is built from the description the adapter knows it
+        // by, when every operator in it places its operands predictably. The drawing is marked so a
+        // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
           const described = await babel.structure(sequence).catch(() => [])
           for (const { text } of described) {
-            if (text === sequence) continue
-            try { return await composed(text, options) } catch { /* the default export draws it */ }
+            if (text === sequence || !composableDescription(text)) continue
+            try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
           }
         }
         if (defaultFace) throw error

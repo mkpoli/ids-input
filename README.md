@@ -153,8 +153,9 @@ and `keydown` change it, `change` names the last change and whether it threw som
 them back, for a host switching between documents. In the tree, a click chooses a part, a part
 dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
 and a part of the tree, or a whole group taken by the grip on its frame, dropped beside a sibling
-moves there while one dropped on any other part switches places with it (`Alt` and an arrow key
-reorders siblings without a pointer). The context
+moves there while one dropped on any other part switches places with it. A finger drags the same way
+on a touch screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders
+siblings without a pointer. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
@@ -165,7 +166,8 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
+also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
+keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
 drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
