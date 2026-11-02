@@ -449,7 +449,9 @@ export class Composer {
       }
       if (typeof node === 'string') {
         const { rest, tones } = splitToneMarks(node)
-        if (tones) {
+        // A tone mark annotates the syllable before it. With nothing before it there is no syllable
+        // to tone, and it is a loose mark like U+0300: it draws as the glyph it is.
+        if (tones && rest) {
           const parts = this.toneLeaf(rest, tones, inset(target(box)), true)
           for (const part of parts) part.leaf = leaf
           leaf++
@@ -699,10 +701,11 @@ export class Composer {
       if (redrawn) encoded = redrawn
     }
     // A syllable with tone marks splits before any whole-character lookup, since no character
-    // carries a tone.
+    // carries a tone. A mark with nothing to follow has no syllable to tone and stays an ordinary
+    // component, drawn as its own glyph.
     if (typeof node === 'string') {
       const { rest, tones } = splitToneMarks(node)
-      if (tones) return this.toneLeaf(rest, tones, region)
+      if (tones && rest) return this.toneLeaf(rest, tones, region)
     }
     if (this.separate && Array.isArray(node)) encoded = null
     if (encoded && !this.expanding.has(encoded) && (typeof node === 'string' || !this.excluded(encoded))) {
