@@ -16,7 +16,7 @@
     "src/composer/client.js": "bb5f236c856c3c6c4f238ee951feb15d19f5c01b7878e58b78d6e17f617c27e2",
     "src/composer/component-forms.js": "38ec82723e4e8ace1111f9396cebb8bc28eb81a8e0540e637da9097be441fac3",
     "src/composer/component-forms.json": "736e47e2308ebf406fc21bd1b5cd434e1d8a1ef88e0eb8c937d3540872e855ae",
-    "src/composer/compose.js": "40af169c925e8b89b570f2af83779509fb3b53d7af7736a6329458ec3fcae125",
+    "src/composer/compose.js": "51d53aa20b7afa16704af82802edb68dba24996284f5fa8c454913b103d88963",
     "src/composer/constants.json": "14e4113493eb93a352f890e3f9cee9b47b9348ec0043dd508b5c213edf7813a0",
     "src/composer/constructs.js": "cdd549961cfbab7d0b64c8df7bc9675060b6f8cc5744ce57cc43bb9c751cc8de",
     "src/composer/document-source.js": "4a331b9bbd320df57a96fa041fa8acc99d9dd35fb90f3682746e57436b0ea33f",
@@ -45,15 +45,11 @@
   },
   "scope": "Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.",
   "accepted": 172872,
-  "drawn": 161491,
-  "missing": 11381,
+  "drawn": 161493,
+  "missing": 11379,
   "invalid": 0,
   "privateUseExcluded": 137468,
   "missingRanges": [
-    [
-      12334,
-      12335
-    ],
     [
       37012,
       37012
@@ -2317,16 +2313,6 @@
   ],
   "invalidRanges": [],
   "blocks": [
-    {
-      "block": "CJK Symbols and Punctuation",
-      "missing": 2,
-      "ranges": [
-        [
-          12334,
-          12335
-        ]
-      ]
-    },
     {
       "block": "CJK Unified Ideographs",
       "missing": 3,
