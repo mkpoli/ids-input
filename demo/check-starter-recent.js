@@ -115,6 +115,40 @@ try {
   assert.deepEqual(await names(), ['⿾正'], 'the list is still there')
   await closeStarter()
 
+  // An empty tab brought back from the list is a tab of its own; an older group restored after it
+  // keeps it rather than taking it for the empty tab that close left behind.
+  const solo = await browser.newContext({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 })
+  await solo.addInitScript(() => {
+    const tab = { id: 'tab-solo', sequence: '⿰氵恩', saved: '⿰氵恩' }
+    localStorage.setItem('ids-input:tabs', JSON.stringify([tab]))
+    localStorage.setItem('ids-input:activeTab', JSON.stringify(tab.id))
+  })
+  const soloPage = await solo.newPage()
+  soloPage.on('pageerror', error => errors.push(error.message))
+  await soloPage.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 })
+  await soloPage.locator('.ids-field input').waitFor({ timeout: 120000 })
+  const soloOrder = () => soloPage.locator('.tabbar .tab').evaluateAll(els => els.map(el => /** @type {HTMLElement} */ (el).dataset.tabId))
+  const soloPanel = soloPage.locator('.starter-panel')
+  await soloPage.locator('.tab[data-tab-id="tab-solo"] [role="tab"]').click({ button: 'middle' })
+  const placeholder = (await soloOrder())[0]
+  assert.notEqual(placeholder, 'tab-solo', 'closing the only tab leaves an empty one')
+  await soloPage.locator(`.tab[data-tab-id="${placeholder}"] [role="tab"]`).click({ button: 'middle' })
+  assert.equal((await soloOrder()).length, 1, 'closing that empty tab leaves another')
+  await soloPage.locator('.starter-trigger').click()
+  await soloPanel.getByRole('tab', { name: 'Recently closed', exact: true }).click()
+  const soloNames = () => soloPanel.locator('.starter-recent-name').allInnerTexts()
+  assert.deepEqual(await soloNames(), ['Untitled', '⿰氵恩'], 'the empty tab and the tab before it are both listed')
+  await soloPanel.locator('.starter-recent-item').first().click()
+  await soloPanel.waitFor({ state: 'detached' })
+  assert.equal((await soloOrder()).length, 1, 'the empty tab comes back')
+  await soloPage.locator('.starter-trigger').click()
+  await soloPanel.getByRole('tab', { name: 'Recently closed', exact: true }).click()
+  await soloPanel.locator('.starter-recent-item').first().click()
+  await soloPanel.waitFor({ state: 'detached' })
+  assert.equal((await soloOrder()).length, 2, 'the older tab joins the empty tab already reopened')
+  assert.equal(await soloPage.locator('.ids-field input').inputValue(), '⿰氵恩', 'the older tab is shown')
+  await solo.close()
+
   assert.deepEqual(errors, [])
   console.log('PASS the starter lists closed tabs and groups and opens them back')
 } finally { await browser.close() }

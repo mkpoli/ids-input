@@ -767,6 +767,12 @@
       at,
       state: states.get(id),
     }))
+    // A close note's empty tab belongs to the history once it is closed in turn: the older group
+    // that left it must not take it back as its own leftover when that group is restored.
+    const closingIds = new Set(removed.map(entry => entry.tab.id))
+    if (closedGroups.some(group => group.fresh && closingIds.has(group.fresh))) {
+      closedGroups = closedGroups.map(group => group.fresh && closingIds.has(group.fresh) ? { ...group, fresh: undefined } : group)
+    }
     const before = activeId
     const wasActive = removed.some(entry => entry.tab.id === before)
     // Remove from the end so each recorded index still names its tab.
