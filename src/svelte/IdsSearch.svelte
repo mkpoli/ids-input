@@ -10,7 +10,7 @@
   import { translator } from './i18n.js'
 
   /** @typedef {import('../adapter/types.js').IdsHit} IdsHit */
-  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure' | 'similar',
+  /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure' | 'unknown' | 'similar',
    *   onopen?: (hit: IdsHit) => void, ontake?: (hit: IdsHit) => void }} */
   let { adapter, query = '', messages, locale = 'en', limit = 60, delay = 250, mode = 'ids', onopen, ontake } = $props()
   const t = $derived(translator(messages, locale))
@@ -49,7 +49,9 @@
     finally { copying = false }
   }
   $effect(() => {
-    const text = asked, find = mode === 'structure' ? adapter.findByStructure : mode === 'similar' ? adapter.findSimilar : adapter.findByIds
+    const text = asked, find = mode === 'structure' ? adapter.findByStructure
+      : mode === 'unknown' ? adapter.findByUnknownStructure
+      : mode === 'similar' ? adapter.findSimilar : adapter.findByIds
     const most = strokeLimit === '' ? shown : Math.max(shown, 600)
     const id = ++asks
     if (!text || !find) { found = { status: 'idle', hits: [], total: 0, characters: '' }; return }
@@ -86,11 +88,11 @@
   </div>
   <p class="count" aria-live="polite">
     {#if found.status === 'failed'}<span class="fault">{t('ids.search.failed')}</span>
-    {:else if found.status === 'pattern'}<span class="fault">{t('ids.structural.invalid')}</span>
+    {:else if found.status === 'pattern'}<span class="fault">{t(mode === 'unknown' ? 'ids.structural.unknownInvalid' : 'ids.structural.invalid')}</span>
     {:else if found.status === 'extra'}<span class="fault">{t('ids.problem.extra')}</span>
     {:else if asked && found.status !== 'idle' && found.status !== 'loading' || found.status === 'loading' && found.hits.length}{t('ids.search.count', { count: strokeLimit === '' ? found.total : visibleHits.length })}{/if}
   </p>
-  {#if mode === 'structure' && found.status === 'ready' && found.total > 0}
+  {#if (mode === 'structure' || mode === 'unknown') && found.status === 'ready' && found.total > 0}
     <div class="result-actions">
       <button type="button" disabled={copying} onclick={copyAll}>{t(copied ? 'ids.structural.copied' : 'ids.structural.copy')}</button>
       {#if copyFailed}<span role="status">{t('ids.structural.copyFailed')}</span>{/if}
@@ -111,7 +113,7 @@
         </li>
       {/each}
     </ol>
-    {#if mode === 'structure' && found.hits.length < found.total}
+    {#if (mode === 'structure' || mode === 'unknown') && found.hits.length < found.total}
       <button type="button" class="more" disabled={found.status === 'loading'} onclick={() => shown += limit}>{t('ids.structural.more')}</button>
     {/if}
   {:else if found.status !== 'loading'}

@@ -608,6 +608,27 @@ all matching characters without separators, while `hits` is limited for display.
 return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
 other characters, with code-point ordering within each group.
 
+**Unknown structure** reads a pattern's top-level operands, or the components of a run, as
+elements to find anywhere in a character. `木口` finds 杏 (`⿱木口`), 呆 (`⿱口木`) and every other
+character holding 木 and 口, at any depth and in any arrangement; `⿰⿰木木口` asks for a `⿰木木`
+subtree and a 口. `⿰木口` asks for the same as `木口`: the operator only groups the elements and is
+not matched. Repeated elements are counted: repeated identical elements need separate occurrences,
+and a component is opened where an element stands inside it, so the hit can mark it. Distinct
+elements may share an occurrence, so a compound and one of its own parts can both be found in the
+same place. A `⬚` or `？` operand adds no requirement; a pattern of only those asks for nothing.
+A–Z variables belong to whole-character search and are refused here. `|` separates up to eight
+alternatives.
+
+```js
+const search = createSearch(table, { forms })
+search.unknownStructure('木口')         // 杏, 呆, …
+search.unknownStructure('⿰木口')       // the same as 木口
+search.unknownStructure('⿰⿰木木口')    // characters holding a ⿰木木 subtree and 口
+```
+
+`babelStoneAdapter.findByUnknownStructure(query, { limit, signal })` runs this search in the same
+worker and returns the same shape as structural search.
+
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
