@@ -7,22 +7,29 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 /** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
 
-/** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection.
- * @param {{ text?: string, box?: number[], flip?: [boolean, boolean] } | null | undefined} item @param {string} [attribute] */
-export function emojiText(item, attribute = '') {
-  const box = (item?.box ?? []).slice(0, 4).map(v => Number.isFinite(Number(v)) ? Number(v) : 0)
-  if (box.length < 4 || typeof item?.text !== 'string') return ''
-  const [x, y, width, height] = box
-  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const reflect = emojiTransform(item)
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+/**
+ * Font size that draws an emoji's ink the shorter side of its box across. Noto Emoji's glyphs fill
+ * the em square, 2,080 of its 2,048 units against an advance of 2,784, so a size of 1 draws 0.73 of
+ * the box, and a size of 1/0.73, the whole box. The box is what the composer gives the operand: an
+ * emoji stands in it as a character does, at the size a character's ink fills its cell.
+ */
+export const EMOJI_SCALE = 1.36
+
+/**
+ * Where an emoji stands in its box: `{ x, y, size }`, the glyph's middle and its font size, every
+ * number finite. The glyph spans `EMOJI_SCALE` times the box's shorter side, so it fills the box as
+ * a component's ink fills its cell.
+ * @param {{ box?: number[] } | null | undefined} item
+ */
+export function emojiPlace(item) {
+  const [x, y, width, height] = (item?.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+  return { x: x + width / 2, y: y + height / 2, size: Math.max(0, Math.min(width, height) * EMOJI_SCALE) }
 }
 
 /**
- * The transform of an emoji mirrored or turned within its box, about the centre of the box: a glyph
- * lies inside its box, so this only turns the glyph, and the whole drawing's reflection leaves its
- * centre where it was, so a flipped emoji is flipped about its own ink. A box that is not four finite
- * numbers has no reflection.
+ * The transform of an emoji mirrored or turned within its box, about the centre of the box, which the
+ * whole drawing's reflection leaves in place, so a flipped emoji is flipped about its own ink. A box
+ * that is not four finite numbers has no reflection.
  * @param {{ box?: number[], flip?: [boolean, boolean] } | null | undefined} item
  */
 export function emojiTransform(item) {
@@ -30,10 +37,9 @@ export function emojiTransform(item) {
   if (!flipX && !flipY) return ''
   const box = Array.isArray(item?.box) ? item.box.slice(0, 4) : []
   if (box.length < 4 || !box.every(value => Number.isFinite(Number(value)))) return ''
-  const [x, y, width, height] = box
+  const { x, y } = emojiPlace(item)
   const round = value => Math.round(value * 1000) / 1000
-  const cx = x + width / 2, cy = y + height / 2
-  return `translate(${round(flipX ? 2 * cx : 0)} ${round(flipY ? 2 * cy : 0)}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
+  return `translate(${round(flipX ? 2 * x : 0)} ${round(flipY ? 2 * y : 0)}) scale(${flipX ? -1 : 1} ${flipY ? -1 : 1})`
 }
 
 /**
@@ -197,11 +203,19 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
   const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
-    if (hasCut) {
+  /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
+  const textOf = (item, attribute = '') => {
+    if (typeof item.text !== 'string') return ''
+    const { x, y, size } = emojiPlace(item)
+    const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const reflect = emojiTransform(item)
+    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
+  }
+  if (hasCut) {
     if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
     out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/>`)
     if (cut) out.push(`<path d="${cut}" fill="#000"/>`)
-    for (const item of emoji.filter(item => item.cut)) out.push(emojiText(item, ' filter="url(#emoji-cut-ink)"'))
+    for (const item of emoji.filter(item => item.cut)) out.push(textOf(item, ' filter="url(#emoji-cut-ink)"'))
     out.push('</mask>')
   }
   if (split) {
@@ -210,7 +224,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     for (const { piece, index } of order) {
       const item = emoji.find(item => item.part === index)
       const path = pathData(piece.d)
-      const content = item ? emojiText(item) : path ? `<path d="${path}" fill="${fill}"/>` : ''
+      const content = item ? textOf(item) : path ? `<path d="${path}" fill="${fill}"/>` : ''
       if (!content) continue
       const transform = transformData(transforms?.[index])
       out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
@@ -218,7 +232,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   } else if (d) out.push(`<path d="${d}" fill="${fill}"${hasCut ? ' mask="url(#cut)"' : ''}/>`)
   if (!groupedEmoji) for (const item of emoji) {
     if (item.cut) continue
-    const content = emojiText(item, hasCut && !item.restored ? ' mask="url(#cut)"' : '')
+    const content = textOf(item, hasCut && !item.restored ? ' mask="url(#cut)"' : '')
     if (!content) continue
     const transform = Number.isInteger(item.part) && transforms ? transformData(transforms[item.part]) : ''
     out.push(transform ? `<g transform="${transform}">${content}</g>` : content)

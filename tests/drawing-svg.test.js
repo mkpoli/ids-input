@@ -87,6 +87,13 @@ it('draws a restored emoji without the cut mask', () => {
   expect(svg).not.toContain('<text mask=')
 })
 
+it('draws an emoji across its box, as wide as the box\'s shorter side', () => {
+  // Noto Emoji's glyphs fill their em: a size of 1/0.73 draws the box's shorter side across.
+  const svg = drawingSvg({ d: '', emoji: [{ text: '🚗', box: [38, 40, 928, 922] }] })
+  expect(svg).toContain('font-size="1253.92"')
+  expect(svg).toContain('x="502" y="501"')
+})
+
 it('keeps a malformed emoji box out of its transform', () => {
   const svg = drawingSvg({ d: '', emoji: [{ text: '😀', box: ['x', 'y', 'w', 'h'], flip: [true, false] }] })
   expect(svg).not.toContain('NaN')
