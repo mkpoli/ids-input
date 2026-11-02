@@ -28,6 +28,7 @@ button.copy{padding:3px 7px;border:1px solid var(--line);border-radius:6px;backg
 .face{width:50px;height:62px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font-size:24px}
 details.fine{margin:0 0 12px;color:var(--muted)}details.fine summary{cursor:pointer;font-weight:600;color:var(--fg)}
 .hits{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:4px}.hit{display:flex;flex-direction:column;gap:2px;border:1px solid var(--line);border-radius:8px;padding:4px;align-items:center}.tiny{font:11px/1.3 "Noto Sans CJK TC","Noto Serif CJK TC",serif;color:var(--muted);word-break:break-all;text-align:center}
+.cid{color:var(--accent);font-weight:700;margin-right:4px}
 </style></head><body><main>
 <h1>Cover cases and components</h1>
 <p class="sub" id="sub">Loading…</p>
@@ -84,7 +85,7 @@ function renderComponents(){
     const faces=faceOf?`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(faceOf)}</div><div class="cap">${n}</div></div>`).join('')}</div>`:'';
     const list=(label,items)=>items.length?`<div class="cap" style="margin-top:8px">${label} (${items.length}):</div><div class="hits">${items.map(h=>`<div class="hit"><div style="font:24px 'Noto Serif CJK JP',serif">${esc(h.ch)}</div>${draw(h.d,56)}<div class="ids tiny">${esc(h.ids)}</div></div>`).join('')}</div>`:'';
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
-      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids">${esc(r.ids)}</div>${r.note?`<div class="cap">${esc(r.note)}</div>`:''}
+      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids"><b class="cid">${esc(r.id??'')}</b> ${esc(r.ids)}</div>${r.note?`<div class="cap">${esc(r.note)}</div>`:''}
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
       ${(r.variants??[]).length?`<div class="cap" style="margin-top:8px">variants (${r.variants.length}):</div><div class="hits">${r.variants.map(v=>`<div class="hit"><div style="font:13px 'Noto Sans CJK TC',serif">${esc(v.ids)}</div>${draw(v.d,104)}<div class="cap">${esc(v.label??'')}</div></div>`).join('')}</div>`:''}
       ${list('characters holding it', hits)}
