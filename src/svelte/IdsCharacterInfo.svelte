@@ -256,8 +256,9 @@
   /** Controls inside the card that keep their own press. @constant {string} */
   const CONTROL = 'button, a, input, select, textarea, summary, label, [role="button"]'
   /** The element the press started on, so a control's press is not mistaken for a surface click.
+   * A new press means any drag of an earlier gesture has ended, even if no dragend reached us.
    * @param {PointerEvent} event */
-  function pressed(event) { press = /** @type {Element} */ (event.target) }
+  function pressed(event) { press = /** @type {Element} */ (event.target); dragging = false }
   /** A right or middle click dismisses the card it lands outside of. @param {MouseEvent} event */
   function context(event) {
     if (!panel?.contains(/** @type {Node} */ (event.target))) close()
@@ -309,7 +310,10 @@
     node.addEventListener('pointerleave', leave)
     node.addEventListener('focusin', focus)
     node.addEventListener('focusout', leave)
-    const dragStart = () => { dragging = true; close() }
+    /** A drag that starts on the card itself, on a source link or selected text, leaves the card
+     * alone: close() would take the dragged source out of the page and no dragend would follow.
+     * @param {DragEvent} event */
+    const dragStart = event => { if (panel?.contains(/** @type {Node} */ (event.target))) return; dragging = true; close() }
     const dragStop = () => { dragging = false }
     window.addEventListener('dragstart', dragStart, true)
     window.addEventListener('dragend', dragStop, true)
