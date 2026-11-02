@@ -14,8 +14,8 @@ try {
   await page.locator('.ids-field input').waitFor({ timeout: 20000 })
   const tabs = () => page.locator('.tabbar .tabs [role="tab"]').count()
   const opened = await tabs()
-  const trigger = page.getByTitle('Templates and examples', { exact: true })
-  const dialog = page.getByRole('dialog', { name: 'Templates and examples' })
+  const trigger = page.getByTitle('Templates, examples and closed tabs', { exact: true })
+  const dialog = page.getByRole('dialog', { name: 'Templates, examples and closed tabs' })
 
   await page.getByTitle('New tab', { exact: true }).click()
   await page.waitForTimeout(300)
@@ -145,7 +145,7 @@ try {
   assert.equal(await templatesTab.getAttribute('aria-selected'), 'true', 'Left returns to Templates')
   await page.keyboard.press('Escape')
   assert.equal(await dialog.count(), 0, 'Escape closes the dialog')
-  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Templates and examples', 'Escape returns the focus to the chevron')
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('aria-label')), 'Templates, examples and closed tabs', 'Escape returns the focus to the chevron')
 
   // Picking a template leaves the focus in the new tab's sequence field.
   await trigger.click()
@@ -182,7 +182,7 @@ try {
   await narrow.locator('.ids-field input').first().waitFor({ timeout: 60000 })
   await narrow.getByRole('button', { name: 'Menu', exact: true }).click()
   await narrow.getByRole('button', { name: 'Open the examples', exact: true }).click()
-  const phoneDialog = narrow.getByRole('dialog', { name: 'Templates and examples' })
+  const phoneDialog = narrow.getByRole('dialog', { name: 'Templates, examples and closed tabs' })
   await phoneDialog.waitFor()
   const phoneExamples = phoneDialog.locator('.list').last()
   const phoneHeads = phoneExamples.locator('button.heading')

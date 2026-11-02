@@ -39,7 +39,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
-  import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -378,7 +378,7 @@
   $effect(() => { if (resultsPane) return watchFallback(resultsPane) })
   const componentLookup = $derived(componentQuery(searchQuery))
   /** @type {HTMLElement | null} */ let work = $state(null)
-  /** @type {{ openStarter: (tab?: 'templates' | 'examples') => void } | null} */ let tabStrip = $state(null)
+  /** @type {{ openStarter: (tab?: 'templates' | 'examples' | 'recent') => void, focusTab: () => void } | null} */ let tabStrip = $state(null)
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
   /** @type {HTMLInputElement | null} */ let documentInput = $state(null)
   let fromText_ = $state('')
@@ -767,6 +767,12 @@
       at,
       state: states.get(id),
     }))
+    // A close note's empty tab belongs to the history once it is closed in turn: the older group
+    // that left it must not take it back as its own leftover when that group is restored.
+    const closingIds = new Set(removed.map(entry => entry.tab.id))
+    if (closedGroups.some(group => group.fresh && closingIds.has(group.fresh))) {
+      closedGroups = closedGroups.map(group => group.fresh && closingIds.has(group.fresh) ? { ...group, fresh: undefined } : group)
+    }
     const before = activeId
     const wasActive = removed.some(entry => entry.tab.id === before)
     // Remove from the end so each recorded index still names its tab.
@@ -838,6 +844,11 @@
   function reopenClosed() {
     const group = closedGroups.at(-1)
     if (group) restoreClosed(group, true)
+  }
+  /** Bring back a closed tab or group chosen in the starter, showing and focusing it. @param {ClosedGroup} group */
+  function reopenGroup(group) {
+    restoreClosed(group, true)
+    tick().then(() => tabStrip?.focusTab())
   }
   /** Close every tab but `id`, showing it. @param {string} id */
   function closeOthers(id) {
@@ -1008,6 +1019,13 @@
     editor, items: exampleItems, view: exampleView,
     onstart: sequence => { addTab(sequence); focusNewTab() },
     onstarted: focusNewTab,
+    // Closed tabs, newest first; choosing one brings its whole group back.
+    recent: [...closedGroups].reverse().map(group => ({
+      key: group.tabs[0]?.tab.id ?? '',
+      names: group.tabs.map(({ tab }) => tabName(tab) || t('app.tabs.untitled')),
+      count: group.tabs.length,
+      reopen: () => reopenGroup(group),
+    })),
   })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
