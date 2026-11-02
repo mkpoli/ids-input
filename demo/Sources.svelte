@@ -217,7 +217,7 @@
   .count{margin:12px 0 0;font-size:12.5px;color:var(--ui-color-ink-muted)}
   .empty{margin:40px 0;font-size:15px;color:var(--ui-color-ink-muted)}
   .group{margin:30px 0 0}
-  .group h2{display:flex;align-items:baseline;gap:8px;margin:0 0 12px;padding-top:10px;border-top:1px solid var(--ui-color-border);font-size:18px}
+  .group h2{display:flex;align-items:baseline;gap:8px;margin:0 0 12px;padding-top:10px;border-top:1px solid var(--ui-color-border);font-size:18px;scroll-margin-top:290px}
   .group h2 .n{font-size:13px;font-weight:400}
   .grouplead{margin:-4px 0 14px;max-width:80ch;font-size:13px;line-height:1.55;color:var(--ui-color-ink-muted)}
   .list{display:grid;gap:10px}
@@ -259,6 +259,6 @@
     .controls{position:static}
     .head{padding-right:0}
     .num{position:static;order:2}
-    .source{scroll-margin-top:120px}
+    .source,.group h2{scroll-margin-top:120px}
   }
 </style>
