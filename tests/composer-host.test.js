@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 
-import worker, { composerFile } from '../src/index.js'
+import worker, { composerFile } from '../composer/src/index.js'
 
 /** An R2 binding over a Map, with the three fields the Worker reads. */
 const store = (files) => ({ COMPOSER: { get: async key => {
