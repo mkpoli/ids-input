@@ -36,10 +36,11 @@
   })
   /** @type {string | null} */
   let focusKey = $state(null)
-  /** @type {{ key: string, swap: boolean } | null} */
-  let over = $state(null)
+  /** @type {string | null} */
+  let overKey = $state(null)
+  let overSwap = $state(false)
   /** @param {Row} row */
-  const overKind = row => over?.key !== row.key ? null : over.swap ? 'swap' : 'move'
+  const overKind = row => overKey !== row.key ? null : overSwap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
@@ -49,7 +50,7 @@
     event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
-  function endDrag() { dragging = null; over = null }
+  function endDrag() { dragging = null; overKey = null; overSwap = false }
 
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
@@ -177,16 +178,16 @@
       if (!dragging || dragging.tree !== editor.tree) return
       const swap = !siblings(dragging.path, row.path)
       if (swap && !swappable(dragging.path, row.path)) return
-      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; over = { key: row.key, swap }; return
+      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; overKey = row.key; overSwap = swap; return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
-    over = { key: row.key, swap: false }
+    overKey = row.key; overSwap = false
   }
   /** @param {DragEvent} event @param {Row} row */
   function drop(event, row) {
-    over = null
+    overKey = null; overSwap = false
     if (event.dataTransfer?.types.includes(PART_DRAG)) {
       if (!dragging || dragging.tree !== editor.tree) return
       const from = dragging.path, same = siblings(from, row.path), swap = !same && swappable(from, row.path)
@@ -232,7 +233,7 @@
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
         onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
-        ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
+        ondragover={event => dragOver(event, row)} ondragleave={() => { overKey = null; overSwap = false }} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
         {#if editing && key(editing.path) === row.key}
           {#key editing}<IdsInlineEdit {editor} path={row.path} owner={listEl} onreveal={reveal} onclose={() => editing = null} />{/key}

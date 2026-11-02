@@ -24,9 +24,11 @@
   const key = path => path.join('.')
 
   // Dropping a part on a box: beside a sibling it moves there, on any other part the two switch places.
-  let over = $state(/** @type {{ path: string, swap: boolean } | null} */ (null))
+  // Both stay plain values, so a dragover that lands on the same box costs no render.
+  let overPath = $state(/** @type {string | null} */ (null))
+  let overSwap = $state(false)
   /** @param {Path} path */
-  const overKind = path => over?.path !== key(path) ? null : over.swap ? 'swap' : 'move'
+  const overKind = path => overPath !== key(path) ? null : overSwap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
@@ -36,7 +38,7 @@
     event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
-  function endDrag() { dragging = null; over = null }
+  function endDrag() { dragging = null; overPath = null; overSwap = false }
 
   /** @param {DragEvent} event @param {Path} path */
   function dragover(event, path) {
@@ -47,17 +49,17 @@
       if (swap && !swappable(dragging.path, path)) return
       event.preventDefault(); event.stopPropagation()
       event.dataTransfer.dropEffect = 'move'
-      over = { path: key(path), swap }
+      overPath = key(path); overSwap = swap
       return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault(); event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
-    over = { path: key(path), swap: false }
+    overPath = key(path); overSwap = false
   }
   /** @param {DragEvent} event @param {Path} path */
   function drop(event, path) {
-    over = null
+    overPath = null; overSwap = false
     if (event.dataTransfer?.types.includes(PART_DRAG)) {
       if (!dragging || dragging.tree !== editor.tree) return
       const from = dragging.path, move = siblings(from, path), swap = !move && swappable(from, path)
@@ -143,12 +145,12 @@
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
     <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>
       <div class="ids-head">
         <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-          ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
+          ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
         {#if editing && samePath(editing.path, path)}
           {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} onclose={() => editing = null} />{/key}
         {:else}
@@ -172,7 +174,7 @@
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
     {/if}
   {/if}
 {/snippet}
