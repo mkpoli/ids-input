@@ -55,5 +55,25 @@ try {
   assert(!wide.pageScrolls, 'no page scroll at 1280 and up')
   assert.equal(wide.gridCap, 'none', 'the parts grid is not capped at 1280 and up')
   assert((wide.nested ?? 0) === 0, `nested scrollers in the input pane at 1280 and up: ${wide.nested}`)
-  console.log('PASS the panels fill the row at middle widths, and each pane scrolls once at 1280 and up')
+
+  // A wrapped tools row once made the square canvas wider than the height left for it, so the tree
+  // scrolled and lost the padding above and below it.
+  await open(page, 1280, 800)
+  const shape = await page.evaluate(() => {
+    const rect = (/** @type {string} */ selector) => document.querySelector(selector)?.getBoundingClientRect()
+    const box = rect('.tree-box'), tree = rect('.ids-tree'), root = rect('.ids-tree-root')
+    const element = /** @type {HTMLElement | null} */ (document.querySelector('.ids-tree'))
+    if (!box || !tree || !root || !element) return null
+    return {
+      width: box.width,
+      height: box.height,
+      pads: [root.left - tree.left, root.top - tree.top, tree.right - root.right, tree.bottom - root.bottom],
+      scrolls: element.scrollHeight > element.clientHeight + 2,
+    }
+  })
+  assert(shape, 'the shape canvas is on the page at 1280')
+  assert(Math.abs(shape.width - shape.height) < 2, `the shape canvas is square: ${shape.width} against ${shape.height}`)
+  for (const pad of shape.pads) assert(Math.abs(pad - 16) < 1.5, `the canvas keeps its 16px padding: ${shape.pads.join(', ')}`)
+  assert(!shape.scrolls, 'the canvas fits its box without scrolling')
+  console.log('PASS the panels fill the row at middle widths, each pane scrolls once at 1280 and up, and the shape canvas keeps its padding')
 } finally { await browser.close() }

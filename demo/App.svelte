@@ -1208,7 +1208,9 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-box" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab"><IdsTree {editor} {keyHints} /></div>
+            <div class="tree-stage" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
+              <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
+            </div>
           {:else}
             {#key activeId}
               <div class="tree-list" role="tabpanel" id="tree-panel" aria-labelledby="tree-tab"><IdsTreeList {editor} /></div>
@@ -1459,6 +1461,7 @@
   .view-tabs button[aria-selected="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
   .view-tabs button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .tree-list{flex:1;min-height:0;overflow:hidden;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);background:var(--ui-color-surface-sunken)}
+  .tree-stage{display:grid;min-width:0}
   .tree-box{display:grid;width:100%;aspect-ratio:1;margin:0 auto;border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken);border:1px solid var(--ui-color-border);overflow:hidden}
   .tree-box :global(.ids-tree){height:100%;overflow:auto}
   .tree-box :global(.ids-tree-root){width:min(100%,600px)}
@@ -1541,8 +1544,13 @@
     .split .grip{width:56px;height:5px;border-radius:var(--ui-radius-pill);background:var(--ui-color-border-strong);transition:background-color var(--ui-duration-fast),width var(--ui-duration-fast)}
     .split:hover .grip,.split:focus-visible .grip{background:var(--ui-color-accent);width:72px}
     .split:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width));border-radius:var(--ui-radius-md)}
-    .tree{flex:none;justify-content:flex-start;container-type:size}
-    .tree-box{width:min(100%,max(140px,calc(100cqh - 100px)))}
+    .tree{flex:none;justify-content:flex-start}
+    /* The stage takes the height the tabs and the tools leave, so the square canvas can be sized
+       from it. Sizing that box from the pane's whole height left the fixed cost of the tools out:
+       once they wrapped to a second row the box stayed too wide for its row and squeezed the
+       canvas, cutting the padding above and below it. */
+    .tree-stage{flex:1;width:100%;min-height:0;place-items:center;container-type:size}
+    .tree-box{width:min(100%,100cqh)}
     .output{grid-column:5;grid-row:1;display:flex;flex-direction:column;align-items:stretch}
     .results{flex:none;min-height:0;max-height:none;overflow:auto}
     /* The structure's matches and the similar ones both keep their height; the pane scrolls. */
