@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
+import { Composer, parseTree } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
@@ -45,6 +45,15 @@ const encodedSource = () => {
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
 }
+
+describe('the composer\u2019s parser', () => {
+  const arity = ch => constants.BINARY.includes(ch) ? 2 : constants.TERNARY.includes(ch) ? 3 : constants.UNARY.includes(ch) ? 1 : 0
+  it('reads a run of conjoining jamo as one component', () => {
+    // ᄋ + ᆞ + ᆯ and ᄅ + ᅡ are syllables, so the block takes two operands and has both.
+    expect(parseTree('\u2ff1\u110b\u119e\u11af\u1105\u1161', arity)).toEqual(['\u2ff1', '\u110b\u119e\u11af', '\u1105\u1161'])
+    expect(parseTree('\u110b\u119e\u11af', arity)).toBe('\u110b\u119e\u11af')
+  })
+})
 
 describe('the composer', () => {
   it('places a lower-right enclosure fallback above and left of its closed sides', async () => {

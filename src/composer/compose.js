@@ -22,6 +22,7 @@ import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
+import { hangulClusterAt } from '../core/hangul.js'
 import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
@@ -110,6 +111,9 @@ export function parseTree(sequence, arity) {
     let ch = chars[at++]
     const n = arity(ch)
     if (!n) {
+      // A run of conjoining jamo that forms one syllable is one component, as the editor reads it.
+      const cluster = hangulClusterAt(chars, at - 1)
+      if (cluster) { at = cluster.end; ch = cluster.text }
       if (isSelector(chars[at])) ch += chars[at++]
       // A tone mark belongs to the syllable it follows, not to the whole description.
       const end = toneMarksAt(chars, at)
