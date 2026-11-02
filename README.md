@@ -1130,6 +1130,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   component `{12}` written out.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
+- Pinz (拼字), 0832, <https://0832.ink/pinz/>, source at <https://github.com/LingbaSanar/pinz>: prior
+  work on IDS composition, an IDS-to-SVG generator built on KAGE and a GlyphWiki glyph dump, read on
+  2026-11-03.
 
 ## The workshop
 
