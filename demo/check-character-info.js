@@ -241,23 +241,28 @@ try {
   }
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
   await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:120000})
+  const card=page.locator('.ids-character-info')
   await page.locator('.ids-field input').fill('⿰馬木')
-  await page.locator('.ids-tree [data-character="馬"]').focus()
-  await page.locator('.ids-character-info').waitFor({state:'visible'})
-  // A tap keeps the card up; its buttons stay reachable without hover.
-  await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
-  await page.locator('.parts-grid .part[data-character="馬"]').first().tap()
-  await page.waitForTimeout(500)
-  assert.ok(await page.locator('.ids-character-info').isVisible())
-  // Painted text takes a tap too, where there is no hover to fall back on.
-  await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
-  await page.locator('.ids-field').scrollIntoViewIfNeeded()
-  await page.evaluate(()=>scrollBy(0,-90));await page.waitForTimeout(200)
+  // Painted text takes a tap, where there is no hover to fall back on.
   const painted=await page.locator('.sequence-paint [data-character="馬"]').first().boundingBox()
   await page.touchscreen.tap(painted.x+painted.width/2,painted.y+painted.height/2)
-  await page.locator('.ids-character-info').waitFor({state:'visible'})
-  assert.equal(await page.locator('.ids-character-info header .glyph').innerText(),'馬')
-  assert.ok(await page.locator('.ids-character-info').evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.bottom<=innerHeight+1}))
+  await card.waitFor({state:'visible'})
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
+  assert.ok(await card.evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.bottom<=innerHeight+1}))
   if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/mobile.png`})
+  // The structure sits in the second pane on a phone, where focus opens the card as well.
+  await page.keyboard.press('Escape');await card.waitFor({state:'hidden'})
+  const phoneTabs=page.locator('.phone-tabs button')
+  await phoneTabs.filter({hasText:'Compose'}).click()
+  await page.locator('.ids-tree [data-character="馬"]').focus()
+  await card.waitFor({state:'visible'})
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
+  // A tap on a palette tile keeps its card up, so its buttons stay reachable without hover.
+  await page.keyboard.press('Escape');await card.waitFor({state:'hidden'})
+  await phoneTabs.filter({hasText:'Input'}).click()
+  await page.locator('.parts-grid .part[data-character="馬"]').first().tap()
+  await page.waitForTimeout(500)
+  assert.ok(await card.isVisible())
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
   await page.close();console.log('PASS mobile viewport')
 } finally { await browser.close() }
