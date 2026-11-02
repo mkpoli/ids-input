@@ -12,9 +12,121 @@
    "edition": "master@2026-11-03"
   },
   {
+   "file": "IDS-UCS-Compat-Supplement.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Compat-Supplement.txt",
+   "sha256": "c1d265a791a24a8b4d7d963cb7cf31a6a3b1b234b630477d3f27798c9ccab930",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
    "file": "IDS-UCS-Compat.txt",
    "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Compat.txt",
    "sha256": "7683730c8213ecb3a2b3e85daa6b7b913c43b44a81a9af7900671bca4d091391",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-A.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-A.txt",
+   "sha256": "d58c5b21054d1ba07fd2621f0892b36c088009d7890b136f42f8c5a5af21f495",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-1.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-1.txt",
+   "sha256": "19d03e23487d56500a944281334cff8c535cf32cd1947fdc3e627de091c6c519",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-2.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-2.txt",
+   "sha256": "551150fa2bd8886c17b5af40ad1d7876026d477349e7d636b0fbfc7306d26b81",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-3.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-3.txt",
+   "sha256": "e59d7e31a589d64adab05b296b4efc3a9ccbe1c36f824b33722b0abf4021c198",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-4.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-4.txt",
+   "sha256": "bd14437272a5067587967cd04259f6485867e75167eb1b6b39e22ed748f0b071",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-5.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-5.txt",
+   "sha256": "21cf28e9e4aeb3d98e8c7739899270b13a6d080a2f65f0d4287710d71e72901a",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-B-6.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-B-6.txt",
+   "sha256": "9b024eb32fa545f4c9c48761802ace232967aa415bd26bb93887ba957f9103a3",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-C.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-C.txt",
+   "sha256": "cc31128af6b7b43349833eed9c6c24e375d051bff3a934be7b97d7a8fc12240d",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-D.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-D.txt",
+   "sha256": "26853c9b5edb5a3d104b6019d3599c5635cb91346436b40814707b1cad0853ea",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-E.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-E.txt",
+   "sha256": "441fc168df1b04ff5daaccab6e79faebc366cc2e00e5d8defdf1b5a9cadb50e2",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-F.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-F.txt",
+   "sha256": "debd6e74369aac9775766ad89faf14a4cda553cde9dad5f103aa89f2b4225fb7",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-G.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-G.txt",
+   "sha256": "1f8f8cc7d911ccf86c196ce4de43d7e4ca03689ee83d4e3e380120eac336c64d",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-H.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-H.txt",
+   "sha256": "3c5b1ef16b0d7a5ec62bd3c618ffd536287e5e54b90d4ce118fa862b551e7085",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-I.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-I.txt",
+   "sha256": "a84694c801290033b7e3f79303c71fcdcae595afc3a47481496dc051832369d0",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Ext-J.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Ext-J.txt",
+   "sha256": "0910def2870d1e4cb38c4064f060de5efc48bb73fee6d5f7447657fa121fa260",
    "date": "",
    "edition": "master@2026-11-03"
   }

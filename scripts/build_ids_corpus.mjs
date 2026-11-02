@@ -79,7 +79,8 @@ for (const [i, entry] of manifest.files.entries()) {
   for (const line of content.split('\n')) {
     if (!line || line.startsWith(';;')) continue
     const fields = line.split('\t')
-    if (fields.length < 3 || !fields[0].startsWith('U+') || [...fields[1]].length !== 1) continue
+    // CHISE writes a character as `U+4E00` in some files and `U-0002A700` in others; both name it.
+    if (fields.length < 3 || !/^U[+-][0-9A-F]+$/i.test(fields[0]) || [...fields[1]].length !== 1) continue
     rows.push({ subject: fields[1].codePointAt(0), text: fields[2], regions: '', prov: chiseProv[i], role: 'source' })
   }
 }
