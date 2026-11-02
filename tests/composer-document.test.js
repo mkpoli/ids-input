@@ -1,11 +1,18 @@
 import { describe, expect, it } from 'bun:test'
-import { fromSequence, renderLayers } from '../src/document/index.js'
+import { fromSequence, renderLayers, renderScopes, scopesSvg } from '../src/document/index.js'
 import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '../src/composer/index.js'
 import { files } from './fixtures/composer-export.js'
 
 const square = (x, width) => `M${x} 0L${x + width} 0L${x + width} 1000L${x} 1000Z`
 const sketch = (boxes) => boxes.map((box, index) => ({ index, box, empty: false }))
 const drawing = parts => ({ parts })
+
+/** The composer's answer for a sequence that holds an emoji: the emoji is a part with no ink, and
+ *  its text names the leaf it took. */
+const containing = (sequence, boxes, parts, emoji) => {
+  const document = fromSequence(sequence)
+  return { document, made: documentSource(document, { parts, emoji }, sketch(boxes)) }
+}
 
 const sourceOf = (sequence, boxes, parts) => {
   const document = fromSequence(sequence)
@@ -14,6 +21,27 @@ const sourceOf = (sequence, boxes, parts) => {
 }
 
 describe('a composer-backed document source', () => {
+  it('draws an emoji operand as text in the box the composer gave it', () => {
+    const { document, made } = containing('⿱車🚗', [[0, 0, 1000, 550], [40, 550, 920, 420]], [
+      { leaf: 0, d: square(0, 550) },
+      { leaf: 1, d: '' },
+    ], [{ text: '🚗', box: [40, 550, 920, 420], leaf: 1 }])
+    expect(made.complete).toBe(true)
+    const car = document.root.children[1]
+    // No outline of its own; the source answers with the glyph and where it sits.
+    expect(made.source.geometry(car)).toBeNull()
+    const text = made.source.text?.(car)
+    expect(text?.text).toBe('🚗')
+    const scopes = renderScopes(document, made.source)
+    expect(scopes.complete).toBe(true)
+    expect(scopes.root.kind === 'operator' && scopes.root.children[1].kind).toBe('text')
+    const svg = scopesSvg(scopes)
+    expect(svg).toContain('<text')
+    expect(svg).toContain('🚗</text>')
+    // The export draws it at the size the preview gives an emoji: EMOJI_SCALE of the box.
+    expect(svg).toContain('scale(1.36)')
+    expect(svg).toContain('font-family="system-ui, sans-serif"')
+  })
   it('turns leaf boxes into placements and local geometry', () => {
     const { document, source, complete } = sourceOf('⿰木口', [[0, 0, 500, 1000], [500, 0, 500, 1000]], [
       { leaf: 0, d: square(0, 500) },

@@ -37,6 +37,20 @@ function placementOf(child, parent) {
   ]
 }
 
+/**
+ * An emoji placed as text in its canvas box: a glyph drawn in a 1000-unit square, its middle on the
+ * box's middle, in a square the box's shorter side wide. `scopesMarkup` draws the glyph at the size
+ * the preview gives it in that square.
+ * @param {{ text: string, box: number[] }} item @returns {{ text: string, matrix: number[] }}
+ */
+function textOf(item) {
+  const [x, y, width, height] = item.box.slice(0, 4).map(Number)
+  // The frame is a square the box's shorter side wide, on the box's middle, so the glyph keeps its
+  // proportions in a box that is not square, as the preview draws it.
+  const side = Math.max(0, Math.min(width, height))
+  return { text: item.text, matrix: [side / 1000, 0, 0, side / 1000, x + width / 2 - side / 2, y + height / 2 - side / 2] }
+}
+
 /** The affine map that normalizes a box into a 1000-unit local frame. @param {Box} box @returns {number[] | null} */
 function localOf(box) {
   if (!(box[2] > 0) || !(box[3] > 0)) return null
@@ -59,6 +73,8 @@ export function documentSource(document, drawing, sketch) {
   const info = new Map()
   /** @type {Map<number, DrawingPart[]>} */
   const parts = new Map()
+  /** @type {Map<number, { text: string, box: number[] }>} */
+  const texts = new Map((drawing.emoji ?? []).filter(item => Number.isInteger(item.leaf)).map(item => [/** @type {number} */ (item.leaf), item]))
   let leaves = 0, components = 0
 
   /** @param {Node} node @returns {Box | null} */
@@ -135,7 +151,7 @@ export function documentSource(document, drawing, sketch) {
   if (components && !raw.length) issues.push('the drawing has no parts')
   for (const [id, at] of info) {
     if (at.leaf === null || at.node.kind !== 'component') continue
-    if (!parts.has(at.leaf)) issues.push(`leaf ${at.leaf} has no drawn part (${id})`)
+    if (!parts.has(at.leaf) && !texts.has(at.leaf)) issues.push(`leaf ${at.leaf} has no drawn part (${id})`)
   }
   if (!sketch) issues.push('the drawing has no sketch')
 
@@ -143,6 +159,8 @@ export function documentSource(document, drawing, sketch) {
   const geometry = node => {
     const at = info.get(node.id)
     if (!at || at.leaf === null || !at.region) return null
+    // An emoji has no outline: its drawn part is an empty path, and its text is what fills the box.
+    if (texts.has(at.leaf)) return null
     const list = parts.get(at.leaf)
     const matrix = localOf(at.region)
     if (!list?.length || !matrix) return null
@@ -165,8 +183,17 @@ export function documentSource(document, drawing, sketch) {
     return from && to ? placementOf(from, to) : null
   }
 
+  /** @param {Node} node @returns {{ text: string, matrix: number[] } | null} */
+  const text = node => {
+    const at = info.get(node.id)
+    const item = at && typeof at.leaf === 'number' ? texts.get(at.leaf) : null
+    if (!item) return null
+    // The box the emoji was placed in is a canvas frame; the renderer attaches the layer chain.
+    return textOf({ text: item.text, box: Array.isArray(item.box) ? item.box : [] })
+  }
+
   return {
-    source: { geometry, placement },
+    source: { geometry, placement, text },
     complete: issues.length === 0,
     issues,
   }

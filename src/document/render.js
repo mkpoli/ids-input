@@ -3,7 +3,7 @@
 // for each operator child and local geometry for each component; this module composes those with the
 // authored layer transforms, applies them to the geometry, and reports what it could not evaluate.
 // Compositing (the ㇯ subtraction and the union of operators) belongs to the consumer of the pieces.
-import { TransformError, chainIsAffine, affineForChain, transformPieces } from './transform.js'
+import { TransformError, affineForChain, chainIsAffine, multiplyAffine, transformPieces } from './transform.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -12,18 +12,32 @@ import { TransformError, chainIsAffine, affineForChain, transformPieces } from '
 /** @typedef {import('./transform.js').Piece} Piece */
 /** @typedef {{ d: string, fillRule?: 'nonzero' | 'evenodd', cut?: boolean }} LocalPiece */
 /** @typedef {{ pieces: LocalPiece[] }} Geometry */
-/** @typedef {{ geometry: (node: Node) => Geometry | null, placement: (parent: OperatorNode, child: Node, index: number) => number[] | null }} LayerSource */
+/** @typedef {{ geometry: (node: Node) => Geometry | null, placement: (parent: OperatorNode, child: Node, index: number) => number[] | null, text?: (node: Node) => { text: string, matrix: number[] } | null }} LayerSource */
 /** @typedef {{ node: string, reason: 'geometry' | 'placement' | 'transform', message: string }} LayerIssue */
 /** @typedef {{ pieces: (Piece & { node: string, approximate: boolean })[], complete: boolean, issues: LayerIssue[] }} LayerDrawing */
 /** @typedef {{ kind: 'component', node: string, positive: Piece[], negative: Piece[] }} ComponentScope */
+/** Text drawn in place of a part with no outline (an emoji), with the affine it is placed by. */
+/** @typedef {{ kind: 'text', node: string, text: { text: string, matrix: number[] } }} TextScope */
 /** @typedef {{ kind: 'operator', node: string, op: string, children: Scope[] }} OperatorScope */
 /** @typedef {{ kind: 'group', node: string, child: Scope }} GroupScope */
 /** @typedef {{ kind: 'slot', node: string }} SlotScope */
-/** @typedef {ComponentScope | OperatorScope | GroupScope | SlotScope} Scope */
+/** @typedef {ComponentScope | TextScope | OperatorScope | GroupScope | SlotScope} Scope */
 /** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[] }} ScopeTree */
 
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
+
+/**
+ * Text placed against the chain that reaches it: the chain as one affine, then the part's own
+ * placement, since a text carries its frame with it.
+ * @param {{ text: string, matrix: number[] }} text @param {Chain} chain
+ * @returns {{ text: string, matrix: number[] }}
+ */
+const attached = (text, chain) => {
+  // Only affine chains place a text: a projective or Möbius one cannot be written as a matrix.
+  const affine = chainIsAffine(chain) ? affineForChain(chain) : null
+  return affine && matrix(affine) ? { text: text.text, matrix: multiplyAffine(affine, text.matrix) } : text
+}
 
 /**
  * Draw the transformed local pieces of a document. `source.geometry(node)` answers a component's
@@ -103,6 +117,15 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
       try { geometry = source.geometry(node) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
         return null
+      }
+      // A part with no outline of its own (an emoji) is drawn as text, in the frame the source places it in.
+      if (!geometry && source.text) {
+        try {
+          const text = source.text(node)
+          if (text) return { kind: 'text', node: node.id, text: attached(text, chain) }
+        } catch (error) {
+          issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
+        }
       }
       if (!geometry || !Array.isArray(geometry.pieces)) {
         issues.push({ node: node.id, reason: 'geometry', message: `no geometry for ${node.id}` })

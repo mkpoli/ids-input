@@ -2,7 +2,7 @@
 // Compose a document's scoped drawing into SVG. Component cuts become a mask scoped to their
 // component; operator unions become groups; ㇯ masks its first operand by the silhouette of its
 // second. Layer transforms are already baked into the pieces by renderScopes.
-import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../core/preview.js'
+import { EMOJI_CUT_MATRIX, EMOJI_SCALE, emojiPlace, emojiTransform } from '../core/preview.js'
 /** @typedef {import('./render.js').Scope} Scope */
 /** @typedef {import('./render.js').ScopeTree} ScopeTree */
 /** @typedef {import('./transform.js').Piece} Piece */
@@ -61,9 +61,19 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
     if (!scope.negative.length) return scope.positive.map(piece => path(piece, fill)).join('')
     return `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}/>`
   }
+  /** An emoji, drawn as text in the frame the source placed it in. @param {{ text: string, matrix: number[] }} placed */
+  function textInk(placed) {
+    const [a, b, c, d, e, f] = placed.matrix.map(Number)
+    if ([a, b, c, d, e, f].some(value => !Number.isFinite(value))) return ''
+    const text = placed.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    // The frame is the box the emoji stands in, and the glyph is drawn as the preview draws it there.
+    return `<text transform="matrix(${a} ${b} ${c} ${d} ${e} ${f}) translate(500 500) scale(${EMOJI_SCALE}) translate(-500 -500)" x="500" y="500" text-anchor="middle" dominant-baseline="central" font-size="1000" font-family="system-ui, sans-serif" fill="${fill}">${text}</text>`
+  }
   /** @param {Scope} scope @param {string} tone @returns {string} */
   function silhouette(scope, tone = '#ffffff') {
     if (scope.kind === 'slot') return ''
+    // A text is solid ink: its silhouette is the text itself.
+    if (scope.kind === 'text') return textInk(scope.text)
     if (scope.kind === 'component') {
       if (!scope.negative.length) return scope.positive.map(piece => path(piece, tone)).join('')
       return `<g ${mask(componentMask(scope))}><rect width="1000" height="1000" fill="${tone}"/></g>`
@@ -86,6 +96,7 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   /** @param {Scope} scope @returns {string} */
   function render(scope) {
     if (scope.kind === 'slot') return ''
+    if (scope.kind === 'text') return textInk(scope.text)
     if (scope.kind === 'component') return componentInk(scope)
     if (scope.kind === 'group') return scope.child ? render(scope.child) : ''
     if (scope.op === '㇯' && scope.children.length >= 2) {
