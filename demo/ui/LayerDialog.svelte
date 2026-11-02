@@ -112,10 +112,41 @@
     return () => controller.abort()
   })
 
+  /** The composer's drawing with each part's leaf named. A drawing that names none draws one part per
+   *  node in reading order, so the node before a part says which leaf it begins at, and a node left
+   *  before it does not take its place.
+   *  @param {import('../../src/document/model.js').Node} root @param {Drawing} drawing */
+  function namedParts(root, drawing) {
+    const parts = drawing.parts ?? []
+    if (parts.every(part => Number.isInteger(part.leaf))) return drawing
+    /** @type {import('../../src/document/model.js').Node[]} */
+    const nodes = root.kind === 'group' ? [root] : root.children
+    let at = 0
+    return { ...drawing, parts: parts.map(part => {
+      const node = nodes[at++] ?? root
+      const leaf = firstLeaf(root, node)
+      return { ...part, leaf }
+    }) }
+  }
+
+  /** The leaf `target` begins at, counted over the leaves of `node`. @param {import('../../src/document/model.js').Node} node @param {import('../../src/document/model.js').Node} target */
+  function firstLeaf(node, target) {
+    let seen = 0
+    const walk = current => {
+      if (current === target) return seen
+      if (current.kind === 'component' || current.kind === 'slot') { seen++; return -1 }
+      if (current.kind === 'group') return walk(current.child)
+      for (const child of current.children) { const at = walk(child); if (at >= 0) return at }
+      return -1
+    }
+    return Math.max(0, walk(node))
+  }
+
   // The scoped drawing follows the document, the composer drawing and its sketch.
   $effect(() => {
     if (!doc || !drawing || !sketch || step !== 'ready') { svg = ''; issue = ''; return }
-    const made = documentSource(doc, drawing, sketch)
+    const named = namedParts(doc.root, drawing)
+    const made = documentSource(doc, named, sketch)
     source = made.source
     if (!made.complete) {
       issue = made.issues[0] ?? t('app.layers.incomplete')
