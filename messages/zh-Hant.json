@@ -187,6 +187,7 @@
   "parts.tab.alphabet": "字母與數字",
   "parts.tab.hangul": "諺文",
   "parts.hangul.group": "顯示",
+  "parts.hangulIds": "結構",
   "parts.hangul.jamo": "字母",
   "parts.hangul.compose": "組合",
   "parts.hangul.syllable": "音節",

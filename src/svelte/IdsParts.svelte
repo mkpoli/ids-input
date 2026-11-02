@@ -14,6 +14,7 @@
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
+  import { hangulIdsOf } from '../core/hangul-ids.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
@@ -570,6 +571,8 @@
     if (part.kind === 'shui') return shuishuLabel(/** @type {import('../adapter/shuishu-data.js').ShuishuPart} */ (part))
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
+    // A syllable says how its letters are set: 가 is ⿰ㄱㅏ.
+    const syllableIds = hangulIdsOf(part.part)
     // Tangut characters carry their count in the tab's own data, not in the palette rows.
     const strokeCount = part.strokes ?? (tab === 'tangut' ? tangutStrokes?.[part.part] : null) ?? null
     // The composer's character list has no first-stroke class; its code point identifies the character.
@@ -584,6 +587,7 @@
       identity?.equivalents.length ? `${t('parts.relatedForms')}: ${identity.equivalents.join(' ')}` : null,
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       romanization,
+      syllableIds ? `${t('parts.hangulIds')}: ${syllableIds}` : null,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,

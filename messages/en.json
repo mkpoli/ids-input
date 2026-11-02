@@ -190,6 +190,7 @@
   "parts.tab.alphabet": "Letters & numbers",
   "parts.tab.hangul": "Hangul",
   "parts.hangul.group": "Show",
+  "parts.hangulIds": "Structure",
   "parts.hangul.jamo": "Jamo",
   "parts.hangul.compose": "Compose",
   "parts.hangul.syllable": "Syllable",

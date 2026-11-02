@@ -4,6 +4,7 @@
 // fetched once a page; a gzipped one (the export writes them so) is unpacked with DecompressionStream.
 import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, parseTree } from './compose.js'
 import { splitDescription } from '../core/ids.js'
+import { hangulOfIds } from '../core/hangul-ids.js'
 import { ASCENT } from './geometry.js'
 import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
@@ -194,7 +195,8 @@ export const svgBox = b => [b[0], ASCENT - b[3], b[2] - b[0], b[3] - b[1]]
 export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
   await source.ready()
   // Loose marks hang off the drawing; they are not leaves of it.
-  return new Composer(source.store(), { fontStyle }).sketch(splitDescription(sequence).base).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
+  const { base } = splitDescription(sequence)
+  return new Composer(source.store(), { fontStyle }).sketch(hangulOfIds(base) ?? base).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
 }
 
 /**
@@ -223,7 +225,10 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
   const { base, marks } = splitDescription(sequence)
   if (layout === 'cells' && marks) throw new LookupError('Cells layout does not draw loose marks.')
   if (layout === 'cells' && modifiedOperators(sequence).length) throw new LookupError('Cells layout does not draw modified operators.')
-  const tree = parseTree(base, arity)
+  // A Hangul syllable described letter by letter draws as the syllable: ⿰ㄱㅏ is 가.
+  const syllable = hangulOfIds(base)
+  const description = syllable ?? base
+  const tree = parseTree(description, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
   // A mark's outline loads like a component's.
   await source.load(source.filesOf([...keysOf(tree, [], separate, fontStyle), ...marks]))
@@ -234,12 +239,12 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       composer = new Composer(store, { exclude, face, separate, fontStyle })
       cells = !marks && !modifiedOperators(sequence).length
         && (layout === 'cells' || (layout === 'auto' && composer.cellsFor(tree, marks)))
-      drawn = cells ? composer.cellLayout(tree) : composer.compose(base, marks)
+      drawn = cells ? composer.cellLayout(tree) : composer.compose(description, marks)
     } catch (error) {
       // A separated drawing can fail where the whole glyph exists. Keep the glyph rather than fail
       // the preview: a view then finds one piece and leaves it alone.
       if (separate && !cells && !store.missing.size && error instanceof LookupError) {
-        try { composer = new Composer(store, { exclude, face, fontStyle }); drawn = composer.compose(base, marks) } catch (again) { failure = again }
+        try { composer = new Composer(store, { exclude, face, fontStyle }); drawn = composer.compose(description, marks) } catch (again) { failure = again }
       } else failure = error
     }
     // A pass that met data not loaded yet only gathers what to load (`Composer.partial`); the drawing
