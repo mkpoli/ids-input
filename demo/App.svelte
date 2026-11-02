@@ -39,7 +39,7 @@
   import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
-  import { canonical, makeTab, readActiveTab, readTabs, writeTabs } from './lib/tabs.js'
+  import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
   import { openTabSession, syncTabSession } from './lib/document-state.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -1016,7 +1016,7 @@
     // Closed tabs, newest first; choosing one brings its whole group back.
     recent: [...closedGroups].reverse().map(group => ({
       key: group.tabs[0]?.tab.id ?? '',
-      names: group.tabs.map(({ tab }) => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')),
+      names: group.tabs.map(({ tab }) => tabName(tab) || t('app.tabs.untitled')),
       count: group.tabs.length,
       reopen: () => reopenGroup(group),
     })),

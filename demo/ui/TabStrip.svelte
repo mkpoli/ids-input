@@ -10,6 +10,7 @@
   import Icon from './Icon.svelte'
   import StarterMenu from './StarterMenu.svelte'
   import TabIcon from './TabIcon.svelte'
+  import { tabName } from '../lib/tabs.js'
   /**
    * @type {{ tabs: import('../lib/tabs.js').Tab[], activeId: string, panelId: string, draw: (sequence: string) => Promise<any>,
    *   t: (key: string, params?: Record<string, string | number>) => string,
@@ -23,7 +24,7 @@
   /** @type {HTMLElement | null} */ let strip = $state(null)
   /** @type {{ openAt: (tab?: 'templates' | 'examples' | 'recent') => void } | null} */ let starterMenu = $state(null)
   /** @param {import('../lib/tabs.js').Tab} tab */
-  const label = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : t('app.tabs.untitled')
+  const label = tab => tabName(tab) || t('app.tabs.untitled')
   /** @param {import('../lib/tabs.js').Tab} tab */
   const edited = tab => tab.sequence !== tab.saved
 
