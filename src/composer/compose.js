@@ -128,6 +128,13 @@ export function parseTree(sequence, arity) {
   return tree
 }
 
+/** A glyph's ink box: its strokes can reach past its placement box, and inside a cell that overflow
+ *  runs into the next cell, so a cell fits the ink. @param {any} part */
+const tightBox = part => {
+  const box = part.contours.reduce((b, c) => union([b, pointsBox(c.light)]), [Infinity, Infinity, -Infinity, -Infinity])
+  return Number.isFinite(box[0]) ? box : part.box
+}
+
 /** A node written out again as a sequence. */
 export const keyOf = node => typeof node === 'string' ? node : node[0] + node.slice(1).map(keyOf).join('')
 
@@ -338,16 +345,22 @@ export class Composer {
       // Separated drawings retain reading order. Only publish ownership when every
       // rendered leaf produced exactly one piece (including empty placeholders).
       const ownership = this.separate ? this.leafOwners(tree) : null
-      if (ownership?.split && !out.some(p => p.cut)) {
+      // A toned syllable draws more parts than leaves, so its drawing needs the owners even where
+      // the tree was not split.
+      if (ownership && (ownership.split || out.some(p => p.origin?.startsWith('mark '))) && !out.some(p => p.cut)) {
         // A toned syllable draws its marks beside it; they belong to the leaf they mark.
+        const before = out.map(part => part.leaf)
         let owner = 0, current = null
         for (const part of out) {
-          if (!part.origin?.startsWith('mark ')) current = ownership.owners[owner++]
-          part.leaf = current
+          if (part.origin?.startsWith('mark ')) part.leaf = current
+          else part.leaf = current = ownership.owners[owner++]
         }
-        if (owner === ownership.owners.length) {
-          for (const part of out) if (part.leaf === undefined) part.leaf = current
-        } else for (const part of out) delete part.leaf
+        // The walk only answers for a drawing of one part per leaf; another keeps the leaves it
+        // was drawn with.
+        if (owner !== ownership.owners.length) out.forEach((part, i) => {
+          if (before[i] === undefined) delete part.leaf
+          else part.leaf = before[i]
+        })
       }
       if (!this.partial && this.weighted) this.balance(out)
       const construct = CONSTRUCTS[sequence]
@@ -401,18 +414,16 @@ export class Composer {
       return [box[0] + w * CELL_INSET, box[1] + h * CELL_INSET, box[2] - w * CELL_INSET, box[3] - h * CELL_INSET]
     }
     const leaves = node => typeof node === 'string' ? 1 : node.slice(1).reduce((sum, kid) => sum + leaves(kid), 0)
+    // The ink of a toned syllable is the ink of its syllable: the mark is no part of the weight.
+    const baseOf = node => typeof node === 'string' ? splitToneMarks(node).rest : node
     // Fit the ink, not the glyph's placement box: a designed glyph's strokes can reach past it,
     // and inside a cell that overflow runs into the next cell.
-    const tight = part => {
-      const box = part.contours.reduce((b, c) => union([b, pointsBox(c.light)]), [Infinity, Infinity, -Infinity, -Infinity])
-      return Number.isFinite(box[0]) ? box : part.box
-    }
     const hasEmpty = node => isEmpty(node) || (Array.isArray(node) && node.slice(1).some(hasEmpty))
     const split = (kids, axis, box, equal, override = null, dense = false) => {
       // An axis takes its shares from the ink of its parts: a column of six dense parts needs more
       // width than one tall 身. A placeholder has no ink, so an axis holding one keeps leaf shares.
       const fallback = !dense || kids.some(hasEmpty)
-      const weights = override ?? kids.map(kid => equal ? 1 : fallback ? Math.sqrt(leaves(kid)) : Math.max(this.ink(kid), 1) ** 0.8)
+      const weights = override ?? kids.map(kid => equal ? 1 : fallback ? Math.sqrt(leaves(kid)) : Math.max(this.ink(baseOf(kid)), 1) ** 0.8)
       const sum = weights.reduce((a, b) => a + b, 0)
       const lo = box[axis], span = box[axis + 2] - lo
       let at = lo
@@ -435,7 +446,7 @@ export class Composer {
       if (typeof node === 'string') {
         const { rest, tones } = splitToneMarks(node)
         if (tones) {
-          const parts = this.toneLeaf(rest, tones, inset(target(box)))
+          const parts = this.toneLeaf(rest, tones, inset(target(box)), true)
           for (const part of parts) part.leaf = leaf
           leaf++
           out.push(...parts)
@@ -445,7 +456,7 @@ export class Composer {
         if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
         // A cell allows a little more stretch than a composed part, so the glyph fills it; a
         // narrow cell still keeps the glyph's proportions instead of turning it into a sliver.
-        const cell = inset(target(box)), inkBox = tight(glyph)
+        const cell = inset(target(box)), inkBox = tightBox(glyph)
         const part = placed(glyph, inkBox, fitted(inkBox, cell, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(node), `cells ${node}`)
         part.leaf = leaf++
         out.push(part)
@@ -473,7 +484,7 @@ export class Composer {
           const glyph = this.glyph(kids[0])
           const region = target(box)
           if (glyph) {
-            const ink = tight(glyph)
+            const ink = tightBox(glyph)
             const outer = placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(kids[0]), `cells ${kids[0]}`)
             const room = this.room(op, [outer], region)
             if (room) {
@@ -747,11 +758,15 @@ export class Composer {
   /** A syllable carrying tone marks: it keeps only the part of the box the marks leave free, at the
    *  right, and the marks stand at the left as the tone of the syllable is written.
    *  @param {string} base @param {string} tones @param {number[]} region */
-  toneLeaf(base, tones, region) {
+  toneLeaf(base, tones, region, cell = false) {
     const marks = markParts(this, tones, region, region)
-    const fitted = markFace(region, union(marks.map(part => part.target)))
-    // The syllable draws as it would alone, in what the marks leave of the box.
-    const body = this.node(base, fitted.face)
+    const face = markFace(region, union(marks.map(part => part.target)))
+    const glyph = cell ? this.glyph(base) : null
+    // The syllable draws as it would alone, in what the marks leave of the box; in a cell it fills
+    // that remainder, as a cell lets a leaf stretch further than a composed part.
+    const body = glyph
+      ? [placed(glyph, tightBox(glyph), fitted(tightBox(glyph), face.face, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(base), `cells ${base}`)]
+      : this.node(base, face.face)
     // A dot has no stem, so the weight pass leaves it its size.
     for (const part of marks) part.fixed = true
     return [...body, ...marks]
