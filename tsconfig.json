@@ -12,7 +12,7 @@
     "outDir": "types",
     "rootDir": "src",
     "skipLibCheck": true,
-  "types": ["bun"],
+    "types": ["bun"],
     "resolveJsonModule": true
   },
   "include": ["src/core/**/*.js", "src/adapter/**/*.js", "src/document/**/*.js"]
