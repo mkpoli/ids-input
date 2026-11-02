@@ -1,0 +1,208 @@
+/* The donor parts review page. Colours, type and space come from the workshop's tokens;
+   only the figure colours are the page's own, because they stand for elements rather
+   than for states. */
+
+/* The description column writes ⿱ and ⿳ as glyphs, so the operator face has to come
+   before the system fallback or they land on tofu. */
+:root {
+  --cjk-sans: 'IDS Strokes', 'IDS Parts', var(--ids-glyph-fallback), 'IDS Project',
+    'IDS Operators', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic',
+    'Microsoft YaHei', 'PingFang SC', sans-serif;
+  --ids-glyph-fallback: 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', 'IDS Fallback';
+  --ids-font: var(--cjk-sans);
+}
+
+body {
+  margin: 0;
+  background: var(--ui-color-canvas);
+  color: var(--ui-color-ink);
+  font: var(--ui-text-md) / var(--ui-leading-normal) var(--ui-font-sans);
+}
+
+header {
+  padding: var(--ui-space-3xl) var(--ui-space-3xl) var(--ui-space-xl);
+  background: var(--ui-color-surface);
+  border-block-end: 1px solid var(--ui-color-border);
+}
+
+h1 {
+  margin: 0 0 var(--ui-space-sm);
+  font-size: var(--ui-text-xl);
+  font-weight: var(--ui-weight-semibold);
+}
+
+h2 {
+  margin: 0 0 var(--ui-space-sm);
+  font-size: var(--ui-text-lg);
+  font-weight: var(--ui-weight-semibold);
+}
+
+.lede {
+  max-width: 92ch;
+  margin: 0 0 var(--ui-space-sm);
+  color: var(--ui-color-ink-soft);
+  font-size: var(--ui-text-sm);
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ui-space-lg);
+  align-items: center;
+  margin-block-start: var(--ui-space-lg);
+}
+
+.filter {
+  display: flex;
+  gap: var(--ui-space-2xs);
+}
+
+.tally {
+  margin: 0;
+  color: var(--ui-color-ink-muted);
+  font-size: var(--ui-text-sm);
+}
+
+.ok { color: var(--ui-color-accent); }
+.bad { color: var(--ui-color-danger); }
+
+main { padding: 0 var(--ui-space-3xl) var(--ui-space-4xl); }
+
+table {
+  width: 100%;
+  margin-block-start: var(--ui-space-xl);
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--ui-space-md) var(--ui-space-lg);
+  background: var(--ui-color-surface-sunken);
+  color: var(--ui-color-ink-muted);
+  font-size: var(--ui-text-2xs);
+  font-weight: var(--ui-weight-semibold);
+  letter-spacing: 0.06em;
+  text-align: start;
+  text-transform: uppercase;
+  border-block-end: 1px solid var(--ui-color-border);
+}
+
+tbody td {
+  padding: var(--ui-space-lg);
+  background: var(--ui-color-surface);
+  border-block-end: 1px solid var(--ui-color-border);
+  vertical-align: top;
+}
+
+tbody tr:hover td { background: var(--ui-color-surface-hover); }
+
+/* A decided row is marked down its leading edge, so the table reads as a list of
+   rows gone through rather than a grid of cells. */
+tbody tr.yes td:first-child { box-shadow: inset 3px 0 0 var(--ui-color-accent); }
+tbody tr.no td:first-child { box-shadow: inset 3px 0 0 var(--ui-color-danger); }
+tbody tr.yes td { background: var(--ui-color-accent-soft); }
+tbody tr.no td { background: var(--ui-color-danger-soft); }
+
+td.char,
+.skipped .char {
+  font-family: var(--cjk-sans);
+  font-size: var(--ui-text-2xl);
+  line-height: var(--ui-leading-tight);
+}
+
+td.ids {
+  width: 15ch;
+  font-family: var(--ids-font);
+  font-size: var(--ui-text-sm);
+  word-break: break-all;
+}
+
+td.fig { width: 136px; }
+
+.figure {
+  display: block;
+  width: 108px;
+  height: 108px;
+  margin-inline: auto;
+}
+
+.legend {
+  margin: var(--ui-space-xs) 0 0;
+  color: var(--ui-color-ink-muted);
+  font-size: var(--ui-text-2xs);
+  line-height: var(--ui-leading-tight);
+  text-align: center;
+}
+
+.ids .legend { text-align: start; }
+.legend span { white-space: nowrap; }
+
+td.tree {
+  font-family: var(--cjk-sans);
+  font-size: var(--ui-text-sm);
+  line-height: var(--ui-leading-normal);
+  white-space: nowrap;
+}
+
+td.vote { width: 16ch; }
+
+.vote div {
+  display: flex;
+  gap: var(--ui-space-2xs);
+}
+
+.vote button[aria-pressed='true'] {
+  border-color: var(--ui-color-accent);
+  background: var(--ui-color-accent);
+  color: var(--ui-color-on-accent);
+}
+
+.vote button[data-vote='no'][aria-pressed='true'] {
+  border-color: var(--ui-color-danger);
+  background: var(--ui-color-danger);
+  color: var(--ui-color-on-danger);
+}
+
+td.empty {
+  color: var(--ui-color-ink-muted);
+  text-align: center;
+}
+
+.skipped {
+  margin-block-start: var(--ui-space-4xl);
+  padding: var(--ui-space-xl);
+  background: var(--ui-color-surface);
+  border: 1px solid var(--ui-color-border);
+  border-radius: var(--ui-radius-lg);
+}
+
+.skipped ul {
+  display: grid;
+  gap: var(--ui-space-sm);
+  margin: var(--ui-space-lg) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skipped li {
+  display: flex;
+  gap: var(--ui-space-sm);
+  align-items: baseline;
+  color: var(--ui-color-ink-soft);
+  font-size: var(--ui-text-sm);
+}
+
+.skipped .char { font-size: var(--ui-text-xl); }
+
+.skipped code {
+  font-family: var(--ids-font);
+  font-size: var(--ui-text-sm);
+}
+
+@media (max-width: 1100px) {
+  header, main { padding-inline: var(--ui-space-xl); }
+  thead th, tbody td { padding: var(--ui-space-sm); }
+}
