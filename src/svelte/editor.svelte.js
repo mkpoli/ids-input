@@ -281,7 +281,7 @@ export function createEditor(options) {
   function swap(from, to) {
     if (disabled()) return
     const next = swapParts(tree, from, to)
-    if (next !== tree) apply(next, to, t('ids.do.exchange', { from: text(partAt(tree, from)), to: text(partAt(tree, to)) }), { swap: { from, to } })
+    if (next !== tree) apply(next, to, t('ids.do.exchange', { from: text(partAt(tree, from)) || t('ids.empty'), to: text(partAt(tree, to)) || t('ids.empty') }), { swap: { from, to } })
   }
   /** Empty the part at `path`. @param {Path | null} path */
   function empty(path) {
