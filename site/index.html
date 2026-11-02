@@ -69,8 +69,8 @@ function renderGallery(){
     <div style="display:flex;gap:8px;margin-top:6px">${draw(r.glyph,120)}${draw(r.old,120)}${draw(r.cur,120)}<div class="cap">glyph · original · current</div></div></div>`).join('')+'</div>';
   count.textContent=`${rows.length} of ${DATA.gallery.length}`;
 }
-let compPart=null;
-const APPROVED=["⿱甶儿", "⿳卝罒冖", "⿴𦥑同", "㇯鹿比", "⿰工几", "⿴囗夊", "⿱𠆢虫", "⿰氵氵", "⿻甲一", "⿳亠口冖", "㇯馬灬", "⿱⺀㐅", "⿱一血", "㇯鳥灬", "⿱皿亅", "⿳亠㐅厂", "⿱士冖", "⿻𢶶戈", "⿱丿乚", "⿸尸彳", "⿱䙲巳"];
+let compPart=null, APPROVED=[];
+
 function renderComponents(){
   const rows=pick(DATA.components);
   const fine=new Set(APPROVED);
@@ -100,5 +100,5 @@ function render(){ if(!DATA) return; if(tab==='caps') renderCaps(); else if(tab=
   view.querySelectorAll('button.copy').forEach(b=>b.addEventListener('click',()=>copy(b.dataset.c,b.dataset.w))); }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{tab=t.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));q.value='';render()}));
 q.addEventListener('input',()=>{q.value;render()});
-fetch('data.json').then(r=>r.json()).then(d=>{DATA=d;sub.textContent='Composed with the branch rules; each row shows the real glyph, the unmodified composer, and the current drawing. Click a copy button on any item.';render()},()=>{sub.textContent='data.json failed to load'});
+Promise.all([fetch('data.json').then(r=>r.json()),fetch('approved.json').then(r=>r.json())]).then(([d,a])=>{APPROVED=a;DATA=d;sub.textContent='Composed with the branch rules; each row shows the real glyph, the unmodified composer, and the current drawing. Click a copy button on any item.';render()},()=>{sub.textContent='data.json failed to load'});
 </script></body></html>
