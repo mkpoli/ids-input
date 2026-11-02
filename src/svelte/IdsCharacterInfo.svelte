@@ -61,6 +61,11 @@
       const what = record.what
       list.push({ key: `${record.site}:${record.what}:${record.url}`, site: record.site, what, url: record.url })
     }
+    // Two records can share a site — UnicodeData.txt and EquivalentUnifiedIdeograph.txt are both
+    // Unicode — and a bare site would read twice; those rows say what each one adds.
+    const shared = new Map()
+    for (const entry of list) shared.set(entry.site, (shared.get(entry.site) ?? 0) + 1)
+    for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
     return list
   })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so

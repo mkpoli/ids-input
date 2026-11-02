@@ -33,6 +33,12 @@ try {
   const han = await links()
   assert.ok(han.some(row => row.text === 'Wiktionary' && row.href === 'https://en.wiktionary.org/wiki/Main_Page'), JSON.stringify(han))
   assert.ok(!han.some(row => row.text === 'Tangut IDS list'), 'the list describes a component’s examples, not a Han card')
+  // Two Unicode records share a site, so each link says what it adds rather than saying "Unicode" twice.
+  const unicode = han.filter(row => row.text.startsWith('Unicode · '))
+  assert.equal(unicode.length, 2, JSON.stringify(han))
+  assert.equal(new Set(unicode.map(row => row.text)).size, 2, 'the two rows read differently')
+  assert.ok(unicode.some(row => row.href.endsWith('/UnicodeData.txt')), JSON.stringify(unicode))
+  assert.ok(unicode.some(row => row.href.endsWith('/EquivalentUnifiedIdeograph.txt')), JSON.stringify(unicode))
   assert.deepEqual(errors, [])
   console.log('PASS source line: one link per source, each to the record it cites')
 } finally { await browser.close() }
