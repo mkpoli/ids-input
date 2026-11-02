@@ -1,6 +1,6 @@
 // Exercise the preview worker for every accepted non-private scalar.
 // bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]
-import { mkdir, readFile, writeFile, rename, readdir } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, rename } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -8,6 +8,7 @@ import { gunzipSync } from 'node:zlib'
 import { isComponent } from '../src/core/ids.js'
 import { UNICODE_VERSION } from '../src/core/unicode.js'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
+import { coverageSources } from './lib/coverage-sources.mjs'
 
 const [cacheArg, output, style = 'sans'] = process.argv.slice(2)
 if (!cacheArg || !output || !COMPOSER_BASES[style]) throw Error('Usage: bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]')
@@ -106,13 +107,8 @@ const blocks = blocksText.split('\n').map(line => line.split('#')[0].trim()).fil
   return { block: block.trim(), missing: absent.length, ranges: ranges(absent) }
 }).filter(row => row.missing)
 const root = new URL('../', import.meta.url)
-const inputFiles = [
-  'src/core/ids.js', 'src/core/unicode.js', 'demo/lib/composer.js',
-  'data/unicode-properties.json', 'data/unicode-coverage.json', 'data/bundled-coverage.json',
-  'data/palette-fallback-characters.json', 'scripts/audit_render_coverage.mjs',
-  ...(await readdir(new URL('src/composer/', root))).filter(name => /\.(js|json)$/.test(name)).map(name => `src/composer/${name}`),
-]
-const implementationHashes = Object.fromEntries(await Promise.all(inputFiles.sort().map(async name => [name, digest(await readFile(new URL(name, root)))])))
+const inputFiles = await coverageSources(root)
+const implementationHashes = Object.fromEntries(await Promise.all(inputFiles.map(async name => [name, digest(await readFile(new URL(name, root)))])))
 const report = {
   unicode: UNICODE_VERSION, style, base, implementationHashes,
   scope: 'Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.',
