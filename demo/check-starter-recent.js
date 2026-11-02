@@ -89,15 +89,17 @@ try {
   assert.equal(await entries().count(), 0, 'the list is empty again')
   await closeStarter()
 
-  // Closing several tabs leaves one entry that counts them; choosing it brings the group back.
+  // Closing several tabs leaves one entry that counts them; choosing it brings the group back,
+  // and a group larger than three tabs shows the first three drawings.
   await page.locator('.tab[data-tab-id="tab-1"] [role="tab"]').click()
   await page.locator('.tab[data-tab-id="tab-3"] [role="tab"]').click({ button: 'right' })
-  await page.getByRole('menuitem', { name: 'Close other tabs', exact: true }).click()
-  assert.deepEqual(await order(), ['tab-3'], 'only the menu tab is left')
+  await page.getByRole('menuitem', { name: 'Close all tabs', exact: true }).click()
+  await page.locator('dialog[open]').getByRole('button', { name: 'Close all', exact: true }).click()
+  assert.equal((await order()).length, 1, 'the group close leaves one empty tab')
   await openStarter()
-  assert.deepEqual(await names(), ['⿾正 · ⿰氵恩 · ⿱艹半'], 'the group names every tab it closed')
-  assert.equal(await entries().first().locator('.starter-recent-count').innerText(), '3 tabs', 'the group counts its tabs')
-  assert.equal(await entries().first().locator('.starter-recent-thumb').count(), 3, 'a group shows a thumbnail for each tab')
+  assert.deepEqual(await names(), ['⿾正 · ⿰氵恩 · ⿱艹半 · ⿻大㸚'], 'the group names every tab it closed')
+  assert.equal(await entries().first().locator('.starter-recent-count').innerText(), '4 tabs', 'the group counts its tabs')
+  assert.equal(await entries().first().locator('.starter-recent-thumb').count(), 3, 'a larger group shows three thumbnails')
   await entries().first().locator('.starter-recent-thumb .tab-glyph').first().waitFor({ timeout: 30000 })
   await entries().first().click()
   await panel.waitFor({ state: 'detached' })
@@ -142,7 +144,7 @@ try {
   await soloPanel.getByRole('tab', { name: 'Recently closed', exact: true }).click()
   const soloNames = () => soloPanel.locator('.starter-recent-name').allInnerTexts()
   assert.deepEqual(await soloNames(), ['Untitled', '⿰氵恩'], 'the empty tab and the tab before it are both listed')
-  assert.equal(await soloPanel.locator('.starter-recent-item').first().locator('.starter-recent-thumb svg').count(), 1, 'an empty tab shows a placeholder thumbnail')
+  assert.equal(await soloPanel.locator('.starter-recent-item').first().locator('.starter-recent-thumb .tab-empty').count(), 1, 'an empty tab shows a placeholder thumbnail')
   await soloPanel.locator('.starter-recent-item').first().click()
   await soloPanel.waitFor({ state: 'detached' })
   assert.equal((await soloOrder()).length, 1, 'the empty tab comes back')

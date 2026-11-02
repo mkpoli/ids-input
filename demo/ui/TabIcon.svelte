@@ -1,13 +1,14 @@
 <script>
   // A tab's composed drawing, and nothing else: the description drawn small in the tab's ink.
   // Until it arrives, or when the export cannot draw it, a muted empty frame stands in its place.
-  // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke.
+  // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke;
+  // a list of settled tabs asks at once with a delay of 0.
   import { parse, write } from '../../src/core/index.js'
   /**
    * @typedef {{ d?: string, cut?: string, slots?: { index: number, box: number[] }[] }} Drawing
-   * @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null> }}
+   * @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null>, delay?: number }}
    */
-  let { sequence, draw } = $props()
+  let { sequence, draw, delay = 200 } = $props()
   const uid = $props.id()
   const read = $derived(parse(sequence, { open: true }))
   const source = $derived(!read.problem && read.tree !== null ? write(read.tree) : '')
@@ -19,7 +20,7 @@
     if (!text) { drawing = null; return }
     const timer = setTimeout(() => ask(text).then(found => {
       if (live) drawing = found && (found.d?.trim() || found.slots?.length) ? found : null
-    }, () => { if (live) drawing = null }), 200)
+    }, () => { if (live) drawing = null }), delay)
     return () => { live = false; clearTimeout(timer) }
   })
 </script>

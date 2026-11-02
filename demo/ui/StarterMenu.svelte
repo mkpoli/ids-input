@@ -133,7 +133,7 @@
                     onclick={() => reopenClosed(entry)}>
                     <span class="starter-recent-thumbs">
                       {#each entry.sequences.slice(0, 3) as sequence, at (at)}
-                        <span class="starter-recent-thumb"><TabIcon {sequence} {draw} /></span>
+                        <span class="starter-recent-thumb"><TabIcon {sequence} {draw} delay={0} /></span>
                       {/each}
                     </span>
                     <span class="starter-recent-name">{name}</span>
