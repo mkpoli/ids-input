@@ -16,8 +16,9 @@ const SHARDS = new Set()
 /** @type {Record<string, string>} */
 let published = {}
 // While developing, the sheet names the shards; the build writes `unicode.json` with their names.
+// A dev server answers a file it does not have with the page itself, so only JSON is read.
 const ready = fetch(new URL('unicode.json', new URL('./', document.baseURI)))
-  .then(response => response.ok ? response.json() : { files: {} })
+  .then(response => response.ok && /json/.test(response.headers.get('content-type') ?? '') ? response.json() : { files: {} })
   .then(data => {
     published = data.files ?? {}
     for (const name of Object.keys(published)) SHARDS.add(name)
