@@ -12,7 +12,7 @@ import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, entryBody, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
-  samePath, sameTree, unwrap, withMarks, write } from '../core/ids.js'
+  samePath, sameTree, swapParts, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
@@ -28,7 +28,7 @@ import { translator } from './i18n.js'
  * @typedef {import('../core/ids.js').Path} Path
  * @typedef {'hover' | 'on' | 'off'} TintMode
  * @typedef {{ tintMode?: TintMode, adapter: IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean }} EditorOptions
- * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean, reorder?: { from: Path, to: Path } }} Change
+ * @typedef {{ id: number, label: string, destructive: boolean, undone?: boolean, reorder?: { from: Path, to: Path }, swap?: { from: Path, to: Path } }} Change
  */
 
 /** The message key of each operator's name. */
@@ -159,9 +159,9 @@ export function createEditor(options) {
   }
   /**
    * A change to the tree, named for the history; a run of typing in the field is one step.
-   * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path } }} [how]
+   * @param {Part} next @param {Path | null} select @param {string} label @param {{ destructive?: boolean, reorder?: { from: Path, to: Path }, swap?: { from: Path, to: Path } }} [how]
    */
-  function apply(next, select, label, { destructive = false, reorder } = {}) {
+  function apply(next, select, label, { destructive = false, reorder, swap } = {}) {
     // A description's text can only carry marks at its end; keep them there.
     next = normalizeMarks(next)
     const valid = parse(write(next), { open: true })
@@ -169,7 +169,7 @@ export function createEditor(options) {
     if (!sameTree(valid.tree, next)) { note = t('ids.problem.unwritable'); return }
     history.record({ tree, chosen }, { merge: typing && run, label })
     run = typing
-    change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}) }
+    change = { id: ++changes, label, destructive, ...(reorder ? { reorder } : {}), ...(swap ? { swap } : {}) }
     commit(next, select)
   }
   function undo() {
@@ -276,6 +276,12 @@ export function createEditor(options) {
     if (disabled()) return
     const next = reorderSiblings(tree, from, to)
     if (next !== tree) apply(next, to, t('ids.do.reorder'), { reorder: { from, to } })
+  }
+  /** Exchange the part at `from` with the part at `to`. @param {Path} from @param {Path} to */
+  function swap(from, to) {
+    if (disabled()) return
+    const next = swapParts(tree, from, to)
+    if (next !== tree) apply(next, to, t('ids.do.exchange', { from: text(partAt(tree, from)) || t('ids.empty'), to: text(partAt(tree, to)) || t('ids.empty') }), { swap: { from, to } })
   }
   /** Empty the part at `path`. @param {Path | null} path */
   function empty(path) {
@@ -444,7 +450,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, take, reorder, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    reset, operator, put, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     resolveChain,
     resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */

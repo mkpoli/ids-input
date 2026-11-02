@@ -152,9 +152,10 @@ and `keydown` change it, `change` names the last change and whether it threw som
 `listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
 them back, for a host switching between documents. In the tree, a click chooses a part, a part
 dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
-and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
-clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
-on it.
+and a part of the tree dropped beside a sibling moves there while one dropped on any other part
+switches places with it (`Alt` and an arrow key reorders siblings without a pointer). The context
+menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
+level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
 The sequence field accepts zi.tools replacement expressions with three single components, such as
 `🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
@@ -1144,7 +1145,8 @@ for. Export can include empty slots on request, including through the scoped doc
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
-with the arrow keys and accept drops. A click, the arrow keys, Home/End or, where the browser leaves
+with the arrow keys, accept drops, and can be dragged onto another row to move beside a sibling or
+switch places. A click, the arrow keys, Home/End or, where the browser leaves
 them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
 middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
 `Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab, the tab's menu

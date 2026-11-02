@@ -392,6 +392,21 @@ export function reorderSiblings(tree, from, to) {
   return replaceAt(tree, parentPath, { ...parent, parts })
 }
 
+/** Whether `path` names the part at `of` or one below it. @param {Path} path @param {Path} of */
+const within = (path, of) => path.length >= of.length && of.every((n, i) => path[i] === n)
+
+/**
+ * `tree` with the parts at `from` and `to` exchanged. Both must exist and neither may lie inside the
+ * other; an empty slot takes the place of a part and leaves its own slot behind.
+ * @param {Part} tree @param {Path} from @param {Path} to @returns {Part} */
+export function swapParts(tree, from, to) {
+  if (!from.length || !to.length || within(from, to) || within(to, from)) return tree
+  const a = partAt(tree, from), b = partAt(tree, to)
+  if (a === undefined || b === undefined) return tree
+  const next = replaceAt(replaceAt(tree, from, b), to, a)
+  return write(next) === write(tree) ? tree : next
+}
+
 /**
  * `part` under `op`: the part first and an empty slot for every other part the operator takes, so a
  * component can be split in place (⿰ round 失 gives ⿰失⬚).

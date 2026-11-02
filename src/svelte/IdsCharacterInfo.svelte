@@ -132,8 +132,11 @@
     const above = Math.max(8, box.top - card.height - 4)
     y = box.bottom + 4 + card.height <= innerHeight ? box.bottom + 4 : above
   }
+  // While a part is dragged the card stays shut: as a popover it would sit over the part the pointer aims at.
+  let dragging = false
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
+    if (dragging) return
     if (!componentIdentity(value) && (!adapter.characterInfo || !characterScript(value))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
@@ -174,7 +177,7 @@
   }
   /** @param {PointerEvent} event */
   function pointer(event) {
-    if (event.pointerType === 'touch') return
+    if (dragging || event.pointerType === 'touch') return
     pointerX = event.clientX; pointerY = event.clientY
     const element = target(event) ?? spanUnder(event, event.clientX, event.clientY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) { if (nearAnchor()) keep(); else leave(); return }
@@ -189,6 +192,7 @@
   /** A click keeps the card open while the pointer travels to its buttons, opening it at once.
    * @param {MouseEvent} event */
   function pin(event) {
+    if (dragging) return
     const element = target(event) ?? spanUnder(event, event.clientX || pointerX, event.clientY || pointerY)
     if (!(element instanceof HTMLElement) || !root?.contains(element)) return
     const value = element.dataset.character ?? ''
@@ -252,8 +256,9 @@
   /** Controls inside the card that keep their own press. @constant {string} */
   const CONTROL = 'button, a, input, select, textarea, summary, label, [role="button"]'
   /** The element the press started on, so a control's press is not mistaken for a surface click.
+   * A new press means any drag of an earlier gesture has ended, even if no dragend reached us.
    * @param {PointerEvent} event */
-  function pressed(event) { press = /** @type {Element} */ (event.target) }
+  function pressed(event) { press = /** @type {Element} */ (event.target); dragging = false }
   /** A right or middle click dismisses the card it lands outside of. @param {MouseEvent} event */
   function context(event) {
     if (!panel?.contains(/** @type {Node} */ (event.target))) close()
@@ -305,7 +310,14 @@
     node.addEventListener('pointerleave', leave)
     node.addEventListener('focusin', focus)
     node.addEventListener('focusout', leave)
-    node.addEventListener('dragstart', close)
+    /** A drag that starts on the card itself, on a source link or selected text, leaves the card
+     * alone: close() would take the dragged source out of the page and no dragend would follow.
+     * @param {DragEvent} event */
+    const dragStart = event => { if (panel?.contains(/** @type {Node} */ (event.target))) return; dragging = true; close() }
+    const dragStop = () => { dragging = false }
+    window.addEventListener('dragstart', dragStart, true)
+    window.addEventListener('dragend', dragStop, true)
+    window.addEventListener('drop', dragStop, true)
     window.addEventListener('keydown', key, true)
     window.addEventListener('pointerdown', pressed, true)
     window.addEventListener('click', outside, true)
@@ -318,7 +330,8 @@
       window.removeEventListener('pointermove', pointer); window.removeEventListener('pointerout', gone)
       node.removeEventListener('click', pin, true); node.removeEventListener('pointerleave', leave)
       node.removeEventListener('focusin', focus); node.removeEventListener('focusout', leave)
-      node.removeEventListener('dragstart', close); window.removeEventListener('keydown', key, true)
+      window.removeEventListener('dragstart', dragStart, true); window.removeEventListener('dragend', dragStop, true)
+      window.removeEventListener('drop', dragStop, true); window.removeEventListener('keydown', key, true)
       window.removeEventListener('pointerdown', pressed, true); window.removeEventListener('click', outside, true)
       window.removeEventListener('contextmenu', context, true); window.removeEventListener('auxclick', context, true)
       window.removeEventListener('resize', close)
