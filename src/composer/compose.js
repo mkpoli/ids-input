@@ -338,8 +338,16 @@ export class Composer {
       // Separated drawings retain reading order. Only publish ownership when every
       // rendered leaf produced exactly one piece (including empty placeholders).
       const ownership = this.separate ? this.leafOwners(tree) : null
-      if (ownership?.split && ownership.owners.length === out.length && !out.some(p => p.cut)) {
-        out.forEach((part, i) => { part.leaf = ownership.owners[i] })
+      if (ownership?.split && !out.some(p => p.cut)) {
+        // A toned syllable draws its marks beside it; they belong to the leaf they mark.
+        let owner = 0, current = null
+        for (const part of out) {
+          if (!part.origin?.startsWith('mark ')) current = ownership.owners[owner++]
+          part.leaf = current
+        }
+        if (owner === ownership.owners.length) {
+          for (const part of out) if (part.leaf === undefined) part.leaf = current
+        } else for (const part of out) delete part.leaf
       }
       if (!this.partial && this.weighted) this.balance(out)
       const construct = CONSTRUCTS[sequence]
@@ -364,7 +372,8 @@ export class Composer {
     const walk = node => {
       if (!Array.isArray(node)) {
         leaves++
-        if (!isEmpty(node) && !this.glyph(node)) supported = false
+        const { rest } = typeof node === 'string' ? splitToneMarks(node) : { rest: node }
+        if (!isEmpty(node) && !this.glyph(rest)) supported = false
         return
       }
       const op = node[0]
@@ -424,6 +433,14 @@ export class Composer {
         return
       }
       if (typeof node === 'string') {
+        const { rest, tones } = splitToneMarks(node)
+        if (tones) {
+          const parts = this.toneLeaf(rest, tones, inset(target(box)))
+          for (const part of parts) part.leaf = leaf
+          leaf++
+          out.push(...parts)
+          return
+        }
         const glyph = this.glyph(node)
         if (!glyph) throw new LookupError(`No glyph draws ${node}.`)
         // A cell allows a little more stretch than a composed part, so the glyph fills it; a
@@ -731,14 +748,13 @@ export class Composer {
    *  right, and the marks stand at the left as the tone of the syllable is written.
    *  @param {string} base @param {string} tones @param {number[]} region */
   toneLeaf(base, tones, region) {
-    const probe = markParts(this, tones, region, region)
-    const fitted = probe.length ? markFace(region, union(probe.map(part => part.target))) : { face: region, scale: 1 }
-    const glyph = this.glyph(base)
-    if (!glyph) throw new LookupError(`No glyph or sequence draws ${base}.`)
-    const marks = markParts(this, tones, region, fitted.face)
+    const marks = markParts(this, tones, region, region)
+    const fitted = markFace(region, union(marks.map(part => part.target)))
+    // The syllable draws as it would alone, in what the marks leave of the box.
+    const body = this.node(base, fitted.face)
     // A dot has no stem, so the weight pass leaves it its size.
     for (const part of marks) part.fixed = true
-    return [this.place(glyph, fitted.face, this.ink(base), `glyph ${base}`), ...marks]
+    return [...body, ...marks]
   }
 
   /** A designed enclosing form of a whole operand, where the export has no cut of it: 电 as ⿺'s

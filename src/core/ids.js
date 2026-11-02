@@ -223,12 +223,14 @@ export function parse(text, { open = false } = {}) {
       const char = emoji || chars[at]
       at += emoji ? [...emoji].length : 1
       if (char === undefined) { if (open) return null; throw 'missing' }
+      // A tone mark names the tone of the syllable it follows, not of the whole description.
+      const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
       // A stroke chain that names a character stands for that character.
       if (char === '#' && !emoji) {
         const chain = strokeChain(chars, at - 1)
         if (chain) {
           at = chain.end
-          return isSelector(chars[at]) ? chain.char + chars[at++] : chain.char
+          return (isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones()
         }
       }
       const n = arity(char)
@@ -237,8 +239,6 @@ export function parse(text, { open = false } = {}) {
         // An emoji sequence may hold zero-width joiners; other invisible characters are not components.
         if (!emoji && /[\p{Cc}\p{Cf}\p{Z}]/u.test(char)) throw 'character'
         if (!isComponent(char)) throw 'component'
-        // A tone mark names the tone of the syllable it follows, not of the whole description.
-        const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
         const cluster = hangulClusterAt(chars, at - 1)
         if (cluster) { at = cluster.end; return cluster.text + tones() }
         return (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
@@ -478,7 +478,8 @@ export function place(tree, at, part) {
 /**
  * `text` split at its loose marks: the description without them and the marks it ends with. A text
  * that is not one description, or has none, answers itself and ''. Where a mark fills an operand
- * (⿰ㄅˊ with ⿰ short of one) it stays a component, as it reads.
+ * (⿰ㄅˊ with ⿰ short of one) it stays a component, as it reads. A Hangul tone mark stays with the
+ * syllable it follows, so it splits off only where that syllable stands alone.
  * @param {string | null | undefined} text
  * @returns {{ base: string, marks: string }}
  */

@@ -3,8 +3,10 @@
 // mark or a superscript does. They are Unicode characters, not operators; `data/unicode-properties.json`
 // pins the ones that count (combining marks and modifier letters, the accent and tone-letter symbols,
 // and superscript or subscript digits). A description is written as its operators and components,
-// then the marks in any order: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛.
+// then the marks in any order: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛. A Hangul tone mark is the exception: it
+// names the tone of the one syllable it follows and stays on it, ⿰가〮나〯.
 import { unicodeProperty } from './unicode.js'
+import { hangulClusterAt } from './hangul.js'
 
 /** A variation selector, as `isSelector` reads it in `ids.js`; kept here so the modules need not cycle. */
 const SELECTOR = /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u
@@ -56,7 +58,8 @@ export function splitMarks(part) {
     return part.marks ? { base: { op: part.op, parts: part.parts }, marks: part.marks } : { base: part, marks: '' }
   }
   const chars = [...part]
-  let at = 1
+  // A conjoining jamo run is one component, not the initial jamo and a mark after it.
+  let at = hangulClusterAt(chars, 0)?.end ?? 1
   if (isSelector(chars[at])) at++
   return { base: chars.slice(0, at).join(''), marks: chars.slice(at).join('') }
 }

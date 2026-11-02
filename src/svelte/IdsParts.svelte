@@ -242,8 +242,23 @@
     if (!canFinal(char)) return
     final = /** @type {string} */ (toConjoiningJamo(char, 'T'))
   }
-  /** @param {string} mark The tone mark to set, or the one set already, which clears it. */
-  function chooseTone(mark) { tone = tone === mark ? '' : mark }
+  /** @param {string} mark The tone mark to set, '' for none. */
+  function chooseTone(mark) { tone = mark }
+  /** The tone keys move as one radio group: arrows walk it, Home and End go to its ends.
+   * @param {KeyboardEvent} event */
+  function toneKeys(event) {
+    const order = ['', HANGUL_TONE_MARKS.high, HANGUL_TONE_MARKS.rising]
+    /** @type {Record<string, number>} */
+    const steps = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }
+    const at = order.indexOf(tone)
+    const step = steps[event.key]
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? order.length - 1 : step === undefined ? null : (at + step + order.length) % order.length
+    if (next === null) return
+    event.preventDefault()
+    tone = order[next]
+    const button = event.currentTarget instanceof HTMLElement ? event.currentTarget.querySelector(`[data-tone="${order[next]}"]`) : null
+    if (button instanceof HTMLElement) button.focus()
+  }
   function backspace() {
     if (tone && composed) tone = ''
     else if (final) final = ''
@@ -647,18 +662,19 @@
       </div>
     </div>
     <section class="compose-tone" data-hangul-group="tone">
-      <h4>{t('parts.hangul.tone')}</h4>
-      <div class="tone-grid" role="radiogroup" aria-label={t('parts.hangul.tone')}>
-        <button type="button" class="tone-key" role="radio" data-tone="" aria-checked={!tone}
+      <h4 id={`${uid}-hangul-tone`}>{t('parts.hangul.tone')}</h4>
+      <!-- svelte-ignore a11y_interactive_supports_focus -->
+      <div class="tone-grid" role="radiogroup" aria-labelledby={`${uid}-hangul-tone`} onkeydown={toneKeys}>
+        <button type="button" class="tone-key" role="radio" data-tone="" aria-checked={!tone} tabindex={tone ? -1 : 0}
           aria-label={`${t('parts.hangul.toneLow')}, ${t('parts.hangul.toneNone')}`}
-          disabled={disabled} onclick={() => { tone = '' }}>{t('parts.hangul.toneLow')}</button>
+          disabled={disabled} onclick={() => chooseTone('')}>{t('parts.hangul.toneLow')}</button>
         <button type="button" class="tone-key" role="radio" data-tone={HANGUL_TONE_MARKS.high} aria-checked={tone === HANGUL_TONE_MARKS.high}
-          title={`U+302E`} aria-label={t('parts.hangul.toneHigh')}
+          tabindex={tone === HANGUL_TONE_MARKS.high ? 0 : -1} title={`U+302E`} aria-label={t('parts.hangul.toneHigh')}
           disabled={disabled} onclick={() => chooseTone(HANGUL_TONE_MARKS.high)}>
           <span class="tone-mark" aria-hidden="true">{HANGUL_TONE_MARKS.high}</span>{t('parts.hangul.toneHigh')}
         </button>
         <button type="button" class="tone-key" role="radio" data-tone={HANGUL_TONE_MARKS.rising} aria-checked={tone === HANGUL_TONE_MARKS.rising}
-          title={`U+302F`} aria-label={t('parts.hangul.toneRising')}
+          tabindex={tone === HANGUL_TONE_MARKS.rising ? 0 : -1} title={`U+302F`} aria-label={t('parts.hangul.toneRising')}
           disabled={disabled} onclick={() => chooseTone(HANGUL_TONE_MARKS.rising)}>
           <span class="tone-mark" aria-hidden="true">{HANGUL_TONE_MARKS.rising}</span>{t('parts.hangul.toneRising')}
         </button>
