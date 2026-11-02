@@ -17,13 +17,17 @@ try {
     await field.waitFor()
     await page.waitForTimeout(600)
   }
-  /** Drag from one box to another, the way a pointer does: press, leave the source, settle on the target. @param {import('playwright-core').Locator} from @param {import('playwright-core').Locator} to */
-  const drag = async (from, to) => {
+  /** Drag from one box to another, the way a pointer does: press, leave the source, settle on the target.
+   * A group is grabbed by its head band, where its parts do not sit; elsewhere the part under the
+   * pointer is the one dragged.
+   * @param {import('playwright-core').Locator} from @param {import('playwright-core').Locator} to @param {number} [grabY] */
+  const drag = async (from, to, grabY) => {
     const a = await from.boundingBox(), b = await to.boundingBox()
     assert.ok(a && b, 'both boxes are on screen')
-    await page.mouse.move(a.x + a.width / 2, a.y + a.height / 2)
+    const y = grabY === undefined ? a.y + a.height / 2 : a.y + grabY
+    await page.mouse.move(a.x + a.width / 2, y)
     await page.mouse.down()
-    await page.mouse.move(a.x + a.width / 2 + 8, a.y + a.height / 2 + 8, { steps: 4 })
+    await page.mouse.move(a.x + a.width / 2 + 8, y + 8, { steps: 4 })
     await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 10 })
     await page.waitForTimeout(150)
     await page.mouse.up()
@@ -47,6 +51,17 @@ try {
   await drag(part(0), part(2))
   assert.equal(await value(), '⿲口日木', 'a part dropped beside a sibling still moves')
 
+  await open('⿱⿰木口⿱日火')
+  const group = index => page.locator('.ids-tree .ids-node').nth(index)
+  assert.equal(await group(1).getAttribute('draggable'), 'true', 'a whole group is draggable by its frame')
+  await drag(group(1), part(3), 8)
+  assert.equal(await value(), '⿱火⿱日⿰木口', 'a group dropped on a part of another branch switches with it')
+  await page.keyboard.press('Control+z')
+  await page.waitForTimeout(300)
+  assert.equal(await value(), '⿱⿰木口⿱日火', 'one undo puts the group back')
+  await drag(group(1), part(0), 8)
+  assert.equal(await value(), '⿱⿰木口⿱日火', 'a group does not land inside itself')
+
   await open('⿱⿰木口日')
   await page.getByRole('tab', { name: 'Tree' }).click()
   const row = path => page.locator(`.ids-treelist [data-path="${path}"]`)
@@ -55,5 +70,5 @@ try {
   assert.equal(await value(), '⿱⿰日口木', 'the list switches places the same way')
 
   assert.deepEqual(errors, [])
-  console.log('PASS a part dragged onto another part switches places')
+  console.log('PASS a part or group dragged onto another part switches places')
 } finally { await browser.close() }
