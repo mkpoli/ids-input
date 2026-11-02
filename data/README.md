@@ -1021,10 +1021,14 @@ layout of every possible IDS tree. Private-use characters need an explicit host 
 
 Each report records the hashes of the files that decide what the preview draws, listed in
 `scripts/lib/coverage-sources.mjs`. `bun scripts/check_coverage_freshness.mjs` compares those
-hashes against the tree and fails on any difference, naming the changed files; `bun run verify`
-runs it, so a change to the preview's inputs has to carry refreshed reports. Re-render each style
-into `docs/coverage/` before opening the pull request. A stale report is worth a failed check:
-it is read as a statement about the current build.
+hashes against the tree and names the files that moved, and `bun run coverage` re-renders all
+three styles into `docs/coverage/`. Both are manual. Gating merges on them fired on nearly every
+change to the composer while saying nothing about whether the change was right, so the scheduled
+`Coverage` workflow renders nightly and opens a pull request when a report moved; the committed
+reports trail the exports by at most a day.
+
+Read a report as a statement about the commit it was rendered at, which `implementationHashes`
+records, rather than about whatever is checked out.
 
 `python3 scripts/build_host_glyph_coverage.py CACHE_DIR` rebuilds the default export's exact
 direct-outline inventory from that cache. The fallback builder uses it to retain missing CJK
