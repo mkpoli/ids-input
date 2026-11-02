@@ -2,11 +2,12 @@
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
-  import { SIBLING_DRAG, siblings, neighbor, remapSiblingPath } from './sibling-drag.js'
+  import { PART_DRAG, siblings, swappable, neighbor, remapSiblingPath, remapSwapPath } from './part-drag.js'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
   // box. A click on a row chooses that part, a click on its arrow opens or closes its parts, and a
-  // part dragged from a palette or a search drops onto the row. Arrow keys move, ArrowRight opens a
-  // row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
+  // part dragged from a palette or a search drops onto the row; a row of the list dropped beside a
+  // sibling moves there or on any other row switches places with it. Arrow keys move, ArrowRight
+  // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
   import { isNode, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
 
@@ -27,22 +28,25 @@
     if (current === rememberedTree) return
     if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(untrack(() => collapsed)))
     const saved = isNode(current) ? collapsedByTree.get(current) : undefined
-    const reorder = untrack(() => editor.change?.reorder)
+    const reorder = untrack(() => editor.change?.reorder), swap = untrack(() => editor.change?.swap)
     if (saved) collapsed = new Set(saved)
     else if (reorder) collapsed = new Set([...untrack(() => collapsed)].map(value => key(remapSiblingPath(value ? value.split('.').map(Number) : [], reorder.from, reorder.to))))
+    else if (swap) collapsed = new Set([...untrack(() => collapsed)].map(value => key(remapSwapPath(value ? value.split('.').map(Number) : [], swap.from, swap.to))))
     rememberedTree = current
   })
   /** @type {string | null} */
   let focusKey = $state(null)
-  /** @type {string | null} */
+  /** @type {{ key: string, swap: boolean } | null} */
   let over = $state(null)
+  /** @param {Row} row */
+  const overKind = row => over?.key !== row.key ? null : over.swap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
     if (editor.disabled || !path.length || !event.dataTransfer) return
     dragging = { path, tree: editor.tree }
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
   function endDrag() { dragging = null; over = null }
@@ -107,6 +111,18 @@
       if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(collapsed))
     }
   }
+  /** @param {Path} from @param {Path} to */
+  function exchange(from, to) {
+    const before = editor.tree
+    if (isNode(before)) collapsedByTree.set(before, new Set(collapsed))
+    editor.swap(from, to)
+    if (editor.tree !== before) {
+      collapsed = new Set([...collapsed].map(value => key(remapSwapPath(value ? value.split('.').map(Number) : [], from, to))))
+      focusKey = key(to)
+      rememberedTree = editor.tree
+      if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(collapsed))
+    }
+  }
   /** @param {Row} row */
   function toggle(row) {
     const next = new Set(collapsed)
@@ -157,21 +173,28 @@
   /** @param {DragEvent} event @param {Row} row */
   function dragOver(event, row) {
     if (editor.disabled || !event.dataTransfer) return
-    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, row.path)) return
-      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; over = row.key; return
+    if (event.dataTransfer.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const swap = !siblings(dragging.path, row.path)
+      if (swap && !swappable(dragging.path, row.path)) return
+      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; over = { key: row.key, swap }; return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
-    over = row.key
+    over = { key: row.key, swap: false }
   }
   /** @param {DragEvent} event @param {Row} row */
   function drop(event, row) {
     over = null
-    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
-      if (dragging && dragging.tree === editor.tree && siblings(dragging.path, row.path)) { event.preventDefault(); move(dragging.path, row.path) }
-      dragging = null; return
+    if (event.dataTransfer?.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const from = dragging.path, same = siblings(from, row.path), swap = !same && swappable(from, row.path)
+      dragging = null
+      if (!same && !swap) return
+      event.preventDefault()
+      if (same) move(from, row.path); else exchange(from, row.path)
+      return
     }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given || editor.disabled) return
@@ -204,7 +227,7 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
+      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
         aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
@@ -241,6 +264,8 @@
   li:hover{background:var(--_surface-subtle)}
   li.chosen{border-color:var(--_accent);background:var(--_accent-light)}
   li.over{border-color:var(--_accent)}
+  li.swap{border-color:var(--_accent);background:var(--_accent-light)}
+  li.dragged{opacity:.45}
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
   .toggle{display:grid;place-items:center;width:14px;flex:none;color:var(--_muted);font-size:11px}
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}

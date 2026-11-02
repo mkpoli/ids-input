@@ -1,13 +1,14 @@
 <script>
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
-  import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
+  import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside a single host, or one over the other. Compound enclosure hosts
   // get separate panels so their descendants stay visible. A click chooses a part; a part
-  // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
-  // click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a level or
-  // copies that part's sequence. An empty slot shows as ⬚.
+  // dragged from a palette, a tree or a search is put where it is dropped, and a part of the tree
+  // dropped beside a sibling moves there or on any other part switches places with it; the context
+  // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
+  // level or copies that part's sequence. An empty slot shows as ⬚.
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
@@ -22,15 +23,17 @@
   /** @param {Path} path */
   const key = path => path.join('.')
 
-  // Dropping a part on a box.
-  let over = $state(/** @type {string | null} */ (null))
+  // Dropping a part on a box: beside a sibling it moves there, on any other part the two switch places.
+  let over = $state(/** @type {{ path: string, swap: boolean } | null} */ (null))
+  /** @param {Path} path */
+  const overKind = path => over?.path !== key(path) ? null : over.swap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
     if (editor.disabled || !path.length || !event.dataTransfer) return
     dragging = { path, tree: editor.tree }
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
   function endDrag() { dragging = null; over = null }
@@ -38,22 +41,31 @@
   /** @param {DragEvent} event @param {Path} path */
   function dragover(event, path) {
     if (editor.disabled || !event.dataTransfer) return
-    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
-      event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'move'; over = key(path); return
+    if (event.dataTransfer.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const swap = !siblings(dragging.path, path)
+      if (swap && !swappable(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation()
+      event.dataTransfer.dropEffect = 'move'
+      over = { path: key(path), swap }
+      return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault(); event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
-    over = key(path)
+    over = { path: key(path), swap: false }
   }
   /** @param {DragEvent} event @param {Path} path */
   function drop(event, path) {
     over = null
-    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
-      event.preventDefault(); event.stopPropagation(); editor.reorder(dragging.path, path)
-      dragging = null; return
+    if (event.dataTransfer?.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const from = dragging.path, move = siblings(from, path), swap = !move && swappable(from, path)
+      dragging = null
+      if (!move && !swap) return
+      event.preventDefault(); event.stopPropagation()
+      if (move) editor.reorder(from, path); else editor.swap(from, path)
+      return
     }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given) return
@@ -130,10 +142,10 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
       ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
       <div class="ids-head">
-        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
+        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} aria-pressed={selected} disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
           ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
@@ -156,7 +168,7 @@
     {#if editing && samePath(editing.path, path)}
       {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
     {:else}
-    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
+    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:dragged={dragging !== null && samePath(dragging.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected}
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
@@ -236,6 +248,8 @@
   :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
+  .ids-node.swap{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
+  .ids-node.dragged,.ids-op.dragged,.ids-part.dragged{opacity:.45}
   .ids-head{position:absolute;top:3em;left:4em;right:4em;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   .ids-head button{pointer-events:auto;flex-shrink:0}
   .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 .545em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11em/1.4 var(--_font);color:var(--_muted)}
@@ -283,13 +297,14 @@
   .ids-tree-root > .ids-part.empty{font-size:min(48px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
   .ids-part.chosen{border:min(2px,2cqw,2cqh) solid var(--_accent);background:var(--_accent-light)}
   .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
+  .ids-part.swap{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid;background:var(--_accent-light)}
 
   /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
      Clip the header visually while keeping its node button available to keyboard navigation. */
   @container (max-height:12px) or (max-width:12px){
     .ids-node{border-width:0;padding:0}
     .ids-head{inset:0;overflow:hidden;clip-path:inset(50%)}
-    .ids-part,.ids-part.chosen,.ids-part.over{border-width:0;padding:0}
+    .ids-part,.ids-part.chosen,.ids-part.over,.ids-part.swap{border-width:0;padding:0}
   }
 
   .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;
