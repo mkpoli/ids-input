@@ -169,7 +169,6 @@
   "app.tabs.menu": "Tab actions",
   "app.tabs.new": "New tab",
   "app.tabs.recent": "Recently closed",
-  "app.tabs.recentCount": "{count} tabs",
   "app.tabs.recentEmpty": "Tabs you close appear here.",
   "app.tabs.reopen": "Reopen closed tab",
   "app.tabs.reopenRecent": "Reopen {name}",

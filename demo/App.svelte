@@ -845,9 +845,39 @@
     const group = closedGroups.at(-1)
     if (group) restoreClosed(group, true)
   }
-  /** Bring back a closed tab or group chosen in the starter, showing and focusing it. @param {ClosedGroup} group */
-  function reopenGroup(group) {
-    restoreClosed(group, true)
+  /** Bring one tab from a closed group back, showing it; the group's other tabs stay listed.
+   *  @param {ClosedGroup} group
+   *  @param {ClosedGroup['tabs'][number]} entry */
+  function reopenRecentTab(group, entry) {
+    const at = group.tabs.indexOf(entry)
+    if (at < 0) return
+    flush()
+    // The empty tab a close left behind goes when the group's first tab comes back.
+    const fresh = tabs.find(tab => tab.id === group.fresh)
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      sessions.delete(fresh.id)
+    }
+    // Place the tab beside the group's tabs already back, so any order ends in the old order.
+    const open = new Set(tabs.map(tab => tab.id))
+    let index = -1
+    for (let i = at - 1; i >= 0 && index < 0; i--) {
+      const id = group.tabs[i].tab.id
+      if (open.has(id)) index = tabs.findIndex(tab => tab.id === id) + 1
+    }
+    for (let i = at + 1; i < group.tabs.length && index < 0; i++) {
+      const id = group.tabs[i].tab.id
+      if (open.has(id)) index = tabs.findIndex(tab => tab.id === id)
+    }
+    if (index < 0) index = Math.min(entry.at, tabs.length)
+    tabs.splice(index, 0, entry.tab)
+    if (entry.state) states.set(entry.tab.id, entry.state)
+    // Take the tab off the history; the group keeps its other tabs for their own rows.
+    const rest = group.tabs.filter(item => item !== entry)
+    const remaining = { ...group, tabs: rest, active: group.active === entry.tab.id ? null : group.active, fresh: undefined }
+    closedGroups = rest.length ? closedGroups.map(item => item === group ? remaining : item) : closedGroups.filter(item => item !== group)
+    activate(entry.tab.id)
     tick().then(() => tabStrip?.focusTab())
   }
   /** Close every tab but `id`, showing it. @param {string} id */
@@ -1019,14 +1049,13 @@
     editor, items: exampleItems, view: exampleView,
     onstart: sequence => { addTab(sequence); focusNewTab() },
     onstarted: focusNewTab,
-    // Closed tabs, newest first; choosing one brings its whole group back.
-    recent: [...closedGroups].reverse().map(group => ({
-      key: group.tabs[0]?.tab.id ?? '',
-      names: group.tabs.map(({ tab }) => tabName(tab) || t('app.tabs.untitled')),
-      sequences: group.tabs.map(({ tab }) => tab.whole || tab.sequence),
-      count: group.tabs.length,
-      reopen: () => reopenGroup(group),
-    })),
+    // Closed tabs, newest group first and in tab order within it; choosing a row brings that tab back.
+    recent: [...closedGroups].reverse().flatMap(group => group.tabs.map(entry => ({
+      key: entry.tab.id,
+      name: tabName(entry.tab) || t('app.tabs.untitled'),
+      sequence: entry.tab.whole || entry.tab.sequence,
+      reopen: () => reopenRecentTab(group, entry),
+    }))),
   })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {

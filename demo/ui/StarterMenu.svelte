@@ -16,7 +16,7 @@
    *   items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null,
    *   onstart: (sequence: string) => void, onstarted?: () => void,
    *   draw: (sequence: string) => Promise<any>,
-   *   recent?: { key: string, names: string[], sequences: string[], count: number, reopen: () => void }[] }}
+   *   recent?: { key: string, name: string, sequence: string, reopen: () => void }[] }}
    */
   let { t, editor, items, view, onstart, onstarted, draw, recent = [] } = $props()
   const uid = $props.id()
@@ -127,17 +127,12 @@
           {#if recent.length}
             <ul class="starter-recent-list" aria-label={t('app.tabs.recent')}>
               {#each recent as entry (entry.key)}
-                {@const name = entry.names.join(' · ')}
+                {@const name = entry.name}
                 <li>
                   <button type="button" class="starter-recent-item" title={name} aria-label={t('app.tabs.reopenRecent', { name })}
                     onclick={() => reopenClosed(entry)}>
-                    <span class="starter-recent-thumbs">
-                      {#each entry.sequences.slice(0, 3) as sequence, at (at)}
-                        <span class="starter-recent-thumb"><TabIcon {sequence} {draw} delay={0} /></span>
-                      {/each}
-                    </span>
+                    <span class="starter-recent-thumb"><TabIcon sequence={entry.sequence} {draw} delay={0} /></span>
                     <span class="starter-recent-name">{name}</span>
-                    {#if entry.count > 1}<span class="starter-recent-count">{t('app.tabs.recentCount', { count: entry.count })}</span>{/if}
                   </button>
                 </li>
               {/each}
@@ -173,9 +168,7 @@
     border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-sm);text-align:left;cursor:pointer}
   .starter-recent-item:hover{background:var(--ui-color-surface-hover)}
   .starter-recent-item:focus-visible{background:var(--ui-color-surface-hover);outline:2px solid var(--ui-color-focus);outline-offset:-2px}
-  .starter-recent-thumbs{display:flex;align-items:center;gap:3px;flex:none;color:var(--ui-color-ink-muted)}
-  .starter-recent-thumb{display:grid;place-items:center;width:24px;height:24px;padding:2px;border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken)}
+  .starter-recent-thumb{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:2px;border-radius:var(--ui-radius-sm);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink-muted)}
   .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:14px}
-  .starter-recent-count{flex:none;color:var(--ui-color-ink-muted);font-size:11px;font-variant-numeric:tabular-nums}
   .starter-recent-empty{margin:0;padding:var(--ui-space-md) var(--ui-space-sm);color:var(--ui-color-ink-muted);font-size:12.5px}
 </style>

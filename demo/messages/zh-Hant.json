@@ -168,7 +168,6 @@
   "app.tabs.menu": "分頁操作",
   "app.tabs.new": "新增分頁",
   "app.tabs.recent": "最近關閉",
-  "app.tabs.recentCount": "{count}個分頁",
   "app.tabs.recentEmpty": "關閉的分頁會留在這裡。",
   "app.tabs.reopen": "重新開啟關閉的分頁",
   "app.tabs.reopenRecent": "重新開啟{name}",

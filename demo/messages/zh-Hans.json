@@ -168,7 +168,6 @@
   "app.tabs.menu": "标签页操作",
   "app.tabs.new": "新建标签页",
   "app.tabs.recent": "最近关闭",
-  "app.tabs.recentCount": "{count}个标签页",
   "app.tabs.recentEmpty": "关闭的标签页会留在这里。",
   "app.tabs.reopen": "重新打开关闭的标签页",
   "app.tabs.reopenRecent": "重新打开{name}",
