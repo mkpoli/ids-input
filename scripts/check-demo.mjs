@@ -150,6 +150,9 @@ function run(file, limit = 240) {
     child.stderr.on('data', chunk => { output += chunk })
     child.on('error', error => finish(1, `\n${error.message}`))
     child.on('close', code => finish(code ?? 1))
+    // A check can exit cleanly while a browser it left behind keeps the pipes open, and then `close`
+    // never comes; the exit code is the verdict, after a moment for the last output.
+    child.on('exit', code => setTimeout(() => finish(code ?? 1), 150))
   })
 }
 
