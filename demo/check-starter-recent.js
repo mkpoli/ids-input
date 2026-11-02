@@ -1,7 +1,8 @@
-// The starter dialog's Recently closed tab: the chevron beside the tab strip's + lists the tabs and
-// groups closed this session, newest first, with a count for a group. Choosing an entry brings its
-// whole group back in the old order, shows the tab that was being edited and puts the focus on it.
-// The list is empty on arrival and after every close has been reopened. Run against a devrun server:
+// The starter dialog's Recently closed tab: the chevron beside the tab strip's + lists each tab
+// closed this session as its own row, newest first, with its drawing. Choosing a row brings that tab
+// back in its old place, shows it and puts the focus on it. A group close leaves one row per tab,
+// and rows reopened in any order still end in the old order. The list is empty on arrival and after
+// every close has been reopened. Run against a devrun server:
 //   IDS_URL=http://localhost:5198 CHROMIUM_PATH=/path/to/chrome bun demo/check-starter-recent.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -35,6 +36,7 @@ try {
   }
   const entries = () => panel.locator('.starter-recent-item')
   const names = () => entries().evaluateAll(els => els.map(el => /** @type {HTMLElement} */ (el.querySelector('.starter-recent-name')).textContent))
+  const thumbs = () => entries().evaluateAll(els => els.map(el => el.querySelectorAll('.starter-recent-thumb').length))
   const closeTab = async id => {
     await page.locator(`.tab[data-tab-id="${id}"] [role="tab"]`).click({ button: 'middle' })
   }
@@ -68,7 +70,8 @@ try {
   assert.deepEqual(await order(), ['tab-1', 'tab-3'], 'a later close comes first in the history')
   await openStarter()
   assert.deepEqual(await names(), ['⿱艹半', '⿾正'], 'the list names the closed tabs, newest first')
-  assert.equal(await entries().first().locator('.starter-recent-count').count(), 0, 'a single tab carries no count')
+  assert.deepEqual(await thumbs(), [1, 1], 'each row shows one thumbnail')
+  await entries().first().locator('.starter-recent-thumb .tab-glyph').waitFor({ timeout: 30000 })
 
   // Choosing the newer entry reopens it in its old place and puts the focus on it.
   await entries().first().click()
@@ -87,22 +90,39 @@ try {
   assert.equal(await entries().count(), 0, 'the list is empty again')
   await closeStarter()
 
-  // Closing several tabs leaves one entry that counts them; choosing it brings the group back.
+  // Closing several tabs lists each of them; reopening rows out of order still restores the old order.
   await page.locator('.tab[data-tab-id="tab-1"] [role="tab"]').click()
   await page.locator('.tab[data-tab-id="tab-3"] [role="tab"]').click({ button: 'right' })
-  await page.getByRole('menuitem', { name: 'Close other tabs', exact: true }).click()
-  assert.deepEqual(await order(), ['tab-3'], 'only the menu tab is left')
+  await page.getByRole('menuitem', { name: 'Close all tabs', exact: true }).click()
+  await page.locator('dialog[open]').getByRole('button', { name: 'Close all', exact: true }).click()
+  assert.equal((await order()).length, 1, 'the group close leaves one empty tab')
   await openStarter()
-  assert.deepEqual(await names(), ['⿾正 · ⿰氵恩 · ⿱艹半'], 'the group names every tab it closed')
-  assert.equal(await entries().first().locator('.starter-recent-count').innerText(), '3 tabs', 'the group counts its tabs')
+  assert.deepEqual(await names(), ['⿾正', '⿰氵恩', '⿱艹半', '⿻大㸚'], 'the close lists one row for each tab')
+  assert.deepEqual(await thumbs(), [1, 1, 1, 1], 'each of those rows shows one thumbnail')
+  await entries().first().locator('.starter-recent-thumb .tab-glyph').waitFor({ timeout: 30000 })
+  await entries().nth(2).click()
+  await panel.waitFor({ state: 'detached' })
+  assert.deepEqual(await order(), ['tab-2'], 'the chosen tab comes back and takes the empty tab away')
+  assert.equal(await page.locator('.ids-field input').inputValue(), '⿱艹半', 'the chosen tab is shown')
+  await openStarter()
+  assert.deepEqual(await names(), ['⿾正', '⿰氵恩', '⿻大㸚'], 'the rest of the group stays listed')
   await entries().first().click()
   await panel.waitFor({ state: 'detached' })
-  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'the whole group comes back in order')
-  assert.equal(await active(), 'tab-1', 'the tab that was being edited is shown')
+  assert.deepEqual(await order(), ['tab-0', 'tab-2'], 'a tab restored later goes before its open neighbour')
+  await openStarter()
+  await entries().last().click()
+  await panel.waitFor({ state: 'detached' })
+  assert.deepEqual(await order(), ['tab-0', 'tab-2', 'tab-3'], 'the last tab goes after its open neighbour')
+  await openStarter()
+  await entries().first().click()
+  await panel.waitFor({ state: 'detached' })
+  assert.deepEqual(await order(), ['tab-0', 'tab-1', 'tab-2', 'tab-3'], 'the old order returns')
+  assert.equal(await active(), 'tab-1', 'the last chosen tab is shown')
   assert.equal(await focusedTab(), 'tab-1', 'the shown tab takes the focus')
   await openStarter()
-  assert.equal(await entries().count(), 0, 'reopening the last group empties the list')
+  assert.equal(await entries().count(), 0, 'reopening every tab empties the list')
   assert.equal(await panel.locator('.starter-recent-empty').isVisible(), true, 'the empty list returns')
+  await closeStarter()
   await closeStarter()
 
   // The panel closes on a click outside, leaving the list for the next visit.
@@ -138,6 +158,7 @@ try {
   await soloPanel.getByRole('tab', { name: 'Recently closed', exact: true }).click()
   const soloNames = () => soloPanel.locator('.starter-recent-name').allInnerTexts()
   assert.deepEqual(await soloNames(), ['Untitled', '⿰氵恩'], 'the empty tab and the tab before it are both listed')
+  assert.equal(await soloPanel.locator('.starter-recent-item').first().locator('.starter-recent-thumb .tab-empty').count(), 1, 'an empty tab shows a placeholder thumbnail')
   await soloPanel.locator('.starter-recent-item').first().click()
   await soloPanel.waitFor({ state: 'detached' })
   assert.equal((await soloOrder()).length, 1, 'the empty tab comes back')
@@ -150,5 +171,5 @@ try {
   await solo.close()
 
   assert.deepEqual(errors, [])
-  console.log('PASS the starter lists closed tabs and groups and opens them back')
+  console.log('PASS the starter lists each closed tab with its thumbnail and opens it back')
 } finally { await browser.close() }

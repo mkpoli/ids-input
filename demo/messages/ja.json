@@ -168,7 +168,6 @@
   "app.tabs.menu": "タブの操作",
   "app.tabs.new": "新しいタブ",
   "app.tabs.recent": "最近閉じたタブ",
-  "app.tabs.recentCount": "{count}個",
   "app.tabs.recentEmpty": "閉じたタブがここに残ります。",
   "app.tabs.reopen": "閉じたタブを開き直す",
   "app.tabs.reopenRecent": "{name}を開き直す",

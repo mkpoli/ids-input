@@ -6,6 +6,7 @@
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
   import MenuList from './MenuList.svelte'
+  import TabIcon from './TabIcon.svelte'
   import { IdsTemplates } from '../../src/svelte/index.js'
   /** @typedef {'templates' | 'examples' | 'recent'} StarterTab */
   /** @type {StarterTab[]} */
@@ -14,9 +15,10 @@
    * @type {{ t: (key: string, params?: Record<string, string | number>) => string, editor: any,
    *   items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null,
    *   onstart: (sequence: string) => void, onstarted?: () => void,
-   *   recent?: { key: string, names: string[], count: number, reopen: () => void }[] }}
+   *   draw: (sequence: string) => Promise<any>,
+   *   recent?: { key: string, name: string, sequence: string, reopen: () => void }[] }}
    */
-  let { t, editor, items, view, onstart, onstarted, recent = [] } = $props()
+  let { t, editor, items, view, onstart, onstarted, draw, recent = [] } = $props()
   const uid = $props.id()
   let open = $state(false)
   /** @type {StarterTab} */ let tab = $state('templates')
@@ -125,13 +127,12 @@
           {#if recent.length}
             <ul class="starter-recent-list" aria-label={t('app.tabs.recent')}>
               {#each recent as entry (entry.key)}
-                {@const name = entry.names.join(' · ')}
+                {@const name = entry.name}
                 <li>
                   <button type="button" class="starter-recent-item" title={name} aria-label={t('app.tabs.reopenRecent', { name })}
                     onclick={() => reopenClosed(entry)}>
-                    <span class="starter-recent-icon"><Icon name="history" size={16} /></span>
+                    <span class="starter-recent-thumb"><TabIcon sequence={entry.sequence} {draw} delay={0} /></span>
                     <span class="starter-recent-name">{name}</span>
-                    {#if entry.count > 1}<span class="starter-recent-count">{t('app.tabs.recentCount', { count: entry.count })}</span>{/if}
                   </button>
                 </li>
               {/each}
@@ -163,12 +164,11 @@
   .starter-body{padding:4px 4px 2px}
   .starter-body:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
   .starter-recent-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-  .starter-recent-item{display:flex;align-items:center;gap:var(--ui-space-sm);width:100%;min-height:var(--ui-control-h-lg);padding:0 var(--ui-space-sm);
-    border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-sm);text-align:left;cursor:pointer}
+  .starter-recent-item{display:flex;align-items:center;gap:var(--ui-space-md);width:100%;min-height:52px;padding:var(--ui-space-2xs) var(--ui-space-sm);
+    border:0;border-radius:var(--ui-radius-lg);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-md);text-align:left;cursor:pointer}
   .starter-recent-item:hover{background:var(--ui-color-surface-hover)}
   .starter-recent-item:focus-visible{background:var(--ui-color-surface-hover);outline:2px solid var(--ui-color-focus);outline-offset:-2px}
-  .starter-recent-icon{display:grid;place-items:center;flex:none;color:var(--ui-color-ink-muted)}
-  .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:14px}
-  .starter-recent-count{flex:none;color:var(--ui-color-ink-muted);font-size:11px;font-variant-numeric:tabular-nums}
+  .starter-recent-thumb{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink)}
+  .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:var(--ui-text-md)}
   .starter-recent-empty{margin:0;padding:var(--ui-space-md) var(--ui-space-sm);color:var(--ui-color-ink-muted);font-size:12.5px}
 </style>

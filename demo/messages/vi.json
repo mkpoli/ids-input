@@ -147,7 +147,6 @@
   "app.tabs.menu": "Thao tác với thẻ",
   "app.tabs.new": "Thẻ mới",
   "app.tabs.recent": "Thẻ đã đóng",
-  "app.tabs.recentCount": "{count} thẻ",
   "app.tabs.recentEmpty": "Các thẻ bạn đóng sẽ hiện ở đây.",
   "app.tabs.reopen": "Mở lại thẻ đã đóng",
   "app.tabs.reopenRecent": "Mở lại {name}",

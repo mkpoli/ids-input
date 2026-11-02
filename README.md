@@ -1167,8 +1167,9 @@ language, settings and the sources. The tab strip’s + opens a blank tab, and t
 opens a starter dialog in three tabs. Templates is the same full catalogue the input pane offers
 (structures, pyramids, repeats and five-copy layouts). Examples lists every starter sequence with
 its character and code point, an abbreviated character, or a mark when it has none, opening as cards
-or a list with its filters and folding. Recently closed lists the tabs and groups closed this
-session, newest first, each opening back where it was. A template or an example opens a tab.
+or a list with its filters and folding. Recently closed lists each tab closed this session, newest
+first, with its drawing; choosing a row opens that tab back where it was. A template or an example
+opens a tab.
 Settings hold the system, light and dark
 themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
 bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
