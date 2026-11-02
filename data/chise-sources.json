@@ -1,0 +1,22 @@
+{
+ "licence": "GPL-2.0-or-later",
+ "note": "CHISE publishes no releases: the pin is the branch tip plus a digest per file.",
+ "repository": "https://github.com/chise/ids",
+ "retrieved": "2026-11-03",
+ "files": [
+  {
+   "file": "IDS-UCS-Basic.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Basic.txt",
+   "sha256": "83f9ba1ebc51ec99a436403e180ac1ebce78de48845e25ca8a29de347f4f2323",
+   "date": "",
+   "edition": "master@2026-11-03"
+  },
+  {
+   "file": "IDS-UCS-Compat.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/master/IDS-UCS-Compat.txt",
+   "sha256": "7683730c8213ecb3a2b3e85daa6b7b913c43b44a81a9af7900671bca4d091391",
+   "date": "",
+   "edition": "master@2026-11-03"
+  }
+ ]
+}
