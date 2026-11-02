@@ -28,9 +28,10 @@ from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
+from engine_data import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTLINES = ROOT / 'data/unicode-outlines'
+OUTLINES = DATA / 'unicode/outlines'
 OUT = ROOT / 'fonts/unicode'
 FAMILY = 'IDS Fallback'
 UPEM = 1000
@@ -139,8 +140,8 @@ def characters_without_outline(metadata):
         value = record[0] if isinstance(record, list) else record.get('part')
         if isinstance(value, str):
             needed.update(value)
-    needed.update(json.loads((ROOT / 'data/palette-fallback-characters.json').read_text()))
-    needed.update(json.loads(gzip.decompress((ROOT / 'data/palette-outlines.json.gz').read_bytes()))['records'])
+    needed.update(json.loads((DATA / 'palette/fallback-characters.json').read_text()))
+    needed.update(json.loads(gzip.decompress((DATA / 'sources/palette/outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
     return sorted(char for char in needed if char not in drawn)
 
@@ -209,7 +210,7 @@ def build(rows, extra=None, family=FAMILY):
 
 
 def main():
-    metadata = json.loads((ROOT / 'data/unicode-outlines.json').read_text())
+    metadata = json.loads((DATA / 'unicode/outlines.json').read_text())
     OUT.mkdir(exist_ok=True)
     for path in OUT.glob('*.woff2'):
         path.unlink()

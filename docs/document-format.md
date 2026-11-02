@@ -412,7 +412,7 @@ with host-supplied local geometry and placements, and writes a scoped tree whose
 component cuts and ㇯ subtraction become SVG masks. It also provides a session that
 keeps the chosen layer, an allocator and undo/redo over whole documents. A
 separated composer drawing supplies the base layout through
-[`src/composer/document-source.js`](../src/composer/document-source.js); it
+`@han-compose/composer/document-source`; it
 uses leaf ownership when present and otherwise infers one non-cut part per
 component in reading order. Session records and file bindings live in
 [`src/document/store.js`](../src/document/store.js) and
@@ -436,7 +436,7 @@ transforms without claiming a particular font or export is available.
 - [RFC 8785, JSON Canonicalization Scheme][jcs]: canonical JSON bytes for fingerprints.
 - [JSON Schema 2020-12][schema]: structural validation vocabulary.
 - [`src/core/ids.js`](../src/core/ids.js): component grammar, operator arities and IDS projection limits.
-- [`src/composer/loader.js`](../src/composer/loader.js) and
+- `@han-compose/composer/loader` and
   [`src/core/preview.js`](../src/core/preview.js): current drawing and adjustment boundaries.
 
 [svg-coordinates]: https://www.w3.org/TR/SVG2/coords.html

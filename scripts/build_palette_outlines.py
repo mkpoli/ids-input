@@ -10,13 +10,14 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
+from engine_data import DATA
 
 root = Path(__file__).resolve().parents[1]
 ttc = Path(sys.argv[1])
 if hashlib.sha256(ttc.read_bytes()).hexdigest() != 'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a':
     raise ValueError('Unexpected Noto Sans CJK Regular TTC; see data/README.md')
 fonts = [(root / 'fonts/Plangothic-gongche.woff2', None), (root / 'fonts/Plangothic-ids-parts.woff2', None), (root / 'fonts/NotoSansCJKjp-ids-strokes.woff2', None), (ttc, 0)]
-missing = set(json.loads((root / 'data/palette-fallback-characters.json').read_text()))
+missing = set(json.loads((DATA / 'palette/fallback-characters.json').read_text()))
 records = {}
 for path, index in fonts:
     with TTFont(path, **({'fontNumber': index} if index is not None else {})) as font:
@@ -33,5 +34,5 @@ for path, index in fonts:
 if missing: raise ValueError(f'Missing outlines: {sorted(missing)}')
 raw = json.dumps({'records': records}, ensure_ascii=False, separators=(',', ':')).encode()
 out = bytearray(gzip.compress(raw, compresslevel=9, mtime=0)); out[9] = 255
-(root / 'data/palette-outlines.json.gz').write_bytes(out)
+(DATA / 'sources/palette/outlines.json.gz').write_bytes(out)
 print(f'{len(records)} glyphs, {len(out)} bytes')

@@ -440,7 +440,7 @@ Malformed descriptions and descriptions naming missing glyphs are excluded from 
 Tangut previews load these outlines locally. Exact descriptions use the corresponding
 character's glyph; edited descriptions use the composition engine's geometric layout.
 Mixed Han–Tangut descriptions also load the host's Han export. The shared layout
-constants in `src/composer/constants.json` come from han-compose at bd0829b (MIT),
+constants in the engine's package (`@han-compose/composer`, `src/constants.json`) come from han-compose at bd0829b (MIT),
 previously used by the composer's test fixture. Tangut Components Supplement glyphs
 are absent from this font version and report a missing glyph.
 
@@ -596,7 +596,7 @@ The generated report uses the same stroke calculation for every subtree.
 The report derives from the public-domain BabelStone Han and Tangut IDS and the
 stroke-count sources listed above. It contains no Rime stroke-order column.
 
-`src/composer/component-forms.json` contains selected Noto CJK JP outlines in
+the engine's `component-forms.json` contains selected Noto CJK JP outlines in
 Sans 2.004 and Serif 2.002. `scripts/build_component_forms.py` verifies the source
 TTC hashes recorded in the JSON before exporting them. Rebuild with
 `uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
@@ -838,7 +838,7 @@ Unassigned and private-use characters without a source outline remain unavailabl
 
 ## Pyramid glyph catalog
 
-`src/composer/pyramid-glyphs.json` contains all 146 one-over-two repeated-component
+the engine's `pyramid-glyphs.json` contains all 146 one-over-two repeated-component
 characters found in the pinned BabelStone data above (147 attested descriptions).
 Run `python3 scripts/build_pyramid_glyphs.py` to regenerate it, or add `--check`
 to verify it. The generator accepts an explicit lower pair or an encoded pair

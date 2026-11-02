@@ -113,7 +113,7 @@ The outlines are the glyphs of `Uni1B300Shuishu`, the font embedded in the code 
 ISO/IEC 10646 Amendment 2.2 charts (PDAM 2.2), read through the PDF's own ToUnicode map. The charts state no separate
 glyph licence and neither does the spreadsheet that names the characters; the position is in
 [LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
-Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.
+Rebuild the font with `uv run --python 3.12 scripts/build_shuishu.py`; the outlines it writes belong to the engine's package.
 
 ## Unicode fallback glyphs
 

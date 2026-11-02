@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // Scan the serif export's own glyphs for contours whose heavy master does not end where it starts:
-// the ones `partOf` (src/composer/geometry.js) repairs before drawing, and the ones it draws as
+// the ones `partOf` (the engine's `geometry.js`) repairs before drawing, and the ones it draws as
 // stored because their light master never repeated its first point. A contour's gap is measured
 // through the pen's own points, so it matches what the drawing code reads.
 //

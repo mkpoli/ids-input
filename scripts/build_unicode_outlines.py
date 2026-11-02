@@ -21,9 +21,10 @@ from fontTools.svgLib.path import parse_path
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
+from engine_data import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / 'data/unicode-outlines'
+OUT = DATA / 'unicode/outlines'
 
 
 def main():
@@ -128,8 +129,8 @@ def main():
         data = bytes(data)
         (OUT / f'{name}.json.gz').write_bytes(data)
         metadata[name] = {'count': len(rows), 'bytes': len(data), 'sha256': hashlib.sha256(data).hexdigest()}
-    (ROOT / 'data/unicode-coverage.json').write_text(json.dumps(ranges, separators=(',', ':')) + '\n')
-    (ROOT / 'data/unicode-outlines.json').write_text(json.dumps({'build': {'unicode': properties['version'], 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
+    (DATA / 'unicode/coverage.json').write_text(json.dumps(ranges, separators=(',', ':')) + '\n')
+    (DATA / 'unicode/outlines.json').write_text(json.dumps({'build': {'unicode': properties['version'], 'fonttools': '4.63.0', 'quantization': 4}, 'count': len(records), 'ranges': ranges,
         'shards': metadata, 'sources': provenance}, ensure_ascii=False, separators=(',', ':')) + '\n')
     # Report every remaining assigned candidate, rather than hiding holes behind block ranges.
     missing = allowed.difference(records)
