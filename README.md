@@ -1147,8 +1147,9 @@ document, including a six-coefficient matrix mode for shears and reflections. Ro
 with the arrow keys and accept drops. A click, the arrow keys, Home/End or, where the browser leaves
 them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
 middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
-`Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab or the tab's menu
-opens the tab or group closed last; that history lasts for the page session. The tree and search
+`Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab, the tab's menu
+or the starter's Recently closed list opens a tab or group closed earlier; that history lasts for
+the page session. The tree and search
 panels in the middle column are divided by a draggable splitter, the tree starting larger; the
 arrow keys move it and a double-click restores the default. Vertical dividers resize the columns by
 dragging or with Left/Right; a double-click resets their widths. Toolbar buttons show their keys on
@@ -1163,10 +1164,11 @@ undo history and layer transforms, which can then be edited independently.
 The toolbar holds Undo and Redo with the history of named steps, consuming the document session’s
 transform steps before the editor’s structural steps, examples, a share link with its QR code, the
 language, settings and the sources. The tab strip’s + opens a blank tab, and the chevron beside it
-opens a starter dialog in two tabs: Templates is the same full catalogue the input pane offers
-(structures, pyramids, repeats and five-copy layouts), and Examples lists every starter sequence with
+opens a starter dialog in three tabs. Templates is the same full catalogue the input pane offers
+(structures, pyramids, repeats and five-copy layouts). Examples lists every starter sequence with
 its character and code point, an abbreviated character, or a mark when it has none, opening as cards
-or a list with its filters and folding. A template or an example opens a tab.
+or a list with its filters and folding. Recently closed lists the tabs and groups closed this
+session, newest first, each opening back where it was. A template or an example opens a tab.
 Settings hold the system, light and dark
 themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
 bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
