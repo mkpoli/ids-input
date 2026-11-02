@@ -8,28 +8,41 @@
   const id = $props.id()
   const t = $derived(translator(messages, locale))
   let query = $state(STRUCTURAL_PRESETS[0].query)
+  // With the structure unknown, the pattern's parts are each required somewhere in the
+  // character, in any arrangement. The presets are whole-character patterns with A–Z variables,
+  // so they leave the panel and a concrete example takes their place.
+  const LOOSE_EXAMPLE = '木口'
+  let loose = $state(false)
   const selected = $derived(STRUCTURAL_PRESETS.find(p => p.query === query)?.id ?? '')
 </script>
 
 <div class="structural-search">
-  <div class="presets" aria-label={t('ids.structural.examples')}>
-    {#each STRUCTURAL_PRESETS.slice(0, 4) as preset}
-      <button type="button" aria-pressed={selected === preset.id} onclick={() => query = preset.query}>
-        <span class="glyphs" lang="ja">{preset.examples}</span><span>{t(`ids.structural.${preset.id}`)}</span>
-      </button>
-    {/each}
-  </div>
-  <label class="other">{t('ids.structural.morePatterns')}
-    <select value={selected} onchange={event => { const p = STRUCTURAL_PRESETS.find(p => p.id === event.currentTarget.value); if (p) query = p.query }}>
-      <option value="" disabled>{t('ids.structural.custom')}</option>
-      {#each STRUCTURAL_PRESETS as preset}<option value={preset.id}>{t(`ids.structural.${preset.id}`)} · {preset.examples}</option>{/each}
-    </select>
-  </label>
+  {#if !loose}
+    <div class="presets" aria-label={t('ids.structural.examples')}>
+      {#each STRUCTURAL_PRESETS.slice(0, 4) as preset}
+        <button type="button" aria-pressed={selected === preset.id} onclick={() => query = preset.query}>
+          <span class="glyphs" lang="ja">{preset.examples}</span><span>{t(`ids.structural.${preset.id}`)}</span>
+        </button>
+      {/each}
+    </div>
+    <label class="other">{t('ids.structural.morePatterns')}
+      <select value={selected} onchange={event => { const p = STRUCTURAL_PRESETS.find(p => p.id === event.currentTarget.value); if (p) query = p.query }}>
+        <option value="" disabled>{t('ids.structural.custom')}</option>
+        {#each STRUCTURAL_PRESETS as preset}<option value={preset.id}>{t(`ids.structural.${preset.id}`)} · {preset.examples}</option>{/each}
+      </select>
+    </label>
+  {/if}
+  {#if adapter.findByUnknownStructure}
+    <div class="modes" role="group" aria-label={t('ids.structural.mode')}>
+      <button type="button" aria-pressed={!loose} onclick={() => loose = false}>{t('ids.structural.exact')}</button>
+      <button type="button" aria-pressed={loose} onclick={() => { if (/[A-Z]/u.test(query)) query = LOOSE_EXAMPLE; loose = true }}>{t('ids.structural.unknown')}</button>
+    </div>
+  {/if}
   <label class="pattern">{t('ids.structural.pattern')}
     <input type="text" bind:value={query} spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby={`${id}-help`} />
   </label>
-  <p id={`${id}-help`} class="help">{t('ids.structural.help')}</p>
-  <IdsSearch {adapter} {query} {messages} {locale} mode="structure" {onopen} {ontake} />
+  <p id={`${id}-help`} class="help">{t(loose ? 'ids.structural.unknownHelp' : 'ids.structural.help')}</p>
+  <IdsSearch {adapter} {query} {messages} {locale} mode={loose ? 'unknown' : 'structure'} {onopen} {ontake} />
 </div>
 
 <style>
@@ -39,6 +52,8 @@
   button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 3px;font-size:11px;cursor:pointer}
   button[aria-pressed=true]{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));background:var(--ids-accent-light,light-dark(#e9edfd,#232c4c))}
   .glyphs{font-family:"IDS Operators",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);font-size:23px;line-height:1.3}
+  .modes{display:flex;gap:4px}
+  .modes button{flex:1;padding:5px 8px;font-size:12px}
   .other,.pattern{display:flex;align-items:center;gap:8px;font-size:12px}
   select,input{min-width:0;flex:1;padding:6px 8px}
   input{font-family:"IDS Operators",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);font-size:16px}

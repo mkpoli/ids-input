@@ -34,6 +34,8 @@ describe('the message catalogues', () => {
     for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
       const messages = catalogue(name)
       for (const preset of STRUCTURAL_PRESETS) expect(`ids.structural.${preset.id}` in messages, `${name}: ${preset.id}`).toBe(true)
+      for (const key of ['mode', 'exact', 'unknown', 'unknownHelp', 'unknownInvalid'])
+        expect(`ids.structural.${key}` in messages, `${name}: ${key}`).toBe(true)
       for (const key of ['generatorPart', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveUnsupported', 'fiveHostUnsupported', 'fiveTooLong', 'fiveTarget'])
         expect(`ids.templates.${key}` in messages, `${name}: ${key}`).toBe(true)
     }

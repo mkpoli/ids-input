@@ -252,7 +252,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     localGeneration = generation
     return building
   }
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'unknown' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
@@ -821,6 +821,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
       const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
+      signal?.throwIfAborted()
+      return result
+    },
+    /** @param {string} query @param {import('./types.js').Options} [options] */
+    async findByUnknownStructure(query, { limit = 60, signal } = {}) {
+      signal?.throwIfAborted()
+      const result = worker && !given ? await inWorker(query, limit, 'unknown') : (await localSearch()).unknownStructure(query, { limit })
       signal?.throwIfAborted()
       return result
     },
