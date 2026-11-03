@@ -3,8 +3,8 @@
  "upem": 1000,
  "ascent": 880,
  "descent": -120,
- "count": 78398,
- "fill": 21737,
+ "count": 78473,
+ "fill": 21812,
  "files": {
   "000": {
    "count": 188,
@@ -255,10 +255,10 @@
    "sha256": "8f680cee35ab3832ff8de16b4ff42f6a01e11a1f5576e741bad46ebf871ec58c"
   },
   "031": {
-   "count": 164,
-   "bytes": 11240,
-   "sha256": "00475451c0776220842fa383c2e5d0ef7d3aa8666199c0eacd97ce541555ff30",
-   "fill": 25
+   "count": 239,
+   "bytes": 27384,
+   "sha256": "5fc0e3311443068bf8d5734753ae539be576f6a4101a0b90abdb542824d719aa",
+   "fill": 100
   },
   "032": {
    "count": 255,
