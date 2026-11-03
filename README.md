@@ -1133,6 +1133,11 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
+`x18n check` reads `t('…')` calls, so a message the code names in a data table — a source's
+`summaryKey` in `demo/lib/sources.js`, a Hangul group's `label` in `src/svelte/IdsParts.svelte` —
+looks unused. Those keys go in `usage.keysInUse` of `x18n.config.json`, and
+`tests/messages.test.js` fails if one of them stops being named by the data.
+
 CI runs verification and builds the workshop and share-card Worker. Production deployment is
 gated to `main` through `.github/workflows/deploy.yml`.
 
