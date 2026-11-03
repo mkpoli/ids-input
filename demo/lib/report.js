@@ -65,12 +65,9 @@ function publicHref(value) {
   try {
     const url = new URL(value, globalThis.location?.href)
     if (url.protocol === 'file:') return '(local file)'
-    if (isLocalHost(url.hostname)) {
-      const site = new URL(SITE)
-      url.protocol = site.protocol
-      url.hostname = site.hostname
-      url.port = site.port
-    }
+    // The desktop app's own schemes (`tauri:`, `atlas:`) cannot be switched to `https:` in place,
+    // so the path is carried over to the site instead.
+    if (isLocalHost(url.hostname)) return new URL(`${url.pathname}${url.search}${url.hash}`, SITE).href
     return url.href
   } catch { return '' }
 }
