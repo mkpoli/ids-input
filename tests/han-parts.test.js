@@ -36,6 +36,9 @@ it('carries the first stroke Rime records for each character', () => {
   // A character given as the equivalent of a stroke character keeps the stroke's class, and the
   // grass radical begins with a horizontal.
   for (const [key, value] of [['𠃍', '折'], ['乀', '點'], ['⻀', '横'], ['⺂', '折']]) expect([key, first(key)]).toEqual([key, value])
+  // A radical form the dictionary does not name takes the class of the character it stands for, the
+  // way its stroke count does: ⺅ for 亻, ⺉ for 刂, ⺡ for 氵.
+  for (const [key, value] of [['⺅', '撇'], ['⺉', '豎'], ['⺎', '横'], ['⺖', '點'], ['⺡', '點']]) expect([key, first(key)]).toEqual([key, value])
   expect(new Set(firsts.filter(Boolean))).toEqual(new Set(['横', '豎', '撇', '點', '折']))
   // The parts palette reads the same dictionary, so the two agree wherever both record a class.
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))

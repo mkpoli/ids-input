@@ -157,7 +157,10 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
 // The four-stroke grass radical begins with a horizontal; CJK RADICAL SECOND ONE (⺂) is a single
 // horizontal-fold stroke, which the five classes call 折.
 const OVERRIDES = new Map([['⻀', '横'], ['⺂', '折']])
-const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char))
+// A radical form Rime does not name takes the first stroke of the character `component-forms.tsv`
+// says it stands for, the way its stroke count already does. The dictionary records ideographs and
+// their variants, not the Kangxi and Radicals Supplement forms.
+const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char) ?? firstStroke(forms.get(char)))
 
 const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes, firsts })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))
