@@ -12,13 +12,14 @@ Each part counts the ideographs whose sequences use it, leaving out the sequence
 hfhchan/ids keeps whole. BabelStone's numbered components are written out first, as IDS.TXT note 6
 gives them, so 書 counts 聿 and 畫 counts 𤱪's own parts; a number the note leaves `？` stays unread and
 counts for nothing. Every character of the CJK Strokes block (U+31C0–U+31E5) is a part, used or
-not; CJK Radicals Supplement characters are parts when used. Operators and `？` are not parts.
+not, and so is 〇, which no sequence names; CJK Radicals Supplement characters are parts when used.
+Operators and `？` are not parts.
 
 Each part carries:
 - `strokes`: Unihan's kTotalStrokes (its first value, which Unihan gives for the zh-Hans form where
   the forms differ). A part Unihan lacks gets the sum over the leaves of its first compound sequence
-  whose leaves all have counts, marked derived; a CJK stroke counts 1 and is marked derived.
-  The fourteen radical forms absent from Unihan use explicit counts; anything else stays null.
+  whose leaves all have counts, marked derived; a CJK stroke counts 1, marked derived. The fourteen
+  radical forms absent from Unihan and 〇 use explicit counts; anything else stays null.
 - `first`: the first stroke in Rime's five-stroke dictionary, using its first listed code when
   it lists alternatives, except that an s/z-only choice uses s (vertical hooks count as 豎).
   h/s/p/n/z map to 横/豎/撇/點/折. Unicode equivalents of CJK strokes use CLASS directly.
@@ -101,6 +102,9 @@ RIME_SHA256 = "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791"
 RIME_SOURCE = f"Rime five-stroke dictionary, {RIME_REVISION}, LGPL-3.0, {RIME_URL}"
 # CJK Radicals Supplement forms absent from Unihan kTotalStrokes.
 RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3), strict=True))
+# 〇 is an ideograph, one stroke, that no sequence names; it enters the palette beside the strokes. The
+# count is the one `MARK_COUNTS` in `build_han_parts.mjs` gives the same character.
+EXTRA_PARTS = {"〇": 1}
 
 # Binary and ternary description characters, and the unary ones (〾 ⿾ ⿿); ㇯ subtracts.
 OPERATORS = set("⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽⿾⿿㇯〾")
@@ -292,6 +296,8 @@ def stroke_counts(
             return RADICAL_COUNTS[char], False
         if char in STROKES:
             return 1, True
+        if char in EXTRA_PARTS:
+            return EXTRA_PARTS[char], False
         if char in seen:
             return None, False
         # The first sequence whose leaves all have counts; a later one is tried when an earlier fails.
@@ -344,6 +350,8 @@ def palette(
     d(ifficult) or s(troke)."""
     uses = parts(written, atomic)
     strokes = STROKES
+    for char in EXTRA_PARTS:
+        uses.setdefault(char, 0)
     names = sorted(set(uses) | set(strokes), key=lambda char: (-uses.get(char, 0), ord(char)))
     counts = stroke_counts(names, written, unihan["kTotalStrokes"])
     common = common_set(unihan)
