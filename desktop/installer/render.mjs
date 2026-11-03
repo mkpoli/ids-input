@@ -73,8 +73,10 @@ async function shoot(html, width, height, scale, out) {
 }
 const tmp = join(HERE, '.render')
 await Bun.$`mkdir -p ${tmp}`
-await shoot(sidebar, 164, 314, 1, join(tmp, 'sidebar.png'))
-await shoot(header, 150, 57, 1, join(tmp, 'header.png'))
+// The wizard fits each bitmap to its control, 164×314 and 150×57 at 100% scaling and twice that at
+// 200%, so the bitmaps are drawn at 2x: sharp on a high-DPI screen, scaled down on any other.
+await shoot(sidebar, 164, 314, 2, join(tmp, 'sidebar.png'))
+await shoot(header, 150, 57, 2, join(tmp, 'header.png'))
 await shoot(dmg, 660, 400, 1, join(tmp, 'dmg.png'))
 await shoot(dmg, 660, 400, 2, join(tmp, 'dmg@2x.png'))
 await browser.close()
