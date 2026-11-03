@@ -50,6 +50,14 @@ fn atlas(root: Option<PathBuf>, request: &Request<Vec<u8>>) -> Response<Vec<u8>>
     }
 }
 
+/// Where a portable copy keeps its webview data (settings, tabs, recent parts): a `data` folder
+/// beside the executable, when a file named `portable` sits there. An installed copy has no such
+/// file and keeps the webview's own place in the user's profile.
+fn portable_data(exe: &Path) -> Option<PathBuf> {
+    let dir = exe.parent()?;
+    dir.join("portable").is_file().then(|| dir.join("data"))
+}
+
 fn open_outside(url: &Url) {
     if matches!(url.scheme(), "http" | "https" | "mailto") {
         let _ = tauri_plugin_opener::open_url(url.as_str(), None::<&str>);
@@ -63,7 +71,11 @@ fn main() {
             std::thread::spawn(move || responder.respond(atlas(root, &request)));
         })
         .setup(|app| {
-            WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()))
+            let mut window = WebviewWindowBuilder::new(app, "main", WebviewUrl::App("index.html".into()));
+            if let Some(data) = std::env::current_exe().ok().and_then(|exe| portable_data(&exe)) {
+                window = window.data_directory(data);
+            }
+            window
                 .title("IDS Workshop")
                 .inner_size(1360.0, 860.0)
                 .min_inner_size(360.0, 480.0)
@@ -120,6 +132,17 @@ mod tests {
         assert_eq!(export_file(root, "/g//07a.json"), None);
         assert_eq!(export_file(root, "/"), None);
         assert_eq!(export_file(root, "/g/%2e%2e"), None);
+    }
+
+    #[test]
+    fn keeps_portable_data_beside_the_executable() {
+        let dir = std::env::temp_dir().join(format!("ids-workshop-portable-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let exe = dir.join("ids-workshop.exe");
+        assert_eq!(portable_data(&exe), None);
+        std::fs::write(dir.join("portable"), "").unwrap();
+        assert_eq!(portable_data(&exe), Some(dir.join("data")));
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

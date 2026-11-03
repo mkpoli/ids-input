@@ -1032,6 +1032,9 @@ own `atlas` scheme, so the workshop draws in Sans with no connection. Serif and 
 from glyphatlas.org. Share links name <https://ids.mkpo.li/>, reports go to its `/api/report`, the
 context of a report carries `desktop: true`, and any address outside the app opens in the system's
 browser. A download lands in the Downloads folder, which then opens on it.
+For Windows there is also a portable zip. Its folder holds `IDS Workshop.exe`, the export and an
+empty `portable` file, which makes the app keep its settings and tabs in a `data` folder beside the
+program rather than in the user's profile.
 A release tag names the version in `package.json`: `desktop-v0.1.0` for 0.1.0.
 
 The page is the workshop built with `VITE_DESKTOP=1` (`bun run build:desktop-page`). To build the
