@@ -647,10 +647,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
         // The examples are glossed from Open Tangut and described in BabelStone's Tangut IDS; the card
         // shows each source once, so they join the record's own sources through the same merge.
-        /** @type {import('./character-info.js').InfoSource[]} */
         const added = []
-        for (const row of info.relations.filter(r => r.kind === 'usage')) added.push({ ...openTangutSource, note: 'openTangut' })
-        if (info.relations.some(r => r.kind === 'usage')) added.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: 'tangutIds' })
+        if (info.relations.some(r => r.kind === 'usage')) added.push(openTangutSource, { label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: /** @type {const} */ ('tangutIds') })
         info.sources = mergeSources([...info.sources, ...added])
         info.sourceSites = /** @type {import('./character-info.js').SourceKind[]} */ (info.sources.map(source => source.note))
       }
