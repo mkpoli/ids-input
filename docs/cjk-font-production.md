@@ -77,9 +77,12 @@ people, mostly writing in Japanese and Chinese, and three exchanges carry the ar
 Sim-CH (@CheonHyeongSim), whose MetaHan proposal extends GlyphWiki and KAGE, replied to a
 demonstration of the workshop on 2026-10-28. The reply, relayed into the room, says the logic is
 部件-based rather than 筆画-based, like 葛炳崙's work from 2020, and that Möbius transforms do not
-apply: “會把粗細炸得一塌糊塗” — the weights blow up. The workshop's own composer has the same
-weakness; outlines taken from a font carry its weight, and parts from different sources do not
-agree. The maintainer conceded the 粗細不符 in the room.
+apply: “會把粗細炸得一塌糊塗” — the weights blow up. The maintainer conceded the 粗細不符 in the
+room. The composer's answer is a weight pass: it draws from one face, falls back to another only
+for components that face lacks, cuts parts from characters, and brings every stroke to the width a
+real character of the result's density has. The design notes report the drawn stroke width at
+0.998 and 1.003 of the real glyph's, median, across x and y on 1,981 compound jōyō kanji
+(han-compose).
 
 海楫 (@sebansios), building a generator for Jurchen and Khitan, described the alternative the same
 day: take KAGE skeletons as input and let a model learn stroke width and 筆端 shapes from existing
@@ -112,9 +115,10 @@ not publish. The room is where some of it is spoken.
   describes it anyway, which is the case this project exists for.
 - The priors in HFH-Font are components and strokes. An IDS supplies the component structure
   explicitly, and this project already composes from parts.
-- IDS describes structure, not weight. The room names the limit composition runs into: parts from
-  different sources disagree in 粗細. A composer needs a weight model, or parts that already share
-  one; the alternatives being built are skeleton-to-outline models and variable-font intermediates.
+- IDS describes structure, not weight. The composer takes weight from a face: one source font,
+  parts cut from its characters, every stroke brought to the target density. That works where a
+  face covers the script; the room's skeleton-to-outline models and variable-font intermediates
+  are for the scripts where none does.
 - The article's new characters — the chemical elements named by combining a semantic and a phonetic
   component — have no place in an existing set. A description plus composition shows them before a
   foundry commits to drawing them.
@@ -149,3 +153,6 @@ not publish. The room is where some of it is spoken.
   dated in the text and attributed by handle; a translation follows where the point depends on it.
   The Sim-CH reply was relayed into the room rather than posted there, and the 字统网 and GlyphWiki
   points are another speaker's account, not checked against either site's source.
+- han-compose. "IDS composer: goals and open cases." Read 2026-11-04.
+  <https://github.com/mkpoli/han-compose/blob/main/docs/design/ids-composer.md> — the stroke-width
+  figures are its own bench on 1,981 compound jōyō kanji, not a review.
