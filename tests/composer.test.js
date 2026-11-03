@@ -76,6 +76,20 @@ describe('what may be composed from a description', () => {
 })
 
 describe('the composer', () => {
+  it('closes 查 with a 提 when it stands in a left cell', async () => {
+    const source = sourceOf()
+    await source.ready()
+    const input = { ...files, ...shards('g', [['查', { k: '查', s: '⿱木口' }]]) }
+    const store = createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+    await store.ready()
+    await store.load(Object.keys(input).filter(name => name.includes('/')))
+    const [left] = new Composer(store.store()).compose('⿰查口')
+    expect(left.origin).toBe('Noto sans 查:L')
+    // The same character on the right keeps its level closing 一.
+    const [, right] = new Composer(store.store()).compose('⿰口查')
+    expect(right.origin).not.toContain('查:L')
+  })
+
   it('places a lower-right enclosure fallback above and left of its closed sides', async () => {
     const source = sourceOf()
     await source.ready()

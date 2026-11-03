@@ -54,6 +54,17 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def rising_bar(bar, frame, rise=44):
+    """查's closing 一 under 日 drawn as the 提 a left cell wants: the stroke's own weight at the right,
+    tapering to a point at the left, rising `rise` units across 日's width. The source bar is wider
+    than 日 because it closes the whole character; a 提 stops at the block above it."""
+    ys = [p[1] for cmd in bar for p in cmd[1]]
+    xs = [p[0] for cmd in frame for p in cmd[1]]
+    x0, x1 = min(xs), max(xs)
+    bottom, top = min(ys), max(ys)
+    tip = bottom + (top - bottom) * 0.25
+    return [('moveTo', ((x0, tip),)), ('lineTo', ((x1, bottom + rise),)), ('lineTo', ((x1, top + rise),)), ('closePath', ())]
+
 def compress_chang(outlines, style):
     """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
     if style == 'sans':
@@ -94,8 +105,17 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     cs=lambda ch:contours(gs,cmap[ord(ch)])
     # Native left-side 朱 from 鴸 and the two legs joined to 元's lower bar.
     # The latter is clipped at the bar's underside for attachment to another bar.
+    # 查 as a left operand keeps 木 and 日 and closes them with a 提 instead of the level 一.
+    cha = cs('查')
+    boxes = [(min(p[0] for cmd in c for p in cmd[1]), min(p[1] for cmd in c for p in cmd[1]),
+              max(p[0] for cmd in c for p in cmd[1]), max(p[1] for cmd in c for p in cmd[1])) for c in cha]
+    short = [i for i, b in enumerate(boxes) if b[3] - b[1] < 120]
+    bar = min(short, key=lambda i: boxes[i][3])
+    limit = max(b[3] - b[1] for b in boxes) - 50
+    frame = max((i for i, b in enumerate(boxes) if i != bar and b[3] - b[1] < limit), key=lambda i: boxes[i][2] - boxes[i][0])
     result['positions'][style] = {
         '朱:L': group([cs('鴸')[4]]),
+        **({'查:L': group([c for i, c in enumerate(cha) if i != bar] + [rising_bar(cha[bar], cha[frame])])} if style == 'sans' else {}),
         '儿:under-bar': crop_group(cs('元')[1:], (-100,-120,1100,408 if style=='sans' else 475)),
         # The legs under 厃 in 詹, cut from the 詹 glyph itself.
         '儿:zhan': zhan_legs,

@@ -1433,6 +1433,14 @@ export class Composer {
     return forward(this.layout, features(this.layout, op, keys.map(k => this.rec(k)), [this.slot(op, 0), this.slot(op, 1)]))
   }
 
+  /** A prepared form for a character whose closing stroke changes in a left cell: 查's level 一 under
+   *  日 becomes a 提. Answers the placed part, or null where the face has no such form.
+   *  @param {string} op @param {import('../core/ids.js').Part} child @param {number[]} box @param {number} index */
+  leftClosure(op, child, box, index) {
+    if (op !== '⿰' || index !== 0 || child !== '查' || this.excluded('查')) return null
+    return componentPositionBox('查:L', this.fontStyle) ? componentPosition('查:L', box, this.fontStyle) : null
+  }
+
   learned(op, children, region) {
     const C = this.C, stem = this.stem0[0][0], frameOf = region ?? this.face
     let boxes = this.predict(op, children)
@@ -1454,6 +1462,8 @@ export class Composer {
           continue
         }
       }
+      const leftClosure = this.leftClosure(op, child, box, i)
+      if (leftClosure) { groups.push([leftClosure]); continue }
       let part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box, region === null)
       if (part && op in this.ENCLOSE && i === 0 && typeof child === 'string' && this.own(child)
         && stretchOf(part.piece.box, box) > C.ENCLOSING_STRETCH) part = null
@@ -1629,6 +1639,8 @@ export class Composer {
       // The sloping right edge of 朱 leaves space for the enclosure's curved
       // left stroke; a gap between their bounding boxes exaggerates it.
       if (compactYan && i === 1) { box[0] -= span * 0.045; yanBox = box.slice() }
+      const leftClosure = this.leftClosure(op, child, box, i)
+      if (leftClosure) { groups.push([leftClosure]); return }
       // 鴸 supplies a full-height left 朱 even in exports without a usable host cut.
       if (compactYan && i === 0) {
         const native = componentPositionBox('朱:L', this.fontStyle)

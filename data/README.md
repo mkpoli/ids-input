@@ -692,6 +692,10 @@ the intact `⿱士冖` crown from 壱 above the short 一 from 壹. The line mov
 vertically without scaling its strokes. `⿱⿱士冖一` uses the same layout. `⿻者丶` uses the glyph shared by
 者 + U+E0101 and U+FA5B, verified in both fonts' variation tables.
 Exact 塁 and 疂 descriptions use their complete native JP glyphs.
+`查:L` closes 查 in a left cell with a 提: 木 and 日 are the glyph's own contours, and
+the level 一 of 旦 is redrawn as a stroke tapering to a point at the left and rising
+to the block's right edge, keeping the bar's weight. The Serif entry and the kaisho
+face keep the level stroke.
 `⿱宀儿` uses 宂 (U+5B82), whose source regions are HTKP; `⿻三丨` uses
 丰 (U+4E30), whose exact source regions are GJKPV. Explicit IDS typed in the
 editor remain unchanged; palette selection inserts the encoded counterparts.
