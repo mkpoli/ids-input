@@ -38,6 +38,14 @@ const encodedSource = () => {
     extra.set(name, gzipSync(JSON.stringify(file)))
   }
   add('⿰木口', { k: '⿰木口', e: '𪱳' })
+  // A description typed with a described character: ⿰𪱴口 spells out to ⿰⿱木口口.
+  add('𪱴', { k: '𪱴', e: '𪱵', s: '⿱木口' })
+  add('𪱵', { k: '𪱵', G: boxGlyph([300, 40, 700, 700]), ink: 3200, nl: 1, o: 1 })
+  add('⿰⿱木口口', { k: '⿰⿱木口口', e: '𪱶' })
+  add('𪱶', { k: '𪱶', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
+  // Two levels: ⿰𪱴𪱴 spells out to ⿰⿱木口⿱木口.
+  add('⿰⿱木口⿱木口', { k: '⿰⿱木口⿱木口', e: '𪱷' })
+  add('𪱷', { k: '𪱷', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
   const glyph = boxGlyph([40, 40, 960, 960])
   add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
   return createSource(async name => {
@@ -382,6 +390,13 @@ describe('the composer', () => {
     expect(split.parts.map(part => part.origin)).toEqual(['glyph 木', 'glyph 口'])
     expect(split.d).toBe(split.parts.map(part => part.d).join(''))
     expect(await compose(encodedSource(), '⿰木口', { separate: true })).toEqual(split)
+  })
+  it('finds the character a description spells out through the characters it names', async () => {
+    const spelling = await compose(encodedSource(), '⿰𪱴口')
+    expect(spelling.parts.map(part => part.origin)).toEqual(['glyph 𪱶'])
+    expect((await compose(encodedSource(), '⿰𪱴𪱴')).parts.map(part => part.origin)).toEqual(['glyph 𪱷'])
+    expect(await compose(encodedSource(), '⿰木口')).toMatchObject({ origins: ['glyph 𪱳'] })
+    expect(await compose(encodedSource(), '⿰木木')).toMatchObject({ origins: ['glyph 木', 'glyph 木'] })
   })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'
