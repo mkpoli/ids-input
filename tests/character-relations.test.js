@@ -34,12 +34,16 @@ describe('character relationships',()=>{
   const unrelated=Object.keys(doc.entries).filter(char=>char!=='𗀀' && doc.entries[char].source==='openTangut' && table.get(char)?.some(s=>[...s.text].some(c=>components.has(c)&&c>='𘠀'&&c<='𘫿')))
   for(const word of unrelated)expect(poison).not.toContain(word)
  }, 20_000)
- test('a Tangut reconstruction finds its character in any system',()=>{
-  for(const query of ['do1','do̱1','ndɔɦ1']){
+ test('a copied Tangut reading finds its character and names the system',()=>{
+  for(const [query, label] of [['do1','do1 · Li'],['do̱1','do̱1 · GX'],['ndɔɦ1','ndɔɦ1 · Ni']]){
    const hit=index.search(query,{limit:100}).find(hit=>hit.char==='𗀀')
    expect(hit,query).toBeDefined()
-   expect(hit.label).toMatch(/do|nd/)
+   expect(hit.label).toBe(label)
   }
+  // A spelling with more exact homophones than the page shows still keeps its own spelling first.
+  expect(index.search('ke',{limit:24}).find(hit=>hit.char==='𗜕')).toBeDefined()
+  // A short Latin word keeps the meaning hits it had before readings were indexed.
+  expect(index.search('sa',{limit:24}).some(hit=>/sad/.test(hit.label))).toBe(true)
  })
  test('qualified short meanings retain their full dictionary labels',()=>{
   expect(index.search('die').find(h=>h.char==='𗆮')?.label).toBe('(of a monarch) to die')

@@ -7,14 +7,14 @@
 /** The systems a reader can type in, in the order the card lists them.
  *  @typedef {{ key: string, short: string, name: string, zh: string, tones: boolean }} ReadingSystem */
 export const READING_SYSTEMS = /** @type {const} */ ([
-  { key: 'li_fanwen', short: 'Li', name: 'Li Fanwen 2008', zh: '李範文2008', tones: true },
-  { key: 'gong_huangcheng', short: 'Gong', name: 'Gong Hwang-cherng', zh: '龔煌城', tones: false },
-  { key: 'gong_xun_202411', short: 'GX', name: 'Gong Xun 2024-11', zh: '龔勛2024-11', tones: true },
-  { key: 'arakawa_shintaro', short: 'Ar', name: 'Arakawa Shintarō', zh: '荒川慎太郎', tones: false },
-  { key: 'miyake', short: 'My', name: 'Marc Miyake', zh: '三宅', tones: true },
-  { key: 'nishida', short: 'Ni', name: 'Nishida 1966', zh: '西田龍雄1966', tones: true },
-  { key: 'kychanov', short: 'Ky', name: 'Kychanov 2006', zh: '克恰諾夫2006', tones: true },
-  { key: 'sofronov', short: 'So', name: 'Sofronov 1968', zh: '索弗羅諾夫1968', tones: true },
+  { key: 'li_fanwen', short: 'Li', name: 'Li Fanwen 2008', zh: '李範文2008' },
+  { key: 'gong_huangcheng', short: 'Gong', name: 'Gong Hwang-cherng', zh: '龔煌城' },
+  { key: 'gong_xun_202411', short: 'GX', name: 'Gong Xun 2024-11', zh: '龔勛2024-11' },
+  { key: 'arakawa_shintaro', short: 'Ar', name: 'Arakawa Shintarō', zh: '荒川慎太郎' },
+  { key: 'miyake', short: 'My', name: 'Marc Miyake', zh: '三宅' },
+  { key: 'nishida', short: 'Ni', name: 'Nishida 1966', zh: '西田龍雄1966' },
+  { key: 'kychanov', short: 'Ky', name: 'Kychanov 2006', zh: '克恰諾夫2006' },
+  { key: 'sofronov', short: 'So', name: 'Sofronov 1968', zh: '索弗羅諾夫1968' },
 ])
 
 /** The two sound glosses, in the card's order. @typedef {{ key: string, name: string, zh: string }} SoundSystem */
@@ -23,13 +23,12 @@ export const SOUND_SYSTEMS = /** @type {const} */ ([
   { key: 'nie_lishan', name: 'Nie Lishan', zh: '聶歷山' },
 ])
 
-/** @typedef {{ char: string, system: string, systemShort: string, systemName: string, raw: string, folded: string, loose: string, tone: string }} Reading */
+/** @typedef {{ char: string, system: string, systemShort: string, raw: string, folded: string, loose: string, tone: string }} Reading */
 
 const LETTERS = /** @type {Record<string, string>} */ ({
   ɨ: 'i', ɪ: 'i', ʉ: 'u', ɯ: 'u', ə: 'e', ɛ: 'e', ɔ: 'o', ɑ: 'a', æ: 'ae',
   ŋ: 'ng', ɣ: 'gh', ʁ: 'r', ɲ: 'ny', ȵ: 'ny', ɱ: 'm', ʷ: 'w', ⁿ: 'n', ł: 'l', ɡ: 'g',
   ʟ: 'l', ᴛ: 't', ɢ: 'g', ʙ: 'b', ᴄ: 'c', ʜ: 'h', ꜰ: 'f', ᴜ: 'u',
-  ʔ: '', ɦ: '',
 })
 
 /**
@@ -53,7 +52,7 @@ export function foldReading(value) {
  * @param {string} folded
  */
 export function loosenReading(folded) {
-  return folded.replace(/^n(?=d|t|g|k|dz|ts)/, '').replace(/^m(?=b|p)/, '').replace(/[jy]/g, '')
+  return folded.replace(/^n(?=d|t|g|k)/, '').replace(/^m(?=b|p)/, '').replace(/[jy]/g, '')
 }
 
 /**
@@ -67,10 +66,11 @@ export function indexReadings(entries) {
   for (const [char, entry] of Object.entries(entries)) {
     for (const system of READING_SYSTEMS) {
       const raw = entry.readings?.[system.key]?.trim()
-      if (!raw) continue
+      // A reading with an unknown segment is not a reading the card can promise.
+      if (!raw || /[?？]/.test(raw)) continue
       const { folded, tone } = foldReading(raw)
       if (!folded) continue
-      readings.push({ char, system: system.key, systemShort: system.short, systemName: system.name, raw, folded, loose: loosenReading(folded), tone })
+      readings.push({ char, system: system.key, systemShort: system.short, raw, folded, loose: loosenReading(folded), tone })
     }
   }
   return readings
@@ -97,15 +97,20 @@ export function searchReadings(readings, query, { limit = 24 } = {}) {
   for (const reading of readings) {
     if (tone && reading.tone && reading.tone !== tone) continue
     let tier = -1
-    if (reading.folded === folded) tier = 0
-    else if (reading.folded.startsWith(folded)) tier = 1
-    else if (loose && reading.loose === loose) tier = 2
-    else if (loose.length > 1 && reading.loose.startsWith(loose)) tier = 3
+    // The spelling on the card comes first: a copied reading keeps its own diacritics and tone.
+    if (reading.raw.trim().toLowerCase() === query.trim().toLowerCase()) tier = 0
+    else if (reading.folded === folded) tier = 1
+    else if (reading.folded.startsWith(folded)) tier = 2
+    else if (loose && reading.loose === loose) tier = 3
+    else if (loose.length > 1 && reading.loose.startsWith(loose)) tier = 4
     if (tier < 0) continue
     const hit = hits.get(reading.char)
     if (!hit || tier < hit.tier) hits.set(reading.char, { char: reading.char, tier, readings: [reading] })
     else if (tier === hit.tier) hit.readings.push(reading)
   }
-  return [...hits.values()].sort((a, b) => a.tier - b.tier || b.readings.length - a.readings.length
-    || (a.char.codePointAt(0) ?? 0) - (b.char.codePointAt(0) ?? 0)).slice(0, limit)
+  const sorted = [...hits.values()].sort((a, b) => a.tier - b.tier || b.readings.length - a.readings.length
+    || (a.char.codePointAt(0) ?? 0) - (b.char.codePointAt(0) ?? 0))
+  // A card spelling must not disappear behind a bucket of folded homophones.
+  const rawExact = sorted.filter(hit => hit.tier === 0)
+  return [...rawExact, ...sorted.filter(hit => hit.tier > 0).slice(0, Math.max(0, limit - rawExact.length))]
 }

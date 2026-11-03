@@ -30,11 +30,11 @@ try{
   await page.waitForFunction(()=>document.querySelector('.ids-pick-panel:not([hidden]) .ids-hit')?.getAttribute('data-character')==='𘆽')
   await input.fill('die');const die=active.locator('[data-character="𗆮"]');await die.waitFor()
   assert.match(await die.innerText(),/\(of a monarch\) to die/)
-  // A reconstruction in any system finds its character; the label says which system spelled it.
-  for(const query of ['do1','do̱1','ndɔɦ1']){
+  // A reconstruction in any system finds the characters that carry it; the label names the system.
+  for(const [query,label] of [['do1','do1 · Li'],['do̱1','do̱1 · GX'],['ndɔɦ1','ndɔɦ1 · Ni']]){
    await input.fill(query)
    const reading=active.locator('[data-character="𗀀"]');await reading.waitFor()
-   assert.match(await reading.innerText(),/do1 · Li|ndo · Ar/, query)
+   assert.ok((await reading.innerText()).includes(label), query)
   }
   await input.fill('horse');await input.fill('water')
   for(const char of ['水','💧','𗋽'])await active.locator(`[data-character="${char}"]`).waitFor()
