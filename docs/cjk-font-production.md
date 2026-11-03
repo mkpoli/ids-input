@@ -1,7 +1,8 @@
 # How a Han face is made
 
-Status: reading notes, 2026-11-03. The counts and times below are the cited sources'; where an
-account rounds a figure, the source behind it is named.
+Status: reading notes, 2026-11-03, from published accounts and the project's public IDS room. The
+counts and times are the cited sources'; where an account rounds a figure, the source behind it is
+named.
 
 ## The set is the unit
 
@@ -67,15 +68,43 @@ Licences are sold per year or in perpetuity. A celebrity hand was bought at ¥1,
 piracy pushed a face listed at ¥1,000 down to ¥50 (北京商报, 2016). The set's size is the cost; the
 price has to carry every character that may never be printed.
 
-## What the sources leave out
+## What the room says
 
-The accounts describe the set and the calendar, not the work. No source here gives time per glyph,
-proofreading, hinting or quality control; none says how much of a shipped set is drawn rather than
-interpolated, reused or bought; none measures an AI tool's error rate on a production face. The
+The project's IDS room — public, on Matrix, bridged to Discord, Telegram, QQ and IRC — holds the
+account the published sources lack. Its history from 2026-10-24 to 2026-11-03 is about two dozen
+people, mostly writing in Japanese and Chinese, and three exchanges carry the argument.
+
+Sim-CH (@CheonHyeongSim), whose MetaHan proposal extends GlyphWiki and KAGE, replied to a
+demonstration of the workshop on 2026-10-28. The reply, relayed into the room, says the logic is
+部件-based rather than 筆画-based, like 葛炳崙's work from 2020, and that Möbius transforms do not
+apply: “會把粗細炸得一塌糊塗” — the weights blow up. The workshop's own composer has the same
+weakness; outlines taken from a font carry its weight, and parts from different sources do not
+agree. The maintainer conceded the 粗細不符 in the room.
+
+海楫 (@sebansios), building a generator for Jurchen and Khitan, described the alternative the same
+day: take KAGE skeletons as input and let a model learn stroke width and 筆端 shapes from existing
+fonts. By 2026-11-02 he had dropped the raster-and-diffusion route for direct control-point
+prediction. His data problem is the tail: GlyphWiki's Jurchen glyphs differ from the Unicode
+representative forms, so the skeleton data has to be made first.
+
+The GenZui designer said on 2026-10-29 why the workshop matters to them: 古籍整理 needs characters
+no font has, and “我不會做字體而且沒有工夫” — they cannot draw a typeface and have no time. For
+them the workshop's starting point was 補字.
+
+Also in the room: 字统网 is GlyphWiki data with the KAGE engine, hand-assembled; the
+auto-composition is, by one account, 白老师's own, with custom syntax such as `(J,)` variants.
+Variable fonts came up as an intermediate for design, with topology consistency across styles as
+the hard part.
+
+## What is still missing
+
+The room gives the work a voice; it still gives no numbers. No source here, published or spoken,
+gives time per glyph, proofreading, hinting or quality control; none says how much of a shipped set
+is drawn rather than interpolated; none measures an AI tool's error rate on a production face. The
 designer study in HFH-Font is the closest, and it evaluates generated glyphs, not a font release.
 
 The gap is real: the field writes about sets and tools, while the work happens in studios that do
-not publish.
+not publish. The room is where some of it is spoken.
 
 ## What it means here
 
@@ -83,6 +112,9 @@ not publish.
   describes it anyway, which is the case this project exists for.
 - The priors in HFH-Font are components and strokes. An IDS supplies the component structure
   explicitly, and this project already composes from parts.
+- IDS describes structure, not weight. The room names the limit composition runs into: parts from
+  different sources disagree in 粗細. A composer needs a weight model, or parts that already share
+  one; the alternatives being built are skeleton-to-outline models and variable-font intermediates.
 - The article's new characters — the chemical elements named by combining a semantic and a phonetic
   component — have no place in an existing set. A description plus composition shows them before a
   foundry commits to drawing them.
@@ -113,3 +145,7 @@ not publish.
 - Liu, Yuli. "Writing on the Wall? How AI Is Reinventing Chinese Typography." Sixth Tone,
   2026-11-02. <https://www.sixthtone.com/news/1019200> — industry claims; its figures are the sets
   above, and the prices and tools it reports are attributed to the foundries and designers it quotes.
+- IDS Workshop room, public Matrix history, 2026-10-24 to 2026-11-03. Messages are quoted as written,
+  dated in the text and attributed by handle; a translation follows where the point depends on it.
+  The Sim-CH reply was relayed into the room rather than posted there, and the 字统网 and GlyphWiki
+  points are another speaker's account, not checked against either site's source.
