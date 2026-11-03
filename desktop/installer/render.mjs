@@ -85,7 +85,7 @@ await browser.close()
 // writes it, so Finder draws the sharper one on a Retina screen.
 await Bun.$`magick ${join(tmp, 'sidebar.png')} -alpha off -type TrueColor BMP3:${join(HERE, 'sidebar.bmp')}`
 await Bun.$`magick ${join(tmp, 'header.png')} -alpha off -type TrueColor BMP3:${join(HERE, 'header.bmp')}`
-const pages = ['-units', 'PixelsPerInch', '(', join(tmp, 'dmg.png'), '-density', '72', ')', '(', join(tmp, 'dmg@2x.png'), '-density', '144', ')', '-alpha', 'off', '-compress', 'lzw', join(HERE, 'dmg-background.tiff')]
+const pages = ['-units', 'PixelsPerInch', '(', join(tmp, 'dmg.png'), '-set', 'density', '72', ')', '(', join(tmp, 'dmg@2x.png'), '-set', 'density', '144', ')', '-alpha', 'off', '-compress', 'lzw', join(HERE, 'dmg-background.tiff')]
 await Bun.$`magick ${pages}`
 await Bun.$`rm -rf ${tmp}`
 console.log('sidebar.bmp header.bmp dmg-background.tiff')
