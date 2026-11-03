@@ -1032,6 +1032,7 @@ own `atlas` scheme, so the workshop draws in Sans with no connection. Serif and 
 from glyphatlas.org. Share links name <https://ids.mkpo.li/>, reports go to its `/api/report`, the
 context of a report carries `desktop: true`, and any address outside the app opens in the system's
 browser. A download lands in the Downloads folder, which then opens on it.
+A release tag names the version in `package.json`: `desktop-v0.1.0` for 0.1.0.
 
 The page is the workshop built with `VITE_DESKTOP=1` (`bun run build:desktop-page`). To build the
 app, install Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/), then:

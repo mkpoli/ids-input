@@ -47,6 +47,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      # The installers take their version from package.json, so a tag must name the same one.
+      - if: startsWith(github.ref, 'refs/tags/desktop-v')
+        shell: bash
+        run: |
+          version=$(jq -r .version package.json)
+          [ "$GITHUB_REF_NAME" = "desktop-v$version" ] || { echo "::error::$GITHUB_REF_NAME does not match package.json $version"; exit 1; }
       - run: bun install --frozen-lockfile
       # The export changes only with COMPOSER_BASE; the fetch fills in whatever the cache lacks.
       - uses: actions/cache@v4
