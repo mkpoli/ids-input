@@ -1439,19 +1439,14 @@
 <Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
   <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
   <div class="confirm-actions">
-    <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
-    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
+    <button type="button" class="ui-button" data-size="lg" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
+    <button type="button" class="ui-button" data-size="lg" data-variant="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
   </div>
 </Dialog>
 
 <style>
-  .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
-  .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
-  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--ui-color-border);border-radius:9px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
-  .confirm-actions button:hover{background:var(--ui-color-surface-hover)}
-  .confirm-actions .danger{border-color:var(--ui-color-danger);color:var(--ui-color-danger)}
-  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--ui-color-danger) 10%,transparent)}
-  .confirm-actions button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .confirm-text{margin:0 0 var(--ui-space-xl);font-size:var(--ui-text-md);line-height:var(--ui-leading-normal)}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:var(--ui-space-sm)}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}

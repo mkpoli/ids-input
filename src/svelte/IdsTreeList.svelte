@@ -292,10 +292,10 @@
     --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     height:100%;min-height:0;overflow:auto;padding:4px;color:var(--_ink)}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
-  li{display:flex;align-items:center;gap:8px;min-height:32px;padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:8px;cursor:pointer}
+  li{display:flex;align-items:center;gap:8px;min-height:var(--ids-control-h-sm,32px);padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:var(--ids-radius-sm,8px);cursor:pointer}
   li[draggable="true"]{cursor:grab}
   li[draggable="true"]:active{cursor:grabbing}
-  li:hover{background:var(--_surface-subtle)}
+  li:hover{border-color:var(--_line);background:var(--_surface-subtle)}
   li.chosen{border-color:var(--_accent);background:var(--_accent-light)}
   li.over{border-color:var(--_accent)}
   li.carried{outline:2px dashed var(--_accent);outline-offset:-2px}

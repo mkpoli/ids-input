@@ -123,7 +123,8 @@
         {#each along as item (item)}<li>{item}</li>{/each}
       </ul>
       {#if failure}<p class="fault" role="alert">{failure}</p>{/if}
-      <button type="submit" class="ui-button send" data-size="lg" data-variant="primary" disabled={busy || !symptom.trim()}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <button type="submit" class="ui-button send" data-size="lg" data-variant="primary" disabled={busy || !symptom.trim()} aria-busy={busy || undefined}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <span class="ui-visually-hidden" role="status">{busy ? t('app.report.sending') : ''}</span>
     </form>
   {/if}
 </Dialog>
