@@ -13,6 +13,14 @@ describe('the tags a share link answers with', () => {
     expect(tags).toContain('U+93B6')
     expect(tags).toContain('<meta name="twitter:card" content="summary_large_image">')
   })
+  it('names the character the card draws, so the page and its image agree', () => {
+    // The card draws the example's character where the table names another one, such as the 講 the
+    // sign writes with 设 for 讠; the page takes that same character.
+    const { title, tags } = metaFor({ ...share, sequence: '⿰设冓', char: '講' })
+    expect(title).toBe('⿰设冓 = 講 (U+8B1B) — IDS Workshop')
+    expect(tags).toContain('content="The sequence ⿰设冓 composed as 講 (U+8B1B)"')
+    expect(tags).not.toContain('U+8BC1')
+  })
   it('says nothing of a code point where the sequence describes no character', () => {
     const { title, tags } = metaFor({ ...share, char: null })
     expect(title).toBe('⿰釒哥 — IDS Workshop')

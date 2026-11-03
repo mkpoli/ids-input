@@ -135,12 +135,16 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
     { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '' },
-    { sequence: '⿰讠冓', refs: [59], char: '講', parts: '讠冓' },
-    { sequence: '⿱艹果', refs: [1], char: '菓' },
-    { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
-    { sequence: '⿰讠正', refs: [59], char: '証', parts: '讠正' },
     // A car below 車, to show an emoji operand; it writes no character and no source records it.
     { sequence: '⿱車🚗', refs: [], char: '' },
+  ] },
+  // The station sign's 講 and 証, and its 菓 and 苐. The sequence writes the 讠 part as 设
+  // (U+8BBE) because 讠 (U+8BA0) is no character of its own.
+  { key: 'sign', refs: [59], examples: [
+    { sequence: '⿰设冓', refs: [59], char: '講', parts: '设冓' },
+    { sequence: '⿱艹果', refs: [1], char: '菓' },
+    { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
+    { sequence: '⿰设正', refs: [59], char: '証', parts: '设正' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
   // since a component runs its own description in its own IDS. Each names the character it writes,

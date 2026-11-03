@@ -4,7 +4,7 @@
 import { EMPTY_MARKS, OPERATORS, UNKNOWN, isComponent, isSelector, parse } from '../src/core/ids.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
 import { shareHtml, routeFor } from './page.js'
-import { cardResponse, characterOf } from './render.js'
+import { cardResponse, characterFor } from './render.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
 const failure = (message, status) => new Response(message, { status, headers: { 'cache-control': 'no-store' } })
@@ -147,10 +147,10 @@ export default {
           const template = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
           if (!template.ok) throw new Error('Page unavailable')
           const html = await template.text()
+          // The page names the character its card draws, so the title, the description and the image agree.
+          const char = await characterFor(env, route.sequence).catch(() => null)
           if (!html.includes('<title>IDS Workshop — Ideographic Description Sequence Editor</title>')) response = render(request, notFound(url, route.sequence), 404)
-          else response = new Response(shareHtml(html, {
-            sequence: route.sequence, char: await characterOf(env, route.sequence), origin: ORIGIN,
-          }), { headers: {
+          else response = new Response(shareHtml(html, { sequence: route.sequence, char, origin: ORIGIN }), { headers: {
             'content-type': 'text/html; charset=utf-8',
             'cache-control': 'max-age=0, must-revalidate',
             'x-og-sequence': encodeURIComponent(route.sequence),
