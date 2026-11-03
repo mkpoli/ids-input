@@ -52,7 +52,7 @@
     </div>
     {#if operandsValid && !query}<p role="status">{t('app.replacement.tooLong')}</p>{/if}
     {#if status}<p role="status">{t(`app.replacement.${status}`)}</p>{/if}
-    <button type="submit" class="ui-button" data-size="lg" data-variant="primary" disabled={!valid || status === 'loading'}>{t('app.replacement.submit')}</button>
+    <button type="submit" class="ui-button" data-size="lg" data-variant="primary" disabled={!valid || status === 'loading'} aria-busy={status === 'loading' || undefined}>{t('app.replacement.submit')}</button>
   </form>
 </Dialog>
 
