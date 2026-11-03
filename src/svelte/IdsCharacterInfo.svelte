@@ -8,6 +8,9 @@
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
   const t = $derived(translator(messages, locale))
+  /** A reading system's name for the card's locale; the CJK names are the ones readers know it by.
+   *  @param {import('../adapter/character-info.js').InfoReading} reading */
+  const readingName = reading => /^(ja|zh|ko)/.test(locale) ? reading.zh : reading.name
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let panel = $state(null)
   /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ let info = $state.raw(null)
@@ -473,9 +476,26 @@
     {#if status === 'loading'}<p class="muted" role="status">{t('info.loading')}</p>
     {:else if status === 'failed'}<p class="muted" role="status">{t('info.failed')}</p>
     {:else if info}
+      {@const hasMeaning = info.glosses.length > 0 || Boolean(info.meanings?.ja?.length) || Boolean(info.meanings?.zh?.length)}
       {#if info.association}<p lang="en">{info.association}</p>{/if}
-      {#if info.glosses.length}<ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul>
+      {#if info.script === 'tangut' && hasMeaning}
+        <dl class="meanings">
+          {#if info.glosses.length}<dt>{t('info.language.en')}</dt><dd><ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul></dd>{/if}
+          {#if info.meanings?.ja?.length}<dt>{t('info.language.ja')}</dt><dd lang="ja">{info.meanings.ja.join(' ')}</dd>{/if}
+          {#if info.meanings?.zh?.length}<dt>{t('info.language.zh')}</dt><dd lang="zh">{info.meanings.zh.join('；')}</dd>{/if}
+        </dl>
+      {:else if info.glosses.length}
+        <ul class="glosses" lang="en">{#each info.glosses as gloss}<li>{gloss}</li>{/each}</ul>
       {:else if !info.association}<p class="muted">{t('info.missing')}</p>{/if}
+      {#if info.readings?.length || info.soundGlosses?.length}
+        <section class="readings">
+          <p class="label">{t('info.readings')}</p>
+          <dl>
+            {#each info.readings ?? [] as reading (reading.name)}<dt>{readingName(reading)}</dt><dd>{reading.value}</dd>{/each}
+            {#each info.soundGlosses ?? [] as sound (sound.name)}<dt>{t('info.soundGloss', { name: readingName(sound) })}</dt><dd lang="zh">{sound.value}</dd>{/each}
+          </dl>
+        </section>
+      {/if}
       {#if info.emoji.length}<div class="mnemonics">{#each info.emoji as emoji}<button type="button" class="relation emoji" disabled={disabled || !onpick} title={emoji.meaning} aria-label={`${t('info.insert', { part: emoji.text })} · ${emoji.meaning}`} onclick={() => pick(emoji.text)}>{emoji.text}</button>{/each}</div>{/if}
       {#each kinds as kind}
         {@const related = info.relations.filter(r => r.kind === kind)}
@@ -495,7 +515,7 @@
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.stroke-glyph{font-family:var(--info-font);font-size:16px;line-height:1;color:var(--ids-ink,light-dark(#24242b,#f0f0f5))}.stroke-facts{display:flex;align-items:center;gap:5px;margin:2px 0 0;font-size:12px;white-space:nowrap}.stroke-count{color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-weight:600;font-variant-numeric:tabular-nums}.stroke-first{color:var(--info-muted)}.stroke-sep{align-self:stretch;width:1px;background:var(--ids-line,light-dark(#e1e1e8,#3a3a43))}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
-  p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
+  p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.meanings{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;margin:0 0 10px}.meanings dt{color:var(--info-muted);font-size:11px;line-height:1.6}.meanings dd{min-width:0;margin:0}.meanings .glosses{margin:0}.meanings dd[lang=ja],.meanings dd[lang=zh]{overflow-wrap:anywhere}.readings{margin-top:12px}.readings dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}.readings dt{color:var(--info-muted);font-size:11.5px;line-height:1.45}.readings dd{margin:0;font-variant-numeric:tabular-nums;line-height:1.45;overflow-wrap:anywhere}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
   .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}

@@ -870,6 +870,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
+- `data/character-info.json.gz`: Unihan 18.0.0 definitions (Unicode License v3) and Open Tangut
+  meanings, reconstructions and sound glosses for the Tangut ideographs (MIT for Open Tangut's
+  compilation; Wiktionary rows CC BY-SA 4.0; CCAMC rows no licence stated; 750 KB gzipped);
+  built by `scripts/build_character_info.py`.
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
 - `data/tangut-layers.json.gz`: the largest character split of 2,408 Tangut descriptions, computed
@@ -1188,10 +1192,12 @@ it, checks its format, and looks up drawings of 日, 木 and 口.
 
 `babelStoneAdapter({ characterInfo: url, ... })` accepts the bundled
 `data/character-info.json.gz`, or its decoded document. The optional
-`adapter.characterInfo(char, { signal })` returns English glosses, cited component
-associations, editorial Han translations and emoji mnemonics, and direct Small Seal
-correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
-describe the limits of each relationship.
+`adapter.characterInfo(char, { signal })` returns English glosses, a Tangut character's
+Japanese and Chinese meanings, the reconstructions and sound glosses it records (up to
+eight and two), cited component associations, editorial Han translations and emoji
+mnemonics, and direct Small Seal correspondences when Small Seal data is supplied.
+[Data coverage and sources](data/README.md#character-information-panels) describe the
+limits of each relationship.
 
 With `characterInfo`, `search` accepts English glosses,
 emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
