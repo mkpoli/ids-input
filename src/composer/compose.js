@@ -15,7 +15,7 @@
 // every host entry of it there, cut or not, and `data.places(key)` the places it is held in; each
 // answers empty for a key the export lacks or whose file is not loaded yet (which the caller loads
 // before drawing again).
-import { EM_BOX, area, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
+import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
@@ -132,6 +132,8 @@ const CELL_MIDDLE_INSET = 0.08
  *  enclosures, across for the rest. Parts keep the tree's reading order, not the side the
  *  enclosure would put them on, since they no longer surround each other. */
 const CELL_AXIS = { '⿵': 1, '⿶': 1 }
+/** The scale `fitInside` walks down to, and the share of a box a room is short of before it gives way. */
+const FIT_FLOOR = 0.45
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
@@ -1431,7 +1433,8 @@ export class Composer {
           groups.push(this.node(child, box))
           const opening = this.room(op, groups[0], frameOf)
           const limit = !opening || area(opening) <= area(box) ? box : opening
-          this.fit(groups[0], groups[1], frameOf, stem, C, { room: limit })
+          const anchor = opening && limit === opening ? this.held(opening, op, frameOf) : limit
+          this.fit(groups[0], groups[1], frameOf, stem, C, { room: limit, anchor: centre(anchor) })
         } else groups.push(this.node(child, box))
         continue
       }
@@ -1441,7 +1444,10 @@ export class Composer {
         if (swept) {
           groups[0] = swept
           const opening = this.room(op, groups[0], frameOf)
-          if (opening) box = [opening[0], opening[1], Math.min(opening[2], box[2]), Math.min(opening[3], box[3])]
+          if (opening) {
+            const cut = [Math.max(opening[0], box[0]), Math.max(opening[1], box[1]), Math.min(opening[2], box[2]), Math.min(opening[3], box[3])]
+            if (cut[0] < cut[2] && cut[1] < cut[3]) box = cut
+          }
         } else return this.node(['⿰', ...children], frameOf)
       }
       if (op in this.ENCLOSE && i === 1 && groups[0].every(p => p.origin.startsWith('glyph'))) {
@@ -1455,12 +1461,10 @@ export class Composer {
         if (room && (within(box, room) < C.ROOM_TRUST || stretchOf(source.box, box) > C.STRETCH)) {
           const other = this.host(op, i, child, children.slice(0, 1), room)
           if (other) ({ record: drawn, piece: source } = other)
-          let anchor = null
           if (stretchOf(source.box, room) > C.STRETCH) {
             groups.push(this.node(child, room))
-            anchor = [(box[0] + box[2]) / 2, (box[1] + box[3]) / 2]
           } else groups.push([this.place(source, room, this.ink(drawn.h), `learned ${drawn.h}`)])
-          this.fit(groups[0], groups[1], frameOf, stem, C, { room, anchor })
+          this.fit(groups[0], groups[1], frameOf, stem, C, { room, anchor: centre(this.held(room, op, frameOf)) })
           continue
         }
       }
@@ -1478,7 +1482,7 @@ export class Composer {
       if (C.CLEARED.includes(op) && i === 1 && this.collide(groups[0], groups[1], frameOf, 64) > C.COLLIDE) {
         const opening = this.room(op, groups[0], frameOf)
         const limit = !opening || area(opening) <= area(box) ? box : shrunk(opening, C.OPENING_SHARE)
-        this.fit(groups[0], groups[1], frameOf, stem, C, { room: limit })
+        this.fit(groups[0], groups[1], frameOf, stem, C, { room: limit, anchor: centre(limit) })
       }
     }
     if (op in this.AXIS) this.space(this.AXIS[op], groups)
@@ -1769,7 +1773,8 @@ export class Composer {
   collide(outer, inner, region, size) { return this.partial ? 0 : collision(outer, inner, region, size) }
 
   /** The largest empty box inside `region` the placed enclosing part closes on its closed sides,
-   *  `ROOM_MARGIN` stroke widths clear of its ink (`_room`). */
+   *  `ROOM_MARGIN` stroke widths clear of its ink (`_room`). On an open side the box stops at the
+   *  part's own ink, so an enclosed part sits between the arms (凵, 門) rather than over their tips. */
   room(op, outer, region, size = 48) {
     if (this.partial) return null
     const C = this.C
@@ -1784,16 +1789,26 @@ export class Composer {
     const sum = (r0, r1, c0, c1) => r1 <= r0 || c1 <= c0 ? 0
       : pre[r1 * (size + 1) + c1] - pre[r0 * (size + 1) + c1] - pre[r1 * (size + 1) + c0] + pre[r0 * (size + 1) + c0]
     const sides = this.ENCLOSE[op]
+    let inkTop = size, inkBottom = -1, inkLeft = size, inkRight = -1
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+      if (!ink[r * size + c]) continue
+      if (r < inkTop) inkTop = r
+      if (r > inkBottom) inkBottom = r
+      if (c < inkLeft) inkLeft = c
+      if (c > inkRight) inkRight = c
+    }
+    const rows = [sides.includes('T') ? 0 : inkTop, sides.includes('B') ? size : inkBottom + 1]
+    const cols = [sides.includes('L') ? 0 : inkLeft, sides.includes('R') ? size : inkRight + 1]
     let best = null
     const heights = new Int32Array(size)
-    for (let row = 0; row < size; row++) {
+    for (let row = rows[0]; row < rows[1]; row++) {
       for (let c = 0; c < size; c++) heights[c] = blocked[row * size + c] ? 0 : heights[c] + 1
       const stack = []
-      for (let col = 0; col <= size; col++) {
+      for (let col = cols[0]; col <= cols[1]; col++) {
         const h = col < size ? heights[col] : 0
         while (stack.length && heights[stack.at(-1)] >= h) {
           const top = stack.pop()
-          const height = heights[top], left = stack.length ? stack.at(-1) + 1 : 0, width = col - left
+          const height = heights[top], left = stack.length ? stack.at(-1) + 1 : cols[0], width = col - left
           if (!height || !width) continue
           const r0 = row - height + 1, r1 = row + 1, c0 = left, c1 = col
           const closed = { L: sum(r0, r1, 0, c0), R: sum(r0, r1, c1, size), T: sum(0, r0, c0, c1), B: sum(r1, size, c0, c1) }
@@ -1805,6 +1820,20 @@ export class Composer {
     if (!best) return null
     const [, r0, r1, c0, c1] = best, w = (region[2] - region[0]) / size, h = (region[3] - region[1]) / size
     return [region[0] + c0 * w, region[3] - r1 * h, region[0] + c1 * w, region[3] - r0 * h]
+  }
+
+  /** `room` opened out over the sides `op` closes, where it is short of `FIT_FLOOR` of the region: a
+   *  part centred in the room alone would sit away from a short arm. */
+  held(room, op, region, size = 48) {
+    const sides = this.ENCLOSE[op], C = this.C
+    const w = (region[2] - region[0]) / size, h = (region[3] - region[1]) / size
+    const room2 = Math.round(size * C.OPEN_ROOM)
+    const give = cells => Math.max(0, Math.min(room2, Math.round(size * FIT_FLOOR) - cells))
+    const across = give((room[2] - room[0]) / w), along = give((room[3] - room[1]) / h)
+    return [sides.includes('L') ? Math.max(region[0], room[0] - across * w) : room[0],
+      sides.includes('T') ? Math.max(region[1], room[1] - along * h) : room[1],
+      sides.includes('R') ? Math.min(region[2], room[2] + across * w) : room[2],
+      sides.includes('B') ? Math.min(region[3], room[3] + along * h) : room[3]]
   }
 
   /** Neighbouring parts moved apart where they face each other closer than `FACING` (`_space`). */
@@ -2271,8 +2300,11 @@ export function fitInside(outer, inner, region, stem, C, { size = 64, room = nul
   const x0 = Math.min(...inner.map(p => p.target[0])), y0 = Math.min(...inner.map(p => p.target[1]))
   const x1 = Math.max(...inner.map(p => p.target[2])), y1 = Math.max(...inner.map(p => p.target[3]))
   const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
-  const top = room ? Math.min(1.6, (room[2] - room[0]) / Math.max(x1 - x0, 1), (room[3] - room[1]) / Math.max(y1 - y0, 1)) : 1.6
-  const steps = Math.max(0, Math.ceil((0.45 - top) / -0.05))
+  const roomed = room ? Math.min(1.6, (room[2] - room[0]) / Math.max(x1 - x0, 1), (room[3] - room[1]) / Math.max(y1 - y0, 1)) : 1.6
+  // A room can be narrower than `FIT_FLOOR` when the enclosure leaves little: start there anyway, and
+  // keep walking below it, since the raster thins out and a scale can land on no ink at all.
+  const top = Math.max(FIT_FLOOR, roomed)
+  const steps = Math.ceil(top / 0.05 * 0.6) + 2
   for (let s = 0; s < steps; s++) {
     const scale = top + s * -0.05
     const hw = (x1 - x0) * scale / 2, hh = (y1 - y0) * scale / 2
@@ -2287,7 +2319,7 @@ export function fitInside(outer, inner, region, stem, C, { size = 64, room = nul
       if (c < c0) c0 = c
       if (c > c1) c1 = c
     }
-    if (r1 < 0) return false
+    if (r1 < 0) continue
     const mh = r1 - r0 + 1, mw = c1 - c0 + 1
     if (mh > size || mw > size) continue
     // The cropped mask shifted to every column, as bit rows.
