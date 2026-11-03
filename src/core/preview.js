@@ -221,7 +221,6 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   }
   if (split) {
     const order = pieces.map((piece, index) => ({ piece, index }))
-    if (groupedEmoji) order.sort((a, b) => a.piece.leaf - b.piece.leaf || a.index - b.index)
     for (const { piece, index } of order) {
       const item = emoji.find(item => item.part === index)
       const path = pathData(piece.d)
