@@ -125,9 +125,12 @@ try {
     await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
     // A click keeps the card up, so it is the one that carries the close button.
     assert.equal(await panel.getByRole('button',{name:'Close character information'}).count(),1,'a pinned card offers the close button')
-    // A tile whose centre lies on the card's own surface, not on one of its controls: a press on a
-    // control belongs to the control, while a press on the surface reaches what the card covers.
-    const covered=await page.evaluate(()=>{
+    // A point on the card's own surface, not on one of its controls: a press on a control belongs to
+    // the control, while a press on the surface reaches what the card covers. A tile centre is
+    // preferred, because the point is also meant to sit over a tile the card covers. The card
+    // re-anchors when it starts describing another character, so this is asked again after such a
+    // click: the point has to come from the card as it stands now.
+    const coveredPoint=()=>page.evaluate(()=>{
       const panel=document.querySelector('.ids-character-info'), card=panel.getBoundingClientRect()
       const control='button,a,input,select,textarea,summary,label,[role="button"]'
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
@@ -136,11 +139,22 @@ try {
         const hit=document.elementFromPoint(x,y)
         return hit===panel||(panel.contains(hit)&&!hit.closest(control))
       })
-      if(!node)return null
-      const box=node.getBoundingClientRect()
-      return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+      if(node){
+        const box=node.getBoundingClientRect()
+        return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+      }
+      // No tile centre lands on the card here: take the first point of its bare surface instead,
+      // so the press still ends on the card rather than wherever a tile happens to be.
+      for(let fy=.9;fy>=.25;fy-=.05){
+        for(let fx=.06;fx<=.94;fx+=.04){
+          const x=card.left+card.width*fx, y=card.top+card.height*fy
+          if(document.elementFromPoint(x,y)===panel)return {value:null,x,y}
+        }
+      }
+      return null
     })
-    assert.ok(covered,'the card covers a tile')
+    const covered=await coveredPoint()
+    assert.ok(covered?.value,'the card covers a tile')
     await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
     assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
     assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
@@ -152,10 +166,13 @@ try {
     assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
     assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
     await page.evaluate(()=>getSelection().removeAllRanges())
-    // A press that starts on a card button and ends on a tile below stays the button's press.
+    // A press that starts on a card button and ends on a tile below stays the button's press. The
+    // click above moved the card, so the point under it is taken again.
+    const under=await coveredPoint()
+    assert.ok(under,'the card has a surface to press after it re-anchors')
     const pressButton=await panel.locator('header button').last().boundingBox(),beforePress=await field.inputValue()
     await page.mouse.move(pressButton.x+pressButton.width/2,pressButton.y+pressButton.height/2);await page.mouse.down()
-    await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
+    await page.mouse.move(under.x,under.y,{steps:8});await page.mouse.up()
     await page.waitForTimeout(500)
     assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
     await panel.waitFor({state:'hidden'})

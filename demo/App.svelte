@@ -144,6 +144,8 @@
     await preparedReady
     return prepared.get(sequence) ?? null
   }
+  /** A sequence with an emoji, which a prepared drawing would ink as a path. @param {string} sequence */
+  const hasEmoji = sequence => /\p{Emoji_Presentation}/u.test(sequence)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
   /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
@@ -163,7 +165,7 @@
       if (!split && exportUrl(COMPOSER_BASE) === preparedBase) {
         const drawn = await preparedFor(sequence)
         options?.signal?.throwIfAborted()
-        if (drawn) return drawn
+        if (drawn && !hasEmoji(sequence)) return drawn
       }
       const adapted = split ? [] : await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
@@ -285,7 +287,7 @@
     if (!iconDrawings.has(key)) {
       const draw = drawerAt(at, style)
       iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase ? await preparedFor(sequence) : null) ?? draw(sequence)))
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
