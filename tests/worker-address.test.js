@@ -151,6 +151,11 @@ describe('a built file', () => {
   it('is not kept where it is missing', async () => {
     expect((await get('https://ids.mkpo.li/assets/gone-0000.js')).headers.get('cache-control') ?? '').not.toContain('immutable')
   })
+  it('leaves a page opened under the folder to be checked on every visit', async () => {
+    const shellOnly = { fetch: async () => new Response(shell, { headers: { 'content-type': 'text/html' } }) }
+    const response = await worker.fetch(new Request('https://ids.mkpo.li/assets/?doc=abc'), { ASSETS: shellOnly })
+    expect(response.headers.get('cache-control') ?? '').not.toContain('immutable')
+  })
   it('leaves the page itself to be checked on every visit', async () => {
     expect((await get('https://ids.mkpo.li/favicon.svg')).headers.get('cache-control') ?? '').not.toContain('immutable')
   })
