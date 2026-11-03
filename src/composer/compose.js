@@ -854,7 +854,7 @@ export class Composer {
         const tall = kinds[i] === 'V', slot = tall ? unit * VOWEL : unit
         const height = slot * (1 + OVERLAP), width = fw * (tall ? 0.9 : 0.72)
         const cx = fx0 + fw / 2
-        drawn.push(...this.runLeaf(letter, [cx - width / 2, top - height + (height - slot) / 2, cx + width / 2, top + (height - slot) / 2]))
+        drawn.push(...this.runLeaf(letter, [cx - width / 2, top - height + (height - slot) / 2, cx + width / 2, top + (height - slot) / 2], false))
         top -= slot
       })
     } else {
@@ -870,7 +870,7 @@ export class Composer {
       const syllable = (index) => {
         const part = parts[index], [, by0, bx1, by1] = boxes[index]
         const inner = inset ? [x0 + inset, by0, bx1, by1] : boxes[index]
-        const body = part.run ? this.runLeaf(part.run, inner) : this.node(part.node, inner)
+        const body = part.run ? this.runLeaf(part.run, inner, false) : this.node(part.node, inner)
         for (const mark of voice[index]) mark.fixed = true
         return [...body, ...voice[index]]
       }
@@ -885,9 +885,9 @@ export class Composer {
    *  its own under the initial. Every letter is drawn from its own outline, so the run carries the
    *  drawing's ink and weight like any other component.
    *  @param {string} run @param {number[]} region */
-  runLeaf(run, region) {
+  runLeaf(run, region, bleed = true) {
     const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
-    const placed = hangulBoxes(run).map(({ letter, box: [a, b, c, d], dot }) => {
+    const placed = hangulBoxes(run, bleed).map(({ letter, box: [a, b, c, d], dot }) => {
       const target = [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
       // A dot keeps its own round shape; filling a letter's room would draw a lozenge.
       const parts = this.node(letter, dot ? roundBox(target) : target)

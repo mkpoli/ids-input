@@ -26,14 +26,28 @@ const G = 0.03
 /** The foot a final claims, from the bottom margin up. */
 const FOOT = [0.04, 0.30]
 /** How wide one letter stands at the foot; a pair sets two of these with a gap between. */
-const W = 0.40
+const W = 0.52
 
 /**
  * Where each letter of one syllable stands, in reading order.
  * @param {string} run a run of jamo: one initial, one or more vowels, any finals
  * @returns {{ letter: string, box: number[], dot?: boolean }[]} each box as fractions `[x0, y0, x1, y1]` of the square
  */
-export function hangulBoxes(run) {
+export function hangulBoxes(run, bleed = true) {
+  return bleed ? hangulLayout(run) : hangulLayout(run, false)
+}
+
+/** Boxes scaled about the square's centre: a font's letters run a little past the em, and a
+ *  composer's glyphs fill about seven tenths of the room they are given.
+ * @param {{ letter: string, box: number[], dot?: boolean }[]} boxes @param {number} sx @param {number} [sy] @returns {{ letter: string, box: number[], dot?: boolean }[]} */
+const fit = (boxes, sx, sy = sx) => boxes.map(({ letter, box: [x0, y0, x1, y1], dot }) => {
+  // A dot keeps its round box; the two axes of a letter's fit would otherwise draw a lozenge.
+  const [fx, fy] = dot ? [Math.min(sx, sy), Math.min(sx, sy)] : [sx, sy]
+  return { letter, box: [0.5 + (x0 - 0.5) * fx, 0.5 + (y0 - 0.5) * fy, 0.5 + (x1 - 0.5) * fx, 0.5 + (y1 - 0.5) * fy], dot }
+})
+
+/** The boxes before the margin is taken. @param {string} run @returns {{ letter: string, box: number[], dot?: boolean }[]} */
+function hangulLayout(run, bleed = true) {
   const chars = [...run]
   /** @param {string} char @returns {'L' | 'V' | 'T'} */
   const kind = char => (/[\u1100-\u115e\u{a960}-\u{a97c}]/u.test(char) ? 'L' : /[\u1161-\u11a7\u{d7b0}-\u{d7c6}]/u.test(char) ? 'V' : 'T')
@@ -69,7 +83,7 @@ export function hangulBoxes(run) {
     if (finals.length === 1) place(finals, box((1 - W) / 2, fy0, (1 + W) / 2, fy1))
     else if (finals.length === 2) {
       // A double patchim takes most of the foot, each consonant a near-square of its own.
-      const half = 0.15
+      const half = 0.24
       place(finals.slice(0, 1), box(0.5 - G / 2 - half, fy0, 0.5 - G / 2, fy1))
       place(finals.slice(1), box(0.5 + G / 2, fy0, 0.5 + G / 2 + half, fy1))
     } else place(finals, box((1 - W) / 2, fy0, (1 + W) / 2, fy1))
@@ -85,7 +99,7 @@ export function hangulBoxes(run) {
       out.push({ letter, box: box(0.5 - side / 2, cy - side / 2, 0.5 + side / 2, cy + side / 2), dot: true })
     }
     foot()
-    return out
+    return bleed ? fit(out, 1.24, 1.05) : out
   }
 
   if (beside) {
@@ -93,15 +107,15 @@ export function hangulBoxes(run) {
     out[0].box = hasFinal ? box(0.02, 0.24, 0.50, 0.90) : box(0.01, 0.12, 0.52, 0.88)
     place(vowels, hasFinal ? box(0.50, 0.34, 0.98, 0.98) : box(0.50, 0.06, 0.98, 0.96))
     foot()
-    return out
+    return bleed ? fit(out, 1.24, 1.05) : out
   }
 
   if (under) {
-    // 고: initial above, vowel beneath, the pair sharing the height above the foot.
-    out[0].box = hasFinal ? box(0.20, 0.70, 0.80, top) : box(0.20, 0.55, 0.80, top)
-    place(vowels, hasFinal ? box(M, 0.40, 1 - M, 0.66) : box(M, 0.10, 1 - M, 0.48))
+    // 고: the initial above, the vowel in the band beneath it, both filling the height.
+    out[0].box = hasFinal ? box(0.18, 0.66, 0.82, top) : box(0.18, 0.52, 0.82, top)
+    place(vowels, hasFinal ? box(M, 0.36, 1 - M, 0.62) : box(M, 0.06, 1 - M, 0.46))
     foot()
-    return out
+    return bleed ? fit(out, 0.96, 0.85) : out
   }
 
   // 과: the initial above and to the left, the vowel's own glyph at the right and beneath it, its
@@ -109,5 +123,5 @@ export function hangulBoxes(run) {
   out[0].box = box(M, 0.52, 0.50, top)
   place(vowels, hasFinal ? box(0.10, 0.34, 1 - M, 0.92) : box(0.10, 0.06, 1 - M, 0.90))
   foot()
-  return out
+  return bleed ? fit(out, 0.96, 1.19) : out
 }
