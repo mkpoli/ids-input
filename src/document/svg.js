@@ -2,7 +2,7 @@
 // Compose a document's scoped drawing into SVG. Component cuts become a mask scoped to their
 // component; operator unions become groups; ㇯ masks its first operand by the silhouette of its
 // second. Layer transforms are already baked into the pieces by renderScopes.
-import { EMOJI_CUT_MATRIX, emojiText } from '../core/preview.js'
+import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../core/preview.js'
 /** @typedef {import('./render.js').Scope} Scope */
 /** @typedef {import('./render.js').ScopeTree} ScopeTree */
 /** @typedef {import('./transform.js').Piece} Piece */
@@ -18,6 +18,15 @@ const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
 
 /** @typedef {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} EmojiItem */
+
+/** An emoji as one SVG `<text>`, escaped and centred in its box at the size its font draws it, with any reflection.
+ * @param {EmojiItem} item @param {string} [attribute] */
+const emojiText = (item, attribute = '') => {
+  const { x, y, size } = emojiPlace(item)
+  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const reflect = emojiTransform(item)
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
+}
 /** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
