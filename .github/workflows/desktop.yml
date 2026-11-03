@@ -63,6 +63,9 @@ jobs:
       - run: bunx tauri build ${{ matrix.args }}
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
+          # Tauri skips the Finder step that lays out the disk image window (background, icon
+          # places) whenever CI=true; the macOS runner has a Finder that can run it.
+          TAURI_BUNDLER_DMG_IGNORE_CI: true
       # The portable copy: the program, the export beside it, and the `portable` file that keeps
       # its settings in a `data` folder there.
       - if: runner.os == 'Windows'
