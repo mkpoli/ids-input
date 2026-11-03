@@ -1,5 +1,6 @@
 // A tab's preview is the composed drawing, so an emoji in the description is drawn there too, in
-// its own colours beside the ink. Run against a devrun server:
+// its own colours beside the ink, in the scoped export's paint order, and with its cut and restored
+// parts masked the same way. Run against a devrun server:
 //   IDS_URL=http://localhost:5186 bun demo/check-tab-emoji.js
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
@@ -33,7 +34,37 @@ try {
   assert.ok(ink.width < 800 && ink.height < 800, `the emoji takes its layout box, not the frame (${ink.width}×${ink.height})`)
   assert.equal(ink.viewBox, '0 0 1000 1000', 'it is placed in the drawing box')
 
+  /** Type a description and wait for its emoji to reach the active tab's preview. @param {string} sequence @param {string} text */
+  async function draw(sequence, text) {
+    await page.locator('.ids-field input').fill(sequence)
+    await page.waitForFunction(({ sequence, text }) => {
+      const field = document.querySelector('.ids-field input')
+      const svg = document.querySelector('.tabbar .tab.on .tab-glyph')
+      return field?.value === sequence && [...(svg?.querySelectorAll('text') ?? [])].some(node => node.textContent === text)
+    }, { sequence, text }, { timeout: 120000 })
+  }
+
+  // The scoped export paints the parts in their own order: the ink, then the emoji over it.
+  await draw('⿻🚗車', '🚗')
+  const order = await glyph.evaluate(svg => [...svg.children]
+    .filter(node => node.tagName === 'path' || node.tagName === 'text')
+    .map(node => node.tagName))
+  assert.deepEqual(order, ['path', 'text'], 'the emoji is painted over the ink, as the scoped export paints it')
+
+  // A cut emoji is part of the ink's mask; a restored one is painted outside it.
+  await draw('㇯車🚗', '🚗')
+  const cut = glyph.locator('mask text[filter]')
+  assert.equal(await cut.count(), 1, 'the cut emoji is in the mask')
+  assert.match((await cut.getAttribute('filter')) ?? '', /-emoji-cut/, 'the cut emoji takes the luminance filter')
+  assert.equal(await glyph.locator('path[mask]').count(), 1, 'the ink is masked for the cut')
+
+  await draw('㇯口㇯木😀', '😀')
+  const restored = glyph.locator('text', { hasText: '😀' })
+  assert.equal(await restored.evaluate(node => node.closest('mask') === null), true, 'the restored emoji is painted outside the mask')
+  assert.equal(await restored.getAttribute('mask'), null, 'the restored emoji takes no mask')
+  assert.equal(await glyph.locator('path[mask]').count(), 1, 'the ink is still masked')
+
   await page.locator('.tabbar').screenshot({ path: process.env.SHOT ?? '/tmp/tab-emoji.png' })
   assert.deepEqual(errors, [])
-  console.log('PASS a tab preview draws the emoji in the composed drawing')
+  console.log('PASS a tab preview draws emoji in the scoped export order, with cut masks and restored items')
 } finally { await browser.close() }
