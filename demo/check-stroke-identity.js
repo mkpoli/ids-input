@@ -162,6 +162,10 @@ try {
   await picked.filter({ hasText: /^㇣$/ }).waitFor()
   await stroke.press('Enter')
   await picked.filter({ hasText: /^㇐$/ }).waitFor()
+  // A tile keeps its card while it has the focus, and that card can sit over the tabs it is about
+  // to press; Escape is how a reader dismisses it.
+  await page.keyboard.press('Escape')
+  await card.waitFor({ state: 'hidden' })
   await palette.getByRole('tab', { name: 'Recent', exact: true }).click()
   assert.deepEqual(await values(cells), ['一', '㇐', '㇣'])
   await assertStrokeSection(palette, 1, 2)
