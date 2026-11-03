@@ -139,6 +139,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱艹果', refs: [1], char: '菓' },
     { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
     { sequence: '⿰讠正', refs: [59], char: '証', parts: '讠正' },
+    // A car below 車, to show an emoji operand; it writes no character and no source records it.
+    { sequence: '⿱車🚗', refs: [], char: '' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
   // since a component runs its own description in its own IDS. Each names the character it writes,
