@@ -3,10 +3,26 @@
 // source stroke group and carries a transform chain; the renderer applies the edits in order,
 // before the component's own layer transform.
 import { transformPath } from './transform.js'
+import { sha256Hex } from './sha256.js'
 
 /** @typedef {import('./model.js').GeometryEdit} GeometryEdit */
 /** @typedef {{ d: string, fillRule?: 'nonzero' | 'evenodd', cut?: boolean }} Piece */
 /** @typedef {{ pieces: Piece[], strokes?: { id: string, pieces: number[] }[] }} Geometry */
+
+/** JCS-canonical descriptor for one piece. */
+function pieceText(piece) {
+  return `{"cut":${piece.cut === true},"d":${JSON.stringify(piece.d)},"fillRule":${JSON.stringify(piece.fillRule ?? 'nonzero')}}`
+}
+
+/**
+ * The lowercase SHA-256 of the JCS-encoded unedited descriptor: 1000-unit pieces in renderer order
+ * and the source stroke groups. Path text is hashed exactly.
+ * @param {Geometry} geometry
+ */
+export function fingerprintGeometry(geometry) {
+  const strokes = (geometry.strokes ?? []).map(stroke => `{"id":${JSON.stringify(stroke.id)},"pieces":[${stroke.pieces.join(',')}]}`)
+  return sha256Hex(`{"pieces":[${geometry.pieces.map(pieceText).join(',')}],"strokes":[${strokes.join(',')}],"units":1000}`)
+}
 
 /** The closed subpaths of a piece, each starting at M. @param {string} d @returns {string[]} */
 export function splitSubpaths(d) {
@@ -31,8 +47,10 @@ export function applyGeometryEdits(geometry, edits, node, { tolerance = 0.1 } = 
   const applied = []
   /** @type {GeometryEdit[]} */
   const unresolved = []
+  const base = geometry.fingerprint ?? fingerprintGeometry(geometry)
   for (const edit of edits) {
     if (edit.node !== node) continue
+    if (edit.geometry !== base) { unresolved.push(edit); continue }
     if (edit.target.kind === 'contour') {
       const piece = pieces[edit.target.piece]
       if (!piece) { unresolved.push(edit); continue }
