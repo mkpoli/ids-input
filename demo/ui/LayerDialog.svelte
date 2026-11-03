@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '../../src/composer/index.js'
-  import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -39,6 +39,7 @@
   let splitOptions = $state(/** @type {string[]} */ ([]))
   let splitMessage = $state('')
   let splitTarget = $state(/** @type {Node | null} */ (null))
+  let strokeId = $state(/** @type {string | null} */ (null))
 
   const layers = $derived.by(() => {
     if (!doc) return []
@@ -80,6 +81,18 @@
     const entry = layout.get(selected.id)
     if (!entry) return null
     return { entry, box: boxCorners(entry.canvas, entry.box) }
+  })
+  const strokeGeometry = $derived.by(() => {
+    if (!selected || !source || selected.kind !== 'component') return null
+    try { return source.geometry(selected) } catch { return null }
+  })
+  const strokes = $derived(strokeGeometry?.strokes ?? [])
+  // A chosen stroke belongs to the chosen layer.
+  $effect(() => { void selected?.id; strokeId = null })
+  /** The geometry edit currently moving the chosen stroke. */
+  const strokeEdit = $derived.by(() => {
+    if (!strokeId || !selected || !doc?.geometryEdits) return null
+    return doc.geometryEdits.find(edit => edit.node === selected.id && edit.target.kind === 'stroke' && edit.target.id === strokeId) ?? null
   })
   /** @param {Node} node */
   const label = node => node.kind === 'component' ? node.char : node.kind === 'operator' ? node.op : node.kind === 'slot' ? '⬚' : 'group'
@@ -183,6 +196,26 @@
     if (typeof coalesce !== 'string') coalesce = ''
     applyError = ''
     try {
+      if (strokeId && strokeGeometry) {
+        const radians = rotate * Math.PI / 180
+        const a = Math.cos(radians) * scaleX, b = Math.sin(radians) * scaleX
+        const c = -Math.sin(radians) * scaleY, d = Math.cos(radians) * scaleY
+        const cx = 500, cy = 500
+        const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
+        if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) {
+          if (strokeEdit) session.clearGeometryEdit(strokeEdit.id)
+        } else {
+          session.setGeometryEdit({
+            id: strokeEdit?.id ?? session.allocator.next(), node: selected.id,
+            geometry: strokeEdit?.geometry ?? fingerprintGeometry(strokeGeometry),
+            target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix }],
+          })
+        }
+        doc = session.document
+        chosen = session.chosen
+        onchange()
+        return
+      }
       if (mode === 'mobius') {
         session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, coalesce ? { coalesce } : {})
       } else if (mode === 'matrix') {
@@ -208,7 +241,8 @@
 
   function reset() {
     if (!session || !selected) return
-    session.clearTransform(selected.id)
+    if (strokeId && strokeEdit) session.clearGeometryEdit(strokeEdit.id)
+    else session.clearTransform(selected.id)
     doc = session.document
     chosen = session.chosen
     onchange()
@@ -397,6 +431,15 @@
       <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
         <div class="transform-body">
+          {#if strokes.length}
+            <div class="strokes" role="group" aria-label={t('app.layers.strokes')}>
+              <span class="ui-label">{t('app.layers.strokes')}</span>
+              {#each strokes as stroke (stroke.id)}
+                <button type="button" class="ui-button" data-size="sm" aria-pressed={strokeId === stroke.id}
+                  onclick={() => { strokeId = strokeId === stroke.id ? null : stroke.id; x = 0; y = 0; scaleX = 1; scaleY = 1; rotate = 0 }}>{stroke.id}</button>
+              {/each}
+            </div>
+          {/if}
           <div class="modes" role="group" aria-label={t('app.layers.mode')}>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
@@ -483,6 +526,8 @@
   .transform{margin-top:var(--ui-space-lg)}
   .transform legend{padding:0 var(--ui-space-xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .transform-body{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
+  .strokes{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs)}
+  .strokes .ui-button[aria-pressed="true"]{background:var(--ui-color-accent);color:var(--ui-color-on-accent)}
   .transform-body .note{margin:0}
   .modes{display:inline-flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken)}
   .modes .ui-button{min-block-size:var(--ui-control-h-xs);padding-inline:var(--ui-space-md);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);box-shadow:none}

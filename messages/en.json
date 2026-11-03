@@ -369,5 +369,6 @@
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS list",
   "info.site.course": "Unicode",
-  "info.firstStrokeShort": "first"
+  "info.firstStrokeShort": "first",
+  "app.layers.strokes": "Strokes"
 }
