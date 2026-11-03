@@ -61,10 +61,19 @@ export function createRelationSearch(doc, seal, table) {
     const info = lookup(char)
     if (!info || info.script === 'seal' && !drawable.has(char)) continue
     node(char)
-    labels.set(char, info.glosses[0] ?? info.association ?? code(char))
+    labels.set(char, info.glosses[0] ?? info.meanings?.zh?.[0] ?? info.meanings?.ja?.[0] ?? info.association ?? code(char))
     for (const gloss of info.glosses) {
       alias(char, gloss, gloss)
       for (const term of gloss.split(';')) {
+        alias(char, term.trim(), gloss, senseOf(term))
+        alias(char, lemma(term), gloss, senseOf(term))
+      }
+    }
+    // A Tangut record can have Chinese or Japanese meanings without English. They label the
+    // character and are searchable like an English gloss.
+    for (const gloss of [...(info.meanings?.zh ?? []), ...(info.meanings?.ja ?? [])]) {
+      alias(char, gloss, gloss, senseOf(gloss))
+      for (const term of gloss.split(/[；;]/)) {
         alias(char, term.trim(), gloss, senseOf(term))
         alias(char, lemma(term), gloss, senseOf(term))
       }
