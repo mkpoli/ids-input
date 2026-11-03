@@ -22,12 +22,12 @@ export const characterScript = char => [...char].length !== 1 ? null : isSmallSe
 const editorial = { label: 'Editorial meaning aids', url: 'https://github.com/mkpoli/ids-input/blob/main/data/README.md#character-information-panels', note: /** @type {const} */ ('editorial') }
 const unicodeSealSource = { label: 'Unicode · SealSources', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/third_party/unicode/ucd/SealSources.txt', license: 'Unicode License v3', note: /** @type {const} */ ('unicodeSealSource') }
 const sealSource = { label: 'CHISE · Jiguge Small Seal', url: 'https://gitlab.chise.org/CHISE/ids', license: 'GPL-2.0-or-later', note: /** @type {const} */ ('sealSource') }
-const openTangut = { label: 'Open Tangut', url: 'https://github.com/imlooh/open-tangut', license: 'MIT', note: /** @type {const} */ ('openTangut') }
+const openTangut = { label: 'Open Tangut', url: 'https://github.com/imlooh/open-tangut', license: 'MIT (compilation); Wiktionary rows CC BY-SA 4.0; CCAMC rows no licence stated', note: /** @type {const} */ ('openTangut') }
 /** @param {string} char */
 const unihan = char => /** @type {const} */ ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3', note: 'unihan' })
 
-/** Every record a character is built from, tagged with its kind and deduplicated the way the card
- *  shows them: one entry per kind, named by its first record, so Unihan, Open Tangut, CHISE, the
+/** Every record a character is built from, tagged with its kind and deduplicated the way the record
+ *  lists them: one entry per kind, named by its first record, so Unihan, Open Tangut, CHISE, the
  *  Unicode seal list and the editorial aids each appear once whatever number of records feed them.
  *  @param {InfoSource[]} records @returns {InfoSource[]} */
 export function mergeSources(records) {

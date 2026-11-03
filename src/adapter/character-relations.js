@@ -159,9 +159,10 @@ export function createRelationSearch(doc, seal, table) {
     const ranked = [...result.values()].sort((a, b) => a.rank - b.rank)
     // Leave room for exact readings after the names and meanings. A short Latin word can be both
     // an English meaning and a reading; reading hits never take every slot from the meanings.
-    const reading = ranked.filter(hit => hit.rank >= 20)
-    const other = ranked.filter(hit => hit.rank < 20)
-    const reserved = reading.length ? Math.min(8, limit) : 0
+    // Usage edges rank 100; they are examples, not readings, and must not take reading slots.
+    const reading = ranked.filter(hit => hit.rank >= 20 && hit.rank < 100)
+    const other = ranked.filter(hit => hit.rank < 20 || hit.rank >= 100)
+    const reserved = reading.length ? Math.min(8, Math.max(0, limit - 8)) : 0
     const shown = [...other.slice(0, limit - reserved), ...reading.slice(0, limit - Math.min(other.length, limit - reserved))]
     return shown.map(({ char, label }) => ({ char, label }))
   }
