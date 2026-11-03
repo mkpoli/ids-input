@@ -22,7 +22,7 @@ describe('character relationships',()=>{
  })
  test('every glossed component occurrence is searchable in both directions',()=>{
   const component='𘠀'
-  const words=Object.keys(doc.entries).filter(char=>doc.entries[char].source==='wiktionary' && table.get(char)?.some(s=>s.text.includes(component)))
+  const words=Object.keys(doc.entries).filter(char=>doc.entries[char].source==='openTangut' && table.get(char)?.some(s=>s.text.includes(component)))
   expect(words.length).toBeGreaterThan(4)
   for(const word of words) {
    expect(chars(component,1000)).toContain(word)
@@ -31,7 +31,7 @@ describe('character relationships',()=>{
   // Shared components never lead from one word to an unrelated word.
   const poison=chars('𗀀',1000)
   const components=new Set((table.get('𗀀')??[]).flatMap(s=>[...s.text]))
-  const unrelated=Object.keys(doc.entries).filter(char=>char!=='𗀀' && doc.entries[char].source==='wiktionary' && table.get(char)?.some(s=>[...s.text].some(c=>components.has(c)&&c>='𘠀'&&c<='𘫿')))
+  const unrelated=Object.keys(doc.entries).filter(char=>char!=='𗀀' && doc.entries[char].source==='openTangut' && table.get(char)?.some(s=>[...s.text].some(c=>components.has(c)&&c>='𘠀'&&c<='𘫿')))
   for(const word of unrelated)expect(poison).not.toContain(word)
  })
  test('qualified short meanings retain their full dictionary labels',()=>{
@@ -56,14 +56,17 @@ describe('character relationships',()=>{
   expect(chars('口',1000)).not.toContain(mouth)
  })
  test('a matched sense does not expand a different meaning of the same glyph',()=>{
-  const fixture={format:'ids-character-info-1',entries:{'木':{en:['tree; wood'],source:'unihan',aids:[0,1]},'𗀀':{en:['tree'],source:'wiktionary',aids:[0]},'𗀁':{en:['wood'],source:'wiktionary',aids:[1]}},aids:[{en:['tree'],han:['木'],emoji:'🌳'},{en:['wood'],han:['木'],emoji:'🪵'}],components:{}}
+  const fixture={format:'ids-character-info-2',entries:{'木':{en:['tree; wood'],source:'unihan',aids:[0,1]},'𗀀':{en:['tree'],source:'openTangut',aids:[0]},'𗀁':{en:['wood'],source:'openTangut',aids:[1]}},aids:[{en:['tree'],han:['木'],emoji:'🌳'},{en:['wood'],han:['木'],emoji:'🪵'}],components:{}}
   const search=createRelationSearch(fixture,null,new Map())
   expect(search.search('tree').map(h=>h.char)).not.toContain('𗀁')
   expect(search.search('木').map(h=>h.char)).toEqual(expect.arrayContaining(['𗀀','𗀁']))
   const horse = createRelationSearch({ ...doc, entries: { '馬': doc.entries['馬'] } }, null, new Map())
   expect(horse.search('horse').find(h=>h.char==='𘥇')?.label).toBe('associated with horses')
   expect(horse.search('surname').map(h=>h.char)).not.toContain('𘥇')
-  expect(chars('surname',1000)).not.toContain('𘥇')
+  // In the full records 𘥇 can stand inside a surname character; that is a usage link, not the
+  // horse association reached through a different sense.
+  const surname = index.search('surname',{limit:1000}).find(h => h.char === '𘥇')
+  if (surname) expect(surname.label).toStartWith('component of ')
  })
 })
 

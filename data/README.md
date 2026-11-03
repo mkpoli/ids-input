@@ -402,24 +402,27 @@ names in the search.
 
 ## Character information panels
 
-`character-info.json.gz` contains full English definitions for 23,310 Han characters
-and 457 single Tangut characters. `scripts/build_character_info.py` builds it from:
+`character-info.json.gz` contains meanings for 23,310 Han characters and 6,144 Tangut
+ideographs. A Tangut record carries its English, Japanese and Chinese meanings, its
+reconstructions in eight systems and two sound glosses where the source has them.
+`scripts/build_character_info.py` builds it from:
 
 - **Unihan 18.0.0**, `kDefinition`, Copyright Unicode, Inc., Unicode License v3.
   [Source archive](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip), SHA-256
   `4c93ea9c1f636451729a840978f1667a53886af37ba854fdcce109721c63d43e`.
-- **English Wiktionary contributors**, extracted by Tatu Ylonen's Wiktextract and
-  distributed through [Kaikki's Tangut dictionary](https://kaikki.org/dictionary/Tangut/index.html),
-  under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/).
-  The [JSONL source](https://kaikki.org/dictionary/Tangut/kaikki.org-dictionary-Tangut.jsonl)
-  was retrieved on 2026-10-27. Kaikki identifies this edition as extracted on 2026-09-09
-  from the 2026-09-02 English Wiktionary dump. The unmodified snapshot is retained as
-  `tangut-glosses-en-source.jsonl.gz`; its decompressed SHA-256 is
-  `22be674102e57eb54d94b4bd9d0e32d28b608037cf02accea4c264d022e20acf`.
-  Only single-character Tangut entries with glosses enter the panel data; duplicate
-  glosses are combined, with source qualifiers preserved. Each adapter record links to the
-  original entry, whose history records its contributors. The adapted Tangut gloss data remains
-  CC BY-SA 4.0; the Unihan records retain Unicode License v3.
+- **[Open Tangut](https://github.com/imlooh/open-tangut)**, MIT, Copyright (c) 2026 Leah,
+  at commit `f523fd524003d83ec91c7ba1e76f60808a6be6f9`. Its
+  [`final_dict.json`](https://github.com/imlooh/open-tangut/blob/f523fd524003d83ec91c7ba1e76f60808a6be6f9/final_dict.json)
+  has SHA-256 `8b5ed40d93e9cb82fdc5743b30090d31fdc1c24f9654b0958c9290ce360a4d0d`.
+  The builder keeps the meanings in three languages, the eight reconstructions and the
+  two sound glosses, and leaves a reading out where the record has none. Open Tangut
+  merges CCAMC and Wiktionary entries and states that its vocabulary is not all verified;
+  the panel repeats what it records rather than checking it against the dictionaries.
+  The builder fetches the pinned file into `cache/` and verifies its digest.
+
+The Tangut records retain Open Tangut's MIT licence (`COPYING-open-tangut.txt`); the
+Unihan records keep Unicode License v3. Open Tangut's repository states MIT while
+merging CCAMC and Wiktionary records, whose own terms it does not restate per row.
 
 `character-meaning-aids.json` contains 57 editorial translations of selected English
 senses into Han characters, with emoji mnemonics. Tangut matches require a complete

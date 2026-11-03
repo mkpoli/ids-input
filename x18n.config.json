@@ -47,7 +47,7 @@
       "demo:app.source.smallSeal",
       "demo:app.source.tangut",
       "demo:app.source.tangutComponentMeaning",
-      "demo:app.source.tangutGlosses",
+      "demo:app.source.openTangut",
       "demo:app.source.unihan",
       "demo:app.source.ziToolsPresentation",
       "demo:sources.tag.dictionary",

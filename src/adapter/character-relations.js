@@ -49,8 +49,10 @@ export function createRelationSearch(doc, seal, table) {
   function alias(char, name, label, sense, curated = false) {
     if (!name.trim()) return
     const id = `${char}\0${foldName(key(name))}`
-    if (!aliases.has(id)) names.push({ char, name: key(name), source: '', detail: '' })
-    aliases.set(id, { label, sense, curated })
+    const previous = aliases.get(id)
+    if (!previous) names.push({ char, name: key(name), source: '', detail: '' })
+    // The first meaning a word names is the one the card shows; a curated aid may replace it.
+    if (!previous || (curated && !previous.curated)) aliases.set(id, { label, sense, curated })
     if (sense && !senseLabels.has(`${char}\0${sense}`)) senseLabels.set(`${char}\0${sense}`, label)
   }
   const drawable = new Set([...Object.keys(seal?.table ?? {}), ...(seal?.parts ?? []).map(p => p.part)])
@@ -87,7 +89,7 @@ export function createRelationSearch(doc, seal, table) {
   }
   // All glossed occurrences, including examples beyond the panel's four-row limit.
   for (const [word, entry] of Object.entries(doc.entries)) {
-    if (entry.source !== 'wiktionary') continue
+    if (entry.source !== 'openTangut') continue
     for (const sequence of table.get(word) ?? []) for (const part of sequence.text) {
       if (characterScript(part) === 'component') link(word, part, 'usage')
     }
@@ -112,11 +114,11 @@ export function createRelationSearch(doc, seal, table) {
     for (const char of direct ?? []) add(char, labels.get(char) ?? code(char), 0, 0, true)
     for (const hit of seeds) {
       const matched = aliases.get(`${hit.char}\0${foldName(written)}`)
-      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 1.5), 0, true, matched?.sense)
+      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 1.5), 0, true, matched?.sense)
     }
     const matches = meanings.search(written, { limit: Infinity }).map(hit => {
       const matched = aliases.get(`${hit.char}\0${foldName(hit.label)}`)
-      const rank = hit.score === 0 ? matched?.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 10 + hit.score / 100
+      const rank = hit.score === 0 ? matched?.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 10 + hit.score / 100
       return { hit, matched, rank }
     }).sort((a, b) => a.rank - b.rank).slice(0, Math.max(64, limit * 2))
     for (const { hit, matched, rank } of matches) {
