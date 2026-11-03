@@ -275,8 +275,10 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
     // is made once all of it is here.
     if (store.missing.size) { await source.load(store.missing); continue }
     if (failure) throw failure
-    const ink = drawn.filter(p => p.empty === undefined)
-    return { d: svgPath(ink.filter(p => !p.cut)), cut: svgPath(ink.filter(p => p.cut)),
+    // A run the face composes is carried as text: its ink is the face's, not a path here.
+    const texts = drawn.filter(p => p.text).map(p => ({ text: p.text, box: svgBox(p.region), family: p.family }))
+    const ink = drawn.filter(p => p.empty === undefined && !p.text)
+    return { emoji: texts, d: svgPath(ink.filter(p => !p.cut)), cut: svgPath(ink.filter(p => p.cut)),
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       missing: [...(composer.missingGlyphs ?? [])],
       stroke: composer.stroke ?? null,

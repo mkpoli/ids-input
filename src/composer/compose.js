@@ -19,13 +19,11 @@ import { EM_BOX, area, count, derived, drawnBox, drawnContours, fill, fitted, gr
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
+import { hangulLetters } from '../core/hangul-ids.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
-import { hangulClusterAt, jamoClass } from '../core/hangul.js'
-import { hangulLetters } from '../core/hangul-ids.js'
-import { hangulBoxes, liesUnder } from './hangul-layout.js'
-import { toConjoiningJamo } from '../core/hangul.js'
+import { hangulClusterAt } from '../core/hangul.js'
 import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
@@ -42,25 +40,6 @@ const YAN_STACK_INK = 14000
 
 /** A precomposed syllable's letters as the conjoining jamo run a font shapes; a run stays as it is.
  *  @param {string} syllable @returns {string} */
-const runOfSyllable = syllable => {
-  const letters = hangulLetters(syllable)
-  if (!letters) return syllable
-  const initial = toConjoiningJamo(letters.initial, 'L') ?? ''
-  const medial = toConjoiningJamo(letters.medial, 'V') ?? ''
-  const final = letters.final ? toConjoiningJamo(letters.final, 'T') ?? '' : ''
-  return initial + medial + final
-}
-
-/** The medial a jamo run opens with, or '' when the run has none. @param {string} run */
-const jamoVowel = run => [...run].find(letter => jamoClass(letter) === 'V') ?? ''
-
-/** `box` as a square of the same centre and the shorter side, so a dot stays round. @param {number[]} box @returns {number[]} */
-const roundBox = box => {
-  const [x0, y0, x1, y1] = box, side = Math.min(x1 - x0, y1 - y0)
-  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
-  return [cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2]
-}
-
 /** Whether `part` is one Hangul syllable, precomposed or a run of jamo, with any tone marks. @param {string | any[]} part */
 const isHangulSyllable = part => {
   if (typeof part !== 'string') return false
@@ -820,64 +799,24 @@ export class Composer {
    *  pair closes up rather than standing apart as two characters. @param {(string | any[])[]} children @param {number[]} region */
   hangulBlock(children, region) {
     const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
-    const parts = children.map(child => {
+    // Two syllables written in one block. Each is set in the face, which composes a run of jamo
+    // and draws a precomposed syllable alike, so the pair carry one weight; each keeps its own
+    // room for the tone marks at its left.
+    const boxes = [
+      [x0 + 0.02 * w, y0 + 0.54 * h, x0 + 0.98 * w, y1],
+      [x0 + 0.02 * w, y0, x0 + 0.98 * w, y0 + 0.54 * h],
+    ]
+    const out = []
+    children.forEach((child, index) => {
       const { rest, tones } = typeof child === 'string' ? splitToneMarks(child) : { rest: child, tones: '' }
-      return { run: typeof rest === 'string' ? runOfSyllable(rest) : '', node: rest, tones }
+      const box = boxes[index]
+      const marks = tones ? markParts(this, tones, box, box) : []
+      const face = marks.length ? markFace(box, union(marks.map(part => part.target))).face : box
+      out.push(...this.runLeaf(String(rest), face, false))
+      for (const part of marks) part.fixed = true
+      out.push(...marks)
     })
-    // Two syllables whose vowels sit under their initials run their letters down one column:
-    // ᄃᆞ over 륵 sets ㄷ ᆞ ㄹ ㅡ ㄱ from top to bottom.
-    const below = part => liesUnder(jamoVowel(part.run))
-    const column = parts.every(part => part.run && below(part))
-    // In a column the marks of both syllables stand together at the left of the block.
-    // In a column the marks of both syllables stand together at the left of the block, sized as a
-    // syllable's mark is rather than as the whole block's.
-    const markFrame = [x0, y0 + h * 0.25, x0 + w * 0.5, y0 + h * 0.75]
-    const marks = column ? markParts(this, parts.map(part => part.tones).join(''), markFrame, region) : []
-    const face = marks.length ? markFace(region, union(marks.map(part => part.target))).face : region
-    const [fx0, fy0, fx1, fy1] = face
-    const fw = fx1 - fx0, fh = fy1 - fy0
-    const letters = column ? parts.flatMap(part => [...part.run]) : []
-    let drawn
-    if (column) {
-      // The consonants keep one size and the vowels most of it, so nothing runs thin, and every
-      // letter takes the block's width the way the workshop's own drawings fill their face.
-      const VOWEL = 0.78
-      // Each letter's box runs a little past its slot, so neighbour strokes close up as they do in
-      // the workshop's own drawings instead of leaving white between them.
-      const OVERLAP = 0.1
-      const kinds = letters.map(letter => jamoClass(letter))
-      const consonants = kinds.filter(kind => kind !== 'V').length, vowels = kinds.length - consonants
-      const unit = fh / (consonants + vowels * VOWEL)
-      let top = fy1
-      drawn = []
-      letters.forEach((letter, i) => {
-        const tall = kinds[i] === 'V', slot = tall ? unit * VOWEL : unit
-        const height = slot * (1 + OVERLAP), width = fw * (tall ? 0.9 : 0.72)
-        const cx = fx0 + fw / 2
-        drawn.push(...this.runLeaf(letter, [cx - width / 2, top - height + (height - slot) / 2, cx + width / 2, top + (height - slot) / 2], false))
-        top -= slot
-      })
-    } else {
-      // Both syllables share one span across the block, so neither stands off its partner.
-      const upper = [x0 + 0.02 * w, y0 + 0.52 * h, x0 + 0.98 * w, y1]
-      const lower = [x0 + 0.02 * w, y0, x0 + 0.98 * w, y0 + 0.58 * h]
-      // A tone mark takes room at the left of its syllable; both syllables keep the same body
-      // box, at full height, so neither is squashed or stands off the other.
-      const boxes = [upper, lower]
-      const voice = parts.map((part, index) => (part.tones ? markParts(this, part.tones, boxes[index], boxes[index]) : []))
-      const gap = Math.min(w, h) * 0.06
-      const inset = Math.max(0, ...voice.map(marks => (marks.length ? Math.max(...marks.map(mark => mark.target[2] - x0)) + gap : 0)))
-      const syllable = (index) => {
-        const part = parts[index], [, by0, bx1, by1] = boxes[index]
-        const inner = inset ? [x0 + inset, by0, bx1, by1] : boxes[index]
-        const body = part.run ? this.runLeaf(part.run, inner, false) : this.node(part.node, inner)
-        for (const mark of voice[index]) mark.fixed = true
-        return [...body, ...voice[index]]
-      }
-      drawn = [...syllable(0), ...syllable(1)]
-    }
-    for (const mark of marks) mark.fixed = true
-    return [...drawn, ...marks]
+    return out
   }
 
   /** A run of conjoining jamo that no glyph spells, stood in its syllable's 配置: the initial
@@ -886,20 +825,16 @@ export class Composer {
    *  drawing's ink and weight like any other component.
    *  @param {string} run @param {number[]} region */
   runLeaf(run, region, bleed = true) {
-    const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
-    const placed = hangulBoxes(run, bleed).map(({ letter, box: [a, b, c, d], dot }) => {
-      const target = [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
-      // A dot keeps its own round shape; filling a letter's room would draw a lozenge.
-      const parts = this.node(letter, dot ? roundBox(target) : target)
-      // The letters keep the weight they are drawn with: a syllable's own strokes are already
-      // balanced against each other by the face that draws them.
-      for (const part of parts) {
-        part.weightLimit = [0, 0]
-        if (dot) part.fixed = true
-      }
-      return parts
-    })
-    return placed.flat()
+    // The face composes a syllable from its jamo better than any table of boxes can: the letters a
+    // font shapes carry the design's own spacing, weights and shapes. The run is handed to the
+    // drawing as text, and the renderers set it in a face that shapes it.
+    const part = placed({ contours: [], width: [1, 1] }, region, region, 1, `text ${run}`)
+    part.text = run
+    part.family = 'hangul'
+    part.region = region
+    // It takes no part in the weighting: its ink comes from the face that sets it.
+    part.fixed = true
+    return [part]
   }
 
   /** A syllable carrying tone marks: it keeps only the part of the box the marks leave free, at the

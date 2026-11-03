@@ -15,7 +15,10 @@ export function emojiText(item, attribute = '') {
   const [x, y, width, height] = box
   const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const reflect = emojiTransform(item)
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+  const family = item?.family === 'hangul' ? HANGUL_FAMILY : 'system-ui, sans-serif'
+  // A Hangul syllable's ink fills its em, so it is set to the box; an emoji is set a little smaller.
+  const size = Math.max(0, Math.min(width, height)) * (item?.family === 'hangul' ? 1 : 0.85)
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="${family}">${text}</text>`
 }
 
 /**
@@ -310,3 +313,16 @@ export function groupParts(pieces, leaves) {
   return out
 }
 
+
+/** The face that composes Hangul from its jamo: the workshop's Korean face, then the system's. */
+export const HANGUL_FAMILY = "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif"
+
+/** A run the face composes, as one SVG `<text>` centred in its box.
+ *  @param {{ text?: string, box?: number[] }} item @param {string} [attribute] @returns {string} */
+export function hangulText(item, attribute = '') {
+  const box = (item?.box ?? []).slice(0, 4).map(v => Number.isFinite(Number(v)) ? Number(v) : 0)
+  if (box.length < 4 || typeof item?.text !== 'string') return ''
+  const [x, y, width, height] = box
+  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return `<text${attribute} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height))}" font-family="${HANGUL_FAMILY}">${text}</text>`
+}

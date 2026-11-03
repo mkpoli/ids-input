@@ -277,7 +277,7 @@
                     {#each drawn.emoji ?? [] as item}
                       {#if item.cut}
                         {@const box = emojiBox(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
                       {/if}
                     {/each}
                   </mask>
@@ -286,7 +286,7 @@
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
                   {/if}
                 {/each}
               {/if}
