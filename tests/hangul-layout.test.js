@@ -63,7 +63,8 @@ describe('Hangul layout', () => {
     // 값: two finals side by side.
     const gaps = hangulBoxes('\u1100\u1161\u11b8\u11ba')
     const finals = gaps.slice(-2).map(({ box }) => box)
-    expect(finals[0][2]).toBeLessThanOrEqual(finals[1][0] + 1e-9)
+    // Each letter's box is widened to hold its ink, so the boxes may touch; their centres may not.
+    expect((finals[0][0] + finals[0][2]) / 2).toBeLessThan((finals[1][0] + finals[1][2]) / 2)
   })
 
   test('sets every modern initial, medial and final', () => {

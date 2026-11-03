@@ -46,6 +46,15 @@ const fit = (boxes, sx, sy = sx) => boxes.map(({ letter, box: [x0, y0, x1, y1], 
   return { letter, box: [0.5 + (x0 - 0.5) * fx, 0.5 + (y0 - 0.5) * fy, 0.5 + (x1 - 0.5) * fx, 0.5 + (y1 - 0.5) * fy], dot }
 })
 
+/** A drawn letter's ink fills about this much of the box it is given: the face's measured ink boxes
+ *  are widened by the reciprocal before they are handed to the composer. */
+const INK = 0.92
+/** `box` grown to hold the ink measured for it, about its own centre. @param {number[]} b @returns {number[]} */
+const forInk = ([x0, y0, x1, y1]) => {
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, w = (x1 - x0) / INK / 2, h = (y1 - y0) / INK / 2
+  return [cx - w, cy - h, cx + w, cy + h]
+}
+
 /** The boxes before the margin is taken. `square` asks for the face's own proportions, used when the
  *  syllable stands alone; a block gives each syllable a half-height box and needs the fill set.
  *  @param {string} run @param {boolean} [square] @returns {{ letter: string, box: number[], dot?: boolean }[]} */
@@ -86,11 +95,11 @@ function hangulLayout(run, square = true) {
       place(finals, box(0.18, 0.02, 0.82, 0.32))
       return
     }
-    if (finals.length === 1) place(finals, box(0.204, 0.043, 0.791, 0.375))
+    if (finals.length === 1) place(finals, forInk(box(0.204, 0.043, 0.791, 0.375)))
     else if (finals.length === 2) {
-      place(finals.slice(0, 1), box(0.188, 0.047, 0.497, 0.408))
-      place(finals.slice(1), box(0.503, 0.047, 0.894, 0.418))
-    } else place(finals, box(0.19, 0.045, 0.81, 0.40))
+      place(finals.slice(0, 1), forInk(box(0.188, 0.047, 0.497, 0.408)))
+      place(finals.slice(1), forInk(box(0.503, 0.047, 0.894, 0.418)))
+    } else place(finals, forInk(box(0.19, 0.045, 0.81, 0.40)))
   }
 
   const top = 1 - M
@@ -98,12 +107,15 @@ function hangulLayout(run, square = true) {
     // ᄀᆞ: the initial above a dot, the final beneath it. The boxes are the ones the face draws
     // (measured from its own syllables), so a run and the font agree.
     out[0].box = square
-      ? (hasFinal ? box(0.19, 0.59, 0.80, 0.90) : box(0.18, 0.35, 0.81, 0.86))
+      ? forInk(hasFinal ? box(0.19, 0.59, 0.80, 0.90) : box(0.18, 0.35, 0.81, 0.86))
       : (hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98))
     const side = square ? (hasFinal ? 0.088 : 0.112) : 0.15
+    // The face sets the dot a little left of the initial's centre: 0.43 where the initial is 0.49.
+    const cx = square ? (out[0].box[0] + out[0].box[2]) / 2 - (hasFinal ? 0.03 : 0.06) : 0.5
+    const drawn = square ? side / INK : side
     for (const letter of vowels) {
       const cy = square ? (hasFinal ? 0.533 : 0.30) : (hasFinal ? 0.475 : 0.115)
-      out.push({ letter, box: box(0.5 - side / 2, cy - side / 2, 0.5 + side / 2, cy + side / 2), dot: true })
+      out.push({ letter, box: box(cx - drawn / 2, cy - drawn / 2, cx + drawn / 2, cy + drawn / 2), dot: true })
     }
     foot()
     return fit(out, 1, 1)
@@ -112,10 +124,10 @@ function hangulLayout(run, square = true) {
   if (beside) {
     // 가: the initial at the left, the vowel a full-height stroke at the right.
     out[0].box = square
-      ? (hasFinal ? box(0.13, 0.54, 0.63, 0.91) : box(0.13, 0.26, 0.63, 0.86))
+      ? forInk(hasFinal ? box(0.13, 0.54, 0.63, 0.91) : box(0.13, 0.26, 0.63, 0.86))
       : (hasFinal ? box(0.02, 0.24, 0.50, 0.90) : box(0.01, 0.12, 0.52, 0.88))
     place(vowels, square
-      ? (hasFinal ? box(0.71, 0.49, 0.92, 0.95) : box(0.70, 0.04, 0.93, 0.95))
+      ? forInk(hasFinal ? box(0.71, 0.49, 0.92, 0.95) : box(0.70, 0.04, 0.93, 0.95))
       : (hasFinal ? box(0.50, 0.34, 0.98, 0.98) : box(0.50, 0.06, 0.98, 0.96)))
     foot()
     return fit(out, 1, 1)
@@ -123,15 +135,19 @@ function hangulLayout(run, square = true) {
 
   if (under) {
     // 고: the initial above, the vowel a wide band beneath it.
-    out[0].box = hasFinal ? box(0.18, 0.62, 0.81, 0.92) : box(0.18, 0.35, 0.81, 0.86)
-    place(vowels, hasFinal ? box(0.10, 0.36, 0.91, 0.58) : box(0.09, 0.17, 0.91, 0.56))
+    out[0].box = square
+      ? forInk(hasFinal ? box(0.18, 0.62, 0.81, 0.92) : box(0.18, 0.35, 0.81, 0.86))
+      : (hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98))
+    place(vowels, square
+      ? forInk(hasFinal ? box(0.10, 0.36, 0.91, 0.58) : box(0.09, 0.17, 0.91, 0.56))
+      : (hasFinal ? box(0.10, 0.34, 0.90, 0.56) : box(0.10, 0.14, 0.90, 0.42)))
     foot()
     return fit(out, 1, 1)
   }
 
   // 과: the initial above and to the left, the vowel's glyph filling the right and beneath it.
-  out[0].box = hasFinal ? box(0.13, 0.44, 0.59, 0.85) : box(0.13, 0.44, 0.59, 0.85)
-  place(vowels, hasFinal ? box(0.08, 0.24, 0.93, 0.95) : box(0.08, 0.04, 0.93, 0.95))
+  out[0].box = forInk(box(0.13, 0.44, 0.59, 0.85))
+  place(vowels, forInk(hasFinal ? box(0.08, 0.24, 0.93, 0.95) : box(0.08, 0.04, 0.93, 0.95)))
   foot()
   return fit(out, 1, 1)
 }
