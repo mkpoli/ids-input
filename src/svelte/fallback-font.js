@@ -4,6 +4,8 @@
 // its characters is shown, so the reader pays for the shards their screens need. The dev server
 // names the files itself; `demo/vite.config.js` writes `unicode.json` with the published names.
 
+import { download } from '../core/retry.js'
+
 const FAMILY = 'IDS Fallback'
 // The shards are registered under `IDS Fallback Shared`, and `--fallback-font` names it in the
 // stacks: a family that a stylesheet also declares would match nothing in Firefox and WeChat.
@@ -16,7 +18,7 @@ const SHARDS = new Set()
 /** @type {Record<string, string>} */
 let published = {}
 // While developing, the sheet names the shards; the build writes `unicode.json` with their names.
-const ready = fetch(new URL('unicode.json', new URL('./', document.baseURI)))
+const ready = download(new URL('unicode.json', new URL('./', document.baseURI)))
   .then(response => response.ok ? response.json() : { files: {} })
   .then(data => {
     published = data.files ?? {}

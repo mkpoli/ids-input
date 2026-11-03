@@ -12,6 +12,7 @@ import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hexOf } from './sha256.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { unicodeSource } from './unicode.js'
+import { download } from '../core/retry.js'
 
 export { LookupError } from './compose.js'
 
@@ -111,7 +112,7 @@ export function createSource(read, { concurrency = 10 } = {}) {
 }
 
 /** A source over HTTP: `base` is the folder holding the export, `suffix` what each name carries there (`.gz`). */
-export function fromUrl(base, { suffix = '', fetch: get = globalThis.fetch } = {}) {
+export function fromUrl(base, { suffix = '', fetch: get = download } = {}) {
   const root = base.endsWith('/') ? base : `${base}/`
   return unicodeSource({ fallback: createSource(async name => {
     const response = await get(`${root}${name}${suffix}`)
