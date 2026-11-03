@@ -12,9 +12,6 @@ export const COVERAGE_SOURCES = [
   'src/core/unicode.js',
   'demo/lib/composer.js',
   'data/unicode-properties.json',
-  'data/unicode-coverage.json',
-  'data/bundled-coverage.json',
-  'data/palette-fallback-characters.json',
 ]
 
 /** Where the engine's own files are read, as the installed package holds them. */
