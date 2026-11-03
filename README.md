@@ -1204,7 +1204,8 @@ mnemonics, and direct Small Seal correspondences when Small Seal data is supplie
 limits of each relationship.
 
 With `characterInfo`, `search` accepts English glosses,
-emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
+emoji, Han, Tangut, and Small Seal characters, and a Tangut reconstruction in any of the
+eight systems, with or without diacritics and tone. Recorded correspondences work in both
 directions, alongside existing names, readings, and component forms. Results keep
 dictionary qualifiers; component occurrences and lookup aliases have separate labels.
 Meaning paths retain their matched sense and follow at most two links. Component

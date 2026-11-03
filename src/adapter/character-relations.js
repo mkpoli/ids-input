@@ -1,6 +1,7 @@
 // @ts-check
 import { createCharacterInfo, characterScript } from './character-info.js'
 import { createNameSearch, foldName } from '../core/names.js'
+import { indexReadings, searchReadings } from '../core/tangut-readings.js'
 
 /** Emoji presentation selectors do not change a search term. @param {string} text */
 const key = text => /\p{Extended_Pictographic}/u.test(text) ? text.replace(/[\uFE0E\uFE0F]/g, '').trim() : text.trim()
@@ -26,6 +27,7 @@ export function createRelationSearch(doc, seal, table) {
   /** @type {Map<string, Meaning>} */ const aliases = new Map()
   /** @type {Map<string, string>} */ const senseLabels = new Map()
   /** @type {import('../core/names.js').ComponentName[]} */ const names = []
+  const readings = indexReadings(doc.entries)
   const senses = new Map(doc.aids.flatMap(aid => aid.en.map(term => [foldName(term), foldName(aid.en[0])])) )
   /** @param {string} text */
   const senseOf = text => senses.get(foldName(lemma(text))) ?? foldName(lemma(text))
@@ -124,6 +126,12 @@ export function createRelationSearch(doc, seal, table) {
     for (const hit of seeds) {
       const matched = aliases.get(`${hit.char}\0${foldName(written)}`)
       add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 1.5), 0, true, matched?.sense)
+    }
+    // A reconstruction names a character the way a gloss does. An exact reading sits below a
+    // curated name and above a meaning; near spellings sit below the meanings.
+    for (const hit of searchReadings(readings, written, { limit: Math.max(64, limit * 2) })) {
+      const first = hit.readings[0]
+      add(hit.char, `${first.raw} · ${first.systemShort}`, hit.tier === 0 ? 4.5 : hit.tier === 1 ? 6.5 : 10 + hit.tier, 0, false)
     }
     const matches = meanings.search(written, { limit: Infinity }).map(hit => {
       const matched = aliases.get(`${hit.char}\0${foldName(hit.label)}`)

@@ -429,6 +429,10 @@ BY-SA 4.0) and [CCAMC](http://ccamc.org/) data (no licence stated), so the combi
 data is not MIT alone; the source line and this note carry that attribution. The Unihan
 records keep Unicode License v3.
 
+The card and the name search read these meanings and readings. A Tangut reconstruction
+finds its character with or without diacritics and tone; a query without a tone accepts
+every tone.
+
 `character-meaning-aids.json` contains 57 editorial translations of selected English
 senses into Han characters, with emoji mnemonics. Tangut matches require a complete
 recorded English sense; no links are inferred from glyph shape or a shared component.

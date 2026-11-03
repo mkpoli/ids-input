@@ -30,13 +30,19 @@ try{
   await page.waitForFunction(()=>document.querySelector('.ids-pick-panel:not([hidden]) .ids-hit')?.getAttribute('data-character')==='𘆽')
   await input.fill('die');const die=active.locator('[data-character="𗆮"]');await die.waitFor()
   assert.match(await die.innerText(),/\(of a monarch\) to die/)
+  // A reconstruction in any system finds its character; the label says which system spelled it.
+  for(const query of ['do1','do̱1','ndɔɦ1']){
+   await input.fill(query)
+   const reading=active.locator('[data-character="𗀀"]');await reading.waitFor()
+   assert.match(await reading.innerText(),/do1 · Li|ndo · Ar/, query)
+  }
   await input.fill('horse');await input.fill('water')
   for(const char of ['水','💧','𗋽'])await active.locator(`[data-character="${char}"]`).waitFor()
   assert.equal(await active.locator('[data-character="🐎"]').count(),0)
   await input.fill('🐎');await active.locator('[data-character="𘆽"]').click()
   assert.equal(await field.inputValue(),'⿰𘆽⬚')
   assert.deepEqual(errors,[])
-  await page.close();console.log(`PASS ${scheme}: reciprocal relations, qualifiers, stale queries, insertion`)
+  await page.close();console.log(`PASS ${scheme}: reciprocal relations, qualifiers, readings, stale queries, insertion`)
  }
  if(!process.env.IDS_SEARCH_BEFORE){
  const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
