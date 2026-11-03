@@ -71,10 +71,10 @@ const boxedIn = ({ selector, limit }) => {
   return boxed
 }
 
-/** The parts of the open tab that draw a box, waiting for shards that arrive after the paint. */
-async function boxedParts(page) {
+/** The characters under `selector` that draw a box, waiting for shards that arrive after the paint. */
+async function boxedInPage(page, selector, limit = 120) {
   for (let attempt = 0; attempt < 20; attempt++) {
-    const boxed = await page.evaluate(boxedIn, { selector: '.parts-grid .part', limit: 120 })
+    const boxed = await page.evaluate(boxedIn, { selector, limit })
     if (!boxed.length) return []
     await page.waitForTimeout(500)
     if (attempt === 19) return boxed
@@ -108,9 +108,16 @@ try {
     await page.waitForTimeout(1500)
     await page.evaluate(() => document.fonts.ready)
     if (!await page.locator('.parts-grid .part').count()) { console.log(`skip the ${tab} palette: no parts`); continue }
-    const boxed = await boxedParts(page)
+    const boxed = await boxedInPage(page, '.parts-grid .part')
     console.log(`${tab}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every part draws'}`)
     if (boxed.length) failures.push(`${tab}: ${boxed.join(' ')}`)
+  }
+  // The search results and the tree show characters as well.
+  for (const [what, selector] of [['search results', '.ids-search-results .char'], ['tree', '.ids-tree .ids-part[data-character]']]) {
+    if (!await page.locator(selector).count()) { console.log(`skip the ${what}: nothing shown`); continue }
+    const boxed = await boxedInPage(page, selector)
+    console.log(`${what}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every character draws'}`)
+    if (boxed.length) failures.push(`${what}: ${boxed.join(' ')}`)
   }
   // The sequence field takes characters typed by hand, including ones only the shards draw.
   const input = page.locator('.sequence-wrap input').first()
