@@ -5,9 +5,9 @@
 /* The description column writes ⿱ and ⿳ as glyphs, so the operator face has to come
    before the system fallback or they land on tofu. */
 :root {
-  --cjk-sans: 'IDS Strokes', 'IDS Parts', var(--ids-glyph-fallback), 'IDS Project',
+  --cjk-sans: 'IDS Strokes', 'IDS Parts', 'IDS Project',
     'IDS Operators', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic',
-    'Microsoft YaHei', 'PingFang SC', sans-serif;
+    'Microsoft YaHei', 'PingFang SC', var(--ids-glyph-fallback), sans-serif;
   --ids-glyph-fallback: 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', 'IDS Fallback';
   --ids-font: var(--cjk-sans);
 }
