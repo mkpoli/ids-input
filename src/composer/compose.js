@@ -852,17 +852,23 @@ export class Composer {
         top -= slot
       })
     } else {
+      // Both syllables share one span across the block, so neither stands off its partner.
       const upper = [x0 + 0.02 * w, y0 + 0.52 * h, x0 + 0.98 * w, y1]
-      const lower = [x0, y0, x1, y0 + 0.58 * h]
-      const syllable = (index, box) => {
-        const part = parts[index]
-        const voice = part.tones ? markParts(this, part.tones, box, box) : []
-        const inner = voice.length ? markFace(box, union(voice.map(mark => mark.target))).face : box
+      const lower = [x0 + 0.02 * w, y0, x0 + 0.98 * w, y0 + 0.58 * h]
+      // A tone mark takes room at the left of its syllable; both syllables keep the same body
+      // box, at full height, so neither is squashed or stands off the other.
+      const boxes = [upper, lower]
+      const voice = parts.map((part, index) => (part.tones ? markParts(this, part.tones, boxes[index], boxes[index]) : []))
+      const gap = Math.min(w, h) * 0.06
+      const inset = Math.max(0, ...voice.map(marks => (marks.length ? Math.max(...marks.map(mark => mark.target[2] - x0)) + gap : 0)))
+      const syllable = (index) => {
+        const part = parts[index], [, by0, bx1, by1] = boxes[index]
+        const inner = inset ? [x0 + inset, by0, bx1, by1] : boxes[index]
         const body = part.run ? this.runLeaf(part.run, inner) : this.node(part.node, inner)
-        for (const mark of voice) mark.fixed = true
-        return [...body, ...voice]
+        for (const mark of voice[index]) mark.fixed = true
+        return [...body, ...voice[index]]
       }
-      drawn = [...syllable(0, upper), ...syllable(1, lower)]
+      drawn = [...syllable(0), ...syllable(1)]
     }
     for (const mark of marks) mark.fixed = true
     return [...drawn, ...marks]
