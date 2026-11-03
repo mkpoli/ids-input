@@ -84,6 +84,24 @@ describe('a run of a flat stack the export designs as one body', () => {
     expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toBeNull()
   })
 
+  it('keeps the three columns of a row whose pair is a character', async () => {
+    // 口木 is written as a character elsewhere, so its cuts are that character's body, not the
+    // font's way of setting two columns of this invented row as one.
+    const composer = await composerOf(sourceOf(bodyRecords, bodyHosts))
+    const support = composer.bodySupport.bind(composer)
+    composer.bodySupport = key => key === '⿰口木' ? 4 : support(key)
+    composer.bySequence = key => key === '⿰口木' ? '某' : null
+    expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toBeNull()
+  })
+
+  it('regroups a column pair that is no character', async () => {
+    const composer = await composerOf(sourceOf(bodyRecords, bodyHosts))
+    const support = composer.bodySupport.bind(composer)
+    composer.bodySupport = key => key === '⿰口木' ? 4 : support(key)
+    expect(composer.groupedStack(['⿲', '口', '木', '扌'])).toEqual(['⿰', ['⿰', '口', '木'], '扌'])
+    expect(composer.groupedStack(['⿳', '口', '木', '扌'])).toEqual(['⿱', ['⿱', '口', '木'], '扌'])
+  })
+
   it('leaves an even run even', async () => {
     // 品 and 森 repeat one operand over equal cells, 糸糸 of ⿲大糸糸 is no more a body than the 大
     // beside it, and the middle of 呂 belongs to the operands on both sides of it.

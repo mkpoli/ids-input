@@ -1307,6 +1307,10 @@ export class Composer {
       // A bar belongs to the whole character, not to a body inside it.
       if (this.isBar(children[at]) || this.isBar(children[at + 1])) continue
       const run = [pair, children[at], children[at + 1]]
+      // In a row of three, a pair the export writes as one character (仙 of 亻山, 休 of 亻木, 短
+      // of 矢豆) is that character's cut, not evidence the font sets two columns of an invented
+      // row as one body; the description names three columns, and it keeps them.
+      if (op === '⿲') { const named = this.bySequence(keyOf(run)); if (named && !this.excluded(named)) continue }
       const support = this.bodySupport(keyOf(run))
       if (support >= BODY_WITNESSES && support > whole && (!best || support > best.support)) best = { at, run, support }
     }
