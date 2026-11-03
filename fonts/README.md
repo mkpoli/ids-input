@@ -50,7 +50,7 @@ ideographs (CJK Unified Ideographs, Extension A and the compatibility ideographs
 has no outline for. Those come from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
 `LICENSE-Jigmo.txt`), with the compatibility ideographs from Unifont 18.0.01 (GNU GPL 2+ with the
 font embedding exception, or SIL OFL 1.1; its notices name the authors, among them Roman Czyborra
-and Paul Hardy). 629 shards, 78,398 characters, 21,737 of them filled from a font, 13.7 MB all together.
+and Paul Hardy). 629 shards, 78,473 characters, 21,812 of them filled from a font, 13.7 MB all together.
 `uv run scripts/build_unicode_font.py` rebuilds them and fetches both sources itself.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,

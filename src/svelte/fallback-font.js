@@ -62,18 +62,31 @@ export function loadFallback(char) {
   const name = ((char.codePointAt(0) ?? 0) >> 8).toString(16).padStart(3, '0')
   let face = faces.get(name)
   if (!face) {
-    face = ready.then(() => {
+    face = ready.then(async () => {
       if (!SHARDS.has(name)) throw new Error('no shard')
       // The build writes `unicode.json` beside the page with the published shard files in it; the
       // dev server publishes the shard as a URL import, which the bundler hands here as a file URL.
       // A shard draws only its own range: a face without one covers every character, and a shard
       // with no glyph for a character in its range would then hide the later faces for it.
       const url = published[name] ?? DEV_SHARDS[name]
-      const made = new FontFace(SHARED, `url("${url}")`, { style: STYLE, unicodeRange: RANGES.get(name) })
-      document.fonts.add(made)
-      address()
-      return made.load()
-    }).catch(() => new FontFace(SHARED, ''))
+      const attempt = () => {
+        const made = new FontFace(SHARED, `url("${url}")`, { style: STYLE, unicodeRange: RANGES.get(name) })
+        document.fonts.add(made)
+        return made.load()
+      }
+      try {
+        const made = await attempt()
+        address()
+        return made
+      } catch {
+        // A shard that failed to arrive is asked for once more before its characters show the box,
+        // and the cache forgets it so the next appearance tries again.
+        await new Promise(resolve => setTimeout(resolve, 400))
+        const made = await attempt()
+        address()
+        return made
+      }
+    }).catch(() => { faces.delete(name); return new FontFace(SHARED, '') })
     faces.set(name, face)
   }
   face.catch(() => {})
