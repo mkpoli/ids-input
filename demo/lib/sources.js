@@ -214,7 +214,7 @@ export const SOURCES = [
     url: 'https://github.com/imlooh/open-tangut',
     licence: 'MIT; CC BY-SA 4.0 for Wiktionary-derived rows',
     summaryKey: 'app.source.openTangut',
-    note: 'Meanings in English, Japanese and Chinese, reconstructions and sound glosses for the Tangut ideographs, from the merged CCAMC and Wiktionary records at commit f523fd5. CCAMC rows state no licence.',
+    note: 'Meanings in English, Japanese and Chinese, reconstructions and sound glosses for the Tangut ideographs, from the merged CCAMC and Wiktionary records at commit f523fd5. Wiktionary rows are CC BY-SA 4.0; CCAMC rows state no licence.',
   },
   {
     id: 'sea-of-tangut',

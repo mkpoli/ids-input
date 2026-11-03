@@ -424,9 +424,10 @@ source has them.
   The builder fetches the pinned file into `cache/` and verifies its digest.
 
 Open Tangut publishes its compilation under MIT (`COPYING-open-tangut.txt`). Its records
-merge English, Japanese and Chinese Wiktionary entries (CC BY-SA 4.0) and CCAMC data (no
-licence stated), so the combined Tangut data is not MIT alone; the source line and this
-note carry that attribution. The Unihan records keep Unicode License v3.
+merge English, Japanese and Chinese [Wiktionary](https://en.wiktionary.org/) entries (CC
+BY-SA 4.0) and [CCAMC](http://ccamc.org/) data (no licence stated), so the combined Tangut
+data is not MIT alone; the source line and this note carry that attribution. The Unihan
+records keep Unicode License v3.
 
 `character-meaning-aids.json` contains 57 editorial translations of selected English
 senses into Han characters, with emoji mnemonics. Tangut matches require a complete

@@ -105,7 +105,7 @@ def build():
             del entry['aids']
     doc = {'format': 'ids-character-info-2', 'sources': {
         'unihan': {'name': 'Unicode Unihan 18.0.0 · kDefinition', 'url': UNIHAN_URL, 'sha256': UNIHAN_SHA, 'license': 'Unicode-3.0', 'copyright': 'Copyright Unicode, Inc.'},
-        'openTangut': {'name': 'Open Tangut', 'url': TANGUT_URL, 'commit': TANGUT_COMMIT, 'sha256': TANGUT_SHA, 'license': 'MIT (compilation); Wiktionary rows CC-BY-SA-4.0; CCAMC rows no licence stated', 'copyright': 'Copyright (c) 2026 Leah; Wiktionary contributors; CCAMC',
+        'openTangut': {'name': 'Open Tangut', 'url': TANGUT_URL, 'commit': TANGUT_COMMIT, 'sha256': TANGUT_SHA, 'license': 'MIT (compilation); Wiktionary rows CC-BY-SA-4.0 (https://en.wiktionary.org/); CCAMC rows no licence stated (http://ccamc.org/)', 'copyright': 'Copyright (c) 2026 Leah; Wiktionary contributors; CCAMC',
                        'modifications': 'English, Japanese and Chinese meanings, reconstructions and sound glosses selected; empty readings, missing-explanation placeholders and editorial-only notes left out.'},
         'aids': {'file': 'character-meaning-aids.json', 'license': 'MIT', 'kind': 'editorial Chinese translations and emoji mnemonics'},
     }, 'entries': entries, 'aids': aids['meanings'], 'components': aids['components']}
