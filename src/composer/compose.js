@@ -89,6 +89,10 @@ const COVER_ROOTS = new Set(['冖', '宀', '穴', '雨'])
 const BODY_WITNESSES = 2
 // How much wider than it is tall a single-contour operand is before it counts as a bar.
 const BAR_ASPECT = 5
+// How much wider than tall a whole glyph may be before a stacked middle band flattens it as a bar:
+// the flattest full component (工, 1.23 in the export) and the flattest one drawn as a band
+// (丷, 2.04) fall either side of it.
+const MIDDLE_FLAT = 1.5
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -1576,7 +1580,12 @@ export class Composer {
     const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
       && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
       && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
-    const weights = children.map((child, k) => this.ink(child) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
+    // A font compresses a stacked middle band, but a full part reads better with the share its own
+    // ink asks for than with 0.75 of it: at 0.75 the 六 of ⿳山六廾 was 217 units high. Bars and
+    // covers (一, 冖, 丷) still take the compression.
+    const wholeMiddles = children.map((child, k) => op === '⿳' && k > 0 && k < children.length - 1 && this.middleWhole(child))
+    const weights = children.map((child, k) => this.ink(child) ** power
+      * (k > 0 && k < children.length - 1 && !wholeMiddles[k] ? middle : 1))
     // A gap of its own width between rows of a dense stack reads as air around fine parts; keeping
     // it to a share of the span leaves the parts the room instead (𰻞's 穴 and 心).
     const gap = compactYan ? 0.01 : op === '⿳' && children.length === 3 ? 0.005 : 0.04
@@ -1638,6 +1647,16 @@ export class Composer {
       for (const part of group) part.target = mapped(part.source, frame, target)
     }
     return group
+  }
+
+  /** A whole glyph a stack's middle band cannot compress: bars and covers (一, 冖, 丷) lie flat
+   *  enough to be one, a full character such as 六 or 水 does not. */
+  middleWhole(child) {
+    if (typeof child !== 'string') return false
+    const glyph = this.glyph(child)
+    if (!glyph) return false
+    const ink = tightBox(glyph)
+    return this.outlines(child) > 1 && ink[2] - ink[0] <= MIDDLE_FLAT * (ink[3] - ink[1])
   }
 
   /** A sequence drawn whole somewhere in the font, in any place but the left or the top (`_instance`). */
