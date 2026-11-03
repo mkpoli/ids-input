@@ -1,5 +1,6 @@
 // @ts-check
 import { isSmallSeal } from './seal-data.js'
+import { READING_SYSTEMS, SOUND_SYSTEMS } from '../core/tangut-readings.js'
 
 /** Which kind each source record is; the card names the site and the note by this key. */
 export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSource', 'sealSource', 'openTangut', 'unihan', 'component', 'tangutIds'])
@@ -22,21 +23,6 @@ const editorial = { label: 'Editorial meaning aids', url: 'https://github.com/mk
 const unicodeSealSource = { label: 'Unicode · SealSources', url: 'https://github.com/frankslin/kaiyuan-small-seal-font/blob/97433695858330ec9fdb7de9c4604da2f635eba6/third_party/unicode/ucd/SealSources.txt', license: 'Unicode License v3', note: /** @type {const} */ ('unicodeSealSource') }
 const sealSource = { label: 'CHISE · Jiguge Small Seal', url: 'https://gitlab.chise.org/CHISE/ids', license: 'GPL-2.0-or-later', note: /** @type {const} */ ('sealSource') }
 const openTangut = { label: 'Open Tangut', url: 'https://github.com/imlooh/open-tangut', license: 'MIT', note: /** @type {const} */ ('openTangut') }
-// The eight reconstructions and two sound glosses the records carry, in the card's order.
-const TANGUT_READINGS = /** @type {const} */ ([
-  { key: 'li_fanwen', name: 'Li Fanwen 2008', zh: '李範文2008' },
-  { key: 'gong_huangcheng', name: 'Gong Hwang-cherng', zh: '龔煌城' },
-  { key: 'gong_xun_202411', name: 'Gong Xun 2024-11', zh: '龔勛2024-11' },
-  { key: 'arakawa_shintaro', name: 'Arakawa Shintarō', zh: '荒川慎太郎' },
-  { key: 'miyake', name: 'Marc Miyake', zh: '三宅' },
-  { key: 'nishida', name: 'Nishida 1966', zh: '西田龍雄1966' },
-  { key: 'kychanov', name: 'Kychanov 2006', zh: '克恰諾夫2006' },
-  { key: 'sofronov', name: 'Sofronov 1968', zh: '索弗羅諾夫1968' },
-])
-const TANGUT_SOUNDS = /** @type {const} */ ([
-  { key: 'li_fanwen', name: 'Li Fanwen', zh: '李範文' },
-  { key: 'nie_lishan', name: 'Nie Lishan', zh: '聶歷山' },
-])
 /** @param {string} char */
 const unihan = char => /** @type {const} */ ({ label: 'Unicode · Unihan kDefinition', url: `https://www.unicode.org/cgi-bin/GetUnihanData.pl?codepoint=${char.codePointAt(0)?.toString(16).toUpperCase()}`, license: 'Unicode License v3', note: 'unihan' })
 
@@ -90,8 +76,8 @@ export function createCharacterInfo(doc, seal = null) {
     const result = { char, script, glosses: entry?.en ?? [], emoji: [], relations: [], sources: [] }
     if (entry) result.sources.push(entry.source === 'unihan' ? unihan(char) : openTangut)
     if (entry?.ja?.length || entry?.zh?.length) result.meanings = { ...(entry.ja?.length ? { ja: entry.ja } : {}), ...(entry.zh?.length ? { zh: entry.zh } : {}) }
-    if (entry?.readings) result.readings = TANGUT_READINGS.flatMap(({ key, name, zh }) => entry.readings?.[key] ? [{ name, zh, value: entry.readings[key] }] : [])
-    if (entry?.sounds) result.soundGlosses = TANGUT_SOUNDS.flatMap(({ key, name, zh }) => entry.sounds?.[key] ? [{ name, zh, value: entry.sounds[key] }] : [])
+    if (entry?.readings) result.readings = READING_SYSTEMS.flatMap(({ key, name, zh }) => entry.readings?.[key] ? [{ name, zh, value: entry.readings[key] }] : [])
+    if (entry?.sounds) result.soundGlosses = SOUND_SYSTEMS.flatMap(({ key, name, zh }) => entry.sounds?.[key] ? [{ name, zh, value: entry.sounds[key] }] : [])
     for (const i of entry?.aids ?? []) {
       const aid = doc.aids[i]
       result.emoji.push({ text: aid.emoji, meaning: aid.en[0] })

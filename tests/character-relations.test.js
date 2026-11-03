@@ -34,6 +34,17 @@ describe('character relationships',()=>{
   const unrelated=Object.keys(doc.entries).filter(char=>char!=='𗀀' && doc.entries[char].source==='openTangut' && table.get(char)?.some(s=>[...s.text].some(c=>components.has(c)&&c>='𘠀'&&c<='𘫿')))
   for(const word of unrelated)expect(poison).not.toContain(word)
  }, 20_000)
+ test('a copied Tangut reading finds its character and names the system',()=>{
+  for(const [query, label] of [['do1','do1 · Li'],['do̱1','do̱1 · GX'],['ndɔɦ1','ndɔɦ1 · Ni']]){
+   const hit=index.search(query,{limit:100}).find(hit=>hit.char==='𗀀')
+   expect(hit,query).toBeDefined()
+   expect(hit.label).toBe(label)
+  }
+  // A spelling with more exact homophones than the page shows still keeps its own spelling first.
+  expect(index.search('ke',{limit:24}).find(hit=>hit.char==='𗜕')).toBeDefined()
+  // A short Latin word keeps the meaning hits it had before readings were indexed.
+  expect(index.search('sa',{limit:24}).some(hit=>/sad/.test(hit.label))).toBe(true)
+ })
  test('qualified short meanings retain their full dictionary labels',()=>{
   expect(index.search('die').find(h=>h.char==='𗆮')?.label).toBe('(of a monarch) to die')
   expect(index.search('short').find(h=>h.char==='𗅒')?.label).toBe('(of stature) short')
@@ -83,6 +94,7 @@ test('the adapter search uses relations while retaining readings and isolating c
  await expect(adapter.search('horse',{signal:c.signal})).rejects.toThrow()
  expect((await adapter.search('uma')).map(h=>h.char)).toContain('𘆽')
  expect((await adapter.search('mǎ')).map(h=>h.char)).toContain('𘆽')
+ expect((await adapter.search('do1')).map(h=>h.char)).toContain('𗀀')
  expect(calls).toBe(1)
 })
 
