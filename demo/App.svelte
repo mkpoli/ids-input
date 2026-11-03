@@ -11,7 +11,7 @@
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
-  import { composerPreview } from '@han-compose/composer'
+  import { composerPreview as composerAt } from '@han-compose/composer'
   import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
