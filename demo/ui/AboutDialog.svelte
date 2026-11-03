@@ -18,7 +18,7 @@
     <p><a class="catalogue" href={`./sources.html?lang=${locale}`}>{t('app.about.openSources')}</a></p>
     <h3>{t('app.about.acknowledgments')}</h3>
     <p>{t('app.about.feedbackThanks')}</p>
-    <p class="feedback-names"><a href="https://x.com/zoenshiueh_lieu" target="_blank" rel="noreferrer">परवद💙💛</a> · <a href="https://x.com/integuraru_P" target="_blank" rel="noreferrer">Fn</a> · <a href="https://x.com/nakiha_kanji" target="_blank" rel="noreferrer">なきは</a> · <a href="https://x.com/umanoyui" target="_blank" rel="noreferrer">馬のゆい</a></p>
+    <p class="feedback-names"><a href="https://x.com/zoenshiueh_lieu" target="_blank" rel="noreferrer">परवद💙💛</a> · <a href="https://x.com/integuraru_P" target="_blank" rel="noreferrer">Fn</a> · <a href="https://x.com/nakiha_kanji" target="_blank" rel="noreferrer">なきは</a> · <a href="https://x.com/umanoyui" target="_blank" rel="noreferrer">馬のゆい</a> · <a href="https://t.me/Ngwuyoh" target="_blank" rel="noreferrer">NGWU YOH</a> · 橘 (귥〮 귤〮) 🍊 · 海楫 · Sim-CH</p>
   </div>
 </Dialog>
 
