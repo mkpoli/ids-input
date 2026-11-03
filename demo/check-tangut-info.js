@@ -22,7 +22,7 @@ try {
     assert.match(text, /下毒者/, 'the Chinese meaning')
     assert.match(text, /Sound gloss, Li Fanwen/, 'the sound gloss')
     assert.match(text, /舌頭音/, 'the gloss text')
-    assert.equal(await panel.locator('.meanings dt').allInnerTexts().then(rows => rows.join(',')), 'EN,JA,ZH')
+    assert.equal(await panel.locator('.meanings dt').allInnerTexts().then(rows => rows.join(',')), 'English,Japanese,Chinese')
     assert.equal(await panel.locator('.readings dt').count(), 10, 'eight reconstructions and two sound glosses')
     assert.match(await panel.getByText('Sound gloss, Nie Lishan', { exact: true }).locator('..').innerText(), /諾/)
     assert.deepEqual(errors, [])
