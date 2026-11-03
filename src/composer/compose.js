@@ -890,10 +890,11 @@ export class Composer {
     const hasFinal = finals.length > 0
     const parts = []
     // A stacked pair keeps room for its final; a pair side by side hangs the final under both.
-    // Beside a vowel the initial stands at that vowel's middle, as the screenshot sets ㄹ against ㅏ.
+    // The initial takes the width a consonant takes in a column, and beside a vowel it stands at
+    // that vowel's middle without being squeezed.
     const initialBox = below
-      ? (hasFinal ? box(0.06, 0.56, 0.94, 0.99) : box(0.06, 0.30, 0.94, 0.99))
-      : (hasFinal ? box(0.02, 0.34, 0.50, 0.86) : box(0.01, 0.24, 0.52, 0.74))
+      ? (hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98))
+      : (hasFinal ? box(0.02, 0.24, 0.50, 0.90) : box(0.01, 0.12, 0.52, 0.88))
     parts.push(...this.node(initial, initialBox))
     if (DOT_VOWELS.has(vowels[0])) {
       // 아라아 and its fellows are dots: a dot drawn to fill a letter's room would be a blob.
