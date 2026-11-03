@@ -48,8 +48,11 @@ describe('Hangul layout', () => {
     expect(go['\u1100'][1]).toBeGreaterThan(go['\u1169'][1])
     // 과: initial top left, the vowel's strokes at the right and beneath it.
     const gwa = at('\u1100\u116a')
-    expect(gwa['\u1100'][0]).toBeLessThan(gwa['\u116a'][0])
-    expect(gwa['\u1100'][1]).toBeGreaterThan(gwa['\u116a'][1])
+    const centre = (/** @type {number[]} */ b) => [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]
+    const [ix, iy] = centre(gwa['\u1100']), [vx, vy] = centre(gwa['\u116a'])
+    // The vowel's own glyph spans the square; its ink lies low and to the right of the initial.
+    expect(ix).toBeLessThan(vx)
+    expect(iy).toBeGreaterThan(vy)
     // ᄀᆞ: the initial above a dot.
     const gao = hangulBoxes('\u1100\u119e')
     expect(gao[1].dot).toBe(true)
