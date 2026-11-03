@@ -4,6 +4,7 @@
 // authored layer transforms, applies them to the geometry, and reports what it could not evaluate.
 // Compositing (the ㇯ subtraction and the union of operators) belongs to the consumer of the pieces.
 import { TransformError, chainIsAffine, affineForChain, transformPieces } from './transform.js'
+import { applyGeometryEdits } from './geometry-edit.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -27,6 +28,14 @@ import { TransformError, chainIsAffine, affineForChain, transformPieces } from '
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
 
+/** The component's geometry with its authored edits applied; unresolved edits are reported. */
+function editedGeometry(geometry, edits, node, issues, tolerance) {
+  if (!geometry || !Array.isArray(geometry.pieces)) return geometry
+  const result = applyGeometryEdits(geometry, edits, node, { tolerance })
+  for (const edit of result.unresolved) issues.push({ node, reason: 'geometry', message: `unresolved geometry edit ${edit.id}` })
+  return result.geometry
+}
+
 /**
  * Draw the transformed local pieces of a document. `source.geometry(node)` answers a component's
  * local pieces in its 1000-unit frame; `source.placement(parent, child, index)` answers the affine
@@ -47,7 +56,7 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     const chain = [...authored, ...parentChain]
     if (node.kind === 'component') {
       let geometry
-      try { geometry = source.geometry(node) } catch (error) {
+      try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
         return
       }
@@ -102,7 +111,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     if (node.kind === 'slot') return { kind: 'slot', node: node.id }
     if (node.kind === 'component') {
       let geometry
-      try { geometry = source.geometry(node) } catch (error) {
+      try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
         return null
       }
