@@ -24,6 +24,7 @@ import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
 import { hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
+import { hangulBoxes, liesUnder } from './hangul-layout.js'
 import { toConjoiningJamo } from '../core/hangul.js'
 import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
@@ -53,8 +54,13 @@ const runOfSyllable = syllable => {
 /** The medial a jamo run opens with, or '' when the run has none. @param {string} run */
 const jamoVowel = run => [...run].find(letter => jamoClass(letter) === 'V') ?? ''
 
-const BELOW_VOWELS = new Set(['\u1169', '\u116d', '\u116e', '\u1172', '\u1173'])
-const DOT_VOWELS = new Set(['\u119e', '\u119f'])
+/** `box` as a square of the same centre and the shorter side, so a dot stays round. @param {number[]} box @returns {number[]} */
+const roundBox = box => {
+  const [x0, y0, x1, y1] = box, side = Math.min(x1 - x0, y1 - y0)
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
+  return [cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2]
+}
+
 /** Whether `part` is one Hangul syllable, precomposed or a run of jamo, with any tone marks. @param {string | any[]} part */
 const isHangulSyllable = part => {
   if (typeof part !== 'string') return false
@@ -820,7 +826,7 @@ export class Composer {
     })
     // Two syllables whose vowels sit under their initials run their letters down one column:
     // ᄃᆞ over 륵 sets ㄷ ᆞ ㄹ ㅡ ㄱ from top to bottom.
-    const below = part => DOT_VOWELS.has(jamoVowel(part.run)) || BELOW_VOWELS.has(jamoVowel(part.run))
+    const below = part => liesUnder(jamoVowel(part.run))
     const column = parts.every(part => part.run && below(part))
     // In a column the marks of both syllables stand together at the left of the block.
     // In a column the marks of both syllables stand together at the left of the block, sized as a
@@ -881,57 +887,14 @@ export class Composer {
    *  @param {string} run @param {number[]} region */
   runLeaf(run, region) {
     const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
-    /** @param {number} a @param {number} b @param {number} c @param {number} d */
-    const box = (a, b, c, d) => [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
-    const chars = [...run]
-    const classes = chars.map(jamoClass)
-    let at = 0
-    const initial = chars[at++]
-    /** @type {string[]} */ const vowels = []
-    while (classes[at] === 'V') vowels.push(chars[at++])
-    /** @type {string[]} */ const finals = []
-    while (classes[at] === 'T') finals.push(chars[at++])
-    if (!vowels.length) return this.node(initial, region)
-    const below = BELOW_VOWELS.has(vowels[0]) || DOT_VOWELS.has(vowels[0])
-    const hasFinal = finals.length > 0
-    const parts = []
-    // A stacked pair keeps room for its final; a pair side by side hangs the final under both.
-    // The initial takes the width a consonant takes in a column, and beside a vowel it stands at
-    // that vowel's middle without being squeezed.
-    const initialBox = below
-      ? (hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98))
-      : (hasFinal ? box(0.02, 0.24, 0.50, 0.90) : box(0.01, 0.12, 0.52, 0.88))
-    parts.push(...this.node(initial, initialBox))
-    if (DOT_VOWELS.has(vowels[0])) {
-      // 아라아 and its fellows are dots: a dot drawn to fill a letter's room would be a blob.
-      // A dot keeps its own round shape: squaring it to a letter's room would draw a lozenge.
-      const side = Math.min(w, h) * 0.15
-      const cx = x0 + 0.5 * w
-      const dot = hasFinal
-        ? [cx - side / 2, y0 + 0.40 * h, cx + side / 2, y0 + 0.40 * h + side]
-        : [cx - side / 2, y0 + 0.04 * h, cx + side / 2, y0 + 0.04 * h + side]
-      for (const part of this.node(vowels[0], dot)) { part.fixed = true; parts.push(part) }
-    } else {
-      const vowelBox = below
-        ? (hasFinal ? box(0.10, 0.34, 0.90, 0.56) : box(0.10, 0.14, 0.90, 0.42))
-        : (hasFinal ? box(0.50, 0.34, 0.98, 0.98) : box(0.50, 0.06, 0.98, 0.96))
-      // A compound vowel is written as its two letters, the first at the left or below.
-      const [vx0, vy0, vx1, vy1] = vowelBox
-      const count = vowels.length
-      vowels.forEach((letter, i) => {
-        const from = vx0 + (vx1 - vx0) * (i / count), to = vx0 + (vx1 - vx0) * ((i + 1) / count)
-        parts.push(...this.node(letter, [from, vy0, to, vy1]))
-      })
-    }
-    if (hasFinal) {
-      const [fx0, fy0, fx1, fy1] = box(0.18, 0.02, 0.82, 0.32)
-      const count = finals.length
-      finals.forEach((letter, i) => {
-        const from = fx0 + (fx1 - fx0) * (i / count), to = fx0 + (fx1 - fx0) * ((i + 1) / count)
-        parts.push(...this.node(letter, [from, fy0, to, fy1]))
-      })
-    }
-    return parts
+    const placed = hangulBoxes(run).map(({ letter, box: [a, b, c, d], dot }) => {
+      const target = [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
+      // A dot keeps its own round shape; filling a letter's room would draw a lozenge.
+      const parts = this.node(letter, dot ? roundBox(target) : target)
+      if (dot) for (const part of parts) part.fixed = true
+      return parts
+    })
+    return placed.flat()
   }
 
   /** A syllable carrying tone marks: it keeps only the part of the box the marks leave free, at the
