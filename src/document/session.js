@@ -49,6 +49,8 @@ import { syncDocument } from './project.js'
  * @property {(op: string, id?: string) => string} changeOperator
  * @property {(id?: string) => string | null} remove
  * @property {(id?: string) => string} clear
+ * @property {(edit: import('./model.js').GeometryEdit) => string} setGeometryEdit
+ * @property {(id: string) => string} clearGeometryEdit
  * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
  * @property {(title: string) => void} setTitle
  * @property {(id?: string) => string} clearTransform
@@ -285,6 +287,25 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       return at
     },
     /** @param {string} title */
+    /** Add or replace one geometry edit, identified by its own ID. */
+    setGeometryEdit(edit) {
+      const next = /** @type {Document} */ (structuredClone(document))
+      const list = next.geometryEdits ? [...next.geometryEdits] : []
+      const at = list.findIndex(item => item.id === edit.id)
+      if (at >= 0) list[at] = /** @type {any} */ (structuredClone(edit))
+      else list.push(/** @type {any} */ (structuredClone(edit)))
+      next.geometryEdits = list
+      commit(next, chosen, action(`Edit geometry ${edit.id}`))
+      return edit.id
+    },
+    /** Remove one geometry edit by ID, keeping the others in order. */
+    clearGeometryEdit(id) {
+      const next = /** @type {Document} */ (structuredClone(document))
+      next.geometryEdits = (next.geometryEdits ?? []).filter(item => item.id !== id)
+      if (!next.geometryEdits.length) delete next.geometryEdits
+      commit(next, chosen, action(`Clear geometry ${id}`))
+      return id
+    },
     setTitle(title) {
       const next = /** @type {Document} */ (structuredClone(document))
       const value = String(title).trim()
