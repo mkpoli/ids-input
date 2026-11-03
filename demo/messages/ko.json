@@ -371,5 +371,6 @@
   "sources.use.fonts": "글리프",
   "sources.use.compare": "엔진 비교",
   "sources.files": "파일",
-  "sources.citedBy": "예시에서 사용"
+  "sources.citedBy": "예시에서 사용",
+  "app.atlas": "부품 목록"
 }

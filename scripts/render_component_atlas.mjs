@@ -13,7 +13,7 @@ import { dirname, resolve } from 'node:path'
 const args = process.argv.slice(2)
 const option = (name, fallback) => { const at = args.indexOf(name); return at < 0 ? fallback : args[at + 1] }
 const ROOT = new URL('../', import.meta.url).pathname
-const OUT = resolve(ROOT, option('--out', 'docs/component-atlas.html'))
+const OUT = resolve(ROOT, option('--out', 'demo/public/component-atlas.html'))
 const LIMIT = Number(option('--limit', '4000'))
 
 const corpus = JSON.parse(gunzipSync(await readFile(new URL('../data/ids-corpus.json.gz', import.meta.url))).toString('utf8'))

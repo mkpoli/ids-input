@@ -372,5 +372,6 @@
   "sources.use.fonts": "Glyph faces",
   "sources.use.compare": "Engine comparison",
   "sources.files": "Files",
-  "sources.citedBy": "Used by examples"
+  "sources.citedBy": "Used by examples",
+  "app.atlas": "Component atlas"
 }
