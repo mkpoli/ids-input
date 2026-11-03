@@ -1154,18 +1154,22 @@ in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`.
 composer export to draw from, so it need not wait on the live one.
 
 `bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
-page load, runs every `demo/check-*.js` against it, and stops the server and its children again.
-Its flags:
+page load, runs every `demo/check-*.js` against it two at a time, and stops the server and its
+children again. Its flags:
 
 - `--only <text>` — only checks whose file name contains it.
 - `--skip a,b` — leave those out, e.g. the six-minute `check-gongche`.
 - `--port <n>` — the port to try first; Vite takes the next free one.
+- `--jobs <n>` — how many checks run at once (two by default; `1` runs them one after another).
 - `--retries <n>` — attempts per check (one retry by default), so a check that only lost a race
   with the dev server does not fail the run.
+- `--limit <s>` — stop a check after that long (600 seconds by default); a check that outlives it
+  is reported as a failure with the output it managed.
 - `--timeout <s>` — the page timeout each check gets (120 by default; `0` keeps the check file's
   own). A busy machine can take longer than Playwright's 30-second default to serve a page, and a
   check that fails for that reason says nothing about the app.
-- `--watchdog <min>` — stop the run when no check has finished for that long (15 by default).
+- `--watchdog <min>` — stop the run when no check has finished for that long. By default it is a
+  minute past every attempt at one check, so 22 minutes with the defaults above.
 
 The checks see the raised timeout through `scripts/check-demo-preload.mjs`, which `bun --preload`
 loads before each check; the check files themselves keep Playwright's defaults.
