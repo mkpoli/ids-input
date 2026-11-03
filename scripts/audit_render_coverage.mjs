@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { gunzipSync } from 'node:zlib'
 import { isComponent } from '../src/core/ids.js'
 import { UNICODE_VERSION } from '../src/core/unicode.js'
+import { coverageSources } from './lib/coverage-sources.mjs'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 
 const [cacheArg, output, style = 'sans'] = process.argv.slice(2)
@@ -106,14 +107,9 @@ const blocks = blocksText.split('\n').map(line => line.split('#')[0].trim()).fil
   return { block: block.trim(), missing: absent.length, ranges: ranges(absent) }
 }).filter(row => row.missing)
 const root = new URL('../', import.meta.url)
-const inputFiles = [
-  'src/core/ids.js', 'src/core/unicode.js', 'demo/lib/composer.js',
-  'data/unicode-properties.json',
-  'node_modules/@han-compose/composer/data/unicode/coverage.json',
-  'node_modules/@han-compose/composer/data/palette/bundled-coverage.json',
-  'node_modules/@han-compose/composer/data/palette/fallback-characters.json', 'scripts/audit_render_coverage.mjs',
-  ...(await readdir(new URL('node_modules/@han-compose/composer/src/', root))).map(name => `node_modules/@han-compose/composer/src/${name}`),
-]
+// One list of inputs, shared with `check_coverage_freshness.mjs`: a report and its check must agree
+// on what decides a drawing, or every report reads as older than the tree it was rendered from.
+const inputFiles = await coverageSources(root)
 const implementationHashes = Object.fromEntries(await Promise.all(inputFiles.sort().map(async name => [name, digest(await readFile(new URL(name, root)))])))
 const report = {
   unicode: UNICODE_VERSION, style, base, implementationHashes,

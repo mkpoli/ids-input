@@ -52,7 +52,8 @@
     "node_modules/@han-compose/composer/src/tree.js": "07a3c94af0561a655feabc65da6d4ce7e8ec587e40d326381fb0d299351a3dbf",
     "node_modules/@han-compose/composer/src/unicode.js": "d7518e6ec690fca7c49e406095684e71090fbb451d8062596168dac2346dc7a9",
     "node_modules/@han-compose/composer/src/worker.js": "2f89fad9b01bd66e5d1b3d138c3d0c1077ab25fb2ae10dc6e3d3dfedf50d4d03",
-    "scripts/audit_render_coverage.mjs": "2b42d229a18fa21df2fbf459987ba99d67b00b381fcc9a1090c9f39de81bf068",
+    "scripts/audit_render_coverage.mjs": "a315180d42a423a2b042c597ad22ba9fc20b00bd3b61189659ab0f881e8236f2",
+    "scripts/lib/coverage-sources.mjs": "2ccdfca8829976fcb9d57f336069f29cfc868d8ce87b936239e98fd2c72771bb",
     "src/core/ids.js": "81651ff5b3a3a12a3e3335f8254368f90873b1bf30bc6cc9528240d2e8610c92",
     "src/core/unicode.js": "246623e0f8016c19d434c99d431fdd6df2d4a280fbcb78ec4ff5cee012f19074"
   },
