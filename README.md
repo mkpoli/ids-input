@@ -1172,13 +1172,14 @@ children again. Its flags:
 - `--jobs <n>` — how many checks run at once (two by default; `1` runs them one after another).
 - `--retries <n>` — attempts per check (one retry by default), so a check that only lost a race
   with the dev server does not fail the run.
-- `--limit <s>` — stop a check after that long (600 seconds by default); a check that outlives it
-  is reported as a failure with the output it managed.
+- `--limit <s>` — stop a check after that long (900 seconds by default); a check that outlives it
+  is reported as a failure with the output it managed. The longest check, `check-gongche`, takes
+  about eight minutes with two running at once.
 - `--timeout <s>` — the page timeout each check gets (120 by default; `0` keeps the check file's
   own). A busy machine can take longer than Playwright's 30-second default to serve a page, and a
   check that fails for that reason says nothing about the app.
 - `--watchdog <min>` — stop the run when no check has finished for that long. By default it is a
-  minute past every attempt at one check, so 22 minutes with the defaults above.
+  minute past every attempt at one check, so 32 minutes with the defaults above.
 
 The checks see the raised timeout through `scripts/check-demo-preload.mjs`, which `bun --preload`
 loads before each check; the check files themselves keep Playwright's defaults.
