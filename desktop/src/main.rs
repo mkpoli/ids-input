@@ -3,7 +3,9 @@
 // outside the app opens in the system's browser.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 
 use tauri::http::{header, Request, Response, StatusCode};
 use tauri::webview::{DownloadEvent, NewWindowResponse};
@@ -77,12 +79,25 @@ fn main() {
                     NewWindowResponse::Deny
                 })
                 // A download lands in the Downloads folder under the name the page gave it, and the
-                // folder opens on it once it is written.
-                .on_download(|_, event| {
-                    if let DownloadEvent::Finished { path: Some(path), success: true, .. } = event {
-                        let _ = tauri_plugin_opener::reveal_item_in_dir(path);
+                // folder opens on it once it is written. WebKit on macOS reports no path when a
+                // download finishes, so the destination is kept from the request.
+                .on_download({
+                    let destinations = Mutex::new(HashMap::<String, PathBuf>::new());
+                    move |_, event| {
+                        match event {
+                            DownloadEvent::Requested { url, destination } => {
+                                destinations.lock().unwrap().insert(url.to_string(), destination.clone());
+                            }
+                            DownloadEvent::Finished { url, path, success } => {
+                                let kept = destinations.lock().unwrap().remove(url.as_str());
+                                if let (true, Some(path)) = (success, path.or(kept)) {
+                                    let _ = tauri_plugin_opener::reveal_item_in_dir(path);
+                                }
+                            }
+                            _ => {}
+                        }
+                        true
                     }
-                    true
                 })
                 .build()?;
             Ok(())
