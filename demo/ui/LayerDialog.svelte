@@ -345,7 +345,7 @@
       <div class="figure">
         <div class="canvas">
           {#if step === 'loading'}
-            <span class="spinner" aria-hidden="true"></span>
+            <span class="ui-spinner" aria-hidden="true"></span>
             <p class="note">{t('app.layers.prepare')}</p>
           {:else if step === 'failed'}
             <p class="note">{failed || t('app.layers.failed')}</p>
@@ -372,9 +372,9 @@
           {/if}
         </div>
       </div>
-      <div class="list" role="tree" aria-label={t('app.layers.label')}>
+      <div class="ui-list list" role="tree" aria-label={t('app.layers.label')}>
         {#each layers as row (row.node.id)}
-          <button type="button" class:chosen={row.node.id === chosen} style:--depth={row.depth}
+          <button type="button" class="ui-list-row" data-interactive class:chosen={row.node.id === chosen} style:--depth={row.depth}
             role="treeitem" aria-selected={row.node.id === chosen} aria-level={row.depth + 1}
             onclick={() => select(row.node.id)} ondblclick={() => decompose(row.node)}>
             <span class="glyph">{label(row.node)}</span>
@@ -397,7 +397,7 @@
       <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
         <div class="transform-body">
-          <div class="modes" role="group" aria-label={t('app.layers.mode')}>
+          <div class="ui-switch-bar modes" role="group" aria-label={t('app.layers.mode')}>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
@@ -474,9 +474,9 @@
   .figure .note{color:#686874}
   .list{display:flex;flex-direction:column;gap:var(--ui-space-3xs);max-height:48vh;overflow:auto}
   .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:var(--ui-space-xs);align-items:center;width:100%;min-height:var(--ui-control-h-lg);
-    padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
-  .list button:hover{background:var(--ui-color-surface-hover)}
-  .list button.chosen{background:var(--ui-color-accent-soft)}
+    padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:1px solid transparent;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;font-size:var(--ui-text-sm);cursor:pointer}
+  .list button:hover{border-color:var(--ui-color-border);background:var(--ui-color-surface-hover)}
+  .list button.chosen{border-color:var(--ui-color-accent);background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
   .glyph{font-size:var(--ui-text-lg)}
   .layer-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .list code{font-family:var(--ui-font-mono);font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
@@ -484,7 +484,7 @@
   .transform legend{padding:0 var(--ui-space-xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .transform-body{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
   .transform-body .note{margin:0}
-  .modes{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs)}
+  .modes{display:flex;flex-wrap:wrap;padding:var(--ui-space-3xs)}
   .affine{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--ui-space-md)}
   .field.rotate{grid-column:2/4}
   /* The unit sits inside the field's box, after the number. */
@@ -500,7 +500,7 @@
   .splits{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs);margin-top:var(--ui-space-lg);padding:var(--ui-space-sm) var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
   .splits span{font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .splits button{height:var(--ui-control-h-sm);padding:0 var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:var(--ui-text-sm);cursor:pointer}
-  .splits button:hover{background:var(--ui-color-surface-hover)}
+  .splits button:hover{border-color:var(--ui-color-border-strong);background:var(--ui-color-surface-hover)}
   .actions{display:flex;gap:var(--ui-space-sm);margin-top:var(--ui-space-lg)}
   .history{margin-top:var(--ui-space-md);font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .history summary{cursor:pointer}
@@ -511,7 +511,5 @@
   .history-list p{margin:var(--ui-space-xs) 0 0;font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
   .note,.hint{margin:var(--ui-space-sm) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .hint{grid-column:1/-1}
-  .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--ui-color-ink-muted) 30%,transparent);border-top-color:var(--ui-color-accent);border-radius:var(--ui-radius-pill);animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(1turn)}}
   @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.mobius{grid-template-columns:1fr}}
 </style>
