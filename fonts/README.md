@@ -35,6 +35,8 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
+`Kureedo-label.woff2` (23 KB, 97 characters: ASCII, 楷 and 書) is a subset of the same Kureedo file, under the same licence, named `Kureedo Label`, with the copyright and licence records of the original. The font switch draws the Kaisho option's name and its Aa sample with it, so a page keeps the full face until the reader chooses Kaisho. SHA-256 `90cb39895d10fb19299becf0e03ba53b04df2becf459276aff27a4cffef9a538`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/Kureedo-Regular.woff2 --unicodes='U+0020-007E,U+66F8,U+6977' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Kureedo-label.woff2`.
+
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 
 ## Fallback shards

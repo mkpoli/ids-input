@@ -909,7 +909,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (458 KB together), Noto Serif Tangut (1 MB),
-  Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
+  Kureedo (2.8 MB), Kureedo Label (23 KB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
