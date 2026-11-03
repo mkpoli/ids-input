@@ -74,10 +74,16 @@ if (errors.length) throw Error(errors.join('\n'))
 const archive = process.argv[2] ? readFileSync(process.argv[2]) : Buffer.from(await (await fetch(UNIHAN.url)).arrayBuffer())
 if (createHash('sha256').update(archive).digest('hex') !== UNIHAN.sha256) throw Error(`Unexpected Unihan: ${UNIHAN.url}`)
 const total = new Map()
+// A compatibility ideograph is another encoding of one unified ideograph; Unihan names it.
+const compat = new Map()
 for (const line of unzipEntry(archive, 'Unihan_IRGSources.txt').toString().split('\n')) {
   if (!line.startsWith('U+')) continue
   const [point, field, value] = line.split('\t')
   if (field === 'kTotalStrokes' && value) total.set(String.fromCodePoint(parseInt(point.slice(2), 16)), Number(value.split(' ')[0]))
+  if (field === 'kCompatibilityVariant' && value) {
+    const variant = value.split('<')[0].trim()
+    if (variant.startsWith('U+')) compat.set(String.fromCodePoint(parseInt(point.slice(2), 16)), String.fromCodePoint(parseInt(variant.slice(2), 16)))
+  }
 }
 
 // The bundled fallback outlines, then the palette's own fallback outlines, cover characters the
@@ -160,7 +166,10 @@ const OVERRIDES = new Map([['⻀', '横'], ['⺂', '折']])
 // A radical form Rime does not name takes the first stroke of the character `component-forms.tsv`
 // says it stands for, the way its stroke count already does. The dictionary records ideographs and
 // their variants, not the Kangxi and Radicals Supplement forms.
-const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char) ?? firstStroke(forms.get(char)))
+const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char)
+  ?? firstStroke(forms.get(char))
+  // A compatibility ideograph copies the unified ideograph Unihan says it encodes.
+  ?? firstStroke(compat.get(char)))
 
 const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes, firsts })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))
