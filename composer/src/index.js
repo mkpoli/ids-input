@@ -18,7 +18,9 @@ export const preflight = () => new Response(null, { status: 204, headers: {
 function split(path) {
   const trimmed = path.replace(/^\/+/, '')
   const slash = trimmed.indexOf('/')
-  if (slash < 0) return trimmed === 'versions.json' ? { key: 'versions.json' } : null
+  // The list of versions is read from the bucket every time: it changes with a publish, and it has no
+  // long cache to overtake.
+  if (slash < 0) return trimmed === 'versions' ? { key: 'versions.json' } : null
   const version = trimmed.slice(0, slash), file = trimmed.slice(slash + 1)
   if (!/^[A-Za-z0-9_.+-]{1,96}$/.test(version) || !FILE.test(file) || file.includes('..')) return null
   return { key: `${version}/${file}`, version }

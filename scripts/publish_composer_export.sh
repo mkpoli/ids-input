@@ -47,7 +47,7 @@ rclone copy "$directory" "r2:$bucket/$version" \
   --exclude '.work/**' --exclude '.export' --exclude '.complete' \
   --transfers 16 --checkers 32 --stats-one-line --stats 30s
 
-# `versions.json` lists what the bucket holds, newest first. The Worker serves it at /versions.json, and
+# `versions.json` lists what the bucket holds, newest first. The Worker serves it at /versions, and
 # another site reads it to choose an export instead of hard-coding one.
 # `rclone cat` of a file the bucket does not hold exits 0 and prints nothing, and `jq` with no input
 # document answers nothing either: the list starts as an empty one.

@@ -31,7 +31,7 @@ describe('the composer export Worker', () => {
   })
 
   it('lists the versions with the export files, on a cache a publish can overtake', async () => {
-    const versions = await call('/versions.json', exportFiles())
+    const versions = await call('/versions', exportFiles())
     expect(versions.status).toBe(200)
     expect(await versions.json()).toEqual(['v1-serif-f6'])
     // The list changes with a publish, so it is not kept for a year like a version's own files.
@@ -42,6 +42,7 @@ describe('the composer export Worker', () => {
     expect((await call('/v2-serif-f6/manifest.json', exportFiles())).status).toBe(404)
     expect((await call('/v1-serif-f6/manifest.json.gz', exportFiles())).status).toBe(404)
     expect((await call('/nofile', exportFiles())).status).toBe(404)
+    expect((await call('/versions.json', exportFiles())).status).toBe(404)
     expect((await call('/v1-serif-f6/../../secrets.json', exportFiles())).status).toBe(404)
   })
 
