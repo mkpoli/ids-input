@@ -49,9 +49,12 @@ rclone copy "$directory" "r2:$bucket/$version" \
 
 # `versions.json` lists what the bucket holds, newest first. The Worker serves it at /versions.json, and
 # another site reads it to choose an export instead of hard-coding one.
-current="$(rclone cat "r2:$bucket/versions.json" 2>/dev/null || echo '[]')"
+# `rclone cat` of a file the bucket does not hold exits 0 and prints nothing, and `jq` with no input
+# document answers nothing either: the list starts as an empty one.
+current="$(rclone cat "r2:$bucket/versions.json" 2>/dev/null || true)"
+[ -n "$current" ] || current='[]'
 updated="$(printf '%s' "$current" | jq -c --arg v "$version" '[ $v ] + (map(select(. != $v)))')"
-printf '%s' "$updated" | rclone rcat "r2:$bucket/versions.json"
+printf '%s\n' "$updated" | rclone rcat "r2:$bucket/versions.json"
 
 rclone check "$directory" "r2:$bucket/$version" --exclude '.work/**' --exclude '.export' --exclude '.complete' --size-only >/dev/null
 echo "published $version; versions.json now $(printf '%s' "$updated" | jq -r 'join(", ")')"
