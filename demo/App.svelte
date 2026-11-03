@@ -36,7 +36,6 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
-  import exampleDrawings from './lib/example-drawings.json'
   import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
@@ -124,8 +123,21 @@
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
-  /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
-  const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
+  // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
+  // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
+  // page draws without waiting for them.
+  const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
+  const preparedReady = import('./lib/example-drawings.json')
+    .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
+    .catch(() => { /* Each example is composed instead. */ })
+  /** An example's prepared drawing once the chunk has arrived; null for any other sequence, or where
+   *  the chunk failed. @param {string} sequence */
+  const preparedFor = async sequence => {
+    if (!EXAMPLE_SEQUENCES.has(sequence)) return null
+    await preparedReady
+    return prepared.get(sequence) ?? null
+  }
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
   /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
@@ -143,7 +155,8 @@
     return /** @type {ReturnType<typeof composerPreview>} */ (Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       if (!split && exportUrl(COMPOSER_BASE) === preparedBase) {
-        const drawn = prepared.get(sequence)
+        const drawn = await preparedFor(sequence)
+        options?.signal?.throwIfAborted()
         if (drawn) return drawn
       }
       const adapted = split ? [] : await babel.overwrite?.(sequence).catch(() => []) ?? []
@@ -154,7 +167,7 @@
       return composed(sequence, options)
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
-        if (split || sequence === undefined || !prepared.has(sequence)) composed.warm()
+        if (split || sequence === undefined || !EXAMPLE_SEQUENCES.has(sequence)) composed.warm()
       },
     }))
   }
@@ -234,7 +247,7 @@
 
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
-        if (split || sequence === undefined || !defaultFace || !prepared.has(sequence)) composed.warm()
+        if (split || sequence === undefined || !defaultFace || !EXAMPLE_SEQUENCES.has(sequence)) composed.warm()
       },
     })
     previewsWithExamples.set(key, preview)
@@ -266,7 +279,7 @@
     if (!iconDrawings.has(key)) {
       const draw = drawerAt(at, style)
       iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? draw(sequence)))
+        (style === 'sans' && exportUrl(at) === preparedBase ? await preparedFor(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
