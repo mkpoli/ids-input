@@ -1,6 +1,9 @@
 {
   "app.about.acknowledgments": "Acknowledgments",
-  "app.about.feedbackThanks": "Thanks for your feedback and suggestions.",
+  "app.about.feedbackThanks": "Thank you to everyone who wrote to us and everyone who passed the post on.",
+  "app.about.reported": "Reports and suggestions",
+  "app.about.quoted": "Quotes",
+  "app.about.reposted": "Reposts",
   "app.about.licenses": "Licenses",
   "app.about.codeLicense": "Code: MIT",
   "app.about.dataLicense": "Data is provided under Creative Commons or the terms of its original sources; see the source credits and data notices for details.",
