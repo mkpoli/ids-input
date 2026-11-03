@@ -49,14 +49,13 @@ it('applies a selected emoji part transform to the exported text', () => {
   expect(svg).toContain('<g transform="translate(25 30)"><text')
 })
 
-it('keeps emoji and paths in operand order for overlays', () => {
+it('keeps emoji and paths in part order for overlays', () => {
   const draw = { d: 'M0 0Z', parts: [{ d: 'M0 0Z', leaf: 1 }, { d: '', leaf: 0 }], emoji: [{ text: '😀', box: [0, 0, 500, 500], part: 1 }] }
   const svg = drawingSvg(draw)
-  expect(svg.indexOf('>😀</text>')).toBeLessThan(svg.indexOf('<path'))
+  expect(svg.indexOf('<path')).toBeLessThan(svg.indexOf('>😀</text>'))
   draw.parts[0].leaf = 0
   draw.parts[1].leaf = 1
-  const reversed = drawingSvg(draw)
-  expect(reversed.indexOf('<path')).toBeLessThan(reversed.indexOf('>😀</text>'))
+  expect(drawingSvg(draw)).toBe(svg)
 })
 
 
