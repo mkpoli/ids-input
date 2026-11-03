@@ -12,6 +12,7 @@ import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
+import { download } from '../core/retry.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -199,14 +200,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
- *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */

@@ -4,6 +4,7 @@
 import { bundledSource } from './bundled.js'
 import { leaves, parse } from '../core/ids.js'
 import { unpack } from './loader.js'
+import { download } from '../core/retry.js'
 
 export const hasTangut = text => /[\u{17000}-\u{18AFF}\u{18D00}-\u{18DFF}]/u.test(text)
 export const onlyTangut = sequence => {
@@ -12,7 +13,7 @@ export const onlyTangut = sequence => {
 }
 
 const loadOutlines = async () => {
-  const response = await fetch(new URL('../../data/tangut-outlines.json.gz', import.meta.url))
+  const response = await download(new URL('../../data/tangut-outlines.json.gz', import.meta.url))
   if (!response.ok) throw new Error(`Tangut outlines: ${response.status}`)
   return JSON.parse(await unpack(await response.arrayBuffer()))
 }

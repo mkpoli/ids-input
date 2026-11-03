@@ -3,6 +3,7 @@
 import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
 import constants from './constants.json' with { type: 'json' }
 import { unpack } from './loader.js'
+import { download } from '../core/retry.js'
 
 /** Whether this exact component has a bundled outline. Selectors require an explicit export glyph. */
 export function hasUnicodeGlyph(key) {
@@ -21,7 +22,7 @@ export function hasUnicodeGlyph(key) {
 const fileOf = key => `unicode/${(key.codePointAt(0) >> 8).toString(16).padStart(3, '0')}`
 const readShard = async name => {
   const shard = name.slice('unicode/'.length)
-  const response = await fetch(new URL(`../../data/unicode-outlines/${shard}.json.gz`, import.meta.url))
+  const response = await download(new URL(`../../data/unicode-outlines/${shard}.json.gz`, import.meta.url))
   if (!response.ok) throw new Error(`Unicode outlines ${shard}: ${response.status}`)
   return JSON.parse(await unpack(await response.arrayBuffer()))
 }
