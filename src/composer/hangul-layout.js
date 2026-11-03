@@ -3,8 +3,8 @@
 // final; the vowel's own shape decides the arrangement, and Unicode's 配置 names the six that
 // occur: an initial beside a vertical vowel (가), above a horizontal one (고), above and beside a
 // mixed one (과), above the 아래아 (ᄀᆞ), each with or without a final beneath. A final of two
-// consonants stands side by side, the first the wider. Nothing here depends on which letters are
-// involved, so the same boxes serve every syllable Unicode can spell and every run beyond it.
+// consonants stands side by side, the pair sharing the foot. Nothing here depends on which letters
+// are involved, so the same boxes serve every syllable Unicode can spell and every run beyond it.
 
 /** Vowel jamo that stand at the right of the initial. */
 const VERTICAL = new Set(['\u1161', '\u1162', '\u1163', '\u1164', '\u1165', '\u1166', '\u1167', '\u1168', '\u1175'])
@@ -19,12 +19,14 @@ export const liesUnder = letter => HORIZONTAL.has(letter) || MIXED.has(letter) |
 /** @param {number} a @param {number} b @param {number} c @param {number} d @returns {number[]} */
 const box = (a, b, c, d) => [a, b, c, d]
 
-// Fractions of the syllable's square. The outer margin and the gap between parts stay the same in
-// every arrangement, so the six 配置 read as one family.
-const M = 0.06
-const G = 0.04
-/** The band a final takes at the foot of the square. */
-const FOOT = 0.30
+// Fractions of the syllable's square, y measured up from the foot. One margin, one gap and one
+// foot height serve every arrangement, so the six 配置 read as one family.
+const M = 0.05
+const G = 0.03
+/** The foot a final claims, from the bottom margin up. */
+const FOOT = [0.04, 0.30]
+/** How wide one letter stands at the foot; a pair sets two of these with a gap between. */
+const W = 0.40
 
 /**
  * Where each letter of one syllable stands, in reading order.
@@ -43,7 +45,8 @@ export function hangulBoxes(run) {
   while (chars[at] && kind(chars[at]) === 'T') finals.push(chars[at++])
   // A bare letter — a column gives each of its letters its own slot — fills the slot it is given.
   if (!initial) return chars.map((letter, i) => ({ letter, box: box(i / chars.length, 0, (i + 1) / chars.length, 1) }))
-  if (!vowels.length) return [{ letter: initial, box: box(M, M, 1 - M, 1 - M) }]
+  // A letter alone — a column gives each its own slot — takes the whole slot, margins and all.
+  if (!vowels.length) return [{ letter: initial, box: box(0, 0, 1, 1) }]
 
   const hasFinal = finals.length > 0
   const beside = vowels.every(letter => VERTICAL.has(letter))
@@ -59,30 +62,34 @@ export function hangulBoxes(run) {
       out.push({ letter, box: [sx0 + ((sx1 - sx0) * i) / n, sy0, sx0 + ((sx1 - sx0) * (i + 1)) / n, sy1] })
     })
   }
-  /** The foot: a single final takes it whole, two stand side by side with the first wider. */
+  /** The foot: one consonant takes a letter's width, two stand side by side on the same line. */
   const foot = () => {
     if (!hasFinal) return
-    // A final keeps a consonant's width; two share the foot, the first the wider.
-    if (finals.length === 1) place(finals, box(0.32, 0.04, 0.68, FOOT))
+    const [fy0, fy1] = FOOT
+    if (finals.length === 1) place(finals, box((1 - W) / 2, fy0, (1 + W) / 2, fy1))
     else if (finals.length === 2) {
-      place(finals.slice(0, 1), box(0.26, 0.04, 0.49, FOOT))
-      place(finals.slice(1), box(0.51, 0.04, 0.74, FOOT))
-    } else place(finals, box(0.24, 0.04, 0.76, FOOT))
+      // A double patchim takes most of the foot, each consonant a near-square of its own.
+      const half = 0.15
+      place(finals.slice(0, 1), box(0.5 - G / 2 - half, fy0, 0.5 - G / 2, fy1))
+      place(finals.slice(1), box(0.5 + G / 2, fy0, 0.5 + G / 2 + half, fy1))
+    } else place(finals, box((1 - W) / 2, fy0, (1 + W) / 2, fy1))
   }
 
-  const side = 0.15
+  const top = 1 - M
   if (dots) {
-    // ᄀᆞ: the initial above a dot, the final beneath.
+    // ᄀᆞ: the initial above a round dot, the final beneath it.
     out[0].box = hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98)
+    const side = 0.15
     for (const letter of vowels) {
-      out.push({ letter, box: hasFinal ? box(0.5 - side / 2, 0.40, 0.5 + side / 2, 0.40 + side) : box(0.5 - side / 2, 0.04, 0.5 + side / 2, 0.04 + side), dot: true })
+      const cy = hasFinal ? 0.475 : 0.115
+      out.push({ letter, box: box(0.5 - side / 2, cy - side / 2, 0.5 + side / 2, cy + side / 2), dot: true })
     }
     foot()
     return out
   }
 
   if (beside) {
-    // 가: initial at the left, vowel at the right.
+    // 가: initial at the left, vowel at the right, both taking the height above the foot.
     out[0].box = hasFinal ? box(0.02, 0.24, 0.50, 0.90) : box(0.01, 0.12, 0.52, 0.88)
     place(vowels, hasFinal ? box(0.50, 0.34, 0.98, 0.98) : box(0.50, 0.06, 0.98, 0.96))
     foot()
@@ -90,17 +97,17 @@ export function hangulBoxes(run) {
   }
 
   if (under) {
-    // 고: initial above, vowel beneath. A stacked pair leaves the vowel a band of its own.
-    out[0].box = hasFinal ? box(0.14, 0.54, 0.86, 0.98) : box(0.14, 0.26, 0.86, 0.98)
-    place(vowels, hasFinal ? box(0.10, 0.34, 0.90, 0.56) : box(0.10, 0.14, 0.90, 0.42))
+    // 고: initial above, vowel beneath, the pair sharing the height above the foot.
+    out[0].box = hasFinal ? box(0.20, 0.70, 0.80, top) : box(0.20, 0.55, 0.80, top)
+    place(vowels, hasFinal ? box(M, 0.40, 1 - M, 0.66) : box(M, 0.10, 1 - M, 0.48))
     foot()
     return out
   }
 
-  // 과: the initial above and to the left, the vowel's strokes at the right and beneath it. The
-  // vowel keeps its own glyph, whose ink lies low and to the right, so the two share the square.
-  out[0].box = hasFinal ? box(0.06, 0.52, 0.56, 0.98) : box(0.06, 0.44, 0.56, 0.98)
-  place(vowels, hasFinal ? box(0.12, 0.30, 0.98, 0.94) : box(0.12, 0.08, 0.98, 0.90))
+  // 과: the initial above and to the left, the vowel's own glyph at the right and beneath it, its
+  // ink lying low and to the right so the two share the square.
+  out[0].box = box(M, 0.52, 0.50, top)
+  place(vowels, hasFinal ? box(0.10, 0.34, 1 - M, 0.92) : box(0.10, 0.06, 1 - M, 0.90))
   foot()
   return out
 }
