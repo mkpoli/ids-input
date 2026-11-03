@@ -5,6 +5,7 @@
 //   bun run check:demo -- --only similar   the checks whose file name contains "similar"
 //   bun run check:demo -- --port 5186      a port of your choosing
 //   bun run check:demo -- --retries 2      more attempts for a check that fails (one by default)
+//   bun run check:demo -- --jobs 1         run the checks one after another (two at a time by default)
 //   bun run check:demo -- --skip gongche   leave the slow or focused checks out (comma separated)
 //   bun run check:demo -- --limit 900      stop a check after fifteen minutes (600 seconds by default)
 //   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (by default a
@@ -32,6 +33,8 @@ const skip = (arg('--skip') ?? '').split(',').filter(Boolean)
 const timeout = Number(arg('--timeout') ?? 120)
 const port = Number(arg('--port') ?? 5186)
 const retries = Number(arg('--retries') ?? 1)
+/** How many checks run at once; each owns a browser, and the dev server serves them all. */
+const jobs = Math.max(1, Number(arg('--jobs') ?? 2))
 /** One attempt at one check; a wedged check is stopped at this many seconds. A check that runs both
  *  schemes over a long list needs minutes on a busy machine, so the bound is generous. */
 const CHECK_LIMIT = Number(arg('--limit') ?? 600)
@@ -178,10 +181,13 @@ setInterval(() => {
 await start()
 await warm()
 progress()
-console.log(`${checks.length} checks against ${url}`)
+console.log(`${checks.length} checks against ${url}, ${jobs} at a time`)
 const failed = []
-for (const [index, file] of checks.entries()) {
-  if (!(await alive())) {
+// One restart at a time, however many checks found the server gone.
+let restarting = null
+const ensureServer = async () => {
+  if (await alive()) return
+  restarting = restarting ?? (async () => {
     console.log('  the dev server has gone; restarting it')
     console.log(tail())
     stop()
@@ -189,8 +195,13 @@ for (const [index, file] of checks.entries()) {
     log = ''
     await start()
     await warm()
-    progress()
-  }
+  })().finally(() => { restarting = null; progress() })
+  await restarting
+}
+/** Runs one check, with its retries, and prints its verdict. @param {number} index @param {string} file */
+const check = async (index, file) => {
+  await ensureServer()
+  progress()
   const started = Date.now()
   let { code, output } = await run(file)
   const attempts = [1]
@@ -201,14 +212,19 @@ for (const [index, file] of checks.entries()) {
   progress()
   const took = ((Date.now() - started) / 1000).toFixed(0)
   const tries = attempts.length > 1 ? ` (${attempts.length} attempts)` : ''
-  if (code === 0) {
-    console.log(`  ${String(index + 1).padStart(2)} ${file.padEnd(30)} ok    ${took}s${tries}`)
-    continue
-  }
+  const line = `  ${String(index + 1).padStart(2)} ${file.padEnd(30)}`
+  if (code === 0) { console.log(`${line} ok    ${took}s${tries}`); return }
   failed.push(file)
-  console.log(`  ${String(index + 1).padStart(2)} ${file.padEnd(30)} FAIL  ${took}s${tries}`)
-  console.log(output.split('\n').filter(line => line.trim()).slice(-10).map(line => `     ${line}`).join('\n'))
+  console.log(`${line} FAIL  ${took}s${tries}`)
+  console.log(output.split('\n').filter(entry => entry.trim()).slice(-10).map(entry => `     ${entry}`).join('\n'))
 }
+let next = 0
+await Promise.all(Array.from({ length: Math.min(jobs, checks.length) }, async () => {
+  while (next < checks.length) {
+    const index = next++
+    await check(index, checks[index])
+  }
+}))
 stop()
 if (failed.length) {
   console.error(`${failed.length} of ${checks.length} checks failed: ${failed.join(', ')}`)
