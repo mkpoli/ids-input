@@ -101,6 +101,22 @@ const CELL_MIDDLE_INSET = 0.08
  *  enclosure would put them on, since they no longer surround each other. */
 const CELL_AXIS = { '⿵': 1, '⿶': 1 }
 
+/** A description laid out as a grid of equal cells: rows of columns (`⿱⿲…`, `⿲⿱…`) or columns
+ *  of rows, two or more each way, every row or column the same number of parts. Answers
+ *  `{ cols, rows }`, or null for anything else, including stacks of stacks along one axis. */
+function gridShape(node) {
+  if (!Array.isArray(node)) return null
+  const kids = node.slice(1)
+  if (kids.length < 2 || !kids.every(Array.isArray)) return null
+  const counts = kids.map(kid => kid.length - 1)
+  if (new Set(counts).size !== 1 || counts[0] < 2) return null
+  const stacks = ['⿱', '⿳'].includes(node[0]) && kids.every(kid => ['⿰', '⿲'].includes(kid[0]))
+  const rows = ['⿰', '⿲'].includes(node[0]) && kids.every(kid => ['⿱', '⿳'].includes(kid[0]))
+  if (stacks) return { cols: counts[0], rows: kids.length }
+  if (rows) return { cols: kids.length, rows: counts[0] }
+  return null
+}
+
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
  * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
 export function parseTree(sequence, arity) {
@@ -1372,9 +1388,30 @@ export class Composer {
         const [x0, y0, x1, y1] = this.INSIDE[op], w = region[2] - region[0], h = region[3] - region[1]
         room = [region[0] + x0 * w, region[1] + y0 * h, region[0] + x1 * w, region[1] + y1 * h]
       }
+      // A grid of parts keeps the shape it counts on: a room taller than the grid needs would
+      // stretch every cell into a sliver (𪈵's six 个), so the room is trimmed to the grid's own
+      // proportion. It keeps the side the frame is open towards, and is centred otherwise.
+      const shape = gridShape(children[1])
+      if (shape) {
+        const [r0, y0, r1, y1] = room
+        const want = shape.cols / shape.rows
+        const across = r1 - r0, down = y1 - y0
+        if (across > 0 && down > 0 && Math.abs(across / down - want) > 0.01) {
+          const sides = this.ENCLOSE[op]
+          const [middleX, middleY] = [(r0 + r1) / 2, (y0 + y1) / 2]
+          if (across / down < want) {
+            const kept = across / want
+            const top = sides.includes('B') ? middleY + kept / 2 : y1
+            room = [r0, top - kept, r1, top]
+          } else {
+            const kept = down * want
+            const right = sides.includes('L') ? middleX + kept / 2 : r1
+            room = [right - kept, y0, right, y1]
+          }
+        }
+      }
       const inner = this.node(children[1], room)
-      this.fit(outer, inner, region, this.stem0[0][0], C,
-        fallback && op === '⿽' ? { room, bounds: room } : undefined)
+      this.fit(outer, inner, region, this.stem0[0][0], C, fallback && op === '⿽' ? { room, bounds: room } : undefined)
       return [...outer, ...inner]
     }
     const axis = this.AXIS[op]

@@ -153,6 +153,25 @@ describe('the composer', () => {
     }
   })
 
+  it('keeps an enclosed grid of parts square rather than stretching it into slivers', async () => {
+    // A room shaped unlike the grid hands every cell its own proportion, turning each part into a
+    // sliver; the room is trimmed to the grid's shape about its centre instead. Both spellings of
+    // one grid: rows of columns, and columns of rows.
+    for (const sequence of ['⿴口⿱⿲木口木⿲木口木', '⿴口⿰⿳木口木⿳木口木']) {
+      const drawn = await compose(sourceOf(), sequence)
+      const inner = drawn.parts.slice(1)
+      expect(inner).toHaveLength(6)
+      for (const part of inner) {
+        expect(part.box[3]).toBeLessThan(260)
+        expect(part.box[2] / part.box[3]).toBeGreaterThan(0.8)
+        expect(part.box[2] / part.box[3]).toBeLessThan(1.25)
+      }
+      const frame = drawn.parts[0].box
+      const above = Math.min(...inner.map(part => part.box[1])) - frame[1]
+      const below = frame[1] + frame[3] - Math.max(...inner.map(part => part.box[1] + part.box[3]))
+      expect(Math.abs(above - below)).toBeLessThan(40)
+    }
+  })
   it('opens split enclosures while preserving editor leaf indices', async () => {
     const extra = new Map()
     for (const ch of [...'彳亍氵弓鬲士冖一殳米几方𠂉其亠𧘇果𤣩王文辛言隹糸𨸏匕頁吅𠦝𠆢羽犬禾']) {
