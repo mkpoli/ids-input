@@ -1,0 +1,107 @@
+name: Desktop
+# The desktop app for Windows, macOS and Linux. A `desktop-v*` tag publishes a release with the
+# installers; a pull request that changes the app, or a manual run, builds them as artifacts only.
+on:
+  push:
+    tags: ['desktop-v*']
+  pull_request:
+    paths: ['desktop/**', '.github/workflows/desktop.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-latest
+            args: --bundles nsis
+          - name: macos
+            os: macos-latest
+            targets: aarch64-apple-darwin,x86_64-apple-darwin
+            args: --target universal-apple-darwin --bundles dmg
+          - name: linux
+            os: ubuntu-22.04
+            args: --bundles appimage,deb
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.targets }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: desktop -> target
+      - if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      # The installers take their version from package.json, so a tag must name the same one.
+      - if: startsWith(github.ref, 'refs/tags/desktop-v')
+        shell: bash
+        run: |
+          version=$(jq -r .version package.json)
+          [ "$GITHUB_REF_NAME" = "desktop-v$version" ] || { echo "::error::$GITHUB_REF_NAME does not match package.json $version"; exit 1; }
+      - run: bun install --frozen-lockfile
+      # The export changes only with COMPOSER_BASE; the fetch fills in whatever the cache lacks.
+      - uses: actions/cache@v4
+        with:
+          path: desktop/atlas
+          key: desktop-atlas-${{ hashFiles('demo/lib/composer.js') }}
+      - run: bun run desktop:atlas
+      - run: bunx tauri build ${{ matrix.args }}
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.name }}
+          if-no-files-found: error
+          path: |
+            desktop/target/**/release/bundle/nsis/*.exe
+            desktop/target/**/release/bundle/dmg/*.dmg
+            desktop/target/**/release/bundle/appimage/*.AppImage
+            desktop/target/**/release/bundle/deb/*.deb
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: bundles
+          merge-multiple: true
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cat > notes.md <<'EOF'
+          The IDS Workshop as a desktop app. It draws the Sans face from a copy of the composer export inside the app, so editing and drawing in Sans work without a connection. Serif and Kaisho still load from glyphatlas.org, and sharing and problem reports go to https://ids.mkpo.li.
+
+          | System | File |
+          | --- | --- |
+          | Windows 10 and 11 | `IDS.Workshop_*_x64-setup.exe` |
+          | macOS 11 or later (Apple silicon and Intel) | `IDS.Workshop_*_universal.dmg` |
+          | Linux | `IDS.Workshop_*_amd64.AppImage` or `IDS.Workshop_*_amd64.deb` |
+
+          The installers are not signed with a developer certificate.
+
+          - **Windows:** if SmartScreen stops the installer, choose **More info**, then **Run anyway**.
+          - **macOS:** drag the app to Applications and open it. If macOS refuses, open **System Settings → Privacy & Security** and choose **Open Anyway** next to IDS Workshop.
+          - **Linux:** make the AppImage executable (`chmod +x`) and run it, or install the .deb with `sudo apt install ./IDS.Workshop_*_amd64.deb`.
+          EOF
+          find bundles -type f \( -name '*.exe' -o -name '*.dmg' -o -name '*.AppImage' -o -name '*.deb' \) -print0 \
+            | xargs -0 gh release create "$TAG" --title "IDS Workshop desktop ${TAG#desktop-v}" --notes-file notes.md
