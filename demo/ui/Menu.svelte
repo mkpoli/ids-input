@@ -9,6 +9,7 @@
   // with the IDC characters. Arrow keys move, Escape closes and gives the focus back.
   import { tick, untrack } from 'svelte'
   import Icon from './Icon.svelte'
+
   import KeyHint from './KeyHint.svelte'
   /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean,
    * open?: boolean, menubar?: boolean, tabIndex?: number, onopenchange?: (open: boolean) => void, onfocus?: () => void, onhover?: () => void, onmove?: (key: string) => void,
@@ -213,8 +214,15 @@
   <button type="button" role="menuitem" class="card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
-    {#if item.drawing?.d}
-      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
+    {#if item.drawing?.d || item.drawing?.emoji?.length}
+      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+        {#if item.drawing.d}<path d={item.drawing.d} />{/if}
+        {#each item.drawing.emoji ?? [] as text}
+          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
+            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
+            font-family="system-ui, sans-serif">{text.text}</text>
+        {/each}
+      </svg>
     {:else}
       <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
     {/if}

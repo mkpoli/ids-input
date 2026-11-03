@@ -392,6 +392,16 @@ export const EXAMPLE_GROUPS = [
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
   ] },
+  // Hangul ligatures (합자): two syllables written in one block, which Unicode cannot encode since
+  // it precomposes each syllable alone. Both come from a Buddhist manuscript: ᄋ + ᆞ over ㄹ + ㅏ,
+  // marked with the double dot above and the single dot below, and ㄷ + ᆞ over 륵, marked on its
+  // lower syllable only. Each mark follows its own syllable.
+  { key: 'hangul', refs: [30, 65], examples: [
+    // ᄋᆞ〯 over 라〮: Old Korean, read @ra.
+    { sequence: '⿱ᄋᆞ〯라〮', refs: [65], char: '', reading: '@ra' },
+    // ᄃᆞ over 륵〮: Old Korean, read d@ruk.
+    { sequence: '⿱ᄃᆞ륵〮', refs: [65], char: '', reading: 'd@ruk' },
+  ] },
   // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
   // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
   { key: 'gugyeol', refs: [1, 30], examples: [

@@ -9,8 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { EMOJI_CUT_MATRIX, FACE, HANGUL_FAMILY, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
-  import { loadFallbackText } from './fallback-font.js'
+  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '../composer/index.js'
   import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
   import { translator } from './i18n.js'
@@ -96,8 +95,6 @@
     slots = view ? [...view.frames.values()].filter(frame => frame.node.kind === 'slot').map(frame => boxCorners(frame.canvas, frame.box)) : []
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
     emoji = view?.scopes ? shown?.drawn?.emoji ?? null : null
-    // A legacy Hangul syllable draws as text; its outlines come from the bundled fallback font.
-    $effect(() => { for (const item of emoji ?? []) if (item.family === 'hangul') loadFallbackText(item.text) })
     cut = view?.scopes ? shown?.drawn?.cut ?? null : null
   })
   const chosenLayer = $derived.by(() => {
@@ -280,7 +277,7 @@
                     {#each drawn.emoji ?? [] as item}
                       {#if item.cut}
                         {@const box = emojiBox(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? HANGUL_FAMILY : 'system-ui, sans-serif'}>{item.text}</text>
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
                       {/if}
                     {/each}
                   </mask>
@@ -289,7 +286,7 @@
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? HANGUL_FAMILY : 'system-ui, sans-serif'}>{item.text}</text>
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
                   {/if}
                 {/each}
               {/if}

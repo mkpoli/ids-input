@@ -1053,7 +1053,7 @@
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
