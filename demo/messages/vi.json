@@ -371,5 +371,6 @@
   "sources.use.fonts": "Bộ hình chữ",
   "sources.use.compare": "So sánh công cụ",
   "sources.files": "Tệp",
-  "sources.citedBy": "Dùng trong ví dụ"
+  "sources.citedBy": "Dùng trong ví dụ",
+  "app.atlas": "Danh mục bộ phận"
 }

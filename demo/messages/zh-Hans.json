@@ -371,5 +371,6 @@
   "sources.use.fonts": "字形",
   "sources.use.compare": "引擎对比",
   "sources.files": "文件",
-  "sources.citedBy": "示例中的使用"
+  "sources.citedBy": "示例中的使用",
+  "app.atlas": "部件表"
 }
