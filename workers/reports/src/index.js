@@ -36,15 +36,19 @@ class DispatchTooLarge extends Error {}
 /** A preview version of the workshop, on the alias its pull request deploys to. */
 const PREVIEW = /^https:\/\/(?:[a-z0-9-]+-)?ids-input-workshop\.mkpoli\.workers\.dev$/
 
+/** The desktop app's page: `tauri://localhost` in WebKit (macOS, Linux), `http://tauri.localhost`
+ *  in WebView2 (Windows). */
+const DESKTOP = new Set(['tauri://localhost', 'http://tauri.localhost'])
+
 /**
- * Whether an origin may talk to the endpoint: the site itself, a preview of it, or any port of
- * localhost for a developer running the workshop. A request without an `Origin` header is not a
- * browser's and is left alone.
+ * Whether an origin may talk to the endpoint: the site itself, a preview of it, the desktop app, or
+ * any port of localhost for a developer running the workshop. A request without an `Origin` header
+ * is not a browser's and is left alone.
  * @param {string | null} origin @param {string} siteOrigin @returns {boolean}
  */
 export function originAllowed(origin, siteOrigin) {
   if (origin === null) return true
-  return origin === siteOrigin || PREVIEW.test(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)
+  return origin === siteOrigin || PREVIEW.test(origin) || DESKTOP.has(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)
 }
 
 /** @param {string | null} origin @returns {Record<string, string>} */
