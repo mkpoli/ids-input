@@ -23,9 +23,10 @@ const ready = download(new URL('unicode.json', new URL('./', document.baseURI)))
   .then(data => {
     published = data.files ?? {}
     for (const name of Object.keys(published)) SHARDS.add(name)
-    if (!SHARDS.size) for (let shard = 0; shard < 0x400; shard++) SHARDS.add(shard.toString(16).padStart(3, '0'))
+    // The dev server has no `unicode.json`: the shards are the files it publishes.
+    for (const name of Object.keys(DEV_SHARDS)) SHARDS.add(name)
   })
-  .catch(() => { for (let shard = 0; shard < 0x400; shard++) SHARDS.add(shard.toString(16).padStart(3, '0')) })
+  .catch(() => { for (const name of Object.keys(DEV_SHARDS)) SHARDS.add(name) })
 
 /** The dev server's addresses for the shards, the fonts directory's files as URL imports.
  * @type {Record<string, string>} */

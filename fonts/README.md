@@ -43,10 +43,13 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 256-code-point shard listed in `fonts/unicode.json`. The faces are not in any stylesheet: the app
 registers a shard as a `FontFace` the first time a character in its range appears
 (`src/svelte/fallback-font.js`), so a page downloads only the shards it shows. A shard also carries
-the palette parts, the empty-slot mark ⬚ and the description characters that the composer has no
-outline for, drawn from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
-`LICENSE-Jigmo.txt`): 590 shards, 56,651 characters, 4,462 from Jigmo, 9.7 MB all together.
-`uv run scripts/build_unicode_font.py` rebuilds them and fetches Jigmo itself.
+the palette parts, the empty-slot mark ⬚, the description characters and the standard Han
+ideographs (CJK Unified Ideographs, Extension A and the compatibility ideographs) that the composer
+has no outline for. Those come from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
+`LICENSE-Jigmo.txt`), with the compatibility ideographs from Unifont 18.0.01 (GNU GPL 2+ with the
+font embedding exception, or SIL OFL 1.1; its notices name the authors, among them Roman Czyborra
+and Paul Hardy). 629 shards, 78,398 characters, 21,737 of them filled from a font, 13.7 MB all together.
+`uv run scripts/build_unicode_font.py` rebuilds them and fetches both sources itself.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google
