@@ -18,10 +18,13 @@ const pause = (ms, signal) => new Promise((resolve, reject) => {
   signal?.addEventListener('abort', done, { once: true })
 })
 
+/** An error that ends the request on purpose: a caller's abort or timeout. @param {unknown} error */
+const stopped = error => error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')
+
 /**
- * `fetch`, asked again after a network error (the TypeError `fetch` rejects with) or a 408, 429 or
- * 5xx answer, up to `waits.length` more times. The last answer or error is the caller's; an
- * aborted request is never asked again.
+ * `fetch`, asked again after it rejects (browsers reject a network failure with a TypeError, Bun
+ * with a plain Error) or answers 408, 429 or 5xx, up to `waits.length` more times. The last answer
+ * or error is the caller's; an aborted or timed-out request is never asked again.
  * @param {(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>} [get]
  * @param {number[]} [waits]
  * @returns {(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>}
@@ -33,8 +36,9 @@ export function retrying(get = (input, init) => globalThis.fetch(input, init), w
       try {
         const response = await get(input, init)
         if (last || !passing(response.status)) return response
+        await response.body?.cancel()
       } catch (error) {
-        if (last || init?.signal?.aborted || !(error instanceof TypeError)) throw error
+        if (last || init?.signal?.aborted || stopped(error)) throw error
       }
       await pause(waits[attempt], init?.signal)
     }

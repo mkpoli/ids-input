@@ -50,10 +50,16 @@ describe('a download asked for again', () => {
     await expect(pending).rejects.toThrow('stop')
     expect(calls.length).toBe(1)
   })
-  it('lets an error other than the network through untouched', async () => {
+  it('lets a timeout through untouched', async () => {
     const calls = []
-    const get = async () => { calls.push(1); throw new RangeError('bad') }
-    await expect(retrying(get, quick)('/a')).rejects.toThrow('bad')
+    const get = async () => { calls.push(1); throw new DOMException('late', 'TimeoutError') }
+    await expect(retrying(get, quick)('/a')).rejects.toThrow('late')
     expect(calls.length).toBe(1)
+  })
+  it('asks again after the plain Error a runtime other than the browser rejects with', async () => {
+    const calls = []
+    const get = async () => { calls.push(1); if (calls.length < 2) throw new Error('ConnectionRefused'); return new Response('ok') }
+    expect((await retrying(get, quick)('/a')).status).toBe(200)
+    expect(calls.length).toBe(2)
   })
 })

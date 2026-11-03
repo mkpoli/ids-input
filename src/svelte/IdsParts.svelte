@@ -25,6 +25,7 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
+  import { download } from '../core/retry.js'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -179,7 +180,7 @@
   $effect(() => {
     if (tab !== 'components' || !characters || hanKeys || hanLoading || hanFailed) return
     hanLoading = true
-    fetch(new URL('../../data/han-parts.json.gz', import.meta.url))
+    download(new URL('../../data/han-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('Han characters'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { hanKeys = data.keys; hanStrokesData = data.strokes })
       .catch(() => { hanLoading = false; hanFailed = true })
@@ -295,7 +296,7 @@
   $effect(() => {
     if (tab !== 'other' || !parts || otherData || otherLoading || otherFailed) return
     otherLoading = true
-    fetch(new URL('../../data/script-parts.json.gz', import.meta.url))
+    download(new URL('../../data/script-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('script parts'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { otherData = data })
       .catch(() => { otherLoading = false; otherFailed = true })
@@ -384,7 +385,7 @@
   $effect(() => {
     if (tab !== 'tangut' || !parts || tangutData || tangutLoading || tangutFailed) return
     tangutLoading = true
-    fetch(new URL('../../data/tangut-parts.json.gz', import.meta.url))
+    download(new URL('../../data/tangut-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('Tangut parts'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { tangutData = data })
       .catch(() => { tangutLoading = false; tangutFailed = true })
@@ -394,7 +395,7 @@
   let tangutStrokes = $state.raw(null)
   $effect(() => {
     if (tab !== 'tangut' || tangutStrokes) return
-    fetch(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
+    download(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
       .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Tangut strokes')))
       .then(unpack).then(JSON.parse).then(data => { tangutStrokes = data.values })
       .catch(() => { /* Counts stay unknown. */ })
