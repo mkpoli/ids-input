@@ -4,7 +4,7 @@
   // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke;
   // a list of settled tabs asks at once with a delay of 0.
   import { parse, write } from '../../src/core/index.js'
-  import { EMOJI_CUT_MATRIX, emojiTransform } from '../../src/core/preview.js'
+  import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../../src/core/preview.js'
   /**
    * @typedef {{ d?: string, cut?: string, slots?: { index: number, box: number[] }[],
    *   emoji?: { text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} Drawing
@@ -15,11 +15,6 @@
   const read = $derived(parse(sequence, { open: true }))
   const source = $derived(!read.problem && read.tree !== null ? write(read.tree) : '')
   let drawing = $state.raw(/** @type {Drawing | null} */ (null))
-  /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
-  const emojiBox = item => {
-    const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
-    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
-  }
 
   $effect(() => {
     const text = source, ask = draw
@@ -44,8 +39,8 @@
         {#if drawing.cut}<path d={drawing.cut} fill="#000" />{/if}
         {#each emoji as item}
           {#if item.cut}
-            {@const box = emojiBox(item)}
-            <text filter={`url(#${uid}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+            {@const place = emojiPlace(item)}
+            <text filter={`url(#${uid}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
           {/if}
         {/each}
       </mask>
@@ -53,8 +48,8 @@
     <path d={drawing.d} mask={hasCut ? `url(#${uid}-cut)` : undefined} />
     {#each emoji as item}
       {#if !item.cut}
-        {@const box = emojiBox(item)}
-        <text mask={hasCut && !item.restored ? `url(#${uid}-cut)` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+        {@const place = emojiPlace(item)}
+        <text mask={hasCut && !item.restored ? `url(#${uid}-cut)` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
       {/if}
     {/each}
     {#each drawing.slots ?? [] as slot (slot.index)}
