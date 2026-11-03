@@ -327,7 +327,7 @@ describe('the composer', () => {
   it('holds a one-part enclosure around its inner parts', async () => {
     // 冂 is a frame: in a cell of its own it keeps its region, and the parts it holds are laid out in
     // one grid, in reading order, from the top.
-    const frame = await compose(enclosureSource(), '⿵冂⿲⿱三口⿱三口⿲⿱三口⿱三口')
+    const frame = await compose(enclosureSource(), '⿵冂⿲⿱三口⿱三口⿰⿱三口⿱三口')
     const svgBox = ([x, y, w, h]) => [x, y, x + w, y + h]
     expect(frame.cells).toBe(true)
     const outerPart = frame.parts.find(part => part.leaf === 0)
