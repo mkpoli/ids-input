@@ -891,7 +891,12 @@ export class Composer {
       const target = [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
       // A dot keeps its own round shape; filling a letter's room would draw a lozenge.
       const parts = this.node(letter, dot ? roundBox(target) : target)
-      if (dot) for (const part of parts) part.fixed = true
+      // The letters keep the weight they are drawn with: a syllable's own strokes are already
+      // balanced against each other by the face that draws them.
+      for (const part of parts) {
+        part.weightLimit = [0, 0]
+        if (dot) part.fixed = true
+      }
       return parts
     })
     return placed.flat()
