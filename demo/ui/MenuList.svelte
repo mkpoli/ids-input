@@ -1,6 +1,7 @@
 <script>
   // A menu's items laid out as a list, for a sheet that holds several menus at once (the phone's menu).
   import Icon from './Icon.svelte'
+
   /** @type {{ items: import('./Menu.svelte').Item[], label: string, onpick?: () => void, view?: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null, open?: boolean, chips?: boolean }} */
   import { tick, untrack } from 'svelte'
   let { items, label, onpick, view = null, open = true, chips = true } = $props()
@@ -146,8 +147,15 @@
   <button type="button" class="card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { openSubmenu = -1; onpick?.(); item.run?.() }}>
-    {#if item.drawing?.d}
-      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
+    {#if item.drawing?.d || item.drawing?.emoji?.length}
+      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+        {#if item.drawing.d}<path d={item.drawing.d} />{/if}
+        {#each item.drawing.emoji ?? [] as text}
+          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
+            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
+            font-family="system-ui, sans-serif">{text.text}</text>
+        {/each}
+      </svg>
     {:else}
       <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
     {/if}

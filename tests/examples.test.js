@@ -144,7 +144,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'erjian', 'geba', 'ligature', 'korean', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'erjian', 'geba', 'ligature', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

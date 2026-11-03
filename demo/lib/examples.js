@@ -392,6 +392,20 @@ export const EXAMPLE_GROUPS = [
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
   ] },
+  // Hangul ligatures (합자): two syllables written in one block. Unicode precomposes each modern
+  // syllable and leaves Old Hangul as a jamo run, so a block of two has no code point. The first
+  // form is this workshop's first-and-last jamo, ㄹ with ㅗ over ㄹ with ㅏ. The other two are Old
+  // Korean blocks from a Buddhist manuscript: ᄋ + ᆞ over ㄹ + ㅏ, and ㄷ + ᆞ over 륵. The first
+  // block marks both syllables, the double dot 방점 above and the single dot below; the second
+  // marks only the lower one. Each tone mark follows its own syllable.
+  { key: 'hangul', refs: [30, 65, 66], examples: [
+    // ㄹ with ㅗ over ㄹ with ㅏ, the first form in the screenshots.
+    { sequence: '⿱⿰ㄹㅗ⿰ㄹㅏ', refs: [66], char: '' },
+    // ᄋᆞ〯 over 라〮: Old Korean, read @ra.
+    { sequence: '⿱ᄋᆞ〯라〮', refs: [65], char: '', reading: '@ra' },
+    // ᄃᆞ〯 over 륵〮: Old Korean, read d@ruk.
+    { sequence: '⿱ᄃᆞ륵〮', refs: [65], char: '', reading: 'd@ruk' },
+  ] },
   // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
   // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
   { key: 'gugyeol', refs: [1, 30], examples: [
