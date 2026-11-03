@@ -33,5 +33,5 @@ try {
   assert.equal(await tab.textContent(), '🚗', 'the tab draws the emoji as text too')
   assert.deepEqual(errors, [])
   await page.locator('.ids-preview-large').screenshot({ path: process.env.SHOT ?? '/tmp/car-example.png' })
-  console.log('PASS the car example opens and draws its emoji in colour')
+  console.log('PASS the car example opens and draws its emoji as text')
 } finally { await browser.close() }
