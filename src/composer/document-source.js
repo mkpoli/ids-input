@@ -4,7 +4,7 @@
 // local placements, normalizes each leaf's canvas paths into its own 1000-unit frame, and leaves the
 // authored layer transforms to the document renderer. The caller must request `separate: true` and
 // pass the sketch it received with the drawing.
-import { TransformError, parsePath, toSequence, transformPath } from '../document/index.js'
+import { TransformError, parsePath, splitSubpaths, toSequence, transformPath } from '../document/index.js'
 
 /** @typedef {import('../document/index.js').Document} Document */
 /** @typedef {import('../document/index.js').Node} Node */
@@ -23,6 +23,48 @@ const union = (a, b) => {
   const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1])
   const x1 = Math.max(a[0] + a[2], b[0] + b[2]), y1 = Math.max(a[1] + a[3], b[1] + b[3])
   return [x, y, x1 - x, y1 - y]
+}
+
+/** The signed area of one closed subpath, read as an SVG path. @param {string} d */
+function signedAreaOf(d) {
+  const path = parsePath(d)
+  let area = 0
+  for (const segment of path.segments) {
+    if (segment.type === 'Z') continue
+    const end = segment.end ?? segment.p
+    if (!end) continue
+    const [x, y] = end
+    area += (segment.p?.[0] ?? x) * y - x * (segment.p?.[1] ?? y)
+  }
+  return area / 2
+}
+
+/**
+ * A drawing part as document pieces and stroke groups. A part with stroke groups becomes one piece
+ * per closed contour, so each group names piece indices; a contour wound against the dominant one is
+ * a cut (a counter). Parts without groups keep their compound path.
+ * @param {{ d: string, cut?: boolean, strokes?: [number, number[]][] }} part @param {string} d
+ * @returns {{ pieces: import('../document/render.js').LocalPiece[], strokes?: { id: string, pieces: number[] }[] }}
+ */
+function partGeometry(part, d) {
+  if (part.cut || !part.strokes?.length) return { pieces: [{ d, fillRule: 'nonzero', cut: Boolean(part.cut) }] }
+  const subpaths = splitSubpaths(d)
+  const contours = subpaths.length
+  if (!contours || part.strokes.some(([, group]) => group.some(index => index < 0 || index >= contours))) {
+    return { pieces: [{ d, fillRule: 'nonzero' }] }
+  }
+  let dominant = 1
+  for (const subpath of subpaths) {
+    const area = signedAreaOf(subpath)
+    if (Math.abs(area) > Math.abs(dominant)) dominant = area
+  }
+  const pieces = subpaths.map(subpath => ({
+    d: subpath,
+    fillRule: /** @type {'nonzero'} */ ('nonzero'),
+    cut: Math.sign(signedAreaOf(subpath)) !== Math.sign(dominant),
+  }))
+  const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
+  return { pieces, strokes }
 }
 
 /** The affine map from a child's 1000-unit local frame into its parent's, by their boxes.
@@ -147,13 +189,17 @@ export function documentSource(document, drawing, sketch) {
     const matrix = localOf(at.region)
     if (!list?.length || !matrix) return null
     try {
-      return {
-        pieces: list.map(part => ({
-          d: transformPath(part.d, [{ type: 'affine', matrix }]).d,
-          fillRule: /** @type {'nonzero'} */ ('nonzero'),
-          cut: Boolean(part.cut),
-        })),
+      const pieces = []
+      /** @type {{ id: string, pieces: number[] }[]} */
+      const strokes = []
+      for (const part of list) {
+        const d = transformPath(part.d, [{ type: 'affine', matrix }]).d
+        const made = partGeometry(part, d)
+        const offset = pieces.length
+        pieces.push(...made.pieces)
+        if (made.strokes) strokes.push(...made.strokes.map(stroke => ({ id: stroke.id, pieces: stroke.pieces.map(index => index + offset) })))
       }
+      return strokes.length ? { pieces, strokes } : { pieces }
     } catch (error) {
       if (error instanceof TransformError) return null
       throw error

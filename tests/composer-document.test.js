@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { fromSequence, renderLayers } from '../src/document/index.js'
+import { applyGeometryEdits, fingerprintGeometry, fromSequence, renderLayers } from '../src/document/index.js'
 import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '../src/composer/index.js'
 import { files } from './fixtures/composer-export.js'
 
@@ -133,9 +133,31 @@ describe('a composer-backed document source', () => {
     expect(whole.parts.some(part => part.strokes?.length)).toBe(true)
     const rendered = renderLayers(document, made.source)
     expect(rendered.complete).toBe(true)
-    expect(rendered.pieces).toHaveLength(2)
+    expect(rendered.pieces).toHaveLength(3)
     expect(rendered.pieces.every(piece => piece.d.length > 0)).toBe(true)
   })
+  it('maps stroke groups to document pieces and applies a stroke edit', async () => {
+    const source = createSource(async name => {
+      const body = files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const document = fromSequence('木')
+    const drawing = await compose(source, '木', { separate: true })
+    const made = documentSource(document, drawing, await composerSketch(source, '木'))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces).toHaveLength(2)
+    expect(geometry?.strokes).toEqual([{ id: '0', pieces: [0] }, { id: '1', pieces: [1] }])
+    document.geometryEdits = [{
+      id: 'e1', node: document.root.id, geometry: fingerprintGeometry(geometry),
+      target: { kind: 'stroke', id: '0' }, transform: [{ type: 'affine', matrix: [1, 0, 0, 1, 5, 0] }],
+    }]
+    const rendered = renderLayers(document, made.source)
+    const plain = renderLayers({ ...document, geometryEdits: [] }, made.source)
+    expect(rendered.complete).toBe(true)
+    expect(rendered.pieces[0].d).not.toBe(plain.pieces[0].d)
+    expect(rendered.pieces[1].d).toBe(plain.pieces[1].d)
+  })
+
   it('keeps cut pieces and rejects a zero box', () => {
     const { document, source } = sourceOf('⿰木口', [[0, 0, 500, 1000], [500, 0, 0, 1000]], [
       { leaf: 0, d: square(0, 500), cut: true },
