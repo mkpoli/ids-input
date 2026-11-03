@@ -117,11 +117,9 @@ describe('document validation', () => {
     kept.extensions = { 'example.org/editor': { value: 1 } }
     expect(validateDocument(kept)).toEqual([])
   })
-  it('requires a pinned recipe for geometry edits and checks their shape', () => {
+  it('checks the shape of geometry edits without requiring a pinned recipe', () => {
     const document = emptyDocument()
     document.geometryEdits = [{ id: 'e1', node: 'root', geometry: '1'.repeat(64), target: { kind: 'contour', piece: 0, contour: 0 }, transform: [] }]
-    expect(validateDocument(document).map(issue => issue.message)).toContain('geometry edits need a pinned recipe')
-    document.render = { mode: 'pinned', engine: 'x', revision: '1', options: {}, assets: [{ role: 'font', sha256: '0'.repeat(64) }] }
     expect(validateDocument(document)).toEqual([])
   })
 })

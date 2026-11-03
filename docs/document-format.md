@@ -214,7 +214,7 @@ is selected directly from an operation's type or payload.
 
 - `unbound`: the host may choose its available renderer and assets. The editor
   displays that the appearance is unbound. Semantic layer transforms still use
-  the specified local frames. Geometry-specific edits require a pinned recipe.
+  the specified local frames. A geometry edit binds to its exact local geometry by fingerprint.
 - `pinned`: the file names `engine`, an immutable `revision`, all effective
   `options`, and an `assets` array. Each asset has a unique `role` and a lowercase
   SHA-256 digest of its bytes. An optional `uri` is a retrieval hint. Fonts,
