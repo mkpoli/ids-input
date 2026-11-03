@@ -484,7 +484,9 @@
         </div></section>{/if}
       {/each}
     {/if}
-    {#if sources.length}
+    <!-- The row leads with the data sources and ends with the records; waiting for the answer keeps
+         that order instead of showing the records alone and moving them along a moment later. -->
+    {#if sources.length && status !== 'loading'}
       <p class="sources" id={`${uid}-sources`}><span class="label">{t('info.source.sections')}</span>{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
     {/if}
   {/if}
