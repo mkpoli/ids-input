@@ -9,7 +9,7 @@
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
-  import { APPROXIMATE } from '@han-compose/composer/compose'
+  import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview } from '@han-compose/composer'
   import engineOutlines from 'ids-engine-outlines'
@@ -37,8 +37,8 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
-  import exampleDrawings from './lib/example-drawings.json'
-  import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
+  import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
+  import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
@@ -69,6 +69,11 @@
   import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
+  /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
+  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  // What a share names: this page, or the published site for the desktop app, whose own address
+  // opens nothing outside it.
+  const shareFrom = DESKTOP ? new URL(SITE) : location
   /** @type {'sans' | 'serif' | 'klee'} */
   let face = $state(load('font', 'sans'))
   $effect(() => save('font', face === 'sans' ? undefined : face))
@@ -128,8 +133,23 @@
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, loaders: bundles }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
-  /** The drawings prepared by demo/scripts/build-example-drawings.mjs for this export. @type {Map<string, import('../src/adapter/types.js').Drawing>} */
-  const prepared = new Map(Object.entries(exampleDrawings.drawings).map(([sequence, entry]) => [sequence, entry.drawn]))
+  // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
+  // At 2 MB they come as a chunk of their own, asked for at once and read when they arrive, so the
+  // page draws without waiting for them.
+  const EXAMPLE_SEQUENCES = new Set(EXAMPLES.map(example => example.sequence))
+  let prepared = $state.raw(/** @type {Map<string, import('../src/adapter/types.js').Drawing>} */ (new Map()))
+  const preparedReady = import('./lib/example-drawings.json')
+    .then(({ default: data }) => { prepared = new Map(Object.entries(data.drawings).map(([sequence, entry]) => [sequence, entry.drawn])) })
+    .catch(() => { /* Each example is composed instead. */ })
+  /** An example's prepared drawing once the chunk has arrived; null for any other sequence, or where
+   *  the chunk failed. @param {string} sequence */
+  const preparedFor = async sequence => {
+    if (!EXAMPLE_SEQUENCES.has(sequence)) return null
+    await preparedReady
+    return prepared.get(sequence) ?? null
+  }
+  /** A sequence with an emoji, which a prepared drawing would ink as a path. @param {string} sequence */
+  const hasEmoji = sequence => /\p{Emoji_Presentation}/u.test(sequence)
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previewsWithExamples = new Map()
   /** A base as the composer's loader settles it: absolute, with a trailing slash on the path. @param {string} value */
@@ -147,8 +167,9 @@
     return /** @type {ReturnType<typeof composerPreview>} */ (Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
       if (!split && exportUrl(COMPOSER_BASE) === preparedBase) {
-        const drawn = prepared.get(sequence)
-        if (drawn) return drawn
+        const drawn = await preparedFor(sequence)
+        options?.signal?.throwIfAborted()
+        if (drawn && !hasEmoji(sequence)) return drawn
       }
       const adapted = split ? [] : await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {
@@ -158,7 +179,7 @@
       return composed(sequence, options)
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
-        if (split || sequence === undefined || !prepared.has(sequence)) composed.warm()
+        if (split || sequence === undefined || !EXAMPLE_SEQUENCES.has(sequence)) composed.warm()
       },
     }))
   }
@@ -222,12 +243,14 @@
           if ([...char].length !== 1 || char === sequence) continue
           try { return await composed(char) } catch { /* the default export draws the sequence */ }
         }
-        // A character the face has no glyph for draws the description the adapter knows it by.
+        // A character the face has no glyph for is built from the description the adapter knows it
+        // by, when every operator in it places its operands predictably. The drawing is marked so a
+        // reader can see it was assembled rather than drawn.
         if ([...sequence].length === 1) {
           const described = await babel.structure(sequence).catch(() => [])
           for (const { text } of described) {
-            if (text === sequence) continue
-            try { return await composed(text, options) } catch { /* the default export draws it */ }
+            if (text === sequence || !composableDescription(text)) continue
+            try { return { ...(await composed(text, options)), composed: true } } catch { /* the default export draws it */ }
           }
         }
         if (defaultFace) throw error
@@ -236,7 +259,7 @@
 
     }, {
       warm: (/** @type {string | undefined} */ sequence) => {
-        if (split || sequence === undefined || !defaultFace || !prepared.has(sequence)) composed.warm()
+        if (split || sequence === undefined || !defaultFace || !EXAMPLE_SEQUENCES.has(sequence)) composed.warm()
       },
     })
     previewsWithExamples.set(key, preview)
@@ -268,7 +291,7 @@
     if (!iconDrawings.has(key)) {
       const draw = drawerAt(at, style)
       iconDrawings.set(key, createIconDrawings(async sequence =>
-        (style === 'sans' && exportUrl(at) === preparedBase ? prepared.get(sequence) : null) ?? draw(sequence)))
+        (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
@@ -392,6 +415,8 @@
   let emoji = $state.raw(null)
   /** @type {string | null} */
   let cut = $state.raw(null)
+  /** @type {number | null} */
+  let cutLeaf = $state.raw(null)
   /** @type {{ save: (format?: 'svg' | 'png') => Promise<void> } | undefined} */
   let exportPanel = $state()
   /** @type {HTMLButtonElement | null} */ let settingsButton = $state(null)
@@ -849,9 +874,39 @@
     const group = closedGroups.at(-1)
     if (group) restoreClosed(group, true)
   }
-  /** Bring back a closed tab or group chosen in the starter, showing and focusing it. @param {ClosedGroup} group */
-  function reopenGroup(group) {
-    restoreClosed(group, true)
+  /** Bring one tab from a closed group back, showing it; the group's other tabs stay listed.
+   *  @param {ClosedGroup} group
+   *  @param {ClosedGroup['tabs'][number]} entry */
+  function reopenRecentTab(group, entry) {
+    const at = group.tabs.indexOf(entry)
+    if (at < 0) return
+    flush()
+    // The empty tab a close left behind goes when the group's first tab comes back.
+    const fresh = tabs.find(tab => tab.id === group.fresh)
+    if (fresh && !fresh.sequence && (fresh.id !== activeId || (!editor.canUndo && !editor.canRedo))) {
+      tabs.splice(tabs.indexOf(fresh), 1)
+      states.delete(fresh.id)
+      sessions.delete(fresh.id)
+    }
+    // Place the tab beside the group's tabs already back, so any order ends in the old order.
+    const open = new Set(tabs.map(tab => tab.id))
+    let index = -1
+    for (let i = at - 1; i >= 0 && index < 0; i--) {
+      const id = group.tabs[i].tab.id
+      if (open.has(id)) index = tabs.findIndex(tab => tab.id === id) + 1
+    }
+    for (let i = at + 1; i < group.tabs.length && index < 0; i++) {
+      const id = group.tabs[i].tab.id
+      if (open.has(id)) index = tabs.findIndex(tab => tab.id === id)
+    }
+    if (index < 0) index = Math.min(entry.at, tabs.length)
+    tabs.splice(index, 0, entry.tab)
+    if (entry.state) states.set(entry.tab.id, entry.state)
+    // Take the tab off the history; the group keeps its other tabs for their own rows.
+    const rest = group.tabs.filter(item => item !== entry)
+    const remaining = { ...group, tabs: rest, active: group.active === entry.tab.id ? null : group.active, fresh: undefined }
+    closedGroups = rest.length ? closedGroups.map(item => item === group ? remaining : item) : closedGroups.filter(item => item !== group)
+    activate(entry.tab.id)
     tick().then(() => tabStrip?.focusTab())
   }
   /** Close every tab but `id`, showing it. @param {string} id */
@@ -1006,7 +1061,7 @@
   }
   const exampleItems = $derived(EXAMPLE_GROUPS.flatMap(group => [
     { heading: t(`app.examples.${group.key}`) },
-    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, group.key === 'korean' || group.key === 'gugyeol' ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
+    ...group.examples.map(example => exampleItem(example, hasTangut(example.sequence) ? 'txg' : isShuishu(example.sequence) ? 'swi' : 'ja', group.refs, ['korean', 'hangul', 'gugyeol'].includes(group.key) ? 'ko' : group.key === 'nom' ? 'vi' : 'ja')),
   ]))
   const exampleView = $derived({
     list: t('app.examples.list'), cards: t('app.examples.cards'), cardsSelected: exampleCards,
@@ -1023,13 +1078,13 @@
     editor, items: exampleItems, view: exampleView,
     onstart: sequence => { addTab(sequence); focusNewTab() },
     onstarted: focusNewTab,
-    // Closed tabs, newest first; choosing one brings its whole group back.
-    recent: [...closedGroups].reverse().map(group => ({
-      key: group.tabs[0]?.tab.id ?? '',
-      names: group.tabs.map(({ tab }) => tabName(tab) || t('app.tabs.untitled')),
-      count: group.tabs.length,
-      reopen: () => reopenGroup(group),
-    })),
+    // Closed tabs, newest group first and in tab order within it; choosing a row brings that tab back.
+    recent: [...closedGroups].reverse().flatMap(group => group.tabs.map(entry => ({
+      key: entry.tab.id,
+      name: tabName(entry.tab) || t('app.tabs.untitled'),
+      sequence: entry.tab.whole || entry.tab.sequence,
+      reopen: () => reopenRecentTab(group, entry),
+    }))),
   })
   // The history, oldest first; a step undone is the next to redo.
   const historyItems = $derived.by(() => {
@@ -1159,9 +1214,9 @@
         </div>
         <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
       <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-        <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
       </div>
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
@@ -1230,7 +1285,7 @@
               onclick={() => view = 'tree'} onkeydown={viewKey}>{t('ids.view.tree')}</button>
           </div>
           {#if view === 'shape'}
-            <div class="tree-stage" role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
+            <div class="tree-stage" data-character-info-avoid role="tabpanel" id="shape-panel" aria-labelledby="shape-tab">
               <div class="tree-box"><IdsTree {editor} {keyHints} /></div>
             </div>
           {:else}
@@ -1275,12 +1330,12 @@
           controls="output-panel" reverse onchange={width => resizeColumn('output', width)} onreset={() => resizeColumn('output', null)} />
       </div>
       <section class="pane output" class:phone-active={phonePane === 'output'} class:adjusting={adjusting} id="output-panel" aria-label={t('app.output')}>
-        <div class="preview">
+        <div class="preview" data-character-info-avoid>
           {#if !large}
             {#key activeId}
               <IdsPreview {adapter} tree={editor.tree} chosen={editor.chosen} {messages} {locale} notes={false}
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
-                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut>
+                editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
                 {#snippet detailContent()}
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
@@ -1314,9 +1369,9 @@
           <div class="large-bar">
             <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
             <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide">{t('app.font.sans')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide">{t('app.font.serif')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide">{t('app.font.klee')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
             </div>
             <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
               {#each [...editor.whole] as ch}
@@ -1336,7 +1391,7 @@
           {/if}
         </dialog>
         <div class="details">
-          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
+          <div class="block"><ExportPanel bind:this={exportPanel} {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} incomplete={exportIncomplete} document={currentSession()?.document} sequence={editor.whole} {t} onnote={note} /></div>
         </div>
       </section>
     </div>
@@ -1365,7 +1420,7 @@
     ]} />
   </div>
 </Dialog>
-<AboutDialog bind:open={aboutOpen} {t} />
+<AboutDialog bind:open={aboutOpen} {locale} {t} />
 <TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {locale} {t} />
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
@@ -1373,7 +1428,7 @@
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
-  {drawing} {scopes} {slots} {emoji} {cut} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
+  {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
@@ -1388,19 +1443,14 @@
 <Dialog bind:open={closeAllOpen} title={t('app.tabs.closeAll')} closeLabel={t('app.close')}>
   <p class="confirm-text">{t('app.tabs.closeAllBody')}</p>
   <div class="confirm-actions">
-    <button type="button" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
-    <button type="button" class="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
+    <button type="button" class="ui-button" data-size="lg" onclick={() => closeAllOpen = false}>{t('app.cancel')}</button>
+    <button type="button" class="ui-button" data-size="lg" data-variant="danger" onclick={closeAllTabs}>{t('app.tabs.closeAllConfirm')}</button>
   </div>
 </Dialog>
 
 <style>
-  .confirm-text{margin:0 0 18px;font-size:14px;line-height:1.5}
-  .confirm-actions{display:flex;justify-content:flex-end;gap:8px}
-  .confirm-actions button{height:34px;padding:0 14px;border:1px solid var(--ui-color-border);border-radius:9px;background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;font-size:13px;cursor:pointer}
-  .confirm-actions button:hover{background:var(--ui-color-surface-hover)}
-  .confirm-actions .danger{border-color:var(--ui-color-danger);color:var(--ui-color-danger)}
-  .confirm-actions .danger:hover{background:color-mix(in srgb,var(--ui-color-danger) 10%,transparent)}
-  .confirm-actions button:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
+  .confirm-text{margin:0 0 var(--ui-space-xl);font-size:var(--ui-text-md);line-height:var(--ui-leading-normal)}
+  .confirm-actions{display:flex;justify-content:flex-end;gap:var(--ui-space-sm)}
   .search-modes{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
   .similar{margin-top:12px;padding-top:8px;border-top:1px solid var(--ui-color-border)}
   .search-modes button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);background:transparent;color:inherit;cursor:pointer}
@@ -1416,9 +1466,12 @@
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
   .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
   .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-sans)}
-  .font-choice .aa.serif{font-family:var(--cjk-serif)}
-  .font-choice[aria-pressed="true"] .aa.klee{font-family:var(--cjk-klee)}
+  .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
+  .font-choice .wide{font-family:var(--cjk-label-sans)}
+  .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
+  .font-choice .aa.klee,.font-choice .wide.klee{font-family:var(--cjk-label-klee)}
+  /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
+  .font-choice .wide.klee:lang(zh-Hans),.font-choice .wide.klee:lang(vi){font-family:var(--cjk-label-sans)}
   .font-choice:hover{color:var(--ui-color-ink)}
   .font-choice[aria-pressed="true"]{background:var(--ui-color-accent-soft);color:var(--ui-color-accent)}
   .font-choice:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}

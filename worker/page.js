@@ -9,7 +9,11 @@ export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
 
 /** The code point of `char`, written `U+93B6`. @param {string} char */
-export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
+/** @param {string} char */
+export const codePoint = char => {
+  const point = char.codePointAt(0)
+  return point === undefined ? '' : `U+${point.toString(16).toUpperCase().padStart(4, '0')}`
+}
 
 /** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
  *  included and text the IDS parser rejects. A share link builds its address the same way.
@@ -17,7 +21,7 @@ export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)
 export const pathOf = sequence => !sequence ? '/' : (/[./]/.test(sequence) || !parse(sequence, { open: true }).tree)
   ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
 
-const RESERVED = new Set(['embed', 'compare', 'engines', 'index', 'og'])
+const RESERVED = new Set(['embed', 'compare', 'engines', 'sources', 'index', 'og'])
 const bad = (error, status = 400) => ({ error, status })
 
 /** Classify requests without loading fonts or rendering. Bounds never truncate a sequence. */
@@ -49,7 +53,8 @@ export function routeFor(url, defaultSequence) {
 }
 
 /**
- * The title, description, tags and image of a shared sequence.
+ * The title, description, tags and image of a shared sequence. `char` is the character the card
+ * draws and names, so the page and its image say the same thing.
  * @param {{ sequence: string, char: string | null, origin: string }} share
  */
 export function metaFor({ sequence, char, origin }) {

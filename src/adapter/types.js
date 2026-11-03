@@ -55,13 +55,14 @@
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
  * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
  * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (⬚), numbered in reading order, in the box the layout gives it.
- * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask.
+ * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean, family?: 'hangul' }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask. `family` names the letters a font shapes for the text, `hangul` for a conjoining jamo run.
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
+ * @property {boolean} [composed] Whether the face had no glyph and the character was assembled from its description. Such a drawing is an approximation and hosts show it apart from a real glyph.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
  * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *
@@ -82,6 +83,7 @@
  * @property {(text: string, options?: Options) => Promise<string | null>} [chainCharacter] The character a zi.tools description carrying a stroke chain names, when the host supplies that table.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number }>} [findSimilar] Characters whose description shares the query's top-level shape with one operand free.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
+ * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByUnknownStructure] Characters holding every top-level element of an IDS pattern, whatever structure joins them, at any depth; | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.

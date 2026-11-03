@@ -30,29 +30,60 @@ describe('sourced character meanings', () => {
     for (const char of '水火山石土') expect(info(char).emoji.length).toBeGreaterThan(0)
     expect(info('馬').emoji).toContainEqual({text:'🐎',meaning:'horse'})
   })
+  test('a Tangut character carries meanings in three languages and its readings', () => {
+    const poison = info('𗀀')
+    expect(poison.glosses).toContain('poison; venom; toxin')
+    expect(poison.meanings.ja).toContain('毒。')
+    expect(poison.meanings.zh).toContain('毒')
+    expect(poison.readings.map(reading => reading.name)).toEqual([
+      'Li Fanwen 2008', 'Gong Hwang-cherng', 'Gong Xun 2024-11', 'Arakawa Shintarō',
+      'Marc Miyake', 'Nishida 1966', 'Kychanov 2006', 'Sofronov 1968',
+    ])
+    expect(poison.readings.find(reading => reading.name === 'Li Fanwen 2008').value).toBe('do1')
+    expect(poison.soundGlosses.find(sound => sound.name === 'Li Fanwen').value).toContain('舌頭音')
+  })
+  test('a missing-explanation placeholder is not published as a meaning', () => {
+    // Open Tangut writes 暫無解釋 where it has no Chinese explanation; the card says nothing instead.
+    expect(document.entries['𗀦'].zh).toBeUndefined()
+    expect(info('𗀦').meanings?.zh).toBeUndefined()
+    expect(document.entries['𗆵'].zh).toEqual(['誠'])
+    expect(info('𗆵').meanings.zh).toEqual(['誠'])
+  })
+  test('the Open Tangut records cover the ideographs and leave readings empty where none exist', () => {
+    const tangut = Object.entries(document.entries).filter(([char]) => characterScript(char) === 'tangut')
+    expect(tangut).toHaveLength(6144)
+    expect(tangut.some(([, entry]) => entry.ja?.length)).toBe(true)
+    expect(tangut.some(([, entry]) => entry.zh?.length)).toBe(true)
+    expect(tangut.some(([, entry]) => entry.readings)).toBe(true)
+    // A reading the source lacks stays out of the card, and an empty record still resolves.
+    const noReading = tangut.find(([, entry]) => !entry.readings && entry.en.length)
+    const found = info(noReading[0])
+    expect(found.readings).toBeUndefined()
+    expect(found.glosses.length + (found.meanings?.ja?.length ?? 0) + (found.meanings?.zh?.length ?? 0)).toBeGreaterThan(0)
+  })
   test('a character lists each kind of source once', () => {
-    // 馬 is glossed by Unihan, translated to Tangut by several Wiktionary records, and drawn in
+    // 馬 is glossed by Unihan, translated to Tangut by several Open Tangut records, and drawn in
     // small seal from two lists; the card shows each kind of source once.
     for (const char of ['馬', '鳥', '口', '𘥇']) {
       const kinds = info(char).sources.map(source => source.note)
       expect(new Set(kinds).size).toBe(kinds.length)
       expect(info(char).sourceSites).toEqual(kinds)
     }
-    expect(info('馬').sources.map(source => source.note)).toEqual(['unihan', 'wiktionary', 'sealSource', 'unicodeSealSource', 'editorial'])
+    expect(info('馬').sources.map(source => source.note)).toEqual(['unihan', 'openTangut', 'sealSource', 'unicodeSealSource', 'editorial'])
   })
-  test('a Wiktionary record links to a page that carries what it cites', () => {
-    // A Tangut character's own page has its glosses; a Han character's Wiktionary record says where
-    // its Tangut translation comes from, and a Tangut page would be no use to the reader.
-    expect(info('𘆽').sources.find(source => source.note === 'wiktionary').url).toContain(encodeURIComponent('𘆽'))
-    const han = info('馬').sources.find(source => source.note === 'wiktionary')
-    expect(han.url).toBe('https://en.wiktionary.org/wiki/Main_Page')
+  test('an Open Tangut record links to the data it cites', () => {
+    // A Tangut character's own record is in Open Tangut; a Han character's card names that record
+    // where the translation comes from.
+    expect(info('𘆽').sources.find(source => source.note === 'openTangut').url).toBe('https://github.com/imlooh/open-tangut')
+    const han = info('馬').sources.find(source => source.note === 'openTangut')
+    expect(han.url).toBe('https://github.com/imlooh/open-tangut')
   })
   test('sources the adapter adds for component examples keep their kind and appear once', async () => {
-    // The adapter adds a Wiktionary record for each example and the Tangut IDS list after lookup.
+    // The adapter adds an Open Tangut record for each example and the Tangut IDS list after lookup.
     const adapter = babelStoneAdapter({ table: new Map([['𘆽', [{ text: '⿰𘥇𘨬', regions: '' }]]]), characterInfo: 'https://example.test/info.gz', fetch: async () => new Response(JSON.stringify(document)) })
     const found = await adapter.characterInfo('𘥇')
     const kinds = found.sources.map(source => source.note)
-    expect(kinds).toContain('wiktionary')
+    expect(kinds).toContain('openTangut')
     expect(kinds).toContain('component')
     expect(new Set(kinds).size).toBe(kinds.length)
     expect(found.sourceSites).toEqual(kinds)

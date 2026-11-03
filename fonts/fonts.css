@@ -22,6 +22,10 @@
   unicode-range:U+2FF0-2FFB}
 
 @font-face{font-family:"Kureedo";src:url("./Kureedo-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs Kureedo draws for the Kaisho option's name and its Aa sample, so the switch avoids the
+   2.8 MB face. */
+@font-face{font-family:"Kureedo Label";src:url("./Kureedo-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+66F8,U+6977}
 @font-face{font-family:"GenZui Sans";src:url("./GenZuiSans-Regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+17000-18AFF,U+18D00-18DFF}

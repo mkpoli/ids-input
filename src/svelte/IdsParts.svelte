@@ -14,6 +14,7 @@
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
+  import { hangulIdsOf } from '../core/hangul-ids.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
@@ -24,12 +25,13 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
+  import { download } from '../core/retry.js'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').PalettePart} PalettePart
    */
-  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => void }} */
+  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
   let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
   const t = $derived(translator(messages, locale))
   const uid = $props.id()
@@ -178,7 +180,7 @@
   $effect(() => {
     if (tab !== 'components' || !characters || hanKeys || hanLoading || hanFailed) return
     hanLoading = true
-    fetch(new URL('../../data/han-parts.json.gz', import.meta.url))
+    download(new URL('../../data/han-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('Han characters'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { hanKeys = data.keys; hanStrokesData = data.strokes })
       .catch(() => { hanLoading = false; hanFailed = true })
@@ -270,8 +272,9 @@
   function pickComposed() {
     if (!composed || disabled) return
     const text = composed.text
+    // An insert with nowhere to go leaves the keyboard as it was; clearing it would lose the letters.
+    if (pick(text) === false) return
     clearCompose()
-    pick(text)
   }
   const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'shuishu' ? 'parts.shuishu.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
@@ -293,7 +296,7 @@
   $effect(() => {
     if (tab !== 'other' || !parts || otherData || otherLoading || otherFailed) return
     otherLoading = true
-    fetch(new URL('../../data/script-parts.json.gz', import.meta.url))
+    download(new URL('../../data/script-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('script parts'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { otherData = data })
       .catch(() => { otherLoading = false; otherFailed = true })
@@ -382,7 +385,7 @@
   $effect(() => {
     if (tab !== 'tangut' || !parts || tangutData || tangutLoading || tangutFailed) return
     tangutLoading = true
-    fetch(new URL('../../data/tangut-parts.json.gz', import.meta.url))
+    download(new URL('../../data/tangut-parts.json.gz', import.meta.url))
       .then(response => { if (!response.ok) throw new Error('Tangut parts'); return response.arrayBuffer() })
       .then(unpack).then(JSON.parse).then(data => { tangutData = data })
       .catch(() => { tangutLoading = false; tangutFailed = true })
@@ -392,7 +395,7 @@
   let tangutStrokes = $state.raw(null)
   $effect(() => {
     if (tab !== 'tangut' || tangutStrokes) return
-    fetch(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
+    download(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
       .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Tangut strokes')))
       .then(unpack).then(JSON.parse).then(data => { tangutStrokes = data.values })
       .catch(() => { /* Counts stay unknown. */ })
@@ -476,7 +479,7 @@
   function pick(part) {
     recent = [part, ...recent.filter(other => other !== part)].slice(0, RECENT_MAX)
     if (recentKey) remember(recentKey, recent)
-    onpick?.(part)
+    return onpick?.(part)
   }
   // Give a double-click time to select text without inserting its first click.
   /** @type {ReturnType<typeof setTimeout> | undefined} */
@@ -570,6 +573,8 @@
     if (part.kind === 'shui') return shuishuLabel(/** @type {import('../adapter/shuishu-data.js').ShuishuPart} */ (part))
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
+    // A syllable says how its letters are set: 가 is ⿰ㄱㅏ.
+    const syllableIds = hangulIdsOf(part.part)
     // Tangut characters carry their count in the tab's own data, not in the palette rows.
     const strokeCount = part.strokes ?? (tab === 'tangut' ? tangutStrokes?.[part.part] : null) ?? null
     // The composer's character list has no first-stroke class; its code point identifies the character.
@@ -584,6 +589,7 @@
       identity?.equivalents.length ? `${t('parts.relatedForms')}: ${identity.equivalents.join(' ')}` : null,
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       romanization,
+      syllableIds ? `${t('parts.hangulIds')}: ${syllableIds}` : null,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
@@ -967,9 +973,9 @@
   .compose-actions button{padding:0 8px;font-size:12px;color:var(--_muted)}
   .compose-actions .compose-backspace{font-size:16px;line-height:1}
   .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;flex:1;min-width:0;min-height:104px;padding:12px;border-color:var(--_line);
-    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
-  .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+  .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .compose-code{font:11px/1.35 ui-monospace,"SF Mono",Menlo,Consolas,monospace;overflow-wrap:anywhere}
   .compose-action{font-size:12px;color:var(--_accent)}
@@ -985,7 +991,7 @@
   .tone-mark{font-size:20px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}
   .jamo-key{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:19px;line-height:1;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
@@ -999,11 +1005,11 @@
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .part.compound{position:relative;padding:5px}
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
-    font:8px/1 var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);color:var(--_ink);background:var(--_surface)}
+    font:8px/1 var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);color:var(--_ink);background:var(--_surface)}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .script-groups{display:flex;flex-wrap:wrap;gap:4px}
   .script-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
@@ -1012,7 +1018,7 @@
   .part{position:relative}
   /* A mark over a dotted circle: the subset faces have no marks, and the page's own font stacks
      place them over a Latin base the way the standard dotted-circle notation expects. */
-  .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
+  .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .part:has(> .shui-ids){padding-bottom:12px;font-size:20px}
   .shui-ids{position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}

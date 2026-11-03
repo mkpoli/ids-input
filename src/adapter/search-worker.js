@@ -8,11 +8,12 @@ import { sealTable, sealForms } from './seal-data.js'
 import { shuishuSequences } from './shuishu-data.js'
 import { createSearch, readStructuralForms } from '../core/search.js'
 import { expandNumberedComponents, mergeIdsTables, parseIdsTable, parseLayers, readNumberedComponents, readText } from './babelstone.js'
+import { download } from '../core/retry.js'
 
 /** @type {Promise<ReturnType<typeof createSearch>> | null} */
 let ready = null
 /** A file's response, refused unless it came back whole. @param {string} url */
-const get = async url => { const response = await fetch(url); if (!response.ok) throw new Error(`${url}: ${response.status}`); return response }
+const get = async url => { const response = await download(url); if (!response.ok) throw new Error(`${url}: ${response.status}`); return response }
 /** @param {string} ids @param {string[] | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal @param {string | import('./shuishu-data.js').ShuishuData | undefined} shuishu */
 export async function load(ids, additionalIds, components, componentsText, forms, given, layers, layersText, smallSeal, shuishu) {
   const [text, extras, numbered, formsText, layerText] = await Promise.all([
@@ -53,6 +54,9 @@ self.onmessage = async ({ data: { id, ids, additionalIds, components, components
   try {
     ready ??= load(ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu).catch(error => { ready = null; throw error })
     const search = await ready
-    self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit }) : mode === 'similar' ? search.similar(query, { limit }) : search.search(query, { limit, componentLookup }) })
+    self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit })
+      : mode === 'unknown' ? search.unknownStructure(query, { limit })
+      : mode === 'similar' ? search.similar(query, { limit })
+      : search.search(query, { limit, componentLookup }) })
   } catch (error) { self.postMessage({ id, error: String(/** @type {Error} */ (error)?.message ?? error) }) }
 }

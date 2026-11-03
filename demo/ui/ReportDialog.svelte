@@ -10,11 +10,11 @@
   /** @type {{ open: boolean, endpoint: string, sequence: string, link: string,
    *   drawing: import('../../src/adapter/types.js').Drawing | null,
    *   scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][],
-   *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null,
+   *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null,
    *   preview: () => Element | null, workspace: () => unknown, version?: number,
    *   locale: string, theme: string, face: string, composer: string,
    *   t: (key: string, params?: Record<string, string | number>) => string }} */
-  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], emoji = null, cut = null, preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
+  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], emoji = null, cut = null, cutLeaf = null, preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
   // The output panel draws either the composed drawing or the scoped document; the report attaches
   // whichever it has, as the export does. Where a composition failed there is still the preview's
   // own picture, which is the one a maintainer most wants to see.
@@ -42,7 +42,7 @@
   const thumbnail = $derived.by(() => {
     if (!open || !drawn) return ''
     const settings = { ...DEFAULTS, size: 256, background: /** @type {const} */ ('white'), placeholders: true }
-    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots, emoji ?? [], cut ?? '') : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
+    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots, emoji ?? [], cut ?? '', cutLeaf) : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
   })
   const along = $derived([
     t('app.report.version', { version: build }),
@@ -77,7 +77,7 @@
     // screen when Send was pressed.
     const said = symptom, reach = contact, image = withImage
     try {
-      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, emoji, cut, preview: preview(), locale, theme, face, composer })
+      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, emoji, cut, cutLeaf, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
       // The form is gone with the focused Send button; the issue is what to look at now.
       tick().then(() => requestAnimationFrame(() => saved?.focus()))
@@ -123,7 +123,8 @@
         {#each along as item (item)}<li>{item}</li>{/each}
       </ul>
       {#if failure}<p class="fault" role="alert">{failure}</p>{/if}
-      <button type="submit" class="ui-button send" data-size="lg" data-variant="primary" disabled={busy || !symptom.trim()}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <button type="submit" class="ui-button send" data-size="lg" data-variant="primary" disabled={busy || !symptom.trim()} aria-busy={busy || undefined}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <span class="ui-visually-hidden" role="status">{busy ? t('app.report.sending') : ''}</span>
     </form>
   {/if}
 </Dialog>
@@ -136,7 +137,7 @@
   .thumb :global(svg){display:block;width:100%;height:100%}
   h3{margin:var(--ui-space-2xs) 0 0;font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
   .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--ui-space-3xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.45;overflow-wrap:anywhere}
-  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators",var(--ids-glyph-fallback,"IDS Fallback"),"Noto Sans CJK JP",sans-serif)}
+  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),"Noto Sans CJK JP",sans-serif)}
   .fault{margin:0;color:var(--ui-color-danger);font-size:var(--ui-text-sm)}
   .send{align-self:flex-start}
   .sent{display:flex;flex-direction:column;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}

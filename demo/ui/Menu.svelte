@@ -9,6 +9,7 @@
   // with the IDC characters. Arrow keys move, Escape closes and gives the focus back.
   import { tick, untrack } from 'svelte'
   import Icon from './Icon.svelte'
+
   import KeyHint from './KeyHint.svelte'
   /** @type {{ label: string, icon?: string, items: Item[], align?: 'start' | 'end', text?: boolean, keyHints?: boolean, keys?: string[], ariaLabel?: string, wide?: boolean, compact?: boolean,
    * open?: boolean, menubar?: boolean, tabIndex?: number, onopenchange?: (open: boolean) => void, onfocus?: () => void, onhover?: () => void, onmove?: (key: string) => void,
@@ -102,7 +103,7 @@
       if (current === untrack(() => active)) return
       active = current
       const at = groups.filter(group => group.heading).findIndex(group => group.heading === current)
-      const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.chip')[at])
+      const chip = /** @type {HTMLElement | undefined} */ (menu.querySelectorAll('.ui-chip')[at])
       const row = chip?.parentElement
       if (chip && row) {
         const chipRect = chip.getBoundingClientRect()
@@ -210,11 +211,18 @@
 {/snippet}
 
 {#snippet cardItem(item)}
-  <button type="button" role="menuitem" class="card" disabled={item.disabled}
+  <button type="button" role="menuitem" class="ui-menu-item card" disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
-    {#if item.drawing?.d}
-      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true"><path d={item.drawing.d} /></svg>
+    {#if item.drawing?.d || item.drawing?.emoji?.length}
+      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+        {#if item.drawing.d}<path d={item.drawing.d} />{/if}
+        {#each item.drawing.emoji ?? [] as text}
+          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
+            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * 0.85)}
+            font-family="system-ui, sans-serif">{text.text}</text>
+        {/each}
+      </svg>
     {:else}
       <span class="card-glyph" lang={item.lang}>{item.leading ?? item.sequence ?? item.label}</span>
     {/if}
@@ -230,7 +238,7 @@
      not a popup, so it carries no aria-haspopup. -->
 {#snippet submenuRow(item, i)}
   {@const open = openSubmenu === i}
-  <button type="button" role="menuitem" class="item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
+  <button type="button" role="menuitem" class="ui-menu-item item submenu-item" aria-expanded={open} aria-controls={open ? `${uid}-sub-${i}` : undefined}
     disabled={item.disabled} onclick={() => toggleSubmenu(i)}
     onkeydown={event => { if (event.key === 'ArrowRight') { event.preventDefault(); event.stopPropagation(); void expand(i, true) } }}>
     <span class="mark">{#if item.icon}<Icon name={item.icon} size={16} />{/if}</span>
@@ -240,7 +248,7 @@
   {#if open}
     <div class="submenu" id={`${uid}-sub-${i}`} role="group" aria-label={item.label}>
       {#each item.submenu as sub, j (j)}
-        {#if 'separator' in sub}<div class="sep" role="separator"></div>
+        {#if 'separator' in sub}<div class="ui-menu-separator sep" role="separator"></div>
         {:else if 'heading' in sub}<p class="heading">{sub.heading}</p>
         {:else}{@render listRow(sub)}{/if}
       {/each}
@@ -249,7 +257,7 @@
 {/snippet}
 
 {#snippet listRow(item)}
-  <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="item"
+  <button type="button" role={item.checked === undefined ? 'menuitem' : 'menuitemradio'} aria-checked={item.checked} class="ui-menu-item item"
     class:rich={item.sequence !== undefined} disabled={item.disabled}
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
@@ -278,7 +286,7 @@
     {#if icon}<Icon name={icon} />{/if}{#if text}<span>{label}</span>{/if}{#if !menubar}<Icon name="chevron" size={14} />{/if}{#if keys?.length}<KeyHint combos={keys} />{/if}
   </button>
   {#if open}
-    <div class="menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
+    <div class="ui-menu menu" class:end={align === 'end'} class:wide class:compact role="menu" id={`${uid}-menu`} tabindex="-1" aria-label={label} bind:this={box} onkeydown={key}
       onfocusin={event => {
         if (openSubmenu < 0) return
         const parent = box?.querySelector('.submenu-item[aria-expanded="true"]')
@@ -287,28 +295,28 @@
       }}>
       {#if view}
         <div class="menu-head">
-          <div class="views" role="group" aria-label={label}>
-            <button type="button" class="view" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={13} /><span>{view.list}</span></button>
-            <button type="button" class="view" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={13} /><span>{view.cards}</span></button>
+          <div class="ui-switch-bar views" role="group" aria-label={label}>
+            <button type="button" class="ui-button view" data-size="sm" role="menuitemradio" aria-checked={!view.cardsSelected} onclick={() => view?.onchange(false)}><Icon name="list" size={14} /><span>{view.list}</span></button>
+            <button type="button" class="ui-button view" data-size="sm" role="menuitemradio" aria-checked={view.cardsSelected} onclick={() => view?.onchange(true)}><Icon name="grid" size={14} /><span>{view.cards}</span></button>
           </div>
           <div class="filter">
             <input class="ui-input filter-input" type="search" placeholder={view.filter.label} aria-label={view.filter.label} bind:value={query}
               onkeydown={event => { if (event.key !== 'Escape') event.stopPropagation() }} />
-            <div class="modes" role="group" aria-label={view.filter.label}>
+            <div class="ui-switch-bar modes" role="group" aria-label={view.filter.label}>
               {#each [['all', view.filter.all], ['encoded', view.filter.encoded], ['unencoded', view.filter.unencoded]] as [key, text] (key)}
-                <button type="button" class="mode" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
+                <button type="button" class="ui-button mode" data-size="sm" role="menuitemradio" aria-checked={mode === key} onclick={() => { mode = key }}>{text}</button>
               {/each}
             </div>
           </div>
           <div class="jump" role="group" aria-label={label}>
             {#each groups as group (group.heading)}
-              {#if group.heading}<button type="button" class="chip" aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
+              {#if group.heading}<button type="button" class="ui-chip" data-interactive data-variant={active === group.heading ? 'selected' : undefined} aria-current={active === group.heading ? 'true' : undefined} onclick={() => jump(group.heading)}>{group.heading}</button>{/if}
             {/each}
           </div>
         </div>
       {/if}
       {#if view && !groups.length}
-        <p class="empty">{view.filter.empty}</p>
+        <p class="ui-empty">{view.filter.empty}</p>
       {:else if view?.cardsSelected}
         {#each groups as group (group.heading)}
           {#if group.heading}{@render groupHeading(group.heading, group.items.length)}{/if}
@@ -346,7 +354,7 @@
   .menu.end{left:auto;right:0}
   .item{display:flex;align-items:center;gap:var(--ui-space-md);width:100%;padding:var(--ui-space-xs) var(--ui-space-md);border:0;border-radius:var(--ui-radius-md);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-md);text-align:left;cursor:pointer}
   .item.rich{min-height:52px;gap:var(--ui-space-md);padding:var(--ui-space-2xs) var(--ui-space-sm);border-radius:var(--ui-radius-lg)}
-  .item:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover);outline:none}
+  .item:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}
   .item.rich:focus-visible{outline:var(--ui-ring-width) solid var(--ui-color-focus);outline-offset:calc(-1 * var(--ui-ring-width))}
   .item:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
   .item.submenu-item .chev{display:grid;place-items:center;flex:none;color:var(--ui-color-ink-muted);transform:rotate(-90deg);transition:transform var(--ui-duration-fast)}
@@ -373,23 +381,19 @@
   .heading:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:1px}
   .heading-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .count{flex:none;margin-left:auto;padding:1px var(--ui-space-xs);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-hover);color:var(--ui-color-ink-muted);font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-semibold);letter-spacing:.02em;font-variant-numeric:tabular-nums}
-  .empty{margin:var(--ui-space-lg) var(--ui-space-md);color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm)}
+  .ui-empty{margin:var(--ui-space-sm) var(--ui-space-md);min-block-size:0;padding:var(--ui-space-lg) var(--ui-space-md)}
   .jump{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs);padding:1px 1px var(--ui-space-3xs)}
-  .chip{flex:none;min-height:var(--ui-control-h-xs);padding:0 var(--ui-space-sm);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface);color:var(--ui-color-ink-muted);
-    font:inherit;font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-semibold);white-space:nowrap;cursor:pointer}
-  .chip:hover{color:var(--ui-color-ink);border-color:var(--ui-color-ink)}
-  .chip[aria-current="true"]{border-color:var(--ui-color-ink);background:var(--ui-color-ink);color:var(--ui-color-surface)}
-  .chip:focus-visible,.mode:focus-visible,.view:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
+  .ui-chip{flex:none}
+  .view:focus-visible,.mode:focus-visible,.ui-chip:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
+  .ui-menu-item[aria-checked="true"]::before,.ui-menu-item[aria-current="true"]::before{display:none}
   .menu-head{position:sticky;top:calc(-1 * var(--ui-space-xs));z-index:2;display:flex;flex-direction:column;gap:var(--ui-space-xs);margin:0 0 var(--ui-space-xs);background:var(--ui-color-surface)}
-  .views{display:flex;gap:var(--ui-space-3xs);padding:var(--ui-space-3xs);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
+  .views{padding:var(--ui-space-3xs)}
+  .views > .ui-button{min-block-size:var(--ui-control-h-sm)}
   .filter{display:flex;align-items:center;gap:var(--ui-space-xs)}
   .filter-input{flex:1}
-  .modes{display:flex;flex:none;gap:var(--ui-space-3xs);padding:var(--ui-space-3xs);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-hover)}
-  .mode{min-height:var(--ui-control-h-xs);padding:0 var(--ui-space-xs);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-semibold);white-space:nowrap;cursor:pointer}
-  .mode[aria-checked="true"]{background:var(--ui-color-surface);color:var(--ui-color-ink)}
-  .view{display:flex;align-items:center;justify-content:center;gap:var(--ui-space-2xs);flex:1;min-height:var(--ui-control-h-xs);padding:0 var(--ui-space-sm);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);
-    font:inherit;font-size:var(--ui-text-xs);font-weight:var(--ui-weight-semibold);cursor:pointer}
-  .view[aria-checked="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
+  .modes{flex:none;padding:var(--ui-space-3xs);background:var(--ui-color-surface-hover)}
+  .mode{padding-inline:var(--ui-space-xs);font-size:var(--ui-text-2xs)}
+  .view{flex:1;white-space:nowrap}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:var(--ui-space-sm);padding:var(--ui-space-2xs) var(--ui-space-xs) var(--ui-space-sm)}
   .card{display:flex;align-items:center;gap:var(--ui-space-sm);min-width:0;min-height:60px;padding:var(--ui-space-xs);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}

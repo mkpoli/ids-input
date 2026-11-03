@@ -11,7 +11,10 @@ try {
     await field.press('Tab')
     await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
     await page.getByRole('button', { name: 'Adjust layout', exact: true }).click()
-    const svg = page.locator('.ids-preview-large svg')
+    // Turning the adjuster on replaces the drawing layer, and the old one fades out over 180 ms,
+    // so for a moment two drawings are in the DOM. The interactive one is the only application.
+    const svg = page.locator('.ids-preview-large svg[role="application"]')
+    await svg.waitFor({ state: 'visible' })
     const box = await svg.boundingBox()
     assert.ok(box, 'the preview has a drawing box')
     await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.5)

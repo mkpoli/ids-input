@@ -4,6 +4,8 @@
 // its characters is shown, so the reader pays for the shards their screens need. The dev server
 // names the files itself; `demo/vite.config.js` writes `unicode.json` with the published names.
 
+import { download } from '@han-compose/composer/retry'
+
 const FAMILY = 'IDS Fallback'
 // The shards are registered under `IDS Fallback Shared`, and `--fallback-font` names it in the
 // stacks: a family that a stylesheet also declares would match nothing in Firefox and WeChat.
@@ -17,14 +19,15 @@ const SHARDS = new Set()
 let published = {}
 // While developing, the sheet names the shards; the build writes `unicode.json` with their names.
 // A dev server answers a file it does not have with the page itself, so only JSON is read.
-const ready = fetch(new URL('unicode.json', new URL('./', document.baseURI)))
+const ready = download(new URL('unicode.json', new URL('./', document.baseURI)))
   .then(response => response.ok && /json/.test(response.headers.get('content-type') ?? '') ? response.json() : { files: {} })
   .then(data => {
     published = data.files ?? {}
     for (const name of Object.keys(published)) SHARDS.add(name)
-    if (!SHARDS.size) for (let shard = 0; shard < 0x400; shard++) SHARDS.add(shard.toString(16).padStart(3, '0'))
+    // The dev server has no `unicode.json`: the shards are the files it publishes.
+    for (const name of Object.keys(DEV_SHARDS)) SHARDS.add(name)
   })
-  .catch(() => { for (let shard = 0; shard < 0x400; shard++) SHARDS.add(shard.toString(16).padStart(3, '0')) })
+  .catch(() => { for (const name of Object.keys(DEV_SHARDS)) SHARDS.add(name) })
 
 /** The dev server's addresses for the shards, the fonts directory's files as URL imports.
  * @type {Record<string, string>} */
@@ -60,18 +63,31 @@ export function loadFallback(char) {
   const name = ((char.codePointAt(0) ?? 0) >> 8).toString(16).padStart(3, '0')
   let face = faces.get(name)
   if (!face) {
-    face = ready.then(() => {
+    face = ready.then(async () => {
       if (!SHARDS.has(name)) throw new Error('no shard')
       // The build writes `unicode.json` beside the page with the published shard files in it; the
       // dev server publishes the shard as a URL import, which the bundler hands here as a file URL.
       // A shard draws only its own range: a face without one covers every character, and a shard
       // with no glyph for a character in its range would then hide the later faces for it.
       const url = published[name] ?? DEV_SHARDS[name]
-      const made = new FontFace(SHARED, `url("${url}")`, { style: STYLE, unicodeRange: RANGES.get(name) })
-      document.fonts.add(made)
-      address()
-      return made.load()
-    }).catch(() => new FontFace(SHARED, ''))
+      const attempt = () => {
+        const made = new FontFace(SHARED, `url("${url}")`, { style: STYLE, unicodeRange: RANGES.get(name) })
+        document.fonts.add(made)
+        return made.load()
+      }
+      try {
+        const made = await attempt()
+        address()
+        return made
+      } catch {
+        // A shard that failed to arrive is asked for once more before its characters show the box,
+        // and the cache forgets it so the next appearance tries again.
+        await new Promise(resolve => setTimeout(resolve, 400))
+        const made = await attempt()
+        address()
+        return made
+      }
+    }).catch(() => { faces.delete(name); return new FontFace(SHARED, '') })
     faces.set(name, face)
   }
   face.catch(() => {})

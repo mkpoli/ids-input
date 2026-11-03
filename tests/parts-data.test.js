@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
+import { gunzipSync } from 'node:zlib'
 import { paletteRows } from '../src/adapter/index.js'
 
 const document = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url), 'utf8'))
@@ -8,6 +9,13 @@ const parts = paletteRows(document)
 const byPart = new Map(parts.map(part => [part.part, part]))
 
 describe('palette stroke metadata', () => {
+  it('carries 〇, which no sequence names, as a one-stroke part', () => {
+    expect(byPart.get('〇')).toMatchObject({ uses: 0, strokes: 1, first: '折', kind: 'd' })
+    // The character list carries the same stroke count; the two sources must agree.
+    const han = JSON.parse(gunzipSync(readFileSync(new URL('../data/han-parts.json.gz', import.meta.url))))
+    expect(han.strokes[han.keys.indexOf('〇')]).toBe(byPart.get('〇').strokes)
+  })
+
   it('counts all fourteen radical forms missing from Unihan', () => {
     const chars = [...'⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕']
     const counts = [2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3]

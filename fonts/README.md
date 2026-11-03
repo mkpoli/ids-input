@@ -35,6 +35,8 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
+`Kureedo-label.woff2` (23 KB, 97 characters: ASCII, 楷 and 書) is a subset of the same Kureedo file, under the same licence, named `Kureedo Label`, with the copyright and licence records of the original. The font switch draws the Kaisho option's name and its Aa sample with it, so a page keeps the full face until the reader chooses Kaisho. SHA-256 `90cb39895d10fb19299becf0e03ba53b04df2becf459276aff27a4cffef9a538`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/Kureedo-Regular.woff2 --unicodes='U+0020-007E,U+66F8,U+6977' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Kureedo-label.woff2`.
+
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 
 ## Fallback shards
@@ -43,10 +45,13 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
 256-code-point shard listed in `fonts/unicode.json`. The faces are not in any stylesheet: the app
 registers a shard as a `FontFace` the first time a character in its range appears
 (`src/svelte/fallback-font.js`), so a page downloads only the shards it shows. A shard also carries
-the palette parts, the empty-slot mark ⬚ and the description characters that the composer has no
-outline for, drawn from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
-`LICENSE-Jigmo.txt`): 590 shards, 56,651 characters, 4,462 from Jigmo, 9.7 MB all together.
-`uv run scripts/build_unicode_font.py` rebuilds them and fetches Jigmo itself.
+the palette parts, the empty-slot mark ⬚, the description characters and the standard Han
+ideographs (CJK Unified Ideographs, Extension A and the compatibility ideographs) that the composer
+has no outline for. Those come from Jigmo (字雲, by the GlyphWiki contributors, CC0 1.0,
+`LICENSE-Jigmo.txt`), with the compatibility ideographs from Unifont 18.0.01 (GNU GPL 2+ with the
+font embedding exception, or SIL OFL 1.1; its notices name the authors, among them Roman Czyborra
+and Paul Hardy). 629 shards, 78,473 characters, 21,812 of them filled from a font, 13.7 MB all together.
+`uv run scripts/build_unicode_font.py` rebuilds them and fetches both sources itself.
 
 `NotoSerifTangut-Regular.woff2` supplies the `IDS Tangut` face for the editor,
 examples, palette and search results. Noto Serif Tangut 2.168, Copyright 2021 Google

@@ -2,7 +2,7 @@
 // The default adapter: BabelStone IDS from a compact table, and the parts palette, read from URLs the
 // host serves (all ship in this package's `data/`). Nothing is asked of a server beyond those files.
 import { createRelationSearch } from './character-relations.js'
-import { createCharacterInfo, componentExamples, mergeSources, tangutGlossSource } from './character-info.js'
+import { createCharacterInfo, componentExamples, mergeSources, openTangutSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
 import { componentIndex } from './containing.js'
@@ -12,6 +12,7 @@ import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
+import { download } from '../core/retry.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -199,14 +200,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   characterInfo?: string | URL | import('./character-info.js').CharacterInfoData,
  *   layers?: string | URL, layersText?: string,
 
- *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: typeof fetch,
+ *   table?: Map<string, Sequence[]>, palette?: PalettePart[], fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = globalThis.fetch.bind(globalThis),
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -252,7 +253,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     localGeneration = generation
     return building
   }
-  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'similar'} [mode] @param {boolean} [componentLookup] */
+  /** The description search in the worker, which loads the files itself. @param {string} query @param {number} limit @param {'ids' | 'structure' | 'unknown' | 'similar'} [mode] @param {boolean} [componentLookup] */
   function inWorker(query, limit, mode = 'ids', componentLookup = true) {
     if (!searcher && worker) {
       searcher = worker()
@@ -644,12 +645,10 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const info = lookup(char)
       if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
         info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
-        // The examples are glossed from Wiktionary and described in BabelStone's Tangut IDS; the card
+        // The examples are glossed from Open Tangut and described in BabelStone's Tangut IDS; the card
         // shows each source once, so they join the record's own sources through the same merge.
-        /** @type {import('./character-info.js').InfoSource[]} */
         const added = []
-        for (const row of info.relations.filter(r => r.kind === 'usage')) added.push({ ...tangutGlossSource(row.char), note: 'wiktionary' })
-        if (info.relations.some(r => r.kind === 'usage')) added.push({ label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: 'tangutIds' })
+        if (info.relations.some(r => r.kind === 'usage')) added.push(openTangutSource, { label: 'Andrew West · Tangut IDS', url: 'https://www.babelstone.co.uk/Tangut/TangutIDS.txt', note: /** @type {const} */ ('tangutIds') })
         info.sources = mergeSources([...info.sources, ...added])
         info.sourceSites = /** @type {import('./character-info.js').SourceKind[]} */ (info.sources.map(source => source.note))
       }
@@ -821,6 +820,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     async findByStructure(query, { limit = 60, signal } = {}) {
       signal?.throwIfAborted()
       const result = worker && !given ? await inWorker(query, limit, 'structure') : (await localSearch()).structure(query, { limit })
+      signal?.throwIfAborted()
+      return result
+    },
+    /** @param {string} query @param {import('./types.js').Options} [options] */
+    async findByUnknownStructure(query, { limit = 60, signal } = {}) {
+      signal?.throwIfAborted()
+      const result = worker && !given ? await inWorker(query, limit, 'unknown') : (await localSearch()).unknownStructure(query, { limit })
       signal?.throwIfAborted()
       return result
     },

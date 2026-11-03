@@ -113,7 +113,10 @@ export default defineConfig({
   // resolves from source; pre-bundled, that URL points nowhere.
   optimizeDeps: { exclude: ['@han-compose/composer'] },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
+    // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
+    // the first scripts as base64, which hardly compresses.
+    assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
   // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
   // read where it stands, and its Worker is a `file:` module the page asks for by that path.
   server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },

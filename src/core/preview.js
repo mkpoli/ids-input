@@ -7,15 +7,23 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 // leaf, the placeholder of a slot — is the engine's (han-compose's package).
 export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts, placeholder, STROKE } from '@han-compose/composer'
 
-/** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection.
- * @param {{ text?: string, box?: number[], flip?: [boolean, boolean] } | null | undefined} item @param {string} [attribute] */
-export function emojiText(item, attribute = '') {
-  const box = (item?.box ?? []).slice(0, 4).map(v => Number.isFinite(Number(v)) ? Number(v) : 0)
-  if (box.length < 4 || typeof item?.text !== 'string') return ''
-  const [x, y, width, height] = box
-  const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const reflect = emojiTransform(item)
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
+/**
+ * Font size that draws an emoji's ink the shorter side of its box across. Noto Emoji's glyphs fill
+ * the em square, 2,080 of its 2,048 units against an advance of 2,784, so a size of 1 draws 0.73 of
+ * the box, and a size of 1/0.73, the whole box. The box is what the composer gives the operand: an
+ * emoji stands in it as a character does, at the size a character's ink fills its cell.
+ */
+export const EMOJI_SCALE = 1.36
+
+/**
+ * Where an emoji stands in its box: `{ x, y, size }`, the glyph's middle and its font size, every
+ * number finite. The glyph spans `EMOJI_SCALE` times the box's shorter side, so it fills the box as
+ * a component's ink fills its cell.
+ * @param {{ box?: number[] } | null | undefined} item
+ */
+export function emojiPlace(item) {
+  const [x, y, width, height] = (item?.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+  return { x: x + width / 2, y: y + height / 2, size: Math.max(0, Math.min(width, height) * EMOJI_SCALE) }
 }
 
 // What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a

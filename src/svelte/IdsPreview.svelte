@@ -9,7 +9,7 @@
   // while the preview's data cannot be read at all, the placeholders stand with no badge.
   import { fade } from 'svelte/transition'
   import { EMPTY, leaves, samePath, write } from '../core/ids.js'
-  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
+  import { EMOJI_CUT_MATRIX, FACE, STROKE, badge, emojiPlace, emojiTransform, placeholder, roughLayout, runPreview } from '../core/preview.js'
   import { documentView } from '@han-compose/composer/document-view'
   import { layerFrames, renderScopes } from '../document/index.js'
   import { affineForChain, boxCorners, findLayer, invertAffine, layerAtPath, multiplyAffine, pathOfLayer, scopesMarkup } from '../document/index.js'
@@ -32,10 +32,10 @@
   /** @typedef {import('../document/session.js').DocumentSession} DocumentSession */
   /** @typedef {import('../document/render.js').ScopeTree} ScopeTree */
   /**
-   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
+   * @type {{ adapter: IdsAdapter, tree: Part, chosen?: Path | null, messages?: Record<string, string>, locale?: string, small?: boolean, notes?: boolean, delay?: number, detail?: string, detailContent?: import('svelte').Snippet, drawing?: Drawing | null, document?: Document | null, session?: DocumentSession | null, version?: number, scopes?: ScopeTree | null, slots?: number[][], emoji?: NonNullable<Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, editable?: boolean, onchoose?: ((path: number[]) => void) | null, onedit?: (() => void) | null }}
    */
   let { adapter, tree, chosen = null, messages, locale = 'en', small = true, notes = true, delay = 150, detail = '', detailContent, drawing = $bindable(null),
-    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
+    document = null, session = null, version = 0, scopes = $bindable(null), slots = $bindable(/** @type {number[][]} */ ([])), emoji = $bindable(null), cut = $bindable(null), cutLeaf = $bindable(null), editable = false, onchoose = null, onedit = null } = $props()
   const t = $derived(translator(messages, locale))
 
   const uid = $props.id()
@@ -102,6 +102,7 @@
     drawing = view?.scopes ? null : step === 'composed' && shown?.drawn ? shown.drawn : null
     emoji = view?.scopes ? shown?.drawn?.emoji ?? null : null
     cut = view?.scopes ? shown?.drawn?.cut ?? null : null
+    cutLeaf = view?.scopes ? shown?.drawn?.parts?.find(part => part.cut)?.leaf ?? null : null
   })
   const chosenLayer = $derived.by(() => {
     if (!localDoc || !chosen) return null
@@ -132,11 +133,6 @@
     point.x = event.clientX
     point.y = event.clientY
     return point.matrixTransform(matrix.inverse())
-  }
-  /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
-  const emojiBox = item => {
-    const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
-    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
   }
   /** @param {number} value */
   const round = value => Math.round(value * 100) / 100
@@ -267,7 +263,7 @@
 >
               {#if view?.scopes}
                 <!-- The scoped drawing carries its own ink, cut and emoji, as the export does. -->
-                {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}`, emoji: drawn.emoji, cut: drawn.cut })}
+                {@const markup = scopesMarkup(view.scopes, { ink: 'currentColor', idPrefix: `${uid}-${name}`, emoji: drawn.emoji, cut: drawn.cut, cutLeaf: drawn.parts?.find(part => part.cut)?.leaf ?? null })}
                 <g class="document" style:color="var(--_ink)">
                   {@html markup.defs}
                   {@html markup.body}
@@ -282,8 +278,8 @@
                     {#if drawn.cut}<path d={drawn.cut} fill="#000" />{/if}
                     {#each drawn.emoji ?? [] as item}
                       {#if item.cut}
-                        {@const box = emojiBox(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                        {@const place = emojiPlace(item)}
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
                       {/if}
                     {/each}
                   </mask>
@@ -291,8 +287,8 @@
                 <path class="ink" d={drawn.d} mask={hasCut ? `url(#${uid}-${name})` : undefined} />
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
-                    {@const box = emojiBox(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family="system-ui, sans-serif">{item.text}</text>
+                    {@const place = emojiPlace(item)}
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
                   {/if}
                 {/each}
               {/if}
@@ -343,7 +339,7 @@
   </div>
 {/snippet}
 
-<figure class="ids-preview" data-step={step} data-label={said.label} data-adjusting={editable ? 'true' : undefined}
+<figure class="ids-preview" data-step={step} data-label={said.label} data-composed={shown?.drawn?.composed ? 'true' : undefined} data-adjusting={editable ? 'true' : undefined}
   aria-busy={step === 'loading'} aria-label={t('ids.preview.drawing', { sequence })}>
   <div class="ids-preview-large">
     {@render picture('large', editable)}
@@ -405,7 +401,8 @@
   .ids-preview-fallback{font-size:11px;color:var(--_muted);text-align:center}
   .ids-preview[data-label="loading"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 35%,var(--_line))}
   .ids-preview[data-label="final"] .ids-preview-badge{color:var(--_accent);border-color:color-mix(in srgb,var(--_accent) 45%,var(--_line))}
-  .ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}
+  .ids-preview[data-composed] .ink{fill:var(--_muted);opacity:.85}
+.ids-preview:is([data-label="failed"],[data-label="tooLarge"]) .ids-preview-badge{color:var(--_fault);border-color:color-mix(in srgb,var(--_fault) 35%,var(--_line))}
   .ids-preview-note{margin:0;width:100%;font-size:11px;line-height:1.4;color:var(--_muted);text-align:center;overflow-wrap:anywhere}
   @keyframes ids-preview-spin{to{transform:rotate(1turn)}}
   @keyframes ids-preview-sweep{from{transform:translateX(-110%)}to{transform:translateX(260%)}}

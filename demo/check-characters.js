@@ -70,8 +70,11 @@ try {
     for (const point of line.slice(1)) await japanese.mouse.move(...japaneseAt(point), { steps: 8 })
     await japanese.mouse.up()
   }
-  await japanese.locator('.ids-sketch .group').filter({ hasText: '文字' }).waitFor({ timeout: 120000 })
-  const japaneseFound = await japanese.locator('.ids-sketch .found').first().locator('.hit').allTextContents()
+  // The classifiers fill the characters group after the palette's parts arrive; asking for the
+  // group by its label tells them apart from the parts and from the Tangut group beside them.
+  const japaneseCharacters = japanese.locator('.ids-sketch .found[aria-label="文字"]')
+  await japaneseCharacters.waitFor({ timeout: 120000 })
+  const japaneseFound = await japaneseCharacters.locator('.hit').allTextContents()
   assert.ok(japaneseFound.some(part => /[\p{Script=Hiragana}\p{Script=Katakana}]/u.test(part)), `kana in the Japanese interface: ${japaneseFound.join(' ')}`)
   await japanese.close()
 

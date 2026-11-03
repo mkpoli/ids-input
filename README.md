@@ -155,9 +155,14 @@ and `keydown` change it, `change` names the last change and whether it threw som
 `listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
 them back, for a host switching between documents. In the tree, a click chooses a part, a part
 dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
-and the context menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator,
-clears, removes a level or copies that part's sequence. "Take parts from" reads a character dropped
-on it.
+and a part of the tree, or a whole group grabbed by its frame, dropped beside a sibling moves there
+while one dropped on any other part switches places with it. A finger drags the same way on a touch
+screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders siblings
+without a pointer. `Space` lifts the focused box, a part or a group by its operator button, and
+`Space` on another box places it; `Escape` lets it go, and in the indented Tree view the arrows move
+the focus between rows while a box is lifted. The context
+menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
+level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
 The sequence field accepts zi.tools replacement expressions with three single components, such as
 `🔄林木火` or `RP林木火`. It opens the source character's descriptions and converts the expression
@@ -166,7 +171,8 @@ shallowest occurrence; where several are equally shallow, the last is used. If t
 remains in the field. Resolution is bounded to eight opened components and 128 candidate trees.
 
 `IdsParts` (`adapter`, `onpick(part)`) and `IdsFrom` (`adapter`, `ontake(text)`, bindable `text`)
-also work without an editor. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
+also work without an editor. A pick that returns `false` was not placed, so the Hangul compose
+keyboard keeps its letters. `IdsSketch` (`adapter`, `onpick(part)`, `onclose()`) is the Find tab's
 drawing pad; it asks the adapter for the palette and takes its glyph shapes from the page's
 `--ids-font`. The Components panel shows the most used parts first, then every Han
 component of one stroke count, including compound IDS, grouped by first stroke. Palette text can be selected and copied;
@@ -608,6 +614,27 @@ all matching characters without separators, while `hits` is limited for display.
 return `problem: 'pattern'`. Results put common unified ideographs first, then Extension A, then
 other characters, with code-point ordering within each group.
 
+**Unknown structure** reads a pattern's top-level operands, or the components of a run, as
+elements to find anywhere in a character. `木口` finds 杏 (`⿱木口`), 呆 (`⿱口木`) and every other
+character holding 木 and 口, at any depth and in any arrangement; `⿰⿰木木口` asks for a `⿰木木`
+subtree and a 口. `⿰木口` asks for the same as `木口`: the operator only groups the elements and is
+not matched. Repeated elements are counted: repeated identical elements need separate occurrences,
+and a component is opened where an element stands inside it, so the hit can mark it. Distinct
+elements may share an occurrence, so a compound and one of its own parts can both be found in the
+same place. A `⬚` or `？` operand adds no requirement; a pattern of only those asks for nothing.
+A–Z variables belong to whole-character search and are refused here. `|` separates up to eight
+alternatives.
+
+```js
+const search = createSearch(table, { forms })
+search.unknownStructure('木口')         // 杏, 呆, …
+search.unknownStructure('⿰木口')       // the same as 木口
+search.unknownStructure('⿰⿰木木口')    // characters holding a ⿰木木 subtree and 口
+```
+
+`babelStoneAdapter.findByUnknownStructure(query, { limit, signal })` runs this search in the same
+worker and returns the same shape as structural search.
+
 `createSearch(table, { forms })` in the core finds characters by what their descriptions hold, and
 `babelStoneAdapter` answers it as `findByIds(query, { limit })` over its table. `IdsSearch` lists the
 hits as square character cards, the code point shown on hover; the workshop puts it under the tree and
@@ -843,6 +870,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
+- `data/character-info.json.gz`: Unihan 18.0.0 definitions (Unicode License v3) and Open Tangut
+  meanings, reconstructions and sound glosses for the Tangut ideographs (MIT for Open Tangut's
+  compilation; Wiktionary rows CC BY-SA 4.0; CCAMC rows no licence stated; 750 KB gzipped);
+  built by `scripts/build_character_info.py`.
 - `data/babelstone-ids.tsv.gz`: BabelStone IDS, public domain, with the 6,145 records of BabelStone
   Tangut IDS, factual decompositions (798 KB).
 - `data/tangut-layers.json.gz`: the largest character split of 2,408 Tangut descriptions, computed
@@ -878,11 +909,12 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic and Noto Sans CJK JP subsets (458 KB together), Noto Serif Tangut (1 MB),
-  Kureedo (2.8 MB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
+  Kureedo (2.8 MB), Kureedo Label (23 KB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
 - `@han-compose/composer`: han-compose's composing engine, MIT, with its own outlines of Noto Serif
-  Tangut, Noto Sans CJK JP and Plangothic (SIL OFL 1.1) and its Unicode fallback. A drawing with a
-  part cut along KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is shared alike
-  under CC BY-SA 3.0.
+  Tangut (SIL OFL 1.1, `fonts/OFL-NotoSerifTangut.txt`), Noto Sans CJK JP and Plangothic (SIL OFL
+  1.1, texts in `fonts/OFL-NotoSansCJK.txt` and `fonts/OFL-Plangothic.txt`) and its Unicode fallback.
+  A drawing with a part cut along KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is
+  shared alike under CC BY-SA 3.0.
 
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
 `scripts/build_ids_data.py`, `scripts/build_ids_parts.py`, `scripts/build_component_names.py` and
@@ -1127,6 +1159,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   component `{12}` written out.
 - Mojidata Web App, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/about>: prior art,
   below.
+The sources the project reads, draws on, compares with or cites are catalogued at
+<https://ids.mkpo.li/sources>: data, fonts, code, references, prior work and the records behind the
+examples, with each source’s author, licence, dates, category and tags. The example records keep
+their notes and citation numbers.
 
 ## The workshop
 
@@ -1142,7 +1178,8 @@ for. Export can include empty slots on request, including through the scoped doc
 nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
-with the arrow keys and accept drops. A click, the arrow keys, Home/End or, where the browser leaves
+with the arrow keys, accept drops, and can be dragged onto another row to move beside a sibling or
+switch places. A click, the arrow keys, Home/End or, where the browser leaves
 them to the page, `Ctrl+Tab`, `Ctrl+Shift+Tab` and `Ctrl+PageUp`/`Ctrl+PageDown` move between tabs. ×,
 middle click, Delete or the tab's menu closes a tab (Undo brings it back; the last tab stays).
 `Ctrl+Shift+T` where the browser leaves it to the page, File → Reopen closed tab, the tab's menu
@@ -1165,8 +1202,9 @@ language, settings and the sources. The tab strip’s + opens a blank tab, and t
 opens a starter dialog in three tabs. Templates is the same full catalogue the input pane offers
 (structures, pyramids, repeats and five-copy layouts). Examples lists every starter sequence with
 its character and code point, an abbreviated character, or a mark when it has none, opening as cards
-or a list with its filters and folding. Recently closed lists the tabs and groups closed this
-session, newest first, each opening back where it was. A template or an example opens a tab.
+or a list with its filters and folding. Recently closed lists each tab closed this session, newest
+first, with its drawing; choosing a row opens that tab back where it was. A template or an example
+opens a tab.
 Settings hold the system, light and dark
 themes, key hints, the preview data source; they open beside the toolbar button on desktop and in a
 bottom drawer on mobile. The address carries the active sequence as its path (`/⿰亻哥`), so a link opens it;
@@ -1225,6 +1263,32 @@ published site with only the parameters that open the sequence. The answer repla
 the issue it became; a report matching an open issue says so and links to it, and a refused or
 timed-out one keeps the text and offers another try.
 
+### Desktop app
+
+`desktop/` wraps the workshop in a [Tauri](https://tauri.app/) window for Windows, macOS and Linux.
+The installers are on the [releases page](https://github.com/mkpoli/ids-input/releases). The app
+carries a copy of the Sans composer export (`COMPOSER_BASE`, about 135 MB) and serves it under its
+own `atlas` scheme, so the workshop draws in Sans with no connection. Serif and Kaisho still load
+from glyphatlas.org. Share links name <https://ids.mkpo.li/>, reports go to its `/api/report`, the
+context of a report carries `desktop: true`, and any address outside the app opens in the system's
+browser. A download lands in the Downloads folder, which then opens on it.
+For Windows there is also a portable zip. Its folder holds `IDS Workshop.exe`, the export and an
+empty `portable` file, which makes the app keep its settings and tabs in a `data` folder beside the
+program rather than in the user's profile.
+A release tag names the version in `package.json`: `desktop-v0.1.0` for 0.1.0.
+
+The page is the workshop built with `VITE_DESKTOP=1` (`bun run build:desktop-page`). To build the
+app, install Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/), then:
+
+```sh
+bun run desktop:atlas   # copy the Sans export into desktop/atlas/
+bun run desktop:dev     # the app over the dev server
+bun run desktop:build   # installers in desktop/target/release/bundle/
+```
+
+The Desktop workflow builds the installers on every `desktop-v*` tag and publishes them as a release
+on that tag. A pull request that changes `desktop/`, or a manual run, builds them as workflow artifacts without a release.
+
 ### Comparison with KAGE
 
 `/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS in three
@@ -1250,68 +1314,15 @@ The About dialog and the comparison page link it.
 
 ## Inspired by
 
-Ideas the editor takes, each traced to the tool's own page as seen on 2026-10-25:
-
-- 字統网 zi.tools, <https://zi.tools/?secondary=ids>: an interactive editor with operator buttons
-  beside direct input, a palette of hard-to-type components, and the ASCII operator names.
-- 字海网 yedict, <http://www.yedict.com/search/ids>: choosing a cell and then an operator splits it,
-  an operator on an operator swaps it with its parts kept, × backs out one level, and a list of
-  hard-to-type components fills the chosen cell; the editor's split, swap and unwrap follow it.
-- Mojidata IDS Finder, Ryusei Yamaguchi (mandel59), <https://mojidata.ryusei.dev/idsfind>: searching
-  by several sequences at once, by a whole pattern with `？` as a wildcard, and by other query terms.
-- CHISE IDS 漢字検索, MORIOKA Tomohiko, <https://www.chise.org/ids-find>: listing the characters
-  that contain every component given.
-
-The data the editor runs on is listed under [Sources](#sources) with its licences.
+The editor's operator palette, split, swap and unwrap follow 字統网 (zi.tools) and 字海网 (yedict);
+its search follows Mojidata and CHISE. The catalogue records each tool, what it supplied and where
+the editor uses it: <https://ids.mkpo.li/sources#group-prior>.
 
 ## Prior art
 
-### KAGE and GlyphWiki
-
-[KAGE](https://github.com/kamichikoichi/kage-engine), created by Koichi Kamichi, and the
-[GlyphWiki](https://glyphwiki.org/) contributors have developed a shared system for describing and
-drawing characters from reusable parts. Their work is an important predecessor to this project's
-character composition. The [KAGE engine](https://github.com/kurgm/kage-engine) renders descriptions
-of strokes and component references; han-compose assembles existing font outlines from an IDS,
-using placement learned from the font. Its serif export can include outlines from
-[Jigmo](https://kamichikoichi.github.io/jigmo/), generated with KAGE from glyphs contributed to
-GlyphWiki and released under CC0 1.0.
-
-### Mojidata
-
-Mojidata is "an open-source collection of Chinese character information databases", and the
-Mojidata Web App searches and displays them (<https://mojidata.ryusei.dev/about>). Its code is at
-<https://github.com/mandel59/mojidata>, <https://github.com/mandel59/mojidata-api> and
-<https://github.com/mandel59/mojidata-web-app>, by Ryusei Yamaguchi. The web app's source is MIT
-(its `LICENSE.md`, "Copyright (c) 2023-2024 Ryusei Yamaguchi"), as is `mojidata-api`; the
-`@mandel59/mojidata` database package declares `MIT AND BSD-3-Clause AND CC-BY-SA-2.1-JP AND
-Unicode-3.0 AND CC0-1.0` for its bundled data. Like this package, it takes its character structures
-from BabelStone IDS. Read on 2026-10-25.
-
-What Mojidata offers that this package does not:
-
-- In its IDS Finder (<https://mojidata.ryusei.dev/idsfind>): a whole-character mode (`§…§`),
-  variables (`x` matching the same subtree each time it appears, `⿱x⿰xx`), a count suffix (`耳*3`),
-  and query terms beyond structure, such as a code point, readings, stroke counts and other
-  properties (in `mojidata-web-app`'s `src/search/parseQuery.ts`), read from its source on
-  2026-10-25. This package's search (see [Search](#search)) takes from it several sequences at once,
-  all to match, `？` as a wildcard for a component or a subtree, and ⿻ matching its parts in either
-  order; it ranks its hits and marks the match, which Mojidata's finder does not do as far as its
-  source shows. No Mojidata data or code is used.
-- Many character databases beyond IDS, shown together, with Moji_Joho, regional and Adobe-Japan1
-  glyphs and glyph images from GlyphWiki.
-- Search backends on SQLite (sql.js, SQLite wasm, better-sqlite3, node:sqlite, Cloudflare D1), and a
-  library for structure manipulation (`@mandel59/idstool`, "Manipurate CJK ideograph structures").
-
-What this package offers that Mojidata, as far as its pages and repositories show, does not:
-
-- A sequence editor: a tree of boxes laid out as the operators place their parts, operator keys
-  by key position, split, swap and unwrap, undo and redo, and ASCII operator names.
-- A parts palette of every component the IDS data names, by stroke count and first stroke, with the
-  most used parts first and font subsets for the parts few fonts draw, plus the composer's Han
-  characters and a Marks tab for combining and tone marks.
-- A keyboard-driven decomposition tree from which any part or node is taken into the editor.
-- Embeddable components behind an adapter interface, so a host keeps its own data and search.
+KAGE and GlyphWiki are the shared stroke-and-part system the composer is compared with; Mojidata is
+the nearest prior IDS search and database. Their entries, licences and what this project takes from
+each are in the same catalogue: <https://ids.mkpo.li/sources#group-prior>.
 
 ## Acknowledgments
 
@@ -1357,6 +1368,11 @@ bun run build:example-drawings   # the examples' drawings, after COMPOSER_BASE c
 bun run build:sketch-parts       # the drawing search's glyph masks, after a font change
 ```
 
+`x18n check` reads `t('…')` calls, so a message the code names in a data table — a source's
+`summaryKey` in `demo/lib/sources.js`, a Hangul group's `label` in `src/svelte/IdsParts.svelte` —
+looks unused. Those keys go in `usage.keysInUse` of `x18n.config.json`, and
+`tests/messages.test.js` fails if one of them stops being named by the data.
+
 CI runs verification and builds the workshop and share-card Worker. Production deployment is
 gated to `main` through `.github/workflows/deploy.yml`.
 
@@ -1382,18 +1398,23 @@ in the Playwright cache. Without `IDS_URL` a check uses `http://localhost:5186`.
 composer export to draw from, so it need not wait on the live one.
 
 `bun run check:demo` does all of that itself: it starts the dev server on 5186, warms it with one
-page load, runs every `demo/check-*.js` against it, and stops the server and its children again.
-Its flags:
+page load, runs every `demo/check-*.js` against it two at a time, and stops the server and its
+children again. Its flags:
 
 - `--only <text>` — only checks whose file name contains it.
 - `--skip a,b` — leave those out, e.g. the six-minute `check-gongche`.
 - `--port <n>` — the port to try first; Vite takes the next free one.
+- `--jobs <n>` — how many checks run at once (two by default; `1` runs them one after another).
 - `--retries <n>` — attempts per check (one retry by default), so a check that only lost a race
   with the dev server does not fail the run.
+- `--limit <s>` — stop a check after that long (900 seconds by default); a check that outlives it
+  is reported as a failure with the output it managed. The longest check, `check-gongche`, takes
+  about eight minutes with two running at once.
 - `--timeout <s>` — the page timeout each check gets (120 by default; `0` keeps the check file's
   own). A busy machine can take longer than Playwright's 30-second default to serve a page, and a
   check that fails for that reason says nothing about the app.
-- `--watchdog <min>` — stop the run when no check has finished for that long (15 by default).
+- `--watchdog <min>` — stop the run when no check has finished for that long. By default it is a
+  minute past every attempt at one check, so 32 minutes with the defaults above.
 
 The checks see the raised timeout through `scripts/check-demo-preload.mjs`, which `bun --preload`
 loads before each check; the check files themselves keep Playwright's defaults.
@@ -1416,14 +1437,18 @@ it, checks its format, and looks up drawings of 日, 木 and 口.
 
 `babelStoneAdapter({ characterInfo: url, ... })` accepts the bundled
 `data/character-info.json.gz`, or its decoded document. The optional
-`adapter.characterInfo(char, { signal })` returns English glosses, cited component
-associations, editorial Han translations and emoji mnemonics, and direct Small Seal
-correspondences when Small Seal data is supplied. [Data coverage and sources](data/README.md#character-information-panels)
-describe the limits of each relationship.
+`adapter.characterInfo(char, { signal })` returns English glosses, a Tangut character's
+Japanese and Chinese meanings, the reconstructions and sound glosses it records (up to
+eight and two), cited component associations, editorial Han translations and emoji
+mnemonics, and direct Small Seal correspondences when Small Seal data is supplied.
+[Data coverage and sources](data/README.md#character-information-panels) describe the
+limits of each relationship.
 
 With `characterInfo`, `search` accepts English glosses,
-emoji, Han, Tangut, and Small Seal characters. Recorded correspondences work in both
-directions, alongside existing names, readings, and component forms. Results keep
+emoji, Han, Tangut, and Small Seal characters, and a Tangut reconstruction in the systems
+its record carries (up to eight), with or without diacritics and tone. A reading shared by
+several characters lists them together. Recorded correspondences work in both directions,
+alongside existing names, readings, and component forms. Results keep
 dictionary qualifiers; component occurrences and lookup aliases have separate labels.
 Meaning paths retain their matched sense and follow at most two links. Component
 usage is a terminal link, so shared components do not connect unrelated words.
@@ -1438,5 +1463,7 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation. Hosts without `characterInfo` retain
+the adapter records and the data documentation. The card keeps clear of surfaces marked
+`data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
+place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

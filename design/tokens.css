@@ -57,6 +57,10 @@
   --ui-color-danger-soft: light-dark(#fdeceb, #3a1e1c);
   --ui-color-on-danger: light-dark(#ffffff, #2a0b08);
 
+  /* A segmented switch's raised half; the light scheme inverts to ink on white. */
+  --ui-color-switch-highlight: light-dark(#1c1c22, #ececf2);
+  --ui-color-on-switch-highlight: light-dark(#ffffff, #111114);
+
   /* Selection and scrollbars */
   --ui-color-selection: var(--ui-color-accent-soft);
   --ui-color-selection-ink: var(--ui-color-ink);

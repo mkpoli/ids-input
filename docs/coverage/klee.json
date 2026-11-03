@@ -5,7 +5,7 @@
   "implementationHashes": {
     "data/bundled-coverage.json": "f5ac36c402607b0e95fc00d9c0a9de6e5db7ea7b866f704e57c244441e156719",
     "data/palette-fallback-characters.json": "a71a69ed83c134afaec0600653930feddc7ed67a34c7340012a7d5fcd5553a4f",
-    "data/unicode-coverage.json": "7b606726286bf5aa52efdd91576e1aa7e2b0a2bec95aff12d2f6bb06c6112559",
+    "data/unicode-coverage.json": "2b742287284cf93c8fe54ba85a0ee5e7d0a7565734d615accb33bcd51edcd545",
     "data/unicode-properties.json": "20763faa888f696bd7cf17d7f569a726c30f95f41528df15407bba0278a02722",
     "demo/lib/composer.js": "387356ccc082344b40a7f917c0d6eb077f33a5b3d765880aae0d165d00f6b14e",
     "scripts/audit_render_coverage.mjs": "c3fa543fd3d95c06495da9e0d45ea66db9f39af8b87f06154cffc5c6d8c28bd1",
@@ -16,15 +16,15 @@
     "src/composer/client.js": "bb5f236c856c3c6c4f238ee951feb15d19f5c01b7878e58b78d6e17f617c27e2",
     "src/composer/component-forms.js": "38ec82723e4e8ace1111f9396cebb8bc28eb81a8e0540e637da9097be441fac3",
     "src/composer/component-forms.json": "736e47e2308ebf406fc21bd1b5cd434e1d8a1ef88e0eb8c937d3540872e855ae",
-    "src/composer/compose.js": "40af169c925e8b89b570f2af83779509fb3b53d7af7736a6329458ec3fcae125",
+    "src/composer/compose.js": "51d53aa20b7afa16704af82802edb68dba24996284f5fa8c454913b103d88963",
     "src/composer/constants.json": "14e4113493eb93a352f890e3f9cee9b47b9348ec0043dd508b5c213edf7813a0",
     "src/composer/constructs.js": "cdd549961cfbab7d0b64c8df7bc9675060b6f8cc5744ce57cc43bb9c751cc8de",
     "src/composer/document-source.js": "4a331b9bbd320df57a96fa041fa8acc99d9dd35fb90f3682746e57436b0ea33f",
     "src/composer/document-view.js": "71bd083a61c0ad2c964446b59f96503a3008b0d9a71f5ad92d0b8dbfc44b5212",
     "src/composer/geometry.js": "7615b170a36f937df94695fb16b0377e7c9643117c6838780283e553313b67e1",
-    "src/composer/index.js": "26fdead318c0d50ddb068e36debf797983eb0d8d8df28626a583fadb7a1b01f2",
+    "src/composer/index.js": "c5f957b971beb0da5d875f5d3e7c08181b16982514c93988f0ca029c6f1a99ef",
     "src/composer/layout.js": "87cd2dfd5edb3703a61fb2ed86bc237c506ccc11d5ea67436c9e0d61050c1419",
-    "src/composer/loader.js": "c06693de1718c36c9416dfce4c3466b1ae7dfc926dced4e22311b4b0d7e6cac8",
+    "src/composer/loader.js": "03504964561256d94993084cad12cda7fe8eaa3f71ef5b728dc5e6d19b060834",
     "src/composer/local.js": "00d033cb4f341db9f93cc21a8b3ed003a8dcabb5cb4951a6a4ada4ac2a5bbda5",
     "src/composer/marks.js": "7b9df6c325d170f4d4de6e3299a3ed6a96a2ffbdc3a1bfe59f941437bfb93254",
     "src/composer/new-korean.js": "0f8473b9d48723254f58c57e0dbd025cf65a844c0660112fde9b65beccd8ff2b",
@@ -45,15 +45,11 @@
   },
   "scope": "Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.",
   "accepted": 172872,
-  "drawn": 96341,
-  "missing": 76531,
+  "drawn": 96351,
+  "missing": 76521,
   "invalid": 0,
   "privateUseExcluded": 137468,
   "missingRanges": [
-    [
-      12334,
-      12335
-    ],
     [
       13704,
       13704
@@ -269,10 +265,6 @@
     [
       40172,
       40172
-    ],
-    [
-      40890,
-      40890
     ],
     [
       75088,
@@ -1576,6 +1568,10 @@
     ],
     [
       134197,
+      134204
+    ],
+    [
+      134206,
       134208
     ],
     [
@@ -1860,6 +1856,10 @@
     ],
     [
       135189,
+      135191
+    ],
+    [
+      135193,
       135252
     ],
     [
@@ -2248,6 +2248,10 @@
     ],
     [
       136574,
+      136575
+    ],
+    [
+      136577,
       136580
     ],
     [
@@ -5096,6 +5100,10 @@
     ],
     [
       146847,
+      146859
+    ],
+    [
+      146861,
       146896
     ],
     [
@@ -5184,6 +5192,10 @@
     ],
     [
       147239,
+      147264
+    ],
+    [
+      147266,
       147272
     ],
     [
@@ -5476,6 +5488,10 @@
     ],
     [
       148516,
+      148516
+    ],
+    [
+      148518,
       148527
     ],
     [
@@ -6476,6 +6492,10 @@
     ],
     [
       152014,
+      152022
+    ],
+    [
+      152024,
       152026
     ],
     [
@@ -19854,16 +19874,6 @@
   "invalidRanges": [],
   "blocks": [
     {
-      "block": "CJK Symbols and Punctuation",
-      "missing": 2,
-      "ranges": [
-        [
-          12334,
-          12335
-        ]
-      ]
-    },
-    {
       "block": "CJK Unified Ideographs Extension A",
       "missing": 12,
       "ranges": [
@@ -19919,7 +19929,7 @@
     },
     {
       "block": "CJK Unified Ideographs",
-      "missing": 43,
+      "missing": 42,
       "ranges": [
         [
           20007,
@@ -20088,10 +20098,6 @@
         [
           40172,
           40172
-        ],
-        [
-          40890,
-          40890
         ]
       ]
     },
@@ -20167,7 +20173,7 @@
     },
     {
       "block": "CJK Unified Ideographs Extension B",
-      "missing": 39430,
+      "missing": 39423,
       "ranges": [
         [
           131074,
@@ -21443,6 +21449,10 @@
         ],
         [
           134197,
+          134204
+        ],
+        [
+          134206,
           134208
         ],
         [
@@ -21727,6 +21737,10 @@
         ],
         [
           135189,
+          135191
+        ],
+        [
+          135193,
           135252
         ],
         [
@@ -22115,6 +22129,10 @@
         ],
         [
           136574,
+          136575
+        ],
+        [
+          136577,
           136580
         ],
         [
@@ -24963,6 +24981,10 @@
         ],
         [
           146847,
+          146859
+        ],
+        [
+          146861,
           146896
         ],
         [
@@ -25051,6 +25073,10 @@
         ],
         [
           147239,
+          147264
+        ],
+        [
+          147266,
           147272
         ],
         [
@@ -25343,6 +25369,10 @@
         ],
         [
           148516,
+          148516
+        ],
+        [
+          148518,
           148527
         ],
         [
@@ -26343,6 +26373,10 @@
         ],
         [
           152014,
+          152022
+        ],
+        [
+          152024,
           152026
         ],
         [
@@ -39808,18 +39842,18 @@
     "unicode-outlines/020.json.gz": "01233f2a4116d30f92b418ced010c72f4d2389a8616a49a681e663172a294745",
     "unicode-outlines/021.json.gz": "0091e6c50a1a0be2665e6faa4fe5335cb673ea880e5e77db92a4740c1046842c",
     "unicode-outlines/022.json.gz": "d76a2df4934e094f9a9cfd268fbd304a8ce644ca1d2236637cd2c1c829a96c6b",
-    "unicode-outlines/023.json.gz": "d6c8bcfb06811963ecff7018ebbb6bcc73f9fa3f3420baa44ce6987f8a44ba08",
+    "unicode-outlines/023.json.gz": "c5a1cc77e96968b5943d130459949f6a5b004421d31878040d23679cd2f5dd43",
     "unicode-outlines/024.json.gz": "cd83d058a2a98dcb8e2b97a1727946957e27b73865ca3eaae2efd81a0634db40",
-    "unicode-outlines/025.json.gz": "54df1c58146e418531645b5cf851783a11d674ee0ad43544e659f1c2055b11d4",
+    "unicode-outlines/025.json.gz": "dad0e3d12ff26ba737fff5753b9739aefee24323369fb8d2180bb94245834d82",
     "unicode-outlines/026.json.gz": "be5a7ad7c8c7c582bb676cf2425ca7cd8ae48ea55f4d773e57b4679e23c04f79",
-    "unicode-outlines/027.json.gz": "d5a50379b4c3a1769f2c553e94bb7984dc1f708ac438de5c51596a87a9f9d565",
+    "unicode-outlines/027.json.gz": "2a84c3fa0258ffb45e2971d3fd4b293b886f938e811099a358585adbbe18c239",
     "unicode-outlines/028.json.gz": "a44f429d38797c51f5f45bdf1bab916ea1aab2a16b09ddeb24c3a152148ff5f1",
     "unicode-outlines/029.json.gz": "d152006abd3e51e7ec0657d9c372b86e3e11c50c7e070f086157a4b14a2239c6",
     "unicode-outlines/02a.json.gz": "b316cf82b9192fc502fa7072cf4c55c9c25db565fa24dce8e7689e7c0b0e65cf",
     "unicode-outlines/02b.json.gz": "3ff6fb5e622ab97497f7f285170cb7e27af5fd99a937c4df77559286b06ad0f2",
     "unicode-outlines/02c.json.gz": "58edc52860f927c9b5b9bb060782f16605c0ee66972563876f5d72f36a98eb80",
     "unicode-outlines/02d.json.gz": "0568d981e454dc29c83540c84e7d5ea79cb92b79cedc2018e833686b70ebd11f",
-    "unicode-outlines/02e.json.gz": "29acfd8ec82c8d4d86bb560f1396320a703cbd95a50522350db1351082b828ae",
+    "unicode-outlines/02e.json.gz": "645c38f399094a3610d2323958a1b8fb99790138701e4bda7a82b572dc5a3ce6",
     "unicode-outlines/02f.json.gz": "16a474645234c7b219c54b2f9f5891877df3aee631c3cd68e0435d78c77f1944",
     "unicode-outlines/030.json.gz": "5b3ef9d01b2e3bb3b36ba7620fbf10126a2c706db1cccfb01782d227035751be",
     "unicode-outlines/031.json.gz": "fea7ee9e259bec6d5f88ea86aa9db62d4f71bd9621f5fd5604998aa0c21c9e29",
@@ -39889,11 +39923,11 @@
     "unicode-outlines/08e.json.gz": "84154b2fdccb7de9d607432297986987b26d5c7821620958137ec80453651244",
     "unicode-outlines/091.json.gz": "b8a1b9aa95693668c720bae428b3982e894126820087f13a6c9713ebf797a67a",
     "unicode-outlines/094.json.gz": "ce9da0889975e35c01d889d0c51d6eca44cf4712d07ce2a1568324fd9de16b2b",
-    "unicode-outlines/098.json.gz": "27c286a811de3c685deca14f9a03f9a4c881ab0e2d347dc04093b79c55167586",
+    "unicode-outlines/098.json.gz": "b7ba607a279cc0cfd4711592717a6442bbc72e3a9e5f29f506c2d39aab2f094e",
     "unicode-outlines/09a.json.gz": "48a359f8e12e734689cb23eb360dda936c545df320351cc068f86e75497e5ea9",
     "unicode-outlines/09b.json.gz": "8935f58b6504f7a781d2fae0bb05e302fb65f8e321b30141fe89a339135bef9b",
     "unicode-outlines/09d.json.gz": "fa2bc1f155d38b3830bbd572f0c2c16e97b0a01af885dc53df10bdd2c37efd06",
-    "unicode-outlines/09f.json.gz": "10838e6a787825d4bdb200dc0ea44a8d093d481ac77132d9fee7b27573e97b2c",
+    "unicode-outlines/09f.json.gz": "410813bc1510122bc5abd57740beea7f0e7cd0ff9617d7de35b2cdc49a03d534",
     "unicode-outlines/0a0.json.gz": "d32a38d547d183b5c3b13f91b9c3f6ef47c95dca2472d0e85710dc40e83aaec3",
     "unicode-outlines/0a1.json.gz": "e9c70eeda6cd65bb357fae94deb5dec0e765e7b9815714902925391a30ebeb19",
     "unicode-outlines/0a2.json.gz": "30cd3dba7ce449a814cefd9fcc7bca155549d69acb54d12228d2f96c5c0c7664",
@@ -39908,7 +39942,7 @@
     "unicode-outlines/0ab.json.gz": "df3bedf2eb5d28fbbf8e7a720f899811d8d599d07880041b7e673d70f1dcf2ce",
     "unicode-outlines/0d7.json.gz": "cabd72d69e50bf6165be579267e939bee3b8b12438bb541499aecdaeecf847db",
     "unicode-outlines/0f9.json.gz": "dce1564fcd40e1fe611f48f603f7622c199700da8dd849ba1ae11e8d1b65ac72",
-    "unicode-outlines/0fa.json.gz": "6e02ac3e18c029b45b893c444ae053a36c6f60f970df1aa764df37ad5e27b9be",
+    "unicode-outlines/0fa.json.gz": "56dc9ba5c6bd7955e73b6129c3d52a2e80c417f5a0983e9c360d188c2c56c192",
     "unicode-outlines/0fb.json.gz": "a13eb004043f9c552c7029856df75243a1355c2569e1cf14105d512cb00f6aef",
     "unicode-outlines/0fc.json.gz": "6af077a5faac06b739ff50c3d8526b2dedfc8fe51709971e6048a040753774d2",
     "unicode-outlines/0fd.json.gz": "af7b1ee158847de2deae3c6603fdb11d2e82b4733727001e69ad35c7696aaa4a",
@@ -40026,7 +40060,7 @@
     "unicode-outlines/1f3.json.gz": "aedbfa20dd9ebe15e1f710dc48240aac5006e049aa531db1ad91212ad4fffbd3",
     "unicode-outlines/1f4.json.gz": "f8ea0fb65a2804a45231d0d2dae4965861871b2e7fde2f2cf8143441990b7566",
     "unicode-outlines/1f5.json.gz": "3453e64fca1a614e3b4a8a3f35ee1b67294158971de0842674604d98a87055dd",
-    "unicode-outlines/1f6.json.gz": "ae06672f7450ff1bb2e5bf23327dbd1072b366ef2b099c1b94d7cdccc6da5724",
+    "unicode-outlines/1f6.json.gz": "336f44c5d70d6c2817b10fe8d18bd4b669e6003da642f24ba5da917714656552",
     "unicode-outlines/1f7.json.gz": "fa529d12d5b424253d07da8035913cfd40fd626d3e9045275f0990c5b6449243",
     "unicode-outlines/1f8.json.gz": "a2bfc167fb971bca3d2218162b2915ec5f81884ffb3673cb290cb6adf132222b",
     "unicode-outlines/1f9.json.gz": "90e3930d30c192517c59446ada72d12820075a71523de1b5bbc97d0b2ab64272",
@@ -40044,16 +40078,16 @@
     "unicode-outlines/209.json.gz": "14b6c3dc32caeec5684f7041a717cd2ecbec8bd14c14d7c530e68e0875a0ad22",
     "unicode-outlines/20a.json.gz": "751a151ca1040990fd92e4758ab775730e710993ece3f3fa27ae27f7afca0e94",
     "unicode-outlines/20b.json.gz": "9d30908644c3264f3b80a33e5269f3dc9ed23ddcf39a0d360d88dd430266fba0",
-    "unicode-outlines/20c.json.gz": "bf63665e3496b06fc46b7936b4037f87c907312d51c232c4c16e45b2a8fc17cf",
+    "unicode-outlines/20c.json.gz": "a81fd11a6faae44409d0712df3b5421fd9f4743072a83c9633cd7476e2517161",
     "unicode-outlines/20d.json.gz": "0689884c86d22630eb21c6a056cc52d7f0a3eb1a099f7e79a962ff7ac507fbe2",
     "unicode-outlines/20e.json.gz": "562ea8171f90ca58994ed7a821bd879d01103078706580514f37093327647641",
     "unicode-outlines/20f.json.gz": "6d6814b57ef3b95d34f7875f1f0f564c82db53b02ff28224d870ecb310f4d6a3",
-    "unicode-outlines/210.json.gz": "dc55960c9c203f5b078c84bc832e76e50b9e99b51c54f801e6a1b9b7da16f02d",
+    "unicode-outlines/210.json.gz": "bc36ea2e3e0d88baeb2b19ce6a563e35f38dba126444297e82ae70862ca4fa4f",
     "unicode-outlines/211.json.gz": "abc7f22a493f50de08ac05f9c152bf2baed1dd29fea147080b54e5067ba3c105",
     "unicode-outlines/212.json.gz": "30af828511cc26c7473798ed371a7c10ab67106e2e435990cc6ebf8a8b6ae16d",
     "unicode-outlines/213.json.gz": "607cbd1e4040c7080653d09a2c983db56ba8fea62b602d3e836b2c852d411974",
     "unicode-outlines/214.json.gz": "2ed608c65c1d3caaa19eb8a10196ddaf330eec56e026a230e08c2aa62ad4e4ae",
-    "unicode-outlines/215.json.gz": "52bccaec2aec94ec2e7d63ff4a06d32140efb0e0c88793f0509753842173c571",
+    "unicode-outlines/215.json.gz": "19cf1cfacfd73039b00d59400a5b527f8a3428bda6f1e976debff638dae5d30e",
     "unicode-outlines/216.json.gz": "762f8fb3725b13d1cfbcae19fdcbdf1004d55df0f1d5d0c1b873db7cdbec49d1",
     "unicode-outlines/217.json.gz": "0dfd6bcdea927afca9e216418a8fd01f7bf29d741f50e038b518279524b081d5",
     "unicode-outlines/218.json.gz": "c445a1df744432bdf7d875e9584c2a2f35bae5198568cc4fa813c61c026fae0f",
@@ -40082,7 +40116,7 @@
     "unicode-outlines/230.json.gz": "2f845e9ecdf0fc4f18916342d3f14645692132a932fd8a808276130991bd0286",
     "unicode-outlines/231.json.gz": "7d86ae2fc3858525f5b43c98d8c53cf1326bd40d79080d89398dc8936911a84b",
     "unicode-outlines/232.json.gz": "e8da9489dc8dd9dc9f3ec841e8f7fcf30439e60f7b1819f94945bbf464491b20",
-    "unicode-outlines/233.json.gz": "e290f889276ff454bca686fb06e59a49006985ceab9ddc6817108934ad521b3e",
+    "unicode-outlines/233.json.gz": "dbbeec78b29f39e5c57f70b37fcd8445686d56fe833d254eec58f830c781ba2e",
     "unicode-outlines/234.json.gz": "28a1c5d49221806efda306d67c9ea225344b5d71ec68aa1e0c506f97fc03020a",
     "unicode-outlines/235.json.gz": "093c8c27e56ba69a9f89a8292f193a3b5da9f70a78a1c3a705489ac5fe8b5ed7",
     "unicode-outlines/236.json.gz": "e1250e6360b131cf88e4bc5fe04fdd90ee003c21573020c35a0f8647eadbeed1",
@@ -40092,14 +40126,14 @@
     "unicode-outlines/23a.json.gz": "0fcf92f7a0f0f44e6a4bded33be01f68d0e9ee49281e945408be82e0eea9d8e2",
     "unicode-outlines/23b.json.gz": "e6bc14e2709000f4a2ef4e9bd0424bd065c3410b42e20bf412ffab9529f392f6",
     "unicode-outlines/23c.json.gz": "f4ec21645b65d942131e33694973c6c9f5393213ac3dece0c23071d5ea39d191",
-    "unicode-outlines/23d.json.gz": "ffdc653c3ed7fce42e61a8937f92b80460bac7f1d20d23ddd7d8e38aff2dd581",
+    "unicode-outlines/23d.json.gz": "60d5a86bad795c2e5d9430374ccb6c1c8ef5cae9fb665f6a430fb79ae82e2155",
     "unicode-outlines/23e.json.gz": "cb897d5785596d48943772bcc2d684952a4b8a93a358b53019dae6b6b9a848f3",
-    "unicode-outlines/23f.json.gz": "65051b964fb28d86f4ab70944b12bf9546a3658c23343f3bf74c77a206c2b986",
+    "unicode-outlines/23f.json.gz": "82774c9b429352eb44855162d5d7a3bc3d062dcba1474b4f364311dfc4dbcec5",
     "unicode-outlines/240.json.gz": "6c8a949d2f266781a80b6b2ad85f5a62f7c974d9781db063ed277c849f4c10e1",
     "unicode-outlines/241.json.gz": "5a1e17aa8e5e7c928aaa40ef5eea2f2ee57f6eda26ba785aa3f20baed1363003",
     "unicode-outlines/242.json.gz": "c10a20cf4f64a17920de96c9648a32e3235fac8d13fe82ea9781fcad9e26a787",
     "unicode-outlines/243.json.gz": "4469d458e9098a28fdec95fbc502f9590426609d0a68d59e1c833bf7e9bda219",
-    "unicode-outlines/244.json.gz": "b0d4e8696c5b3b592a87f488590cb14cd36d239eeee679854d0a6a23557224a7",
+    "unicode-outlines/244.json.gz": "052229f4bc4719fb212850afa873ac30ff84d67409ab44d97f14755ee733f15f",
     "unicode-outlines/245.json.gz": "36d43b08ba8c59334c5c79ad95c113ac5befe77d8e8e14f5112f380172b907c0",
     "unicode-outlines/246.json.gz": "867e39c6258e45ec9f39a0aab51aa2d1bde48c6673eecd75508811bffa261171",
     "unicode-outlines/247.json.gz": "501fe480edcaee6067bd27c394bb7216c68b53756cd915419a87a8ce8c7e1691",
@@ -40112,7 +40146,7 @@
     "unicode-outlines/24e.json.gz": "cbe7a91225517c7535535da3240701a71eb7eea877209622926ed4f848349531",
     "unicode-outlines/24f.json.gz": "27a43bea2c173635d34bb6c53657f692077523a8df67259dc3ae03d2d4353f5c",
     "unicode-outlines/250.json.gz": "30e4956fa7236c6e35763e0f319bf5047e1b12b62accd01b732438a0ace74eaa",
-    "unicode-outlines/251.json.gz": "26569578f3246e97630bef0d250197e4b5513b85d7ef7a152722109ea5b38ba2",
+    "unicode-outlines/251.json.gz": "b85688c3ee82b5131e9e08929ac881b76dd70fd8477892427b1f48829e40fe64",
     "unicode-outlines/252.json.gz": "0b51f6bf513de42065f71330001d981942284e2c15de2499b6f977183666ef69",
     "unicode-outlines/253.json.gz": "8adaa51b2d07757591b31cbc9dccc254d07ac55487996291e73c4228c70d0426",
     "unicode-outlines/254.json.gz": "f54b7678a0ebaba7ba196352a2c6a5e5dbfb135b2a10f7fd9c9577f800cf5acd",
@@ -40317,7 +40351,7 @@
     "unicode-outlines/331.json.gz": "eed5be1580c35d169eb50240afa42edf687d3137905820dd5cb43a85ef9652b5",
     "unicode-outlines/332.json.gz": "24903dc9d7ab214512e907c72b2adbbb090cfb21ee9494382cd89a1850564eb1",
     "unicode-outlines/333.json.gz": "323df8f54813ceebb31b20cfa7a1bf5d8bd706f7a1e521d90cea637550f0ab2b",
-    "unicode-outlines/334.json.gz": "a1d02a10938c19479aa1aeac3b2411a3a8d7b295e323029276aa67f4f779b3f1"
+    "unicode-outlines/334.json.gz": "2b402872594a4c83fc6568ddf8b1f7f3567d462ca0b4d1a65c9c3f3b50f8f96b"
   },
   "sourceHashes": {
     "g/000.json": "f0eb89ebe736a1b8bd50ed35eb90e99a262b701e00015a56d8c282d70976cf31",

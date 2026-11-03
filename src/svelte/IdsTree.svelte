@@ -1,13 +1,15 @@
 <script>
+  import { untrack } from 'svelte'
   import { tint } from './tokens.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
-  import { SIBLING_DRAG, siblings, neighbor } from './sibling-drag.js'
+  import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
   // column, the second part inside a single host, or one over the other. Compound enclosure hosts
   // get separate panels so their descendants stay visible. A click chooses a part; a part
-  // dragged from a palette, a tree or a search is put where it is dropped; the context menu (right
-  // click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a level or
-  // copies that part's sequence. An empty slot shows as ⬚.
+  // dragged from a palette, a tree or a search is put where it is dropped, and a part of the tree
+  // dropped beside a sibling moves there or on any other part switches places with it; the context
+  // menu (right click, the Menu key or Shift+F10) splits or swaps with any operator, clears, removes a
+  // level or copies that part's sequence. An empty slot shows as ⬚.
   import { OPERATOR_GROUPS, isNode, partAt, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
@@ -22,43 +24,148 @@
   /** @param {Path} path */
   const key = path => path.join('.')
 
-  // Dropping a part on a box.
-  let over = $state(/** @type {string | null} */ (null))
+  // Dropping a part on a box: beside a sibling it moves there, on any other part the two switch places.
+  // Both stay plain values, so a dragover that lands on the same box costs no render.
+  let overPath = $state(/** @type {string | null} */ (null))
+  let overSwap = $state(false)
+  /** @param {Path} path */
+  const overKind = path => overPath !== key(path) ? null : overSwap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
     if (editor.disabled || !path.length || !event.dataTransfer) return
     dragging = { path, tree: editor.tree }
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
-  function endDrag() { dragging = null; over = null }
+  function endDrag() { dragging = null; overPath = null; overSwap = false }
 
   /** @param {DragEvent} event @param {Path} path */
   function dragover(event, path) {
     if (editor.disabled || !event.dataTransfer) return
-    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
-      event.preventDefault(); event.stopPropagation(); event.dataTransfer.dropEffect = 'move'; over = key(path); return
+    if (event.dataTransfer.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const swap = !siblings(dragging.path, path)
+      if (swap && !swappable(dragging.path, path)) return
+      event.preventDefault(); event.stopPropagation()
+      event.dataTransfer.dropEffect = 'move'
+      overPath = key(path); overSwap = swap
+      return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault(); event.stopPropagation()
     event.dataTransfer.dropEffect = 'copy'
-    over = key(path)
+    overPath = key(path); overSwap = false
   }
   /** @param {DragEvent} event @param {Path} path */
   function drop(event, path) {
-    over = null
-    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, path)) return
-      event.preventDefault(); event.stopPropagation(); editor.reorder(dragging.path, path)
-      dragging = null; return
+    overPath = null; overSwap = false
+    if (event.dataTransfer?.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const from = dragging.path, move = siblings(from, path), swap = !move && swappable(from, path)
+      dragging = null
+      if (!move && !swap) return
+      event.preventDefault(); event.stopPropagation()
+      if (move) editor.reorder(from, path); else editor.swap(from, path)
+      return
     }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given) return
     event.preventDefault(); event.stopPropagation()
     editor.take(given, path)
+  }
+
+  // Lifting a box with the space bar: the keyboard way to switch a part with one in another branch.
+  // Space lifts the focused box, Space again on another box places it, Escape lets it go.
+  /** @type {{ path: Path, tree: Part } | null} */ let carry = $state.raw(null)
+  $effect(() => {
+    const tree = editor.tree
+    untrack(() => { if (carry && carry.tree !== tree) carry = null })
+  })
+  // Escape lets a lifted box go. The character card takes the first Escape (keydown) to close
+  // itself, so the release is read on keyup, where nothing has stopped the event.
+  $effect(() => {
+    /** @param {KeyboardEvent} event */
+    const release = event => { if (event.key === 'Escape' && carry) carry = null }
+    window.addEventListener('keyup', release)
+    return () => window.removeEventListener('keyup', release)
+  })
+  /** @param {Path} to */
+  function placeCarry(to) {
+    const held = carry
+    carry = null
+    if (!held || held.tree !== editor.tree) return
+    if (siblings(held.path, to)) editor.reorder(held.path, to)
+    else if (swappable(held.path, to)) editor.swap(held.path, to)
+  }
+
+  // A finger drag: touch fires no dragstart, so the same move and switch are tracked by pointer.
+  // The first movement past a few pixels starts it, so a tap still chooses the box.
+  /** @type {{ path: Path, pointer: number, x: number, y: number, moved: boolean } | null} */ let touch = null
+  /** @type {{ text: string, x: number, y: number } | null} */ let ghost = $state(null)
+  // A drag that ends on a box can still be followed by a click; the next one is the drag's, not a choice.
+  let swallowed = false
+
+  /** @param {PointerEvent} event */
+  function touchDown(event) {
+    if (event.pointerType !== 'touch' || editor.disabled) return
+    const box = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
+    if (!(box instanceof HTMLElement) || !rootEl?.contains(box) || box.closest('.inline-edit,input,textarea')) return
+    const written = box.getAttribute('data-hover-path') ?? ''
+    const path = written === '' ? [] : written.split('.').map(Number)
+    if (!path.length) return
+    touch = { path, pointer: event.pointerId, x: event.clientX, y: event.clientY, moved: false }
+  }
+
+  /** @param {PointerEvent} event */
+  function touchMove(event) {
+    if (!touch || event.pointerId !== touch.pointer) return
+    if (!touch.moved) {
+      if (Math.hypot(event.clientX - touch.x, event.clientY - touch.y) < 8) return
+      touch.moved = true
+      swallowed = true
+      dragging = { path: touch.path, tree: editor.tree }
+      ghost = { text: editor.sequenceAt(touch.path), x: event.clientX, y: event.clientY }
+    } else {
+      if (ghost) ghost = { ...ghost, x: event.clientX, y: event.clientY }
+    }
+    overAt(event.clientX, event.clientY)
+  }
+
+  /** The box under a point, as a drop target. @param {number} x @param {number} y */
+  function overAt(x, y) {
+    const from = dragging?.path
+    if (!from) return
+    const under = document.elementFromPoint(x, y)?.closest('[data-hover-path]')
+    const written = under instanceof HTMLElement ? under.getAttribute('data-hover-path') : null
+    if (written == null) { overPath = null; overSwap = false; return }
+    const path = written === '' ? [] : written.split('.').map(Number)
+    const move = siblings(from, path), swap = !move && swappable(from, path)
+    if (!move && !swap) { overPath = null; overSwap = false; return }
+    overPath = key(path); overSwap = swap
+  }
+
+  /** @param {PointerEvent} event */
+  function touchUp(event) {
+    if (!touch || event.pointerId !== touch.pointer) return
+    const from = touch.path, moved = touch.moved, landed = overPath
+    touch = null
+    if (!moved) return
+    dragging = null; overPath = null; overSwap = false; ghost = null
+    if (landed != null) {
+      const to = landed === '' ? [] : landed.split('.').map(Number)
+      if (siblings(from, to)) editor.reorder(from, to)
+      else if (swappable(from, to)) editor.swap(from, to)
+    }
+    setTimeout(() => { swallowed = false }, 400)
+  }
+
+  function touchCancel() {
+    if (!touch) return
+    touch = null
+    dragging = null; overPath = null; overSwap = false; ghost = null
+    setTimeout(() => { swallowed = false }, 400)
   }
 
   // The context menu of a part: where it opened, and for which part.
@@ -82,6 +189,16 @@
   function contextmenu(event, path) { event.preventDefault(); openMenu(path, event.clientX, event.clientY) }
   /** @param {KeyboardEvent} event @param {Path} path */
   function partKey(event, path) {
+    if (event.key === ' ' && !event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.isComposing) {
+      event.preventDefault()
+      if (!path.length || editor.disabled) return
+      if (carry && samePath(carry.path, path)) { carry = null; return }
+      if (carry) { placeCarry(path); return }
+      carry = { path, tree: editor.tree }
+      editor.choose(path)
+      return
+    }
+    if (event.key === 'Escape' && carry) { event.preventDefault(); carry = null; return }
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editPart(path); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
@@ -130,13 +247,16 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>
+    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} draggable={!editor.disabled && path.length > 0 && !(editing && samePath(editing.path, path))}
+      ondragstart={event => startDrag(event, path)} ondragend={endDrag}
+      title={path.length ? `${editor.name(part.op)} · ${t('ids.dragSibling')}` : undefined}
+      class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>
       <div class="ids-head">
-        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} aria-pressed={selected} disabled={editor.disabled}
+        <button type="button" class="ids-op" draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} data-path={key(path)} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} aria-pressed={selected} aria-keyshortcuts="Space" disabled={editor.disabled}
           aria-label={t('ids.node', { name: editor.name(part.op), sequence: write(part) })} title={`${part.op} ${editor.name(part.op)}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
           onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-          ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
+          ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}><OperatorIcon op={part.op} size={16} /></button>
         {#if editing && samePath(editing.path, path)}
           {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} onclose={() => editing = null} />{/key}
         {:else}
@@ -156,21 +276,23 @@
     {#if editing && samePath(editing.path, path)}
       {#key editing}<IdsInlineEdit {editor} {path} owner={rootEl} variant="leaf" onclose={() => editing = null} />{/key}
     {:else}
-    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={over === key(path)} aria-pressed={selected}
+    <button type="button" class="ids-part" data-character={part ?? undefined} draggable={!editor.disabled && path.length > 0} ondragstart={event => startDrag(event, path)} ondragend={endDrag} style:--tint={tint(path)} class:empty={part === null} class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} aria-pressed={selected} aria-keyshortcuts="Space"
       data-path={key(path)} data-hover-path={key(path)} disabled={editor.disabled} title={`${part === null ? label : t('ids.choose', { part })}${path.length ? ` · ${t('ids.dragSibling')}` : ''}`}
       aria-label={parent ? t('ids.part', { part: label, n: parent.n, name: editor.name(parent.op) }) : label}
       onclick={() => editor.choose(path)} oncontextmenu={event => contextmenu(event, path)} onkeydown={event => partKey(event, path)}
-      ondragover={event => dragover(event, path)} ondragleave={() => over = null} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
+      ondragover={event => dragover(event, path)} ondragleave={() => { overPath = null; overSwap = false }} ondrop={event => drop(event, path)}>{part ?? '⬚'}</button>
     {/if}
   {/if}
 {/snippet}
 
 <div class="ids-tree" role="group" aria-label={t('ids.structure')} bind:this={rootEl}
   onpointermove={event => {
+    if (touch) { touchMove(event); return }
     const target = /** @type {HTMLElement} */ (event.target).closest('[data-hover-path]')
     const path = target?.getAttribute('data-hover-path')
     editor.hover(path == null ? null : path === '' ? [] : path.split('.').map(Number))
-  }} onpointerleave={() => editor.hover(null)} onpointerdown={event => {
+  }} onpointerleave={() => editor.hover(null)} onpointerup={touchUp} onpointercancel={touchCancel} onpointerdown={event => {
+    touchDown(event)
     const target = /** @type {HTMLElement} */ (event.target)
     if (!editor.disabled && (target === event.currentTarget || target.classList.contains('ids-tree-root'))) {
       const active = document.activeElement
@@ -178,6 +300,7 @@
       editor.choose(null)
     }
   }} onclickcapture={event => {
+    if (swallowed) { swallowed = false; event.stopImmediatePropagation(); event.preventDefault(); return }
     if (event.detail !== 1) return
     const target = /** @type {HTMLElement} */ (event.target)
     clickPath = target.closest('.ids-unwrap,.ids-menu,.inline-edit') ? null : target.closest('[data-hover-path]')?.getAttribute('data-hover-path') ?? null
@@ -188,6 +311,9 @@
     if (anchor) { event.preventDefault(); editPart(path === '' ? [] : path.split('.').map(Number)) }
   }}>
   <div class="ids-tree-root">{@render box(editor.tree, [], null)}</div>
+  {#if ghost}
+    <div class="ids-touch-ghost" aria-hidden="true" style:left="{ghost.x}px" style:top="{ghost.y}px">{ghost.text}</div>
+  {/if}
   {#if menu}
     {@const filled = menuPart !== null && menuPart !== undefined}
     <!-- svelte-ignore a11y_interactive_supports_focus -->
@@ -220,7 +346,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:16px;color:var(--_ink)}
   .ids-tree-root{display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0;container-type:size}
   .ids-tree-root > *{height:100%;min-height:0}
@@ -231,11 +357,21 @@
      one pixel, shrinking together with the available width and height. */
   .ids-node{position:relative;display:flex;flex-direction:column;height:100%;min-width:0;min-height:0;box-sizing:border-box;font-size:min(1px,1cqw,.6cqh);padding:24em 6em 6em;border:1.5em dashed var(--_line-strong);border-radius:10em;cursor:pointer;
     transition:border-color .12s,background-color .12s}
+  .ids-node.carried,.ids-part.carried{outline:2px dashed var(--_accent);outline-offset:2px}
+  .ids-node[draggable="true"]{cursor:grab}
+  .ids-node[draggable="true"]:active{cursor:grabbing}
   .ids-node.disabled{cursor:default}
+  /* A finger on a box drags it rather than scrolling the tree; the gaps still scroll. */
+  .ids-tree [data-hover-path]{touch-action:none}
+  .ids-touch-ghost{position:fixed;z-index:60;max-width:12em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;pointer-events:none;
+    padding:4px 10px;border:1px solid var(--_accent);border-radius:10px;background:var(--_surface);color:var(--_ink);
+    font-family:var(--_font);font-size:20px;line-height:1.3;box-shadow:0 8px 20px rgb(0 0 0 / .2);transform:translate(-50%,-50%)}
   :is(.ids-op,.ids-part)[draggable="true"]{cursor:grab}
   :is(.ids-op,.ids-part)[draggable="true"]:active{cursor:grabbing}
   .ids-node.chosen{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
   .ids-node.over{border-style:solid;border-color:var(--_accent)}
+  .ids-node.swap{border-style:solid;border-color:var(--_accent);background:var(--_accent-light)}
+  .ids-node.dragged,.ids-op.dragged,.ids-part.dragged{opacity:.45}
   .ids-head{position:absolute;top:3em;left:4em;right:4em;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
   .ids-head button{pointer-events:auto;flex-shrink:0}
   .ids-subsequence{pointer-events:auto;flex:1;min-width:0;margin:0 .545em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:11em/1.4 var(--_font);color:var(--_muted)}
@@ -283,13 +419,14 @@
   .ids-tree-root > .ids-part.empty{font-size:min(48px,max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
   .ids-part.chosen{border:min(2px,2cqw,2cqh) solid var(--_accent);background:var(--_accent-light)}
   .ids-part.over{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid}
+  .ids-part.swap{border:min(2px,2cqw,2cqh) solid var(--_accent);border-style:solid;background:var(--_accent-light)}
 
   /* Device-pixel minimum borders and controls cannot fit in the smallest cells.
      Clip the header visually while keeping its node button available to keyboard navigation. */
   @container (max-height:12px) or (max-width:12px){
     .ids-node{border-width:0;padding:0}
     .ids-head{inset:0;overflow:hidden;clip-path:inset(50%)}
-    .ids-part,.ids-part.chosen,.ids-part.over{border-width:0;padding:0}
+    .ids-part,.ids-part.chosen,.ids-part.over,.ids-part.swap{border-width:0;padding:0}
   }
 
   .ids-menu{position:fixed;z-index:50;display:flex;flex-direction:column;gap:2px;width:max-content;max-width:260px;padding:6px;

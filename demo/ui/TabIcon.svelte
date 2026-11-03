@@ -1,13 +1,16 @@
 <script>
-  // A tab's composed drawing, and nothing else: the description drawn small in the tab's ink.
+  // A tab's composed drawing: the description drawn small in the tab's ink, its emoji in colour.
   // Until it arrives, or when the export cannot draw it, a muted empty frame stands in its place.
-  // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke.
+  // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke;
+  // a list of settled tabs asks at once with a delay of 0.
   import { parse, write } from '../../src/core/index.js'
+  import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../../src/core/preview.js'
   /**
-   * @typedef {{ d?: string, cut?: string, slots?: { index: number, box: number[] }[] }} Drawing
-   * @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null> }}
+   * @typedef {{ d?: string, cut?: string, slots?: { index: number, box: number[] }[],
+   *   emoji?: { text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} Drawing
+   * @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null>, delay?: number }}
    */
-  let { sequence, draw } = $props()
+  let { sequence, draw, delay = 200 } = $props()
   const uid = $props.id()
   const read = $derived(parse(sequence, { open: true }))
   const source = $derived(!read.problem && read.tree !== null ? write(read.tree) : '')
@@ -18,18 +21,37 @@
     let live = true
     if (!text) { drawing = null; return }
     const timer = setTimeout(() => ask(text).then(found => {
-      if (live) drawing = found && (found.d?.trim() || found.slots?.length) ? found : null
-    }, () => { if (live) drawing = null }), 200)
+      if (live) drawing = found && (found.d?.trim() || found.slots?.length || found.emoji?.length) ? found : null
+    }, () => { if (live) drawing = null }), delay)
     return () => { live = false; clearTimeout(timer) }
   })
 </script>
 
 {#if drawing}
+  {@const emoji = drawing.emoji ?? []}
+  {@const hasCut = Boolean(drawing.cut || emoji.some(item => item.cut))}
   <svg class="tab-glyph" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
-    {#if drawing.cut}
-      <mask id="{uid}-cut"><rect x="0" y="0" width="1000" height="1000" fill="#fff" /><path d={drawing.cut} fill="#000" /></mask>
+    {#if hasCut}
+      {#if emoji.some(item => item.cut)}
+        <filter id="{uid}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
+      {/if}
+      <mask id="{uid}-cut"><rect x="0" y="0" width="1000" height="1000" fill="#fff" />
+        {#if drawing.cut}<path d={drawing.cut} fill="#000" />{/if}
+        {#each emoji as item}
+          {#if item.cut}
+            {@const place = emojiPlace(item)}
+            <text filter={`url(#${uid}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
+          {/if}
+        {/each}
+      </mask>
     {/if}
-    <path d={drawing.d} mask={drawing.cut ? `url(#${uid}-cut)` : undefined} />
+    <path d={drawing.d} mask={hasCut ? `url(#${uid}-cut)` : undefined} />
+    {#each emoji as item}
+      {#if !item.cut}
+        {@const place = emojiPlace(item)}
+        <text mask={hasCut && !item.restored ? `url(#${uid}-cut)` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
+      {/if}
+    {/each}
     {#each drawing.slots ?? [] as slot (slot.index)}
       <rect class="tab-slot" x={slot.box[0]} y={slot.box[1]} width={slot.box[2]} height={slot.box[3]} rx="60" />
     {/each}
