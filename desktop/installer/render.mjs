@@ -42,10 +42,10 @@ const sidebar = page(164, 314, `
   </div>
 </div>`)
 
-// Windows wizard, inner pages: 150×57 at the right of the white title band.
+// Windows wizard, inner pages: 150×57 at the left of the white title band, before the page's title.
 const header = page(150, 57, `
-<div style="height:100%;background:#fff;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-right:14px">
-  ${glyph(30, C.ink)}${mark(30, C.accent, '#fff')}
+<div style="height:100%;background:#fff;display:flex;align-items:center;justify-content:flex-start;gap:9px;padding-left:16px">
+  ${mark(28, C.accent, '#fff')}${glyph(30, C.ink)}
 </div>`)
 
 // macOS disk image window. Finder treats a window with a background picture as light, so its file
