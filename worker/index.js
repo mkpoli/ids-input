@@ -162,6 +162,10 @@ export default {
     }
     // Dynamic responses need their own indexing policy.
     const headers = new Headers(response.headers)
+    // The build names every file under /assets/ by a hash of its content, so a copy a browser holds
+    // stays right for good and a return visit asks the network for none of them. A 304 carries
+    // the same rule, since its headers replace those the browser stored.
+    if (route.kind === 'asset' && /^\/assets\/[^/]+$/.test(url.pathname) && (response.ok || response.status === 304)) headers.set('cache-control', 'public, max-age=31536000, immutable')
     if (url.hostname !== 'ids.mkpo.li') headers.set('x-robots-tag', 'noindex')
     return new Response(request.method === 'HEAD' ? null : response.body, {
       status: response.status, statusText: response.statusText, headers,
