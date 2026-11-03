@@ -214,6 +214,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   if (hasCut) {
     if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)
     out.push(`<mask id="cut"><rect x="${-pad}" y="${-pad}" width="${span}" height="${span}" fill="#fff"/>`)
+    // A cut drawing stays merged, so its pieces move nowhere and the cut keeps the merged frame.
     if (cut) out.push(`<path d="${cut}" fill="#000"/>`)
     for (const item of emoji.filter(item => item.cut)) out.push(textOf(item, ' filter="url(#emoji-cut-ink)"'))
     out.push('</mask>')
