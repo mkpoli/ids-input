@@ -21,6 +21,10 @@ TANGUT_BLOCKS = ((0x17000, 0x187FF), (0x18D00, 0x18DFF))
 SYSTEMS = ['li_fanwen', 'gong_huangcheng', 'gong_xun_202411', 'arakawa_shintaro', 'miyake', 'nishida',
            'kychanov', 'sofronov']
 SOUNDS = [('li_fanwen', 'sound_li_fanwen'), ('nie_lishan', 'sound_nie_lishan')]
+# Open Tangut writes a missing Chinese explanation and a pointer to another entry in the meaning
+# field. Neither is a meaning; they stay out of the card. Parenthesised editorial notes do too.
+ZH_PLACEHOLDERS = {'暫無解釋', '（訛體）'}
+ZH_PREFIXES = ('重定向至', '（按：')
 
 
 def is_tangut(char):
@@ -38,6 +42,18 @@ def fetch(url, path, digest):
     return raw
 
 
+def clean(values, language):
+    cleaned = []
+    for value in values or []:
+        text = value.strip()
+        if not text:
+            continue
+        if language == 'zh' and (text in ZH_PLACEHOLDERS or text.startswith(ZH_PREFIXES)):
+            continue
+        cleaned.append(text)
+    return cleaned
+
+
 def open_tangut():
     raw = fetch(TANGUT_URL, ROOT / 'cache/open-tangut-final_dict.json', TANGUT_SHA)
     entries = {}
@@ -49,14 +65,13 @@ def open_tangut():
             raise ValueError(f'Open Tangut: {char} appears twice')
         definitions = row.get('definitions') or {}
         pronunciations = row.get('pronunciations') or {}
-        entry = {
-            'source': 'openTangut',
-            'en': [sense for sense in definitions.get('en') or [] if sense.strip()],
-        }
-        if definitions.get('ja'):
-            entry['ja'] = definitions['ja']
-        if definitions.get('zh'):
-            entry['zh'] = definitions['zh']
+        entry = {'source': 'openTangut', 'en': clean(definitions.get('en'), 'en')}
+        ja = clean(definitions.get('ja'), 'ja')
+        if ja:
+            entry['ja'] = ja
+        zh = clean(definitions.get('zh'), 'zh')
+        if zh:
+            entry['zh'] = zh
         readings = {key: pronunciations[key] for key in SYSTEMS if pronunciations.get(key)}
         if readings:
             entry['readings'] = readings
@@ -90,8 +105,8 @@ def build():
             del entry['aids']
     doc = {'format': 'ids-character-info-2', 'sources': {
         'unihan': {'name': 'Unicode Unihan 18.0.0 · kDefinition', 'url': UNIHAN_URL, 'sha256': UNIHAN_SHA, 'license': 'Unicode-3.0', 'copyright': 'Copyright Unicode, Inc.'},
-        'openTangut': {'name': 'Open Tangut', 'url': TANGUT_URL, 'commit': TANGUT_COMMIT, 'sha256': TANGUT_SHA, 'license': 'MIT', 'copyright': 'Copyright (c) 2026 Leah',
-                       'modifications': 'English, Japanese and Chinese meanings, eight reconstructions and two sound glosses selected; empty readings left out.'},
+        'openTangut': {'name': 'Open Tangut', 'url': TANGUT_URL, 'commit': TANGUT_COMMIT, 'sha256': TANGUT_SHA, 'license': 'MIT (compilation); Wiktionary rows CC-BY-SA-4.0; CCAMC rows no licence stated', 'copyright': 'Copyright (c) 2026 Leah; Wiktionary contributors; CCAMC',
+                       'modifications': 'English, Japanese and Chinese meanings, reconstructions and sound glosses selected; empty readings, missing-explanation placeholders and editorial-only notes left out.'},
         'aids': {'file': 'character-meaning-aids.json', 'license': 'MIT', 'kind': 'editorial Chinese translations and emoji mnemonics'},
     }, 'entries': entries, 'aids': aids['meanings'], 'components': aids['components']}
     raw = (json.dumps(doc, ensure_ascii=False, separators=(',', ':')) + '\n').encode()

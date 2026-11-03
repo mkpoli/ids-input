@@ -42,6 +42,13 @@ describe('sourced character meanings', () => {
     expect(poison.readings.find(reading => reading.name === 'Li Fanwen 2008').value).toBe('do1')
     expect(poison.soundGlosses.find(sound => sound.name === 'Li Fanwen').value).toContain('舌頭音')
   })
+  test('a missing-explanation placeholder is not published as a meaning', () => {
+    // Open Tangut writes 暫無解釋 where it has no Chinese explanation; the card says nothing instead.
+    expect(document.entries['𗀦'].zh).toBeUndefined()
+    expect(info('𗀦').meanings?.zh).toBeUndefined()
+    expect(document.entries['𗆵'].zh).toEqual(['誠'])
+    expect(info('𗆵').meanings.zh).toEqual(['誠'])
+  })
   test('the Open Tangut records cover the ideographs and leave readings empty where none exist', () => {
     const tangut = Object.entries(document.entries).filter(([char]) => characterScript(char) === 'tangut')
     expect(tangut).toHaveLength(6144)
