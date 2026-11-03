@@ -7,20 +7,15 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 /** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 export const EMOJI_CUT_MATRIX = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'
 
-/** The fonts that shape Old Hangul: a conjoining jamo run has no single glyph, so the font draws
- *  the cluster, ㅇ with its 아래아 under it, as one syllable. */
-export const HANGUL_FAMILY = "var(--fallback-font, 'IDS Fallback'), 'Noto Sans CJK KR', 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif"
-
-/** A drawing's emoji or legacy Hangul as one SVG `<text>`, escaped and centred in its box, with any reflection.
- * @param {{ text?: string, box?: number[], flip?: [boolean, boolean], family?: string } | null | undefined} item @param {string} [attribute] */
+/** A drawing's emoji as one SVG `<text>`, escaped and centred in its box, with any reflection.
+ * @param {{ text?: string, box?: number[], flip?: [boolean, boolean] } | null | undefined} item @param {string} [attribute] */
 export function emojiText(item, attribute = '') {
   const box = (item?.box ?? []).slice(0, 4).map(v => Number.isFinite(Number(v)) ? Number(v) : 0)
   if (box.length < 4 || typeof item?.text !== 'string') return ''
   const [x, y, width, height] = box
   const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const reflect = emojiTransform(item)
-  const family = item.family === 'hangul' ? HANGUL_FAMILY : 'system-ui, sans-serif'
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="${family}">${text}</text>`
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${Math.max(0, Math.min(width, height) * 0.85)}" font-family="system-ui, sans-serif">${text}</text>`
 }
 
 /**
@@ -178,7 +173,7 @@ const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/
  * side, `size` its width and height in pixels. Empty slots are left out unless `placeholders`, which
  * draws each as the editor does, in the ink at half strength.
  * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
- *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean, family?: 'hangul' }[] }} drawing
+ *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} drawing
  * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean }} [options]
  * @returns {string}
  */

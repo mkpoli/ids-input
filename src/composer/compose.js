@@ -22,7 +22,9 @@ import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
-import { hangulClusterAt } from '../core/hangul.js'
+import { hangulClusterAt, jamoClass } from '../core/hangul.js'
+import { hangulLetters } from '../core/hangul-ids.js'
+import { toConjoiningJamo } from '../core/hangul.js'
 import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
@@ -36,6 +38,36 @@ const yanGlyphs = new Map(['⿳亠㐅厂', '⿱文厂'].flatMap(outer =>
 const yanSources = new Map([['⿳亠㐅厂', '產'], ['⿱文厂', '產'], ['⿳亠丷厂', '产']])
 // The stacked 日 pair has about this much outline ink in both exports.
 const YAN_STACK_INK = 14000
+
+/** A precomposed syllable's letters as the conjoining jamo run a font shapes; a run stays as it is.
+ *  @param {string} syllable @returns {string} */
+const runOfSyllable = syllable => {
+  const letters = hangulLetters(syllable)
+  if (!letters) return syllable
+  const initial = toConjoiningJamo(letters.initial, 'L') ?? ''
+  const medial = toConjoiningJamo(letters.medial, 'V') ?? ''
+  const final = letters.final ? toConjoiningJamo(letters.final, 'T') ?? '' : ''
+  return initial + medial + final
+}
+
+/** The medial a jamo run opens with, or '' when the run has none. @param {string} run */
+const jamoVowel = run => [...run].find(letter => jamoClass(letter) === 'V') ?? ''
+
+const BELOW_VOWELS = new Set(['\u1169', '\u116d', '\u116e', '\u1172', '\u1173'])
+const DOT_VOWELS = new Set(['\u119e', '\u119f'])
+/** Whether `part` is one Hangul syllable, precomposed or a run of jamo, with any tone marks. @param {string | any[]} part */
+const isHangulSyllable = part => {
+  if (typeof part !== 'string') return false
+  const { rest } = splitToneMarks(part)
+  return Boolean(rest && (hangulLetters(rest) || isJamoRun(rest)))
+}
+
+/** Whether `text` is one run of conjoining jamo that forms a syllable. @param {string} text */
+const isJamoRun = text => {
+  const chars = [...text]
+  const cluster = hangulClusterAt(chars, 0)
+  return Boolean(cluster && cluster.end === chars.length)
+}
 
 export class LookupError extends Error { name = 'LookupError' }
 
@@ -716,6 +748,8 @@ export class Composer {
     if (typeof node === 'string') {
       const { rest, tones } = splitToneMarks(node)
       if (tones && rest) return this.toneLeaf(rest, tones, region)
+      // A run of conjoining jamo has no glyph of its own; its letters stand in the syllable's 配置.
+      if (isJamoRun(node)) return this.runLeaf(node, region)
     }
     if (this.separate && Array.isArray(node)) encoded = null
     if (encoded && !this.expanding.has(encoded) && (typeof node === 'string' || !this.excluded(encoded))) {
@@ -751,6 +785,9 @@ export class Composer {
     // between the halves of a frame, which is no run to group.
     node = (written === node ? this.groupedStack(node) : null) ?? written
     const op = node[0], children = node.slice(1)
+    // Two syllables in one block close up as the manuscript sets them; an ideograph's two operands
+    // would halve the face and leave the pair standing apart.
+    if (op === '⿱' && children.length === 2 && children.every(isHangulSyllable)) return this.hangulBlock(children, region)
     if (op === MIRROR || op === ROTATE) return this.flipped(op, children[0], region, atRoot)
     if (op === VARIANT) return this.node(children[0], region, atRoot)
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
@@ -770,6 +807,123 @@ export class Composer {
       if (moved) return moved
     }
     return this.shares(op, children, region)
+  }
+
+  /** Two syllables in one block, set at the split the manuscript's blocks keep: the upper takes
+   *  the top 54%, the lower the rest, and the lower reaches a little into the upper's band so the
+   *  pair closes up rather than standing apart as two characters. @param {(string | any[])[]} children @param {number[]} region */
+  hangulBlock(children, region) {
+    const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
+    const parts = children.map(child => {
+      const { rest, tones } = typeof child === 'string' ? splitToneMarks(child) : { rest: child, tones: '' }
+      return { run: typeof rest === 'string' ? runOfSyllable(rest) : '', node: rest, tones }
+    })
+    // Two syllables whose vowels sit under their initials run their letters down one column:
+    // ᄃᆞ over 륵 sets ㄷ ᆞ ㄹ ㅡ ㄱ from top to bottom.
+    const below = part => DOT_VOWELS.has(jamoVowel(part.run)) || BELOW_VOWELS.has(jamoVowel(part.run))
+    const column = parts.every(part => part.run && below(part))
+    // In a column the marks of both syllables stand together at the left of the block.
+    // In a column the marks of both syllables stand together at the left of the block, sized as a
+    // syllable's mark is rather than as the whole block's.
+    const markFrame = [x0, y0 + h * 0.25, x0 + w * 0.5, y0 + h * 0.75]
+    const marks = column ? markParts(this, parts.map(part => part.tones).join(''), markFrame, region) : []
+    const face = marks.length ? markFace(region, union(marks.map(part => part.target))).face : region
+    const [fx0, fy0, fx1, fy1] = face
+    const fw = fx1 - fx0, fh = fy1 - fy0
+    const letters = column ? parts.flatMap(part => [...part.run]) : []
+    let drawn
+    if (column) {
+      // The consonants keep one size and the vowels most of it, so nothing runs thin, and every
+      // letter takes the block's width the way the workshop's own drawings fill their face.
+      const VOWEL = 0.78
+      // Each letter's box runs a little past its slot, so neighbour strokes close up as they do in
+      // the workshop's own drawings instead of leaving white between them.
+      const OVERLAP = 0.1
+      const kinds = letters.map(letter => jamoClass(letter))
+      const consonants = kinds.filter(kind => kind !== 'V').length, vowels = kinds.length - consonants
+      const unit = fh / (consonants + vowels * VOWEL)
+      let top = fy1
+      drawn = []
+      letters.forEach((letter, i) => {
+        const tall = kinds[i] === 'V', slot = tall ? unit * VOWEL : unit
+        const height = slot * (1 + OVERLAP), width = fw * 0.92
+        const cx = fx0 + fw / 2
+        drawn.push(...this.runLeaf(letter, [cx - width / 2, top - height + (height - slot) / 2, cx + width / 2, top + (height - slot) / 2]))
+        top -= slot
+      })
+    } else {
+      const upper = [x0 + 0.02 * w, y0 + 0.52 * h, x0 + 0.98 * w, y1]
+      const lower = [x0, y0, x1, y0 + 0.58 * h]
+      const syllable = (index, box) => {
+        const part = parts[index]
+        const voice = part.tones ? markParts(this, part.tones, box, box) : []
+        const inner = voice.length ? markFace(box, union(voice.map(mark => mark.target))).face : box
+        const body = part.run ? this.runLeaf(part.run, inner) : this.node(part.node, inner)
+        for (const mark of voice) mark.fixed = true
+        return [...body, ...voice]
+      }
+      drawn = [...syllable(0, upper), ...syllable(1, lower)]
+    }
+    for (const mark of marks) mark.fixed = true
+    return [...drawn, ...marks]
+  }
+
+  /** A run of conjoining jamo that no glyph spells, stood in its syllable's 配置: the initial
+   *  above a horizontal vowel or beside a vertical one, the final below, and the 아래아 a dot of
+   *  its own under the initial. Every letter is drawn from its own outline, so the run carries the
+   *  drawing's ink and weight like any other component.
+   *  @param {string} run @param {number[]} region */
+  runLeaf(run, region) {
+    const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
+    /** @param {number} a @param {number} b @param {number} c @param {number} d */
+    const box = (a, b, c, d) => [x0 + a * w, y0 + b * h, x0 + c * w, y0 + d * h]
+    const chars = [...run]
+    const classes = chars.map(jamoClass)
+    let at = 0
+    const initial = chars[at++]
+    /** @type {string[]} */ const vowels = []
+    while (classes[at] === 'V') vowels.push(chars[at++])
+    /** @type {string[]} */ const finals = []
+    while (classes[at] === 'T') finals.push(chars[at++])
+    if (!vowels.length) return this.node(initial, region)
+    const below = BELOW_VOWELS.has(vowels[0]) || DOT_VOWELS.has(vowels[0])
+    const hasFinal = finals.length > 0
+    const parts = []
+    // A stacked pair keeps room for its final; a pair side by side hangs the final under both.
+    const initialBox = below
+      ? (hasFinal ? box(0.06, 0.56, 0.94, 0.99) : box(0.06, 0.30, 0.94, 0.99))
+      : (hasFinal ? box(0.02, 0.40, 0.50, 0.99) : box(0.01, 0.30, 0.52, 0.99))
+    parts.push(...this.node(initial, initialBox))
+    if (DOT_VOWELS.has(vowels[0])) {
+      // 아라아 and its fellows are dots: a dot drawn to fill a letter's room would be a blob.
+      // A dot keeps its own round shape: squaring it to a letter's room would draw a lozenge.
+      const side = Math.min(w, h) * 0.15
+      const cx = x0 + 0.5 * w
+      const dot = hasFinal
+        ? [cx - side / 2, y0 + 0.40 * h, cx + side / 2, y0 + 0.40 * h + side]
+        : [cx - side / 2, y0 + 0.04 * h, cx + side / 2, y0 + 0.04 * h + side]
+      for (const part of this.node(vowels[0], dot)) { part.fixed = true; parts.push(part) }
+    } else {
+      const vowelBox = below
+        ? (hasFinal ? box(0.10, 0.34, 0.90, 0.56) : box(0.10, 0.14, 0.90, 0.42))
+        : (hasFinal ? box(0.50, 0.34, 0.98, 0.98) : box(0.50, 0.06, 0.98, 0.96))
+      // A compound vowel is written as its two letters, the first at the left or below.
+      const [vx0, vy0, vx1, vy1] = vowelBox
+      const count = vowels.length
+      vowels.forEach((letter, i) => {
+        const from = vx0 + (vx1 - vx0) * (i / count), to = vx0 + (vx1 - vx0) * ((i + 1) / count)
+        parts.push(...this.node(letter, [from, vy0, to, vy1]))
+      })
+    }
+    if (hasFinal) {
+      const [fx0, fy0, fx1, fy1] = box(0.18, 0.02, 0.82, 0.32)
+      const count = finals.length
+      finals.forEach((letter, i) => {
+        const from = fx0 + (fx1 - fx0) * (i / count), to = fx0 + (fx1 - fx0) * ((i + 1) / count)
+        parts.push(...this.node(letter, [from, fy0, to, fy1]))
+      })
+    }
+    return parts
   }
 
   /** A syllable carrying tone marks: it keeps only the part of the box the marks leave free, at the

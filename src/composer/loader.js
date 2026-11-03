@@ -5,6 +5,8 @@
 import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, parseTree } from './compose.js'
 import { splitDescription } from '../core/ids.js'
 import { hangulOfIds } from '../core/hangul-ids.js'
+import { composeJamo } from '../core/hangul.js'
+import { withoutMarks } from '../core/marks.js'
 import { ASCENT } from './geometry.js'
 import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
@@ -14,6 +16,26 @@ import { pyramidRows } from '../core/pyramid.js'
 import { unicodeSource } from './unicode.js'
 
 export { LookupError } from './compose.js'
+
+// A syllable written as jamo draws its precomposed glyph: 라 typed as 라 is still 라.
+/** @param {any} part @returns {any} */
+function normaliseJamo(part) {
+  if (typeof part === 'string') {
+    // A tone mark belongs to the syllable before it, so the run under it is what gets rewritten.
+    const base = /** @type {string} */ (withoutMarks(part))
+    const marks = base === part ? '' : part.slice(base.length)
+    const written = composeJamo(base)
+    return written && [...written].length === 1 ? written + marks : part
+  }
+  // The composer's own tree holds each node as its operator followed by its operands.
+  return Array.isArray(part) ? [part[0], ...part.slice(1).map(normaliseJamo)] : part
+}
+
+/** `text` with every jamo-run leaf written as the syllable it composes. @param {string} text @param {(ch: string) => number} arity @returns {string} */
+function normaliseHangul(text, arity) {
+  const written = normaliseJamo(parseTree(text, arity))
+  return typeof written === 'string' ? written : keyOf(written)
+}
 
 export async function unpack(buffer) {
   const head = new Uint8Array(buffer, 0, 2)
@@ -196,7 +218,8 @@ export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
   await source.ready()
   // Loose marks hang off the drawing; they are not leaves of it.
   const { base } = splitDescription(sequence)
-  return new Composer(source.store(), { fontStyle }).sketch(hangulOfIds(base) ?? base).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
+  const arity = ch => { const c = source.manifest.constants; return c.BINARY.includes(ch) ? 2 : c.TERNARY.includes(ch) ? 3 : c.UNARY.includes(ch) ? 1 : 0 }
+  return new Composer(source.store(), { fontStyle }).sketch(normaliseHangul(hangulOfIds(base) ?? base, arity)).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
 }
 
 /**
@@ -227,7 +250,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
   if (layout === 'cells' && modifiedOperators(sequence).length) throw new LookupError('Cells layout does not draw modified operators.')
   // A Hangul syllable described letter by letter draws as the syllable: ⿰ㄱㅏ is 가.
   const syllable = hangulOfIds(base)
-  const description = syllable ?? base
+  const description = normaliseHangul(syllable ?? base, arity)
   const tree = parseTree(description, arity)
   if (tooLarge(tree)) throw new LookupError(`${sequence} is larger than a preview draws.`)
   // A mark's outline loads like a component's.

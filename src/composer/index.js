@@ -8,8 +8,6 @@ import { createDrawer } from './client.js'
 import { LIMITS, PYRAMID_LAYERS, tooLarge } from './loader.js'
 import { isNode, parse, write } from '../core/ids.js'
 import { emojiPrefix } from '../core/emoji.js'
-import { withoutMarks } from '../core/marks.js'
-import { composeJamo, hangulClusterAt } from '../core/hangul.js'
 import { groupParts } from '../core/preview.js'
 import { onlyBundled } from './local.js'
 
@@ -28,20 +26,6 @@ export { LIMITS, PYRAMID_LAYERS, LookupError, compose, createSource, fromUrl, si
 export class TooLargeError extends Error { name = 'TooLargeError' }
 /** The export could not be read at all (unreachable, refused by CORS, not there, or `base` is no URL): nothing was tried. */
 export class UnavailableError extends Error { name = 'UnavailableError' }
-
-// A conjoining jamo run the composer has no glyph for draws as text, so a font shapes the cluster:
-// ᄋ with ᆞ under it, the 아래아, is one syllable that no single glyph spells. The tone mark that
-// follows such a run travels with it.
-/** @param {string} part @returns {string | null} */
-function hangulText(part) {
-  const base = /** @type {string} */ (withoutMarks(part))
-  const chars = [...base]
-  const cluster = hangulClusterAt(chars, 0)
-  if (!cluster || cluster.end !== chars.length) return null
-  const composed = composeJamo(base)
-  // A run that composes to one precomposed syllable keeps its glyph; the rest is text.
-  return composed && [...composed].length === 1 ? null : part
-}
 
 /** Replace emoji sequences with empty slots while the composer calculates their positions. @param {string} sequence */
 function emojiSlots(sequence) {
@@ -72,8 +56,6 @@ function emojiSlots(sequence) {
     const index = leaf++
     if (part === null) { slots.push(null); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
     if (emojiPrefix(part) === part && ([...part].length > 1 || /\p{Emoji_Presentation}/u.test(part))) { slots.push(part); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
-    const hangul = hangulText(part)
-    if (hangul) { slots.push(hangul); slotLeaves.push(index); flips.push([flipX, flipY]); cuts.push(cut); overlays.push(overlay); restorations.push(restored); return null }
     return part
   }
   const result = convert(parsed.tree)
@@ -150,7 +132,7 @@ export function composerPreview({ base, separate = false, fontStyle = 'sans', wo
           const text = prepared.slots[slot.index]
           if (!text) return []
           /** @type {{ text: string, box: number[], leaf: number, part: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }} */
-          const item = { text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1, ...(hangulText(text) ? { family: 'hangul' } : {}) }
+          const item = { text, box: slot.box, leaf: prepared.slotLeaves[slot.index], part: -1 }
           const flip = prepared.flips[slot.index]
           if (flip?.[0] || flip?.[1]) item.flip = flip
           if (prepared.cuts[slot.index]) item.cut = true
