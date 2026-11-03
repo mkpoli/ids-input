@@ -846,7 +846,7 @@ export class Composer {
       drawn = []
       letters.forEach((letter, i) => {
         const tall = kinds[i] === 'V', slot = tall ? unit * VOWEL : unit
-        const height = slot * (1 + OVERLAP), width = fw * 0.92
+        const height = slot * (1 + OVERLAP), width = fw * (tall ? 0.9 : 0.72)
         const cx = fx0 + fw / 2
         drawn.push(...this.runLeaf(letter, [cx - width / 2, top - height + (height - slot) / 2, cx + width / 2, top + (height - slot) / 2]))
         top -= slot
@@ -890,9 +890,10 @@ export class Composer {
     const hasFinal = finals.length > 0
     const parts = []
     // A stacked pair keeps room for its final; a pair side by side hangs the final under both.
+    // Beside a vowel the initial stands at that vowel's middle, as the screenshot sets ㄹ against ㅏ.
     const initialBox = below
       ? (hasFinal ? box(0.06, 0.56, 0.94, 0.99) : box(0.06, 0.30, 0.94, 0.99))
-      : (hasFinal ? box(0.02, 0.40, 0.50, 0.99) : box(0.01, 0.30, 0.52, 0.99))
+      : (hasFinal ? box(0.02, 0.34, 0.50, 0.86) : box(0.01, 0.24, 0.52, 0.74))
     parts.push(...this.node(initial, initialBox))
     if (DOT_VOWELS.has(vowels[0])) {
       // 아라아 and its fellows are dots: a dot drawn to fill a letter's room would be a blob.
