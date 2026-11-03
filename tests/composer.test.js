@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer, composableDescription, parseTree } from '../src/composer/compose.js'
+import { Composer, composableDescription, fitInside, parseTree } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
@@ -109,6 +109,17 @@ describe('the composer', () => {
     } finally {
       Composer.prototype.room = originalRoom
     }
+  })
+
+  it('still fits a part into an opening too tight for the starting scale', async () => {
+    // A 冖 cover leaves a slot a twentieth of the em tall: the part has to shrink into it rather than
+    // stay across the bar, where the scale the room allows alone would not reach.
+    const source = sourceOf()
+    await source.ready()
+    await source.load(Object.keys(files).filter(name => name.includes('/')))
+    const composer = new Composer(source.store())
+    const tight = [200, 480, 800, 530]
+    expect(fitInside(composer.compose('冂'), composer.compose('木'), [40, 40, 960, 960], 16, constants, { room: tight })).toBe(true)
   })
 
   it('renders the four-mouth grid by row while keeping the original leaf order', async () => {

@@ -271,6 +271,7 @@ export function partInk(part) {
 }
 
 export const area = b => Math.max(b[2] - b[0], 0) * Math.max(b[3] - b[1], 0)
+export const centre = b => [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]
 export const union = boxes => [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
   Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
 
