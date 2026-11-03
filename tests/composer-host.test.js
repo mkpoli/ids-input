@@ -30,16 +30,19 @@ describe('the composer export Worker', () => {
     expect((await call('/v1-serif-f6/OFL.txt', exportFiles())).headers.get('content-type')).toContain('text/plain')
   })
 
-  it('lists the versions with the export files', async () => {
-    const versions = await call('/versions.json', exportFiles())
+  it('lists the versions with the export files, on a cache a publish can overtake', async () => {
+    const versions = await call('/versions', exportFiles())
     expect(versions.status).toBe(200)
     expect(await versions.json()).toEqual(['v1-serif-f6'])
+    // The list changes with a publish, so it is not kept for a year like a version's own files.
+    expect(versions.headers.get('cache-control')).not.toContain('immutable')
   })
 
   it('answers a version it does not hold and a path that names no file', async () => {
     expect((await call('/v2-serif-f6/manifest.json', exportFiles())).status).toBe(404)
     expect((await call('/v1-serif-f6/manifest.json.gz', exportFiles())).status).toBe(404)
     expect((await call('/nofile', exportFiles())).status).toBe(404)
+    expect((await call('/versions.json', exportFiles())).status).toBe(404)
     expect((await call('/v1-serif-f6/../../secrets.json', exportFiles())).status).toBe(404)
   })
 
