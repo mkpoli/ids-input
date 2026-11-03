@@ -322,7 +322,32 @@ export class Composer {
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }
-  bySequence(k) { return this.rec(k)?.e ?? null }
+  /**
+   * The character a description draws, if one is drawn for it. A description may name a character
+   * that is itself described (⿰查皮 for 皶), so an absent key is tried again with its described
+   * operands written out, twice over.
+   */
+  bySequence(k) {
+    let key = k
+    for (let depth = 0; depth <= 2; depth += 1) {
+      const encoded = this.rec(key)?.e
+      if (encoded) return encoded
+      const spelled = this.spell(key)
+      if (spelled === key) return null
+      key = spelled
+    }
+    return null
+  }
+  /** `key` with every described operand written out, or `key` itself. A key that does not parse is
+   *  left alone: a caller with no tree to draw checks the tree's own parse.
+   *  @param {string} key */
+  spell(key) {
+    let tree
+    try { tree = this.parse(key) } catch { return key }
+    /** @param {any} node @returns {any} */
+    const walk = node => typeof node === 'string' ? this.sequenceOf(node) ?? node : node.slice(0, 1).concat(node.slice(1).map(walk))
+    return keyOf(walk(tree))
+  }
   sequenceOf(ch) { return this.rec(ch)?.s ?? null }
   atomic(ch) { return this.rec(ch)?.at === 1 }
 
