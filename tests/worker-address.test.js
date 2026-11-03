@@ -133,3 +133,25 @@ describe('what the asset layer owns', () => {
     expect((await ask('https://ids.mkpo.li/assets/nope.js')).status).toBe(404)
   })
 })
+
+describe('a built file', () => {
+  const files = { fetch: async request => {
+    const path = new URL(typeof request === 'string' ? request : request.url).pathname
+    if (path === '/assets/index-1HF87ivm.js') return new Response('x', { headers: { 'cache-control': 'public, max-age=0, must-revalidate' } })
+    if (path === '/assets/seen-1HF87ivm.js') return new Response(null, { status: 304, headers: { 'cache-control': 'public, max-age=0, must-revalidate' } })
+    return new Response('missing', { status: 404 })
+  } }
+  const get = url => worker.fetch(new Request(url), { ASSETS: files })
+  it('is kept for good, its name changing with its content', async () => {
+    expect((await get('https://ids.mkpo.li/assets/index-1HF87ivm.js')).headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+  })
+  it('keeps the same rule when the browser copy is still current', async () => {
+    expect((await get('https://ids.mkpo.li/assets/seen-1HF87ivm.js')).headers.get('cache-control')).toBe('public, max-age=31536000, immutable')
+  })
+  it('is not kept where it is missing', async () => {
+    expect((await get('https://ids.mkpo.li/assets/gone-0000.js')).headers.get('cache-control') ?? '').not.toContain('immutable')
+  })
+  it('leaves the page itself to be checked on every visit', async () => {
+    expect((await get('https://ids.mkpo.li/favicon.svg')).headers.get('cache-control') ?? '').not.toContain('immutable')
+  })
+})
