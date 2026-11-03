@@ -430,6 +430,20 @@ describe('the composer', () => {
   })
 })
 
+describe('a stack of three operands', () => {
+  it('gives a full middle glyph its own share of the stack', async () => {
+    const drawn = await compose(sourceOf(), '⿳山六廾')
+    const middle = drawn.parts.find(part => part.origin === 'glyph 六')
+    expect(middle).toBeDefined()
+    const [, , width, height] = middle.box
+    // 六 takes the middle's full share. At 0.75 of it the glyph was 235 units high, and stretched
+    // across the row it read as a flat stripe.
+    expect(height).toBeGreaterThan(265)
+    expect(width / height).toBeLessThan(3.5)
+    expect(width).toBeGreaterThan(850)
+  })
+})
+
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {
   static made = []
