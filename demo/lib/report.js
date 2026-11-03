@@ -4,6 +4,7 @@
 // no local address or file path reaches the issue.
 import { EMPTY_MARKS } from '../../src/core/ids.js'
 import { DEFAULTS, pngOf, pngOfSvg, scopedPngOf } from './exporting.js'
+import { DESKTOP, SITE } from './desktop.js'
 
 /** @typedef {{ at: number, level: 'error' | 'warn', text: string }} LogEntry */
 /** What the output panel has drawn: the composed drawing, or the scoped document the export uses.
@@ -18,7 +19,6 @@ export const LIMITS = { symptom: 4000, sequence: 2000, contact: 200, link: 4000,
 const RING = 20, LINE = 500, BURST = 100, ATTRIBUTE = 120
 // Long enough for 8 MB on a slow phone, short enough that a hung intake gives the dialog back.
 const SEND_TIMEOUT = 60_000
-const SITE = 'https://ids.mkpo.li'
 const HOST = String.raw`localhost|127(?:\.\d{1,3}){1,3}|0\.0\.0\.0|10(?:\.\d{1,3}){3}|192\.168(?:\.\d{1,3}){2}|172\.(?:1[6-9]|2\d|3[01])(?:\.\d{1,3}){2}|\[[0-9a-f:]*:[0-9a-f:]*\]|[\w.-]*\.local(?:host)?`
 const LOCAL = new RegExp(`^(?:${HOST})$`, 'i')
 
@@ -65,12 +65,9 @@ function publicHref(value) {
   try {
     const url = new URL(value, globalThis.location?.href)
     if (url.protocol === 'file:') return '(local file)'
-    if (isLocalHost(url.hostname)) {
-      const site = new URL(SITE)
-      url.protocol = site.protocol
-      url.hostname = site.hostname
-      url.port = site.port
-    }
+    // The desktop app's own schemes (`tauri:`, `atlas:`) cannot be switched to `https:` in place,
+    // so the path is carried over to the site instead.
+    if (isLocalHost(url.hostname)) return new URL(`${url.pathname}${url.search}${url.hash}`, SITE).href
     return url.href
   } catch { return '' }
 }
@@ -217,7 +214,8 @@ export function reportContext(settings, preview) {
     userAgent: navigator.userAgent.slice(0, 500),
     platform: navigator.platform,
     fonts: loadedFonts(),
-    local: location.protocol === 'file:' || isLocalHost(location.hostname) || undefined,
+    desktop: DESKTOP || undefined,
+    local: !DESKTOP && (location.protocol === 'file:' || isLocalHost(location.hostname)) || undefined,
     // A pull request's preview is not the published page, and a report from one should say so.
     previewVersion: location.hostname.endsWith('.workers.dev') || undefined,
     historyLength: history.length,

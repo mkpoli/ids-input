@@ -466,13 +466,17 @@ describe('the endpoint', () => {
     expect(response.headers.get('access-control-allow-methods')).toBe('POST, OPTIONS')
     expect(response.headers.get('vary')).toBe('Origin')
   })
-  it('allows the workshop, its previews and any port of localhost, and nothing else', () => {
+  it('allows the workshop, its previews, the desktop app and any port of localhost, and nothing else', () => {
     expect(originAllowed(SITE, SITE)).toBe(true)
     expect(originAllowed('http://localhost:5173', SITE)).toBe(true)
     expect(originAllowed('http://localhost', SITE)).toBe(true)
     expect(originAllowed(null, SITE)).toBe(true)
     expect(originAllowed('https://ids-input-workshop.mkpoli.workers.dev', SITE)).toBe(true)
     expect(originAllowed('https://feat-demo-abc123-ids-input-workshop.mkpoli.workers.dev', SITE)).toBe(true)
+    expect(originAllowed('tauri://localhost', SITE)).toBe(true)
+    expect(originAllowed('http://tauri.localhost', SITE)).toBe(true)
+    expect(originAllowed('tauri://localhost.evil.example', SITE)).toBe(false)
+    expect(originAllowed('https://tauri.localhost', SITE)).toBe(false)
     expect(originAllowed('https://evil.example', SITE)).toBe(false)
     expect(originAllowed('https://ids-input-workshop.mkpoli.workers.dev.evil.example', SITE)).toBe(false)
     expect(originAllowed('http://localhost.evil.example', SITE)).toBe(false)

@@ -11,7 +11,7 @@
   import { smallSealAdapter } from '../src/adapter/index.js'
   import { APPROXIMATE, composableDescription } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
-  import { composerPreview } from '../src/composer/index.js'
+  import { composerPreview as composerAt } from '../src/composer/index.js'
   import { EMPTY_MARKS, OPERATORS, componentQuery, isShuishu, parse, unalias } from '../src/core/index.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -36,7 +36,8 @@
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
-  import { COMPOSER_BASE, COMPOSER_BASES } from './lib/composer.js'
+  import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
+  import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
   import { readRecent, remember } from './lib/recent.js'
@@ -67,6 +68,11 @@
   import ComponentLookup from './ui/ComponentLookup.svelte'
 
   const params = new URLSearchParams(location.search)
+  /** A preview over the export at `base`, read from wherever this build holds it. @param {Parameters<typeof composerAt>[0]} options */
+  const composerPreview = options => composerAt({ ...options, base: readFrom(options.base) })
+  // What a share names: this page, or the published site for the desktop app, whose own address
+  // opens nothing outside it.
+  const shareFrom = DESKTOP ? new URL(SITE) : location
   /** @type {'sans' | 'serif' | 'klee'} */
   let face = $state(load('font', 'sans'))
   $effect(() => save('font', face === 'sans' ? undefined : face))
@@ -1412,8 +1418,8 @@
 <PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
-<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
-<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
+<ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, shareFrom, currentDocument())} sequence={editor.whole} {t} onnote={note} />
+<ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, shareFrom, currentDocument())}
   {drawing} {scopes} {slots} {emoji} {cut} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
 <LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true)} sequence={editor.whole} {t}
