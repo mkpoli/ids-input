@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://x18n.dev/schema/reviews.json
+x18n: 1
+sources:
+  core:ids.templates.generatorPart:
+    ja: f8e141bdaf70c
+    ko: f8e141bdaf70c
+    vi: f8e141bdaf70c
+    zh-Hans: f8e141bdaf70c
+    zh-Hant: f8e141bdaf70c
+  core:ids.templates.pyramidCustom:
+    ja: 8d5566decfd94
+    ko: 8d5566decfd94
+    vi: 8d5566decfd94
+    zh-Hans: 8d5566decfd94
+    zh-Hant: 8d5566decfd94
+  core:ids.templates.repeatBottomHint:
+    ja: 1ee56317f497bd
+    ko: 1ee56317f497bd
+    vi: 1ee56317f497bd
+    zh-Hans: 1ee56317f497bd
+    zh-Hant: 1ee56317f497bd
+  core:info.site.editorial:
+    ko: 1865f0b5db521d
+  core:parts.hangul.oldCluster:
+    ja: 1bf30ef9f82ca1
+    ko: 1bf30ef9f82ca1
+    vi: 1bf30ef9f82ca1
+    zh-Hans: 1bf30ef9f82ca1
+    zh-Hant: 1bf30ef9f82ca1
+  core:parts.tab.shuishu:
+    ja: 1758b26202dbe6
+    ko: 1758b26202dbe6
+    vi: 1758b26202dbe6
+    zh-Hans: 1758b26202dbe6
+    zh-Hant: 1758b26202dbe6
+  core:parts.tangut.strokes:
+    ja: 80570341ae696
+    ko: 80570341ae696
+    vi: 80570341ae696
+    zh-Hans: 80570341ae696
+    zh-Hant: 80570341ae696
+  demo:app.examples.shuishu:
+    ja: 1cd8d8a8d31958
+    ko: 1cd8d8a8d31958
+    vi: 1cd8d8a8d31958
+    zh-Hans: 1cd8d8a8d31958
+    zh-Hant: 1cd8d8a8d31958
+  demo:app.prefs.title:
+    ja: 1af5213c3ebb9e
+    ko: 1af5213c3ebb9e
+    zh-Hans: 1af5213c3ebb9e
+    zh-Hant: 1af5213c3ebb9e
