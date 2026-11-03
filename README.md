@@ -1023,6 +1023,28 @@ published site with only the parameters that open the sequence. The answer repla
 the issue it became; a report matching an open issue says so and links to it, and a refused or
 timed-out one keeps the text and offers another try.
 
+### Desktop app
+
+`desktop/` wraps the workshop in a [Tauri](https://tauri.app/) window for Windows, macOS and Linux.
+The installers are on the [releases page](https://github.com/mkpoli/ids-input/releases). The app
+carries a copy of the Sans composer export (`COMPOSER_BASE`, about 135 MB) and serves it under its
+own `atlas` scheme, so the workshop draws in Sans with no connection. Serif and Kaisho still load
+from glyphatlas.org. Share links name <https://ids.mkpo.li/>, reports go to its `/api/report`, the
+context of a report carries `desktop: true`, and any address outside the app opens in the system's
+browser. A download lands in the Downloads folder, which then opens on it.
+
+The page is the workshop built with `VITE_DESKTOP=1` (`bun run build:desktop-page`). To build the
+app, install Rust and the [Tauri prerequisites](https://tauri.app/start/prerequisites/), then:
+
+```sh
+bun run desktop:atlas   # copy the Sans export into desktop/atlas/
+bun run desktop:dev     # the app over the dev server
+bun run desktop:build   # installers in desktop/target/release/bundle/
+```
+
+The Desktop workflow builds the installers on every `desktop-v*` tag and publishes them as a release
+on that tag. A pull request that changes `desktop/`, or a manual run, builds them as workflow artifacts without a release.
+
 ### Comparison with KAGE
 
 `/compare.html` puts the workshop's drawing beside KAGE's composition of the same IDS in three
