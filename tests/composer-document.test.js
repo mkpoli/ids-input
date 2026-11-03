@@ -40,7 +40,8 @@ describe('a composer-backed document source', () => {
     expect(svg).toContain('🚗</text>')
     // The export draws it at the size the preview gives an emoji: EMOJI_SCALE of the box.
     expect(svg).toContain('scale(1.36)')
-    expect(svg).toContain('font-family="system-ui, sans-serif"')
+    // The emoji names itself as the font, so the platform's emoji face draws it.
+    expect(svg).toContain('font-family="🚗"')
   })
   it('turns leaf boxes into placements and local geometry', () => {
     const { document, source, complete } = sourceOf('⿰木口', [[0, 0, 500, 1000], [500, 0, 500, 1000]], [

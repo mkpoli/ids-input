@@ -209,7 +209,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
     const { x, y, size } = emojiPlace(item)
     const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const reflect = emojiTransform(item)
-    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
+    return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="${text}">${text}</text>`
   }
   if (hasCut) {
     if (emoji.some(item => item.cut)) out.push(`<filter id="emoji-cut-ink" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${EMOJI_CUT_MATRIX}"/></filter>`)

@@ -25,7 +25,7 @@ const emojiText = (item, attribute = '') => {
   const { x, y, size } = emojiPlace(item)
   const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const reflect = emojiTransform(item)
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="${text}">${text}</text>`
 }
 /** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
@@ -67,7 +67,7 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
     if ([a, b, c, d, e, f].some(value => !Number.isFinite(value))) return ''
     const text = placed.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     // The frame is the box the emoji stands in, and the glyph is drawn as the preview draws it there.
-    return `<text transform="matrix(${a} ${b} ${c} ${d} ${e} ${f}) translate(500 500) scale(${EMOJI_SCALE}) translate(-500 -500)" x="500" y="500" text-anchor="middle" dominant-baseline="central" font-size="1000" font-family="system-ui, sans-serif" fill="${fill}">${text}</text>`
+    return `<text transform="matrix(${a} ${b} ${c} ${d} ${e} ${f}) translate(500 500) scale(${EMOJI_SCALE}) translate(-500 -500)" x="500" y="500" text-anchor="middle" dominant-baseline="central" font-size="1000" font-family="${text}" fill="${fill}">${text}</text>`
   }
   /** @param {Scope} scope @param {string} tone @returns {string} */
   function silhouette(scope, tone = '#ffffff') {

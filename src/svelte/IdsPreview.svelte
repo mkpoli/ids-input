@@ -272,7 +272,7 @@
                     {#each drawn.emoji ?? [] as item}
                       {#if item.cut}
                         {@const place = emojiPlace(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family={item.text}>{item.text}</text>
                       {/if}
                     {/each}
                   </mask>
@@ -281,7 +281,7 @@
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const place = emojiPlace(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family={item.text}>{item.text}</text>
                   {/if}
                 {/each}
               {/if}
