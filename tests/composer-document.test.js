@@ -129,6 +129,8 @@ describe('a composer-backed document source', () => {
     const drawing = await compose(source, '⿰木口', { separate: true })
     const made = documentSource(document, drawing, await composerSketch(source, '⿰木口'))
     expect(made.complete).toBe(true)
+    const whole = await compose(source, '木', { separate: true })
+    expect(whole.parts.some(part => part.strokes?.length)).toBe(true)
     const rendered = renderLayers(document, made.source)
     expect(rendered.complete).toBe(true)
     expect(rendered.pieces).toHaveLength(2)

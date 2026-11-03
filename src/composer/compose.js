@@ -318,7 +318,7 @@ export class Composer {
     return answer
   }
 
-  glyphRecord(ch) { return this.rec(ch)?.G ?? null }
+  glyphRecord(ch) { const record = this.rec(ch); const glyph = record?.G; if (glyph && record.sg && !glyph.sg) glyph.sg = record.sg; return glyph ?? null }
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }

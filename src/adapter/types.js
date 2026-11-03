@@ -50,6 +50,7 @@
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
+ * @property {[number, number[]][]} [strokes] The source's stroke groups as [stroke ID, contour indices] within `d`.
  *
  * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
