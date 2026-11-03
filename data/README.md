@@ -402,8 +402,8 @@ names in the search.
 
 ## Character information panels
 
-`character-info.json.gz` contains meanings for 23,310 Han characters and 6,144 Tangut
-ideographs. A Tangut record carries its English, Japanese and Chinese meanings, its
+`character-info.json.gz` (format `ids-character-info-2`) contains meanings for 23,310 Han
+characters and 6,144 Tangut ideographs. A Tangut record carries its English, Japanese and Chinese meanings, its
 reconstructions in eight systems and two sound glosses where the source has them.
 `scripts/build_character_info.py` builds it from:
 
