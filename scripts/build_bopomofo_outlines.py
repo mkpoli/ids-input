@@ -13,6 +13,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
 from build_ids_parts import FONTS
+from engine_data import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -42,7 +43,7 @@ def main():
         records[char] = {'k': char, 'G': {'v': 0, 'b': [v * scale for v in bounds.bounds], 'p': pen.contours},
                          'ink': perimeter.value * scale, 'o': len(pen.contours)}
     raw = json.dumps({'sources': sources, 'records': records}, ensure_ascii=False, separators=(',', ':')).encode()
-    (ROOT / 'data/bopomofo-outlines.json.gz').write_bytes(gzip.compress(raw, compresslevel=9, mtime=0))
+    (DATA / 'sources/bopomofo/outlines.json.gz').write_bytes(gzip.compress(raw, compresslevel=9, mtime=0))
     print(f'{len(records)} Bopomofo outlines')
 
 

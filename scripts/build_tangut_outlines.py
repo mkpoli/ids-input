@@ -13,6 +13,7 @@ from fontTools.ttLib import TTFont
 from fontTools.pens.basePen import BasePen
 from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.perimeterPen import PerimeterPen
+from engine_data import DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT = ROOT / 'fonts/NotoSerifTangut-Regular.woff2'
@@ -86,7 +87,7 @@ def main():
     document = {'font': 'Noto Serif Tangut 2.168', 'license': 'SIL OFL 1.1',
                 'fontSha256': hashlib.sha256(FONT.read_bytes()).hexdigest(), 'records': records}
     raw = json.dumps(document, ensure_ascii=False, separators=(',', ':')).encode()
-    target = ROOT / 'data/tangut-outlines.json.gz'
+    target = DATA / 'sources/tangut/outlines.json.gz'
     target.write_bytes(gzip.compress(raw, compresslevel=9, mtime=0))
     print(f'{len(records)} records; {len(raw)} bytes; {target.stat().st_size} compressed')
 

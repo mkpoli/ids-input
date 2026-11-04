@@ -29,6 +29,8 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.pens.transformPen import TransformPen
 from fontTools.ttLib import TTFont
 
+from engine_data import DATA
+
 ROOT = Path(__file__).resolve().parents[1]
 OUTLINES = DATA / 'unicode/outlines'
 OUT = ROOT / 'fonts/unicode'
@@ -163,10 +165,11 @@ def characters_without_outline(metadata):
         value = record[0] if isinstance(record, list) else record.get('part')
         if isinstance(value, str):
             needed.update(value)
-    needed.update(json.loads((ROOT / 'data/palette-fallback-characters.json').read_text()))
-    needed.update(json.loads(gzip.decompress((ROOT / 'data/palette-outlines.json.gz').read_bytes()))['records'])
-    # The bopomofo palette draws from its own outline bundle, which no webfont face carries.
-    needed.update(json.loads(gzip.decompress((ROOT / 'data/bopomofo-outlines.json.gz').read_bytes()))['records'])
+    # The palette's outlines and the bopomofo bundle are the engine's files, read where the package
+    # holds them.
+    needed.update(json.loads((DATA / 'palette/fallback-characters.json').read_text()))
+    needed.update(json.loads(gzip.decompress((DATA / 'sources/palette/outlines.json.gz').read_bytes()))['records'])
+    needed.update(json.loads(gzip.decompress((DATA / 'sources/bopomofo/outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
     needed.update(han_ideographs())
     return sorted(char for char in needed if char not in drawn)

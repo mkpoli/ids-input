@@ -46,12 +46,14 @@ const loadFor = env => {
   }
   return {
     loaders,
-    // The files are the deployment's own: read from its assets by the path the engine names. A
-    // missing one is answered with the app's page, which the type tells apart.
+    // The files are the deployment's own: read from its assets by the path the engine names and
+    // answered as the parsed file, which is what a bundled source reads (`records`, `unicode/...`).
+    // A missing one is answered empty, as `outlines` on the page does; a dev server's page stands in
+    // for a file it does not have, which the content type tells apart.
     read: async path => {
       const answer = await env.ASSETS.fetch(new URL(`/og/data/${served(path)}`, 'https://assets/'))
-      if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return new Response(null, { status: 404 })
-      return answer
+      if (!answer.ok || answer.headers.get('content-type')?.startsWith('text/html')) return {}
+      return JSON.parse(await unpack(await answer.arrayBuffer()))
     },
   }
 }
