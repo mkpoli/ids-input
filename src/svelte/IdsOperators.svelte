@@ -6,10 +6,13 @@
   import { EMPTY_KEY, KEY_OF } from '../core/keys.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, size?: number }} */
   let { editor, keyHints = true, size = 24 } = $props()
   const t = $derived(editor.t)
+  /** @type {HTMLElement | null} */ let operatorRoot = $state(null)
+  $effect(() => { if (operatorRoot) return watchFallback(operatorRoot) })
   const uid = $props.id()
   const picked = $derived(editor.picked)
   // The short groups side by side first, the empty slot's key after them, then the long group across.
@@ -17,7 +20,7 @@
     : /** @type {typeof OPERATOR_GROUPS[number]} */ (OPERATOR_GROUPS.find(group => group.arity === n)))
 </script>
 
-<div class="ids-operators" role="group" aria-label={t('ids.operators')}>
+<div class="ids-operators" role="group" aria-label={t('ids.operators')} bind:this={operatorRoot}>
   {#each groups as item (typeof item === 'string' ? item : item.arity)}
     {#if item === 'empty'}
       <div class="ids-op-group" data-arity="0" role="group" aria-labelledby={`${uid}-ops-empty`}>

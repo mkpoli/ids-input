@@ -17,6 +17,7 @@
   import { DEPTH, ROOTS, decomposable, lookupChar, namedParts, roots, searchParts, tokens, treeKey, unencoded, variants } from '../core/decompose.js'
   import { createLookup } from './lookup.svelte.js'
   import { translator } from './i18n.js'
+  import { watchFallback } from './fallback-font.js'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -53,6 +54,7 @@
   /** @type {number | null} */ let swapAt = $state(null)
   let live = $state('')
   /** @type {HTMLElement | null} */ let tree = $state(null)
+  $effect(() => { if (tree) return watchFallback(tree) })
   /** @type {HTMLInputElement | null} */ let input = $state(null)
 
   const typed = $derived(roots(text))

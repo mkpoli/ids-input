@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
@@ -172,6 +173,7 @@
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
+  $effect(() => { if (rootEl) return watchFallback(rootEl) })
   /** @type {{ path: Path } | null} */ let editing = $state(null)
   /** The first click's target, retained if selection changes the layout before the second click. @type {string | null} */ let clickPath = null
   /** @param {Path} path */

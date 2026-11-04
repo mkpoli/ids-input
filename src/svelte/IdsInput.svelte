@@ -5,6 +5,7 @@
   // and hands the sequence to `onuse` once it is whole. A host wanting its own layout uses the parts
   // (IdsSequence, IdsOperators, IdsTree, IdsPartTools, IdsPicker, IdsPreview) over its own editor.
   import { untrack } from 'svelte'
+  import { watchFallback } from './fallback-font.js'
   import { isSequence, parse } from '../core/ids.js'
   import { replacementQuery } from '../core/replacement.js'
   import { replacementExpression } from '../core/replacement-expression.js'
@@ -27,6 +28,7 @@
   const editor = createEditor(() => ({ adapter, messages, locale, disabled, tintMode }))
   const t = $derived(editor.t)
   /** @type {HTMLElement | null} */ let root = $state(null)
+  $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
 
   // The text the editor last handed out, so a `value` set from outside is told from its own.

@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { PART_DRAG, siblings, swappable, neighbor, remapSiblingPath, remapSwapPath } from './part-drag.js'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
@@ -54,6 +55,7 @@
 
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
+  $effect(() => { if (listEl) return watchFallback(listEl) })
   /** @type {{ path: Path } | null} */ let editing = $state(null)
   /** @type {{ key: string, x: number, y: number, time: number } | null} */ let firstClick = null
   /** @param {Row} row */

@@ -3,6 +3,7 @@
   import { tick, untrack } from 'svelte'
   import { parse, place, samePath, write } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
+  import { loadFallbackText } from './fallback-font.js'
   /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, owner: HTMLElement | null, variant?: 'label' | 'leaf', onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
   let { editor, path, owner, variant = 'label', onclose, onreveal } = $props()
   const targetPath = untrack(() => path)
@@ -50,8 +51,8 @@
 </script>
 
 <span class="inline-edit" class:leaf={variant === 'leaf'}>
-  <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
-    lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oninput={() => error = ''} onblur={() => apply(false)} oncompositionstart={() => composing = true}
+  <input bind:this={input} bind:value disabled={editor.disabled} oninput={event => { loadFallbackText(event.currentTarget.value); error = '' }} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
+    lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} onblur={() => apply(false)} oncompositionstart={() => composing = true}
     oncompositionend={() => { composing = false; if (document.activeElement !== input) apply(false) }}
     onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()}
     ondragstart={event => event.stopPropagation()} ondragover={event => event.stopPropagation()} ondrop={event => event.stopPropagation()} />

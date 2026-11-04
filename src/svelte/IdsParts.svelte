@@ -34,6 +34,8 @@
   /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
   let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
   const t = $derived(translator(messages, locale))
+  /** @type {HTMLElement | null} */
+  let partsRoot = $state(null)
   const uid = $props.id()
 
   const RECENT_MAX = 30
@@ -497,7 +499,8 @@
     if (part !== undefined) pick(part)
   }
   onMount(() => {
-    const stopWatching = watchFallback(document.querySelector('.ids-parts'))
+    // The element the panel renders: a page can hold another `.ids-parts` earlier in the document.
+    const stopWatching = watchFallback(partsRoot)
     /** @param {PointerEvent} event */
     const pointer = event => {
       if (pendingTarget && !event.composedPath().includes(pendingTarget) && !(event.target instanceof Element && event.target.closest('.part'))) flushPick()
@@ -703,7 +706,7 @@
   </div>
 {/snippet}
 
-<div class="ids-parts" role="group" aria-label={t('parts.label')}>
+<div class="ids-parts" role="group" aria-label={t('parts.label')} bind:this={partsRoot}>
   <div class="parts-top">
     <div class="parts-tabs" role="tablist" aria-label={t('parts.label')}>
       {#each TABS as name, index (name)}

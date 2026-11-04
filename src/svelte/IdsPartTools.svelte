@@ -5,6 +5,7 @@
   // the components float over the page, so choosing a part does not move what is around it.
   import { isNode } from '../core/ids.js'
   import { shortcut } from './shortcut.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean }} */
   let { editor, keyHints = true, slot = $bindable(null), status = true } = $props()
@@ -19,6 +20,7 @@
   const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0)
   const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part }))
   /** @type {HTMLElement | null} */ let root = $state(null)
+  $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
   let open = $state(false)
   let placed = $state(false)
