@@ -833,7 +833,7 @@ frequency report and automatic cutoff are unchanged.
 
 `small-seal.json.gz` contains the Jiguge (汲古閣) edition's IDS from
 [CHISE-IDS](https://gitlab.chise.org/CHISE/ids), maintained by MORIOKA Tomohiko and
-contributors. It is GPL-2.0-or-later; see `COPYING-small-seal.txt`. The complete input
+contributors. It is GPL-2.0-or-later; see `COPYING-chise-ids.txt`. The complete input
 IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 
 | Coverage | Count |
@@ -908,10 +908,11 @@ description preserves `original`, `kind` (`structural` or `apparent`), resolved 
 that the editor cannot parse. These audit records remain available even when the
 character has no usable description.
 
-Rebuild with `python3 scripts/build_small_seal.py`; downloads are cached and checked
-against pinned SHA-256 digests. `--cache` and `--out` select their locations. The source
-archive is written beside the output. Test mapping safeguards with
-`python3 -m unittest discover -s scripts -p test_small_seal.py`.
+Rebuild with `python3 scripts/build_small_seal.py`, then `python3 scripts/build_small_seal_palette.py`,
+which merges the curated supplements and is not optional: without it the output lacks the 49 crosswalk
+entries its test expects. Downloads are cached and checked against pinned SHA-256 digests.
+`--cache` and `--out` select their locations. The source archive is written beside the output.
+Test mapping safeguards with `python3 -m unittest discover -s scripts -p test_small_seal.py`.
 
 `small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
 mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
@@ -1123,9 +1124,22 @@ records from han-compose (MIT). Unihan is distributed under the Unicode License 
 dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 
 
-## Unencoded components
+## `ids-corpus.json.gz`
 
-The design for a merged component catalogue — CHISE, BabelStone, the zi.tools forms and this project's own rows as one identity model — is in [the corpus note](../docs/ids-corpus.md). It is a design, not data: no artifact or build script exists yet, and the merged file would be GPL-2.0-or-later because CHISE's rows are.
+One catalogue of component identities and the descriptions that name them, built by
+`scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
+108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
+CHISE's, and every row carries the source it came from.
+
+- Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
+  (`COPYING-chise-ids.txt`). The code stays MIT.
+- Sources: `ids-corpus-sources.tar.gz` holds the eighteen CHISE files, CHISE's README and the
+  licence; the pin, per-file digests and licence statement are in `chise-sources.json`.
+- Changes: CHISE writes each description with the character's code point and its parts as entities;
+  the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
+  rows with BabelStone's. Built on 2026-11-04.
+- Format: columnar JSON, gzipped; the design behind the identity model is in
+  [the corpus note](../docs/ids-corpus.md).
 
 ## Preview coverage audit
 
