@@ -60,6 +60,11 @@ try {
     const inner = (await stored())?.document?.root?.children?.find(child => child.char === '木')
     assert.ok(outer && inner, 'the enclosure and its inner part are both layers')
 
+    // An empty hole inside the enclosure chooses the enclosure, not the root that shares its box.
+    await page.mouse.click(at(500, 170).x, at(500, 170).y)
+    await page.waitForTimeout(300)
+    assert.equal((await stored())?.chosen, outer.id, 'the empty hole of an enclosure chooses the enclosure')
+
     // The inner part can be chosen while the enclosing part is on top of the drawing.
     const middle = at(555, 555)
     await page.mouse.click(middle.x, middle.y)
