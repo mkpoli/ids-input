@@ -5,6 +5,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
+import { CARD_VERSION } from '../worker/card-version.js'
 
 if (process.versions.bun) throw new Error('Run this workerd test with node; Bun does not support its Undici dispatcher')
 
@@ -34,7 +35,7 @@ try {
   assert.equal(page.headers.get('x-robots-tag'), null)
   const html = await page.text()
   assert.match(html, /og:url" content="https:\/\/ids.mkpo.li\/%E2%BF%B0%E9%87%92%E5%93%A5"/)
-  assert.match(html, /og:image" content="https:\/\/ids.mkpo.li\/og\/%E2%BF%B0%E9%87%92%E5%93%A5.png"/)
+  assert.ok(html.includes(`og:image" content="https://ids.mkpo.li/og/%E2%BF%B0%E9%87%92%E5%93%A5.png?v=${CARD_VERSION}"`))
   const query = await runtime.dispatchFetch('https://branch-ids-input-workshop.mkpoli.workers.dev/?ids=a%2Fb')
   assert.equal(query.status, 200)
   assert.equal(query.headers.get('x-robots-tag'), 'noindex')

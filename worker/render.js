@@ -10,9 +10,8 @@ import { OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
+import { CARD_VERSION } from './card-version.js'
 
-// The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v12'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // Metadata requests do not need the rasterizer.
@@ -139,7 +138,7 @@ export async function unitsFor(env, sequence, named) {
  * @param {any} env @param {any} ctx @param {string} sequence
  */
 export async function cardResponse(env, ctx, sequence) {
-  const key = new URL(`https://card/${VERSION}/${encodeURIComponent(sequence)}`)
+  const key = new URL(`https://card/${CARD_VERSION}/${encodeURIComponent(sequence)}`)
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
