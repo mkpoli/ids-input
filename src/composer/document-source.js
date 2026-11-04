@@ -39,6 +39,24 @@ function signedAreaOf(d) {
   return area / 2
 }
 
+/** The centre of a polygon's control box. @param {number[][]} points */
+function centreOf(points) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  for (const [x, y] of points) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y) }
+  return [(x0 + x1) / 2, (y0 + y1) / 2]
+}
+
+/** Whether `point` lies inside the polygon through `points`, by the even-odd rule.
+ * @param {number[]} point @param {number[][]} points */
+function inside(point, points) {
+  let hit = false
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const a = points[i], b = points[j]
+    if ((a[1] > point[1]) !== (b[1] > point[1]) && point[0] < (b[0] - a[0]) * (point[1] - a[1]) / (b[1] - a[1]) + a[0]) hit = !hit
+  }
+  return hit
+}
+
 /**
  * A drawing part as document pieces and stroke groups. A part with stroke groups becomes one piece
  * per closed contour, so each group names piece indices; a contour wound against the dominant one is
@@ -53,15 +71,12 @@ function partGeometry(part, d) {
   if (!contours || part.strokes.some(([, group]) => group.some(index => index < 0 || index >= contours))) {
     return { pieces: [{ d, fillRule: 'nonzero' }] }
   }
-  let dominant = 1
-  for (const subpath of subpaths) {
-    const area = signedAreaOf(subpath)
-    if (Math.abs(area) > Math.abs(dominant)) dominant = area
-  }
-  const pieces = subpaths.map(subpath => ({
+  const areas = subpaths.map(signedAreaOf)
+  const polygons = subpaths.map(subpath => parsePath(subpath).points)
+  const pieces = subpaths.map((subpath, index) => ({
     d: subpath,
     fillRule: /** @type {'nonzero'} */ ('nonzero'),
-    cut: Math.sign(signedAreaOf(subpath)) !== Math.sign(dominant),
+    cut: polygons.some((other, at) => at !== index && Math.abs(areas[at]) > Math.abs(areas[index]) && inside(centreOf(polygons[index]), other)),
   }))
   const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
   return { pieces, strokes }
