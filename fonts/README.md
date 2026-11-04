@@ -2,15 +2,16 @@
 
 Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
 Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). A third draws the twelve ideographic description characters
+the editor's empty-slot mark ⬚ (U+2B1A). A third draws the sixteen ideographic description characters
 for sequence text where no installed font has them. Kureedo and GenZui Sans supply the optional
 Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
 (U+2B1A, U+31C0–U+31E3) and `IDS Parts` (U+2E80–U+2EFF, U+31E4–U+31EF, U+20000–U+3FFFF), with ranges
-that do not overlap, and `IDS Operators` (U+2FF0–U+2FFB) for sequence text. The rest of the Basic
-Multilingual Plane, Extension A included, comes from the reader's own CJK font.
+that do not overlap, and `IDS Operators` (U+2FF0–U+2FFF; the first twelve from Noto, the four newer
+ones from Jigmo) for sequence text. The rest of the Basic Multilingual Plane, Extension A included,
+comes from the reader's own CJK font.
 
 - `NotoSansCJKjp-ids-strokes.woff2` (3.4 KB, 37 characters): Noto Sans CJK JP 2.004
   (<https://github.com/notofonts/noto-cjk>, tag `Sans2.004`, the variable font instanced at weight
@@ -22,6 +23,13 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
   (`OFL-NotoSansCJK.txt`), SHA-256 `d2b33d199ce5ad6edbf8b9f1ab11e719cb306a8d63ac5f07fddb5fde70cf2890`.
   Rebuild with `uv run --with 'fonttools[woff]' pyftsubset NotoSansCJK-Regular.ttc --font-number=0
   --unicodes=2FF0-2FFB --flavor=woff2 --output-file=fonts/NotoSansCJKjp-ids-operators.woff2`.
+- `Jigmo-ids-operators.woff2` (1.5 KB, 4 characters): U+2FFC–U+2FFF, the description characters
+  Unicode added after the pinned Noto Sans CJK, named `IDS Operators`. Jigmo (字雲) 20250912 by
+  Koichi Kamichi (<https://kamichikoichi.github.io/jigmo/>), CC0 1.0 (`LICENSE-Jigmo.txt`), and the
+  same archive as the fallback shards. SHA-256
+  `6d0b56a57d435cfc59c1dda56cbeb123ec081f0b586898bfe5b2c0d31399ef50`. Rebuild with
+  `uv run --with 'fonttools[woff]' pyftsubset Jigmo.ttf --unicodes=2FFC-2FFF --flavor=woff2
+  --output-file=fonts/Jigmo-ids-operators.woff2`.
 - `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one

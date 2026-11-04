@@ -110,6 +110,29 @@ describe('scoped markup', () => {
     expect(markup.body).toContain('<path')
     expect(scopesSvg(view.scopes).startsWith('<svg ')).toBe(true)
   })
+  it('tags each part with its layer only when a preview asks', () => {
+    const document = fromSequence('⿰木口')
+    const view = documentView(document, drawing(parts), sketch(boxes), { renderer })
+    expect(scopesMarkup(view.scopes).body).not.toContain('data-layer')
+    const named = scopesMarkup(view.scopes, { layers: true })
+    expect(named.body).toContain(`data-layer="${document.root.children[0].id}"`)
+    expect(named.body).toContain(`data-layer="${document.root.children[1].id}"`)
+  })
+  it('keeps a layer id as written even when it is not an XML name', () => {
+    const document = fromSequence('⿰木口')
+    document.root.children[0].id = 'a.b'
+    const view = documentView(document, drawing(parts), sketch(boxes), { renderer })
+    const named = scopesMarkup(view.scopes, { layers: true })
+    expect(named.body).toContain('data-layer="a.b"')
+  })
+  it('keeps a cut part out of hit testing while giving it an ink target', () => {
+    const scopes = { root: { kind: 'component', node: 'l1', positive: [{ d: square(0, 1000) }], negative: [{ d: square(250, 500) }] }, complete: true, issues: [], leafFrames: new Map() }
+    const named = scopesMarkup(scopes, { layers: true })
+    expect(named.body).toContain('data-layer="l1"')
+    expect(named.body).toContain('pointer-events="none"')
+    expect(named.body).toContain('fill="transparent"')
+    expect(scopesMarkup(scopes).body).not.toContain('pointer-events="none"')
+  })
   it('keeps mask ids distinct by prefix', () => {
     const document = fromSequence('㇯木口')
     const view = documentView(document, drawing([{ leaf: 0, d: square(0, 1000) }, { leaf: 1, d: square(500, 500) }]), sketch(boxes), { renderer })

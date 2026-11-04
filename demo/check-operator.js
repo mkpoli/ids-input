@@ -20,13 +20,16 @@ try {
     assert.equal(await dialog.getByRole('treeitem').nth(0).getAttribute('aria-selected'), 'true')
     await dialog.getByRole('button', { name: 'Edit on canvas', exact: true }).click()
     await dialog.waitFor({ state: 'hidden' })
-    const handle = page.locator('.ids-preview .handle.move')
-    await handle.waitFor({ timeout: 10000 })
-    const grip = await handle.boundingBox()
-    assert.ok(grip, 'the operator has a move handle')
-    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+    const outline = page.locator('.ids-preview .select-grip')
+    await outline.waitFor({ timeout: 10000 })
+    const surface = await page.locator('.ids-preview-large svg[role="application"]').boundingBox()
+    assert.ok(surface, 'the operator has a drawing box')
+    // The outline is the operator's move grip; a quarter along its top edge is clear of the
+    // eight resize handles and the turn line.
+    const grip = { x: surface.x + surface.width * 0.25, y: surface.y + 4 }
+    await page.mouse.move(grip.x, grip.y)
     await page.mouse.down()
-    await page.mouse.move(grip.x + grip.width / 2 + 40, grip.y + grip.height / 2 + 20)
+    await page.mouse.move(grip.x + 40, grip.y + 20)
     await page.mouse.up()
     await page.waitForTimeout(500)
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)

@@ -25,7 +25,7 @@
   let source = $state.raw(null)
   /** @type {Map<string, import('../../src/document/frames.js').LayerFrame>} */
   let layout = $state.raw(new Map())
-  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
+  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, place: number[] } | null} */
   let drag = $state.raw(null)
   let gesture = 0
 
@@ -308,8 +308,8 @@
     const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
     drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
-      local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
-      a0: Math.atan2(point.y - center[1], point.x - center[0]), frame: selection.entry.frame }
+      local0: (() => { const inverse = invertAffine(selection.entry.place); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
+      a0: Math.atan2(point.y - center[1], point.x - center[0]), place: selection.entry.place }
     svg.setPointerCapture?.(event.pointerId)
   }
 
@@ -323,14 +323,14 @@
     const point = pointAt(svg, event)
     if (!point) return
     if (drag.kind === 'move') {
-      const inverse = invertAffine(drag.frame)
+      const inverse = invertAffine(drag.place)
       if (!inverse) return
       const origin = applyAffine(inverse, [0, 0])
       const local = applyAffine(inverse, [point.x - drag.p0.x, point.y - drag.p0.y])
       x = Math.round((drag.start.x + local[0] - origin[0]) * 100) / 100
       y = Math.round((drag.start.y + local[1] - origin[1]) * 100) / 100
     } else if (drag.kind === 'scale') {
-      const inverse = invertAffine(drag.frame)
+      const inverse = invertAffine(drag.place)
       if (!inverse) return
       const local = applyAffine(inverse, [point.x, point.y])
       const ratioX = Math.abs(drag.local0[0] - 500) < 1 ? 1 : (local[0] - 500) / (drag.local0[0] - 500)

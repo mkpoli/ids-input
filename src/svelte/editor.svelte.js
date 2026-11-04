@@ -12,7 +12,7 @@ import { insertAt } from './insertion.js'
 import { tokens, rangeToken } from './tokens.js'
 import { tick } from 'svelte'
 import { applyOperator, clear, entryBody, isDescription, isMarks, isNode, nextEmpty, normalizeMarks, parse, partAt, paths, place as placed, reorderSiblings,
-  samePath, sameTree, swapParts, unwrap, withMarks, write } from '../core/ids.js'
+  replaceAt, samePath, sameTree, swapParts, unwrap, withMarks, write } from '../core/ids.js'
 import { namingOperator, unalias } from '../core/aliases.js'
 import { commandFor } from '../core/keys.js'
 import { createHistory } from '../core/history.js'
@@ -90,6 +90,48 @@ export function createEditor(options) {
     return entry?.status === 'ready' ? entry.sequences.map(s => s.text).filter(sequence => !parse(sequence, { open: true }).problem) : []
   })
   const swaps = $derived(typeof picked === 'string' ? lookup.swaps[lookupChar(picked)] ?? [] : [])
+  // The characters each description encodes, asked once, for the merge list of a chosen node.
+  /** @type {Record<string, { status: 'loading', id: number } | { status: 'failed' } | { status: 'ready', chars: string[] }>} */
+  let described = $state.raw({})
+  /** The `encoded` answer the cache belongs to, null when the adapter has none. */
+  let describer = /** @type {IdsAdapter['encoded'] | null} */ (null)
+  let mergeRequests = 0
+  /**
+   * Whether the answer to request `id` still owns `sequence`. An answer a newer request replaced is
+   * ignored; one the adapter moved on from is dropped, so another adapter can ask again.
+   * @param {string} sequence @param {IdsAdapter['encoded']} ask @param {number} id
+   */
+  function ownsDescribed(sequence, ask, id) {
+    const known = described[sequence]
+    if (known?.status !== 'loading' || known.id !== id) return false
+    if (options().adapter.encoded === ask) return true
+    const next = { ...described }
+    delete next[sequence]
+    described = next
+    return false
+  }
+  /** @param {Path | null} select */
+  function readDescribed(select) {
+    const ask = options().adapter.encoded ?? null
+    if (describer !== ask) { describer = ask; described = {} }
+    if (!select || !ask) return
+    const part = partAt(tree, select)
+    if (!isNode(part) || nextEmpty(part)) return
+    const sequence = write(part), known = described[sequence]
+    // A failure is tried again the next time the node is selected.
+    if (known?.status === 'loading' || known?.status === 'ready') return
+    const id = ++mergeRequests
+    described = { ...described, [sequence]: { status: 'loading', id } }
+    // An operator modifier narrows the description to one character; its modifier-free reading is
+    // a different character (⿻[1:]丨日 is 甲 where ⿻丨日 is 申).
+    ask(sequence, { exact: true }).then(chars => {
+      if (!ownsDescribed(sequence, ask, id)) return
+      described = { ...described, [sequence]: { status: 'ready', chars: [...new Set(chars)].filter(char => char !== sequence && [...char].length === 1) } }
+    }, () => {
+      if (!ownsDescribed(sequence, ask, id)) return
+      described = { ...described, [sequence]: { status: 'failed' } }
+    })
+  }
 
   function sync() {
     steps = history.steps()
@@ -155,6 +197,7 @@ export function createEditor(options) {
     const part = select ? partAt(next, select) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
+    readDescribed(select)
     sync()
   }
   /**
@@ -206,6 +249,7 @@ export function createEditor(options) {
     note = ''; typing = false; run = false; change = null
     const part = chosen ? partAt(tree, chosen) : undefined
     if (typeof part === 'string') lookup.read(lookupChar(part))
+    else readDescribed(chosen)
     sync()
   }
 
@@ -248,6 +292,22 @@ export function createEditor(options) {
     const next = placed(tree, at, part)
     return apply(next.tree, next.chosen, label ?? (before === null || before === undefined ? t('ids.do.put', { part: text(part) })
       : t('ids.do.replace', { from: text(before), part: text(part) })), { destructive: isNode(before) })
+  }
+  /**
+   * Replace the node at `at` (the chosen node by default) with `char`, one of the characters
+   * `merges` lists for it. False where that part is not a node or the adapter has not named `char`
+   * among the characters it encodes.
+   * @param {string} char @param {Path | null} [at]
+   */
+  function merge(char, at) {
+    if (disabled() || !char) return false
+    const path = at === undefined ? chosen : at
+    if (!path) return false
+    const part = partAt(tree, path)
+    if (!isNode(part)) return false
+    const known = described[write(part)]
+    if (describer !== (options().adapter.encoded ?? null) || known?.status !== 'ready' || !known.chars.includes(char)) return false
+    return apply(replaceAt(tree, path, char), path, t('ids.do.merge', { part: write(part), char }), { destructive: true })
   }
   /**
    * A part or a node as written (a palette part, a part taken from a tree, a sequence), put in place.
@@ -313,6 +373,7 @@ export function createEditor(options) {
     const part = chosen ? partAt(tree, chosen) : undefined
     piece = text(part)
     if (typeof part === 'string') lookup.read(lookupChar(part))
+    else readDescribed(chosen)
   }
 
   /** The field, read as it is typed: ASCII operator names become operators where the caret is. @param {HTMLInputElement} field */
@@ -425,6 +486,7 @@ export function createEditor(options) {
       chosen = token?.path ?? null
       piece = text(chosen ? partAt(tree, chosen) : undefined)
       if (typeof picked === 'string') lookup.read(lookupChar(picked))
+      else readDescribed(chosen)
     },
     /** @param {Path} path */
     isSelected(path) { return chosen !== null && chosen.every((n, i) => path[i] === n) },
@@ -441,6 +503,12 @@ export function createEditor(options) {
     get picked() { return picked },
     get splits() { return splits },
     get swaps() { return swaps },
+    /** The characters the chosen node encodes, once the adapter has answered; none for a component. */
+    get merges() {
+      if (!isNode(picked)) return []
+      const known = described[write(picked)]
+      return describer === (options().adapter.encoded ?? null) && known?.status === 'ready' ? known.chars : []
+    },
     get change() { return change },
     get steps() { return steps },
     get canUndo() { return steps.done.length > 0 },
@@ -451,7 +519,7 @@ export function createEditor(options) {
     get locale() { return options().locale ?? 'en' },
     get t() { return t },
     lookup, name, text, pathKey,
-    reset, operator, put, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
+    reset, operator, put, merge, take, reorder, swap, empty, remove, open, choose, edit, settle, enter, undo, redo, keydown, focusChosen, snapshot, restore,
     resolveChain,
     resolveInput, cancelResolution,
     /** Jump `n` steps back (negative) or forward through the history. @param {number} n */

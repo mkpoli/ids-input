@@ -150,17 +150,18 @@ workshop in `demo/` does so:
 ```
 
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
-with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
-and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
-them back, for a host switching between documents. In the tree, a click chooses a part, a part
-dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
-and a part of the tree, or a whole group grabbed by its frame, dropped beside a sibling moves there
-while one dropped on any other part switches places with it. A finger drags the same way on a touch
-screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders siblings
-without a pointer. `Space` lifts the focused box, a part or a group by its operator button, and
-`Space` on another box places it; `Escape` lets it go, and in the indented Tree view the arrows move
-the focus between rows while a box is lifted. The context
+with ⿰", "Put 木"): `operator`, `put`, `merge`, `take`, `empty`, `remove`, `open`, `undo`, `redo`,
+`travel` and `keydown` change it, `change` names the last change and whether it threw something away,
+and `listen(fn)` hears each new text. `merges` lists the characters the chosen node encodes and
+`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. `snapshot()` returns that
+state and history; `restore(state)` puts them back, for a host switching between documents. In the
+tree, a click chooses a part, a part dragged from the palette, the decomposition tree, a search or
+the swaps is put where it is dropped, and a part of the tree, or a whole group grabbed by its frame,
+dropped beside a sibling moves there while one dropped on any other part switches places with it.
+A finger drags the same way on a touch screen, where the browser starts no drag of its own, and
+`Alt` with an arrow key reorders siblings without a pointer. `Space` lifts the focused box, a part
+or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
+the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
@@ -460,7 +461,8 @@ document at the same paths, keeping each layer's ID, name and transform through 
 structural edits. Pass the long-lived session allocator so removed IDs do not return.
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
-each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
+each layer's box and three frames: the box-to-canvas frame of its geometry (`canvas`), its own
+1000-unit frame before its authored transform (`place`) and after it (`full`). The workshop
 keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
@@ -527,10 +529,13 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
-export. Drag the selected layer to move it, its corner square to scale it, or its circle to turn it;
-each gesture writes one coalesced document transform. Use `composerPreview({ base, separate: true })`
-so each operand arrives as its own part. When the document source is incomplete the preview falls
-back to the merged drawing, and editing is unavailable.
+export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
+a corner to scale both, or the circle to turn it, and hold Shift to keep both scales equal. Each
+gesture writes one coalesced document transform. A part inside an enclosing one keeps its own grab
+area, so the small part can be chosen and moved without going through the layer list. Use
+`composerPreview({ base, separate: true })` so each operand arrives as its own part. When the
+document source is incomplete the preview falls back to the merged drawing, and editing is
+unavailable.
 
 A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
 each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
@@ -1175,7 +1180,8 @@ at the start; the Shape or indented Tree view and the search under it; and at th
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
-nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
+nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
+a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys, accept drops, and can be dragged onto another row to move beside a sibling or

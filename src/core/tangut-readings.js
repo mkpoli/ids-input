@@ -4,8 +4,8 @@
 // final digit kept as the tone, so diacritics, IPA letters and separators do not tell readings
 // apart, and a looser spelling drops the medials and prenasals that systems disagree on.
 
-/** The systems a reader can type in, in the order the card lists them.
- *  @typedef {{ key: string, short: string, name: string, zh: string, tones: boolean }} ReadingSystem */
+/** The systems a reader can type in, in the order the record lists them.
+ *  @typedef {{ key: string, short: string, name: string, zh: string }} ReadingSystem */
 export const READING_SYSTEMS = /** @type {const} */ ([
   { key: 'li_fanwen', short: 'Li', name: 'Li Fanwen 2008', zh: '李範文2008' },
   { key: 'gong_huangcheng', short: 'Gong', name: 'Gong Hwang-cherng', zh: '龔煌城' },
@@ -17,7 +17,7 @@ export const READING_SYSTEMS = /** @type {const} */ ([
   { key: 'sofronov', short: 'So', name: 'Sofronov 1968', zh: '索弗羅諾夫1968' },
 ])
 
-/** The two sound glosses, in the card's order. @typedef {{ key: string, name: string, zh: string }} SoundSystem */
+/** The two sound glosses, in the record's order. @typedef {{ key: string, name: string, zh: string }} SoundSystem */
 export const SOUND_SYSTEMS = /** @type {const} */ ([
   { key: 'li_fanwen', name: 'Li Fanwen', zh: '李範文' },
   { key: 'nie_lishan', name: 'Nie Lishan', zh: '聶歷山' },

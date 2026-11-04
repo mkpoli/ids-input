@@ -30,7 +30,9 @@
     const element = field
     const measure = () => {
       const css = getComputedStyle(element)
-      metrics = `padding:${css.padding};font:${css.font};letter-spacing:${css.letterSpacing};line-height:${css.lineHeight}`
+      // The font stays on the stylesheet: copying the computed stack here would freeze the fallback
+      // family the field had before its shards registered, and the painted text would keep boxes.
+      metrics = `padding:${css.padding};letter-spacing:${css.letterSpacing};line-height:${css.lineHeight}`
     }
     const observer = new ResizeObserver(measure)
     observer.observe(element)
