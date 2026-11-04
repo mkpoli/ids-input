@@ -147,17 +147,18 @@ workshop in `demo/` does so:
 ```
 
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
-with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
-and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
-them back, for a host switching between documents. In the tree, a click chooses a part, a part
-dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
-and a part of the tree, or a whole group grabbed by its frame, dropped beside a sibling moves there
-while one dropped on any other part switches places with it. A finger drags the same way on a touch
-screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders siblings
-without a pointer. `Space` lifts the focused box, a part or a group by its operator button, and
-`Space` on another box places it; `Escape` lets it go, and in the indented Tree view the arrows move
-the focus between rows while a box is lifted. The context
+with ⿰", "Put 木"): `operator`, `put`, `merge`, `take`, `empty`, `remove`, `open`, `undo`, `redo`,
+`travel` and `keydown` change it, `change` names the last change and whether it threw something away,
+and `listen(fn)` hears each new text. `merges` lists the characters the chosen node encodes and
+`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. `snapshot()` returns that
+state and history; `restore(state)` puts them back, for a host switching between documents. In the
+tree, a click chooses a part, a part dragged from the palette, the decomposition tree, a search or
+the swaps is put where it is dropped, and a part of the tree, or a whole group grabbed by its frame,
+dropped beside a sibling moves there while one dropped on any other part switches places with it.
+A finger drags the same way on a touch screen, where the browser starts no drag of its own, and
+`Alt` with an arrow key reorders siblings without a pointer. `Space` lifts the focused box, a part
+or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
+the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
