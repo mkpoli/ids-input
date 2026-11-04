@@ -9,7 +9,7 @@ import { sha256Hex } from './sha256.js'
 /** @typedef {{ d: string, fillRule?: 'nonzero' | 'evenodd', cut?: boolean }} Piece */
 /** @typedef {{ pieces: Piece[], strokes?: { id: string, pieces: number[] }[] }} Geometry */
 
-/** JCS-canonical descriptor for one piece. */
+/** JCS-canonical descriptor for one piece. @param {Piece} piece */
 function pieceText(piece) {
   return `{"cut":${piece.cut === true},"d":${JSON.stringify(piece.d)},"fillRule":${JSON.stringify(piece.fillRule ?? 'nonzero')}}`
 }
@@ -42,7 +42,7 @@ const joinSubpaths = subpaths => subpaths.join('')
  */
 export function applyGeometryEdits(geometry, edits, node, { tolerance = 0.1 } = {}) {
   /** @type {Piece[]} */
-  const pieces = geometry.pieces.map(piece => ({ ...piece }))
+  const pieces = geometry.pieces.map(/** @param {Piece} piece */ piece => ({ ...piece }))
   const strokes = geometry.strokes ?? []
   const applied = []
   /** @type {GeometryEdit[]} */
@@ -50,18 +50,20 @@ export function applyGeometryEdits(geometry, edits, node, { tolerance = 0.1 } = 
   const base = fingerprintGeometry(geometry)
   for (const edit of edits) {
     if (edit.node !== node) continue
+    const target = edit.target
     if (edit.geometry !== base) { unresolved.push(edit); continue }
-    if (edit.target.kind === 'contour') {
-      const piece = pieces[edit.target.piece]
+    if (target.kind === 'contour') {
+      const piece = pieces[target.piece]
       if (!piece) { unresolved.push(edit); continue }
       const subpaths = splitSubpaths(piece.d)
-      if (!subpaths[edit.target.contour]) { unresolved.push(edit); continue }
-      subpaths[edit.target.contour] = transformPath(subpaths[edit.target.contour], edit.transform, { tolerance }).d
+      if (!subpaths[target.contour]) { unresolved.push(edit); continue }
+      subpaths[target.contour] = transformPath(subpaths[target.contour], edit.transform, { tolerance }).d
       piece.d = joinSubpaths(subpaths)
       applied.push(edit.id)
       continue
     }
-    const group = strokes.find(stroke => stroke.id === edit.target.id)
+    if (target.kind !== 'stroke') { unresolved.push(edit); continue }
+    const group = strokes.find(stroke => stroke.id === target.id)
     if (!group) { unresolved.push(edit); continue }
     let ok = true
     for (const index of group.pieces) {

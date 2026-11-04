@@ -28,7 +28,8 @@ import { applyGeometryEdits } from './geometry-edit.js'
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
 
-/** The component's geometry with its authored edits applied; unresolved edits are reported. */
+/** The component's geometry with its authored edits applied; unresolved edits are reported.
+ * @param {Geometry | null} geometry @param {import('./model.js').GeometryEdit[]} edits @param {string} node @param {LayerIssue[]} issues @param {number} tolerance */
 function editedGeometry(geometry, edits, node, issues, tolerance) {
   if (!geometry || !Array.isArray(geometry.pieces)) return geometry
   const result = applyGeometryEdits(geometry, edits, node, { tolerance })

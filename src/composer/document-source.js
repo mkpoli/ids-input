@@ -34,7 +34,7 @@ function signedAreaOf(d) {
       if (previous && first) area += previous[0] * first[1] - first[0] * previous[1]
       continue
     }
-    const point = segment.end ?? segment.p
+    const point = 'end' in segment ? segment.end : segment.p
     if (!point) continue
     if (!previous) { first = point; previous = point; continue }
     area += previous[0] * point[1] - point[0] * previous[1]
@@ -204,7 +204,7 @@ export function documentSource(document, drawing, sketch) {
   }
   if (!sketch) issues.push('the drawing has no sketch')
 
-  /** @param {Node} node @returns {{ pieces: import('../document/render.js').LocalPiece[] } | null} */
+  /** @param {Node} node @returns {{ pieces: import('../document/render.js').LocalPiece[], strokes?: { id: string, pieces: number[] }[] } | null} */
   const geometry = node => {
     const at = info.get(node.id)
     if (!at || at.leaf === null || !at.region) return null
