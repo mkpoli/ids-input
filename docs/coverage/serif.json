@@ -54,7 +54,7 @@
     "node_modules/@han-compose/composer/src/worker.js": "2f89fad9b01bd66e5d1b3d138c3d0c1077ab25fb2ae10dc6e3d3dfedf50d4d03",
     "scripts/audit_render_coverage.mjs": "a315180d42a423a2b042c597ad22ba9fc20b00bd3b61189659ab0f881e8236f2",
     "scripts/lib/coverage-sources.mjs": "2ccdfca8829976fcb9d57f336069f29cfc868d8ce87b936239e98fd2c72771bb",
-    "src/core/ids.js": "53a71e4fba297b6ed21c7c6a17b4e3f7767dad14c207dee220ac2ca461aab1c7",
+    "src/core/ids.js": "c0c1a442ad2ef64f3d6fcc3a3e17414ba1f3e597de5d0b2f1a9fdbd57ff5fa17",
     "src/core/unicode.js": "246623e0f8016c19d434c99d431fdd6df2d4a280fbcb78ec4ff5cee012f19074"
   },
   "scope": "Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.",
