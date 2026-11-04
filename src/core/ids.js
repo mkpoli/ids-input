@@ -24,7 +24,7 @@ export * from './marks.js'
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
 
-import { pyramidRows } from './pyramid-shape.js'
+import { pyramidRows } from '@han-compose/composer/pyramid-rows'
 
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
