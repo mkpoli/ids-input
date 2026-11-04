@@ -25,12 +25,12 @@ from fontTools.pens.ttGlyphPen import TTGlyphPen
 from fontTools.svgLib.path import parse_path
 
 from build_tangut_outlines import Contours
-from engine_data import DATA
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'data/new-korean'
 FONT = ROOT / 'fonts/IDSNewKorean.woff2'
-OUTLINES = DATA / 'sources/new-korean/outlines.json.gz'
+OUTLINES = WRITE_DATA / 'sources/new-korean/outlines.json.gz'
 VIEW_BOX = 708.66142
 SCALE = 1000 / VIEW_BOX
 

@@ -34,13 +34,13 @@ from fontTools.ttLib import TTFont
 
 from build_tangut_outlines import Contours
 
-from engine_data import DATA
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "ids-characters.tsv"
 # The shards are the engine's: it reads them from its package, so they are patched there.
-OUTLINES = DATA / "unicode/outlines"
-METADATA = DATA / "unicode/outlines.json"
+OUTLINES = WRITE_DATA / "unicode/outlines"
+METADATA = WRITE_DATA / "unicode/outlines.json"
 PLANGOTHIC = {
     "file": "PlangothicP2-Regular.ttf",
     "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f",

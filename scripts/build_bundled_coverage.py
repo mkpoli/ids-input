@@ -2,7 +2,7 @@
 import gzip
 import json
 from pathlib import Path
-from engine_data import DATA
+from engine_data import DATA, WRITE_DATA
 
 ROOT = Path(__file__).resolve().parents[1]
 coverage = {}
@@ -18,5 +18,5 @@ for name in ['tangut', 'small-seal', 'bopomofo', 'shuishu']:
         else:
             ranges.append([cp, cp])
     coverage[name] = ranges
-(DATA / 'palette/bundled-coverage.json').write_text(
+(WRITE_DATA / 'palette/bundled-coverage.json').write_text(
     json.dumps(coverage, separators=(',', ':')) + '\n')

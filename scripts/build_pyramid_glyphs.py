@@ -12,9 +12,11 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data/babelstone-ids.tsv.gz"
-# The catalogue is the engine's: it ships inside `@han-compose/composer`, so the file written is
-# the one the installed package reads.
-TARGET = ROOT / "node_modules/@han-compose/composer/src/pyramid-glyphs.json"
+# The catalogue is the engine's: it is committed in a han-compose checkout, which `bun run data`
+# copies into the package, so the file written is the source of truth.
+from engine_data import WRITE_SRC as SRC
+
+TARGET = SRC / "pyramid-glyphs.json"
 FORMS = {"牜": "牛", "釒": "金"}
 
 

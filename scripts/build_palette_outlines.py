@@ -10,7 +10,7 @@ from fontTools.pens.boundsPen import BoundsPen
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
-from engine_data import DATA
+from engine_data import DATA, WRITE_DATA
 
 root = Path(__file__).resolve().parents[1]
 ttc = Path(sys.argv[1])
@@ -34,5 +34,5 @@ for path, index in fonts:
 if missing: raise ValueError(f'Missing outlines: {sorted(missing)}')
 raw = json.dumps({'records': records}, ensure_ascii=False, separators=(',', ':')).encode()
 out = bytearray(gzip.compress(raw, compresslevel=9, mtime=0)); out[9] = 255
-(DATA / 'sources/palette/outlines.json.gz').write_bytes(out)
+(WRITE_DATA / 'sources/palette/outlines.json.gz').write_bytes(out)
 print(f'{len(records)} glyphs, {len(out)} bytes')

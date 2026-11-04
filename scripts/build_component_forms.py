@@ -284,8 +284,7 @@ result['sources']['kaisho'] = {
 result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
     'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
 }}}
-# The table is the engine's: it ships inside `@han-compose/composer`, so the file written is the one
-# the installed package reads.
-_PACKAGE = Path('node_modules/@han-compose/composer/src')
-_PACKAGE.mkdir(parents=True, exist_ok=True)
-(_PACKAGE / 'component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
+# The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
+# into the package, so the file written is the source of truth rather than an installed copy.
+from engine_data import WRITE_SRC as SRC
+(SRC / 'component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
