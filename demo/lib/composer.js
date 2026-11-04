@@ -8,7 +8,7 @@ export const COMPOSER_BASE = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
   serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f6/',
-  klee: 'https://glyphatlas.org/atlas/composer/e1e0af4b94e6-kaisho-compose-layout-v4-kaisho-f5/',
+  klee: 'https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f6/',
 
 }
 
