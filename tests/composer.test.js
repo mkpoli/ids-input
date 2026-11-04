@@ -10,6 +10,7 @@ import { Composer, composableDescription, fitInside, parseTree } from '../src/co
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
+import gaizhaGlyph from './fixtures/gaizha-glyph.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
 import constants from '../src/composer/constants.json' with { type: 'json' }
@@ -48,6 +49,7 @@ const encodedSource = () => {
   add('𪱷', { k: '𪱷', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
   const glyph = boxGlyph([40, 40, 960, 960])
   add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
+  add('皶', { k: '皶', ...gaizhaGlyph })
   return createSource(async name => {
     const body = extra.get(name) ?? files[name]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
@@ -408,6 +410,18 @@ describe('the composer', () => {
     expect((await compose(encodedSource(), '⿰𪱴𪱴')).parts.map(part => part.origin)).toEqual(['glyph 𪱷'])
     expect(await compose(encodedSource(), '⿰木口')).toMatchObject({ origins: ['glyph 𪱳'] })
     expect(await compose(encodedSource(), '⿰木木')).toMatchObject({ origins: ['glyph 木', 'glyph 木'] })
+  })
+  it('splits the designed glyph a variant description names', async () => {
+    const whole = await compose(encodedSource(), '皶')
+    const plain = await compose(encodedSource(), '⿰查皮')
+    const split = await compose(encodedSource(), '⿰查皮', { separate: true })
+    expect(plain.parts.map(part => part.origin)).toEqual(['glyph 皶'])
+    expect(plain.d).toBe(whole.d)
+    expect(split.parts.map(part => part.origin)).toEqual(['glyph 皶', 'glyph 皶'])
+    expect(split.parts).toHaveLength(2)
+    // The partition itself: eight contours around 査, seven around 皮.
+    expect(split.parts.map(part => (part.d.match(/M/g) ?? []).length)).toEqual([8, 7])
+    expect(split.d).toBe(whole.d)
   })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'

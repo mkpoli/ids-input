@@ -238,6 +238,17 @@ const ENCLOSURE_CUTS = {
   }],
 }
 
+// Descriptions written with a variant of a component: ⿰查皮 names 皶, whose own sequence is ⿰査皮.
+// The export has no cut for it because the left 一 and 皮's stroke overlap, so the font's designed
+// glyph is partitioned here instead, one piece per leaf. The digest ties each partition to the
+// outlines it was read from; another export keeps the geometric composition.
+const VARIANT_CUTS = {
+  '⿰查皮': ['皶', {
+    'c8c37fe8c089233bb6a36f3e3170c0f173b4b9d6c155b470d0066fd8b4cd95a9': [[0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14]],
+    '0569d2e44325d2d0dc3c4a2ee2f26f044aa3fa08d623bd06a935b39dc5b419fe': [[0,1,2,3,4,5,6,7,8],[9,10,11,12,13,14,15]],
+  }],
+}
+
 // Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
 // box of such a glyph to this share of the width and draws its foot out to the right edge.
 const ENCLOSURE_SHARE = 0.485
@@ -762,6 +773,8 @@ export class Composer {
     }
     const native = this.enclosureParts(node, region)
     if (native) return native
+    const designed = this.variantParts(node, region)
+    if (designed) return designed
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
     const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key, this.fontStyle))
       ? componentParts(key, region, this.fontStyle, atRoot) : null
@@ -1010,6 +1023,28 @@ export class Composer {
     if (!this.separate) return [placed(glyph, glyph.box, target, this.ink(char), `glyph ${char}`)]
     return indices.map(group => {
       const part = derived(glyph, group.map(i => glyph.contours[i]))
+      return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
+    })
+  }
+
+  /** The font's designed glyph of a description written with a variant component, partitioned one
+   *  piece per leaf. The export has no cut for it: the operands' strokes overlap, so the parts do
+   *  not separate into contours the way a host cut expects. */
+  variantParts(node, region) {
+    const entry = Array.isArray(node) ? VARIANT_CUTS[keyOf(node)] : null
+    if (!entry || this.expanding.size || this.excluded(entry[0]) || !node.slice(1).every(child => typeof child === 'string')) return null
+    if (node.slice(1).some(child => this.excluded(child))) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record) return null
+    const glyph = partOf(record)
+    if (!this.separate) return [this.place(glyph, region, this.ink(char), `glyph ${char}`)]
+    const groups = cuts[hexOf(JSON.stringify(record.p))]
+    if (!groups || groups.length !== node.length - 1) return null
+    const used = groups.flat().sort((a, b) => a - b)
+    if (used.length !== glyph.contours.length || used.some((index, i) => index !== i)) return null
+    const target = fitted(glyph.box, region, this.C.STRETCH)
+    return groups.map(group => {
+      const part = derived(glyph, group.map(index => glyph.contours[index]))
       return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
     })
   }
@@ -2005,6 +2040,35 @@ export class Composer {
       if (op === '⿳' && children[1] === '冖' && lowerInk[2] - lowerInk[0] >= 0.9 * (coverInk[2] - coverInk[0]) && gap > COVER_GAP) {
         const shift = Math.min(gap - COVER_GAP, 0.25 * (lowerInk[3] - lowerInk[1]))
         for (const p of lower) p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
+      }
+    }
+    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])
+      && typeof children[1] === 'string') {
+      let topBox = null
+      try {
+        const tree = this.parse(this.sequenceOf(children[1]) ?? '')
+        if (Array.isArray(tree) && tree[0] === '⿱' && ['日', '曰', '田', '罒', '目', '四'].includes(tree[1])) topBox = tree[1]
+      } catch { /* not a box-headed sequence */ }
+      if (topBox) {
+        const coverBox = bounds(groups[0]), lowerInk = inkBounds(groups[1]), height = lowerInk[3] - lowerInk[1]
+        const split = lowerInk[3] - 0.45 * height, factor = 0.72 * (coverBox[2] - coverBox[0]) / Math.max(lowerInk[2] - lowerInk[0], 1)
+        const centre = (coverBox[0] + coverBox[2]) / 2
+        for (const p of groups[1]) {
+          const contours = p.part.contours.slice()
+          let changed = false
+          drawnContours(p).forEach((points, index) => {
+            const b = pointsBox(points)
+            if ((b[1] + b[3]) / 2 < split) return
+            const c = { ...contours[index] }
+            let lo = Infinity, hi = -Infinity
+            for (let k = 0; k < c.light.length; k += 2) { lo = Math.min(lo, c.light[k]); hi = Math.max(hi, c.light[k]) }
+            const mid = (lo + hi) / 2, scale = (p.target[2] - p.target[0]) / Math.max(p.source[2] - p.source[0], 1)
+            const shift = (centre - (b[0] + b[2]) / 2) / scale
+            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * factor; out[k + 1] = points[k + 1] } return out }
+            c.light = move(c.light); c.heavy = move(c.heavy); contours[index] = c; changed = true
+          })
+          if (changed) p.part = derived(p.part, contours)
+        }
       }
     }
   }
