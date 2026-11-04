@@ -41,6 +41,22 @@ const COMPATIBILITY = {
   T: compatibility('ㄱㄲㄳㄴㄵㄶㄷㄹㄺㄻㄼㄽㄾㄿㅀㅁㅂㅄㅅㅆㅇㅈㅊㅋㅌㅍㅎ', 0x11a8),
 }
 
+/** The two consonants a compound final is written with: ᆰ is ㄹ then ㄱ. Empty for a plain final.
+ *  @type {ReadonlyMap<string, [string, string]>} */
+export const COMPOUND_FINALS = new Map([
+  ['\u11aa', ['\u11a8', '\u11ba']], // ㄳ
+  ['\u11ac', ['\u11ab', '\u11bd']], // ㄵ
+  ['\u11ad', ['\u11ab', '\u11c2']], // ㄶ
+  ['\u11b0', ['\u11af', '\u11a8']], // ㄺ
+  ['\u11b1', ['\u11af', '\u11b7']], // ㄻ
+  ['\u11b2', ['\u11af', '\u11b8']], // ㄼ
+  ['\u11b3', ['\u11af', '\u11ba']], // ㄽ
+  ['\u11b4', ['\u11af', '\u11c0']], // ㄾ
+  ['\u11b5', ['\u11af', '\u11c1']], // ㄿ
+  ['\u11b6', ['\u11af', '\u11c2']], // ㅀ
+  ['\u11b9', ['\u11b8', '\u11ba']], // ㅄ
+])
+
 /** The class of a conjoining jamo, or null for anything else. @param {string | undefined} char @returns {JamoClass | null} */
 export function jamoClass(char) {
   const cp = char?.codePointAt(0)

@@ -22,7 +22,7 @@ import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells } from './pyramid.js'
 import { pyramidRows } from '../core/pyramid.js'
-import { hangulClusterAt, jamoClass } from '../core/hangul.js'
+import { COMPOUND_FINALS, hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
 import { toConjoiningJamo } from '../core/hangul.js'
 import { isOutbound, markFace, markParts } from './marks.js'
@@ -972,9 +972,12 @@ export class Composer {
       // A single final takes the foot. A double patchim sets its two consonants side by side on
       // one line, each in a near-square box, the way a face draws 값 and 닭; splitting one wide
       // box evenly would squeeze both.
-      if (finals.length === 2) {
-        parts.push(...this.node(finals[0], box(0.19, 0.04, 0.50, 0.34)))
-        parts.push(...this.node(finals[1], box(0.50, 0.04, 0.81, 0.34)))
+      // A compound final is one jamo (ᆰ, ᆬ, ᆹ) but two consonants: the face's single glyph for it
+      // is drawn for a whole syllable, so it is written out as its two letters.
+      const pair = finals.length === 1 ? COMPOUND_FINALS.get(finals[0]) : finals.length === 2 ? finals : null
+      if (pair) {
+        parts.push(...this.node(pair[0], box(0.19, 0.04, 0.50, 0.34)))
+        parts.push(...this.node(pair[1], box(0.50, 0.04, 0.81, 0.34)))
       } else {
         const [fx0, fy0, fx1, fy1] = box(0.18, 0.02, 0.82, 0.32)
         const count = finals.length
