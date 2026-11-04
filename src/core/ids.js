@@ -1,7 +1,7 @@
 // @ts-check
 import { hangulClusterAt } from '@han-compose/composer/hangul'
 import { unicodeProperty } from './unicode.js'
-import { emojiPrefix } from './emoji.js'
+import { emojiPrefix } from '@han-compose/composer/emoji'
 import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
 import { strokeChain } from './strokes.js'
 export { UNICODE_VERSION } from './unicode.js'
