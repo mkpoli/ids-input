@@ -87,7 +87,7 @@ header calls it SIL OFL 1.1, its conditions differ from the standard SIL license
 The derivative family is named IDS Seal and retains Kaiyuan Small Seal in the
 Compatible Fullname field. The license and copyright notice are embedded in the font.
 
-Build the webfont and `data/small-seal-outlines.json.gz` with
+Build the webfont and the engine's Small Seal outlines with
 `uv run scripts/build_small_seal_font.py`. This uses the bundled SVG sources and the pinned
 crosswalk SVGs, checks their digests, converts cubic curves to quadratic curves with a 0.5-unit error bound,
 and writes deterministic font and outline files. Exact-description mappings in the
@@ -103,7 +103,7 @@ the positions proposed in OBAYASHI Muneaki, [L2/19-230R](https://www.unicode.org
 (2019-06-24). Unicode 18.0.0 leaves them unassigned; `fonts.css` gives the face the
 matching `unicode-range`.
 
-The drawings are CC BY-SA 4.0; the font and `data/new-korean-outlines.json.gz` keep that
+The drawings are CC BY-SA 4.0; the font and the engine's New Korean outlines keep that
 licence, and [LICENSE-IDSNewKorean.txt](LICENSE-IDSNewKorean.txt) records the attribution.
 The source SVGs, digests and letter names are in [`data/new-korean/`](../data/new-korean/).
 Rebuild the font and outlines with `uv run scripts/build_new_korean.py`.
@@ -151,6 +151,6 @@ the Plangothic P1/P2 V2.9.5795 digests listed above, and uses the same subset/me
 procedure as the general parts font. `fonts.css` imports the generated
 `gongche.css`; the supplementary characters use the existing `IDS Parts` family.
 
-Matching composer outlines are included in `data/palette-outlines.json.gz`.
+Matching composer outlines ship in the engine's package, `data/sources/palette/outlines.json.gz`.
 BMP text uses the reader's CJK font, as in the rest of the panel. The outlined
 fallback for missing BMP components uses the pinned Noto Sans CJK font.

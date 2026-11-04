@@ -45,7 +45,7 @@
     "node_modules/@han-compose/composer/src/shuishu.js": "b8864dedbfb642c49a528f53409e937ce2ee474f5002ea78b62a81a8c26ddc3f",
     "node_modules/@han-compose/composer/src/slot-placeholder.js": "f3cbe4cdbb7cfc8dab206a113caa0a657015121eac05c752ce1dea8883ceb200",
     "node_modules/@han-compose/composer/src/small-seal.js": "3a85a0bba9cf1c71fc332dde8417fb568cfefda9f88e750f0632d6c83649ffcf",
-    "node_modules/@han-compose/composer/src/source.js": "ab098b779fde5f157acc59ae3d86a94f2a367774d8505037f99300807eb03d64",
+    "node_modules/@han-compose/composer/src/source.js": "7c1544f5e5dd1ea0ae1f9f0cc0dfd191d52c5fa86581fac9ce9b4e9d335418f8",
     "node_modules/@han-compose/composer/src/strokes.js": "8a8c187c94bcfed0cd50b91c640203f9fd5704d3b689d44d203294f073537594",
     "node_modules/@han-compose/composer/src/tangut.js": "60df28cf24a362af9103efc7b57b7af2b2d13ee12c14761f972de073d6bb95f6",
     "node_modules/@han-compose/composer/src/tokens.js": "0b79b6b8fbe5431419f10efab22f81e07f6da55c63b39dbe5916a32a24aeda57",
@@ -54,7 +54,7 @@
     "node_modules/@han-compose/composer/src/worker.js": "2f89fad9b01bd66e5d1b3d138c3d0c1077ab25fb2ae10dc6e3d3dfedf50d4d03",
     "scripts/audit_render_coverage.mjs": "a315180d42a423a2b042c597ad22ba9fc20b00bd3b61189659ab0f881e8236f2",
     "scripts/lib/coverage-sources.mjs": "2ccdfca8829976fcb9d57f336069f29cfc868d8ce87b936239e98fd2c72771bb",
-    "src/core/ids.js": "81651ff5b3a3a12a3e3335f8254368f90873b1bf30bc6cc9528240d2e8610c92",
+    "src/core/ids.js": "53a71e4fba297b6ed21c7c6a17b4e3f7767dad14c207dee220ac2ca461aab1c7",
     "src/core/unicode.js": "246623e0f8016c19d434c99d431fdd6df2d4a280fbcb78ec4ff5cee012f19074"
   },
   "scope": "Every accepted non-private scalar rendered separately through the preview worker. Does not test variation sequences, arbitrary IDS layouts, or visual fidelity.",

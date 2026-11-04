@@ -48,7 +48,7 @@ def main():
         allowed.difference_update(host_points.intersection(range(lo, hi + 1)))
     # Dedicated bundles have holes too. Their exact records are the coverage boundary.
     for name in ['tangut', 'bopomofo', 'small-seal', 'palette']:
-        bundle = json.loads(gzip.decompress((ROOT / f'data/{name}-outlines.json.gz').read_bytes()))
+        bundle = json.loads(gzip.decompress((DATA / f'sources/{name}/outlines.json.gz').read_bytes()))
         allowed.difference_update(ord(key) for key, record in bundle['records'].items()
                                   if len(key) == 1 and record.get('G', {}).get('p'))
     for lo, hi in [(0xE000, 0xF8FF), (0xF0000, 0xFFFFD), (0x100000, 0x10FFFD)]:

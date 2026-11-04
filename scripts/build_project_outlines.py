@@ -14,7 +14,7 @@ Run after `build_unicode_outlines.py`, since that script rewrites every shard:
     uv run scripts/build_project_outlines.py [--font PlangothicP2-Regular.ttf]
 
 Without `--font` the pinned file is fetched into `cache/`. The script replaces records in
-`data/unicode-outlines/` and updates their hashes in `data/unicode-outlines.json`.
+the engine's `data/unicode/outlines/` and updates their hashes in `data/unicode/outlines.json`.
 """
 
 from __future__ import annotations
@@ -34,10 +34,13 @@ from fontTools.ttLib import TTFont
 
 from build_tangut_outlines import Contours
 
+from engine_data import DATA
+
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "data" / "ids-characters.tsv"
-OUTLINES = ROOT / "data" / "unicode-outlines"
-METADATA = ROOT / "data" / "unicode-outlines.json"
+# The shards are the engine's: it reads them from its package, so they are patched there.
+OUTLINES = DATA / "unicode/outlines"
+METADATA = DATA / "unicode/outlines.json"
 PLANGOTHIC = {
     "file": "PlangothicP2-Regular.ttf",
     "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f",

@@ -8,7 +8,7 @@ SVG IDC icons are for buttons only. Render ideographic description characters as
 
 The drawing engine lives in han-compose (https://github.com/mkpoli/han-compose). Kept here: the
 editor interface, interaction, and data sourcing. A change to how a sequence draws belongs in
-han-compose, not in `src/composer/`.
+han-compose, in its JavaScript package.
 
 | Change | Where |
 |---|---|
@@ -25,9 +25,9 @@ han-compose, not in `src/composer/`.
   composer's. A layered preview hands over the document, which `documentView` reads by its `root`.
 - The engine writes, this package reads. `composerPreview({ base })` reads the export's current
   format only; a manifest of another format is a failed load.
-- Everything that decides a drawing is checked in han-compose. `tests/composer.test.js` here checks
-  what an editor gets back — a drawing, its slots, a sketch, a refused sequence — never how the
-  notes, rooms or turns are chosen.
+- Everything that decides a drawing is checked in han-compose. `tests/composer-preview.test.js` here
+  checks what an editor gets back — a drawing, its slots, a sketch, a refused sequence — never how
+  the notes, rooms or turns are chosen.
 - The engine is the dependency `@han-compose/composer`, read from `node_modules/` and nowhere else,
   declarations included. Nothing in this package draws: fix a drawing in han-compose, and its tests
   there find it.

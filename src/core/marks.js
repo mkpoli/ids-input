@@ -6,7 +6,7 @@
 // then the marks in any order: ⿰亻木ˊ, ⿰ㄅㄚˇ, ⿰氵青゛. A Hangul tone mark is the exception: it
 // names the tone of the one syllable it follows and stays on it, ⿰가〮나〯.
 import { unicodeProperty } from './unicode.js'
-import { hangulClusterAt } from './hangul.js'
+import { hangulClusterAt } from '@han-compose/composer/hangul'
 
 /** A variation selector, as `isSelector` reads it in `ids.js`; kept here so the modules need not cycle. */
 const SELECTOR = /^[\uFE00-\uFE0F\u{E0100}-\u{E01EF}]$/u

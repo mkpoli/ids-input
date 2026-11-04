@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { retrying } from '../src/core/retry.js'
+import { retrying } from '@han-compose/composer/retry'
 
 /** A fetch that answers each call from `answers` in turn: a status, or 'drop' for a network error. */
 const scripted = answers => {

@@ -645,7 +645,7 @@ export const SOURCES = [
       ko: 'CJK 확장 J와 Noto 글꼴이 채우지 못한 글자의 대체 윤곽.',
       vi: 'Hình dự phòng cho CJK Extension J và các chỗ Noto chưa có.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'noto-emoji',
@@ -663,7 +663,7 @@ export const SOURCES = [
       ko: '대체 윤곽에 쓰는 단색 이모지 윤곽.',
       vi: 'Đường viền emoji đơn sắc cho các hình dự phòng.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'unifont',
@@ -682,7 +682,7 @@ export const SOURCES = [
       ko: '다른 글꼴에 없는 최근 가나, 키릴, 음성 기호, 표의 문자 기호의 픽셀 윤곽.',
       vi: 'Hình điểm ảnh cho kana, Kirin, ký hiệu ngữ âm và dấu biểu ý mà các phông khác thiếu.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'iosevka',
@@ -701,7 +701,7 @@ export const SOURCES = [
       ko: '대체 윤곽에 쓰는 라틴 수식 문자 48자.',
       vi: '48 chữ Latin biến thể cho các hình dự phòng.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
   {
     id: 'unihieroglyphica',
@@ -719,7 +719,7 @@ export const SOURCES = [
       ko: '이집트 상형문자 확장 A 3,995자.',
       vi: '3.995 hình chữ tượng hình Ai Cập mở rộng A.',
     },
-    used: ['data/unicode-outlines/'],
+    used: ['node_modules/@han-compose/composer/data/unicode/outlines/'],
   },
 
   // ------------------------------------------------------------------ code

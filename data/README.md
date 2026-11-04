@@ -514,7 +514,7 @@ the eight malformed descriptions remain as source text. The source remains in
 `babelstone-ids.tsv.gz` and both forms remain searchable. Built by
 `node scripts/build_tangut_layers.mjs` from the table, which carries the pinned source digest.
 
-## `tangut-outlines.json.gz`
+## Tangut outlines
 
 Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
 `uv run scripts/build_tangut_outlines.py`. The file records the font checksum and
@@ -603,7 +603,7 @@ or the character itself.
 
 ## New Korean Orthography outlines
 
-`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+The engine's `data/sources/new-korean/outlines.json.gz` holds the four letters the New Korean Orthography
 (조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
 
 - U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
@@ -883,18 +883,18 @@ against pinned SHA-256 digests. `--cache` and `--out` select their locations. Th
 archive is written beside the output. Test mapping safeguards with
 `python3 -m unittest discover -s scripts -p test_small_seal.py`.
 
-`small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
-mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
+The engine's `data/sources/small-seal/outlines.json.gz` holds the supported glyphs and unambiguous
+exact-description mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
 for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
 quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 56,651 glyph outlines in 590 chunks, each covering at most
+The engine's `data/unicode/outlines/*.json.gz` contains 56,651 glyph outlines in 590 chunks, each covering at most
 256 code points. The full set is 26,503,554 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
-`unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
-counts, source fonts, source digests and copyright notices.
+`data/unicode/coverage.json` lists exact covered ranges; `data/unicode/outlines.json` records chunk
+hashes, counts, source fonts, source digests and copyright notices. Both ship in the engine's package.
 
 The original sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
 `fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
@@ -976,8 +976,8 @@ code points, transcriptions and limits.
 
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 79 glyphs whose palette entries are missing from the
-pinned default composer export. `palette-fallback-characters.json` lists them.
+The engine's `data/sources/palette/outlines.json.gz` contains 79 glyphs whose palette entries are
+missing from the pinned default composer export. `data/palette/fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
 come from the included Plangothic parts/Gongche and Noto CJK stroke subsets, plus Noto Sans CJK Regular

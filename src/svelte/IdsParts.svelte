@@ -13,8 +13,8 @@
   import { onMount } from 'svelte'
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
-  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
-  import { hangulIdsOf } from '../core/hangul-ids.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '@han-compose/composer/hangul'
+  import { hangulIdsOf } from '@han-compose/composer/hangul-ids'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
@@ -25,7 +25,7 @@
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
-  import { download } from '../core/retry.js'
+  import { download } from '@han-compose/composer/retry'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter

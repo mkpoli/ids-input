@@ -867,7 +867,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   (`data/COPYING-small-seal.txt`).
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
-- `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
+- `fonts/IDSSeal*`, with the engine's `small-seal` outlines in its package: derived Kaiyuan glyphs under
   the [Kaiyuan font license](fonts/LICENSE-IDSSeal.txt); the outline file also contains
   exact-description mappings from CHISE (GPL-2.0-or-later).
 - `data/character-info.json.gz`: Unihan 18.0.0 definitions (Unicode License v3) and Open Tangut

@@ -1,5 +1,5 @@
 // @ts-check
-import { hangulClusterAt } from './hangul.js'
+import { hangulClusterAt } from '@han-compose/composer/hangul'
 import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from './emoji.js'
 import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
