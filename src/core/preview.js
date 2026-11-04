@@ -1,33 +1,11 @@
 // @ts-nocheck: geometry over plain arrays, as in a drawing.
-import { EMOJI_CUT_MATRIX, drawingSvg, emojiTransform, groupParts } from '@han-compose/composer'
 import { entryDescription, isDescription as isWhole } from './ids.js'
 
 // What the editor's preview shows around a drawing: its badge, and the boxes where nothing is drawn
 // yet (a fast layout before the engine's has loaded). The drawing itself — its file, its parts by
-// leaf, the placeholder of a slot — is the engine's (han-compose's package).
-export { drawingSvg, EMOJI_CUT_MATRIX, emojiTransform, groupParts, placeholder, STROKE } from '@han-compose/composer'
-
-/**
- * Font size that draws an emoji's ink the shorter side of its box across. Noto Emoji's glyphs fill
- * the em square, 2,080 of its 2,048 units against an advance of 2,784, so a size of 1 draws 0.73 of
- * the box, and a size of 1/0.73, the whole box. The box is what the composer gives the operand: an
- * emoji stands in it as a character does, at the size a character's ink fills its cell.
- */
-export const EMOJI_SCALE = 1.36
-
-/**
- * Where an emoji stands in its box: `{ x, y, size }`, the glyph's middle and its font size, every
- * number finite. The glyph spans `EMOJI_SCALE` times the box's shorter side, so it fills the box as
- * a component's ink fills its cell.
- * @param {{ box?: number[] } | null | undefined} item
- */
-export function emojiPlace(item) {
-  const [x, y, width, height] = (item?.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
-  return { x: x + width / 2, y: y + height / 2, size: Math.max(0, Math.min(width, height) * EMOJI_SCALE) }
-}
-
-// What the editor's preview shows: the badge on its frame, and the placeholder an empty slot (or a
-// part not drawn yet) becomes, in the drawing's 1000-unit box.
+// leaf, the placeholder of a slot, where an emoji stands — is the engine's (han-compose's package).
+export { drawingSvg, EMOJI_CUT_MATRIX, emojiPlace, EMOJI_SCALE, emojiTransform } from '@han-compose/composer/drawing-svg'
+export { groupParts, placeholder, STROKE } from '@han-compose/composer'
 
 /** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 /**
