@@ -212,6 +212,7 @@
   "app.layers.failed": "Could not draw this description with layers.",
   "app.layers.nonlinear": "This layer has a nonlinear transform. Reset it before using the fields.",
   "app.layers.reset": "Reset transform",
+  "app.layers.strokes": "Strokes",
   "app.layers.transform": "Transform",
   "app.layers.x": "X",
   "app.layers.y": "Y",

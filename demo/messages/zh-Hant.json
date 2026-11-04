@@ -211,6 +211,7 @@
   "app.layers.failed": "無法按圖層繪製此描述。",
   "app.layers.nonlinear": "此圖層具有非線性變換。請先重設再使用欄位。",
   "app.layers.reset": "重設變換",
+  "app.layers.strokes": "筆畫",
   "app.layers.transform": "變換",
   "app.layers.x": "X",
   "app.layers.y": "Y",

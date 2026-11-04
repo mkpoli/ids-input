@@ -211,6 +211,7 @@
   "app.layers.failed": "この説明をレイヤー付きで描けませんでした。",
   "app.layers.nonlinear": "このレイヤーには非線形の変形があります。フィールドを使う前にリセットしてください。",
   "app.layers.reset": "変形をリセット",
+  "app.layers.strokes": "画",
   "app.layers.transform": "変形",
   "app.layers.x": "X",
   "app.layers.y": "Y",

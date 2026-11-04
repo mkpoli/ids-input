@@ -211,6 +211,7 @@
   "app.layers.failed": "Không thể vẽ mô tả này theo lớp.",
   "app.layers.nonlinear": "Lớp này có biến đổi phi tuyến. Hãy đặt lại trước khi dùng các trường.",
   "app.layers.reset": "Đặt lại biến đổi",
+  "app.layers.strokes": "Nét",
   "app.layers.transform": "Biến đổi",
   "app.layers.x": "X",
   "app.layers.y": "Y",
