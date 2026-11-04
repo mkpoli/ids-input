@@ -969,12 +969,20 @@ export class Composer {
       })
     }
     if (hasFinal) {
-      const [fx0, fy0, fx1, fy1] = box(0.18, 0.02, 0.82, 0.32)
-      const count = finals.length
-      finals.forEach((letter, i) => {
-        const from = fx0 + (fx1 - fx0) * (i / count), to = fx0 + (fx1 - fx0) * ((i + 1) / count)
-        parts.push(...this.node(letter, [from, fy0, to, fy1]))
-      })
+      // A single final takes the foot. A double patchim sets its two consonants side by side on
+      // one line, each in a near-square box, the way a face draws 값 and 닭; splitting one wide
+      // box evenly would squeeze both.
+      if (finals.length === 2) {
+        parts.push(...this.node(finals[0], box(0.19, 0.04, 0.50, 0.34)))
+        parts.push(...this.node(finals[1], box(0.50, 0.04, 0.81, 0.34)))
+      } else {
+        const [fx0, fy0, fx1, fy1] = box(0.18, 0.02, 0.82, 0.32)
+        const count = finals.length
+        finals.forEach((letter, i) => {
+          const from = fx0 + (fx1 - fx0) * (i / count), to = fx0 + (fx1 - fx0) * ((i + 1) / count)
+          parts.push(...this.node(letter, [from, fy0, to, fy1]))
+        })
+      }
     }
     return parts
   }
