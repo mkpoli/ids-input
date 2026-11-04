@@ -159,6 +159,34 @@ try {
     const even = scaleOf(flattened((await chosenNode())?.transform))
     assert.ok(even.x > 1.05 && Math.abs(even.x - even.y) < 1e-3, 'Shift keeps the corner scale even')
 
+    // An off-centre grab scales from the handle's own corner, so the edge follows the pointer
+    // instead of measuring the ratio from the grab point.
+    await page.getByRole('button', { name: 'Reset part', exact: true }).click()
+    await page.waitForTimeout(400)
+    const box = await svg.boundingBox()
+    assert.ok(box, 'the preview has a drawing box')
+    const eastGrip = await page.locator('.ids-preview-large .handle.resize.e .handle-hit').boundingBox()
+    const westGrip = await page.locator('.ids-preview-large .handle.resize.w .handle-hit').boundingBox()
+    assert.ok(eastGrip && westGrip, 'both east and west handles are there')
+    // The two centre handles stand one local 1000 units apart, so their screen distance is the
+    // scale that turns a pointer delta into the layer's own units.
+    const span = Math.hypot(eastGrip.x + eastGrip.width / 2 - (westGrip.x + westGrip.width / 2), eastGrip.y + eastGrip.height / 2 - (westGrip.y + westGrip.height / 2))
+    const grab = { x: eastGrip.x + eastGrip.width * 0.9, y: eastGrip.y + eastGrip.height / 2 }
+    await drag(grab, { x: grab.x + 60, y: grab.y })
+    const offCentre = scaleOf(flattened((await chosenNode())?.transform))
+    const expected = 1 + 60 / span
+    assert.ok(Math.abs(offCentre.x - expected) < 0.01, `an off-centre grab scales by the pointer (${offCentre.x.toFixed(3)} vs ${expected.toFixed(3)})`)
+    assert.ok(Math.abs(offCentre.y - 1) < 0.005, 'an off-centre east grab keeps the height')
+
+    // The turn grip turns the layer.
+    await page.getByRole('button', { name: 'Reset part', exact: true }).click()
+    await page.waitForTimeout(400)
+    const turn = await page.locator('.ids-preview-large .handle.rotate .handle-hit').boundingBox()
+    assert.ok(turn, 'the turn handle exists')
+    await drag({ x: turn.x + turn.width / 2, y: turn.y + turn.height / 2 }, { x: turn.x + turn.width / 2 + 60, y: turn.y + turn.height / 2 + 40 })
+    const turned = flattened((await chosenNode())?.transform)
+    assert.ok(Math.abs(turned[1]) > 0.05, 'the turn handle rotates the layer')
+
     if (process.env.IDS_ADJUST_FREE_SHOTS) {
       mkdirSync(process.env.IDS_ADJUST_FREE_SHOTS, { recursive: true })
       await page.locator('.ids-preview').screenshot({ path: `${process.env.IDS_ADJUST_FREE_SHOTS}/adjust-free-${scheme}.png` })

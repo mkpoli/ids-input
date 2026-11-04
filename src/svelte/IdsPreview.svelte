@@ -144,12 +144,17 @@
   const selectionQuad = $derived(frame ? quadOf(frame) : null)
   const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
   const rotationValue = $derived(flat ? Math.round(Math.atan2(flat[1], flat[0]) * 1800 / Math.PI) / 10 : 0)
+  /** The handle's own place in the layer's 1000-unit frame. @param {string} key */
+  const handleOf = key => /** @type {[number, number]} */ ([
+    key.includes('w') ? 0 : key.includes('e') ? 1000 : 500,
+    key.includes('n') ? 0 : key.includes('s') ? 1000 : 500,
+  ])
   /** The point a resize handle holds still, in the layer's own frame. @param {string} key */
   const anchorOf = key => /** @type {[number, number]} */ ([
     key.includes('w') ? 1000 : key.includes('e') ? 0 : 500,
     key.includes('n') ? 1000 : key.includes('s') ? 0 : 500,
   ])
-  /** @typedef {{ gesture: number, kind: 'move' | 'scale' | 'rotate', id: string, svg: SVGSVGElement, p0: { x: number, y: number }, center: [number, number], place: number[], base: import('../document/index.js').Chain, inverseFull: number[] | null, corner: string, anchor: [number, number], q0: [number, number], perPixel: number, a0: number }} Drag */
+  /** @typedef {{ gesture: number, kind: 'move' | 'scale' | 'rotate', id: string, svg: SVGSVGElement, p0: { x: number, y: number }, center: [number, number], place: number[], base: import('../document/index.js').Chain, inverseFull: number[] | null, corner: string, handle: [number, number], anchor: [number, number], q0: [number, number], perPixel: number, a0: number }} Drag */
   /** @type {Drag | null} */
   let docDrag = $state.raw(null)
   let gesture = 0
@@ -226,11 +231,12 @@
   /** The smallest layer whose own box holds the point, so an enclosed part wins over its enclosure. @param {number[]} point */
   function pickAt(point) {
     let found = /** @type {import('../document/frames.js').LayerFrame | null} */ (null)
-    let area = Infinity
+    let area = Infinity, depth = -1
     for (const hit of hits) {
       if (!insideQuad(point, hit.quad)) continue
-      // A tie is a group and its child sharing one box; the later, deeper frame wins.
-      if (hit.area <= area) { found = hit.frame; area = hit.area }
+      // The smallest box wins. A tie is a group and its child sharing one box: the deeper frame
+      // wins, and at equal depth the later one, which is painted on top.
+      if (hit.area < area || hit.area === area && hit.frame.depth >= depth) { found = hit.frame; area = hit.area; depth = hit.frame.depth }
     }
     return found
   }
@@ -260,7 +266,7 @@
     const matrix = svg.getScreenCTM()
     const perPixel = matrix?.a ? 1 / matrix.a : 1
     docDrag = { gesture: ++gesture, kind, id: node.id, svg, p0: { x: p.x, y: p.y }, center: [center[0], center[1]], place: at.place, base,
-      inverseFull, corner, anchor: anchorOf(corner), q0: /** @type {[number, number]} */ ([q0[0], q0[1]]), perPixel,
+      inverseFull, corner, handle: handleOf(corner), anchor: anchorOf(corner), q0: /** @type {[number, number]} */ ([q0[0], q0[1]]), perPixel,
       a0: Math.atan2(p.y - center[1], p.x - center[0]) }
     svg.setPointerCapture?.(event.pointerId)
     svg.focus?.({ preventScroll: true })
@@ -306,10 +312,12 @@
     const [ax, ay] = docDrag.anchor
     const horizontal = docDrag.corner.includes('w') || docDrag.corner.includes('e')
     const vertical = docDrag.corner.includes('n') || docDrag.corner.includes('s')
-    /** @param {number} value @param {number} from @param {number} anchor */
-    const ratio = (value, from, anchor) => Math.abs(from - anchor) < 1e-6 ? 1 : (value - anchor) / (from - anchor)
-    let sx = horizontal ? ratio(q[0], docDrag.q0[0], ax) : 1
-    let sy = vertical ? ratio(q[1], docDrag.q0[1], ay) : 1
+    // The pointer may grab the handle off its centre. Its own corner is the reference, so the
+    // handle follows the pointer's movement instead of measuring from where the grab happened.
+    /** @param {number} value @param {number} from @param {number} anchor @param {number} at */
+    const ratio = (value, from, anchor, at) => Math.abs(at - anchor) < 1e-6 ? 1 : 1 + (value - from) / (at - anchor)
+    let sx = horizontal ? ratio(q[0], docDrag.q0[0], ax, docDrag.handle[0]) : 1
+    let sy = vertical ? ratio(q[1], docDrag.q0[1], ay, docDrag.handle[1]) : 1
     if (event.shiftKey) {
       const uniform = horizontal && vertical ? (Math.abs(sx - 1) >= Math.abs(sy - 1) ? sx : sy) : horizontal ? sx : sy
       sx = uniform; sy = uniform
@@ -412,20 +420,20 @@
                     aria-label={t('ids.adjust.move', { part })}
                     onpointerdown={event => startDrag(event, { kind: 'move', node: chosenLayer, frame })} />
                   <line class="turn-line" x1={top[0]} y1={top[1]} x2={turn[0]} y2={turn[1]} />
-                  <g class="handle rotate" role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part })}
-                    aria-valuemin="-180" aria-valuemax="180" aria-valuenow={rotationValue}
-                    onpointerdown={event => startDrag(event, { kind: 'rotate', node: chosenLayer, frame })}>
-                    <circle class="handle-hit" cx={turn[0]} cy={turn[1]} r={size * 1.4} fill="transparent" />
-                    <circle class="handle-face" cx={turn[0]} cy={turn[1]} r={size * 0.55} />
-                  </g>
                   {#each HANDLES as [key, hx, hy] (key)}
                     {@const at = applyAffine(frame.full, [hx, hy])}
                     <g class={`handle resize ${key}`} role="button" tabindex="-1" aria-label={t('ids.adjust.scale', { part })}
                       onpointerdown={event => startDrag(event, { kind: 'scale', node: chosenLayer, frame, corner: key })}>
-                      <circle class="handle-hit" cx={at[0]} cy={at[1]} r={size * 1.5} fill="transparent" />
+                      <circle class="handle-hit" cx={at[0]} cy={at[1]} r={size * 0.95} fill="transparent" />
                       <rect class="handle-face" x={at[0] - size / 2} y={at[1] - size / 2} width={size} height={size} rx={size / 5} />
                     </g>
                   {/each}
+                  <g class="handle rotate" role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part })}
+                    aria-valuemin="-180" aria-valuemax="180" aria-valuenow={rotationValue}
+                    onpointerdown={event => startDrag(event, { kind: 'rotate', node: chosenLayer, frame })}>
+                    <circle class="handle-hit" cx={turn[0]} cy={turn[1]} r={size * 0.9} fill="transparent" />
+                    <circle class="handle-face" cx={turn[0]} cy={turn[1]} r={size * 0.55} />
+                  </g>
                 </g>
               {/if}
             </svg>

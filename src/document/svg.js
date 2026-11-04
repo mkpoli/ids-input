@@ -13,6 +13,8 @@ const colour = value => /^#[0-9a-f]{3,8}$/i.test(value) ? value : '#000000'
 const pathData = value => String(value).replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
 /** @param {string} value */
 const identifier = value => String(value).replace(/[^A-Za-z0-9_-]/g, '') || 'ids'
+/** An attribute value safe between double quotes. @param {string} value */
+const attribute = value => String(value).replace(/[&<"]/g, character => character === '&' ? '&amp;' : character === '<' ? '&lt;' : '&quot;')
 
 /** @param {Piece} piece @param {string} fill */
 const path = (piece, fill) => `<path d="${pathData(piece.d)}" fill="${fill}" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}"/>`
@@ -59,11 +61,17 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   }
   /** @param {import('./render.js').ComponentScope} scope */
   function componentInk(scope) {
-    const ink = scope.negative.length
-      ? `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}/>`
+    const cut = scope.negative.length > 0
+    const ink = cut
+      ? `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}${layers ? ' pointer-events="none"' : ''}/>`
       : scope.positive.map(piece => path(piece, fill)).join('')
-    // A preview can name the part its ink belongs to, so a click lands on what is painted.
-    return layers ? `<g data-layer="${identifier(scope.node)}">${ink}</g>` : ink
+    // A mask hides ink from the eye but not from hit testing, so a cut part keeps its positive
+    // outline as a transparent target. A preview can also name the part its ink belongs to, so a
+    // click lands on what is painted.
+    const target = layers && cut
+      ? scope.positive.map(piece => `<path d="${pathData(piece.d)}" fill="transparent" fill-rule="${piece.fillRule === 'evenodd' ? 'evenodd' : 'nonzero'}" pointer-events="all"/>`).join('')
+      : ''
+    return layers ? `<g data-layer="${attribute(scope.node)}">${ink}${target}</g>` : ink
   }
   /** @param {Scope} scope @param {string} tone @returns {string} */
   function silhouette(scope, tone = '#ffffff') {
