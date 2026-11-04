@@ -16,10 +16,13 @@
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;
   unicode-range:U+2B1A,U+31C0-31E3}
 
-/* The twelve ideographic description characters, for sequence text on machines with no font that
-   draws them. */
+/* The sixteen ideographic description characters, for sequence text on machines with no font that
+   draws them. The four after U+2FFB are newer than the pinned Noto Sans CJK, so they come from
+   Jigmo. */
 @font-face{font-family:"IDS Operators";src:url("./NotoSansCJKjp-ids-operators.woff2") format("woff2");font-display:swap;
   unicode-range:U+2FF0-2FFB}
+@font-face{font-family:"IDS Operators";src:url("./Jigmo-ids-operators.woff2") format("woff2");font-display:swap;
+  unicode-range:U+2FFC-2FFF}
 
 @font-face{font-family:"Kureedo";src:url("./Kureedo-Regular.woff2") format("woff2");font-display:swap}
 /* The glyphs Kureedo draws for the Kaisho option's name and its Aa sample, so the switch avoids the
