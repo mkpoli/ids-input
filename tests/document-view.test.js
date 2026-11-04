@@ -107,6 +107,14 @@ describe('scoped markup', () => {
     expect(markup.body).toContain('<path')
     expect(scopesSvg(view.scopes).startsWith('<svg ')).toBe(true)
   })
+  it('tags each part with its layer only when a preview asks', () => {
+    const document = fromSequence('⿰木口')
+    const view = documentView(document, drawing(parts), sketch(boxes))
+    expect(scopesMarkup(view.scopes).body).not.toContain('data-layer')
+    const named = scopesMarkup(view.scopes, { layers: true })
+    expect(named.body).toContain(`data-layer="${document.root.children[0].id}"`)
+    expect(named.body).toContain(`data-layer="${document.root.children[1].id}"`)
+  })
   it('keeps mask ids distinct by prefix', () => {
     const document = fromSequence('㇯木口')
     const view = documentView(document, drawing([{ leaf: 0, d: square(0, 1000) }, { leaf: 1, d: square(500, 500) }]), sketch(boxes))

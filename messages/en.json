@@ -1,6 +1,6 @@
 {
   "ids.adjust.done": "Done",
-  "ids.adjust.hint": "Drag a part to move it, the corner to scale, the circle to turn.",
+  "ids.adjust.hint": "Drag to move, an edge or corner to scale, the circle to turn; Shift keeps the scale even.",
   "ids.adjust.move": "Move {part}",
   "ids.adjust.rotate": "Turn {part}",
   "ids.adjust.scale": "Scale {part}",

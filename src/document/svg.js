@@ -28,7 +28,7 @@ const emojiText = (item, attribute = '', matrix = null) => {
   const reflect = [matrix ? `matrix(${matrix.map(value => Math.round(value * 1e4) / 1e4).join(' ')})` : '', emojiTransform(item)].filter(Boolean).join(' ')
   return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="system-ui, sans-serif">${text}</text>`
 }
-/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null, cutLeaf?: number | null }} SvgOptions */
+/** @typedef {{ ink?: string, background?: string | null, size?: number, idPrefix?: string, padding?: number, slots?: number[][], emoji?: EmojiItem[] | null, cut?: string | null, cutLeaf?: number | null, layers?: boolean }} SvgOptions */
 /** @typedef {{ defs: string, body: string, background: string, width: number, padding: number, span: number }} ScopedMarkup */
 
 /**
@@ -39,7 +39,7 @@ const emojiText = (item, attribute = '', matrix = null) => {
  * @param {ScopeTree} drawing @param {SvgOptions} [options]
  * @returns {ScopedMarkup}
  */
-export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = null, cut = '', cutLeaf = null } = {}) {
+export function scopesMarkup(drawing, { ink = '#000000', background = null, size = 1000, idPrefix = 'ids', padding = 0, slots = [], emoji = null, cut = '', cutLeaf = null, layers = false } = {}) {
   const fill = ink === 'currentColor' ? 'currentColor' : colour(ink), back = background === null ? null : colour(background)
   const width = Math.max(1, Math.round(Number.isFinite(size) ? size : 1000))
   const pad = Math.round(Math.max(0, Math.min(Number.isFinite(padding) ? padding : 0, 0.5)) * 1000 * 100) / 100
@@ -59,8 +59,11 @@ export function scopesMarkup(drawing, { ink = '#000000', background = null, size
   }
   /** @param {import('./render.js').ComponentScope} scope */
   function componentInk(scope) {
-    if (!scope.negative.length) return scope.positive.map(piece => path(piece, fill)).join('')
-    return `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}/>`
+    const ink = scope.negative.length
+      ? `<rect x="0" y="0" width="1000" height="1000" fill="${fill}" ${mask(componentMask(scope))}/>`
+      : scope.positive.map(piece => path(piece, fill)).join('')
+    // A preview can name the part its ink belongs to, so a click lands on what is painted.
+    return layers ? `<g data-layer="${identifier(scope.node)}">${ink}</g>` : ink
   }
   /** @param {Scope} scope @param {string} tone @returns {string} */
   function silhouette(scope, tone = '#ffffff') {

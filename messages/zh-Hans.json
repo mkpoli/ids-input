@@ -1,6 +1,6 @@
 {
   "ids.adjust.done": "完成",
-  "ids.adjust.hint": "拖动部件移动，拖角缩放，拖圆点旋转。",
+  "ids.adjust.hint": "拖动移动，拖边或角缩放，拖圆点旋转。按住Shift等比缩放。",
   "ids.adjust.move": "移动{part}",
   "ids.adjust.rotate": "旋转{part}",
   "ids.adjust.scale": "缩放{part}",

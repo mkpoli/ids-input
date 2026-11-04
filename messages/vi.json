@@ -1,6 +1,6 @@
 {
   "ids.adjust.done": "Xong",
-  "ids.adjust.hint": "Kéo bộ phận để di chuyển, kéo góc để đổi kích thước, kéo vòng tròn để xoay.",
+  "ids.adjust.hint": "Kéo để di chuyển, kéo cạnh hoặc góc để đổi kích thước, kéo vòng tròn để xoay. Giữ Shift để đổi đều hai chiều.",
   "ids.adjust.move": "Di chuyển {part}",
   "ids.adjust.rotate": "Xoay {part}",
   "ids.adjust.scale": "Đổi kích thước {part}",
