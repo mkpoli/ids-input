@@ -9,7 +9,7 @@ import { affineForChain, applyAffine, invertAffine, multiplyAffine } from './tra
 /** @typedef {import('./render.js').LayerSource} LayerSource */
 /** @typedef {[number, number, number, number]} Box */
 /** @typedef {{ box: number[] }} SketchLeaf */
-/** @typedef {{ node: Node, box: Box, depth: number, canvas: number[], place: number[], full: number[], supported: boolean }} LayerFrame */
+/** @typedef {{ node: Node, box: Box, depth: number, canvas: number[], base: number[], place: number[], full: number[], supported: boolean }} LayerFrame */
 
 const IDENTITY = [1, 0, 0, 1, 0, 0]
 const CANVAS = /** @type {Box} */ ([0, 0, 1000, 1000])
@@ -37,6 +37,8 @@ const localOf = box => [1000 / box[2], 0, 0, 1000 / box[3], -box[0] * 1000 / box
  * The root frame is the canvas. A group forwards its child's box and path; an operator combines its
  * children. `place` maps the layer's 1000-unit frame into the canvas before its authored transform,
  * `full` after it, and `canvas` carries points in the layer's original canvas box through `full`.
+ * `base` is `place` without any ancestor's authored transform, so a drawing's own coordinates can
+ * be brought into the layer's frame even when an ancestor has moved.
  * If a chain is nonlinear, a placement is missing or a map cannot be inverted, the layer remains
  * in the map with `supported: false` so the inspector can still select it.
  * @param {Document} document @param {LayerSource} source @param {SketchLeaf[]} sketch
@@ -46,8 +48,8 @@ export function layerFrames(document, source, sketch) {
   /** @type {Map<string, LayerFrame>} */
   const out = new Map()
   let leaf = 0
-  /** @param {Node} node @param {number[]} parentFull @param {number[]} edge @param {boolean} parentSupported @param {number} depth @returns {Box | null} */
-  const walk = (node, parentFull, edge, parentSupported, depth) => {
+  /** @param {Node} node @param {number[]} parentFull @param {number[]} parentBase @param {number[]} edge @param {boolean} parentSupported @param {number} depth @returns {Box | null} */
+  const walk = (node, parentFull, parentBase, edge, parentSupported, depth) => {
     const region = node.kind === 'component' || node.kind === 'slot'
       ? (() => {
         const box = sketch[leaf++]?.box
@@ -56,6 +58,7 @@ export function layerFrames(document, source, sketch) {
       })()
       : null
     const authored = affineForChain(node.transform ?? [])
+    const base = multiplyAffine(parentBase, edge)
     const place = multiplyAffine(parentFull, edge)
     const full = authored ? multiplyAffine(place, authored) : place
     const supported = parentSupported && Boolean(authored) && Boolean(invertAffine(full))
@@ -64,17 +67,17 @@ export function layerFrames(document, source, sketch) {
       for (const [index, child] of node.children.entries()) {
         const placement = source.placement(node, child, index)
         if (!placement) continue
-        const childBox = walk(child, full, placement, supported, depth + 1)
+        const childBox = walk(child, full, base, placement, supported, depth + 1)
         if (childBox) box = box ? unionBox(box, childBox) : childBox
       }
     } else if (node.kind === 'group') {
-      const childBox = walk(node.child, full, IDENTITY, supported, depth + 1)
+      const childBox = walk(node.child, full, base, IDENTITY, supported, depth + 1)
       if (childBox) box = childBox
     }
     const finalBox = node.id === document.root.id ? CANVAS : box
-    if (finalBox) out.set(node.id, { node, box: finalBox, depth, canvas: multiplyAffine(full, localOf(finalBox)), place, full, supported })
+    if (finalBox) out.set(node.id, { node, box: finalBox, depth, canvas: multiplyAffine(full, localOf(finalBox)), base, place, full, supported })
     return finalBox
   }
-  walk(document.root, IDENTITY, IDENTITY, true, 0)
+  walk(document.root, IDENTITY, IDENTITY, IDENTITY, true, 0)
   return out
 }

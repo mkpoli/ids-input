@@ -29,10 +29,11 @@ describe('layer frames', () => {
   it('uses the canvas for the root and sketch boxes for leaves', () => {
     const document = fromSequence('⿰木口')
     const frames = layerFrames(document, sourceFor(document, [[0, 0, 500, 1000], [500, 0, 500, 1000]]), sketch([[0, 0, 500, 1000], [500, 0, 500, 1000]]))
-    expect(frames.get(document.root.id)).toMatchObject({ box: [0, 0, 1000, 1000], depth: 0, canvas: identity, place: identity, full: identity, supported: true })
+    expect(frames.get(document.root.id)).toMatchObject({ box: [0, 0, 1000, 1000], depth: 0, canvas: identity, base: identity, place: identity, full: identity, supported: true })
     expect(frames.get(document.root.children[0].id)?.box).toEqual([0, 0, 500, 1000])
     expect(frames.get(document.root.children[0].id)?.depth).toBe(1)
     expect(frames.get(document.root.children[0].id)?.canvas).toEqual(identity)
+    expect(frames.get(document.root.children[0].id)?.base).toEqual([0.5, 0, 0, 1, 0, 0])
     expect(frames.get(document.root.children[0].id)?.place).toEqual([0.5, 0, 0, 1, 0, 0])
     expect(frames.get(document.root.children[0].id)?.full).toEqual([0.5, 0, 0, 1, 0, 0])
   })
@@ -53,6 +54,7 @@ describe('layer frames', () => {
     const frames = layerFrames(document, sourceFor(document, boxes), sketch(boxes))
     const top = parent.children[0]
     const frame = frames.get(top.id)
+    expect(frame?.base).toEqual([0.5, 0, 0, 0.5, 0, 0])
     expect(frame?.place).toEqual([0.5, 0, 0, 0.5, 50, 0])
     expect(frame?.full).toEqual([0.5, 0, 0, 0.5, 50, 0])
     expect(frame?.canvas).toEqual([1, 0, 0, 1, 50, 0])
