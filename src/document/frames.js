@@ -1,7 +1,7 @@
 // @ts-check
 // Layer frames for the preview and the inspector: the layout box of a layer, the affine map from
-// its own 1000-unit frame into the canvas, the frame used to convert canvas gestures into local
-// edits, and whether every authored chain on the way is affine.
+// its own 1000-unit frame into the canvas, the map from the canvas into the frame a gesture edits,
+// and whether every authored chain on the way is affine.
 import { affineForChain, applyAffine, invertAffine, multiplyAffine } from './transform.js'
 
 /** @typedef {import('./model.js').Document} Document */
@@ -9,7 +9,7 @@ import { affineForChain, applyAffine, invertAffine, multiplyAffine } from './tra
 /** @typedef {import('./render.js').LayerSource} LayerSource */
 /** @typedef {[number, number, number, number]} Box */
 /** @typedef {{ box: number[] }} SketchLeaf */
-/** @typedef {{ node: Node, box: Box, canvas: number[], frame: number[], supported: boolean }} LayerFrame */
+/** @typedef {{ node: Node, box: Box, canvas: number[], place: number[], full: number[], supported: boolean }} LayerFrame */
 
 const IDENTITY = [1, 0, 0, 1, 0, 0]
 const CANVAS = /** @type {Box} */ ([0, 0, 1000, 1000])
@@ -29,11 +29,15 @@ export function boxCorners(matrix, box) {
   return [Math.min(...xs), Math.min(...ys), Math.max(...xs) - Math.min(...xs), Math.max(...ys) - Math.min(...ys)]
 }
 
+/** The map from the box's canvas units into the layer's 1000-unit local frame. @param {Box} box @returns {number[]} */
+const localOf = box => [1000 / box[2], 0, 0, 1000 / box[3], -box[0] * 1000 / box[2], -box[1] * 1000 / box[3]]
+
 /**
  * Compute one frame per layer from a document, its `LayerSource` placements and the composer sketch.
  * The root frame is the canvas. A group forwards its child's box and path; an operator combines its
- * children. If a chain is nonlinear or a placement is missing, the layer remains in the map with
- * `supported: false` so the inspector can still select it.
+ * children. `place` maps the layer's 1000-unit frame into the canvas before its authored transform,
+ * `full` after it, and both feed direct canvas gestures. If a chain is nonlinear or a placement is
+ * missing, the layer remains in the map with `supported: false` so the inspector can still select it.
  * @param {Document} document @param {LayerSource} source @param {SketchLeaf[]} sketch
  * @returns {Map<string, LayerFrame>}
  */
@@ -41,8 +45,8 @@ export function layerFrames(document, source, sketch) {
   /** @type {Map<string, LayerFrame>} */
   const out = new Map()
   let leaf = 0
-  /** @param {Node} node @param {number[]} parentP @param {number[]} parentC @param {number[]} edge @param {boolean} parentSupported @returns {Box | null} */
-  const walk = (node, parentP, parentC, edge, parentSupported) => {
+  /** @param {Node} node @param {number[]} parentFull @param {number[]} edge @param {boolean} parentSupported @returns {Box | null} */
+  const walk = (node, parentFull, edge, parentSupported) => {
     const region = node.kind === 'component' || node.kind === 'slot'
       ? (() => {
         const box = sketch[leaf++]?.box
@@ -50,28 +54,26 @@ export function layerFrames(document, source, sketch) {
           ? /** @type {Box} */ (box.slice(0, 4)) : null
       })()
       : null
-    const P = multiplyAffine(parentP, edge)
-    const frame = multiplyAffine(parentC, P)
-    const inverse = invertAffine(P)
-    const E = affineForChain(node.transform ?? [])
-    const supported = parentSupported && Boolean(E && inverse)
-    const C = E && inverse ? multiplyAffine(parentC, multiplyAffine(P, multiplyAffine(E, inverse))) : parentC
+    const authored = affineForChain(node.transform ?? [])
+    const place = multiplyAffine(parentFull, edge)
+    const full = authored ? multiplyAffine(place, authored) : place
+    const supported = parentSupported && Boolean(authored) && Boolean(invertAffine(place))
     let box = region
     if (node.kind === 'operator') {
       for (const [index, child] of node.children.entries()) {
         const placement = source.placement(node, child, index)
         if (!placement) continue
-        const childBox = walk(child, P, C, placement, supported)
+        const childBox = walk(child, full, placement, supported)
         if (childBox) box = box ? unionBox(box, childBox) : childBox
       }
     } else if (node.kind === 'group') {
-      const childBox = walk(node.child, P, C, IDENTITY, supported)
+      const childBox = walk(node.child, full, IDENTITY, supported)
       if (childBox) box = childBox
     }
     const finalBox = node.id === document.root.id ? CANVAS : box
-    if (finalBox) out.set(node.id, { node, box: finalBox, canvas: C, frame, supported })
+    if (finalBox) out.set(node.id, { node, box: finalBox, canvas: multiplyAffine(full, localOf(finalBox)), place, full, supported })
     return finalBox
   }
-  walk(document.root, IDENTITY, IDENTITY, IDENTITY, true)
+  walk(document.root, IDENTITY, IDENTITY, true)
   return out
 }
