@@ -8,7 +8,7 @@ uv run scripts/build_unicode_font.py
 
 The composer already draws these characters as outlines; this writes the same shapes as a webfont,
 one file per 256-code-point shard, so text surfaces fall back to them when no installed font has the
-character. Coverage, metrics and provenance come from data/unicode-outlines.json and its shards.
+character. Coverage, metrics and provenance come from the engine's `data/unicode/outlines.json` and its shards.
 
 Characters the app shows but cannot draw -- palette parts, the empty-slot mark and the radicals --
 come from Jigmo, the CC0 glyphs of GlyphWiki, with `--jigmo JIGMO.ttf`. The app asks for the shard of
@@ -39,7 +39,7 @@ UPEM = 1000
 ASCENT, DESCENT = 880, -120
 COPYRIGHT = ('Outline sources: Noto fonts (c) Google LLC, SIL OFL 1.1; Jigmo by Kamichi Chizuko, '
              'CC0 1.0; GNU Unifont and GlyphWiki contributors, see their licence files. Full notices: '
-             'fonts/README.md and data/unicode-outlines.json.')
+             'fonts/README.md and the engine\'s data/unicode/outlines.json.')
 
 
 def int16(text):
