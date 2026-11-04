@@ -185,7 +185,7 @@ try {
   assert.equal(await page.getByText('OLD GLOSS', { exact: true }).count(), 0)
   await page.close()
 
-  // Real bundle: 23 one-stroke CJK/radical parts and all 38 symbols remain reachable.
+  // Real bundle: 24 one-stroke parts (23 CJK/radical forms and 〇) and all 38 symbols remain reachable.
   for (const colorScheme of ['light', 'dark']) {
     const full = await browser.newPage({ viewport: { width: 1440, height: 1400 }, deviceScaleFactor: 2, colorScheme })
     full.on('pageerror', error => errors.push(error.message))
@@ -203,21 +203,25 @@ try {
     await assertNoExtraControls(parts)
     await one.click()
     const oneStrokeParts = await values(parts.locator('.part'))
-    assert.equal(oneStrokeParts.length, 23)
-    assert.equal(new Set(oneStrokeParts).size, 23)
-    assert.equal(await parts.locator('.part:not([data-component-type="ideograph"]):not([data-component-type="radical"])').count(), 0)
+    assert.equal(oneStrokeParts.length, 24)
+    assert.equal(new Set(oneStrokeParts).size, 24)
+    assert.deepEqual(
+      await values(parts.locator('.part:not([data-component-type="ideograph"]):not([data-component-type="radical"])')),
+      ['〇'],
+      '〇 is the one one-stroke part without a component record; the palette carries it for direct selection',
+    )
     await assertNoStrokeSymbols(parts)
     // Numeric searches span both kinds of component and keep their identities explicit.
     const search = parts.getByRole('searchbox')
     await search.fill('1')
     const all = await values(parts.locator('.part'))
-    assert.equal(all.length, 61)
-    assert.equal(new Set(all).size, 61)
+    assert.equal(all.length, 62)
+    assert.equal(new Set(all).size, 62)
     assert.deepEqual([...all].sort(), [...oneStrokeParts, ...unicodeStrokes].sort())
-    await assertStrokeSection(parts, 23, 38)
+    await assertStrokeSection(parts, 24, 38)
     for (const [part, symbol] of [['一', '㇐'], ['丨', '㇑'], ['丶', '㇔'], ['丿', '㇒'], ['乚', '㇟'], ['亅', '㇚']]) {
-      assert.ok(all.slice(0, 23).includes(part), `${part} stays in the ordinary results`)
-      assert.ok(all.slice(23).includes(symbol), `${symbol} stays in the stroke section`)
+      assert.ok(all.slice(0, 24).includes(part), `${part} stays in the ordinary results`)
+      assert.ok(all.slice(24).includes(symbol), `${symbol} stays in the stroke section`)
     }
     assert.equal(await parts.locator('[data-character="⺄"]').getAttribute('data-component-type'), 'radical')
     assert.match(await parts.locator('[data-character="⺄"]').getAttribute('aria-label'), /Radical/)
@@ -304,5 +308,5 @@ try {
   assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= await touch.evaluate(() => innerWidth))
   await touch.close()
   assert.deepEqual(errors, [])
-  console.log('PASS stroke identity: Strokes, 23 CJK/radical parts, 38 symbols, split searches/Recent, readable neutral gray, exact selection/copy, source-backed keyboard/touch cards and adapter swaps')
+  console.log('PASS stroke identity: Strokes, 24 one-stroke parts, 38 symbols, split searches/Recent, readable neutral gray, exact selection/copy, source-backed keyboard/touch cards and adapter swaps')
 } finally { await browser.close() }
