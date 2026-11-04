@@ -4,6 +4,7 @@
 
 import { sequenceOfPath } from '../src/core/address.js'
 import { parse } from '../src/core/ids.js'
+import { CARD_VERSION } from './card-version.js'
 
 export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
@@ -63,7 +64,7 @@ export function metaFor({ sequence, char, origin }) {
   const description = char
     ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
     : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
-  const image = `${origin}/og/${encodeURIComponent(sequence)}.png`
+  const image = `${origin}/og/${encodeURIComponent(sequence)}.png?v=${CARD_VERSION}`
   return {
     title,
     tags: [
