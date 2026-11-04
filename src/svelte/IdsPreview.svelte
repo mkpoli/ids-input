@@ -422,7 +422,7 @@
                   <line class="turn-line" x1={top[0]} y1={top[1]} x2={turn[0]} y2={turn[1]} />
                   {#each HANDLES as [key, hx, hy] (key)}
                     {@const at = applyAffine(frame.full, [hx, hy])}
-                    <g class={`handle resize ${key}`} role="button" tabindex="-1" aria-label={t('ids.adjust.scale', { part })}
+                    <g class={`handle resize ${key}`} role="button" tabindex="-1" aria-label={`${t('ids.adjust.scale', { part })} ${key.toUpperCase()}`}
                       onpointerdown={event => startDrag(event, { kind: 'scale', node: chosenLayer, frame, corner: key })}>
                       <circle class="handle-hit" cx={at[0]} cy={at[1]} r={size * 0.95} fill="transparent" />
                       <rect class="handle-face" x={at[0] - size / 2} y={at[1] - size / 2} width={size} height={size} rx={size / 5} />
