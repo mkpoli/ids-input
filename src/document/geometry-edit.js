@@ -47,7 +47,7 @@ export function applyGeometryEdits(geometry, edits, node, { tolerance = 0.1 } = 
   const applied = []
   /** @type {GeometryEdit[]} */
   const unresolved = []
-  const base = geometry.fingerprint ?? fingerprintGeometry(geometry)
+  const base = fingerprintGeometry(geometry)
   for (const edit of edits) {
     if (edit.node !== node) continue
     if (edit.geometry !== base) { unresolved.push(edit); continue }

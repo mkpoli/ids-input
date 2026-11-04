@@ -29,3 +29,16 @@ describe('rendering geometry edits', () => {
     expect(drawing.issues[0].message).toContain('unresolved geometry edit e1')
   })
 })
+
+describe('geometry edit resolution', () => {
+  it('reports an edit whose layer is gone', () => {
+    const document = {
+      root: { kind: 'component', id: 'n1' },
+      geometryEdits: [{ id: 'e1', node: 'gone', geometry: 'a'.repeat(64), target: { kind: 'stroke', id: 's' }, transform: translate(5, 0) }],
+    }
+    const source = { geometry: () => ({ pieces: [{ d: 'M0 0L10 0Z' }], strokes: [{ id: 's', pieces: [0] }] }), placement: () => null }
+    const drawing = renderLayers(document, source)
+    expect(drawing.complete).toBe(false)
+    expect(drawing.issues.some(issue => issue.message.includes('no layer gone'))).toBe(true)
+  })
+})

@@ -25,17 +25,22 @@ const union = (a, b) => {
   return [x, y, x1 - x, y1 - y]
 }
 
-/** The signed area of one closed subpath, read as an SVG path. @param {string} d */
+/** The signed area of one closed subpath, from its segment endpoints. @param {string} d */
 function signedAreaOf(d) {
   const path = parsePath(d)
-  let area = 0
+  let area = 0, first = null, previous = null
   for (const segment of path.segments) {
-    if (segment.type === 'Z') continue
-    const end = segment.end ?? segment.p
-    if (!end) continue
-    const [x, y] = end
-    area += (segment.p?.[0] ?? x) * y - x * (segment.p?.[1] ?? y)
+    if (segment.type === 'Z') {
+      if (previous && first) area += previous[0] * first[1] - first[0] * previous[1]
+      continue
+    }
+    const point = segment.end ?? segment.p
+    if (!point) continue
+    if (!previous) { first = point; previous = point; continue }
+    area += previous[0] * point[1] - point[0] * previous[1]
+    previous = point
   }
+  if (previous && first) area += previous[0] * first[1] - first[0] * previous[1]
   return area / 2
 }
 
@@ -66,6 +71,9 @@ function inside(point, points) {
  */
 function partGeometry(part, d) {
   if (part.cut || !part.strokes?.length) return { pieces: [{ d, fillRule: 'nonzero', cut: Boolean(part.cut) }] }
+  const groups = part.strokes
+  const shared = groups.flatMap(([, group]) => group).some((contour, index, all) => all.indexOf(contour) !== index)
+  if (shared) return { pieces: [{ d, fillRule: 'nonzero' }] }
   const subpaths = splitSubpaths(d)
   const contours = subpaths.length
   if (!contours || part.strokes.some(([, group]) => group.some(index => index < 0 || index >= contours))) {

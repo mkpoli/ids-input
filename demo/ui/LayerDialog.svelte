@@ -100,6 +100,12 @@
     if (!strokeId || !selected || !doc?.geometryEdits) return null
     return doc.geometryEdits.find(edit => edit.node === selected.id && edit.target.kind === 'stroke' && edit.target.id === strokeId) ?? null
   })
+  /** @param {string} id */
+  function chooseStroke(id) {
+    strokeId = strokeId === id ? null : id
+    if (strokeId) { mode = 'affine'; applyError = '' }
+  }
+
   /** @param {Node} node */
   const label = node => node.kind === 'component' ? node.char : node.kind === 'operator' ? node.op : node.kind === 'slot' ? '⬚' : 'group'
   /** @param {Node} node */
@@ -153,7 +159,23 @@
 
   // Read the selected layer's transform into the fields.
   $effect(() => {
-    if (strokeId) return
+    if (strokeId) {
+      const flat = affineForChain(strokeEdit?.transform ?? [])
+      if (!flat) { nonlinear = true; return }
+      nonlinear = false
+      mode = 'affine'
+      matrix = flat
+      const [a, b, c, d, e, f] = flat
+      const cx = 500, cy = 500
+      x = Math.round((e - cx + a * cx + c * cy) * 100) / 100
+      y = Math.round((f - cy + b * cx + d * cy) * 100) / 100
+      scaleX = Math.round(Math.hypot(a, b) * 1000) / 1000
+      scaleY = Math.round(Math.hypot(c, d) * 1000) / 1000
+      rotate = Math.round(Math.atan2(b, a) * 1800 / Math.PI) / 10
+      simple = true
+      applyError = ''
+      return
+    }
     if (!selected) { nonlinear = false; return }
     const chain = selected.transform ?? []
     applyError = ''
@@ -248,7 +270,7 @@
 
   function reset() {
     if (!session || !selected) return
-    if (strokeId && strokeEdit) session.clearGeometryEdit(strokeEdit.id)
+    if (strokeId) { if (strokeEdit) session.clearGeometryEdit(strokeEdit.id) }
     else session.clearTransform(selected.id)
     doc = session.document
     chosen = session.chosen
@@ -443,14 +465,14 @@
               <span class="ui-label">{t('app.layers.strokes')}</span>
               {#each strokes as stroke (stroke.id)}
                 <button type="button" class="ui-button" data-size="sm" aria-pressed={strokeId === stroke.id}
-                  onclick={() => { strokeId = strokeId === stroke.id ? null : stroke.id; x = 0; y = 0; scaleX = 1; scaleY = 1; rotate = 0 }}>{stroke.id}</button>
+                  onclick={() => chooseStroke(stroke.id)}>{stroke.id}</button>
               {/each}
             </div>
           {/if}
           <div class="modes" role="group" aria-label={t('app.layers.mode')}>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={Boolean(strokeId) || (mode === 'matrix' && !simple)} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} disabled={Boolean(strokeId)} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} disabled={Boolean(strokeId)} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
           </div>
           {#if mode === 'affine'}
             <div class="affine">
@@ -484,7 +506,7 @@
       {#if applyError}<p class="note" role="alert">{applyError}</p>{/if}
       {@const history = doc && session ? { done: [...session.steps.done], undone: [...session.steps.undone] } : { done: [], undone: [] }}
       <div class="actions">
-        <button type="button" class="ui-button" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
+        <button type="button" class="ui-button" disabled={strokeId ? !strokeEdit : !selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
         <button type="button" class="ui-button" onclick={() => { open = false; oncanvas?.() }}>{t('app.layers.oncanvas')}</button>
       </div>
       {#if history.done.length || history.undone.length}

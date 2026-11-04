@@ -48,6 +48,8 @@ function editedGeometry(geometry, edits, node, issues, tolerance) {
 export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
   /** @type {(Piece & { node: string, approximate: boolean })[]} */
   const pieces = []
+  /** @type {Set<string>} */
+  const seen = new Set()
   /** @type {LayerIssue[]} */
   const issues = []
   /** @param {Node} node @param {Chain} parentChain */
@@ -55,6 +57,7 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     const authored = node.transform ?? []
     const chain = [...authored, ...parentChain]
     if (node.kind === 'component') {
+      seen.add(node.id)
       let geometry
       try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
@@ -93,6 +96,7 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     })
   }
   visit(document.root, [])
+  for (const edit of document.geometryEdits ?? []) if (!seen.has(edit.node)) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
   return { pieces, complete: issues.length === 0, issues }
 }
 
@@ -103,6 +107,8 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
  * @param {Document} document @param {LayerSource} source @param {{ tolerance?: number }} [options] @returns {ScopeTree}
  */
 export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
+  /** @type {Set<string>} */
+  const seen = new Set()
   /** @type {LayerIssue[]} */
   const issues = []
   /** @param {Node} node @param {Chain} parentChain @returns {Scope | null} */
@@ -110,6 +116,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     const chain = [...(node.transform ?? []), ...parentChain]
     if (node.kind === 'slot') return { kind: 'slot', node: node.id }
     if (node.kind === 'component') {
+      seen.add(node.id)
       let geometry
       try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
@@ -154,6 +161,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     return { kind: 'operator', node: node.id, op: node.op, children }
   }
   const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
+  for (const edit of document.geometryEdits ?? []) if (!seen.has(edit.node)) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
   return { root, complete: issues.length === 0, issues, leafFrames: new Map() }
 }
 
