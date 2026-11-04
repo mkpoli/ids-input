@@ -12,9 +12,12 @@
   const picked = $derived(editor.picked)
   function apply() { if (editor.enter()) queueMicrotask(() => { slot?.focus(); slot?.select() }) }
   const part = $derived(typeof picked === 'string' ? picked : '')
+  const written = $derived(isNode(picked) ? editor.sequenceAt(editor.chosen ?? []) : '')
+  const merges = $derived(editor.merges)
   const at = $derived(editor.chosen ? editor.chosen.join('.') : '')
-  const identity = $derived(`${at}\u0000${part}`)
-  const replaceable = $derived(Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0))
+  const identity = $derived(`${at}\u0000${part}\u0000${written}`)
+  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0)
+  const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part }))
   /** @type {HTMLElement | null} */ let root = $state(null)
   /** @type {HTMLElement | null} */ let panel = $state(null)
   let open = $state(false)
@@ -141,9 +144,9 @@
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={t('ids.swaps.label', { part })} style:top="{top}px" style:left="{left}px">
+    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} style:top="{top}px" style:left="{left}px">
       <div class="ids-swaps-head">
-        <span class="ids-title">{t('ids.swaps.label', { part })}</span>
+        <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
       </div>
       <div class="ids-options">
@@ -154,6 +157,10 @@
         {#each editor.splits as sequence (sequence)}
           <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
             onclick={() => editor.take(sequence)}>{sequence}</button>
+        {/each}
+        {#each merges as char (char)}
+          <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.merge', { part: written, char })}
+            aria-label={t('ids.merge', { part: written, char })} onclick={() => editor.merge(char)}>{char}</button>
         {/each}
       </div>
     </div>
@@ -183,17 +190,18 @@
   .ids-glyph{font-family:var(--_font);font-size:18px;line-height:1}
   .ids-tools > button:not(:disabled):hover{border-color:var(--_line-strong);background:var(--_surface-subtle)}
   kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
-  .ids-title{font-size:11px;color:var(--_muted)}
+  .ids-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:system-ui,var(--_font),sans-serif;font-size:11px;color:var(--_muted)}
   .ids-swaps{position:fixed;z-index:20;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
     max-width:min(420px,calc(100vw - 16px));max-height:min(42vh,300px);padding:10px;border:1px solid var(--_line);border-radius:12px;background:var(--_surface);
     box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto}
   .ids-swaps:not(.ready){visibility:hidden}
   .ids-swaps-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-  .ids-swaps-close{display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
+  .ids-swaps-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
   .ids-options{display:flex;flex-wrap:wrap;gap:6px}
   .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
   .ids-split{font-size:16px;color:var(--_muted)}
+  .ids-merge{font-weight:500}
   .ids-swap:not(:disabled):hover{border-color:var(--_accent)}
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}
