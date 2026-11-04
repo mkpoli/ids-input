@@ -4,7 +4,8 @@
 // The page runs under a fontconfig that offers one Latin font and nothing else, so a character no
 // bundled face draws can only appear as the missing-glyph box. A glyph is judged a box by rendering
 // it and an unassigned code point with the element's own font stack: the box both draw is the same
-// shape, while a real glyph differs everywhere it has ink.
+// shape, while a real glyph differs everywhere it has ink. Characters below the fold are scrolled
+// into view first, since the app loads a shard only for text a reader has seen.
 //
 // Run against a devrun server: IDS_URL=http://localhost:5173 bun demo/check-no-tofu.js
 import { chromium } from 'playwright-core'
@@ -82,6 +83,20 @@ async function boxedInPage(page, selector, limit = 120) {
   return []
 }
 
+/**
+ * Scrolls every match into view, so the app asks for the shard of text it had not shown yet: a part
+ * below the fold has no glyph until a reader sees it.
+ */
+async function reveal(page, selector, limit = 120) {
+  await page.evaluate(async ({ selector, limit }) => {
+    for (const element of [...document.querySelectorAll(selector)].slice(0, limit)) {
+      element.scrollIntoView({ block: 'center' })
+      await new Promise(resolve => setTimeout(resolve, 60))
+    }
+  }, { selector, limit })
+  await page.waitForTimeout(1200)
+}
+
 if (process.platform !== 'linux') {
   console.log('SKIP no-tofu: hiding the installed fonts is a fontconfig setup')
   process.exit(0)
@@ -108,6 +123,7 @@ try {
     await page.waitForTimeout(1500)
     await page.evaluate(() => document.fonts.ready)
     if (!await page.locator('.parts-grid .part').count()) { console.log(`skip the ${tab} palette: no parts`); continue }
+    await reveal(page, '.parts-grid .part')
     const boxed = await boxedInPage(page, '.parts-grid .part')
     console.log(`${tab}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every part draws'}`)
     if (boxed.length) failures.push(`${tab}: ${boxed.join(' ')}`)
@@ -115,6 +131,7 @@ try {
   // The search results and the tree show characters as well.
   for (const [what, selector] of [['search results', '.ids-search-results .char'], ['tree', '.ids-tree .ids-part[data-character]']]) {
     if (!await page.locator(selector).count()) { console.log(`skip the ${what}: nothing shown`); continue }
+    await reveal(page, selector)
     const boxed = await boxedInPage(page, selector)
     console.log(`${what}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every character draws'}`)
     if (boxed.length) failures.push(`${what}: ${boxed.join(' ')}`)
