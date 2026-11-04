@@ -458,8 +458,9 @@ document at the same paths, keeping each layer's ID, name and transform through 
 structural edits. Pass the long-lived session allocator so removed IDs do not return.
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
-each layer's box and three frames: the box-to-canvas frame of its geometry (`canvas`), its own
-1000-unit frame before its authored transform (`place`) and after it (`full`). The workshop
+each layer's box, depth and four frames: the box-to-canvas frame of its geometry (`canvas`), the
+same frame without ancestor transforms (`base`), its own 1000-unit frame before its authored
+transform (`place`) and after it (`full`). The workshop
 keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
@@ -527,8 +528,10 @@ the preview when there is one. While the data is unavailable, the placeholders s
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
 export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
 a corner to scale both, or the circle to turn it, and hold Shift to keep both scales equal. Each
-gesture writes one coalesced document transform. A part inside an enclosing one keeps its own grab
-area, so the small part can be chosen and moved without going through the layer list. Use
+gesture writes one coalesced document transform. The outline follows the layer's painted bounds,
+so a glyph that paints outside its layout cell still gets a box around what is drawn. A part inside
+an enclosing one keeps its own grab area, so the small part can be chosen and moved without going
+through the layer list. Use
 `composerPreview({ base, separate: true })` so each operand arrives as its own part. When the
 document source is incomplete the preview falls back to the merged drawing, and editing is
 unavailable.
