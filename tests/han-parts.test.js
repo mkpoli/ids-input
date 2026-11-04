@@ -39,6 +39,9 @@ it('carries the first stroke Rime records for each character', () => {
   // A radical form the dictionary does not name takes the class of the character it stands for, the
   // way its stroke count does: ⺅ for 亻, ⺉ for 刂, ⺡ for 氵.
   for (const [key, value] of [['⺅', '撇'], ['⺉', '豎'], ['⺎', '横'], ['⺖', '點'], ['⺡', '點']]) expect([key, first(key)]).toEqual([key, value])
+  // A compatibility ideograph copies the unified ideograph Unihan says it encodes: U+F900 豈 reads
+  // as U+8C48 豈, U+F904 as 滑.
+  for (const [point, value] of [[0xF900, '豎'], [0xF901, '横'], [0xF904, '點'], [0xF905, '豎']]) expect([String.fromCodePoint(point), first(String.fromCodePoint(point))]).toEqual([String.fromCodePoint(point), value])
   expect(new Set(firsts.filter(Boolean))).toEqual(new Set(['横', '豎', '撇', '點', '折']))
   // The parts palette reads the same dictionary, so the two agree wherever both record a class.
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))

@@ -1068,14 +1068,15 @@ outlines 19, so the list matches what the preview can compose rather than what o
 hold.
 
 `firsts` gives 横, 豎, 撇, 點 or 折, the class of the first stroke Rime's five-stroke dictionary
-records, for 102,866 of the characters, read as the parts palette's `first` column is; the two agree
+records, for 103,328 of the characters, read as the parts palette's `first` column is; the two agree
 wherever both record a class. A radical form the dictionary does not name takes the class of the
 character `component-forms.tsv` says it stands for, the way its stroke count already does, so ⺅ reads
-as 撇 like 亻. The remaining 486 hold `null`, because no source names their stroke order: 450 CJK
-compatibility ideographs (plus 12 in the compatibility supplement), 23 marks and Hangzhou numerals
-that take a stroke count the project supplies but no stroke order, and one 𫠞. A search hit's tooltip
-and the character card show these two facts; the dictionary's stroke order follows Chinese order,
-which can differ from Japanese order.
+as 撇 like 亻; a compatibility ideograph takes the class of the unified ideograph Unihan's
+`kCompatibilityVariant` says it encodes, so U+F900 豈 reads as 豎 like U+8C48 豈. The remaining 24 hold
+`null`, because no source names their stroke order: 23 marks and Hangzhou numerals that take a stroke
+count the project supplies but no stroke order, and one 𫠞. A search hit's tooltip and the character
+card show these two facts; the dictionary's stroke order follows Chinese order, which can differ from
+Japanese order.
 
 The Components tab offers the list as **All characters**, beside the curated components and their
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
