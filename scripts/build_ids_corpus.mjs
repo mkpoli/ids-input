@@ -3,10 +3,13 @@
 //
 //   bun scripts/build_ids_corpus.mjs [--out FILE] [--cache DIR] [--check]
 //
-// The first increment reads BabelStone and the two CHISE files with encoded characters (Basic and
-// Compatibility). A CHISE entity name (`&GT-K01666;`) has no ontology resolution yet, so its
-// component is a cid with a private-use form and its descriptions stay `unresolved`: the catalogue
-// records the part without pretending to know how it is drawn.
+// The first increment reads BabelStone and the CHISE UCS files. A CHISE entity name
+// (`&GT-K01666;`) has no ontology resolution yet, so its component is a cid with a private-use form
+// and its descriptions stay `unresolved`: the catalogue records the part without pretending to know
+// how it is drawn.
+//
+// Alongside the corpus the build writes data/ids-corpus-sources.tar.gz: the CHISE inputs it read,
+// their digests and the licence, so the GPL source offer does not depend on the pinned URLs.
 import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
@@ -23,6 +26,28 @@ const CHECK = args.includes('--check')
 const PUA_BASE = 0xf0000
 
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
+
+/** One ustar header block: fixed field order, the checksum filled last, so the archive is byte-stable. */
+function tarHeader(name, size) {
+  const header = Buffer.alloc(512)
+  const put = (at, length, value) => header.write(value, at, length, 'utf8')
+  put(0, 100, name); put(100, 8, '0000644\u0000'); put(108, 8, '0000000\u0000'); put(116, 8, '0000000\u0000')
+  put(124, 12, `${size.toString(8).padStart(11, '0')}\u0000`); put(136, 12, '00000000000\u0000')
+  put(148, 8, '        '); put(156, 1, '0'); put(257, 6, 'ustar\u0000'); put(263, 2, '00')
+  const sum = header.reduce((total, byte) => total + byte, 0)
+  put(148, 8, `${sum.toString(8).padStart(6, '0')}\u0000 `)
+  return header
+}
+
+/** A deterministic tar of `{ [name]: bytes }`: no timestamps, sorted names, padded to 512. */
+function tar(files) {
+  const blocks = []
+  for (const [name, bytes] of Object.entries(files).sort(([a], [b]) => (a < b ? -1 : 1))) {
+    blocks.push(tarHeader(name, bytes.length), bytes, Buffer.alloc((512 - (bytes.length % 512)) % 512))
+  }
+  blocks.push(Buffer.alloc(1024))
+  return Buffer.concat(blocks)
+}
 const text = bytes => new TextDecoder().decode(bytes)
 
 const manifest = JSON.parse(await readFile(new URL('../data/chise-sources.json', import.meta.url)))
@@ -132,7 +157,11 @@ const descriptions = [...seen.values()]
 const corpus = {
   format: 'ids-input/ids-corpus',
   version: 1,
-  licence: { spdx: manifest.licence, perSource: true, note: 'CHISE rows are GPL-2.0-or-later; editorial rows are MIT.' },
+  licence: { spdx: manifest.licence, perSource: true,
+    note: 'Every description here is a source row: the CHISE ones are GPL-2.0-or-later by CHISE-IDS'
+      + ' (MORIOKA Tomohiko and contributors), the BabelStone ones are public domain. The CHISE rows'
+      + ` were converted to cids and merged with BabelStone on ${manifest.retrieved}.`
+      + ' data/COPYING-chise-ids.txt is the text; data/ids-corpus-sources.tar.gz holds the sources.' },
   pua: { base: PUA_BASE, next: nextSlot },
   sources,
   provenance,
@@ -156,12 +185,32 @@ for (const [subject, value, , , , , status] of descriptions) {
   try { parse(value) } catch (error) { throw new Error(`${subject}: ${error.message}`) }
 }
 const bytes = gzipSync(Buffer.from(JSON.stringify(corpus)), { level: 9, mtime: 0 })
+
+// The archive is built on every run, so `--check` compares it too: a missing or stale source
+// archive is as much a stale checkout as a stale corpus.
+const inputs = { 'COPYING': await readFile(new URL('../data/COPYING-chise-ids.txt', import.meta.url)) }
+await source(manifest.readme)
+inputs[manifest.readme.file] = await readFile(resolve(CACHE, manifest.readme.file))
+for (const entry of manifest.files) inputs[entry.file] = await readFile(resolve(CACHE, entry.file))
+inputs['README'] = Buffer.from(`${[
+  `CHISE-IDS source files for data/ids-corpus.json.gz, from ${manifest.repository}`,
+  'maintained by MORIOKA Tomohiko and contributors, GPL-2.0-or-later: see CHISE-README.md for the',
+  'grant and COPYING for the text.', '',
+  `retrieved ${manifest.retrieved}; the pin is the branch ${manifest.pin}`, '',
+  ...[manifest.readme, ...manifest.files].map(entry => `${entry.sha256}  ${entry.file}`),
+].join('\n')}\n`)
+const archive = gzipSync(tar(inputs), { level: 9, mtime: 0 })
+const ARCHIVE = new URL('../data/ids-corpus-sources.tar.gz', import.meta.url)
+
 if (CHECK) {
-  const committed = await readFile(OUT).catch(() => null)
-  if (!committed || !committed.equals(bytes)) throw new Error(`${OUT} is not what this build writes`)
+  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive]]) {
+    const committed = await readFile(path).catch(() => null)
+    if (!committed || !committed.equals(expected)) throw new Error(`${path} is not what this build writes`)
+  }
   console.log(`${OUT}: up to date`)
 } else {
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, bytes)
+  await writeFile(ARCHIVE, archive)
   console.log(`${OUT}: ${corpus.counts.descriptions} descriptions, ${corpus.counts.components} components, ${corpus.counts.unresolved} unresolved, ${bytes.length} bytes`)
 }
