@@ -1,6 +1,6 @@
 {
   "ids.adjust.done": "完了",
-  "ids.adjust.hint": "部品をドラッグで移動、角で拡大縮小、丸で回転。",
+  "ids.adjust.hint": "ドラッグで移動、辺か角で拡大縮小、丸で回転。Shiftで縦横同じ倍率。",
   "ids.adjust.move": "{part}を移動",
   "ids.adjust.rotate": "{part}を回転",
   "ids.adjust.scale": "{part}を拡大縮小",
