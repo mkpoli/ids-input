@@ -12,7 +12,7 @@ import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
 
 // The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v11'
+const VERSION = 'v12'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // Metadata requests do not need the rasterizer.
