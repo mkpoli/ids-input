@@ -14,7 +14,7 @@ describe('Pages sequence routing', () => {
     }
   })
   it('leaves root, files, nested assets, and Pages HTML routes to the assets binding', () => {
-    for (const path of ['/', '/robots.txt', '/favicon.svg', '/assets/app.js', '/og/fonts/a.ttf', '/og/data/a.json.gz', '/embed', '/compare', '/engines', '/engines/', '/embed/', '/index.html', '/s/⿰木口']) {
+    for (const path of ['/', '/robots.txt', '/favicon.svg', '/assets/app.js', '/og/fonts/a.ttf', '/og/data/a.json.gz', '/embed', '/compare', '/engines', '/sources', '/design', '/engines/', '/embed/', '/index.html', '/s/⿰木口']) {
       expect(route(path)).toEqual({ kind: 'asset' })
     }
   })
