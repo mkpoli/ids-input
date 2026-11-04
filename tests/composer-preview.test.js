@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { composerPreview } from '@han-compose/composer'
-import { roughLayout, runPreview } from '../src/core/preview.js'
+import { badge, roughLayout, runPreview } from '../src/core/preview.js'
 import { files as smallExport } from './fixtures/small-export.js'
 import { drawingWorker } from './fixtures/drawing-worker.js'
 
@@ -259,5 +259,18 @@ describe('the composer preview against a real drawing', () => {
     const missing = { ...smallExport }
     delete missing['manifest.json']
     expect((await drawing(missing)('⿰木口').catch(caught => caught)).name).toBe('UnavailableError')
+  })
+})
+
+describe('the preview badge', () => {
+  it('says composing, preview, approximate, final, failed or too large', () => {
+    expect(badge('loading')).toEqual({ label: 'loading', params: {} })
+    expect(badge('capped')).toEqual({ label: 'tooLarge', params: {} })
+    expect(badge('failed')).toEqual({ label: 'failed', params: {} })
+    expect(badge('composed', { approximate: [] })).toEqual({ label: 'draft', params: {} })
+    expect(badge('composed', { approximate: ['⿾', '㇯'] })).toEqual({ label: 'approximate', params: { ops: '⿾ ㇯' } })
+    expect(badge('composed', { cells: true })).toEqual({ label: 'cells', params: {} })
+    expect(badge('composed', { cells: true, approximate: ['⿼'] })).toEqual({ label: 'approximate', params: { ops: '⿼' } })
+    expect(badge('final')).toEqual({ label: 'final', params: {} })
   })
 })
