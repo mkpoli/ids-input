@@ -60,3 +60,13 @@ describe('a persisted document session', () => {
     expect(() => readSession('{')).toThrow('invalid JSON')
   })
 })
+
+describe('a geometry edit in a stored session', () => {
+  it('round-trips its target and transform', () => {
+    const session = createDocumentSession(fromSequence('木'))
+    const edit = { id: 'e1', node: session.document.root.id, geometry: '1'.repeat(64), target: { kind: 'stroke', id: '0' }, transform: [{ type: 'affine', matrix: [1, 0, 0, 1, 20, 0] }] }
+    session.setGeometryEdit(edit)
+    const read = readSession(writeSession(session))
+    expect(read.document.geometryEdits).toEqual([edit])
+  })
+})

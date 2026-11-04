@@ -88,7 +88,13 @@
   })
   const strokes = $derived(strokeGeometry?.strokes ?? [])
   // A chosen stroke belongs to the chosen layer.
-  $effect(() => { void selected?.id; strokeId = null })
+  let strokeOwner = null
+  $effect(() => {
+    const id = selected?.id ?? null
+    if (id === strokeOwner) return
+    strokeOwner = id
+    strokeId = null
+  })
   /** The geometry edit currently moving the chosen stroke. */
   const strokeEdit = $derived.by(() => {
     if (!strokeId || !selected || !doc?.geometryEdits) return null
@@ -147,6 +153,7 @@
 
   // Read the selected layer's transform into the fields.
   $effect(() => {
+    if (strokeId) return
     if (!selected) { nonlinear = false; return }
     const chain = selected.transform ?? []
     applyError = ''
