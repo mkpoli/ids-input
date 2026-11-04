@@ -17,7 +17,7 @@
     "node_modules/@han-compose/composer/src/compose.js": "4467a48d7827e25e781dcc7dcb7d475b8768b57189d80a1c755ff592cfe0024f",
     "node_modules/@han-compose/composer/src/constants.json": "57169400c90ed3bc7c1a99105b0b2cab340c01aeb72c04ec140185a15409374c",
     "node_modules/@han-compose/composer/src/constructs.js": "cdd549961cfbab7d0b64c8df7bc9675060b6f8cc5744ce57cc43bb9c751cc8de",
-    "node_modules/@han-compose/composer/src/document-source.js": "3db2cef22fd36d81db8f5b6e779dbb208ecc95e9c7a3c9ea984ebb5592ac3e7d",
+    "node_modules/@han-compose/composer/src/document-source.js": "a9928b0c39c3edc417552557f8e7955cecc3d27a41d118144b14118e6eb4f800",
     "node_modules/@han-compose/composer/src/document-view.js": "7eb20f3e98b237bf8bbeffe21cd186dd7aa734d7b3720de95a626ecbc767fbff",
     "node_modules/@han-compose/composer/src/drawing-svg.js": "7d53e7ce69b2a58895820c576d1a11b1ac28df674b77c46435b12f944a8aab50",
     "node_modules/@han-compose/composer/src/emoji.js": "7d897fca9aadaef76ad5bb2cf8a3fbcc82d42babba8921a71b66e85dadf4016c",
