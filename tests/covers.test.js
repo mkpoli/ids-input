@@ -44,6 +44,18 @@ describe('a cover', () => {
     expect(width).toBeLessThan(0.75 * 700)
   })
 
+  it('leaves a middle 冖 open over a narrow part', () => {
+    const c = lonely()
+    const top = [at(part(contour(350, 500, 650, 800)), [350, 500, 650, 800])]
+    const cover = [at(part(contour(0, 350, 900, 450)), [0, 350, 900, 450])]
+    const lower = [at(part(contour(0, -50, 900, 300)), [0, -50, 900, 300])]
+    c.fitUnderCover('⿳', ['卜', '冖', '人'], [top, cover, lower])
+    // The top spans a third of the cover's width: the bar stays where the share put it.
+    expect(cover[0].target[1]).toBe(350)
+    // The part below still closes on the cover from underneath.
+    expect(lower[0].target[1]).toBeGreaterThan(-50)
+  })
+
   it('closes a middle 冖 on the part above and the part below', () => {
     const c = lonely()
     const top = [at(part(contour(0, 500, 900, 800)), [0, 500, 900, 800])]

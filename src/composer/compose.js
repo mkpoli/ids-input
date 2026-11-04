@@ -100,6 +100,9 @@ const SIDE_COVERS = new Set(['宀', '冖'])
 const COVER_BAR = 0.72
 /** How far a middle 冖's ink overlaps the parts above and below it, in font units. */
 const COVER_GAP = -24
+// How much of a middle 冖's width the part above it must span before the cover closes on it: a
+// narrow part would have the bar close on a post (⿳卜冖人).
+const COVER_CLOSE_SHARE = 0.5
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
@@ -2027,7 +2030,7 @@ export class Composer {
     }
     if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && children[1] === '冖') {
       const a = inkBounds(groups[0]), b = inkBounds(groups[1]), gap = a[1] - b[3]
-      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && gap > COVER_GAP) {
+      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && a[2] - a[0] >= COVER_CLOSE_SHARE * (b[2] - b[0]) && gap > COVER_GAP) {
         const shift = Math.min(gap - COVER_GAP, 0.25 * (b[3] - b[1]))
         if (shift > 0) for (const group of groups.slice(1)) for (const p of group)
           p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
