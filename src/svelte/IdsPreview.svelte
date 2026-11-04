@@ -130,7 +130,9 @@
   /** An emoji's box and glyph size, with every number finite. @param {{ box?: number[] }} item */
   const emojiBox = item => {
     const [x, y, width, height] = (item.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
-    return { x, y, width, height, size: Math.max(0, Math.min(width, height) * 0.85) }
+    // A Hangul syllable's ink fills 0.91 of its em against an emoji's 0.85.
+    const side = Math.max(0, Math.min(width, height))
+    return { x, y, width, height, size: side * (item?.family === 'hangul' ? 0.94 : 0.85) }
   }
   /** @param {number} value */
   const round = value => Math.round(value * 100) / 100
@@ -277,7 +279,7 @@
                     {#each drawn.emoji ?? [] as item}
                       {#if item.cut}
                         {@const box = emojiBox(item)}
-                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
+                        <text filter={`url(#${uid}-${name}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2 + (item.family === 'hangul' ? 0.02 * box.size : 0)} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
                       {/if}
                     {/each}
                   </mask>
@@ -286,7 +288,7 @@
                 {#each drawn.emoji ?? [] as item}
                   {#if !item.cut}
                     {@const box = emojiBox(item)}
-                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
+                    <text mask={hasCut && !item.restored ? `url(#${uid}-${name})` : undefined} transform={emojiTransform(item) || undefined} x={box.x + box.width / 2} y={box.y + box.height / 2 + (item.family === 'hangul' ? 0.02 * box.size : 0)} text-anchor="middle" dominant-baseline="central" font-size={box.size} font-family={item.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{item.text}</text>
                   {/if}
                 {/each}
               {/if}

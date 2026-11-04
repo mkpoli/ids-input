@@ -151,8 +151,8 @@
       <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
         {#if item.drawing.d}<path d={item.drawing.d} />{/if}
         {#each item.drawing.emoji ?? [] as text}
-          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
-            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * (text.family === 'hangul' ? 1 : 0.85))}
+          <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2 + (text.family === 'hangul' ? 0.02 * Math.min(text.box[2], text.box[3]) * 0.94 : 0)} text-anchor="middle" dominant-baseline="central"
+            font-size={Math.max(0, Math.min(text.box[2], text.box[3]) * (text.family === 'hangul' ? 0.94 : 0.85))}
             font-family={text.family === 'hangul' ? "'IDS New Korean', 'Noto Sans CJK KR', 'Malgun Gothic', 'NanumGothic', sans-serif" : 'system-ui, sans-serif'}>{text.text}</text>
         {/each}
       </svg>

@@ -825,9 +825,8 @@ export class Composer {
    *  drawing's ink and weight like any other component.
    *  @param {string} run @param {number[]} region */
   runLeaf(run, region, bleed = true) {
-    // The face composes a syllable from its jamo better than any table of boxes can: the letters a
-    // font shapes carry the design's own spacing, weights and shapes. The run is handed to the
-    // drawing as text, and the renderers set it in a face that shapes it.
+    // The face composes a run of jamo into its syllable: the letters carry the design's own
+    // spacing, weights and shapes, which a table of boxes could only approximate.
     const part = placed({ contours: [], width: [1, 1] }, region, region, 1, `text ${run}`)
     part.text = run
     part.family = 'hangul'

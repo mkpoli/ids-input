@@ -15,10 +15,14 @@ export function emojiText(item, attribute = '') {
   const [x, y, width, height] = box
   const text = item.text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const reflect = emojiTransform(item)
-  const family = item?.family === 'hangul' ? HANGUL_FAMILY : 'system-ui, sans-serif'
-  // A Hangul syllable's ink fills its em, so it is set to the box; an emoji is set a little smaller.
-  const size = Math.max(0, Math.min(width, height)) * (item?.family === 'hangul' ? 1 : 0.85)
-  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${y + height / 2}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="${family}">${text}</text>`
+  const hangul = item?.family === 'hangul'
+  const family = hangul ? HANGUL_FAMILY : 'system-ui, sans-serif'
+  const side = Math.max(0, Math.min(width, height))
+  // An emoji's ink fills 0.85 of its em; a Hangul syllable's 0.91, and its ink sits a shade above
+  // the em's centre, so it is set at 0.94 and moved down by 0.02 of the em to sit centred.
+  const size = side * (hangul ? 0.94 : 0.85)
+  const cy = y + height / 2 + (hangul ? 0.02 * size : 0)
+  return `<text${attribute}${reflect ? ` transform="${reflect}"` : ''} x="${x + width / 2}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-family="${family}">${text}</text>`
 }
 
 /**
