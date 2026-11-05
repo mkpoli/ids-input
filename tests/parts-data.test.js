@@ -9,10 +9,10 @@ const parts = paletteRows(document)
 const byPart = new Map(parts.map(part => [part.part, part]))
 
 describe('palette fragments', () => {
-  it('gives every read-only numbered component a null fragment and no part a fragment that is not a string', () => {
-    const readonly = parts.filter(part => part.readonly === 1)
-    expect(readonly.length).toBeGreaterThan(60)
-    expect(readonly.every(part => part.fragment === null)).toBe(true)
+  it('gives a numbered component with no written form a null fragment and no part a fragment that is not a string', () => {
+    const unwritten = parts.filter(part => part.fragment === null)
+    expect(unwritten.length).toBeGreaterThan(60)
+    expect(unwritten.every(part => part.glyph)).toBe(true)
     expect(parts.every(part => part.fragment == null || typeof part.fragment === 'string')).toBe(true)
   })
 })
