@@ -213,6 +213,20 @@ const cutsOf = contours => {
     expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, false])
   })
 
+  it('keeps the compound path when a counter would erase a stroke inside or across its hole', () => {
+    const outer = ring(0, 0, 1000, 1000), hole = ring(200, 200, 800, 800, true)
+    for (const extra of [ring(400, 400, 600, 600), ring(100, 450, 900, 550), ring(300, 300, 500, 500, true)]) {
+      const geometry = cutsOf([outer, hole, extra])
+      expect(geometry?.pieces).toHaveLength(1)
+      expect(geometry?.strokes).toBeUndefined()
+    }
+  })
+
+  it('keeps a counter as a cut when no other stroke meets its hole', () => {
+    const geometry = cutsOf([ring(0, 0, 1000, 1000), ring(200, 200, 800, 800, true)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
   it('keeps the compound path when a stroke names a fractional contour index', () => {
     const document = fromSequence('口')
     const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'

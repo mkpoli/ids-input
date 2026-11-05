@@ -117,7 +117,7 @@ function partGeometry(part, d) {
   })
   const meets = (one, other) => edgesCross(polygons[one], polygons[other]) || contains(polygons[one], polygons[other]) || contains(polygons[other], polygons[one])
   const erased = cuts.some((cut, index) => cut && polygons.some((_, at) => at !== index && !cuts[at] && !enclosers[index].includes(at) && meets(index, at)))
-  //TMP if (erased) return { pieces: [{ d, fillRule: 'nonzero' }] }
+  if (erased) return { pieces: [{ d, fillRule: 'nonzero' }] }
   const pieces = subpaths.map((subpath, index) => ({ d: subpath, fillRule: /** @type {'nonzero'} */ ('nonzero'), cut: cuts[index] }))
   const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
   return { pieces, strokes }
