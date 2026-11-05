@@ -413,7 +413,8 @@ Han–seal compositions also need the host's Han export.
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
 excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
-provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+provenance and rebuilding. CHISE data, whose IDS is maintained by MORIOKA Tomohiko and
+contributors, is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents
 
@@ -876,9 +877,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 ## Licences
 
-- Code: MIT (`LICENSE`).
+- Code: MIT (`LICENSE`). The data files carry their own terms, below; a file built from
+  several sources carries all of theirs.
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
-  (`data/COPYING-small-seal.txt`).
+  (`data/COPYING-chise-ids.txt`).
+- `data/ids-corpus.json.gz` and its sources `data/ids-corpus-sources.tar.gz`: GPL-2.0-or-later as
+  a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
+  source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
+  each row says which it is. Code stays MIT.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
