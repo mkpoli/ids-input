@@ -70,12 +70,13 @@ function renderGallery(){
     <div style="display:flex;gap:8px;margin-top:6px">${draw(r.glyph,120)}${draw(r.old,120)}${draw(r.cur,120)}<div class="cap">glyph · original · current</div></div></div>`).join('')+'</div>';
   count.textContent=`${rows.length} of ${DATA.gallery.length}`;
 }
-let compPart=null, APPROVED=[];
+let compPart=null, APPROVED=[], ALIASES={};
 
 function renderComponents(){
   const rows=pick(DATA.components);
-  const fine=new Set(APPROVED);
-  const bad=rows.filter(r=>!fine.has(r.ids));
+  const fine=new Set(APPROVED.filter(x=>!Object.hasOwn(ALIASES,x)));
+  const bad=rows.filter(r=>!fine.has(r.ids) && !r.sameAs);
+  const merged=rows.filter(r=>r.sameAs);
   const parts=[...new Set(rows.map(r=>r.ids[0]))];
   const shown=compPart?bad.filter(r=>r.ids.startsWith(compPart)):bad;
   const chip=(v,label,active)=>`<button class="tab" style="padding:4px 10px;font-size:12px" aria-selected="${active}" data-part="${v??''}">${esc(label)}</button>`;
@@ -85,7 +86,7 @@ function renderComponents(){
     const faces=faceOf?`<div class="faces">${FACES.map(({f,n})=>`<div style="text-align:center"><div class="face" style="font-family:'${f}'">${esc(faceOf)}</div><div class="cap">${n}</div></div>`).join('')}</div>`:'';
     const list=(label,items)=>items.length?`<div class="cap" style="margin-top:8px">${label} (${items.length}):</div><div class="hits">${items.map(h=>`<div class="hit"><div style="font:24px 'Noto Serif CJK JP',serif">${esc(h.ch)}</div>${draw(h.d,56)}<div class="ids tiny">${esc(h.ids)}</div></div>`).join('')}</div>`:'';
     return `<div class="card"><div style="display:flex;gap:10px;align-items:flex-start">
-      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids"><b class="cid">${esc(r.id??'')}</b> ${esc(r.ids)}</div>${r.note?`<div class="cap">${esc(r.note)}</div>`:''}
+      ${draw(r.cur??r.d,110)}<div style="flex:1;min-width:0"><div class="ids"><b class="cid">${esc(r.id??'')}</b> ${esc(r.ids)}</div>${r.note?`<div class="cap">${esc(r.note)}</div>`:''}${merged.filter(x=>x.sameAs===r.id).map(x=>`<div class="cap">${esc(x.id)} ${esc(x.ids)} is the same component</div>`).join('')}
       <div class="cap">${r.strokes} strokes · ${r.uses} uses${r.first?' · '+r.first:''}</div>${copies(r.ids,r.ids,r.ids+'\t'+r.strokes)}</div></div>
       ${(r.variants??[]).length?`<div class="cap" style="margin-top:8px">variants (${r.variants.length}):</div><div class="hits">${r.variants.map(v=>`<div class="hit"><div style="font:13px 'Noto Sans CJK TC',serif">${esc(v.ids)}</div>${draw(v.d,104)}<div class="cap">${esc(v.label??'')}</div></div>`).join('')}</div>`:''}
       ${list('characters holding it', hits)}
@@ -96,11 +97,12 @@ function renderComponents(){
     <details class="fine"><summary>Approved as drawn — resolved (${rows.filter(r=>fine.has(r.ids)).length})</summary><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${rows.filter(r=>fine.has(r.ids)).map(r=>`<span class="ids">${esc(r.ids)}</span>`).join(' · ')}</div></details>
     <div class="gridwrap">${shown.map(card).join('')}</div>`;
   view.querySelectorAll('[data-part]').forEach(b=>b.addEventListener('click',()=>{compPart=b.dataset.part||null;render()}));
-  count.textContent=`${shown.length} to redesign${compPart?' ('+compPart+')':''} of ${DATA.components.length}`;
+  count.textContent=`${shown.length} to redesign${compPart?' ('+compPart+')':''} of ${DATA.components.length}${merged.length?` · ${merged.length} merged`:''}`;
 }
 function render(){ if(!DATA) return; if(tab==='caps') renderCaps(); else if(tab==='gallery') renderGallery(); else renderComponents();
   view.querySelectorAll('button.copy').forEach(b=>b.addEventListener('click',()=>copy(b.dataset.c,b.dataset.w))); }
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{tab=t.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));q.value='';render()}));
 q.addEventListener('input',()=>{q.value;render()});
-Promise.all([fetch('data.json').then(r=>r.json()),fetch('approved.json').then(r=>r.json())]).then(([d,a])=>{APPROVED=a;DATA=d;sub.textContent='Composed with the branch rules; each row shows the real glyph, the unmodified composer, and the current drawing. Click a copy button on any item.';render()},()=>{sub.textContent='data.json failed to load'});
+const V='?v='+Date.now();
+Promise.all([fetch('data.json'+V).then(r=>r.json()),fetch('approved.json'+V).then(r=>r.json()),fetch('aliases.json'+V).then(r=>r.json())]).then(([d,a,al])=>{APPROVED=a;ALIASES=al;DATA=d;sub.textContent='Composed with the branch rules; each row shows the real glyph, the unmodified composer, and the current drawing. Click a copy button on any item.';render()},()=>{sub.textContent='data.json failed to load'});
 </script></body></html>
