@@ -20,7 +20,7 @@ import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fi
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
-import { pyramidCells, pyramidOnBaseCells } from './pyramid.js'
+import { pyramidCells, pyramidOnBaseLayout } from './pyramid.js'
 import { pyramidRows, pyramidOnBase } from '../core/pyramid.js'
 import { hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
@@ -351,14 +351,11 @@ export class Composer {
    * drawn alone does.
    */
   baseParts({ cell, layers, base }, region) {
-    const [x0, y0, x1, y1] = region
-    // The base is the bottom row, a `layers + 1` share of the height; y runs up in a region.
-    const edge = y0 + (y1 - y0) / (layers + 1)
-    const cells = pyramidOnBaseCells([x0, edge, x1, y1], layers)
+    const { cells, base: baseBox } = pyramidOnBaseLayout(region, layers)
     const drawn = hasSlot(cell)
       ? cells.flatMap((box, i) => this.node(i ? shiftedSlots(cell, i * slotsIn(cell)) : cell, box))
       : cells.flatMap(box => this.node(cell, box))
-    return [...drawn, ...this.basePart(base, [x0, y0, x1, edge])]
+    return [...drawn, ...this.basePart(base, baseBox)]
   }
 
   /**
@@ -366,12 +363,11 @@ export class Composer {
    * a cell allows, so a wide, short base row fills its width. Anything else is drawn as usual.
    * @param {any} base @param {number[]} region */
   basePart(base, region) {
-    const { rest, tones } = typeof base === 'string' ? splitToneMarks(base) : { rest: base, tones: '' }
-    if (typeof rest === 'string' && rest && !tones) {
-      const glyph = this.glyph(rest)
+    if (typeof base === 'string' && base && !splitToneMarks(base).tones) {
+      const glyph = this.glyph(base)
       if (glyph) {
         const ink = tightBox(glyph)
-        return [placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(rest), `glyph ${rest}`)]
+        return [placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(base), `glyph ${base}`)]
       }
     }
     return this.node(base, region)
@@ -677,10 +673,9 @@ export class Composer {
       }
       const stacked = this.pyramidWithBase(node)
       if (stacked) {
-        const [x0, y0, x1, y1] = region
-        const edge = y0 + (y1 - y0) / (stacked.layers + 1)
-        for (const box of pyramidOnBaseCells([x0, edge, x1, y1], stacked.layers)) walk(stacked.cell, box, false)
-        walk(stacked.base, [x0, y0, x1, edge], false)
+        const { cells, base } = pyramidOnBaseLayout(region, stacked.layers)
+        for (const box of cells) walk(stacked.cell, box, false)
+        walk(stacked.base, base, false)
         return
       }
       const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null

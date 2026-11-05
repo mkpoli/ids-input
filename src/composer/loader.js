@@ -167,11 +167,16 @@ export function size(tree) {
 /** Whether a tree is larger than a preview draws (`LIMITS`), unless it is a pyramid within
  *  `PYRAMID_LAYERS`. A pyramid of two layers counts too: its cells are laid out apart, never merged
  *  into the overlapping parts the limits guard against. */
+/** Whether a subtree is within the structural limits a preview draws. */
+const within = node => {
+  const { nodes, depth } = size(node)
+  return nodes <= LIMITS.nodes && depth <= LIMITS.depth
+}
 export const tooLarge = tree => {
   const pyramid = pyramidRows(tree, { minLayers: 2 })
-  if (pyramid) return pyramid.layers > PYRAMID_LAYERS
+  if (pyramid) return pyramid.layers > PYRAMID_LAYERS || !within(pyramid.cell)
   const onBase = pyramidOnBase(tree)
-  if (onBase) return onBase.layers > PYRAMID_LAYERS
+  if (onBase) return onBase.layers > PYRAMID_LAYERS || !within(onBase.cell) || !within(onBase.base)
   const { nodes, depth } = size(tree)
   return nodes > LIMITS.nodes || depth > LIMITS.depth
 }

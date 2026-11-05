@@ -200,7 +200,7 @@ function rowsOnBase(rows, minLayers) {
   const layers = rows.length - 1
   const cell = rows[0], base = rows[layers]
   // A row of cells is no base; the pyramid's top is one part, a cell of the row below it.
-  if (!(minLayers >= 1) || ROWS.has(operatorOf(base))) return null
+  if (ROWS.has(operatorOf(base))) return null
   const size = leafCount(cell)
   if (!size) return null
   for (let i = 0; i < layers; i++) {
@@ -220,10 +220,12 @@ function rowsOnBase(rows, minLayers) {
  * stack has at least `minLayers` pyramid rows and every row holds that many cells of the part. A
  * complete pyramid, such as ⿳口⿰口口⿲口口口, has no base row and reads by `pyramidRows`.
  * @param {unknown} tree
- * @param {{ minLayers?: number }} [options]
+ * @param {{ minLayers?: number }} [options] At least two, the rows a pyramid needs.
  * @returns {{ cell: Part, layers: number, base: Part } | null}
  */
 export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
+  // A pyramid has at least two rows; one row is a plain stack.
+  if (!(minLayers >= 2)) return null
   for (const rows of stackReadings(tree)) {
     const found = rowsOnBase(rows, minLayers)
     if (found) return found
@@ -232,7 +234,7 @@ export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
   const kids = childrenOf(tree)
   if (kids && kids.length === 2 && STACKS.has(operatorOf(tree)) && !ROWS.has(operatorOf(kids[1]))) {
     const pyramid = pyramidRows(kids[0], { minLayers })
-    if (pyramid) return { cell: pyramid.cell, layers: pyramid.layers, base: /** @type {Part} */ (kids[1]) }
+    if (pyramid?.direction === 'top') return { cell: pyramid.cell, layers: pyramid.layers, base: /** @type {Part} */ (kids[1]) }
   }
   return null
 }

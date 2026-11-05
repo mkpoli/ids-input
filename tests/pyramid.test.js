@@ -4,7 +4,7 @@ import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '../src/
 import { Composer } from '../src/composer/compose.js'
 import { pyramidCells } from '../src/composer/pyramid.js'
 import { groupParts } from '../src/core/preview.js'
-import { files } from './fixtures/composer-export.js'
+import { constants, files } from './fixtures/composer-export.js'
 
 const sourceOf = (fetched = []) => createSource(async name => {
   fetched.push(name)
@@ -205,10 +205,18 @@ describe('a pyramid on a base', () => {
       .toEqual({ cell: '口', layers: 2, base: { op: '⿱', parts: ['水', '火'] } })
   })
 
-  it('leaves whole pyramids, rows and plain stacks alone', () => {
-    for (const text of ['⿳口⿰口口⿲口口口', '⿱口⿰口口', '⿱木口', '⿳口⿰木木口', '⿳口⿰口口⿰木木', '⿰口口', '⿱木⿰木木'])
+  it('leaves whole pyramids, rows, sideways pyramids and plain stacks alone', () => {
+    for (const text of ['⿳口⿰口口⿲口口口', '⿱口⿰口口', '⿱木口', '⿳口⿰木木口', '⿳口⿰口口⿰木木', '⿰口口', '⿱木⿰木木',
+      '⿱⿱⿰口口口木', '⿱⿰口⿱口口木', '⿱⿰⿱口口口木'])
       expect(pyramidOnBase(tree(text))).toBeNull()
     expect(pyramidOnBase(tree('⿳口⿰口口木'), { minLayers: 3 })).toBeNull()
+    expect(pyramidOnBase(tree('⿳口⿰口口木'), { minLayers: 1 })).toBeNull()
+  })
+
+  it('keeps the base and the cell within the preview limits', () => {
+    const deep = '⿴'.repeat(9) + '口'.repeat(10)
+    expect(tooLarge(tree('⿳口⿰口口' + deep))).toBe(true)
+    expect(tooLarge(tree('⿳口⿰口口木'))).toBe(false)
   })
 })
 
@@ -500,24 +508,24 @@ describe('drawing a pyramid', () => {
     for (const parts of drawings.slice(1)) expect(parts).toEqual(drawings[0])
     const [top, left, right, base] = drawings[0]
     expect(drawings[0]).toHaveLength(4)
-    for (const cell of [top, left, right]) {
-      // Equal cells, each wider than it is tall, so the rows read 扁 as they are written by hand.
-      expect(cell.box[2]).toBeCloseTo(top.box[2], 6)
-      expect(cell.box[3]).toBeCloseTo(top.box[3], 6)
-      expect(cell.box[2]).toBeGreaterThan(cell.box[3] * 1.2)
-    }
-    // The widest row spans the width a part drawn alone has.
-    const face = (await compose(source, '木', { separate: true })).parts[0].box
-    expect(left.box[0]).toBeCloseTo(face[0], 6)
-    expect(right.box[0] + right.box[2]).toBeCloseTo(face[0] + face[2], 6)
-    expect(top.box[0] + top.box[2] / 2).toBeCloseTo((left.box[0] + right.box[0] + right.box[2]) / 2, 6)
+    const cells = [top, left, right]
+    // Equal cells, each wider than it is tall, so the rows read 扁 as they are written by hand.
+    expect(new Set(cells.map(cell => cell.box[2].toFixed(6)))).toHaveLength(1)
+    expect(new Set(cells.map(cell => cell.box[3].toFixed(6)))).toHaveLength(1)
+    for (const cell of cells) expect(cell.box[2]).toBeGreaterThan(cell.box[3] * 1.2)
+    // The widest row spans the em's face, and the top sits over its middle.
+    const [fx0, , fx1] = constants.face
+    const [topBox, leftBox, rightBox, baseBox] = (await sketch(source, texts[0])).map(leaf => leaf.box)
+    expect(leftBox[0]).toBeCloseTo(fx0, 6)
+    expect(rightBox[0] + rightBox[2]).toBeCloseTo(fx1, 6)
+    expect(topBox[0] + topBox[2] / 2).toBeCloseTo((leftBox[0] + rightBox[0] + rightBox[2]) / 2, 6)
     expect(left.box[1]).toBeCloseTo(right.box[1], 6)
     expect(left.box[0]).toBeLessThan(right.box[0])
     expect(top.box[1] + top.box[3]).toBeLessThan(left.box[1])
-    expect(base.box[1]).toBeGreaterThanOrEqual(left.box[1] + left.box[3])
+    expect(base.box[1]).toBeGreaterThan(left.box[1] + left.box[3])
     // The base takes the row's width, so a 木 stands as wide as the 品 above it.
-    expect(base.box[0]).toBeCloseTo(left.box[0], 6)
-    expect(base.box[2]).toBeCloseTo(right.box[0] + right.box[2] - left.box[0], 6)
+    expect(baseBox[0]).toBeCloseTo(fx0, 6)
+    expect(baseBox[0] + baseBox[2]).toBeCloseTo(fx1, 6)
   })
 
   it('draws a deeper pyramid on a base in its cells too', async () => {
@@ -526,7 +534,7 @@ describe('drawing a pyramid', () => {
     expect(parts).toHaveLength(pyramidCount(3) + 1)
     const cells = parts.slice(0, -1), base = parts.at(-1)
     expect(new Set(cells.map(cell => cell.box[2].toFixed(3)))).toHaveLength(1)
-    expect(base.box[1]).toBeGreaterThanOrEqual(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])) - 1e-6)
+    expect(base.box[1]).toBeGreaterThan(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])))
   })
 
   it('draws a stacked cell and a stacked base whole', async () => {
@@ -536,14 +544,19 @@ describe('drawing a pyramid', () => {
     const parts = (await compose(source, '⿳口⿰口口⿱木口', { separate: true })).parts
     expect(parts).toHaveLength(5)
     const cells = parts.slice(0, 3), base = parts.slice(3)
-    for (const part of base) expect(part.box[1]).toBeGreaterThanOrEqual(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])) - 1e-6)
+    for (const part of base) expect(part.box[1]).toBeGreaterThan(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])))
   })
 
   it('numbers a pyramid on a base in reading order', async () => {
     const source = sourceOf(), drawn = await compose(source, '⿳⬚⿰⬚⬚⬚', { separate: true })
     expect(drawn.parts).toHaveLength(0)
     expect(drawn.slots.map(slot => slot.index)).toEqual([0, 1, 2, 3])
-    expect(drawn.slots[3].box[2]).toBeGreaterThan(drawn.slots[0].box[2])
+    const [first, left, right, base] = drawn.slots.map(slot => slot.box)
+    expect(first[0] + first[2] / 2).toBeCloseTo((left[0] + right[0] + right[2]) / 2, 6)
+    expect(first[1] + first[3]).toBeLessThan(left[1])
+    expect(left[0] + left[2]).toBeLessThan(right[0])
+    expect(right[1] + right[3]).toBeLessThan(base[1])
+    expect(base[2]).toBeGreaterThan(first[2])
   })
 
   it('draws a pyramid nested in another description', async () => {

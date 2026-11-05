@@ -57,6 +57,27 @@ export function pyramidCells(region, layers, { direction = 'top' } = {}) {
 }
 
 /**
+ * Where a pyramid standing on a base draws inside `region` ([x0, y0, x1, y1], y up): its cells in
+ * reading order, and the base's box. The widest row spans the region's width and the rows fill
+ * their part of its height, so a cell is wider than it is tall, the way the shape is written by
+ * hand. All cells are the same size, every row is centred, and `PYRAMID_GAP` of a cell separates
+ * both columns and rows, including the last row from the base.
+ * @param {number[]} region
+ * @param {number} layers
+ * @returns {{ cells: number[][], base: number[] }}
+ */
+export function pyramidOnBaseLayout(region, layers) {
+  const [x0, y0, x1, y1] = region
+  const width = x1 - x0, height = y1 - y0
+  if (!(layers > 0) || !(width > 0) || !(height > 0)) return { cells: [], base: [x0, y0, x1, y0] }
+  // A cell's height, with a gap after every row and above the base: `layers + 1` rows plus
+  // `layers` gaps, the gap a share of the cell.
+  const unit = height / (layers + 1 + PYRAMID_GAP * layers)
+  const base = [x0, y0, x1, y0 + unit]
+  return { cells: pyramidOnBaseCells([x0, y0 + unit * (1 + PYRAMID_GAP), x1, y1], layers), base }
+}
+
+/**
  * The cells of the pyramid part of a pyramid standing on a base, inside `region` ([x0, y0, x1, y1],
  * y up), in reading order. The widest row spans the region's width and the rows fill its height, so
  * a cell is wider than it is tall, the way the shape is written by hand. All cells are the same
