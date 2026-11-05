@@ -631,6 +631,22 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
+  { key: 'jurchen', refs: [66], examples: [
+    // The numerals Unicode gives a value in kJURC_Numeric; `modern` is the Han numeral for that value.
+    { "sequence": "𙁉", "char": "𙁉", "modern": "一", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙁊", "char": "𙁊", "modern": "二", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙄩", "char": "𙄩", "modern": "三", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘺹", "char": "𘺹", "modern": "四", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙄫", "char": "𙄫", "modern": "五", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙅁", "char": "𙅁", "modern": "六", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸼", "char": "𘸼", "modern": "七", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸽", "char": "𘸽", "modern": "八", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙀔", "char": "𙀔", "modern": "九", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘹏", "char": "𘹏", "modern": "十", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘹂", "char": "𘹂", "modern": "百", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘻂", "char": "𘻂", "modern": "千", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸁", "char": "𘸁", "modern": "万", "source": "data/jurchen.json.gz" },
+  ] },
   { key: 'shuishu', refs: [52, 53], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers. Names,
