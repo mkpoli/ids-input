@@ -49,8 +49,8 @@ import { syncDocument } from './project.js'
  * @property {(op: string, id?: string) => string} changeOperator
  * @property {(id?: string) => string | null} remove
  * @property {(id?: string) => string} clear
- * @property {(edit: import('./model.js').GeometryEdit) => string} setGeometryEdit
- * @property {(id: string) => string} clearGeometryEdit
+ * @property {(edit: import('./model.js').GeometryEdit, options?: { coalesce?: string, replace?: string[] }) => string} setGeometryEdit
+ * @property {(id: string | string[], options?: { coalesce?: string }) => string} clearGeometryEdit
  * @property {(chain: Chain, id?: string, options?: { coalesce?: string }) => string} setTransform
  * @property {(title: string) => void} setTitle
  * @property {(id?: string) => string} clearTransform
@@ -287,24 +287,32 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
       return at
     },
     /** @param {string} title */
-    /** Add or replace one geometry edit, identified by its own ID. */
-    setGeometryEdit(edit) {
+    /**
+     * Add or replace one geometry edit, identified by its own ID. Edits named in `replace` are
+     * removed in the same step.
+     * @param {import('./model.js').GeometryEdit} edit @param {{ coalesce?: string, replace?: string[] }} [options]
+     */
+    setGeometryEdit(edit, { coalesce, replace = [] } = {}) {
       const next = /** @type {Document} */ (structuredClone(document))
-      const list = next.geometryEdits ? [...next.geometryEdits] : []
+      const list = (next.geometryEdits ?? []).filter(item => item.id === edit.id || !replace.includes(item.id))
       const at = list.findIndex(item => item.id === edit.id)
       if (at >= 0) list[at] = /** @type {any} */ (structuredClone(edit))
       else list.push(/** @type {any} */ (structuredClone(edit)))
       next.geometryEdits = list
-      commit(next, chosen, action(`Edit geometry ${edit.id}`))
+      commit(next, chosen, action(`Edit geometry ${edit.id}`), coalesce)
       return edit.id
     },
-    /** Remove one geometry edit by ID, keeping the others in order. */
-    clearGeometryEdit(id) {
+    /**
+     * Remove geometry edits by ID, keeping the others in order.
+     * @param {string | string[]} id @param {{ coalesce?: string }} [options]
+     */
+    clearGeometryEdit(id, { coalesce } = {}) {
+      const ids = Array.isArray(id) ? id : [id]
       const next = /** @type {Document} */ (structuredClone(document))
-      next.geometryEdits = (next.geometryEdits ?? []).filter(item => item.id !== id)
+      next.geometryEdits = (next.geometryEdits ?? []).filter(item => !ids.includes(item.id))
       if (!next.geometryEdits.length) delete next.geometryEdits
-      commit(next, chosen, action(`Clear geometry ${id}`))
-      return id
+      commit(next, chosen, action(`Clear geometry ${ids.join(' ')}`), coalesce)
+      return ids[0]
     },
     setTitle(title) {
       const next = /** @type {Document} */ (structuredClone(document))
