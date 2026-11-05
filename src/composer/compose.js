@@ -1325,6 +1325,10 @@ export class Composer {
     if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
     const pair = op === '⿳' ? '⿱' : '⿰'
     const children = node.slice(1)
+    // ⺊ over 冖 is one designed top (the KRM vulgar 處, K07097330), not two stack operands:
+    // draw the prepared ⿱⺊冖 and give it the top band, with the bottom operand below.
+    if (op === '⿳' && (children[0] === '⺊' || children[0] === '卜') && children[1] === '冖'
+      && isComponentForm('⿱⺊冖', this.fontStyle)) return ['⿱', ['⿱', '⺊', '冖'], children[2]]
     // An even run stays even, whatever cuts the export holds of a pair of it: three of the same
     // operand (品, 森, 焱), a pair of the same operand beside a third (⿲大糸糸), and a run that
     // reads the same from either end (呂, 粥), whose middle belongs to both sides at once.

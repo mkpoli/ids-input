@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Composer } from '../src/composer/compose.js'
 import { makePart, placed } from '../src/composer/geometry.js'
+import { isComponentForm } from '../src/composer/component-forms.js'
 
 const contour = (x0, y0, x1, y1) => {
   const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
@@ -66,5 +67,17 @@ describe('a cover over two parts', () => {
     expect(cover[0].target[1]).toBeCloseTo(580, 0)
     expect(middle[0].target[3]).toBeCloseTo(690, 0)
     expect(bottom[0].target[2] - bottom[0].target[0]).toBeCloseTo(0.66 * 900, 0)
+  })
+})
+
+describe('the KRM ⿱⺊冖 top', () => {
+  it('is one prepared component in a flat stack, and only where a form exists', () => {
+    const c = lonely()
+    c.fontStyle = 'sans'
+    c.spelled = new Map()
+    expect(c.groupedStack(['⿳', '⺊', '冖', '人'])).toEqual(['⿱', ['⿱', '⺊', '冖'], '人'])
+    expect(c.groupedStack(['⿳', '卜', '冖', '人'])).toEqual(['⿱', ['⿱', '⺊', '冖'], '人'])
+    expect(isComponentForm('⿱⺊冖', 'sans')).toBe(true)
+    expect(isComponentForm('⿱⺊冖', 'kaisho')).toBe(false)
   })
 })
