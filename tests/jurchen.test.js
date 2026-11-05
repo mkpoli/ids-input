@@ -7,6 +7,7 @@ import { compose } from '../src/composer/loader.js'
 import { onlyBundled } from '../src/composer/local.js'
 import { hasJurchen, jurchenSource } from '../src/composer/jurchen.js'
 import { traitsOf } from '../src/composer/source.js'
+import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import { jurchenAdapter } from '../src/adapter/jurchen.js'
 import { jurchenLabel, jurchenMatches, jurchenNames } from '../src/adapter/jurchen-data.js'
 
@@ -82,6 +83,17 @@ describe('Jurchen in the editor', () => {
   it('adds the parts to the palette and a reading to the search', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
     expect(await adapter.parts()).toHaveLength(965)
+    expect((await adapter.search(TUMEN)).map(hit => hit.char)).toContain(TUMEN)
+  })
+
+  it('returns as many characters of a stroke code as the search asks for', async () => {
+    const adapter = jurchenAdapter({ data, palette: [] })
+    expect((await adapter.search('szhhd', { limit: 120 })).filter(hit => isJurchen(hit.char))).toHaveLength(data.parts.filter(part => part.jurCode === 'szhhd').length)
+    expect(data.parts.filter(part => part.jurCode === 'szhhd').length).toBeGreaterThan(12)
+  })
+
+  it('keeps the other hits when the Jurchen index cannot be read', async () => {
+    const adapter = babelStoneAdapter({ palette: [], table: new Map(), jurchen: 'https://example.invalid/jurchen.json.gz', fetch: async () => { throw new Error('offline') } })
     expect((await adapter.search(TUMEN)).map(hit => hit.char)).toContain(TUMEN)
   })
 })

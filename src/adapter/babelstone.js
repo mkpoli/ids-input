@@ -741,9 +741,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         }
       }
       if (jurchen) {
-        const doc = await readJurchen()
-        // As with Shuishu: a typed character stands with the components, a reading or stroke code below.
-        if (doc) hits = [...hits, ...jurchenNames(doc, text)]
+        try {
+          const doc = await readJurchen()
+          // As with Shuishu: a typed character stands with the components, a reading or stroke code below.
+          if (doc) hits = [...hits, ...jurchenNames(doc, text, limit)]
+        } catch {
+          signal?.throwIfAborted() // The other hits stand without the Jurchen index.
+        }
       }
       if (!characterInfo && smallSeal) {
         const doc = await readSeal()
