@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { drawingSvg } from '../src/core/index.js'
+import { emojiPlace } from '../src/core/preview.js'
 
 const drawing = { d: 'M0 0L100 0L100 100Z', slots: [{ index: 0, box: [500, 0, 500, 1000] }], stroke: [80, 80] }
 
@@ -112,4 +113,11 @@ it('keeps a merged cut on the frame its merged ink keeps', () => {
   const svg = drawingSvg({ d: 'M0 0Z', cut: 'M0 0L10 0L10 10Z', parts: [{ leaf: 0, d: 'M0 0Z', cut: true }, { leaf: 1, d: '' }], transforms: ['translate(10 0)', null], emoji: [{ text: '😀', box: [0, 0, 100, 200], part: 1, cut: true }] })
   expect(svg).toContain('<path d="M0 0Z" fill="#000000" mask="url(#cut)"/>')
   expect(svg).not.toContain('<path d="M0 0L10 0L10 10Z" fill="#000" transform=')
+})
+
+it('places an Emoji at finite numbers whatever its box holds', () => {
+  for (const item of [{}, { box: [1, 2] }, { box: [1, 'x', 3, 4] }, null]) {
+    const place = emojiPlace(item)
+    expect([place.x, place.y, place.size].every(Number.isFinite)).toBe(true)
+  }
 })

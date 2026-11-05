@@ -22,7 +22,7 @@ export const EMOJI_SCALE = 1.36
  * @param {{ box?: number[] } | null | undefined} item
  */
 export function emojiPlace(item) {
-  const [x, y, width, height] = (item?.box ?? []).slice(0, 4).map(value => Number.isFinite(Number(value)) ? Number(value) : 0)
+  const [x, y, width, height] = [0, 1, 2, 3].map(at => { const value = Number(item?.box?.[at]); return Number.isFinite(value) ? value : 0 })
   return { x: x + width / 2, y: y + height / 2, size: Math.max(0, Math.min(width, height) * EMOJI_SCALE) }
 }
 
