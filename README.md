@@ -263,8 +263,10 @@ character spells it as a whole, it uses only alignment and exact enclosure opera
 has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
 cell layout gives a single top part less than a third of the height and lets it fill the width,
 shares an alignment axis below the top by the ink of its parts (one holding an empty slot keeps leaf shares), insets a side-split enclosure's inner part and a three-row middle,
-and fits each glyph by its ink. A dense description then reads as one character rather than a list
-of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+and fits each glyph by its ink. A face that lacks an enclosure's own form presses it; where it
+draws the same kind of foot elsewhere, the composer grafts it — see
+[enclosure grafts](docs/enclosure-graft.md). A dense description then reads as one character rather
+than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
 such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
 puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
 
