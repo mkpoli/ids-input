@@ -99,11 +99,12 @@
   $effect(() => {
     if (strokeId && !strokes.some(stroke => stroke.id === strokeId)) strokeId = null
   })
-  /** The geometry edit currently moving the chosen stroke. */
-  const strokeEdit = $derived.by(() => {
-    if (!strokeId || !selected || !doc?.geometryEdits) return null
-    return doc.geometryEdits.find(edit => edit.node === selected.id && edit.target.kind === 'stroke' && edit.target.id === strokeId) ?? null
+  /** Every geometry edit moving the chosen stroke, in the order the renderer applies them. */
+  const strokeEdits = $derived.by(() => {
+    if (!strokeId || !selected || !doc?.geometryEdits) return []
+    return doc.geometryEdits.filter(edit => edit.node === selected.id && edit.target.kind === 'stroke' && edit.target.id === strokeId)
   })
+  const strokeEdit = $derived(strokeEdits[0] ?? null)
   /** @param {string} id */
   function chooseStroke(id) {
     strokeId = strokeId === id ? null : id
@@ -164,7 +165,7 @@
   // Read the selected layer's transform into the fields.
   $effect(() => {
     if (strokeId) {
-      const flat = affineForChain(strokeEdit?.transform ?? [])
+      const flat = affineForChain(strokeEdits.flatMap(edit => edit.transform))
       if (!flat) { nonlinear = true; return }
       nonlinear = false
       mode = 'affine'
@@ -236,13 +237,13 @@
         const cx = 500, cy = 500
         const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
         if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) {
-          if (strokeEdit) session.clearGeometryEdit(strokeEdit.id, coalesce ? { coalesce } : {})
+          if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id), coalesce ? { coalesce } : {})
         } else {
           session.setGeometryEdit({
             id: strokeEdit?.id ?? session.allocator.next(), node: selected.id,
             geometry: strokeEdit?.geometry ?? fingerprintGeometry(strokeGeometry),
             target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix }],
-          }, coalesce ? { coalesce } : {})
+          }, { ...(coalesce ? { coalesce } : {}), replace: strokeEdits.map(edit => edit.id) })
         }
         doc = session.document
         chosen = session.chosen
@@ -274,7 +275,7 @@
 
   function reset() {
     if (!session || !selected) return
-    if (strokeId) { if (strokeEdit) session.clearGeometryEdit(strokeEdit.id) }
+    if (strokeId) { if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id)) }
     else session.clearTransform(selected.id)
     doc = session.document
     chosen = session.chosen
