@@ -37,7 +37,8 @@ export function componentParts(text, region = constants.face, style = 'sans', at
   const target = atRoot ? mapped(frame, constants.face, region) : region
   const font = style === 'kaisho' ? 'Kureedo' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK`
   const editorial = editorialForms.get(text)
-  const origin = editorial ? `${editorial} editorial (${font}): ${text}`
+  const attribution = editorial && data.editorial[editorial].kind === 'editorial manuscript-informed outline' ? style : font
+  const origin = editorial ? `${editorial} editorial (${attribution}): ${text}`
     : text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `${font}: ${text}`
   return parts.map(part => ({ ...placed(part, part.box, mapped(part.box, frame, target), ink, origin), fixed: true }))
 }

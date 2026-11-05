@@ -54,42 +54,38 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
-def shape_of(cs, ch):
-    """A glyph as a pathops path, for transforming and joining pieces."""
-    path = pathops.Path()
-    for contour in cs(ch): replayRecording(contour, path.getPen())
-    return path
+def seal_dot_top(style):
+    """Editorial ⿱⺊冖 drawn in a shared 1000-unit frame, without font donors.
 
-def placed_shape(path, scale_x, scale_y, x, y):
-    """The shape scaled, with (x, y) as its new lower-left corner."""
-    x0, y0, _, _ = path.bounds
-    return path.transform(scale_x, 0, 0, scale_y, x - x0 * scale_x, y - y0 * scale_y)
-
-def path_contours(path):
-    pen = RecordingPen(); path.draw(pen)
-    result, current = [], []
-    for command in pen.value:
-        current.append(command)
-        if command[0] in ('closePath', 'endPath'):
-            result.append(current); current = []
-    return result
-
-def seal_dot_top(cs):
-    """⿱⺊冖: the face's 丨 centred on 冖 and joined to its roof, with a 一 for ⺊'s dot.
-
-    The KRM headword K07097330 (Kanchi-in Ruiju Myōgishō, Hōge 97.3.3) writes the top of the
-    vulgar 處 this way: a horizontal dot, one vertical, centred over the cover and meeting it.
-    No encoded character carries the top, so it is built from the face's own strokes.
+    K07097330 (法下 97.3.3; Tenri 391.3.3, gloss 俗) witnesses the
+    centred, roof-joined stem and short rightward horizontal dot. K01035410
+    writes this top over 人 and glosses 俗處字. These are regularized outlines,
+    not a facsimile or an identification with an encoded character. The
+    GlyphWiki trace is a comparison witness, not the outline source.
     """
-    cover, stem, bar = shape_of(cs, '冖'), shape_of(cs, '丨'), shape_of(cs, '一')
-    width = cover.bounds[2] - cover.bounds[0]
-    cover = placed_shape(cover, 820 / width, 820 / width, 90, 120)
-    stem = placed_shape(stem, 1, 500 / (stem.bounds[3] - stem.bounds[1]), 479, cover.bounds[3] - 20)
-    bar = placed_shape(bar, 240 / (bar.bounds[2] - bar.bounds[0]), 1, stem.bounds[2] - 240, stem.bounds[3] - 10)
-    tops = pathops.op(stem, bar, pathops.PathOp.UNION)
-    # Two groups: the crafted ⺊ and the face's own 冖. A one-group form would be drawn only as a
-    # whole glyph, and the workshop's separate view would compose the two pieces from the export.
-    return [group(path_contours(tops)), group(path_contours(cover))]
+    from fontTools.svgLib.path import parse_path
+    # Y increases upwards. The stem and roof share the entire y=560 seam.
+    # Keep the short bar on the RIGHT of the stem, below its upper terminal.
+    # The two groups preserve the editable ⺊ / 冖 leaves in separate view.
+    # Sans and Serif share proportions, with explicit weight/terminal designs.
+    if style == 'sans':
+        top = 'M465 560 L465 860 L535 860 L535 765 L735 765 L735 700 L535 700 L535 560 Z'
+        roof = ('M90 560 L910 560 L910 385 L840 385 L840 495 '
+                'L160 495 L160 365 L90 365 Z')
+    elif style == 'serif':
+        top = ('M465 560 L465 845 L450 860 L535 860 L535 752 '
+               'L715 752 L735 770 L760 725 L535 725 L535 560 Z')
+        roof = ('M110 560 L840 560 L875 580 L920 535 L890 510 '
+                'L845 390 L815 400 L840 520 L160 520 '
+                'Q160 410 115 365 L80 395 Q115 450 110 560 Z')
+    else:
+        raise ValueError('No attested Kaisho outline has been prepared')
+    groups = []
+    for outline in (top, roof):
+        pen = RecordingPen()
+        parse_path(outline, pen)
+        groups.append(group([pen.value]))
+    return groups
 
 def compress_chang(outlines, style):
     """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
@@ -291,7 +287,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
-    forms['⿱⺊冖'] = seal_dot_top(cs)
+    forms['⿱⺊冖'] = seal_dot_top(style)
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
@@ -326,13 +322,16 @@ result['editorial'] = {
         'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
     }},
     'KRM-07097330': {
-        'kind': 'editorial face-derived outline',
+        'kind': 'editorial manuscript-informed outline',
         'reference': 'KRM K07097330; K01035410 glosses the ⺊ form 俗處字',
         'url': 'https://viewer.hdic.jp/krm-public/show/K0709733',
         'witness': 'Kanchi-in manuscript of the Ruiju Myōgishō, Hōge 97.3.3 (Tenri 391.3.3), copied 1241/1251',
         'image': 'https://dl.ndl.go.jp/api/iiif/2586897/R0000052/full/1200,/0/default.jpg',
-        'limitation': 'No encoded character carries the top. The junction, the centred stem and the horizontal dot follow the manuscript; the strokes are the face\'s own 丨, 一 and 冖.',
-        'donors': {'sans': ['丨', '一', '冖'], 'serif': ['丨', '一', '冖']},
+        'limitation': 'Regularized editorial outlines, not a facsimile or an encoded-character identification. The manuscript informs the joined centred stem and short rightward horizontal dot; proportions and Sans/Serif terminals are editorial. GlyphWiki is a comparison witness, not an outline donor.',
+        'comparison': 'https://glyphwiki.org/glyph/hdic_hkrm-01035410.svg',
+        'gloss': 'K07097330: 俗; K01035410: 俗處字',
+        'kaisho': 'No prepared form; retain ordinary Kaisho composition without a Sans fallback.',
+        'donors': {'sans': [], 'serif': []},
         'forms': ['⿱⺊冖'],
     },
 }

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Composer } from '../src/composer/compose.js'
 import { makePart, placed } from '../src/composer/geometry.js'
-import { isComponentForm } from '../src/composer/component-forms.js'
+import { componentParts, isGroupedForm, isComponentForm } from '../src/composer/component-forms.js'
 
 const contour = (x0, y0, x1, y1) => {
   const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
@@ -93,3 +93,18 @@ describe('the KRM ⿱⺊冖 top', () => {
     expect(isComponentForm('⿱⺊冖', 'kaisho')).toBe(false)
   })
 })
+
+for (const style of ['sans', 'serif']) {
+  it(`keeps the ${style} manuscript top joined with a rightward bar in separate view`, () => {
+    expect(isGroupedForm('⿱⺊冖', style)).toBe(true)
+    const [top, roof] = componentParts('⿱⺊冖', undefined, style)
+    const points = top.part.contours[0].light
+    const xs = Array.from(points).filter((_, i) => i % 2 === 0)
+    // The bar projects to the right; the centred stem reaches the roof seam.
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(450)
+    expect(Math.max(...xs)).toBeGreaterThan(700)
+    expect(top.part.box[1]).toBe(560)
+    expect(roof.part.box[3]).toBeGreaterThanOrEqual(560)
+    expect(JSON.stringify(top)).not.toContain('Noto')
+  })
+}
