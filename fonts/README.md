@@ -1,10 +1,10 @@
 # Fonts
 
-Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
-Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). A third draws the sixteen ideographic description characters
-for sequence text where no installed font has them. Kureedo and GenZui Sans supply the optional
-Kaisho face.
+Several webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
+Radicals Supplement, the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), the
+BabelStone PUA glyphs for numbered components with no IDS fragment, and the editor's empty-slot mark
+⬚ (U+2B1A). Another draws the sixteen ideographic description characters for sequence text where no
+installed font has them. Kureedo and GenZui Sans supply the optional Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
@@ -30,6 +30,12 @@ comes from the reader's own CJK font.
   `6d0b56a57d435cfc59c1dda56cbeb123ec081f0b586898bfe5b2c0d31399ef50`. Rebuild with
   `uv run --with 'fonttools[woff]' pyftsubset Jigmo.ttf --unicodes=2FFC-2FFF --flavor=woff2
   --output-file=fonts/Jigmo-ids-operators.woff2`.
+- `IDSNumbered.woff2` (38 KB, 69 characters): BabelStone Han PUA 1.472 by Andrew West
+  (<https://www.babelstone.co.uk/Fonts/PUA.html>), cut to the PUA code points IDS.TXT note 6 gives
+  the numbered components with no IDS fragment, U+E080–U+F8DF. Named `IDS Numbered`; the source is
+  under the Arphic Public License (`LICENSE-BabelStoneHanPUA.txt`). The PUA code points are not
+  stable; `data/numbered-pua-outlines.json.gz` records the font version and digest. Rebuild with
+  `uv run scripts/build_numbered_pua.py`.
 - `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one
