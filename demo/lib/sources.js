@@ -1089,8 +1089,6 @@ export const SOURCES = [
     people: ['GlyphWiki contributors'],
     url: 'https://glyphwiki.org/',
     licence: 'free use of glyph data and articles',
-    used: ['data/glyphwiki-jurchen.svg.json.gz'],
-    note: 'Four Jurchen glyphs, U+18E00–U+18E03, ship from it in glyphwiki-jurchen.svg.json.gz; the source SVGs, per-glyph URLs and SHA-256s are kept there.',
     summary: {
       en: 'A shared database of KAGE glyphs and positional alternates; its data may be used freely, and the alternates are a useful outside check on this composer.',
       ja: 'KAGE字形と位置別異体の共有データベース。データは自由に使え、異体は本composerの外部照合に役立つ。',

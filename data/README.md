@@ -931,8 +931,8 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 56,651 glyph outlines in 590 chunks, each covering at most
-256 code points. The full set is 26,503,554 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 56,657 glyph outlines in 590 chunks, each covering at most
+256 code points. The full set is 26,511,873 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
@@ -1066,19 +1066,13 @@ export's glyphs take precedence.
 - [UniHieroglyphica](https://github.com/thesaurus-linguae-aegyptiae/unihieroglyphica/tree/9375eba4e2b626658e57e3a526118b8225c0581e):
   3,995 Egyptian Hieroglyphs Extended-A outlines, designed by Michel Suignard;
   copyright Regents of the University of California, [SIL OFL 1.1](../fonts/OFL-UniHieroglyphica.txt).
-- [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
-  `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
-  Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)
-  is preserved from [Mozilla's repository](https://github.com/mozilla/gecko-dev/blob/master/layout/reftests/fonts/glyphwiki-license.txt),
-  because the live license page was unavailable when checked on 2026-10-28.
 
 `unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
 sources, grouped by Unicode block. These are missing glyphs, not parser restrictions. It excludes
 exact dedicated-bundle outlines and CJK outlines in the pinned default export
 (`host-glyph-coverage.json`), but includes holes within those ranges that the previous range-based
 report omitted. This is an outline-source inventory; the worker audit described below measures
-rendering, including composition from other records. Jurchen coverage is limited to the four
-available source glyphs; the remaining characters need additional source outlines. Private-use
+rendering, including composition from other records. Jurchen has [its own bundle](#jurchen). Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
 
 ### Other script parts

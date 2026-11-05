@@ -147,7 +147,7 @@ lacks a glyph, and the same outlines ship as a webfont for text. Sources, rebuil
 coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
 [OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL
 1.1. Extended sources use `LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`,
-`OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright
+`OFL-UniHieroglyphica.txt` and `OFL-Iosevka.md`; per-source copyright
 notices are preserved in the outline metadata.
 
 `unicode/*.woff2` is the `IDS Fallback` family: one file per 256-code-point shard, each declared in
