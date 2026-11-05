@@ -36,9 +36,11 @@ function flatten(d) {
     for (let step = 1; step <= CURVE_STEPS; step++) {
       const t = step / CURVE_STEPS, u = 1 - t
       if (segment.type === 'Q') {
-        points.push([0, 1].map(k => u * u * segment.p[k] + 2 * u * t * segment.c[k] + t * t * segment.end[k]))
-      } else {
-        points.push([0, 1].map(k => u * u * u * segment.p[k] + 3 * u * u * t * segment.c1[k] + 3 * u * t * t * segment.c2[k] + t * t * t * segment.end[k]))
+        const { p, c, end } = segment
+        points.push([0, 1].map(k => u * u * p[k] + 2 * u * t * c[k] + t * t * end[k]))
+      } else if (segment.type === 'C') {
+        const { p, c1, c2, end } = segment
+        points.push([0, 1].map(k => u * u * u * p[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t * t * t * end[k]))
       }
     }
   }
@@ -68,7 +70,7 @@ function inside(point, points) {
 
 /** Whether segment ab properly crosses segment cd. @param {number[]} a @param {number[]} b @param {number[]} c @param {number[]} d */
 function crosses(a, b, c, d) {
-  const side = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+  const side = (/** @type {number[]} */ p, /** @type {number[]} */ q, /** @type {number[]} */ r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
   return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0
 }
 
@@ -115,10 +117,11 @@ function partGeometry(part, d) {
     const winding = enclosers[index].reduce((sum, at) => sum + turns[at], 0)
     return winding !== 0 && winding + turns[index] === 0
   })
-  const meets = (one, other) => edgesCross(polygons[one], polygons[other]) || contains(polygons[one], polygons[other]) || contains(polygons[other], polygons[one])
+  const meets = (/** @type {number} */ one, /** @type {number} */ other) => edgesCross(polygons[one], polygons[other]) || contains(polygons[one], polygons[other]) || contains(polygons[other], polygons[one])
   const erased = cuts.some((cut, index) => cut && polygons.some((_, at) => at !== index && !cuts[at] && !enclosers[index].includes(at) && meets(index, at)))
   if (erased) return { pieces: [{ d, fillRule: 'nonzero' }] }
-  const pieces = subpaths.map((subpath, index) => ({ d: subpath, fillRule: /** @type {'nonzero'} */ ('nonzero'), cut: cuts[index] }))
+  /** @type {import('../document/render.js').LocalPiece[]} */
+  const pieces = subpaths.map((subpath, index) => ({ d: subpath, fillRule: 'nonzero', cut: cuts[index] }))
   const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
   return { pieces, strokes }
 }
@@ -245,6 +248,7 @@ export function documentSource(document, drawing, sketch) {
     const matrix = localOf(at.region)
     if (!list?.length || !matrix) return null
     try {
+      /** @type {import('../document/render.js').LocalPiece[]} */
       const pieces = []
       /** @type {{ id: string, pieces: number[] }[]} */
       const strokes = []
