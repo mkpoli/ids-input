@@ -9,6 +9,9 @@ import { hasJurchen, jurchenSource } from '../src/composer/jurchen.js'
 import { traitsOf } from '../src/composer/source.js'
 import { babelStoneAdapter } from '../src/adapter/babelstone.js'
 import { jurchenAdapter } from '../src/adapter/jurchen.js'
+import { characterOf, namedFor } from '../worker/render.js'
+import { codePoint } from '../worker/card.js'
+import { codePoint as pageCodePoint } from '../worker/page.js'
 import { jurchenLabel, jurchenMatches, jurchenNames } from '../src/adapter/jurchen-data.js'
 
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))).toString())
@@ -119,6 +122,19 @@ describe('Jurchen variant sequences', () => {
     expect(onlyBundled(`⿰${TUMEN}\uFE04${FIRST}`, false, false)).toBe(false)
     const drawn = await compose(jurchenSource({ load: async () => outlines }), `⿰${VARIANT}${FIRST}`, { separate: true })
     expect(drawn.origins).toContain(`glyph ${VARIANT}`)
+  })
+
+  it('puts a typed variant first in the adapter search', async () => {
+    const adapter = jurchenAdapter({ data, palette: [] })
+    expect((await adapter.search(VARIANT, { limit: 1 })).map(hit => hit.char)).toEqual([VARIANT])
+  })
+
+  it('names a variant on a share card', async () => {
+    expect(namedFor(VARIANT, VARIANT)).toBe(VARIANT)
+    expect(await characterOf({}, VARIANT)).toBe(VARIANT)
+    expect(codePoint(VARIANT)).toBe('U+18E01 U+FE00')
+    expect(codePoint(TUMEN)).toBe('U+18E01')
+    expect(pageCodePoint(VARIANT)).toBe('U+18E01 U+FE00')
   })
 
   it('keeps a typed variant in the search and in a description', () => {

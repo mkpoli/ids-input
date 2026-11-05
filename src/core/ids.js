@@ -84,6 +84,8 @@ export const isShuishu = text => SHUISHU.test(text ?? '')
 
 /** The Jurchen characters of Unicode 18.0, U+18E00..U+19191, and its 51 radicals, U+191A0..U+191D2. */
 export const JURCHEN = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}]/u
+/** A Jurchen character with one of the selectors its variant sequences use. */
+export const JURCHEN_VARIANT = /^[\u{18E00}-\u{19191}][\uFE00-\uFE04]$/u
 /** Whether `text` contains a Jurchen character or radical. @param {string | null | undefined} text */
 export const isJurchen = text => JURCHEN.test(text ?? '')
 

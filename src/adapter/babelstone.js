@@ -744,7 +744,12 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         try {
           const doc = await readJurchen()
           // As with Shuishu: a typed character stands with the components, a reading or stroke code below.
-          if (doc) hits = [...hits, ...jurchenNames(doc, text, limit)]
+          if (doc) {
+            const named = jurchenNames(doc, text, limit)
+            // A typed variant sequence is what was asked for, ahead of the base the direct hits split off.
+            const variants = named.filter(hit => hit.rank === undefined && [...hit.char].length > 1)
+            hits = [...variants, ...hits, ...named.filter(hit => !variants.includes(hit))]
+          }
         } catch {
           signal?.throwIfAborted() // The other hits stand without the Jurchen index.
         }
