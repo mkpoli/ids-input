@@ -7,8 +7,9 @@ export { isJurchen }
 /**
  * A Jurchen palette part. `jurRadical` is its radical number, `jurCode` Alari's stroke code,
  * `jurReading` the dictionary's reading as Unicode records it, `jurNumeric` Unicode's numeric value
- * and `jurSource` Unicode's source reference. A radical carries only its number and code.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'radical', jurRadical: number, jurCode: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
+ * and `jurSource` Unicode's source reference. A radical carries only its number and code, and a
+ * host's own part may carry none of them.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'radical', jurRadical?: number, jurCode?: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
  *
  * @typedef {{ format: number, parts: JurchenPart[], unicode?: string, sources?: unknown }} JurchenData
  */
@@ -25,7 +26,7 @@ export const jurchenLabel = part => [
   part.jurReading,
   part.jurNumeric,
   part.jurCode,
-  `部首 ${part.jurRadical}`,
+  part.jurRadical == null ? null : `部首 ${part.jurRadical}`,
   part.strokes == null ? null : `${part.strokes} 畫`,
   part.jurSource,
   `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
@@ -83,7 +84,7 @@ export function jurchenMatches(parts, query) {
     const reading = readingTier(part, text)
     if (part.jurCode === code) tiers[0].push(part)
     else if (reading === 0) tiers[1].push(part)
-    else if (part.jurCode.startsWith(code)) tiers[2].push(part)
+    else if (part.jurCode?.startsWith(code)) tiers[2].push(part)
     else if (reading === 1) tiers[3].push(part)
     else if (reading === 2) tiers[4].push(part)
   }
@@ -91,8 +92,8 @@ export function jurchenMatches(parts, query) {
 }
 
 /**
- * The characters a search names: a typed character stands on its own, a whole reading or stroke code
- * ranks below the vocabulary, since it says little about which character is meant.
+ * The characters a search names: a typed character stands on its own; a whole reading, stroke code
+ * or numeric value ranks below the vocabulary, since it says little about which character is meant.
  * @param {JurchenData} doc @param {string} query @param {number} [limit]
  * @returns {{ char: string, label: string, rank?: number }[]}
  */
@@ -103,6 +104,7 @@ export function jurchenNames(doc, query, limit = 12) {
     return jurchenMatches(doc.parts, text).slice(0, limit).map(part => ({ char: part.part, label: jurchenLabel(part) }))
   }
   const code = text.toLowerCase()
-  return doc.parts.filter(part => part.jurCode === code || readingTier(part, text) === 0).slice(0, limit)
+  const value = /^\d+$/.test(text) ? Number(text) : null
+  return doc.parts.filter(part => part.jurCode === code || part.jurNumeric === value && value !== null || readingTier(part, text) === 0).slice(0, limit)
     .map(part => ({ char: part.part, label: jurchenLabel(part), rank: 5 }))
 }

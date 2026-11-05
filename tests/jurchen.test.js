@@ -130,5 +130,14 @@ describe('Finding Jurchen', () => {
     expect(jurchenNames(data, TUMEN)[0]).toEqual({ char: TUMEN, label: jurchenLabel(chars[1]) })
     expect(jurchenNames(data, 'tumen')[0].rank).toBe(5)
     expect(jurchenNames(data, '')).toEqual([])
+    expect(jurchenNames(data, '10000')[0].char).toBe(TUMEN)
+    expect(jurchenNames(data, '10001')).toEqual([])
+  })
+
+  it('names and finds a host part with no record', () => {
+    const bare = { part: FIRST, kind: 'extra' }
+    expect(jurchenLabel(bare)).toBe('女真 字 · U+18E00')
+    expect(jurchenMatches([bare], 'hh')).toEqual([])
+    expect(groupPaletteParts([bare]).get('jurchen')).toEqual([bare])
   })
 })

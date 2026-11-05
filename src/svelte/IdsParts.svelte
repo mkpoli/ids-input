@@ -443,8 +443,8 @@
   let jurGroup = $state(/** @type {(typeof JUR_GROUPS)[number]['name']} */ ('character'))
   /** The radical the characters are narrowed to; undefined for all of them. @type {number | undefined} */
   let jurRadical = $state()
-  const jurParts = $derived(/** @type {import('../adapter/jurchen-data.js').JurchenPart[]} */ ((parts ?? []).filter(part => part.kind === 'jur')))
-  const jurGroups = $derived(JUR_GROUPS.map(group => ({ ...group, parts: jurParts.filter(part => part.jurGroup === group.name) })).filter(group => group.parts.length))
+  const jurParts = $derived(/** @type {import('../adapter/jurchen-data.js').JurchenPart[]} */ (partsByScript.get('jurchen') ?? []))
+  const jurGroups = $derived(JUR_GROUPS.map(group => ({ ...group, parts: jurParts.filter(part => (part.jurGroup ?? 'character') === group.name) })).filter(group => group.parts.length))
   const selectedJurGroup = $derived(jurGroups.find(group => group.name === jurGroup) ?? jurGroups[0])
   const jurRadicals = $derived(jurParts.filter(part => part.jurGroup === 'radical'))
   const query = $derived(filter.trim())
@@ -582,7 +582,7 @@
   /** @param {PalettePart} part */
   const title = part => {
     if (part.kind === 'shui') return shuishuLabel(/** @type {import('../adapter/shuishu-data.js').ShuishuPart} */ (part))
-    if (part.kind === 'jur') return jurchenLabel(/** @type {import('../adapter/jurchen-data.js').JurchenPart} */ (part))
+    if (characterScript(part.part) === 'jurchen') return jurchenLabel(/** @type {import('../adapter/jurchen-data.js').JurchenPart} */ (part))
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
     // A syllable says how its letters are set: 가 is ⿰ㄱㅏ.
@@ -630,7 +630,7 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       {@const identity = componentIdentity(part.part)}
-      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : part.kind === 'jur' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
         onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
         ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
         onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
@@ -1033,7 +1033,7 @@
   .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
   /* Two rows of the 51, so the characters stay in view; the rest scroll. */
   .jurchen-radicals{max-height:68px;overflow:auto}
-  .jurchen-radicals button{font-size:16px;line-height:1.25;padding:3px 7px}
+  .jurchen-radicals button{font:16px/1.25 "IDS Jurchen",var(--ids-ui-font,system-ui,sans-serif);padding:3px 7px}
   .jurchen-radicals button:first-child{font-size:12px}
   .part[data-component-type="stroke"]{color:var(--_muted)}
   .stroke-results{display:flex;flex-direction:column;gap:8px;min-width:0}
