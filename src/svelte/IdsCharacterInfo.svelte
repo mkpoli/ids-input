@@ -46,7 +46,8 @@
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
-  // the character itself. A data record is named by its site; each course record keeps its own title.
+  // the character itself, and the character's page on zi.tools. A data record is named by its site;
+  // each course record keeps its own title.
   /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
   const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
   /** @type {{ key: string, site: string, what: string, url: string }[]} */
@@ -69,6 +70,9 @@
     const shared = new Map()
     for (const entry of list) shared.set(entry.site, (shared.get(entry.site) ?? 0) + 1)
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
+    // zi.tools indexes the same characters from its own records; the card ends by handing the reader
+    // that page once it has named what it read.
+    if (char) list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
     return list
   })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
