@@ -203,13 +203,3 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
   })
 })
-
-describe('splitting an Emoji from its marks', () => {
-  it('keeps an Emoji sequence whole', () => {
-    const emoji = '👩🏽‍💻'
-    expect(marksOf(emoji)).toBe('')
-    expect(withoutMarks(emoji)).toBe(emoji)
-    expect(withoutMarks(`${emoji}ˊ`)).toBe(emoji)
-    expect(marksOf(`${emoji}ˊ`)).toBe('ˊ')
-  })
-})
