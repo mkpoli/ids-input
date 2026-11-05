@@ -62,6 +62,13 @@ in their title; a description finds its character, a typed part lists the charac
 it, and the structure panel treats the decomposition as the character's parts. The tab says the
 decompositions are ours, since no source gives them.
 
+The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 537 variant
+sequences, with outlines from
+[Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
+`IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
+reading in Unicode's records, numeric value or code point. No source decomposes these characters,
+so they have no descriptions of their own.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
   <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">
@@ -147,17 +154,18 @@ workshop in `demo/` does so:
 ```
 
 The editor holds the tree, the chosen part and a history of named steps (`editor.steps`, "Split ⬚
-with ⿰", "Put 木"): `operator`, `put`, `take`, `empty`, `remove`, `open`, `undo`, `redo`, `travel`
-and `keydown` change it, `change` names the last change and whether it threw something away, and
-`listen(fn)` hears each new text. `snapshot()` returns that state and history; `restore(state)` puts
-them back, for a host switching between documents. In the tree, a click chooses a part, a part
-dragged from the palette, the decomposition tree, a search or the swaps is put where it is dropped,
-and a part of the tree, or a whole group grabbed by its frame, dropped beside a sibling moves there
-while one dropped on any other part switches places with it. A finger drags the same way on a touch
-screen, where the browser starts no drag of its own, and `Alt` with an arrow key reorders siblings
-without a pointer. `Space` lifts the focused box, a part or a group by its operator button, and
-`Space` on another box places it; `Escape` lets it go, and in the indented Tree view the arrows move
-the focus between rows while a box is lifted. The context
+with ⿰", "Put 木"): `operator`, `put`, `merge`, `take`, `empty`, `remove`, `open`, `undo`, `redo`,
+`travel` and `keydown` change it, `change` names the last change and whether it threw something away,
+and `listen(fn)` hears each new text. `merges` lists the characters the chosen node encodes and
+`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. `snapshot()` returns that
+state and history; `restore(state)` puts them back, for a host switching between documents. In the
+tree, a click chooses a part, a part dragged from the palette, the decomposition tree, a search or
+the swaps is put where it is dropped, and a part of the tree, or a whole group grabbed by its frame,
+dropped beside a sibling moves there while one dropped on any other part switches places with it.
+A finger drags the same way on a touch screen, where the browser starts no drag of its own, and
+`Alt` with an arrow key reorders siblings without a pointer. `Space` lifts the focused box, a part
+or a group by its operator button, and `Space` on another box places it; `Escape` lets it go, and in
+the indented Tree view the arrows move the focus between rows while a box is lifted. The context
 menu (right click, the Menu key or `Shift+F10`) splits or swaps with any operator, clears, removes a
 level or copies that part's sequence. "Take parts from" reads a character dropped on it.
 
@@ -205,7 +213,7 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -217,6 +225,7 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
+pyramidOnBase(parse('⿳口⿰口口木').tree)  // { cell: '口', layers: 2, base: '木' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -276,7 +285,10 @@ cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way
 description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
 above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
 composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
-instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+instead (品, 森). `pyramidOnBase` reads a pyramid standing on one more part, ⿳口⿰口口木 and
+⿱⿱口⿰口口木 alike, as `{ cell, layers, base }`; the composer spreads the rows over the full width
+above the base, each cell wider than it is tall, draws the base as a cell in the row below, and
+draws the spellings alike. A whole description may run past the ordinary 64-code-point length as a pyramid
 of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
 64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
 layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
@@ -406,7 +418,8 @@ Han–seal compositions also need the host's Han export.
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
 excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
-provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+provenance and rebuilding. CHISE data, whose IDS is maintained by MORIOKA Tomohiko and
+contributors, is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents
 
@@ -457,7 +470,9 @@ document at the same paths, keeping each layer's ID, name and transform through 
 structural edits. Pass the long-lived session allocator so removed IDs do not return.
 `treeFromDocument` and `documentFromTree` convert between the two projections; `layerAtPath` and
 `pathOfLayer` move between editor paths and layer IDs. `layerFrames(document, source, sketch)` gives
-each layer's box, local-to-canvas frame and conversion frame for handles and fields. The workshop
+each layer's box, depth and four frames: the box-to-canvas frame of its geometry (`canvas`), the
+same frame without ancestor transforms (`base`), its own 1000-unit frame before its authored
+transform (`place`) and after it (`full`). The workshop
 keeps a session with each tab, so the document survives reloads. The preview,
 Adjust layout and export use that document, and a share link carries what the sequence cannot.
 
@@ -523,10 +538,15 @@ cannot be read at all, and any other Error when it cannot draw. `IdsPreview` sho
 the preview when there is one. While the data is unavailable, the placeholders stand with no badge.
 
 `IdsPreview` takes a tab `document` and `session` for direct layer editing, and binds `scopes` for
-export. Drag the selected layer to move it, its corner square to scale it, or its circle to turn it;
-each gesture writes one coalesced document transform. Use `composerPreview({ base, separate: true })`
-so each operand arrives as its own part. When the document source is incomplete the preview falls
-back to the merged drawing, and editing is unavailable.
+export. Drag a part, or the selected layer's outline, to move it; drag an edge to scale one axis,
+a corner to scale both, or the circle to turn it, and hold Shift to keep both scales equal. Each
+gesture writes one coalesced document transform. The outline follows the layer's painted bounds,
+so a glyph that paints outside its layout cell still gets a box around what is drawn. A part inside
+an enclosing one keeps its own grab area, so the small part can be chosen and moved without going
+through the layer list. Use
+`composerPreview({ base, separate: true })` so each operand arrives as its own part. When the
+document source is incomplete the preview falls back to the merged drawing, and editing is
+unavailable.
 
 A separated drawing also feeds a document renderer: `documentSource(document, drawing, sketch)` keeps
 each leaf's box as its local frame, or `composeDocumentSource(document, preview)` draws and builds the
@@ -542,7 +562,9 @@ the Find tab's drawing search uses. `components` writes
 out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
-reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
+components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
+stay in the unknown-stroke group without insertion. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
 than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
@@ -757,8 +779,8 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
-CJK strokes the prepared file covers, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with the 11,417 parts in the
+prepared sketch file and the CJK strokes it covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
 the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
@@ -862,9 +884,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 ## Licences
 
-- Code: MIT (`LICENSE`).
+- Code: MIT (`LICENSE`). The data files carry their own terms, below; a file built from
+  several sources carries all of theirs.
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
-  (`data/COPYING-small-seal.txt`).
+  (`data/COPYING-chise-ids.txt`).
+- `data/ids-corpus.json.gz` and its sources `data/ids-corpus-sources.tar.gz`: GPL-2.0-or-later as
+  a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
+  source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
+  each row says which it is. Code stays MIT.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
@@ -880,7 +907,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   from those public-domain decompositions (16 KB); it adds no source and records no descent.
 - `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
   that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
-  the adapter reads descriptions by it.
+  the adapter reads descriptions by it, and the parts palette lists all 121 by number.
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
   currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).
@@ -939,7 +966,8 @@ at the start; the Shape or indented Tree view and the search under it; and at th
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
 for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
-nudge, `+` and `-` scale, `[` and `]` turn, and `0` resets. The changes stay with their tab and export
+nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
+a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
 document, including a six-coefficient matrix mode for shears and reflections. Rows in the Tree view select parts, expand
 with the arrow keys, accept drops, and can be dragged onto another row to move beside a sibling or
@@ -986,11 +1014,15 @@ in `localStorage`; the keys use the `ids-input:` prefix.
 ### Share cards
 
 A share link at `/<sequence>` carries preview tags for its sequence, matching character and
-Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. The preview image
-at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic description sequence
-and a separate Unicode caption. Text size follows the sequence length; longer sequences wrap to
-at most three lines, with an ellipsis once they exceed the card's readable capacity. IDC characters
-use glyphs from the bundled GenZui Sans font.
+Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. A link carrying a
+document keeps its title and token in those tags, and its image draws the document's layers where
+the editor put them when they can be scoped; otherwise it draws the separated sequence. The
+preview image at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic
+description sequence and a separate Unicode caption. A titled document card sets the title there in
+place of the caption. Text size follows the sequence length; longer sequences wrap to at most three
+lines, with an ellipsis once they exceed the card's readable capacity. A document card says it is a
+shared document and sets its title when it has one. IDC characters use glyphs from the bundled
+GenZui Sans font.
 
 The Cloudflare Worker serves preview pages and images alongside the workshop's static assets, and
 forwards `/api/report` to the report intake.
@@ -1065,8 +1097,9 @@ composed by this site, so their scores include composition. The rest compare typ
 variant choice. The page explains how the three numbers are measured and why the heavier
 typeface lowers the first two. The gallery shows 48 cards at a time, with Show more for the rest,
 and filters by set and structure. The drawings are a snapshot of the 2026-10-29 run in
-`demo/lib/comparison.json`; GlyphWiki's glyph data is free to use and the KAGE engine is GPL-3.0.
-The About dialog links the page.
+`demo/lib/comparison.json`; after a composer change, rebuild it with
+`bun scripts/build_comparison.mjs`. GlyphWiki's glyph data is free to use and the KAGE engine is
+GPL-3.0. The About dialog links the page.
 
 ### Engine comparison
 

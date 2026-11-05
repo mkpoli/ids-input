@@ -2,15 +2,16 @@
 
 Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
 Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). A third draws the twelve ideographic description characters
+the editor's empty-slot mark ⬚ (U+2B1A). A third draws the sixteen ideographic description characters
 for sequence text where no installed font has them. Kureedo and GenZui Sans supply the optional
 Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
 (U+2B1A, U+31C0–U+31E3) and `IDS Parts` (U+2E80–U+2EFF, U+31E4–U+31EF, U+20000–U+3FFFF), with ranges
-that do not overlap, and `IDS Operators` (U+2FF0–U+2FFB) for sequence text. The rest of the Basic
-Multilingual Plane, Extension A included, comes from the reader's own CJK font.
+that do not overlap, and `IDS Operators` (U+2FF0–U+2FFF; the first twelve from Noto, the four newer
+ones from Jigmo) for sequence text. The rest of the Basic Multilingual Plane, Extension A included,
+comes from the reader's own CJK font.
 
 - `NotoSansCJKjp-ids-strokes.woff2` (3.4 KB, 37 characters): Noto Sans CJK JP 2.004
   (<https://github.com/notofonts/noto-cjk>, tag `Sans2.004`, the variable font instanced at weight
@@ -22,6 +23,13 @@ Multilingual Plane, Extension A included, comes from the reader's own CJK font.
   (`OFL-NotoSansCJK.txt`), SHA-256 `d2b33d199ce5ad6edbf8b9f1ab11e719cb306a8d63ac5f07fddb5fde70cf2890`.
   Rebuild with `uv run --with 'fonttools[woff]' pyftsubset NotoSansCJK-Regular.ttc --font-number=0
   --unicodes=2FF0-2FFB --flavor=woff2 --output-file=fonts/NotoSansCJKjp-ids-operators.woff2`.
+- `Jigmo-ids-operators.woff2` (1.5 KB, 4 characters): U+2FFC–U+2FFF, the description characters
+  Unicode added after the pinned Noto Sans CJK, named `IDS Operators`. Jigmo (字雲) 20250912 by
+  Koichi Kamichi (<https://kamichikoichi.github.io/jigmo/>), CC0 1.0 (`LICENSE-Jigmo.txt`), and the
+  same archive as the fallback shards. SHA-256
+  `6d0b56a57d435cfc59c1dda56cbeb123ec081f0b586898bfe5b2c0d31399ef50`. Rebuild with
+  `uv run --with 'fonttools[woff]' pyftsubset Jigmo.ttf --unicodes=2FFC-2FFF --flavor=woff2
+  --output-file=fonts/Jigmo-ids-operators.woff2`.
 - `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one
@@ -120,6 +128,18 @@ glyph licence and neither does the spreadsheet that names the characters; the po
 [LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
 Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.
 
+## IDS Jurchen
+
+`IDSJurchen.woff2` maps Unicode 18.0's 914 Jurchen characters and 51 radicals (U+18E00–U+19191 and
+U+191A0–U+191D2), and 537 variant sequences through U+FE00–U+FE04 in a format 14 cmap; `fonts.css`
+gives the face the matching `unicode-range`.
+
+The outlines are those of Alari Xuwasun Jurchen, public beta of 2026-10-12, by Sulfa, Dooran and
+Raxon7, under the SIL OFL 1.1 ([LICENSE-IDSJurchen.txt](LICENSE-IDSJurchen.txt)). This face reaches the
+variants through the selectors alone, leaves out the style sets, and is converted from cubic to
+quadratic outlines.
+Rebuild the font and `data/jurchen-outlines.json.gz` with `uv run --python 3.12 scripts/build_jurchen.py`.
+
 ## Unicode fallback glyphs
 
 The composer draws 56,651 additional characters from font-derived outlines when the selected export
@@ -127,7 +147,7 @@ lacks a glyph, and the same outlines ship as a webfont for text. Sources, rebuil
 coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
 [OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL
 1.1. Extended sources use `LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`,
-`OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright
+`OFL-UniHieroglyphica.txt` and `OFL-Iosevka.md`; per-source copyright
 notices are preserved in the outline metadata.
 
 `unicode/*.woff2` is the `IDS Fallback` family: one file per 256-code-point shard, each declared in

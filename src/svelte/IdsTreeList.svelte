@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { PART_DRAG, siblings, swappable, neighbor, remapSiblingPath, remapSwapPath } from './part-drag.js'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
@@ -54,6 +55,7 @@
 
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
+  $effect(() => { if (listEl) return watchFallback(listEl) })
   /** @type {{ path: Path } | null} */ let editing = $state(null)
   /** @type {{ key: string, x: number, y: number, time: number } | null} */ let firstClick = null
   /** @param {Row} row */
@@ -289,7 +291,7 @@
     --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     height:100%;min-height:0;overflow:auto;padding:4px;color:var(--_ink)}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
   li{display:flex;align-items:center;gap:8px;min-height:var(--ids-control-h-sm,32px);padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:var(--ids-radius-sm,8px);cursor:pointer}

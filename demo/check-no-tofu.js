@@ -4,7 +4,8 @@
 // The page runs under a fontconfig that offers one Latin font and nothing else, so a character no
 // bundled face draws can only appear as the missing-glyph box. A glyph is judged a box by rendering
 // it and an unassigned code point with the element's own font stack: the box both draw is the same
-// shape, while a real glyph differs everywhere it has ink.
+// shape, while a real glyph differs everywhere it has ink. Characters below the fold are scrolled
+// into view first, since the app loads a shard only for text a reader has seen.
 //
 // Run against a devrun server: IDS_URL=http://localhost:5173 bun demo/check-no-tofu.js
 import { chromium } from 'playwright-core'
@@ -35,7 +36,7 @@ function latinOnlyFontconfig() {
 }
 
 /** The palette's tabs, each a set of parts drawn with the app's faces. */
-const TABS = ['Components', 'Gongche', 'Tangut', 'Small Seal', 'Shuishu', 'Bopomofo', 'Marks', 'Letters & numbers', 'Hangul', 'Other scripts']
+const TABS = ['Components', 'Gongche', 'Tangut', 'Jurchen', 'Small Seal', 'Shuishu', 'Bopomofo', 'Marks', 'Letters & numbers', 'Hangul', 'Other scripts']
 
 /**
  * In the page: the characters of `selector` that draw the missing-glyph box, with the element's own
@@ -71,15 +72,29 @@ const boxedIn = ({ selector, limit }) => {
   return boxed
 }
 
-/** The parts of the open tab that draw a box, waiting for shards that arrive after the paint. */
-async function boxedParts(page) {
+/** The characters under `selector` that draw a box, waiting for shards that arrive after the paint. */
+async function boxedInPage(page, selector, limit = 120) {
   for (let attempt = 0; attempt < 20; attempt++) {
-    const boxed = await page.evaluate(boxedIn, { selector: '.parts-grid .part', limit: 120 })
+    const boxed = await page.evaluate(boxedIn, { selector, limit })
     if (!boxed.length) return []
     await page.waitForTimeout(500)
     if (attempt === 19) return boxed
   }
   return []
+}
+
+/**
+ * Scrolls every match into view, so the app asks for the shard of text it had not shown yet: a part
+ * below the fold has no glyph until a reader sees it.
+ */
+async function reveal(page, selector, limit = 120) {
+  await page.evaluate(async ({ selector, limit }) => {
+    for (const element of [...document.querySelectorAll(selector)].slice(0, limit)) {
+      element.scrollIntoView({ block: 'center' })
+      await new Promise(resolve => setTimeout(resolve, 60))
+    }
+  }, { selector, limit })
+  await page.waitForTimeout(1200)
 }
 
 if (process.platform !== 'linux') {
@@ -108,9 +123,18 @@ try {
     await page.waitForTimeout(1500)
     await page.evaluate(() => document.fonts.ready)
     if (!await page.locator('.parts-grid .part').count()) { console.log(`skip the ${tab} palette: no parts`); continue }
-    const boxed = await boxedParts(page)
+    await reveal(page, '.parts-grid .part')
+    const boxed = await boxedInPage(page, '.parts-grid .part')
     console.log(`${tab}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every part draws'}`)
     if (boxed.length) failures.push(`${tab}: ${boxed.join(' ')}`)
+  }
+  // The search results and the tree show characters as well.
+  for (const [what, selector] of [['search results', '.ids-search-results .char'], ['tree', '.ids-tree .ids-part[data-character]']]) {
+    if (!await page.locator(selector).count()) { console.log(`skip the ${what}: nothing shown`); continue }
+    await reveal(page, selector)
+    const boxed = await boxedInPage(page, selector)
+    console.log(`${what}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every character draws'}`)
+    if (boxed.length) failures.push(`${what}: ${boxed.join(' ')}`)
   }
   // The sequence field takes characters typed by hand, including ones only the shards draw.
   const input = page.locator('.sequence-wrap input').first()

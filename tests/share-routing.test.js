@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { metaFor, pathOf, routeFor } from '../worker/page.js'
+import { CARD_VERSION } from '../worker/card-version.js'
 import { linkTo } from '../demo/lib/share.js'
 
 const route = path => routeFor(new URL(path, 'https://ids.mkpo.li'), '⿰木口')
@@ -13,7 +14,7 @@ describe('Pages sequence routing', () => {
     }
   })
   it('leaves root, files, nested assets, and Pages HTML routes to the assets binding', () => {
-    for (const path of ['/', '/robots.txt', '/favicon.svg', '/assets/app.js', '/og/fonts/a.ttf', '/og/data/a.json.gz', '/embed', '/compare', '/engines', '/engines/', '/embed/', '/index.html', '/s/⿰木口']) {
+    for (const path of ['/', '/robots.txt', '/favicon.svg', '/assets/app.js', '/og/fonts/a.ttf', '/og/data/a.json.gz', '/embed', '/compare', '/engines', '/sources', '/design', '/engines/', '/embed/', '/index.html', '/s/⿰木口']) {
       expect(route(path)).toEqual({ kind: 'asset' })
     }
   })
@@ -33,6 +34,6 @@ describe('Pages sequence routing', () => {
     expect(route('/⿰木口?doc=anything&ids=other')).toEqual({ kind: 'page', sequence: '⿰木口' })
     const { tags } = metaFor({ sequence: 'a/b', char: null, origin: 'https://ids.mkpo.li' })
     expect(tags).toContain('href="https://ids.mkpo.li/?ids=a%2Fb"')
-    expect(tags).toContain('content="https://ids.mkpo.li/og/a%2Fb.png"')
+    expect(tags).toContain(`content="https://ids.mkpo.li/og/a%2Fb.png?v=${CARD_VERSION}"`)
   })
 })

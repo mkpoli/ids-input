@@ -8,6 +8,7 @@
   import { untrack } from 'svelte'
   import { loadStrokes } from './strokes.js'
   import { translator } from './i18n.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @typedef {import('../adapter/types.js').IdsHit} IdsHit */
   /** @type {{ adapter: import('../adapter/types.js').IdsAdapter, query?: string, messages?: Record<string, string>, locale?: string, limit?: number, delay?: number, mode?: 'ids' | 'structure' | 'unknown' | 'similar',
@@ -18,6 +19,10 @@
   const asked = $derived(query.trim())
   // A stroke count narrows the hits; the palette's character counts load on first use.
   let strokeLimit = $state('')
+  /** @type {HTMLElement | null} */
+  let panel = $state(null)
+  // The hits and the descriptions draw characters the reader's fonts may lack.
+  $effect(() => { if (panel) return watchFallback(panel) })
   /** @type {Map<string, number | null> | null} */
   let strokeCounts = $state.raw(null)
   let strokeLoading = false
@@ -79,7 +84,7 @@
   const cp = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
 </script>
 
-<section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status}>
+<section class="ids-search-results" aria-label={t('ids.search.title')} data-status={found.status} bind:this={panel}>
   <div class="stroke-limit">
     <label for={`${uid}-strokes`}>{t('ids.search.strokes')}</label>
     <input id={`${uid}-strokes`} type="number" min="1" max="40" inputmode="numeric" autocomplete="off"
@@ -129,7 +134,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--_ink)}
   button:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   .count{margin:0;min-height:18px;font-size:12px;color:var(--_muted)}

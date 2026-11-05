@@ -45,6 +45,13 @@ describe('character relationships',()=>{
   // A short Latin word keeps the meaning hits it had before readings were indexed.
   expect(index.search('sa',{limit:24}).some(hit=>/sad/.test(hit.label))).toBe(true)
  })
+ test('a short result list keeps the meanings before reading and usage slots',()=>{
+  const water=index.search('water',{limit:8}).map(hit=>hit.char)
+  for(const char of ['水','𗋽'])expect(water,char).toContain(char)
+  expect(water).toHaveLength(8)
+  const fire=index.search('fire',{limit:24}).map(hit=>hit.char)
+  expect(fire).toContain('火')
+ })
  test('qualified short meanings retain their full dictionary labels',()=>{
   expect(index.search('die').find(h=>h.char==='𗆮')?.label).toBe('(of a monarch) to die')
   expect(index.search('short').find(h=>h.char==='𗅒')?.label).toBe('(of stature) short')

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import worker from '../worker/index.js'
+import { CARD_VERSION } from '../worker/card-version.js'
+import { fromSequence, shareDocument } from '../src/document/index.js'
 
 const shell = await Bun.file(new URL('../demo/index.html', import.meta.url)).text()
 const assets = {
@@ -26,6 +28,38 @@ describe('a path that names a sequence', () => {
     expect(body.match(/The ideographic description sequence ⿰木口/g)?.length).toBe(3)
     expect(body).toContain('<meta name="description" content="The ideographic description sequence ⿰木口')
     expect(body).toContain('https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png')
+  })
+
+  it('names a shared document, and keeps its tokens out of the sequence tags', async () => {
+    const document = fromSequence('⿰木口')
+    document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 200, 0] }]
+    document.title = 'Moved 木'
+    const token = shareDocument(document)
+    const response = await ask(`https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=${token}`)
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain('<title>Moved 木 — IDS Workshop</title>')
+    expect(body).toContain(`<link rel="canonical" href="https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=${token}">`)
+    expect(body).toContain(`content="https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png?v=${CARD_VERSION}&amp;doc=${token}"`)
+    expect(body).toContain('The IDS document Moved 木 (⿰木口), shared from IDS Workshop.')
+    expect(body).not.toContain('⿰木口 =')
+  })
+  it('opens a document at the root when the token carries its sequence', async () => {
+    const document = fromSequence('⿰木口')
+    document.title = 'Root document'
+    const token = shareDocument(document)
+    const response = await ask(`https://ids.mkpo.li/?doc=${token}`)
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain('<title>Root document — IDS Workshop</title>')
+    expect(body).toContain(`<link rel="canonical" href="https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=${token}">`)
+  })
+  it('ignores an unreadable token and keeps the path tags', async () => {
+    const response = await ask('https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=abc')
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain('<title>⿰木口 — IDS Workshop</title>')
+    expect(body).not.toContain('doc=abc')
   })
   it('serves the empty slot a link written before ⬚ carries', async () => {
     expect((await ask('https://ids.mkpo.li/%E2%BF%B0%EF%BC%8B%E5%8F%A3')).status).toBe(200)

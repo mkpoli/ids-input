@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { metaFor, pathOf, shareHtml } from '../worker/page.js'
+import { CARD_VERSION } from '../worker/card-version.js'
 import { readFileSync } from 'node:fs'
 
 const page = readFileSync(new URL('../demo/index.html', import.meta.url), 'utf8')
@@ -9,7 +10,7 @@ describe('the tags a share link answers with', () => {
   it('names the sequence and its character, with the card image', () => {
     const { title, tags } = metaFor(share)
     expect(title).toBe('⿰釒哥 = 鎶 (U+93B6) — IDS Workshop')
-    expect(tags).toContain('content="https://ids.mkpo.li/og/%E2%BF%B0%E9%87%92%E5%93%A5.png"')
+    expect(tags).toContain(`content="https://ids.mkpo.li/og/%E2%BF%B0%E9%87%92%E5%93%A5.png?v=${CARD_VERSION}"`)
     expect(tags).toContain('U+93B6')
     expect(tags).toContain('<meta name="twitter:card" content="summary_large_image">')
   })
@@ -20,6 +21,21 @@ describe('the tags a share link answers with', () => {
     expect(title).toBe('⿰设冓 = 講 (U+8B1B) — IDS Workshop')
     expect(tags).toContain('content="The sequence ⿰设冓 composed as 講 (U+8B1B)"')
     expect(tags).not.toContain('U+8BC1')
+  })
+
+  it('names a shared document, its title and its token', () => {
+    const { title, tags } = metaFor({ ...share, doc: 'abc', documentTitle: 'Moved 木' })
+    expect(title).toBe('Moved 木 — IDS Workshop')
+    expect(tags).toContain('content="The IDS document Moved 木 (⿰釒哥), shared from IDS Workshop."')
+    expect(tags).toContain('href="https://ids.mkpo.li/%E2%BF%B0%E9%87%92%E5%93%A5?doc=abc"')
+    expect(tags).toContain(`content="https://ids.mkpo.li/og/%E2%BF%B0%E9%87%92%E5%93%A5.png?v=${CARD_VERSION}&amp;doc=abc"`)
+    expect(tags).toContain('The IDS document Moved 木, the sequence ⿰釒哥')
+  })
+  it('keeps the sequence title for a document without a title', () => {
+    const { title, tags } = metaFor({ ...share, doc: 'abc', documentTitle: null })
+    expect(title).toBe('⿰釒哥 = 鎶 (U+93B6) — IDS Workshop')
+    expect(tags).toContain('content="The ideographic description sequence ⿰釒哥, shared as a document from IDS Workshop."')
+    expect(tags).toContain('The sequence ⿰釒哥 shared as a document')
   })
   it('says nothing of a code point where the sequence describes no character', () => {
     const { title, tags } = metaFor({ ...share, char: null })

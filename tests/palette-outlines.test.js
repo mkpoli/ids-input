@@ -40,8 +40,10 @@ it('accounts for the leaves of every shipped palette entry', async () => {
     if (isNode(node)) return node.parts.forEach(visit)
     if (!hasPaletteGlyph(node) && !hasUnicodeGlyph(node) && !remoteKeys.has(node) && !local.some(records => records[node])) missing.add(node)
   }
-  for (const { part } of rows) {
-    const result = parse(part, { open: true })
+  for (const { part, fragment } of rows) {
+    const text = /^\{\d+\}$/.test(part) ? fragment : part
+    if (!text) continue
+    const result = parse(text, { open: true })
     expect(result.problem).toBeUndefined()
     visit(result.tree)
   }

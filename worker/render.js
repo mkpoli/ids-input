@@ -2,17 +2,17 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { compose } from '../src/composer/loader.js'
-import { unpack } from '../src/composer/loader.js'
+import { compose, sketch as composerSketch, unpack } from '../src/composer/loader.js'
+import { documentView } from '../src/composer/document-view.js'
+import { boxCorners } from '../src/document/index.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE, codePoint } from './card.js'
-import { OPERATORS } from '../src/core/ids.js'
+import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
+import { CARD_VERSION } from './card-version.js'
 
-// The card changes with this constant: old entries stay readable under their own key.
-const VERSION = 'v11'
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
 
 // Metadata requests do not need the rasterizer.
@@ -43,6 +43,7 @@ const loadersFor = env => ({
   seal: { load: outlines(env, 'data/small-seal-outlines.json.gz') },
   newKorean: { load: outlines(env, 'data/new-korean-outlines.json.gz') },
   shuishu: { load: outlines(env, 'data/shuishu-outlines.json.gz') },
+  jurchen: { load: outlines(env, 'data/jurchen-outlines.json.gz') },
   palette: { load: outlines(env, 'data/palette-outlines.json.gz') },
   unicode: { load: async name => { const bytes = await read(env, `data/${name.replace('unicode/', 'unicode-outlines/')}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
 })
@@ -54,13 +55,16 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
   .then(text => JSON.parse(text))
   .catch(() => ({}))
 
+/** One character, a Jurchen variant sequence counting as one. @param {string} text */
+const isOneCharacter = text => [...text].length === 1 || JURCHEN_VARIANT.test(text)
+
 /**
- * The character a sequence is, or describes: the sequence itself when it is one character, else a
- * character whose IDS it exactly is.
+ * The character a sequence is, or describes: the sequence itself when it is one character or a
+ * Jurchen variant sequence, else a character whose IDS it exactly is.
  * @param {any} env @param {string} sequence
  */
 export async function characterOf(env, sequence) {
-  if ([...sequence].length === 1 && !OPERATORS.some(([operator]) => operator === sequence)) return sequence
+  if (isOneCharacter(sequence) && !OPERATORS.some(([operator]) => operator === sequence)) return sequence
   return (await idsIndex(env))[sequence] ?? null
 }
 
@@ -80,12 +84,25 @@ async function draw(env, sequence) {
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }
 
+/**
+ * The separated drawing of a document and its scoped view, or null where the composer cannot draw
+ * it. A view can be incomplete while its drawing still shows the sequence.
+ * @param {any} env @param {string} sequence @param {any} document
+ */
+async function drawDocument(env, sequence, document) {
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders: loadersFor(env) })
+  await source.ready()
+  const drawing = await compose(source, sequence, { separate: true, fontStyle: 'sans' })
+  const sketch = await composerSketch(source, sequence)
+  return { view: documentView(document, drawing, sketch), drawing }
+}
+
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
-async function png(env, sequence, drawing, char, shown = null) {
+async function png(env, sequence, drawing, char, shown = null, document = null) {
   const Resvg = await ready()
   const units = shown?.units ?? [sequence]
-  const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? ''))
-  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint }), {
+  const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? '') + (document?.title ?? ''))
+  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint, document }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
@@ -104,7 +121,7 @@ async function png(env, sequence, drawing, char, shown = null) {
 export function namedFor(sequence, composed = null) {
   const example = EXAMPLES.find(example => example.sequence === sequence)
   const named = example?.char || example?.abbreviates || composed
-  return named && [...named].length === 1 ? [...named][0] : null
+  return named && isOneCharacter(named) ? named : null
 }
 
 /** The character a card and its page both name: the example's, else the table's. @param {any} env @param {string} sequence */
@@ -136,10 +153,13 @@ export async function unitsFor(env, sequence, named) {
 
 /**
  * The card for `sequence` as a cacheable response. `ctx` carries the cache write past the answer.
- * @param {any} env @param {any} ctx @param {string} sequence
+ * `document` draws the sequence as the document carries it, and `token` keeps that card apart.
+ * @param {any} env @param {any} ctx @param {string} sequence @param {any} [document]
+ * @param {string} [token]
  */
-export async function cardResponse(env, ctx, sequence) {
-  const key = new URL(`https://card/${VERSION}/${encodeURIComponent(sequence)}`)
+export async function cardResponse(env, ctx, sequence, document = null, token = '') {
+  const key = new URL(`https://card/${CARD_VERSION}/${encodeURIComponent(sequence)}`)
+  if (document) key.searchParams.set('doc', token)
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
@@ -149,11 +169,22 @@ export async function cardResponse(env, ctx, sequence) {
   const named = namedFor(sequence, composed)
   const char = named
   const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
-  const sequenceDrawing = await draw(env, sequence).catch(() => null)
-  const drawings = await drawUnits(env, units, sequenceDrawing)
-  const shown = units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
-  const body = await png(env, sequence, sequenceDrawing, char, shown)
-  const answer = new Response(body, { headers: { 'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT } })
+  // A document is one drawing, not the characters a sequence writes; when its layers cannot be
+  // scoped, the card falls back to the separated drawing and still says it is a document. The
+  // plain drawing is only made when no document drawing answered.
+  const made = document ? await drawDocument(env, sequence, document).catch(() => null) : null
+  const sequenceDrawing = made?.drawing ?? await draw(env, sequence).catch(() => null)
+  const drawings = document ? [] : await drawUnits(env, units, sequenceDrawing)
+  const shown = document ? null : units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
+  const slots = made?.view ? [...made.view.frames.values()]
+    .filter(frame => frame.node.kind === 'slot')
+    .map(frame => boxCorners(frame.canvas, frame.box)) : []
+  const drawn = document ? { scopes: made?.view.complete ? made.view.scopes : null, title: document.title ?? null, slots } : null
+  const body = await png(env, sequence, sequenceDrawing, char, shown, drawn)
+  const answer = new Response(body, { headers: {
+    'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT,
+    'x-og-card': document ? drawn.scopes ? 'document' : 'document-fallback' : 'sequence',
+  } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer
 }
