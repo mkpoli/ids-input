@@ -41,11 +41,12 @@ export function createDrawer(makeWorker, base) {
     const live = makeWorker()
     worker = live
     live.onmessage = ({ data }) => {
+      if (worker !== live) return
       if (data.id !== pending?.id) return
       if (data.sketch) { pending?.onSketch?.(data.sketch); return }
       settle(data.error === undefined ? { status: 'composed', drawn: data.drawn } : { status: 'failed', error: data.error, ...(data.unavailable ? { unavailable: true } : {}) })
     }
-    live.onerror = event => { event?.preventDefault?.(); end(); settle({ status: 'failed', error: String(event?.message ?? 'worker failed') }) }
+    live.onerror = event => { event?.preventDefault?.(); if (worker !== live) return; end(); settle({ status: 'failed', error: String(event?.message ?? 'worker failed') }) }
     return live
   }
   function cancel() {

@@ -497,6 +497,19 @@ describe('the drawer', () => {
     two.answer({ id: two.posted[0].id, drawn: { d: 'M1 1Z' } })
     expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' } })
   })
+  it('ignores what a replaced worker says late', async () => {
+    FakeWorker.made = []
+    const drawer = createDrawer(() => new FakeWorker(), '/b/')
+    drawer.draw('⿰木口')
+    const [one] = FakeWorker.made
+    const second = drawer.draw('⿱木口')
+    const two = FakeWorker.made[1]
+    one.onerror({ message: 'late', preventDefault() {} })
+    one.answer({ id: two.posted[0].id, drawn: { d: 'M9 9Z' } })
+    two.answer({ id: two.posted[0].id, drawn: { d: 'M1 1Z' } })
+    expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' } })
+    expect(two.ended).toBe(false)
+  })
   it('reports a failed drawing, and a cancelled one', async () => {
     FakeWorker.made = []
     const drawer = createDrawer(() => new FakeWorker(), '/b/')
