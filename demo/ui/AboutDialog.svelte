@@ -1,13 +1,13 @@
 <script module>
-  // People who wrote to us, and people who passed the post on. A name without
-  // a url has no account we could verify, so it stays plain text.
+  // People who wrote to us, and people who passed the post on, each with the
+  // account behind the name.
   const reported = [
     { n: 'परवद💙💛', u: 'https://x.com/zoenshiueh_lieu' },
     { n: 'Fn', u: 'https://x.com/integuraru_P' },
     { n: 'なきは', u: 'https://x.com/nakiha_kanji' },
     { n: '馬のゆい', u: 'https://x.com/umanoyui' },
     { n: 'NGWU YOH', u: 'https://t.me/Ngwuyoh' },
-    { n: '橘 (귥〮 귤〮) 🍊' },
+    { n: '橘 (귥〮 귤〮) 🍊', u: 'https://en.wikisource.org/wiki/User:Fish_bowl' },
     { n: '海楫', u: 'https://x.com/sebansios' },
     { n: 'Sim-CH', u: 'https://x.com/CheonHyeongSim' }
   ]
@@ -95,7 +95,7 @@
       <h4>{t(group.label)}</h4>
       <ul class="thanks">
         {#each group.people as person}
-          <li>{#if person.u}<a href={person.u} target="_blank" rel="noreferrer">{person.n}</a>{:else}{person.n}{/if}</li>
+          <li><a href={person.u} target="_blank" rel="noreferrer">{person.n}</a></li>
         {/each}
       </ul>
     {/each}
