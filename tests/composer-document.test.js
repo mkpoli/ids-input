@@ -169,6 +169,18 @@ describe('a composer-backed document source', () => {
 })
 
 describe('stroke contours and holes', () => {
+const ring = (x0, y0, x1, y1, reverse = false) => {
+  const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+  return `M${(reverse ? corners.reverse() : corners).map(point => point.join(' ')).join('L')}Z`
+}
+const cutsOf = contours => {
+  const document = fromSequence('口')
+  const d = contours.join(' ')
+  const strokes = contours.map((_, index) => [index, [index]])
+  const made = documentSource(document, { parts: [{ leaf: 0, d, strokes }] }, sketch([[0, 0, 1000, 1000]]))
+  return made.source.geometry(document.root)
+}
+
   it('keeps a counter as a cut when the stroke groups are valid', () => {
     const document = fromSequence('口')
     const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
@@ -189,6 +201,16 @@ describe('stroke contours and holes', () => {
     const d = 'M0 0Q500 -500 1000 0Q500 500 0 0Z M400 -50L400 50L600 50L600 -50Z'
     const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
     expect(made.source.geometry(document.root)?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
+  it('does not cut a stroke that crosses an outline', () => {
+    const geometry = cutsOf([ring(0, 0, 450, 450), ring(200, 100, 600, 200)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, false])
+  })
+
+  it('does not cut a contour wound like the one that holds it', () => {
+    const geometry = cutsOf([ring(0, 0, 1000, 1000), ring(200, 200, 800, 800)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, false])
   })
 
   it('keeps the compound path when a stroke names a fractional contour index', () => {

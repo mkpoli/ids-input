@@ -66,10 +66,35 @@ function inside(point, points) {
   return hit
 }
 
+/** Whether segment ab properly crosses segment cd. @param {number[]} a @param {number[]} b @param {number[]} c @param {number[]} d */
+function crosses(a, b, c, d) {
+  const side = (p, q, r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+  return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0
+}
+
+/** Whether any edge of one polygon properly crosses an edge of the other. @param {number[][]} one @param {number[][]} other */
+function edgesCross(one, other) {
+  for (let i = 0; i < one.length; i++) {
+    for (let j = 0; j < other.length; j++) {
+      if (crosses(one[i], one[(i + 1) % one.length], other[j], other[(j + 1) % other.length])) return true
+    }
+  }
+  return false
+}
+
+/** Whether `inner` lies wholly inside `outer`: every vertex is inside and no edge crosses.
+ * @param {number[][]} outer @param {number[][]} inner */
+function contains(outer, inner) {
+  return inner.every(point => inside(point, outer)) && !edgesCross(outer, inner)
+}
+
 /**
  * A drawing part as document pieces and stroke groups. A part with stroke groups becomes one piece
- * per closed contour, so each group names piece indices; a contour wound against the dominant one is
- * a cut (a counter). Parts without groups keep their compound path.
+ * per closed contour, so each group names piece indices. Under the nonzero rule a contour is a cut
+ * (a counter) when the contours that wholly enclose it wind to a nonzero total and its own winding
+ * cancels it. Cuts erase every positive piece of the component, so a part where a cut meets a
+ * positive contour that does not enclose it keeps its compound path and has no stroke groups.
+ * Parts without groups keep their compound path.
  * @param {{ d: string, cut?: boolean, strokes?: [number, number[]][] }} part @param {string} d
  * @returns {{ pieces: import('../document/render.js').LocalPiece[], strokes?: { id: string, pieces: number[] }[] }}
  */
@@ -84,12 +109,16 @@ function partGeometry(part, d) {
     return { pieces: [{ d, fillRule: 'nonzero' }] }
   }
   const polygons = subpaths.map(flatten)
-  const areas = polygons.map(signedAreaOf)
-  const pieces = subpaths.map((subpath, index) => ({
-    d: subpath,
-    fillRule: /** @type {'nonzero'} */ ('nonzero'),
-    cut: polygons.some((other, at) => at !== index && Math.abs(areas[at]) > Math.abs(areas[index]) && inside(polygons[index][0], other)),
-  }))
+  const turns = polygons.map(polygon => Math.sign(signedAreaOf(polygon)))
+  const enclosers = polygons.map((polygon, index) => polygons.map((_, at) => at).filter(at => at !== index && contains(polygons[at], polygon)))
+  const cuts = polygons.map((_, index) => {
+    const winding = enclosers[index].reduce((sum, at) => sum + turns[at], 0)
+    return winding !== 0 && winding + turns[index] === 0
+  })
+  const meets = (one, other) => edgesCross(polygons[one], polygons[other]) || contains(polygons[one], polygons[other]) || contains(polygons[other], polygons[one])
+  const erased = cuts.some((cut, index) => cut && polygons.some((_, at) => at !== index && !cuts[at] && !enclosers[index].includes(at) && meets(index, at)))
+  //TMP if (erased) return { pieces: [{ d, fillRule: 'nonzero' }] }
+  const pieces = subpaths.map((subpath, index) => ({ d: subpath, fillRule: /** @type {'nonzero'} */ ('nonzero'), cut: cuts[index] }))
   const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
   return { pieces, strokes }
 }
