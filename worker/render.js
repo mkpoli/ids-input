@@ -2,8 +2,8 @@
 // The image behind a share link: the sequence composed from the same export the editor draws from,
 // laid out by `card.js`, rasterized, and kept in the cache. A sequence the composer cannot draw
 // still gets a card, with the empty frame.
-import { compose } from '../src/composer/loader.js'
-import { unpack } from '../src/composer/loader.js'
+import { compose, sketch as composerSketch, unpack } from '../src/composer/loader.js'
+import { documentView } from '../src/composer/document-view.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { OPERATORS } from '../src/core/ids.js'
@@ -79,12 +79,25 @@ async function draw(env, sequence) {
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })
 }
 
+/**
+ * The separated drawing of a document and its scoped view, or null where the composer cannot draw
+ * it. A view can be incomplete while its drawing still shows the sequence.
+ * @param {any} env @param {string} sequence @param {any} document
+ */
+async function drawDocument(env, sequence, document) {
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
+  await source.ready()
+  const drawing = await compose(source, sequence, { separate: true, fontStyle: 'sans' })
+  const sketch = await composerSketch(source, sequence)
+  return { view: documentView(document, drawing, sketch), drawing }
+}
+
 /** Rasterized card PNG. @param {any} env @param {string} sequence @param {any} drawing @param {string | null} char */
-async function png(env, sequence, drawing, char, shown = null) {
+async function png(env, sequence, drawing, char, shown = null, document = null) {
   const Resvg = await ready()
   const units = shown?.units ?? [sequence]
-  const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? ''))
-  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint }), {
+  const { buffers, familyOf } = await facesFor(env, units.join('') + (char ?? '') + (shown?.codepoint ?? '') + (document?.title ?? ''))
+  const render = await Resvg.async(cardSvg({ sequence, drawing, char, familyOf, units, drawings: shown?.drawings, codepoint: shown?.codepoint, document }), {
     font: { fontBuffers: buffers, defaultFontFamily: 'Noto Sans CJK JP', sansSerifFamily: 'Noto Sans CJK JP', loadSystemFonts: false },
     fitTo: { mode: 'original' },
   })
@@ -135,10 +148,13 @@ export async function unitsFor(env, sequence, named) {
 
 /**
  * The card for `sequence` as a cacheable response. `ctx` carries the cache write past the answer.
- * @param {any} env @param {any} ctx @param {string} sequence
+ * `document` draws the sequence as the document carries it, and `token` keeps that card apart.
+ * @param {any} env @param {any} ctx @param {string} sequence @param {any} [document]
+ * @param {string} [token]
  */
-export async function cardResponse(env, ctx, sequence) {
+export async function cardResponse(env, ctx, sequence, document = null, token = '') {
   const key = new URL(`https://card/${CARD_VERSION}/${encodeURIComponent(sequence)}`)
+  if (document) key.searchParams.set('doc', token)
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
@@ -149,9 +165,13 @@ export async function cardResponse(env, ctx, sequence) {
   const char = named
   const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
   const sequenceDrawing = await draw(env, sequence).catch(() => null)
-  const drawings = await drawUnits(env, units, sequenceDrawing)
-  const shown = units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
-  const body = await png(env, sequence, sequenceDrawing, char, shown)
+  // A document is one drawing, not the characters a sequence writes; when its layers cannot be
+  // scoped, the card falls back to the separated drawing and still says it is a document.
+  const made = document ? await drawDocument(env, sequence, document).catch(() => null) : null
+  const drawings = document ? [] : await drawUnits(env, units, sequenceDrawing)
+  const shown = document ? null : units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
+  const drawn = document ? { scopes: made?.view.complete ? made.view.scopes : null, title: document.title ?? null } : null
+  const body = await png(env, sequence, made?.drawing ?? sequenceDrawing, char, shown, drawn)
   const answer = new Response(body, { headers: { 'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer

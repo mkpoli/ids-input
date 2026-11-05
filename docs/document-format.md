@@ -379,7 +379,8 @@ layer's path, kind, name, transform and extensions. IDs are fresh on arrival,
 the same ones every read. A document its sequence already spells shares the
 path alone; use a file when the difference exceeds the host's URL or QR-code
 budget. The older `#` and `?ids=` forms still open. The worker writes the title,
-the description and the canonical for a sequence into the head the host serves.
+description, canonical and card for a sequence into the head and image the host serves; a link with
+a token gets the document's title and a card drawn from its layers.
 A path that names no sequence answers 404 with the text and a link that opens it
 as a draft. Text built from a sequence's letters that does not parse, like
 `木口` or a draft holding an empty-slot mark, is sent on to the editor with 303.

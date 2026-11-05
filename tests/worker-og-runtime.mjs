@@ -5,6 +5,7 @@ import { readFile, readdir } from 'node:fs/promises'
 import { resolve, extname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare'
+import { fromSequence, shareDocument } from '../src/document/index.js'
 import { CARD_VERSION } from '../worker/card-version.js'
 
 if (process.versions.bun) throw new Error('Run this workerd test with node; Bun does not support its Undici dispatcher')
@@ -57,5 +58,27 @@ try {
   assert.equal(png.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
   assert.equal(png.readUInt32BE(16), 1200)
   assert.equal(png.readUInt32BE(20), 630)
-  console.log(`Worker runtime passed; resvg PNG ${png.length} bytes, 1200 × 630`)
+
+  const document = fromSequence('⿰木口')
+  document.root.children[0].transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 200, 0] }]
+  document.title = 'Moved 木'
+  const token = shareDocument(document)
+  assert.ok(token, 'the document carries a share token')
+  const docPage = await runtime.dispatchFetch(`https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=${token}`)
+  assert.equal(docPage.status, 200)
+  const docHtml = await docPage.text()
+  assert.match(docHtml, /<title>Moved 木 — IDS Workshop<\/title>/)
+  assert.ok(docHtml.includes(`og:url" content="https://ids.mkpo.li/%E2%BF%B0%E6%9C%A8%E5%8F%A3?doc=${token}"`))
+  assert.ok(docHtml.includes(`og:image" content="https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png?v=${CARD_VERSION}&amp;doc=${token}"`))
+  const plainImage = await runtime.dispatchFetch('https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png')
+  assert.equal(plainImage.status, 200)
+  const plainPng = Buffer.from(await plainImage.arrayBuffer())
+  const docImage = await runtime.dispatchFetch(`https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png?doc=${token}`)
+  assert.equal(docImage.status, 200)
+  const docPng = Buffer.from(await docImage.arrayBuffer())
+  assert.equal(docPng.subarray(0, 8).toString('hex'), '89504e470d0a1a0a')
+  assert.equal(docPng.readUInt32BE(16), 1200)
+  assert.equal(docPng.readUInt32BE(20), 630)
+  assert.notEqual(Buffer.compare(docPng, plainPng), 0, 'the document card is not the sequence card')
+  console.log(`Worker runtime passed; resvg PNG ${png.length} bytes, document card ${docPng.length} bytes, 1200 × 630`)
 } finally { await runtime.dispose() }
