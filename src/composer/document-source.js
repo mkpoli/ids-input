@@ -30,10 +30,7 @@ function signedAreaOf(d) {
   const path = parsePath(d)
   let area = 0, first = null, previous = null
   for (const segment of path.segments) {
-    if (segment.type === 'Z') {
-      if (previous && first) area += previous[0] * first[1] - first[0] * previous[1]
-      continue
-    }
+    if (segment.type === 'Z') continue
     const point = 'end' in segment ? segment.end : segment.p
     if (!point) continue
     if (!previous) { first = point; previous = point; continue }
