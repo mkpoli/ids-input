@@ -102,9 +102,9 @@ for (const style of ['sans', 'serif']) {
     const xs = Array.from(points).filter((_, i) => i % 2 === 0)
     // The bar projects to the right; the centred stem reaches the roof seam.
     expect(Math.min(...xs)).toBeGreaterThanOrEqual(450)
-    expect(Math.max(...xs)).toBeGreaterThan(700)
-    expect(top.part.box[1]).toBe(560)
-    expect(roof.part.box[3]).toBeGreaterThanOrEqual(560)
-    expect(JSON.stringify(top)).not.toContain('Noto')
+    expect(Math.max(...xs)).toBeGreaterThanOrEqual(900)
+    expect(top.part.box[1]).toBe(style === 'sans' ? 562 : 543)
+    expect(roof.part.box[3]).toBeGreaterThanOrEqual(top.part.box[1])
+    expect(top.origin).toContain(`Noto ${style === 'sans' ? 'Sans' : 'Serif'} CJK`)
   })
 }
