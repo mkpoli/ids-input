@@ -136,8 +136,6 @@
     observer.observe(list)
     return () => { cancelAnimationFrame(frame); document.removeEventListener('scroll', listen, { capture: true }); observer.disconnect() }
   })
-
-
 </script>
 
 {#snippet groupHeading(heading, count)}

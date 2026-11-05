@@ -7,6 +7,7 @@ export function cardView(drawing) {
   const boxes = [...(drawing?.parts ?? []), ...(drawing?.emoji ?? [])]
     .map(item => item.box)
     .filter(box => Array.isArray(box) && box.length === 4 && box.every(value => Number.isFinite(Number(value))))
+    .map(box => box.map(Number))
   if (!boxes.length) return '0 0 1000 1000'
   const x0 = Math.min(...boxes.map(box => box[0])), y0 = Math.min(...boxes.map(box => box[1]))
   const x1 = Math.max(...boxes.map(box => box[0] + box[2])), y1 = Math.max(...boxes.map(box => box[1] + box[3]))
