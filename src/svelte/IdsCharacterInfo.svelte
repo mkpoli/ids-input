@@ -325,10 +325,11 @@
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
     if (!anchor) return
-    // A scroll that clips the anchor out of its own box takes the card with it.
+    // A scroll that clips the anchor out of its own box takes the card with it. Where the card
+    // itself covers the anchor's place, the anchor is still where the card says it is.
     const box = anchor.getBoundingClientRect()
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-    if (hit && anchor.contains(hit) || panel?.matches(':hover')) position()
+    if (hit && (anchor.contains(hit) || panel?.contains(hit))) position()
     else close()
   }
   /** Controls inside the card that keep their own press. @constant {string} */
