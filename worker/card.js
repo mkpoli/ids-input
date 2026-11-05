@@ -1,5 +1,6 @@
 // The share card uses the workshop palette. IDC characters are text; button icons never enter it.
 import { drawingSvg } from '../src/core/preview.js'
+import { scopesSvg } from '../src/document/svg.js'
 
 export const SIZE = { width: 1200, height: 630 }
 /** @param {string} character */
@@ -56,6 +57,32 @@ function glyph(drawing, palette, ordinal) {
   }
   return drawingSvg(drawing, { ink: palette.ink, padding: inset / 1000, placeholders: true, size: box })
     .replace(/^<svg[^>]*>/, `<svg x="${x + pad}" y="${y + pad}" width="${box}" height="${box}" viewBox="${-inset} ${-inset} ${span} ${span}">`)
+}
+
+/**
+ * A document's scoped drawing in the frame, or its sequence drawing where the layers have no scoped
+ * form. The scoped drawing keeps the document's layer transforms.
+ * @param {{ scopes: any, drawing: any, palette: typeof PALETTES.light, slots?: number[][] }} given
+ */
+function documentGlyph({ scopes, drawing, palette, slots = [] }) {
+  if (!scopes) return glyph(drawing, palette)
+  const { x, y, side, pad } = FRAME
+  const box = side - 2 * pad, inset = 16, span = 1000 + 2 * inset
+  const boxes = Array.isArray(slots) ? slots : []
+  return scopesSvg(scopes, {
+    ink: palette.ink, padding: inset / 1000, size: box, idPrefix: 'og-document', slots: boxes,
+    emoji: drawing?.emoji ?? null, cut: drawing?.cut ?? '',
+    cutLeaf: drawing?.parts?.find((/** @type {any} */ part) => part.cut)?.leaf ?? null,
+  }).replace(/^<svg[^>]*>/, `<svg x="${x + pad}" y="${y + pad}" width="${box}" height="${box}" viewBox="${-inset} ${-inset} ${span} ${span}">`)
+}
+
+/** A document title set in one line: the size the column gives it, with an ellipsis past 27 cells.
+ *  @param {string} text */
+function titleLine(text) {
+  const characters = cells(text)
+  const size = Math.min(40, Math.max(20, Math.floor(COLUMN.width / Math.max(1, characters.length))))
+  const shown = characters.length > 27 ? [...characters.slice(0, 26), '…'] : characters
+  return { text: shown.join(''), size }
 }
 
 const GAP = 14
@@ -126,9 +153,10 @@ function faceOfOperator(familyOf, cell) {
 
 /**
  * @param {{ sequence: string, drawing?: any, char?: string | null, familyOf?: (character: string) => string,
- *   units?: string[], drawings?: (any | null)[], theme?: 'light' | 'dark', codepoint?: string }} card
+ *   units?: string[], drawings?: (any | null)[], theme?: 'light' | 'dark', codepoint?: string,
+ *   document?: { scopes: any, title: string | null, slots?: number[][] } | null }} card
  */
-export function cardSvg({ sequence, drawing = null, char = null, familyOf = () => 'Noto Sans CJK JP', units: shown, drawings = [], theme = 'light', codepoint }) {
+export function cardSvg({ sequence, drawing = null, char = null, familyOf = () => 'Noto Sans CJK JP', units: shown, drawings = [], theme = 'light', codepoint, document = null }) {
   const p = PALETTES[theme]
   // A sequence read with a character it does not compose draws only the cells of that character.
   const faceOf = faces({ units: shown ?? (char && codepoint ? [char] : glyphemes(sequence)), familyOf })
@@ -140,7 +168,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
   const point = codepoint ?? (char ? codePoint(char) : null)
   /** @param {string} character */
   const family = (character) => escaped(faceOf(character))
-  const identity = char
+  const characterIdentity = char
     ? `<text x="568" y="398" font-size="14" fill="${p.muted}">Character</text>`
       + `<text data-character="true" x="568" y="441" font-family="${family(char)}" font-size="40" fill="${p.ink}">${escaped(char)}</text>`
       + `<path d="M628 397V437" stroke="${p.line}"/>`
@@ -148,6 +176,16 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
       + `<text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">${escaped(point ?? '')}</text>`
     : `<text x="568" y="398" font-size="14" fill="${p.muted}">Composes</text>`
       + `<text x="568" y="436" font-size="20" fill="${p.muted}">No character at this code point</text>`
+  // A document with a title says that; one without keeps the character its sequence names.
+  const identity = document
+    ? document.title
+      ? (() => {
+          const line = titleLine(document.title)
+          return `<text x="568" y="398" font-size="14" fill="${p.muted}">Document</text>`
+            + `<text data-document="true" x="568" y="441" font-size="${line.size}" fill="${p.ink}">${escaped(line.text)}</text>`
+        })()
+      : char ? characterIdentity : ''
+    : characterIdentity
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" font-family="Noto Sans CJK JP">`
     + `<rect width="1200" height="630" fill="${p.bg}"/>`
     + `<rect x="24" y="24" width="1152" height="582" rx="28" fill="${p.surface}" stroke="${p.line}"/>`
@@ -155,8 +193,8 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
     + `<text x="1120" y="75" text-anchor="end" font-size="18" fill="${p.muted}">ids.mkpo.li</text>`
     + `<path d="M56 103H1144" stroke="${p.line}"/>`
     + frame(p)
-    + (shown ? unitsGlyph({ units: shown, drawings: drawings.length ? drawings : [drawing, ...shown.slice(1).map(() => null)], palette: p }) : glyph(drawing, p))
-    + `<text x="568" y="${shown ? 160 : 193}" font-size="19" fill="${p.muted}">${shown ? 'Characters of the description, each drawn on its own' : 'Ideographic description sequence'}</text>`
+    + (document ? documentGlyph({ scopes: document.scopes, drawing, palette: p, slots: document.slots }) : shown ? unitsGlyph({ units: shown, drawings: drawings.length ? drawings : [drawing, ...shown.slice(1).map(() => null)], palette: p }) : glyph(drawing, p))
+    + `<text x="568" y="${shown ? 160 : 193}" font-size="19" fill="${p.muted}">${document ? 'Shared document' : shown ? 'Characters of the description, each drawn on its own' : 'Ideographic description sequence'}</text>`
     + text + identity
     + `<path d="M568 479H1108" stroke="${p.line}"/>`
     + `<text x="568" y="520" font-size="20" fill="${p.muted}">Open in IDS Workshop</text>`
