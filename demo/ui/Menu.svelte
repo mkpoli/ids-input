@@ -400,11 +400,11 @@
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}
   .card:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .card:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
-  .card-art{display:block;flex:none;width:46px;height:46px;color:var(--ui-color-ink)}
+  .card-art{display:block;flex:none;width:56px;height:56px;padding:4px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
   .card-art path{fill:currentColor}
-  .card-glyph{display:block;flex:none;width:46px;height:46px;overflow:hidden;font-family:var(--cjk);font-size:25px;line-height:46px;color:var(--ui-color-ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
+  .card-glyph{display:block;flex:none;width:56px;height:56px;overflow:hidden;font-family:var(--cjk);font-size:30px;line-height:56px;color:var(--ui-color-ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
   .card-text{display:flex;flex:1;flex-direction:column;gap:var(--ui-space-3xs);min-width:0}
-  .card-label{font-family:var(--cjk);font-size:var(--ui-text-2xs);line-height:1.35;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card-label{font-family:var(--cjk);font-size:var(--ui-text-xs);line-height:1.35;color:var(--ui-color-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note{color:var(--ui-color-ink-muted);font:var(--ui-weight-medium) var(--ui-text-2xs)/1.4 var(--ui-font-mono);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .card-note.unencoded{font:inherit;font-size:var(--ui-text-2xs);font-style:italic}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
