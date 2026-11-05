@@ -54,6 +54,43 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def shape_of(cs, ch):
+    """A glyph as a pathops path, for transforming and joining pieces."""
+    path = pathops.Path()
+    for contour in cs(ch): replayRecording(contour, path.getPen())
+    return path
+
+def placed_shape(path, scale_x, scale_y, x, y):
+    """The shape scaled, with (x, y) as its new lower-left corner."""
+    x0, y0, _, _ = path.bounds
+    return path.transform(scale_x, 0, 0, scale_y, x - x0 * scale_x, y - y0 * scale_y)
+
+def path_contours(path):
+    pen = RecordingPen(); path.draw(pen)
+    result, current = [], []
+    for command in pen.value:
+        current.append(command)
+        if command[0] in ('closePath', 'endPath'):
+            result.append(current); current = []
+    return result
+
+def seal_dot_top(cs):
+    """⿱⺊冖: the face's 丨 centred on 冖 and joined to its roof, with a 一 for ⺊'s dot.
+
+    The KRM headword K07097330 (Kanchi-in Ruiju Myōgishō, Hōge 97.3.3) writes the top of the
+    vulgar 處 this way: a horizontal dot, one vertical, centred over the cover and meeting it.
+    No encoded character carries the top, so it is built from the face's own strokes.
+    """
+    cover, stem, bar = shape_of(cs, '冖'), shape_of(cs, '丨'), shape_of(cs, '一')
+    width = cover.bounds[2] - cover.bounds[0]
+    cover = placed_shape(cover, 820 / width, 820 / width, 90, 120)
+    stem = placed_shape(stem, 1, 500 / (stem.bounds[3] - stem.bounds[1]), 479, cover.bounds[3] - 20)
+    bar = placed_shape(bar, 240 / (bar.bounds[2] - bar.bounds[0]), 1, stem.bounds[2] - 240, stem.bounds[3] - 10)
+    tops = pathops.op(stem, bar, pathops.PathOp.UNION)
+    # Two groups: the crafted ⺊ and the face's own 冖. A one-group form would be drawn only as a
+    # whole glyph, and the workshop's separate view would compose the two pieces from the export.
+    return [group(path_contours(tops)), group(path_contours(cover))]
+
 def compress_chang(outlines, style):
     """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
     if style == 'sans':
@@ -252,6 +289,9 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             out.append((points[i + 1] - bot_y) * sy + top_y)
         return [ops, out]
     forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
+    # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
+    # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
+    forms['⿱⺊冖'] = seal_dot_top(cs)
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
@@ -281,7 +321,19 @@ result['sources']['kaisho'] = {
     'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
     'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
 }
-result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
-    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
-}}}
+result['editorial'] = {
+    'JYN00003': {**XIE_PROVENANCE, 'donors': {
+        'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
+    }},
+    'KRM-07097330': {
+        'kind': 'editorial face-derived outline',
+        'reference': 'KRM K07097330; K01035410 glosses the ⺊ form 俗處字',
+        'url': 'https://viewer.hdic.jp/krm-public/show/K0709733',
+        'witness': 'Kanchi-in manuscript of the Ruiju Myōgishō, Hōge 97.3.3 (Tenri 391.3.3), copied 1241/1251',
+        'image': 'https://dl.ndl.go.jp/api/iiif/2586897/R0000052/full/1200,/0/default.jpg',
+        'limitation': 'No encoded character carries the top. The junction, the centred stem and the horizontal dot follow the manuscript; the strokes are the face\'s own 丨, 一 and 冖.',
+        'donors': {'sans': ['丨', '一', '冖'], 'serif': ['丨', '一', '冖']},
+        'forms': ['⿱⺊冖'],
+    },
+}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')
