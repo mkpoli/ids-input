@@ -104,6 +104,14 @@ describe('a composer-backed document source', () => {
     expect(made.complete).toBe(false)
     expect(made.issues).toContain('part leaf 0 has path data the transform engine cannot read')
   })
+  it('reports a layout box with a number that is not finite', () => {
+    const { complete, issues } = sourceOf('⿰木口', [[Number.NaN, 0, 500, 1000], [500, 0, 500, 1000]], [
+      { leaf: 0, d: square(0, 500) },
+      { leaf: 1, d: square(500, 500) },
+    ])
+    expect(complete).toBe(false)
+    expect(issues.join()).toContain('no layout box')
+  })
   it('draws a document through a preview and forwards its sketch', async () => {
     const document = fromSequence('⿰木口')
     const boxes = [[0, 0, 500, 1000], [500, 0, 500, 1000]]
