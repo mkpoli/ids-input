@@ -240,6 +240,7 @@
   "parts.shuishu.note": "提案ブロックの暫定符号位置に置いています。Unicode 18.0.0では未割り当てです。",
   "parts.shuishu.ids": "分解は編集によるもので、資料にはありません。分け方が明らかな字だけを載せています。",
   "parts.jurchen.character": "文字",
+  "parts.jurchen.variant": "異体字",
   "parts.jurchen.radical": "部首",
   "parts.jurchen.groups": "女真文字の分類",
   "parts.jurchen.radicals": "女真文字の部首",

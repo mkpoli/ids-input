@@ -15,14 +15,14 @@ const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz
 const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen-outlines.json.gz', import.meta.url))).toString())
 const chars = data.parts.filter(part => part.jurGroup === 'character')
 const radicals = data.parts.filter(part => part.jurGroup === 'radical')
-const FIRST = '\u{18E00}', TUMEN = '\u{18E01}', RADICAL = '\u{191A0}'
+const FIRST = '\u{18E00}', TUMEN = '\u{18E01}', VARIANT = '\u{18E01}\uFE00', RADICAL = '\u{191A0}'
 const found = query => jurchenMatches(data.parts, query).map(part => part.part)
 
 describe('Jurchen data', () => {
   it('holds the whole of Unicode 18.0, once each', () => {
     expect(chars).toHaveLength(914)
     expect(radicals).toHaveLength(51)
-    expect(new Set(data.parts.map(part => part.part)).size).toBe(965)
+    expect(new Set(data.parts.map(part => part.part)).size).toBe(1502)
     expect(chars.map(part => part.part.codePointAt(0))).toEqual(Array.from({ length: 914 }, (_, i) => 0x18E00 + i))
     expect(radicals.map(part => part.part.codePointAt(0))).toEqual(Array.from({ length: 51 }, (_, i) => 0x191A0 + i))
   })
@@ -42,7 +42,7 @@ describe('Jurchen data', () => {
   })
 
   it('draws every part, with quadratic outlines only', () => {
-    expect(Object.keys(outlines.records)).toHaveLength(965)
+    expect(Object.keys(outlines.records)).toHaveLength(1502)
     for (const part of data.parts) {
       const record = outlines.records[part.part]
       expect(record.G.p.length).toBeGreaterThan(0)
@@ -67,7 +67,7 @@ describe('Jurchen in the editor', () => {
 
   it('has its own tab and stays out of Other scripts', () => {
     expect(isOtherScript('jurchen')).toBe(false)
-    expect(groupPaletteParts(data.parts).get('jurchen')).toHaveLength(965)
+    expect(groupPaletteParts(data.parts).get('jurchen')).toHaveLength(1502)
   })
 
   it('draws a description of Jurchen from the bundled outlines', async () => {
@@ -82,7 +82,7 @@ describe('Jurchen in the editor', () => {
 
   it('adds the parts to the palette and a reading to the search', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
-    expect(await adapter.parts()).toHaveLength(965)
+    expect(await adapter.parts()).toHaveLength(1502)
     expect((await adapter.search(TUMEN)).map(hit => hit.char)).toContain(TUMEN)
   })
 
@@ -98,16 +98,48 @@ describe('Jurchen in the editor', () => {
   })
 })
 
+describe('Jurchen variant sequences', () => {
+  const variants = data.parts.filter(part => part.jurGroup === 'variant')
+
+  it('holds the 537 of the table, each after its base with its record', () => {
+    expect(variants).toHaveLength(537)
+    for (const variant of variants) {
+      const [base, selector] = [...variant.part]
+      expect(selector >= '\uFE00' && selector <= '\uFE04').toBe(true)
+      const entry = chars.find(part => part.part === base)
+      expect(variant.jurReading).toBe(entry.jurReading)
+    }
+    const at = data.parts.findIndex(part => part.part === TUMEN)
+    expect(data.parts[at + 1].part).toBe(VARIANT)
+  })
+
+  it('draws each one from its own outline', async () => {
+    expect(outlines.records[VARIANT].G.p).not.toEqual(outlines.records[TUMEN].G.p)
+    expect(onlyBundled(`⿰${VARIANT}${FIRST}`, false, false)).toBe(true)
+    expect(onlyBundled(`⿰${TUMEN}\uFE04${FIRST}`, false, false)).toBe(false)
+    const drawn = await compose(jurchenSource({ load: async () => outlines }), `⿰${VARIANT}${FIRST}`, { separate: true })
+    expect(drawn.origins).toContain(`glyph ${VARIANT}`)
+  })
+
+  it('keeps a typed variant in the search and in a description', () => {
+    expect(jurchenNames(data, VARIANT)[0].char).toBe(VARIANT)
+    expect(write(parse(`⿰${VARIANT}${FIRST}`).tree)).toBe(`⿰${VARIANT}${FIRST}`)
+    expect(jurchenLabel(variants[0])).toContain('女真 異體')
+    expect(jurchenLabel(variants[0])).toContain('U+18E01 U+FE00')
+  })
+})
+
 describe('Finding Jurchen', () => {
   it('finds a code point, written either way', () => {
-    expect(found('U+18E01')).toEqual([TUMEN])
-    expect(found('18e01')).toEqual([TUMEN])
+    expect(found('U+18E01')[0]).toBe(TUMEN)
+    expect(found('18e01')[0]).toBe(TUMEN)
+    expect(found('U+18E01').every(char => char.startsWith(TUMEN))).toBe(true)
     expect(found('U+10000')).toEqual([])
   })
 
   it('reads a number as a value, then a stroke count', () => {
-    const hits = found('10000')
-    expect(hits).toEqual([TUMEN])
+    expect(found('10000')[0]).toBe(TUMEN)
+    expect(found('10000').every(char => char.startsWith(TUMEN))).toBe(true)
     const five = found('5')
     expect(data.parts.find(part => part.part === five[0]).jurNumeric).toBe(5)
     expect(five.length).toBeGreaterThan(1)
@@ -116,6 +148,7 @@ describe('Finding Jurchen', () => {
 
   it('lists typed characters in order', () => {
     expect(found(TUMEN + FIRST)).toEqual([TUMEN, FIRST])
+    expect(found(`${VARIANT}${FIRST}`)).toEqual([VARIANT, FIRST])
   })
 
   it('finds a stroke code, whole before its extensions', () => {

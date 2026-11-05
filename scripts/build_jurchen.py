@@ -13,8 +13,10 @@ Sources, pinned in `data/jurchen/sources.json` with SHA-256 digests:
 - `Alari_jurc.dict.yaml` for the stroke codes;
 - `AlariXuwasunJurchen-Regular.otf` for the outlines.
 
-The font keeps the base code points only and is converted from cubic to quadratic outlines, which
-the composer's records and the card renderer read. The table's 537 variant sequences are not kept.
+The font keeps the characters, radicals and variant sequences and is converted from cubic to quadratic
+outlines, which the composer's records and the card renderer read. A variant sequence is a base
+character and a selector from U+FE00..U+FE04, reached through a format 14 cmap and recorded under the
+pair; a sequence the table and the font do not both give stops the build.
 """
 import base64
 import gzip
@@ -96,7 +98,7 @@ def records():
 
 
 def stroke_codes():
-    """The stroke code of each base code point. The table's placeholder row for U+25A1 is dropped."""
+    """The stroke code of each row, by its text. The table's placeholder row for U+25A1 is dropped."""
     body = checked('Alari_jurc.dict.yaml').read_text(encoding='utf-8').replace('\r', '').split('...\n', 1)[1]
     codes = {}
     for line in body.splitlines():
@@ -108,37 +110,45 @@ def stroke_codes():
         letters = re.sub(r'[^a-z]', '', code)
         if not re.fullmatch(r'[hspdz]+b?', letters):
             raise ValueError(f'Unreadable stroke code: {line!r}')
-        if len(text) == 1:
-            if ord(text) in codes:
-                raise ValueError(f'Two codes for U+{ord(text):04X}')
-            codes[ord(text)] = letters
-        elif len(text) != 2 or ord(text[1]) not in SELECTORS:
+        if not (len(text) == 1 or len(text) == 2 and ord(text[1]) in SELECTORS):
             raise ValueError(f'Unreadable row: {line!r}')
-    if set(codes) != set(CHARS) | set(RADICALS):
+        if text in codes:
+            raise ValueError(f'Two codes for {text!r}')
+        codes[text] = letters
+    if {ord(text) for text in codes if len(text) == 1} != set(CHARS) | set(RADICALS):
         raise ValueError('The table should give a code for every character and radical')
     return codes
 
 
-def build_font():
+def build_font(codes):
     source = TTFont(checked('AlariXuwasunJurchen-Regular.otf'))
     if source['head'].unitsPerEm != 1000:
         raise ValueError('The conversion assumes 1000 units per em')
     cmap, glyphs, metrics = source.getBestCmap(), source.getGlyphSet(), source['hmtx']
     points = [*CHARS, *RADICALS]
-    names = {point: f'u{point:05X}' for point in points}
-    outlines, widths = {'.notdef': TTGlyphPen(None).glyph()}, {'.notdef': (1000, 0)}
+    # Each text the font draws, with the source glyph and the name it takes here.
+    drawn = {}
     for point in points:
         if point not in cmap:
             raise ValueError(f'The font does not draw U+{point:04X}')
+        drawn[chr(point)] = (cmap[point], f'u{point:05X}')
+    for selector, rows in next(table for table in source['cmap'].tables if table.format == 14).uvsDict.items():
+        for point, glyph in rows:
+            drawn[chr(point) + chr(selector)] = (glyph or cmap[point], f'u{point:05X}.{selector:04x}')
+    if set(drawn) != set(codes):
+        raise ValueError(f'The table and the font differ on {sorted(set(drawn) ^ set(codes))[:5]}')
+    outlines, widths = {'.notdef': TTGlyphPen(None).glyph()}, {'.notdef': (1000, 0)}
+    for glyph, name in drawn.values():
         pen = TTGlyphPen(None)
         # PostScript outlines wind the other way from TrueType's.
-        glyphs[cmap[point]].draw(Cu2QuPen(pen, MAX_ERROR, reverse_direction=True))
-        outlines[names[point]] = pen.glyph()
-        widths[names[point]] = (metrics[cmap[point]][0], 0)
+        glyphs[glyph].draw(Cu2QuPen(pen, MAX_ERROR, reverse_direction=True))
+        outlines[name] = pen.glyph()
+        widths[name] = (metrics[glyph][0], 0)
 
     builder = FontBuilder(1000, isTTF=True)
     builder.setupGlyphOrder(list(outlines))
-    builder.setupCharacterMap({point: names[point] for point in points})
+    builder.setupCharacterMap({ord(text): name for text, (_, name) in drawn.items() if len(text) == 1},
+                              uvs=[(ord(text[0]), ord(text[1]), name) for text, (_, name) in drawn.items() if len(text) == 2])
     builder.setupGlyf(outlines)
     builder.setupHorizontalMetrics({name: (width, outlines[name].xMin if outlines[name].numberOfContours else 0)
                                     for name, (width, _) in widths.items()})
@@ -153,7 +163,7 @@ def build_font():
         'psName': 'IDSJurchen-Regular',
         'version': 'Version 1.0',
         'designer': 'Sulfa, Dooran, Raxon7',
-        'description': 'The base characters and radicals of Alari Xuwasun Jurchen, converted to TrueType outlines.',
+        'description': 'The characters, radicals and variant sequences of Alari Xuwasun Jurchen, converted to TrueType outlines.',
         'licenseDescription': LICENCE.read_text(encoding='utf-8'),
         'licenseInfoURL': 'https://openfontlicense.org',
     })
@@ -165,7 +175,7 @@ def build_font():
     font.flavor = 'woff2'
     FONT.parent.mkdir(parents=True, exist_ok=True)
     font.save(FONT)
-    return TTFont(FONT), points, names
+    return font, {text: name for text, (_, name) in drawn.items()}
 
 
 def write(path, document):
@@ -177,43 +187,49 @@ def write(path, document):
 
 def main():
     source, codes = records(), stroke_codes()
-    font, points, names = build_font()
+    font, names = build_font(codes)
     glyphs = font.getGlyphSet()
     outlines = {}
-    for point in points:
-        glyph = glyphs[names[point]]
+    for char, name in names.items():
+        glyph = glyphs[name]
         pen, bounds, perimeter = Contours(glyphs), BoundsPen(glyphs), PerimeterPen(glyphs)
         for target in (pen, bounds, perimeter):
             glyph.draw(target)
         if bounds.bounds is None:
-            raise ValueError(f'Empty glyph for U+{point:04X}')
-        char = chr(point)
+            raise ValueError(f'Empty glyph for {char!r}')
         outlines[char] = {'k': char, 'G': {'v': 0, 'b': [round(value, 4) for value in bounds.bounds], 'p': pen.contours},
                           'ink': round(perimeter.value, 4), 'o': len(pen.contours)}
 
+    variants = {}
+    for text in codes:
+        if len(text) == 2:
+            variants.setdefault(ord(text[0]), []).append(text)
+    if not set(variants) <= set(CHARS):
+        raise ValueError('The conversion assumes only characters have variant sequences')
     parts = []
     for point in CHARS:
         entry = source[point]
         radical, strokes = entry['kJURC_RSUnicode'].split('.')
         numeric = entry.get('kJURC_Numeric')
-        parts.append({
-            'part': chr(point),
+        record = {
             'kind': 'jur',
-            'jurGroup': 'character',
             'jurRadical': int(radical),
-            'jurCode': codes[point],
             'jurReading': entry.get('kJURC_NCReading'),
             'jurNumeric': int(numeric) if numeric else None,
             'jurSource': entry['kJURC_Src'],
             'strokes': int(strokes),
-        })
+        }
+        parts.append({'part': chr(point), 'jurGroup': 'character', 'jurCode': codes[chr(point)], **record})
+        # A variant follows its base, so that a search lists them together.
+        for text in sorted(variants.get(point, [])):
+            parts.append({'part': text, 'jurGroup': 'variant', 'jurCode': codes[text], **record})
     for index, point in enumerate(RADICALS, 1):
         parts.append({
             'part': chr(point),
             'kind': 'jur',
             'jurGroup': 'radical',
             'jurRadical': index,
-            'jurCode': codes[point],
+            'jurCode': codes[chr(point)],
             'strokes': None,
         })
     write(INDEX, {'format': 1, 'unicode': '18.0.0', 'sources': json.loads((SOURCE / 'sources.json').read_text()), 'parts': parts})

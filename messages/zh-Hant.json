@@ -240,6 +240,7 @@
   "parts.shuishu.note": "置於提案區塊的暫定碼位；Unicode 18.0.0 尚未分配。",
   "parts.shuishu.ids": "分解是編者所加，資料中並沒有，因此只收拆分清楚的字。",
   "parts.jurchen.character": "文字",
+  "parts.jurchen.variant": "異體",
   "parts.jurchen.radical": "部首",
   "parts.jurchen.groups": "女真文分類",
   "parts.jurchen.radicals": "女真文部首",

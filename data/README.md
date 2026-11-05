@@ -623,9 +623,12 @@ from a copy of its text; date not seen), which also says the font is a Fangsong 
 encoding proposal's forms, so it does not reproduce an inscription or manuscript. The site was found
 through 柳突破's [Bilibili video](https://www.bilibili.com/video/BV1odec6pEqp/) of 2026-09-16.
 
-The table lists 537 variant sequences through U+FE00–U+FE04, a convention of its own that
-`StandardizedVariants.txt` of Unicode 18.0 does not record; they are left out here. No source
-decomposes these characters, so the index has no IDS.
+The 537 parts with `jurGroup: 'variant'` are the table's and the font's variant sequences through
+U+FE00–U+FE04. They are Alari's convention: `StandardizedVariants.txt` of Unicode 18.0 records none
+for Jurchen, so another font may draw the base form. Each carries its base character's Unicode record
+and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
+end of its code, and drops the table's placeholder row for U+25A1. No source decomposes these
+characters, so the index has no IDS.
 
 Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
 index, outlines and font with `uv run --python 3.12 scripts/build_jurchen.py`, then

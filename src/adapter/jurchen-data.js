@@ -4,12 +4,16 @@
 import { isJurchen } from '../core/ids.js'
 export { isJurchen }
 
+/** One typed character or radical, with its variation selector if it has one. */
+const TYPED = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}][\uFE00-\uFE04]?/gu
+
 /**
  * A Jurchen palette part. `jurRadical` is its radical number, `jurCode` Alari's stroke code,
  * `jurReading` the dictionary's reading as Unicode records it, `jurNumeric` Unicode's numeric value
- * and `jurSource` Unicode's source reference. A radical carries only its number and code, and a
- * host's own part may carry none of them.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'radical', jurRadical?: number, jurCode?: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
+ * and `jurSource` Unicode's source reference. A variant sequence carries its base character's record
+ * and its own code. A radical carries only its number and code, and a host's own part may carry
+ * none of them.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'variant' | 'radical', jurRadical?: number, jurCode?: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
  *
  * @typedef {{ format: number, parts: JurchenPart[], unicode?: string, sources?: unknown }} JurchenData
  */
@@ -22,14 +26,14 @@ export function jurchenTable(doc) {
 
 /** What a part is called wherever the editor names one. @param {JurchenPart} part */
 export const jurchenLabel = part => [
-  `女真 ${part.jurGroup === 'radical' ? '部首' : '字'}`,
+  `女真 ${part.jurGroup === 'radical' ? '部首' : part.jurGroup === 'variant' ? '異體' : '字'}`,
   part.jurReading,
   part.jurNumeric,
   part.jurCode,
   part.jurRadical == null ? null : `部首 ${part.jurRadical}`,
   part.strokes == null ? null : `${part.strokes} 畫`,
   part.jurSource,
-  `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
+  [...part.part].map(char => `U+${char.codePointAt(0)?.toString(16).toUpperCase()}`).join(' '),
 ].filter(value => value != null).join(' · ')
 
 // The readings are written in IPA-like letters a reader rarely has to hand, so a reading and a query
@@ -56,7 +60,7 @@ function readingTier(part, query) {
 }
 
 /**
- * The parts a query names, closest first: a code point, or the numeral with that value and the
+ * The parts a query names, closest first: a code point with its variants, or the numeral with that value and the
  * characters of that stroke count, or the characters typed, or a stroke code and a reading at once.
  * @param {JurchenPart[]} parts @param {string} query @returns {JurchenPart[]}
  */
@@ -75,8 +79,7 @@ export function jurchenMatches(parts, query) {
     return [...parts.filter(part => part.jurNumeric === value), ...parts.filter(part => part.strokes === value && part.jurNumeric !== value)]
   }
   if (isJurchen(text)) {
-    const typed = new Set([...text])
-    return [...typed].flatMap(char => parts.filter(part => part.part === char))
+    return [...new Set(text.match(TYPED))].flatMap(char => parts.filter(part => part.part === char))
   }
   const code = text.toLowerCase()
   const tiers = /** @type {JurchenPart[][]} */ ([[], [], [], [], []])

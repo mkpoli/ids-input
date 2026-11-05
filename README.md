@@ -62,7 +62,8 @@ in their title; a description finds its character, a typed part lists the charac
 it, and the structure panel treats the decomposition as the character's parts. The tab says the
 decompositions are ours, since no source gives them.
 
-The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals, with outlines from
+The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 537 variant
+sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
 reading in Unicode's records, numeric value or code point. No source decomposes these characters,
