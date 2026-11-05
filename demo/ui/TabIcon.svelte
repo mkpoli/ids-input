@@ -4,10 +4,9 @@
   // Drawn after a short pause, so a run of typing asks for one drawing rather than each keystroke;
   // a list of settled tabs asks at once with a delay of 0.
   import { parse, write } from '../../src/core/index.js'
-  import { EMOJI_CUT_MATRIX, emojiPlace, emojiTransform } from '../../src/core/preview.js'
+  import { drawingSvg } from '../../src/core/index.js'
   /**
-   * @typedef {{ d?: string, cut?: string, slots?: { index: number, box: number[] }[],
-   *   emoji?: { text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} Drawing
+   * @typedef {Parameters<typeof drawingSvg>[0]} Drawing
    * @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null>, delay?: number }}
    */
   let { sequence, draw, delay = 200 } = $props()
@@ -28,40 +27,13 @@
 </script>
 
 {#if drawing}
-  {@const emoji = drawing.emoji ?? []}
-  {@const hasCut = Boolean(drawing.cut || emoji.some(item => item.cut))}
-  <svg class="tab-glyph" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false">
-    {#if hasCut}
-      {#if emoji.some(item => item.cut)}
-        <filter id="{uid}-emoji-cut" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values={EMOJI_CUT_MATRIX} /></filter>
-      {/if}
-      <mask id="{uid}-cut"><rect x="0" y="0" width="1000" height="1000" fill="#fff" />
-        {#if drawing.cut}<path d={drawing.cut} fill="#000" />{/if}
-        {#each emoji as item}
-          {#if item.cut}
-            {@const place = emojiPlace(item)}
-            <text filter={`url(#${uid}-emoji-cut)`} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
-          {/if}
-        {/each}
-      </mask>
-    {/if}
-    <path d={drawing.d} mask={hasCut ? `url(#${uid}-cut)` : undefined} />
-    {#each emoji as item}
-      {#if !item.cut}
-        {@const place = emojiPlace(item)}
-        <text mask={hasCut && !item.restored ? `url(#${uid}-cut)` : undefined} transform={emojiTransform(item) || undefined} x={place.x} y={place.y} text-anchor="middle" dominant-baseline="central" font-size={place.size} font-family="system-ui, sans-serif">{item.text}</text>
-      {/if}
-    {/each}
-    {#each drawing.slots ?? [] as slot (slot.index)}
-      <rect class="tab-slot" x={slot.box[0]} y={slot.box[1]} width={slot.box[2]} height={slot.box[3]} rx="60" />
-    {/each}
-  </svg>
+  <span class="tab-glyph" aria-hidden="true">{@html drawingSvg(drawing, { ink: 'currentColor', placeholders: true, idPrefix: `${uid}-` })}</span>
 {:else}
   <svg class="tab-empty" viewBox="0 0 1000 1000" aria-hidden="true" focusable="false"><rect x="150" y="150" width="700" height="700" rx="90" /></svg>
 {/if}
 
 <style>
-  .tab-glyph{display:block;width:100%;height:100%;fill:currentColor}
-  .tab-slot{fill:none;stroke:currentColor;stroke-opacity:.35;stroke-width:24;stroke-dasharray:48 40}
+  .tab-glyph{display:block;width:100%;height:100%}
+  .tab-glyph :global(svg){display:block;width:100%;height:100%}
   .tab-empty{display:block;width:100%;height:100%;fill:none;stroke:currentColor;stroke-opacity:.28;stroke-width:26;stroke-dasharray:0 58;stroke-linecap:round}
 </style>
