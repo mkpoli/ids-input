@@ -199,8 +199,10 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   const pieces = Array.isArray(drawing.parts) ? drawing.parts : null
   const emoji = drawing.emoji ?? []
   const hasCut = Boolean(cut || emoji.some(item => item.cut))
+  /** Whether an emoji names a drawn part, so it paints in that part's turn. @param {{ part?: number }} item */
+  const inPart = item => Number.isInteger(item.part) && item.part >= 0 && item.part < (pieces?.length ?? 0)
   const groupedEmoji = !hasCut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
-    && emoji.every(item => Number.isInteger(item.part) && item.part >= 0 && item.part < pieces.length)
+    && emoji.some(inPart)
   const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
   /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
@@ -230,8 +232,8 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
       out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
     }
   } else if (d) out.push(`<path d="${d}" fill="${fill}"${hasCut ? ' mask="url(#cut)"' : ''}/>`)
-  if (!groupedEmoji) for (const item of emoji) {
-    if (item.cut) continue
+  for (const item of emoji) {
+    if (item.cut || (split && groupedEmoji && inPart(item))) continue
     const content = textOf(item, hasCut && !item.restored ? ' mask="url(#cut)"' : '')
     if (!content) continue
     const transform = Number.isInteger(item.part) && transforms ? transformData(transforms[item.part]) : ''

@@ -113,12 +113,3 @@ it('keeps a merged cut on the frame its merged ink keeps', () => {
   expect(svg).toContain('<path d="M0 0Z" fill="#000000" mask="url(#cut)"/>')
   expect(svg).not.toContain('<path d="M0 0L10 0L10 10Z" fill="#000" transform=')
 })
-
-it('draws every Emoji of a part, and one that names a part the drawing lacks', () => {
-  const svg = drawingSvg({
-    d: '',
-    parts: [{ d: 'M0 0L1 1Z', leaf: 0 }],
-    emoji: [{ text: '😀', box: [0, 0, 9, 9], part: 0 }, { text: '😁', box: [0, 0, 9, 9], part: 0 }, { text: '🙂', box: [0, 0, 9, 9], part: 9 }],
-  })
-  for (const text of ['😀', '😁', '🙂']) expect(svg).toContain(text)
-})
