@@ -61,6 +61,13 @@ describe('a workshop share card', () => {
     expect(svg).not.toContain('data-character="true"')
     expect(svg).not.toContain('data-codepoint="true"')
   })
+
+  it('draws an empty slot where the document moved it', () => {
+    const scopes = { root: { kind: 'component', node: 'root', positive: [{ d: 'M0 0L100 0L100 100Z' }], negative: [] }, complete: true, issues: [], leafFrames: new Map() }
+    const svg = cardSvg({ sequence: '⿰木⬚', drawing: { slots: [{ index: 0, box: [500, 0, 500, 1000] }] }, document: { scopes, title: null, slots: [[350, 0, 500, 1000]] } })
+    expect(svg).toContain('<rect x="350" y="0" width="500" height="1000" rx="18"')
+    expect(svg).not.toContain('<rect x="500" y="0" width="500" height="1000" rx="18"')
+  })
   it('falls back to the sequence drawing when a document has no scoped drawing', () => {
     const svg = cardSvg({ sequence: '⿰木口', drawing, document: { scopes: null, title: null } })
     expect(svg).toContain('>Shared document</text>')

@@ -4,6 +4,7 @@
 // still gets a card, with the empty frame.
 import { compose, sketch as composerSketch, unpack } from '../src/composer/loader.js'
 import { documentView } from '../src/composer/document-view.js'
+import { boxCorners } from '../src/document/index.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE, codePoint } from './card.js'
 import { OPERATORS } from '../src/core/ids.js'
@@ -85,7 +86,7 @@ async function draw(env, sequence) {
  * @param {any} env @param {string} sequence @param {any} document
  */
 async function drawDocument(env, sequence, document) {
-  const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
+  const source = sourceFor(sequence, { base: COMPOSER_BASE, separate: true, loaders: loadersFor(env) })
   await source.ready()
   const drawing = await compose(source, sequence, { separate: true, fontStyle: 'sans' })
   const sketch = await composerSketch(source, sequence)
@@ -170,9 +171,15 @@ export async function cardResponse(env, ctx, sequence, document = null, token = 
   const made = document ? await drawDocument(env, sequence, document).catch(() => null) : null
   const drawings = document ? [] : await drawUnits(env, units, sequenceDrawing)
   const shown = document ? null : units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
-  const drawn = document ? { scopes: made?.view.complete ? made.view.scopes : null, title: document.title ?? null } : null
+  const slots = made?.view ? [...made.view.frames.values()]
+    .filter(frame => frame.node.kind === 'slot')
+    .map(frame => boxCorners(frame.canvas, frame.box)) : []
+  const drawn = document ? { scopes: made?.view.complete ? made.view.scopes : null, title: document.title ?? null, slots } : null
   const body = await png(env, sequence, made?.drawing ?? sequenceDrawing, char, shown, drawn)
-  const answer = new Response(body, { headers: { 'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT } })
+  const answer = new Response(body, { headers: {
+    'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT,
+    'x-og-card': document ? drawn.scopes ? 'document' : 'document-fallback' : 'sequence',
+  } })
   if (cache) ctx.waitUntil(cache.put(key, answer.clone()))
   return answer
 }

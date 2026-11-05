@@ -62,15 +62,15 @@ function glyph(drawing, palette, ordinal) {
 /**
  * A document's scoped drawing in the frame, or its sequence drawing where the layers have no scoped
  * form. The scoped drawing keeps the document's layer transforms.
- * @param {{ scopes: any, drawing: any, palette: typeof PALETTES.light }} given
+ * @param {{ scopes: any, drawing: any, palette: typeof PALETTES.light, slots?: number[][] }} given
  */
-function documentGlyph({ scopes, drawing, palette }) {
+function documentGlyph({ scopes, drawing, palette, slots = [] }) {
   if (!scopes) return glyph(drawing, palette)
   const { x, y, side, pad } = FRAME
   const box = side - 2 * pad, inset = 16, span = 1000 + 2 * inset
-  const slots = Array.isArray(drawing?.slots) ? drawing.slots.map((/** @type {any} */ slot) => slot.box) : []
+  const boxes = Array.isArray(slots) ? slots : []
   return scopesSvg(scopes, {
-    ink: palette.ink, padding: inset / 1000, size: box, idPrefix: 'og-document', slots,
+    ink: palette.ink, padding: inset / 1000, size: box, idPrefix: 'og-document', slots: boxes,
     emoji: drawing?.emoji ?? null, cut: drawing?.cut ?? '',
     cutLeaf: drawing?.parts?.find((/** @type {any} */ part) => part.cut)?.leaf ?? null,
   }).replace(/^<svg[^>]*>/, `<svg x="${x + pad}" y="${y + pad}" width="${box}" height="${box}" viewBox="${-inset} ${-inset} ${span} ${span}">`)
@@ -154,7 +154,7 @@ function faceOfOperator(familyOf, cell) {
 /**
  * @param {{ sequence: string, drawing?: any, char?: string | null, familyOf?: (character: string) => string,
  *   units?: string[], drawings?: (any | null)[], theme?: 'light' | 'dark', codepoint?: string,
- *   document?: { scopes: any, title: string | null } | null }} card
+ *   document?: { scopes: any, title: string | null, slots?: number[][] } | null }} card
  */
 export function cardSvg({ sequence, drawing = null, char = null, familyOf = () => 'Noto Sans CJK JP', units: shown, drawings = [], theme = 'light', codepoint, document = null }) {
   const p = PALETTES[theme]
@@ -193,7 +193,7 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
     + `<text x="1120" y="75" text-anchor="end" font-size="18" fill="${p.muted}">ids.mkpo.li</text>`
     + `<path d="M56 103H1144" stroke="${p.line}"/>`
     + frame(p)
-    + (document ? documentGlyph({ scopes: document.scopes, drawing, palette: p }) : shown ? unitsGlyph({ units: shown, drawings: drawings.length ? drawings : [drawing, ...shown.slice(1).map(() => null)], palette: p }) : glyph(drawing, p))
+    + (document ? documentGlyph({ scopes: document.scopes, drawing, palette: p, slots: document.slots }) : shown ? unitsGlyph({ units: shown, drawings: drawings.length ? drawings : [drawing, ...shown.slice(1).map(() => null)], palette: p }) : glyph(drawing, p))
     + `<text x="568" y="${shown ? 160 : 193}" font-size="19" fill="${p.muted}">${document ? 'Shared document' : shown ? 'Characters of the description, each drawn on its own' : 'Ideographic description sequence'}</text>`
     + text + identity
     + `<path d="M568 479H1108" stroke="${p.line}"/>`
