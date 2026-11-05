@@ -15,7 +15,8 @@
   let { drawing = null, scopes = null, slots = [], emoji = null, cut = null, cutLeaf = null, incomplete = false, document = null, sequence, t, onnote } = $props()
   let partial = $state(false)
   let s = $state(storedSettings())
-  $effect(() => keepSettings($state.snapshot(s)))
+  let touched = $state(false)
+  $effect(() => { const settings = $state.snapshot(s); if (touched) keepSettings(settings) })
   const ready = $derived(Boolean(scopes ?? drawing))
   const canExport = $derived(ready && (!incomplete || partial))
   const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots, emoji ?? [], cut ?? '', cutLeaf))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
@@ -69,7 +70,7 @@
 
 <section class="export" aria-labelledby="{uid}-title">
   <h3 id="{uid}-title">{t('app.export.title')}</h3>
-  <div class="rows">
+  <div class="rows" onchange={() => { touched = true }} oninput={() => { touched = true }}>
     <div class="row">
       <span class="name" aria-hidden="true">{t('app.export.format')}</span>
       <Segmented label={t('app.export.format')} bind:value={s.format}
