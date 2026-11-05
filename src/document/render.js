@@ -5,6 +5,7 @@
 // Compositing (the ㇯ subtraction and the union of operators) belongs to the consumer of the pieces.
 import { TransformError, chainIsAffine, affineForChain, transformPieces } from './transform.js'
 import { applyGeometryEdits } from './geometry-edit.js'
+import { findLayer } from './model.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -35,6 +36,20 @@ function editedGeometry(geometry, edits, node, issues, tolerance) {
   const result = applyGeometryEdits(geometry, edits, node, { tolerance })
   for (const edit of result.unresolved) issues.push({ node, reason: 'geometry', message: `unresolved geometry edit ${edit.id}` })
   return result.geometry
+}
+
+/**
+ * Report geometry edits that no rendered component received: a target that is not in the tree, or a
+ * layer that is not a component. A component the walk skipped has its own issue already.
+ * @param {Document} document @param {Set<string>} seen @param {LayerIssue[]} issues
+ */
+function missingEditTargets(document, seen, issues) {
+  for (const edit of document.geometryEdits ?? []) {
+    if (seen.has(edit.node)) continue
+    const found = findLayer(document.root, edit.node)
+    if (!found) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
+    else if (found.node.kind !== 'component') issues.push({ node: edit.node, reason: 'geometry', message: `geometry edit ${edit.id} targets ${edit.node}, which is not a component` })
+  }
 }
 
 /**
@@ -97,7 +112,7 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     })
   }
   visit(document.root, [])
-  for (const edit of document.geometryEdits ?? []) if (!seen.has(edit.node)) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
+  missingEditTargets(document, seen, issues)
   return { pieces, complete: issues.length === 0, issues }
 }
 
@@ -162,7 +177,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     return { kind: 'operator', node: node.id, op: node.op, children }
   }
   const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
-  for (const edit of document.geometryEdits ?? []) if (!seen.has(edit.node)) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
+  missingEditTargets(document, seen, issues)
   return { root, complete: issues.length === 0, issues, leafFrames: new Map() }
 }
 
