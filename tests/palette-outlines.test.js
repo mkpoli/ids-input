@@ -24,6 +24,7 @@ it('accounts for the leaves of every shipped palette entry', async () => {
   const { paletteRows } = await import('../src/adapter/babelstone.js')
   const { parse, isNode, write } = await import('../src/core/ids.js')
   const { isComponentForm } = await import('../src/composer/component-forms.js')
+  const { hasPaletteGlyph } = await import('../src/composer/palette.js')
   const { hasUnicodeGlyph } = await import('../src/composer/unicode.js')
   const { COMPOSER_BASE } = await import('../demo/lib/composer.js')
   const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
@@ -40,7 +41,11 @@ it('accounts for the leaves of every shipped palette entry', async () => {
     if (isNode(node)) return node.parts.forEach(visit)
     if (!hasPaletteGlyph(node) && !hasUnicodeGlyph(node) && !remoteKeys.has(node) && !local.some(records => records[node])) missing.add(node)
   }
-  for (const { part, fragment } of rows) {
+  for (const { part, fragment, glyph } of rows) {
+    if (glyph) {
+      expect(hasPaletteGlyph(glyph)).toBe(true)
+      continue
+    }
     const text = /^\{\d+\}$/.test(part) ? fragment : part
     if (!text) continue
     const result = parse(text, { open: true })

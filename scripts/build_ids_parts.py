@@ -395,6 +395,9 @@ def numbered_rows(
         counts = [known_strokes.get(leaf) for leaf in leaves]
         count = sum(counts) if counts and all(value is not None for value in counts) else None
         cls = next((known_first[leaf] for leaf in leaves if leaf in known_first), None)
+        # Note 6 gives a PUA code point for every component, including those with no fragment.
+        found = re.search(r"\(([0-9A-F]{4,6})\)", description)
+        glyph = None if fragment or not found else chr(int(found.group(1), 16))
         rows.append([
             f"{{{number}}}",
             len(users.get(number, ())),
@@ -404,7 +407,8 @@ def numbered_rows(
             "d",
             fragment or None,
             description,
-            0 if fragment else 1,
+            0 if fragment or glyph else 1,
+            glyph,
         ])
     return rows
 
@@ -503,7 +507,7 @@ def main(argv: list[str] | None = None) -> int:
     from tangut import read_tangut, tangut_parts, SOURCE
     rows.extend(tangut_parts(read_tangut(args.cache)))
     document = {
-        "columns": ["part", "uses", "strokes", "derived", "first", "kind", "fragment", "description", "readonly"],
+        "columns": ["part", "uses", "strokes", "derived", "first", "kind", "fragment", "description", "readonly", "glyph"],
         "common": f"常用漢字 (Unihan kJoyoKanji) or 通用规范汉字表 level 1 (Unihan kTGH ≤ {TGH_FIRST_LEVEL})",
         "sources": [
             f"BabelStone IDS.TXT, File Date {ids_date}, PD, Andrew West, {IDS_URL}"

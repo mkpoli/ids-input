@@ -15,6 +15,9 @@
   unicode-range:U+33473}
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;
   unicode-range:U+2B1A,U+31C0-31E3}
+/* BabelStone Han PUA's glyphs for the numbered components IDS.TXT note 6 gives no fragment. */
+@font-face{font-family:"IDS Numbered";src:url("./IDSNumbered.woff2") format("woff2");font-display:swap;
+  unicode-range:U+E080-F8DF}
 
 /* The sixteen ideographic description characters, for sequence text on machines with no font that
    draws them. The four after U+2FFB are newer than the pinned Noto Sans CJK, so they come from
