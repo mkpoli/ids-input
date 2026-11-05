@@ -177,7 +177,9 @@
       scaleX = Math.round(Math.hypot(a, b) * 1000) / 1000
       scaleY = Math.round(Math.hypot(c, d) * 1000) / 1000
       rotate = Math.round(Math.atan2(b, a) * 1800 / Math.PI) / 10
-      simple = true
+      const radians = rotate * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
+      const expected = [cos * scaleX, sin * scaleX, -sin * scaleY, cos * scaleY]
+      simple = expected.every((value, index) => Math.abs(value - flat[index]) < 0.002)
       applyError = ''
       return
     }
@@ -232,17 +234,19 @@
     try {
       if (strokeId && strokeGeometry) {
         const radians = rotate * Math.PI / 180
-        const a = Math.cos(radians) * scaleX, b = Math.sin(radians) * scaleX
-        const c = -Math.sin(radians) * scaleY, d = Math.cos(radians) * scaleY
+        // A stroke edit with shear or a reflection keeps its linear part; only X and Y move it.
+        const [a, b, c, d] = simple
+          ? [Math.cos(radians) * scaleX, Math.sin(radians) * scaleX, -Math.sin(radians) * scaleY, Math.cos(radians) * scaleY]
+          : matrix
         const cx = 500, cy = 500
-        const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
-        if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) {
+        const next = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
+        if (next.every((value, index) => value === [1, 0, 0, 1, 0, 0][index])) {
           if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id), coalesce ? { coalesce } : {})
         } else {
           session.setGeometryEdit({
             id: strokeEdit?.id ?? session.allocator.next(), node: selected.id,
             geometry: strokeEdit?.geometry ?? fingerprintGeometry(strokeGeometry),
-            target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix }],
+            target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix: next }],
           }, { ...(coalesce ? { coalesce } : {}), replace: strokeEdits.map(edit => edit.id) })
         }
         doc = session.document
@@ -483,9 +487,9 @@
             <div class="affine">
               <label class="ui-field field"><span class="ui-label">{t('app.layers.x')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={x} onchange={apply} /></span></label>
               <label class="ui-field field"><span class="ui-label">{t('app.layers.y')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={y} onchange={apply} /></span></label>
-              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleX')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} onchange={apply} /><span class="unit">×</span></span></label>
-              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleY')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} onchange={apply} /><span class="unit">×</span></span></label>
-              <label class="ui-field field rotate"><span class="ui-label">{t('app.layers.rotate')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={rotate} onchange={apply} /><span class="unit">°</span></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleX')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleY')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field rotate"><span class="ui-label">{t('app.layers.rotate')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={rotate} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">°</span></span></label>
             </div>
           {:else if mode === 'matrix'}
             <div class="matrix">
