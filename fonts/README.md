@@ -4,7 +4,7 @@ Several webfont subsets draw the palette parts that few installed fonts cover: t
 Radicals Supplement, the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), the
 BabelStone PUA glyphs for numbered components with no IDS fragment, and the editor's empty-slot mark
 ⬚ (U+2B1A). Another draws the sixteen ideographic description characters for sequence text where no
-installed font has them. Kureedo and GenZui Sans supply the optional Kaisho face.
+installed font has them. Zhuque Fangsong, Kureedo and GenZui Sans supply the optional Kaisho face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
@@ -50,6 +50,10 @@ comes from the reader's own CJK font.
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
 `Kureedo-label.woff2` (23 KB, 97 characters: ASCII, 楷 and 書) is a subset of the same Kureedo file, under the same licence, named `Kureedo Label`, with the copyright and licence records of the original. The font switch draws the Kaisho option's name and its Aa sample with it, so a page keeps the full face until the reader chooses Kaisho. SHA-256 `90cb39895d10fb19299becf0e03ba53b04df2becf459276aff27a4cffef9a538`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/Kureedo-Regular.woff2 --unicodes='U+0020-007E,U+66F8,U+6977' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Kureedo-label.woff2`.
+
+`ZhuqueFangsong-Regular.woff2` (4.8 MB) supplies the optional `Zhuque Fangsong` Fangsong face. Zhuque Fangsong v0.212, a technical preview by TrionesType, Copyright 2023 JadeFoci, SIL Open Font License 1.1 with no Reserved Font Name (`OFL-Zhuque.txt`), from [TrionesType/zhuque](https://github.com/TrionesType/zhuque), recompressed from the release's TTF with its outlines unchanged; this woff2 SHA-256 `5cb9aca8a85825a204ba58c9e975d8298e7370494b845694ee8a6882d0d6ed37`. Its Latin letters and symbols are Alegreya's, by Juan Pablo del Peral of Huerta Tipográfica, under the same licence. Its README asks that versions modified by others not be widely distributed before the official release; the label subset below and the export's cut outlines are shipped with that request noted, and it is not a licence term.
+
+`Zhuque-label.woff2` (10 KB, 99 characters: ASCII, ỏ, ố, 仿 and 宋) is a subset of the same file, under the same licence, named `Zhuque Label`, with the copyright and licence records of the original. The font switch draws the Fangsong option's name and its Aa sample with it. SHA-256 `0a0b75cdbfee749ceafb4f8c3d9a633ca0f389925610039bb18b2e6adb6b7136`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/ZhuqueFangsong-Regular.woff2 --unicodes='U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Zhuque-label.woff2`.
 
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 

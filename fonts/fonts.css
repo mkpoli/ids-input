@@ -32,6 +32,11 @@
    2.8 MB face. */
 @font-face{font-family:"Kureedo Label";src:url("./Kureedo-label.woff2") format("woff2");font-display:swap;
   unicode-range:U+0020-007E,U+66F8,U+6977}
+@font-face{font-family:"Zhuque Fangsong";src:url("./ZhuqueFangsong-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs Zhuque draws for the Fangsong option's name and its Aa sample, so the switch avoids the
+   4.8 MB face. */
+@font-face{font-family:"Zhuque Label";src:url("./Zhuque-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B}
 @font-face{font-family:"GenZui Sans";src:url("./GenZuiSans-Regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+17000-18AFF,U+18D00-18DFF}

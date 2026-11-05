@@ -74,7 +74,7 @@
   // What a share names: this page, or the published site for the desktop app, whose own address
   // opens nothing outside it.
   const shareFrom = DESKTOP ? new URL(SITE) : location
-  /** @type {'sans' | 'serif' | 'klee'} */
+  /** @type {'sans' | 'serif' | 'fangsong' | 'klee'} */
   let face = $state(load('font', 'sans'))
   $effect(() => save('font', face === 'sans' ? undefined : face))
   $effect(() => { document.documentElement.dataset.font = face })
@@ -124,7 +124,7 @@
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'kaisho'} style */
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const previewAt = (at, split, style) => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
@@ -186,7 +186,7 @@
    * A face's preview: its own export, then the encoded character's glyph in that face, then the
    * default export. A sequence the face cannot compose still draws, and an example that names a
    * character draws that character when the face has it. @param {string} at @param {boolean} split
-   * @param {'sans' | 'serif' | 'kaisho'} style
+   * @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style
    */
   function previewFor(at, split, style) {
     const key = `${at}\0${split ? '1' : '0'}\0${style}`
@@ -226,10 +226,11 @@
         const drawn = await draw(sequence, options)
         // Klee One draws about ten thousand characters; a kanji it lacks is stood in for by a crude
         // description (术 is ⿺木丶), and a description it cannot cut is assembled from unscaled whole
-        // operands. The Kaisho face borrows the Serif drawing in both cases.
+        // operands. The Kaisho face borrows the Serif drawing in both cases, and so does Fangsong, whose
+        // font is about as small.
         const transplanted = drawn?.origins?.some(origin => origin.startsWith('transplant '))
-        if (style === 'kaisho' && !split && (drawn?.missing?.length || transplanted)) {
-          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the Kaisho drawing */ }
+        if ((style === 'kaisho' || style === 'fangsong') && !split && (drawn?.missing?.length || transplanted)) {
+          try { return { ...(await serif(sequence, options)), faceFallback: 'serif' } } catch { /* keep the face's own drawing */ }
         }
         return drawn
       } catch (error) {
@@ -265,7 +266,7 @@
   // Tab icons need their own drawer so their requests cannot cancel the main preview.
   /** @type {Map<string, ReturnType<typeof createIconDrawings>>} */
   const iconDrawings = new Map()
-  /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const drawerAt = (at, style) => {
     const composed = composerPreview({ base: at, fontStyle: style })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
@@ -282,7 +283,7 @@
       }
     }
   }
-  /** @param {string} at @param {'sans' | 'serif' | 'kaisho'} style */
+  /** @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const iconsAt = (at, style) => {
     const key = `${at}\0${style}`
     if (!iconDrawings.has(key)) {
@@ -292,7 +293,7 @@
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
   }
-  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'klee' ? 'kaisho' : 'sans')
+  const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
   const adapter = $derived({ ...babel, preview: previewFor(base, separate, componentStyle), icon: icons, fontStyle: componentStyle })
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -1213,6 +1214,7 @@
       <div class="font-switch" role="group" aria-label={t('app.font.label')}>
         <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
+        <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
         <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
       </div>
       </nav>
@@ -1368,6 +1370,7 @@
             <div class="font-switch" role="group" aria-label={t('app.font.label')}>
               <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
               <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
+              <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
               <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
             </div>
             <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
@@ -1466,6 +1469,7 @@
   .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
   .font-choice .wide{font-family:var(--cjk-label-sans)}
   .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
+  .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
   .font-choice .aa.klee,.font-choice .wide.klee{font-family:var(--cjk-label-klee)}
   /* Kureedo draws neither 书 nor ả/ư; keep those names in one face. */
   .font-choice .wide.klee:lang(zh-Hans),.font-choice .wide.klee:lang(vi){font-family:var(--cjk-label-sans)}

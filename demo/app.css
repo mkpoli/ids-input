@@ -7,6 +7,7 @@
   --ui-font-sans: 'IDS New Korean', 'IDS Shuishu', 'IDS Jurchen', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --cjk-sans: 'IDS Numbered', 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Jurchen', 'IDS Project', 'IDS Operators', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), sans-serif;
   --cjk-serif: 'IDS Numbered', 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Jurchen', 'IDS Project', 'IDS Operators', 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Songti SC', 'SimSun', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), serif;
+  --cjk-fangsong: 'IDS Numbered', 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Jurchen', 'IDS Project', 'IDS Operators', 'Zhuque Fangsong', 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Songti SC', 'SimSun', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), serif;
   --cjk-klee: 'IDS Numbered', 'IDS Strokes', 'IDS Seal', 'IDS Parts', 'IDS Tangut', 'IDS New Korean', 'IDS Shuishu', 'IDS Jurchen', 'IDS Project', 'Kureedo', 'GenZui Sans', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), sans-serif;
   --cjk: var(--cjk-sans);
   --ids-font: var(--cjk-sans);
@@ -14,6 +15,7 @@
      outlines, which would otherwise draw every common character in Jigmo. */
   --cjk-label-sans: 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', system-ui, var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), sans-serif;
   --cjk-label-serif: 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Songti SC', 'SimSun', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), serif;
+  --cjk-label-fangsong: 'Zhuque Label', 'Noto Serif CJK JP', 'Noto Serif JP', 'Hiragino Mincho ProN', 'Yu Mincho', 'Songti SC', 'SimSun', var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), serif;
   --cjk-label-klee: 'Kureedo Label', 'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Microsoft YaHei', 'PingFang SC', system-ui, var(--ids-glyph-fallback, var(--fallback-font, 'IDS Fallback')), sans-serif;
   /* After the reader's fonts and installed broad-coverage ones, before the bundled fallback. */
   --ids-glyph-fallback: 'Jigmo', 'Jigmo2', 'Jigmo3', 'Plangothic P1', 'Plangothic P2', var(--fallback-font, 'IDS Fallback');
@@ -104,6 +106,11 @@
 :root[data-font='serif'] {
   --cjk: var(--cjk-serif);
   --ids-font: var(--cjk-serif);
+}
+
+:root[data-font='fangsong'] {
+  --cjk: var(--cjk-fangsong);
+  --ids-font: var(--cjk-fangsong);
 }
 
 :root[data-font='klee'] {
