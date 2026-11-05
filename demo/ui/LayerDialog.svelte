@@ -236,13 +236,13 @@
         const cx = 500, cy = 500
         const matrix = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
         if (x === 0 && y === 0 && scaleX === 1 && scaleY === 1 && rotate === 0) {
-          if (strokeEdit) session.clearGeometryEdit(strokeEdit.id)
+          if (strokeEdit) session.clearGeometryEdit(strokeEdit.id, coalesce ? { coalesce } : {})
         } else {
           session.setGeometryEdit({
             id: strokeEdit?.id ?? session.allocator.next(), node: selected.id,
             geometry: strokeEdit?.geometry ?? fingerprintGeometry(strokeGeometry),
             target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix }],
-          })
+          }, coalesce ? { coalesce } : {})
         }
         doc = session.document
         chosen = session.chosen
