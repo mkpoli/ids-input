@@ -325,11 +325,13 @@
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
     if (!anchor) return
-    // A scroll that clips the anchor out of its own box takes the card with it. Where the card
-    // itself covers the anchor's place, the anchor is still where the card says it is.
+    // A hit inside the anchor or the card keeps the card where it stands. A painted input, a shadow
+    // root or another overlay can retarget the hit outside both, so a card the pointer rests on still
+    // follows its anchor while that anchor sits in the window.
     const box = anchor.getBoundingClientRect()
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-    if (hit && (anchor.contains(hit) || panel?.contains(hit))) position()
+    const inWindow = box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth
+    if (hit && (anchor.contains(hit) || panel?.contains(hit)) || inWindow && panel?.matches(':hover')) position()
     else close()
   }
   /** Controls inside the card that keep their own press. @constant {string} */
