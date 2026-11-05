@@ -203,3 +203,12 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
   })
 })
+
+describe('a mark beside an empty slot', () => {
+  it('splits off the slot and draws the mark', async () => {
+    expect(splitDescription('⬚́')).toEqual({ base: '⬚', marks: '́' })
+    const drawn = await compose(source(), '⬚́')
+    expect(drawn.slots).toHaveLength(1)
+    expect(drawn.parts.at(-1).origin).toBe('mark ́')
+  })
+})
