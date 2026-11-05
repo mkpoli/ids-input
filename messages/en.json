@@ -228,6 +228,7 @@
   "parts.tab.components": "Components",
   "parts.tab.recent": "Recent",
   "parts.unknownStrokes": "Stroke count not recorded",
+  "parts.numbered.readonly": "No IDS fragment; listed for reference",
   "parts.uses.one": "used in {count} character",
   "parts.uses.other": "used in {count} characters",
   "parts.seal.basic": "Basic",

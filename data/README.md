@@ -59,6 +59,8 @@ BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by
 BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
 the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
 fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+The parts palette carries all 121 as rows, marked with their fragment, description and whether they
+are read-only; the 52 with a fragment take the fragment's stroke count and first stroke.
 `{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
 names its two halves, 𦚏 and ⿷己三.
 
@@ -191,23 +193,28 @@ signed off. The shapes derive from those fonts; Noto's SIL OFL 1.1 and Jigmo's C
 
 The parts palette (難輸入部件): every component BabelStone IDS names, with how many ideographs use
 each, its stroke count, the class of its first stroke, and whether it is common, hard to type or a
-CJK stroke. 10,683 Han entries (2,935 common, 7,710 hard to type, 38 strokes) plus 768 Tangut
-components; 292 KB, 54 KB gzipped. Built by `scripts/build_ids_parts.py` followed by
-`bun run build:subtrees`; see the rules below.
+CJK stroke. 10,805 Han entries (2,935 common, 7,832 hard to type, 38 strokes; 121 of the hard
+entries are BabelStone's numbered components) plus 768 Tangut components; 293 KB, 57 KB gzipped.
+Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 The panel's Common view lists the parts 50 or more ideographs use, judged by real IDS use rather than
-the kind column; a host part without a use count falls back to its c kind. Its stroke groups list
-every common and hard-to-type part of the chosen count, with counts from 23 strokes up sharing one
-chip.
+the kind column; a host part without a use count falls back to its c kind. BabelStone's numbered
+components stay out of Common and appear under their stroke counts. Its stroke groups list every
+common and hard-to-type part of the chosen count, with counts from 23 strokes up sharing one chip.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
   decomposition choices, Unicode data and explicit radical counts.
-- Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
-  first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+- Format: `columns` `[part, uses, strokes, derived, first, kind, fragment, description, readonly]`
+  and one row per part, most used first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK
+  stroke). `fragment`, `description` and `readonly` belong to the numbered components: the IDS
+  fragment note 6 gives, where it occurs, and whether the palette lists it without inserting it
+  (a `？` component with no fragment and no stroke count).
 - `uses`: the ideographs whose descriptions name the part, counted from the descriptions with
   BabelStone's numbered components written out as `data/ids-components.tsv` gives them, so 書 counts
-  聿. The three components only the write-out names, ⺂, ⺕ and 彐, are parts too.
+  聿. The three components only the write-out names, ⺂, ⺕ and 彐, are parts too. A numbered
+  component's own `uses` counts the source spelling, so `{42}` counts the descriptions that name it,
+  not the 彐 those descriptions read as.
 
 The displayed Common palette places traditional, simplified and positional forms
 from `component-forms.tsv` next to one another. Each family starts where its
@@ -253,7 +260,7 @@ Notes on the columns:
 
 ## `sketch-parts.json.gz`
 
-The drawing search's prepared glyph shapes: the palette's 11,417 parts, each fitted to the 40×40
+The drawing search's prepared glyph shapes: the 11,417 parts the sketch builder prepares, each fitted to the 40×40
 square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 1.8 MB
 gzipped. Format:
 

@@ -34,6 +34,9 @@
  * @property {string} [jurSource] Unicode's source reference, for Jurchen.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
+ * @property {string} [fragment] The IDS fragment that writes out a numbered component (`{42}` as 彐).
+ * @property {string} [description] Where a numbered component occurs, as BabelStone's note 6 gives it.
+ * @property {0 | 1} [readonly] Whether the palette lists the part without inserting it (a numbered component with no fragment).
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.

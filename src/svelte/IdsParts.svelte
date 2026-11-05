@@ -3,7 +3,9 @@
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
   // offers frequent character components, character components by stroke count, and a separate
   // stroke-symbol view. Counted groups use the first-stroke classes (横 豎 撇 點 折, where recorded,
-  // unknown last). Search and Recent place stroke symbols under their own heading.
+  // unknown last). Counted groups also carry BabelStone's numbered components: the fragment where
+  // note 6 gives one, the number alone and read-only where it does not. Search and Recent place
+  // stroke symbols under their own heading.
   // Tangut shows the Tangut components in code point order, Small Seal the seal forms,
   // Bopomofo the bopomofo letters, Letters & numbers the Latin, Cyrillic and ASCII parts, Hangul the
   // Hangul letters, Gongche the gongche notation, Recent the parts picked here before (kept in this
@@ -339,8 +341,10 @@
   const COMMON_USE = 50
   const countedParts = $derived((parts ?? []).filter(part => (part.kind === 'c' || part.kind === 'd') && !isStroke(part.part)))
   const strokeSymbols = $derived((parts ?? []).filter(part => isStroke(part.part)))
+  /** BabelStone's numbered components are references, not common characters. @param {PalettePart} part */
+  const numbered = part => /^\{\d+\}$/.test(part.part)
   const commonParts = $derived(adjacentVariants(countedParts.filter(part =>
-    part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE)))
+    !numbered(part) && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE))))
   // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(countedParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
@@ -469,9 +473,15 @@
         .concat(shuiParts.filter(part => part.part !== query && shuiWords(part).some(word => word.includes(lowered))))
     }
     if (tab === 'jurchen') return jurchenMatches(jurParts, query)
-    if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
+    if (/^\d+$/.test(query)) {
+      const stroked = parts.filter(part => part.strokes === Number(query))
+      if (stroked.length) return adjacentVariants(stroked)
+      return parts.filter(part => /^\{\d+\}$/.test(part.part) && part.part.slice(1, -1) === query)
+    }
+    // A numbered reference is its own query, not the digits inside it.
+    if (/^\{\d+\}$/.test(query)) return parts.filter(part => part.part === query || part.aliases?.some(alias => alias.includes(query)))
     const chars = new Set([...query])
-    return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
+    return adjacentVariants(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
@@ -597,6 +607,8 @@
     const identity = componentIdentity(part.part)
     return [
       isNewKorean(part.part) ? null : part.part,
+      part.description ?? null,
+      part.fragment ?? null,
       (identity || tab === 'gongche' && !isSequence(part.part) || tab === 'marks' || composerCharacters) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
       identity ? t(`parts.identity.${identity.type}`) : null,
       identity?.type === 'stroke' ? identity.name : null,
@@ -608,7 +620,7 @@
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
-      nko || romanization ? null : tab === 'gongche' && strokeCount == null ? null : strokeCount == null ? t('parts.unknownStrokes') : `${part.derived && identity?.type !== 'stroke' ? '≈ ' : ''}${t('parts.strokeCount', { count: strokeCount })}`,
+      nko || romanization ? null : part.readonly === 1 ? t('parts.numbered.readonly') : tab === 'gongche' && strokeCount == null ? null : strokeCount == null ? t('parts.unknownStrokes') : `${part.derived && identity?.type !== 'stroke' ? '≈ ' : ''}${t('parts.strokeCount', { count: strokeCount })}`,
       part.uses != null ? t(identity ? 'parts.idsUses' : 'parts.uses', { count: part.uses }) : null,
     ].filter(Boolean).join(' · ')
   }
@@ -633,11 +645,18 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       {@const identity = componentIdentity(part.part)}
-      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
-        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
-        ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
-        onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
-        {#if isSequence(part.part)}
+      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part) || Boolean(part.fragment && isSequence(part.fragment))} class:numbered={Boolean(part.fragment) && !isSequence(part.fragment)} class:readonly={part.readonly === 1} disabled={disabled} aria-disabled={part.readonly === 1 || undefined} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && part.readonly !== 1 && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
+        ondragstart={event => { if (event.target === event.currentTarget && part.readonly !== 1) event.dataTransfer?.setData('text/plain', part.fragment ?? part.part) }}
+        onclick={event => { if (part.readonly !== 1) clickPart(event, part.fragment ?? part.part) }} ondblclick={selectPart} onkeydown={selectionKey}>
+        {#if part.fragment && !isSequence(part.fragment)}
+          <span class="part-text">{part.fragment}</span>
+          <span class="numbered-ref" aria-hidden="true">{part.part}</span>
+        {:else if part.fragment}
+          <IdsPartIcon sequence={part.fragment} {adapter} />
+          <span class="part-text visually-hidden">{part.fragment}</span>
+          <span class="numbered-ref" aria-hidden="true">{part.part}</span>
+        {:else if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />
           <span class="part-text compound-text">{part.part}</span>
         {:else}
@@ -1052,6 +1071,13 @@
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
     font:8px/1 var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);color:var(--_ink);background:var(--_surface)}
+  .part.numbered{flex-direction:column;gap:1px;font-size:18px}
+  .numbered-ref{font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
+  .part.compound .numbered-ref{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;background:var(--_surface)}
+  .part.readonly{color:var(--_muted);cursor:default}
+  .part.readonly .part-text{font-family:var(--ids-ui-font,system-ui,sans-serif);font-size:13px;max-width:100%;overflow-wrap:anywhere}
+  .part[aria-disabled="true"]:hover{border-color:transparent;background:var(--_surface-subtle)}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .script-groups{display:flex;flex-wrap:wrap;gap:4px}
   .script-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
