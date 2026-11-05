@@ -349,8 +349,8 @@
     if (!svg) return
     const point = pointAt(svg, event)
     if (!point) return
-    const [x, y, width, height] = selection.box
-    const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
+    const [boxX, boxY, width, height] = selection.box
+    const center = /** @type {[number, number]} */ ([boxX + width / 2, boxY + height / 2])
     drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
       local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
