@@ -127,6 +127,22 @@ function stackRows(node) {
 }
 
 /**
+ * The ways a stack's rows may be read: every operand expanded into rows, and the last operand kept
+ * whole as a base, which may itself be a description. The second reading is offered when the last
+ * operand is a stack, the only case the two readings differ.
+ * @param {unknown} node @returns {unknown[][]}
+ */
+function stackReadings(node) {
+  const rows = stackRows(node)
+  const kids = childrenOf(node)
+  if (!rows || !kids) return []
+  const last = kids.at(-1)
+  if (last === undefined || last === rows.at(-1)) return [rows]
+  const prefix = kids.slice(0, -1).flatMap(kid => stackRows(kid) ?? [kid])
+  return [rows, [...prefix, last]]
+}
+
+/**
  * A triangular arrangement of one repeated part, read from a tree: groups of 1, 2, 3, … of the same
  * cell, pointing top, bottom, left or right. Null unless it has at least `minLayers` layers. A cell
  * is any subtree, so a pyramid of a description reads back like one of a component; the cell is that
@@ -176,18 +192,11 @@ export function pyramidRows(tree, { minLayers = 3 } = {}) {
 }
 
 /**
- * A pyramid standing on a base: rows of 1, 2, … `layers` cells of one part, and one more part under
- * them, read from a stack however its grouping spells it (⿳口⿰口口木 reads like ⿱⿱口⿰口口木). A base
- * is one part; it may repeat the cell, as `⿳口⿰口口口` is a pyramid of three 口 on a fourth. Null
- * unless the stack has at least `minLayers` pyramid rows and every row holds that many cells of the
- * part. A complete pyramid, such as ⿳口⿰口口⿲口口口, has no base row and reads by `pyramidRows`.
- * @param {unknown} tree
- * @param {{ minLayers?: number }} [options]
- * @returns {{ cell: Part, layers: number, base: Part } | null}
- */
-export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
-  const rows = stackRows(tree)
-  if (!rows || rows.length < minLayers + 1) return null
+ * Rows of 1, 2, … cells of one part with one more part under them, read as a pyramid on a base.
+ * @param {unknown[]} rows @param {number} minLayers
+ * @returns {{ cell: Part, layers: number, base: Part } | null} */
+function rowsOnBase(rows, minLayers) {
+  if (rows.length < minLayers + 1) return null
   const layers = rows.length - 1
   const cell = rows[0], base = rows[layers]
   // A row of cells is no base; the pyramid's top is one part, a cell of the row below it.
@@ -201,4 +210,29 @@ export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
     if (!cells.every(one => samePart(one, cell))) return null
   }
   return { cell: /** @type {Part} */ (cell), layers, base: /** @type {Part} */ (base) }
+}
+
+/**
+ * A pyramid standing on a base: rows of 1, 2, … `layers` cells of one part, and one more part under
+ * them, read from a stack however its grouping spells it (⿳口⿰口口木 reads like ⿱⿱口⿰口口木). A base
+ * is one part; it may repeat the cell, as `⿳口⿰口口口` is a pyramid of three 口 on a fourth, and it
+ * may be a description, as `⿳口⿰口口⿱水火` puts a stacked 水火 under the pyramid. Null unless the
+ * stack has at least `minLayers` pyramid rows and every row holds that many cells of the part. A
+ * complete pyramid, such as ⿳口⿰口口⿲口口口, has no base row and reads by `pyramidRows`.
+ * @param {unknown} tree
+ * @param {{ minLayers?: number }} [options]
+ * @returns {{ cell: Part, layers: number, base: Part } | null}
+ */
+export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
+  for (const rows of stackReadings(tree)) {
+    const found = rowsOnBase(rows, minLayers)
+    if (found) return found
+  }
+  // A complete pyramid under one base, its top a description rather than a row to read.
+  const kids = childrenOf(tree)
+  if (kids && kids.length === 2 && STACKS.has(operatorOf(tree)) && !ROWS.has(operatorOf(kids[1]))) {
+    const pyramid = pyramidRows(kids[0], { minLayers })
+    if (pyramid) return { cell: pyramid.cell, layers: pyramid.layers, base: /** @type {Part} */ (kids[1]) }
+  }
+  return null
 }

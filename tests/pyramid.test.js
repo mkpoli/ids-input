@@ -198,6 +198,13 @@ describe('a pyramid on a base', () => {
     expect(pyramidOnBase(tree('⿱' + pyramidSequence('口', 3) + '木'))).toEqual({ cell: '口', layers: 3, base: '木' })
   })
 
+  it('reads a stacked cell or base whole', () => {
+    expect(pyramidOnBase(tree('⿱' + pyramidSequence('⿱木口', 2) + '水')))
+      .toEqual({ cell: { op: '⿱', parts: ['木', '口'] }, layers: 2, base: '水' })
+    expect(pyramidOnBase(tree('⿳口⿰口口⿱水火')))
+      .toEqual({ cell: '口', layers: 2, base: { op: '⿱', parts: ['水', '火'] } })
+  })
+
   it('leaves whole pyramids, rows and plain stacks alone', () => {
     for (const text of ['⿳口⿰口口⿲口口口', '⿱口⿰口口', '⿱木口', '⿳口⿰木木口', '⿳口⿰口口⿰木木', '⿰口口', '⿱木⿰木木'])
       expect(pyramidOnBase(tree(text))).toBeNull()
@@ -520,6 +527,16 @@ describe('drawing a pyramid', () => {
     const cells = parts.slice(0, -1), base = parts.at(-1)
     expect(new Set(cells.map(cell => cell.box[2].toFixed(3)))).toHaveLength(1)
     expect(base.box[1]).toBeGreaterThanOrEqual(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])) - 1e-6)
+  })
+
+  it('draws a stacked cell and a stacked base whole', async () => {
+    const source = sourceOf()
+    // Three cells of the stacked description ⿱木口, then the base.
+    expect((await compose(source, '⿱' + pyramidSequence('⿱木口', 2) + '永', { separate: true })).parts).toHaveLength(7)
+    const parts = (await compose(source, '⿳口⿰口口⿱木口', { separate: true })).parts
+    expect(parts).toHaveLength(5)
+    const cells = parts.slice(0, 3), base = parts.slice(3)
+    for (const part of base) expect(part.box[1]).toBeGreaterThanOrEqual(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])) - 1e-6)
   })
 
   it('numbers a pyramid on a base in reading order', async () => {
