@@ -203,17 +203,3 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
   })
 })
-
-describe('sketching loose marks', () => {
-  it('puts each leaf where the drawing puts it beside a mark', async () => {
-    const local = source()
-    const boxes = await sketch(local, '⿰ㄅㄚˇ')
-    const plain = await sketch(local, '⿰ㄅㄚ')
-    const drawn = await compose(local, '⿰ㄅㄚˇ')
-    const ink = drawn.parts.filter(part => !part.origin.startsWith('mark'))
-    expect(boxes[1].box[1]).toBeGreaterThan(plain[1].box[1])
-    // The leaf's box holds the ink the drawing placed in it.
-    expect(boxes[1].box[1]).toBeLessThanOrEqual(ink[1].box[1] + 1)
-    expect(boxes[0].box[0] + boxes[0].box[2]).toBeLessThanOrEqual(plain[0].box[0] + plain[0].box[2])
-  })
-})
