@@ -1,5 +1,18 @@
 <script module>
   /** @typedef {{ label: string, icon?: string, shortcut?: string, hint?: string, disabled?: boolean, checked?: boolean, lang?: string, leading?: string, sequence?: string, note?: string, reading?: string, readingLang?: string, unencoded?: boolean, drawing?: { d: string }, run?: () => void, submenu?: Item[] } | { heading: string } | { separator: true }} Item */
+/** A card frames its drawing's ink in a square, so a small drawing is not lost in the full box.
+ *  @param {{ parts?: { box: number[] }[], emoji?: { box: number[] }[] } | undefined} drawing @returns {string} */
+function cardView(drawing) {
+  const boxes = [...(drawing?.parts ?? []), ...(drawing?.emoji ?? [])].map(item => item.box).filter(box => Array.isArray(box) && box.length === 4 && box.every(v => Number.isFinite(Number(v))))
+  if (!boxes.length) return '0 0 1000 1000'
+  const x0 = Math.min(...boxes.map(b => b[0])), y0 = Math.min(...boxes.map(b => b[1]))
+  const x1 = Math.max(...boxes.map(b => b[0] + b[2])), y1 = Math.max(...boxes.map(b => b[1] + b[3]))
+  const side = Math.max(x1 - x0, y1 - y0) * 1.12
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
+  return `${(cx - side / 2).toFixed(1)} ${(cy - side / 2).toFixed(1)} ${side.toFixed(1)} ${side.toFixed(1)}`
+}
+
+
 </script>
 
 <script>
@@ -215,7 +228,7 @@
     aria-label={item.sequence !== undefined && item.reading === undefined ? `${item.leading ?? ''} ${item.label} ${item.note ?? ''}`.trim() : undefined}
     title={item.hint} onclick={() => { hide(); item.run?.() }}>
     {#if item.drawing?.d || item.drawing?.emoji?.length}
-      <svg class="card-art" viewBox="0 0 1000 1000" aria-hidden="true">
+      <svg class="card-art" viewBox={cardView(item.drawing)} aria-hidden="true">
         {#if item.drawing.d}<path d={item.drawing.d} />{/if}
         {#each item.drawing.emoji ?? [] as text}
           <text x={text.box[0] + text.box[2] / 2} y={text.box[1] + text.box[3] / 2} text-anchor="middle" dominant-baseline="central"
