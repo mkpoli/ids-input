@@ -55,3 +55,34 @@ export function pyramidCells(region, layers, { direction = 'top' } = {}) {
   }
   return cells
 }
+
+/**
+ * The cells of the pyramid part of a pyramid standing on a base, inside `region` ([x0, y0, x1, y1],
+ * y up), in reading order. The widest row spans the region's width and the rows fill its height, so
+ * a cell is wider than it is tall, the way the shape is written by hand. All cells are the same
+ * size, every row is centred, and `PYRAMID_GAP` of a cell separates both columns and rows.
+ * @param {number[]} region
+ * @param {number} layers
+ * @returns {number[][]}
+ */
+export function pyramidOnBaseCells(region, layers) {
+  const [x0, y0, x1, y1] = region
+  const width = x1 - x0, height = y1 - y0
+  if (!(layers > 0) || !(width > 0) || !(height > 0)) return []
+  // The widest row holds `layers` cells, and the rows stack `layers` deep, with a gap between each.
+  const span = layers + PYRAMID_GAP * (layers - 1)
+  const cellWidth = width / span, cellHeight = height / span
+  const columnGap = cellWidth * PYRAMID_GAP, rowGap = cellHeight * PYRAMID_GAP
+  const cx = (x0 + x1) / 2
+  const cells = []
+  for (let row = 0; row < layers; row++) {
+    const count = row + 1
+    const top = y1 - row * (cellHeight + rowGap)
+    const left = cx - (count * cellWidth + (count - 1) * columnGap) / 2
+    for (let i = 0; i < count; i++) {
+      const x = left + i * (cellWidth + columnGap)
+      cells.push([x, top - cellHeight, x + cellWidth, top])
+    }
+  }
+  return cells
+}

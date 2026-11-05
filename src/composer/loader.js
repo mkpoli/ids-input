@@ -12,7 +12,7 @@ import { drawnBox, svgPath } from './geometry.js'
 import { readLayout } from './layout.js'
 import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hexOf } from './sha256.js'
-import { pyramidRows } from '../core/pyramid.js'
+import { pyramidOnBase, pyramidRows } from '../core/pyramid.js'
 import { unicodeSource } from './unicode.js'
 import { download } from '../core/retry.js'
 
@@ -170,6 +170,8 @@ export function size(tree) {
 export const tooLarge = tree => {
   const pyramid = pyramidRows(tree, { minLayers: 2 })
   if (pyramid) return pyramid.layers > PYRAMID_LAYERS
+  const onBase = pyramidOnBase(tree)
+  if (onBase) return onBase.layers > PYRAMID_LAYERS
   const { nodes, depth } = size(tree)
   return nodes > LIMITS.nodes || depth > LIMITS.depth
 }

@@ -107,6 +107,25 @@ function splitGroups(node, from, to, counts, size, out, leaves, outer, inner) {
   return at === to + 1
 }
 
+/** The leaves a subtree draws, a leaf and an empty slot counting one. @param {unknown} node */
+const leafCount = node => {
+  if (typeof node === 'string' || node === null) return 1
+  if (typeof node !== 'object') return 0
+  const kids = childrenOf(node)
+  return kids ? kids.reduce((sum, kid) => sum + leafCount(kid), 0) : 0
+}
+
+/** The rows a stack draws, top first: a stacked operand brings its own rows, so every grouping of
+ *  one stack answers the same rows. Null when `node` is no stack.
+ *  @param {unknown} node @returns {unknown[] | null} */
+function stackRows(node) {
+  const op = operatorOf(node)
+  if (op === undefined || !STACKS.has(op)) return null
+  const kids = childrenOf(node)
+  if (!kids || kids.length < 2) return null
+  return kids.flatMap(kid => stackRows(kid) ?? [kid])
+}
+
 /**
  * A triangular arrangement of one repeated part, read from a tree: groups of 1, 2, 3, … of the same
  * cell, pointing top, bottom, left or right. Null unless it has at least `minLayers` layers. A cell
@@ -154,4 +173,32 @@ export function pyramidRows(tree, { minLayers = 3 } = {}) {
     }
   }
   return null
+}
+
+/**
+ * A pyramid standing on a base: rows of 1, 2, … `layers` cells of one part, and one more part under
+ * them, read from a stack however its grouping spells it (⿳口⿰口口木 reads like ⿱⿱口⿰口口木). A base
+ * is one part; it may repeat the cell, as `⿳口⿰口口口` is a pyramid of three 口 on a fourth. Null
+ * unless the stack has at least `minLayers` pyramid rows and every row holds that many cells of the
+ * part. A complete pyramid, such as ⿳口⿰口口⿲口口口, has no base row and reads by `pyramidRows`.
+ * @param {unknown} tree
+ * @param {{ minLayers?: number }} [options]
+ * @returns {{ cell: Part, layers: number, base: Part } | null}
+ */
+export function pyramidOnBase(tree, { minLayers = 2 } = {}) {
+  const rows = stackRows(tree)
+  if (!rows || rows.length < minLayers + 1) return null
+  const layers = rows.length - 1
+  const cell = rows[0], base = rows[layers]
+  // A row of cells is no base; the pyramid's top is one part, a cell of the row below it.
+  if (!(minLayers >= 1) || ROWS.has(operatorOf(base))) return null
+  const size = leafCount(cell)
+  if (!size) return null
+  for (let i = 0; i < layers; i++) {
+    /** @type {unknown[]} */
+    const cells = []
+    if (!splitCells(rows[i], i + 1, size, cells, leafCount, ROWS)) return null
+    if (!cells.every(one => samePart(one, cell))) return null
+  }
+  return { cell: /** @type {Part} */ (cell), layers, base: /** @type {Part} */ (base) }
 }

@@ -20,8 +20,8 @@ import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fi
 import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
-import { pyramidCells } from './pyramid.js'
-import { pyramidRows } from '../core/pyramid.js'
+import { pyramidCells, pyramidOnBaseCells } from './pyramid.js'
+import { pyramidRows, pyramidOnBase } from '../core/pyramid.js'
 import { hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
 import { toConjoiningJamo } from '../core/hangul.js'
@@ -305,6 +305,7 @@ export class Composer {
     // Characters whose glyph the export lacks and whose sequence stands in for it.
     this.missingGlyphs = new Set()
     this.pyramids = new WeakMap()
+    this.bases = new WeakMap()
     this.nativeEnclosures = new Set()
   }
 
@@ -327,6 +328,53 @@ export class Composer {
     const answer = found && !designed ? found : null
     this.pyramids.set(node, answer)
     return answer
+  }
+
+  /**
+   * The pyramid standing on a base that a node draws as, remembered for this drawing: rows of 1, 2,
+   * … cells with one part under them, however the stack groups the rows. The rows are the drawing,
+   * so a 品-shaped top spreads over the width in flat cells rather than stacking square ones.
+   */
+  pyramidWithBase(node) {
+    if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidOnBase(node)
+    if (this.bases.has(node)) return this.bases.get(node)
+    const answer = pyramidOnBase(node)
+    this.bases.set(node, answer)
+    return answer
+  }
+
+  /**
+   * The parts of a pyramid standing on a base: its cells in the top `layers` of `layers + 1` rows,
+   * the base across the rest. The cells spread over the full width, so each is wider than it is
+   * tall; the base is drawn as a cell too, so a 木 under a 品 spans the width instead of standing
+   * thin in the middle of it. A pyramid of empty slots numbers its cells in reading order, as one
+   * drawn alone does.
+   */
+  baseParts({ cell, layers, base }, region) {
+    const [x0, y0, x1, y1] = region
+    // The base is the bottom row, a `layers + 1` share of the height; y runs up in a region.
+    const edge = y0 + (y1 - y0) / (layers + 1)
+    const cells = pyramidOnBaseCells([x0, edge, x1, y1], layers)
+    const drawn = hasSlot(cell)
+      ? cells.flatMap((box, i) => this.node(i ? shiftedSlots(cell, i * slotsIn(cell)) : cell, box))
+      : cells.flatMap(box => this.node(cell, box))
+    return [...drawn, ...this.basePart(base, [x0, y0, x1, edge])]
+  }
+
+  /**
+   * The base of a pyramid, drawn as a cell: a plain component fits its box with the wider stretch
+   * a cell allows, so a wide, short base row fills its width. Anything else is drawn as usual.
+   * @param {any} base @param {number[]} region */
+  basePart(base, region) {
+    const { rest, tones } = typeof base === 'string' ? splitToneMarks(base) : { rest: base, tones: '' }
+    if (typeof rest === 'string' && rest && !tones) {
+      const glyph = this.glyph(rest)
+      if (glyph) {
+        const ink = tightBox(glyph)
+        return [placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(rest), `glyph ${rest}`)]
+      }
+    }
+    return this.node(base, region)
   }
 
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
@@ -467,7 +515,7 @@ export class Composer {
     if (marks || this.exclude.size) return false
     const key = keyOf(tree)
     if (this.bySequence(key) || this.spelled.has(key)) return false
-    if (this.pyramid(tree)) return false
+    if (this.pyramid(tree) || this.pyramidWithBase(tree)) return false
     if (isGroupedForm(key, this.fontStyle) || isComponentForm(key, this.fontStyle)) return false
     let leaves = 0, supported = true
     const walk = node => {
@@ -625,6 +673,14 @@ export class Composer {
       if (pyramid) {
         // One box per leaf of the repeated cell, in the cell the pyramid gives it.
         for (const box of pyramidCells(region, pyramid.layers, { direction: pyramid.direction })) walk(pyramid.cell, box, false)
+        return
+      }
+      const stacked = this.pyramidWithBase(node)
+      if (stacked) {
+        const [x0, y0, x1, y1] = region
+        const edge = y0 + (y1 - y0) / (stacked.layers + 1)
+        for (const box of pyramidOnBaseCells([x0, edge, x1, y1], stacked.layers)) walk(stacked.cell, box, false)
+        walk(stacked.base, [x0, y0, x1, edge], false)
         return
       }
       const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
@@ -824,6 +880,8 @@ export class Composer {
     const coverHead = Array.isArray(node) && typeof node[1] === 'string' && this.isCover(node[1])
     const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) || coverHead ? null : this.instance(node, region)
     if (found) return [found]
+    const stacked = this.pyramidWithBase(node)
+    if (stacked) return this.baseParts(stacked, region)
     const written = this.respelled(node)
     // Once nothing draws this node whole, a run of it the export designs as one body is regrouped.
     // A rewrite stands as it is: an enclosure written as a stack (㗊 as ⿳吅X吅) holds its operand
