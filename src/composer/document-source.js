@@ -25,27 +25,34 @@ const union = (a, b) => {
   return [x, y, x1 - x, y1 - y]
 }
 
-/** The signed area of one closed subpath, from its segment endpoints. @param {string} d */
-function signedAreaOf(d) {
-  const path = parsePath(d)
-  let area = 0, first = null, previous = null
-  for (const segment of path.segments) {
+const CURVE_STEPS = 16
+
+/** The polygon a closed subpath traces, with each curve sampled. @param {string} d @returns {number[][]} */
+function flatten(d) {
+  const points = []
+  for (const segment of parsePath(d).segments) {
     if (segment.type === 'Z') continue
-    const point = 'end' in segment ? segment.end : segment.p
-    if (!point) continue
-    if (!previous) { first = point; previous = point; continue }
-    area += previous[0] * point[1] - point[0] * previous[1]
-    previous = point
+    if (segment.type === 'M' || segment.type === 'L') { points.push(segment.p); continue }
+    for (let step = 1; step <= CURVE_STEPS; step++) {
+      const t = step / CURVE_STEPS, u = 1 - t
+      if (segment.type === 'Q') {
+        points.push([0, 1].map(k => u * u * segment.p[k] + 2 * u * t * segment.c[k] + t * t * segment.end[k]))
+      } else {
+        points.push([0, 1].map(k => u * u * u * segment.p[k] + 3 * u * u * t * segment.c1[k] + 3 * u * t * t * segment.c2[k] + t * t * t * segment.end[k]))
+      }
+    }
   }
-  if (previous && first) area += previous[0] * first[1] - first[0] * previous[1]
-  return area / 2
+  return points
 }
 
-/** The centre of a polygon's control box. @param {number[][]} points */
-function centreOf(points) {
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
-  for (const [x, y] of points) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y) }
-  return [(x0 + x1) / 2, (y0 + y1) / 2]
+/** The signed area of a polygon. @param {number[][]} points */
+function signedAreaOf(points) {
+  let area = 0
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i + 1) % points.length]
+    area += a[0] * b[1] - b[0] * a[1]
+  }
+  return area / 2
 }
 
 /** Whether `point` lies inside the polygon through `points`, by the even-odd rule.
@@ -76,12 +83,12 @@ function partGeometry(part, d) {
   if (!contours || part.strokes.some(([, group]) => group.some(index => !Number.isInteger(index) || index < 0 || index >= contours))) {
     return { pieces: [{ d, fillRule: 'nonzero' }] }
   }
-  const areas = subpaths.map(signedAreaOf)
-  const polygons = subpaths.map(subpath => parsePath(subpath).points)
+  const polygons = subpaths.map(flatten)
+  const areas = polygons.map(signedAreaOf)
   const pieces = subpaths.map((subpath, index) => ({
     d: subpath,
     fillRule: /** @type {'nonzero'} */ ('nonzero'),
-    cut: polygons.some((other, at) => at !== index && Math.abs(areas[at]) > Math.abs(areas[index]) && inside(centreOf(polygons[index]), other)),
+    cut: polygons.some((other, at) => at !== index && Math.abs(areas[at]) > Math.abs(areas[index]) && inside(polygons[index][0], other)),
   }))
   const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
   return { pieces, strokes }
