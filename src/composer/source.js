@@ -15,6 +15,7 @@ import { hasShuishu, shuishuSource } from './shuishu.js'
 import { hasJurchen, jurchenSource } from './jurchen.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { leaves, parse, splitDescription } from '../core/ids.js'
+import { tonesOf } from '../core/marks.js'
 
 /**
  * What in a sequence calls for bundled outlines instead of the export: a tree of empty slots draws
@@ -27,7 +28,7 @@ export function traitsOf(sequence) {
   const empty = parsed !== null && !parsed.problem && parsed.tree !== null && leaves(parsed.tree).every(leaf => leaf.char === null)
   return {
     empty,
-    loose: splitDescription(sequence).marks !== '',
+    loose: splitDescription(sequence).marks !== '' || (parsed !== null && !parsed.problem && parsed.tree !== null && tonesOf(parsed.tree) !== ''),
     tangut: hasTangut(sequence),
     bopomofo: hasBopomofo(sequence),
     seal: hasSmallSeal(sequence),

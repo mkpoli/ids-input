@@ -64,6 +64,12 @@ export function splitMarks(part) {
   return { base: chars.slice(0, at).join(''), marks: chars.slice(at).join('') }
 }
 
+/** The tone marks a part's components hold, in reading order. @param {import('./ids.js').Part} part @returns {string} */
+export const tonesOf = part => {
+  if (part !== null && typeof part === 'object') return part.parts.map(tonesOf).join('')
+  return part === null ? '' : [...splitMarks(part).marks].filter(isToneMark).join('')
+}
+
 /** The loose marks `part` carries. @param {import('./ids.js').Part} part */
 export const marksOf = part => splitMarks(part).marks
 
