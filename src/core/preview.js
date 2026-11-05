@@ -200,7 +200,7 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   const emoji = drawing.emoji ?? []
   const hasCut = Boolean(cut || emoji.some(item => item.cut))
   const groupedEmoji = !hasCut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
-    && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
+    && emoji.every(item => Number.isInteger(item.part) && item.part >= 0 && item.part < pieces.length)
   const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
   /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
@@ -222,9 +222,9 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   if (split) {
     const order = pieces.map((piece, index) => ({ piece, index }))
     for (const { piece, index } of order) {
-      const item = emoji.find(item => item.part === index)
+      const items = groupedEmoji ? emoji.filter(item => item.part === index) : []
       const path = pathData(piece.d)
-      const content = item ? textOf(item) : path ? `<path d="${path}" fill="${fill}"/>` : ''
+      const content = items.length ? items.map(item => textOf(item)).join('') : path ? `<path d="${path}" fill="${fill}"/>` : ''
       if (!content) continue
       const transform = transformData(transforms?.[index])
       out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
