@@ -4,6 +4,7 @@
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
   import { loadStrokeRecords } from './strokes.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
@@ -13,6 +14,7 @@
   const readingName = reading => /^(ja|zh|ko)/.test(locale) ? reading.zh : reading.name
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let panel = $state(null)
+  $effect(() => { if (panel) return watchFallback(panel) })
   /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ let info = $state.raw(null)
   let char = $state(''), status = $state('idle'), open = $state(false), x = $state(0), y = $state(0)
   /** @type {HTMLElement | null} */ let anchor = null

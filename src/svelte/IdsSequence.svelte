@@ -5,6 +5,7 @@
   import { replacementExpression, replacementInput } from '../core/replacement-expression.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
+  import { loadFallbackText } from './fallback-font.js'
   let scroll = $state(0)
   let composing = $state(false)
   let metrics = $state('')
@@ -25,6 +26,8 @@
     return () => editor.cancelResolution()
   })
   /** @type {HTMLInputElement | null} */ let field = $state(null)
+  // The field draws what is typed into it, including characters only the shards have.
+  $effect(() => { loadFallbackText(editor.draft) })
   $effect(() => {
     if (!field) return
     const element = field
