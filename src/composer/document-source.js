@@ -248,13 +248,22 @@ export function documentSource(document, drawing, sketch) {
       const pieces = []
       /** @type {{ id: string, pieces: number[] }[]} */
       const strokes = []
-      for (const part of list) {
-        const d = transformPath(part.d, [{ type: 'affine', matrix }]).d
-        const made = partGeometry(part, d)
+      /** @type {Map<string, number>} */
+      const counts = new Map()
+      const made = list.map(part => {
+        const result = partGeometry(part, transformPath(part.d, [{ type: 'affine', matrix }]).d)
+        for (const stroke of result.strokes ?? []) counts.set(stroke.id, (counts.get(stroke.id) ?? 0) + 1)
+        return result
+      })
+      // Glyphs number their strokes independently, so an ID that more than one part uses is
+      // qualified by the part's index and every stroke stays addressable.
+      made.forEach((result, part) => {
         const offset = pieces.length
-        pieces.push(...made.pieces)
-        if (made.strokes) strokes.push(...made.strokes.map(stroke => ({ id: stroke.id, pieces: stroke.pieces.map(index => index + offset) })))
-      }
+        pieces.push(...result.pieces)
+        for (const stroke of result.strokes ?? []) {
+          strokes.push({ id: (counts.get(stroke.id) ?? 0) > 1 ? `${part}:${stroke.id}` : stroke.id, pieces: stroke.pieces.map(index => index + offset) })
+        }
+      })
       return strokes.length ? { pieces, strokes } : { pieces }
     } catch (error) {
       if (error instanceof TransformError) return null

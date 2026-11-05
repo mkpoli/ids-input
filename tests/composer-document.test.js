@@ -227,6 +227,18 @@ const cutsOf = contours => {
     expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, true])
   })
 
+  it('qualifies a stroke ID that two parts of one leaf both use', () => {
+    const document = fromSequence('口')
+    const parts = [
+      { leaf: 0, d: ring(0, 0, 400, 400), strokes: [[0, [0]]] },
+      { leaf: 0, d: ring(500, 500, 900, 900) + ring(600, 600, 700, 700), strokes: [[0, [0]], [1, [1]]] },
+    ]
+    const made = documentSource(document, { parts }, sketch([[0, 0, 1000, 1000]]))
+    expect(made.source.geometry(document.root)?.strokes).toEqual([
+      { id: '0:0', pieces: [0] }, { id: '1:0', pieces: [1] }, { id: '1', pieces: [2] },
+    ])
+  })
+
   it('keeps the compound path when a stroke names a fractional contour index', () => {
     const document = fromSequence('口')
     const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
