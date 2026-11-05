@@ -83,6 +83,16 @@ describe('Jurchen in the editor', () => {
     expect(drawn.d.length).toBeGreaterThan(10)
   })
 
+  it('draws a selector no record names as the character, and keeps a record the selector has', async () => {
+    const source = () => jurchenSource({ load: async () => outlines })
+    const bare = await compose(source(), FIRST, { separate: true })
+    const selected = await compose(source(), `${FIRST}\uFE00`, { separate: true })
+    expect(selected.d).toBe(bare.d)
+    expect((await compose(source(), `⿰${FIRST}\uFE00${TUMEN}`, { separate: true })).origins).toHaveLength(2)
+    expect(outlines.records[VARIANT]).toBeDefined()
+    expect((await compose(source(), VARIANT, { separate: true })).origins).toEqual([`glyph ${VARIANT}`])
+  })
+
   it('adds the parts to the palette and a reading to the search', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
     expect(await adapter.parts()).toHaveLength(1502)

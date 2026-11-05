@@ -2,10 +2,12 @@
 // Overlay bundled outline records on an optional host export.
 import constants from './constants.json' with { type: 'json' }
 
-export function bundledSource({ load, matches, fallback = null }) {
+export function bundledSource({ load, matches, fallback = null, alias = key => key }) {
   // `ready()` fills `records`; callers ask for files and records after it resolves.
   let ready = null, records = null
-  const owns = key => matches(key) && records?.[key] != null
+  // `alias` names the record a key falls back to when it has none of its own.
+  const keyOf = key => records?.[key] != null ? key : alias(key)
+  const owns = key => matches(key) && records?.[keyOf(key)] != null
   const source = {
     manifest: null, layout: null,
     ready() {
@@ -21,7 +23,7 @@ export function bundledSource({ load, matches, fallback = null }) {
       const remote = fallback?.store()
       return {
         manifest: source.manifest, layout: source.layout, missing: remote?.missing ?? new Set(),
-        rec: key => owns(key) ? records[key] ?? null : remote?.rec(key) ?? null,
+        rec: key => owns(key) ? records[keyOf(key)] ?? null : remote?.rec(key) ?? null,
         hosts: (key, place) => owns(key) ? [] : remote?.hosts(key, place) ?? [],
         places: key => owns(key) ? [] : remote?.places(key) ?? [],
       }
