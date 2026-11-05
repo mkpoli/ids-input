@@ -165,17 +165,18 @@ export async function cardResponse(env, ctx, sequence, document = null, token = 
   const named = namedFor(sequence, composed)
   const char = named
   const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
-  const sequenceDrawing = await draw(env, sequence).catch(() => null)
   // A document is one drawing, not the characters a sequence writes; when its layers cannot be
-  // scoped, the card falls back to the separated drawing and still says it is a document.
+  // scoped, the card falls back to the separated drawing and still says it is a document. The
+  // plain drawing is only made when no document drawing answered.
   const made = document ? await drawDocument(env, sequence, document).catch(() => null) : null
+  const sequenceDrawing = made?.drawing ?? await draw(env, sequence).catch(() => null)
   const drawings = document ? [] : await drawUnits(env, units, sequenceDrawing)
   const shown = document ? null : units.length > 1 ? { units, drawings, codepoint: char ? codePoint(char) : undefined } : null
   const slots = made?.view ? [...made.view.frames.values()]
     .filter(frame => frame.node.kind === 'slot')
     .map(frame => boxCorners(frame.canvas, frame.box)) : []
   const drawn = document ? { scopes: made?.view.complete ? made.view.scopes : null, title: document.title ?? null, slots } : null
-  const body = await png(env, sequence, made?.drawing ?? sequenceDrawing, char, shown, drawn)
+  const body = await png(env, sequence, sequenceDrawing, char, shown, drawn)
   const answer = new Response(body, { headers: {
     'content-type': 'image/png', 'content-length': String(body.length), 'cache-control': KEPT,
     'x-og-card': document ? drawn.scopes ? 'document' : 'document-fallback' : 'sequence',

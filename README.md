@@ -997,11 +997,13 @@ in `localStorage`; the keys use the `ids-input:` prefix.
 A share link at `/<sequence>` carries preview tags for its sequence, matching character and
 Unicode code point. Sequences containing a dot or slash use `/?ids=<sequence>`. A link carrying a
 document keeps its title and token in those tags, and its image draws the document's layers where
-the editor put them. The preview image at `/og/<sequence>.png` is 1200×630, with a framed drawing,
-the ideographic description sequence and a separate Unicode caption. Text size follows the sequence
-length; longer sequences wrap to at most three lines, with an ellipsis once they exceed the card's
-readable capacity. A document card says it is a shared document and sets its title when it has one.
-IDC characters use glyphs from the bundled GenZui Sans font.
+the editor put them when they can be scoped; otherwise it draws the separated sequence. The
+preview image at `/og/<sequence>.png` is 1200×630, with a framed drawing, the ideographic
+description sequence and a separate Unicode caption. A titled document card sets the title there in
+place of the caption. Text size follows the sequence length; longer sequences wrap to at most three
+lines, with an ellipsis once they exceed the card's readable capacity. A document card says it is a
+shared document and sets its title when it has one. IDC characters use glyphs from the bundled
+GenZui Sans font.
 
 The Cloudflare Worker serves preview pages and images alongside the workshop's static assets, and
 forwards `/api/report` to the report intake.

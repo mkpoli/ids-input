@@ -82,6 +82,12 @@ try {
   assert.equal(docPng.readUInt32BE(16), 1200)
   assert.equal(docPng.readUInt32BE(20), 630)
   assert.notEqual(Buffer.compare(docPng, plainPng), 0, 'the document card is not the sequence card')
+  const flat = fromSequence('⿰木口')
+  flat.title = 'Moved 木'
+  const flatImage = await runtime.dispatchFetch(`https://ids.mkpo.li/og/%E2%BF%B0%E6%9C%A8%E5%8F%A3.png?doc=${shareDocument(flat)}`)
+  assert.equal(flatImage.status, 200)
+  assert.equal(flatImage.headers.get('x-og-card'), 'document')
+  assert.notEqual(Buffer.compare(docPng, Buffer.from(await flatImage.arrayBuffer())), 0, 'the layer transform changes the document card')
 
   // A component form fills a leaf that the bundled-only source would draw as one part; the card
   // must still find a scoped document rather than fall back to the sequence.
