@@ -206,10 +206,25 @@ describe('identity edits', () => {
     const target = child(document, 2)
     target.transform = transform
     const allocator = createAllocator(documentIds(document))
-    const copy = duplicateSubtree(target, allocator)
+    const { node: copy, geometryEdits } = duplicateSubtree(document, target.id, allocator)
     expect(copy.id).not.toBe(target.id)
     expect(copy.transform).toEqual(transform)
     expect(documentIds({ ...document, root: copy })).not.toContain(target.id)
+    expect(geometryEdits).toEqual([])
+  })
+  it('copies the geometry edits of a subtree under fresh IDs', () => {
+    const document = fromSequence('⿰木口')
+    const [wood, mouth] = document.root.children
+    const edit = (id, node, stroke) => ({ id, node, geometry: 'a'.repeat(64), target: { kind: 'stroke', id: stroke }, transform })
+    document.geometryEdits = [edit('e1', wood.id, '0'), edit('e2', mouth.id, '1'), edit('e3', wood.id, '2')]
+    const before = structuredClone(document)
+    const allocator = createAllocator(documentIds(document))
+    const { node, geometryEdits } = duplicateSubtree(document, wood.id, allocator)
+    expect(geometryEdits.map(item => item.target.id)).toEqual(['0', '2'])
+    expect(geometryEdits.every(item => item.node === node.id)).toBe(true)
+    const known = new Set(documentIds(document))
+    for (const id of [node.id, ...geometryEdits.map(item => item.id)]) expect(known.has(id)).toBe(false)
+    expect(document).toEqual(before)
   })
   it('rejects an allocator prefix that cannot leave room for an ID', () => {
     expect(() => createAllocator([], 'x'.repeat(71))).toThrow(DocumentError)
