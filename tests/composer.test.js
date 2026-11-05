@@ -10,9 +10,10 @@ import { Composer, composableDescription, fitInside, parseTree } from '../src/co
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
+import sansOpenEnclosure from './fixtures/sans-open-enclosure.json' with { type: 'json' }
 import gaizhaGlyph from './fixtures/gaizha-glyph.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
-import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
+import { drawnBox, makePart, partOf, placed } from '../src/composer/geometry.js'
 import constants from '../src/composer/constants.json' with { type: 'json' }
 
 const sourceOf = (fetched = []) => createSource(async name => {
@@ -91,6 +92,20 @@ describe('the composer', () => {
       expect((inner.target[0] + inner.target[2]) / 2).toBeLessThan((region[0] + region[2]) / 2)
       expect((inner.target[1] + inner.target[3]) / 2).toBeGreaterThan((region[1] + region[3]) / 2)
     }
+  })
+
+  it('reaches the last ink column in the room of an enclosure open on the right', async () => {
+    // 厂 as the pinned Sans export draws it (SIL OFL 1.1), placed over four fifths of the face.
+    const input = { ...files, ...shards('g', Object.entries(sansOpenEnclosure)) }
+    const source = createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+    await source.ready()
+    const composer = new Composer(source.store())
+    const part = partOf(sansOpenEnclosure['厂'].G), face = composer.face
+    const target = [face[0], face[1], face[0] + (face[2] - face[0]) * 0.8, face[3]]
+    const room = composer.room('⿸', [placed(part, part.box, target, 0, 'test')], face)
+    // One cell is 1/48 of the face; the room ends at the cell after the ink, 773, not at the one before.
+    expect(room[2]).toBeGreaterThan(765)
+    expect(room[2]).toBeLessThan(785)
   })
 
   it('keeps the fallback above the centre when an enclosing glyph leaves no detected room', async () => {
