@@ -287,6 +287,8 @@
   let otherData = $state.raw(null)
   let otherFailed = $state(false), otherLoading = false
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
+  // A host that passes no Jurchen data has nothing to list there.
+  const tabs = $derived(parts && !partsByScript.has('jurchen') ? TABS.filter(name => name !== 'jurchen') : TABS)
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
   // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
   // @x18n-keys
@@ -629,11 +631,11 @@
   let tabButtons = $state([])
   /** @param {KeyboardEvent} event @param {number} index */
   function tabKey(event, index) {
-    const last = TABS.length - 1
+    const last = tabs.length - 1
     const to = /** @type {Record<string, number>} */ ({ ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last })[event.key]
     if (to === undefined) return
     event.preventDefault()
-    tab = TABS[to]
+    tab = tabs[to]
     tabButtons[to]?.focus()
   }
   // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes.
@@ -740,7 +742,7 @@
 <div class="ids-parts" role="group" aria-label={t('parts.label')} bind:this={partsRoot}>
   <div class="parts-top">
     <div class="parts-tabs" role="tablist" aria-label={t('parts.label')}>
-      {#each TABS as name, index (name)}
+      {#each tabs as name, index (name)}
         <button type="button" role="tab" id={`${uid}-tab-${name}`} aria-controls={`${uid}-panel`} bind:this={tabButtons[index]}
           class:active={tab === name} aria-selected={tab === name} tabindex={tab === name ? 0 : -1}
           onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{name === 'other' ? t('parts.script.choose') : t(`parts.tab.${name}`)}</button>
