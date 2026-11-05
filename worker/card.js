@@ -4,7 +4,7 @@ import { scopesSvg } from '../src/document/svg.js'
 
 export const SIZE = { width: 1200, height: 630 }
 /** @param {string} character */
-export const codePoint = (character) => `U+${/** @type {number} */ (character.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
+export const codePoint = (character) => [...character].map(unit => `U+${/** @type {number} */ (unit.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`).join(' ')
 // Keep these values aligned with demo/app.css; the card tests check both schemes.
 export const PALETTES = {
   light: { bg: '#f3f3f6', surface: '#ffffff', subtle: '#f6f6f9', ink: '#1c1c22', muted: '#686874', line: '#e1e1e8', strong: '#c2c2cc', accent: '#2944c7', soft: '#e9edfd' },

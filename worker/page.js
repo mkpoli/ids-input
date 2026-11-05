@@ -11,10 +11,7 @@ export const OG_HEIGHT = 630
 
 /** The code point of `char`, written `U+93B6`. @param {string} char */
 /** @param {string} char */
-export const codePoint = char => {
-  const point = char.codePointAt(0)
-  return point === undefined ? '' : `U+${point.toString(16).toUpperCase().padStart(4, '0')}`
-}
+export const codePoint = char => [...char].map(unit => `U+${(unit.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ')
 
 /** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
  *  included and text the IDS parser rejects. A share link builds its address the same way.

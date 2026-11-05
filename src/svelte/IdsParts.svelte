@@ -445,7 +445,7 @@
   const shuiParts = $derived((parts ?? []).filter(part => part.kind === 'shui'))
   const shuiGroups = $derived(SHUI_GROUPS.map(group => ({ ...group, parts: shuiParts.filter(part => part.shuiGroup === group.name) })).filter(group => group.parts.length))
   const selectedShuiGroup = $derived(shuiGroups.find(group => group.name === shuiGroup) ?? shuiGroups[0])
-  const JUR_GROUPS = /** @type {const} */ ([{ name: 'character', message: 'character' }, { name: 'radical', message: 'radical' }])
+  const JUR_GROUPS = /** @type {const} */ ([{ name: 'character', message: 'character' }, { name: 'variant', message: 'variant' }, { name: 'radical', message: 'radical' }])
   let jurGroup = $state(/** @type {(typeof JUR_GROUPS)[number]['name']} */ ('character'))
   /** The radical the characters are narrowed to; undefined for all of them. @type {number | undefined} */
   let jurRadical = $state()
@@ -493,7 +493,7 @@
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'shuishu') return [{ cls: undefined, parts: selectedShuiGroup?.parts ?? [] }]
-    if (tab === 'jurchen') return [{ cls: undefined, parts: (selectedJurGroup?.parts ?? []).filter(part => jurGroup === 'radical' || jurRadical === undefined || part.jurRadical === jurRadical) }]
+    if (tab === 'jurchen') return [{ cls: undefined, parts: (selectedJurGroup?.parts ?? []).filter(part => selectedJurGroup?.name === 'radical' || jurRadical === undefined || part.jurRadical === jurRadical) }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
@@ -813,7 +813,7 @@
           onclick={() => jurGroup = group.name}>{t(`parts.jurchen.${group.message}`)} <span>{group.parts.length}</span></button>
       {/each}
     </div>
-    {#if selectedJurGroup?.name === 'character'}
+    {#if selectedJurGroup?.name !== 'radical'}
       <div class="parts-counts jurchen-radicals" role="group" aria-label={t('parts.jurchen.radicals')}>
         <button type="button" class:active={jurRadical === undefined} aria-pressed={jurRadical === undefined}
           onclick={() => { jurRadical = undefined }}>{t('parts.jurchen.anyRadical')}</button>

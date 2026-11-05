@@ -44,6 +44,7 @@
 @font-face{font-family:"IDS Shuishu";src:url("./IDSShuishu.woff2") format("woff2");font-display:swap;
   unicode-range:U+1B300-1B4E5,U+1B500-1B52E}
 
-/* Unicode's Jurchen characters and radicals, from Alari Xuwasun Jurchen. */
+/* Unicode's Jurchen characters and radicals, from Alari Xuwasun Jurchen. The selectors are in the
+   range so a variant sequence reaches the face whole. */
 @font-face{font-family:"IDS Jurchen";src:url("./IDSJurchen.woff2") format("woff2");font-display:swap;
-  unicode-range:U+18E00-19191,U+191A0-191D2}
+  unicode-range:U+18E00-19191,U+191A0-191D2,U+FE00-FE04}

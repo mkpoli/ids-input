@@ -241,6 +241,7 @@
   "parts.shuishu.note": "Đặt tại các vị trí mã tạm thời của khối đề nghị; Unicode 18.0.0 để trống.",
   "parts.shuishu.ids": "Cách tách chữ do người biên tập đặt, không nguồn nào ghi, nên chỉ gồm những chữ có cách tách rõ ràng.",
   "parts.jurchen.character": "Chữ",
+  "parts.jurchen.variant": "Dị thể",
   "parts.jurchen.radical": "Bộ thủ",
   "parts.jurchen.groups": "Phân loại chữ Nữ Chân",
   "parts.jurchen.radicals": "Bộ thủ chữ Nữ Chân",
