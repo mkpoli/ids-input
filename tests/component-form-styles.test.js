@@ -59,6 +59,22 @@ it('draws 山 inside the 萬 frame without closing it', () => {
     // Nothing is drawn below the 山: no bar closes 萬's box along its bottom.
     const points = data.forms[style]['⿳艹田⿵冂山'].flat().flatMap(([, coords]) => coords)
     const ys = points.filter((_, i) => i % 2 === 1)
+    expect(ys.length).toBeGreaterThan(0)
     expect(Math.min(...ys)).toBeGreaterThan(-40)
+    // The 山 is the last group: three stems that stand on the frame's lower edge and run the width of
+    // the box, none of them a bar that closes it.
+    const mountain = data.forms[style]['⿳艹田⿵冂山'].at(-1)
+    expect(mountain).toHaveLength(3)
+    const spans = mountain.map(([, coords]) => {
+      const xs = coords.filter((_, i) => i % 2 === 0), tops = coords.filter((_, i) => i % 2 === 1)
+      return { x0: Math.min(...xs), x1: Math.max(...xs), y1: Math.max(...tops) }
+    })
+    expect(Math.min(...spans.map(span => span.x0))).toBeLessThan(120)
+    expect(Math.max(...spans.map(span => span.x1))).toBeGreaterThan(880)
+    for (const span of spans) {
+      expect(span.x1 - span.x0).toBeLessThan(500)
+      expect(span.y1).toBeGreaterThan(190)
+      expect(span.y1).toBeLessThan(290)
+    }
   }
 })
