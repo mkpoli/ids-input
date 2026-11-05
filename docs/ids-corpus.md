@@ -18,6 +18,17 @@ Three gaps motivate it.
 - **Scripts with whole characters and no named parts.** Small Seal and Shuishu have outlines for
   their characters but no component vocabulary, so they cannot be composed from parts at all.
 
+Wikisource transcribers meet these gaps in practice: a printed character nobody encoded, which they
+need a description to render in place of. Fish bowl's English Wikisource
+[user page](https://en.wikisource.org/wiki/User:Fish_bowl) keeps their running list of the places
+they met: a state cell such as `unify (39)`, `?unify?`, `error` or `accepted`, or none, the character
+the place should show, the IDS with the doubtful part marked where one is doubtful, the page or book
+needing it, and where a case is decided a GlyphWiki form. A draft template there would take the IDS,
+the character and a UCV number or a `moe=`, `ws=` or `img=` code, filed as similar to
+[Template:Sinogram](https://en.wikisource.org/wiki/Template:Sinogram) and
+[Template:參](https://zh.wikisource.org/wiki/Template:%E5%8F%82) (now
+[Template:另2](https://zh.wikisource.org/wiki/Template:%E5%8F%A62)).
+
 ## Licence, first
 
 The merged artifact would be **GPL-2.0-or-later**, because CHISE's IDS files and its ontology are
@@ -57,7 +68,10 @@ uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, `glyphs
 Every description row carries `subject` (a cid), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`
 (source, alternative, apparent, derived, editorial) and a `status` (ready, unresolved, unsupported,
-empty). A row is never invented: an unresolved designator stays unresolved rather than becoming `？`.
+empty). A row is never invented: an unresolved designator stays unresolved rather than becoming `？`,
+and an IDS a source gives stays in `text` while its unencoded leaves are tokenised in `resolved`,
+since both are what a transcriber renders. BabelStone lines without a region tag are the exception:
+the parse skips them, and with them any subject they alone describe.
 
 ## Merge
 
