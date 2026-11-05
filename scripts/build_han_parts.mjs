@@ -117,6 +117,13 @@ const MARK_COUNTS = new Map([
   ['𖿢', 1], ['𖿣', 2], ['𖿰', 3], ['𖿱', 1], ['𖿲', 2], ['𖿳', 7], ['𖿴', 3], ['𖿵', 4], ['𖿶', 2],
 ])
 const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? MARK_COUNTS.get(key) ?? null)
+// The first stroke of the marks and numerals the dictionary does not name, read from the shapes as
+// their counts are: 々 begins with a dot, the Hangzhou numerals 〡〢〣 and 〦〧〨 with a vertical,
+// 〤〥〩 with a falling stroke, and 〸〹〺 with a horizontal.
+const MARK_FIRSTS = new Map([
+  ['々', '點'], ['〡', '豎'], ['〢', '豎'], ['〣', '豎'], ['〤', '撇'], ['〥', '撇'],
+  ['〦', '豎'], ['〧', '豎'], ['〨', '豎'], ['〩', '撇'], ['〸', '横'], ['〹', '横'], ['〺', '横'],
+])
 
 // Rime's dictionary writes each stroke of a character as one letter: h 横, s 豎, p 撇, n or d 點,
 // z 折. A character's first stroke is the first letter of its first complete code, except that codes
@@ -167,6 +174,7 @@ const OVERRIDES = new Map([['⻀', '横'], ['⺂', '折']])
 // says it stands for, the way its stroke count already does. The dictionary records ideographs and
 // their variants, not the Kangxi and Radicals Supplement forms.
 const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char)
+  ?? MARK_FIRSTS.get(char)
   ?? firstStroke(forms.get(char))
   // A compatibility ideograph copies the unified ideograph Unihan says it encodes.
   ?? firstStroke(compat.get(char)))
