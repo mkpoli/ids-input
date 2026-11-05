@@ -466,18 +466,18 @@
     {/if}
     {#if splitMessage}<p class="note" role="alert">{splitMessage}</p>{/if}
     {#if selected}
+      {#if strokes.length}
+        <div class="strokes" role="group" aria-label={t('app.layers.strokes')}>
+          <span class="ui-label">{t('app.layers.strokes')}</span>
+          {#each strokes as stroke (stroke.id)}
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={strokeId === stroke.id}
+              onclick={() => chooseStroke(stroke.id)}>{stroke.id}</button>
+          {/each}
+        </div>
+      {/if}
       <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
         <div class="transform-body">
-          {#if strokes.length}
-            <div class="strokes" role="group" aria-label={t('app.layers.strokes')}>
-              <span class="ui-label">{t('app.layers.strokes')}</span>
-              {#each strokes as stroke (stroke.id)}
-                <button type="button" class="ui-button" data-size="sm" aria-pressed={strokeId === stroke.id}
-                  onclick={() => chooseStroke(stroke.id)}>{stroke.id}</button>
-              {/each}
-            </div>
-          {/if}
           <div class="modes" role="group" aria-label={t('app.layers.mode')}>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={Boolean(strokeId) || (mode === 'matrix' && !simple)} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} disabled={Boolean(strokeId)} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
