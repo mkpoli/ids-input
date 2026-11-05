@@ -95,6 +95,10 @@
     strokeOwner = id
     strokeId = null
   })
+  // A chosen stroke the layer no longer draws, after a split or a new composer drawing, is dropped.
+  $effect(() => {
+    if (strokeId && !strokes.some(stroke => stroke.id === strokeId)) strokeId = null
+  })
   /** The geometry edit currently moving the chosen stroke. */
   const strokeEdit = $derived.by(() => {
     if (!strokeId || !selected || !doc?.geometryEdits) return null
