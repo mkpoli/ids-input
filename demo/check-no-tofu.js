@@ -36,7 +36,7 @@ function latinOnlyFontconfig() {
 }
 
 /** The palette's tabs, each a set of parts drawn with the app's faces. */
-const TABS = ['Components', 'Gongche', 'Tangut', 'Small Seal', 'Shuishu', 'Bopomofo', 'Marks', 'Letters & numbers', 'Hangul', 'Other scripts']
+const TABS = ['Components', 'Gongche', 'Tangut', 'Jurchen', 'Small Seal', 'Shuishu', 'Bopomofo', 'Marks', 'Letters & numbers', 'Hangul', 'Other scripts']
 
 /**
  * In the page: the characters of `selector` that draw the missing-glyph box, with the element's own

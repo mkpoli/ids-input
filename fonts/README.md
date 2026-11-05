@@ -128,6 +128,16 @@ glyph licence and neither does the spreadsheet that names the characters; the po
 [LICENSE-IDSShuishu.txt](LICENSE-IDSShuishu.txt) and the [data notices](../data/README.md#shuishu).
 Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 scripts/build_shuishu.py`.
 
+## IDS Jurchen
+
+`IDSJurchen.woff2` maps Unicode 18.0's 914 Jurchen characters and 51 radicals (U+18E00–U+19191 and
+U+191A0–U+191D2); `fonts.css` gives the face the matching `unicode-range`.
+
+The outlines are those of Alari Xuwasun Jurchen, public beta of 2026-10-12, by Sulfa, Dooran and
+Raxon7, under the SIL OFL 1.1 ([LICENSE-IDSJurchen.txt](LICENSE-IDSJurchen.txt)). This face keeps the
+base code points, leaves out the style sets, and is converted from cubic to quadratic outlines.
+Rebuild the font and `data/jurchen-outlines.json.gz` with `uv run --python 3.12 scripts/build_jurchen.py`.
+
 ## Unicode fallback glyphs
 
 The composer draws 56,651 additional characters from font-derived outlines when the selected export

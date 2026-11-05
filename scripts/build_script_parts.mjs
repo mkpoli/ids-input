@@ -35,7 +35,7 @@ function script(char) {
   if (cp >= 0x31c0 && cp <= 0x31ef) return 'strokes'
   if (cp >= 0x30 && cp <= 0x39) return 'latin'
   let lo = 0, hi = ranges.length - 1
-  while (lo <= hi) { const mid = (lo + hi) >> 1, [first, last, name] = ranges[mid]; if (cp < first) hi = mid - 1; else if (cp > last) lo = mid + 1; else return ({ Hani: 'han', Latn: 'latin', Cyrl: 'cyrillic', Hang: 'hangul', Bopo: 'bopomofo', Tang: 'tangut', Zyyy: null, Zinh: null })[name] ?? (name === 'Zyyy' || name === 'Zinh' ? null : name) }
+  while (lo <= hi) { const mid = (lo + hi) >> 1, [first, last, name] = ranges[mid]; if (cp < first) hi = mid - 1; else if (cp > last) lo = mid + 1; else return ({ Hani: 'han', Latn: 'latin', Cyrl: 'cyrillic', Hang: 'hangul', Bopo: 'bopomofo', Tang: 'tangut', Jurc: 'jurchen', Zyyy: null, Zinh: null })[name] ?? (name === 'Zyyy' || name === 'Zinh' ? null : name) }
   return null
 }
 const coverage = JSON.parse(readFileSync(new URL('../data/unicode-coverage.json', import.meta.url)))

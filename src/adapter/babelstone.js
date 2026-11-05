@@ -5,6 +5,7 @@ import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, mergeSources, openTangutSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
+import { jurchenNames, jurchenTable } from './jurchen-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -191,7 +192,8 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * `sketches` is the URL of `data/sketch-parts.json.gz` (or its decoded document), the prepared
  * glyph masks the Find tab's drawing search compares with; without it the tab builds them from
  * the page's fonts when it opens. `shuishu` adds the Shuishu characters and radicals to the
- * palette, and their names, readings and meanings to the search.
+ * palette, and their names, readings and meanings to the search. `jurchen` adds the Jurchen
+ * characters and radicals to the palette, and their readings and stroke codes to the search.
  * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
  *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
@@ -204,10 +206,11 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   smallSeal?: string | URL | import('./seal-data.js').SmallSealData,
  *   sketches?: string | URL | import('../core/sketch-data.js').SketchData,
  *   shuishu?: string | URL | import('./shuishu-data.js').ShuishuData,
+ *   jurchen?: string | URL | import('./jurchen-data.js').JurchenData,
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -304,6 +307,16 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return doc
   })().catch(error => { seal = null; throw error })
 
+  /** @type {Promise<import('./jurchen-data.js').JurchenData | null> | null} */
+  let jur = null
+  const readJurchen = () => jur ??= (async () => {
+    if (!jurchen) return null
+    const doc = typeof jurchen === 'string' || jurchen instanceof URL
+      ? /** @type {import('./jurchen-data.js').JurchenData} */ (JSON.parse(await readText(await load(jurchen)))) : jurchen
+    jurchenTable(doc) // Validate the format before exposing any of its data.
+    return doc
+  })().catch(error => { jur = null; throw error })
+
   /** @type {Promise<import('./shuishu-data.js').ShuishuData | null> | null} */
   let shui = null
   const readShuishu = () => shui ??= (async () => {
@@ -333,7 +346,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
   const read = () => table ??= Promise.all([
     given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
-      : smallSeal || shuishu ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
+      : smallSeal || shuishu || jurchen ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
     ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
     componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
@@ -436,7 +449,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       ? JSON.parse(await readText(await load(sketches, options))) : sketches
     // A prepared file belongs to the palette it was made for; a host's own palette keeps only the
     // parts it holds, with that palette's counts.
-    if (!givenPalette && !parts && !smallSeal && !shuishu) return readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
+    if (!givenPalette && !parts && !smallSeal && !shuishu && !jurchen) return readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const rows = await readPalette()
     const prepared = readSketchTemplates(/** @type {import('../core/sketch-data.js').SketchData} */ (document))
     const by = new Map(rows.map(row => [row.part, row]))
@@ -448,12 +461,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
 
   const readPalette = () => palette ??= Promise.all([
     givenPalette ? Promise.resolve(givenPalette) : parts ? load(parts).then(response => response.json()).then(paletteRows)
-      : smallSeal || shuishu ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
+      : smallSeal || shuishu || jurchen ? [] : Promise.reject(new Error('babelStoneAdapter: no `parts` URL or `palette` given')),
     readSeal(),
     readShuishu(),
+    readJurchen(),
     formsText !== undefined ? formsText : forms ? load(forms).then(response => response.text()).catch(() => '') : '',
-  ]).then(([base, doc, shuiDoc, text]) => {
-    const rows = doc || shuiDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
+  ]).then(([base, doc, shuiDoc, jurDoc, text]) => {
+    const rows = doc || shuiDoc || jurDoc ? [...new Map([...base, ...(doc?.parts ?? []), ...(shuiDoc?.parts ?? []), ...(jurDoc?.parts ?? [])].map(p => [p.part, p])).values()] : base
     // Keep reviewed contextual search substitutions out of palette families.
     const safe = text.split('\n').filter(line => !line.split('\t').slice(0, 2).some(char => PALETTE_SEPARATE.has(char))).join('\n')
     const variants = readForms(safe)
@@ -628,7 +642,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   let relations = null
   let relationsGeneration = -1
   const relationIndex = async () => {
-    const built = given || ids || smallSeal || shuishu ? await readSearch() : { generation: searchGeneration, table: new Map() }
+    const built = given || ids || smallSeal || shuishu || jurchen ? await readSearch() : { generation: searchGeneration, table: new Map() }
     if (relations && relationsGeneration === built.generation) return relations
     const building = relations = Promise.all([readInformation(), Promise.resolve(built.table)])
       .then(([{ doc, seal }, found]) => createRelationSearch(doc, seal, found))
@@ -643,7 +657,7 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       signal?.throwIfAborted()
       const { doc, lookup } = await readInformation()
       const info = lookup(char)
-      if (info?.script === 'component' && (given || ids || smallSeal || shuishu)) {
+      if (info?.script === 'component' && (given || ids || smallSeal || shuishu || jurchen)) {
         info.relations.push(...componentExamples(char, doc, (await readSearch()).table))
         // The examples are glossed from Open Tangut and described in BabelStone's Tangut IDS; the card
         // shows each source once, so they join the record's own sources through the same merge.
@@ -724,6 +738,15 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
           const named = shuishuNames(doc, text)
           const built = named.filter(hit => hit.rank === 0)
           hits = [...built, ...hits, ...named.filter(hit => hit.rank !== 0)]
+        }
+      }
+      if (jurchen) {
+        try {
+          const doc = await readJurchen()
+          // As with Shuishu: a typed character stands with the components, a reading or stroke code below.
+          if (doc) hits = [...hits, ...jurchenNames(doc, text, limit)]
+        } catch {
+          signal?.throwIfAborted() // The other hits stand without the Jurchen index.
         }
       }
       if (!characterInfo && smallSeal) {

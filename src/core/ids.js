@@ -82,6 +82,11 @@ export const SHUISHU = /[\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}]/u
 /** Whether `text` contains a Shuishu character. @param {string | null | undefined} text */
 export const isShuishu = text => SHUISHU.test(text ?? '')
 
+/** The Jurchen characters of Unicode 18.0, U+18E00..U+19191, and its 51 radicals, U+191A0..U+191D2. */
+export const JURCHEN = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}]/u
+/** Whether `text` contains a Jurchen character or radical. @param {string | null | undefined} text */
+export const isJurchen = text => JURCHEN.test(text ?? '')
+
 /** @param {string | undefined} char */
 export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(char)
 
