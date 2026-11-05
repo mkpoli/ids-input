@@ -62,6 +62,12 @@ in their title; a description finds its character, a typed part lists the charac
 it, and the structure panel treats the decomposition as the character's parts. The tab says the
 decompositions are ours, since no source gives them.
 
+The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals, with outlines from
+[Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
+`IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
+reading in Unicode's records, numeric value or code point. No source decomposes these characters,
+so they have no descriptions of their own.
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
   <img src="docs/images/phone-light.png" width="260" alt="The workshop at phone width: the sequence field, the operator palette and the parts palette in one column">

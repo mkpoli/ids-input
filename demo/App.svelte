@@ -23,6 +23,7 @@
   import components from '../data/ids-components.tsv?url'
   import sealData from '../data/small-seal.json.gz?url'
   import shuishuData from '../data/shuishu.json.gz?url'
+  import jurchenData from '../data/jurchen.json.gz?url'
   import sealExtraParts from '../data/seal-extra-parts.json'
   import parts from '../data/ids-parts.json?url'
   import sketches from '../data/sketch-parts.json.gz?url'
@@ -81,7 +82,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {

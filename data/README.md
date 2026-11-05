@@ -601,6 +601,36 @@ decomposition file costs those descriptions only.
 `scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
 or the character itself.
 
+
+## Jurchen
+
+`jurchen.json.gz` is the palette index for Unicode 18.0's 914 Jurchen characters and 51 radicals, and
+`jurchen-outlines.json.gz` holds their 965 outlines.
+
+| Field | Source |
+| --- | --- |
+| `jurRadical`, `strokes`, `jurSource`, `jurReading`, `jurNumeric` | [`JurchenSources.txt`](https://www.unicode.org/Public/18.0.0/ucd/JurchenSources.txt), [Unicode Terms of Use](https://www.unicode.org/terms_of_use.html). The readings are 金啓孮, 『女真文辞典』 (文物出版社, 1984), one entry per character; 806 characters have one. |
+| `jurCode` | Alari Jurchen Rime table `Alari_jurc.dict.yaml`, version 2026.05.29, by Yehenara Ayasala, Sulfa and Tunggiya Uju, [朝花·夕拾 電子藏書閣](https://dorontu.com/#/cloud), folder 女真文资料/女真文rime输入法. It states no licence and is published for readers to download and use. Its header says Jurchen has no common stroke order and its codes may not be unique. |
+| Outlines | Alari Xuwasun Jurchen, public beta of 2026-10-12, by Sulfa, Dooran and Raxon7, same site, folder 女真文资料/女真文字体, SIL OFL 1.1. |
+
+Unicode gives a radical no stroke count, so `strokes` is null on the 51 radicals; a radical's number
+is its place in the block. Radical and stroke values come from `kJURC_RSUnicode`, whose second number
+is the total stroke count.
+
+The stroke definitions are from Sulfa and Ayasala's article
+[「没人给女真文做字体和输入法？那我们自己来」](https://mp.weixin.qq.com/s/YaUP6bq4xt_18ywlRxCQpA) (WeChat, read
+from a copy of its text; date not seen), which also says the font is a Fangsong restyling of the
+encoding proposal's forms, so it does not reproduce an inscription or manuscript. The site was found
+through 柳突破's [Bilibili video](https://www.bilibili.com/video/BV1odec6pEqp/) of 2026-09-16.
+
+The table lists 537 variant sequences through U+FE00–U+FE04, a convention of its own that
+`StandardizedVariants.txt` of Unicode 18.0 does not record; they are left out here. No source
+decomposes these characters, so the index has no IDS.
+
+Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
+index, outlines and font with `uv run --python 3.12 scripts/build_jurchen.py`, then
+`uv run --python 3.12 python scripts/build_bundled_coverage.py`.
+
 ## New Korean Orthography outlines
 
 `new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
