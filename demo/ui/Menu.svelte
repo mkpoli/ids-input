@@ -400,7 +400,7 @@
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}
   .card:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .card:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
-  .card-art{display:block;flex:none;width:48px;height:48px;padding:4px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
+  .card-art{display:block;flex:none;width:48px;height:48px;color:var(--ui-color-ink)}
   .card-art path{fill:currentColor}
   .card-glyph{display:block;flex:none;width:48px;height:48px;overflow:hidden;font-family:var(--cjk);font-size:26px;line-height:48px;color:var(--ui-color-ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
   .card-text{display:flex;flex:1;flex-direction:column;gap:var(--ui-space-3xs);min-width:0}

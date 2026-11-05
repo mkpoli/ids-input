@@ -295,7 +295,7 @@
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}
   .card:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .card:disabled{opacity:var(--ui-disabled-opacity);cursor:not-allowed}
-  .card-art{display:block;flex:none;width:48px;height:48px;padding:3px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
+  .card-art{display:block;flex:none;width:48px;height:48px;color:var(--ui-color-ink)}
   .card-art path{fill:currentColor}
   .card-glyph{display:block;flex:none;width:36px;height:36px;overflow:hidden;font-family:var(--cjk);font-size:20px;line-height:36px;color:var(--ui-color-ink);text-align:center;white-space:nowrap;text-overflow:ellipsis}
   .card-text{display:flex;flex:1;flex-direction:column;gap:1px;min-width:0}
