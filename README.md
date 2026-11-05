@@ -212,7 +212,7 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -224,6 +224,7 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
+pyramidOnBase(parse('⿳口⿰口口木').tree)  // { cell: '口', layers: 2, base: '木' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -283,7 +284,10 @@ cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way
 description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
 above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
 composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
-instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+instead (品, 森). `pyramidOnBase` reads a pyramid standing on one more part, ⿳口⿰口口木 and
+⿱⿱口⿰口口木 alike, as `{ cell, layers, base }`; the composer spreads the rows over the full width
+above the base, each cell wider than it is tall, draws the base as a cell in the row below, and
+draws the spellings alike. A whole description may run past the ordinary 64-code-point length as a pyramid
 of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
 64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
 layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left

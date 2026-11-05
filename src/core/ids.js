@@ -24,7 +24,7 @@ export * from './marks.js'
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
 
-import { pyramidRows } from './pyramid-shape.js'
+import { pyramidOnBase, pyramidRows } from './pyramid-shape.js'
 
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
@@ -204,7 +204,8 @@ export function modifierLength(text, at) {
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
- * of two or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
+ * of two or more rows, or such a pyramid on a base, up to `PYRAMID_LONGEST` code points; a draft may
+ * be that long.
  *
  * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
  * definition after it are left out (see `entryDescription`).
@@ -265,7 +266,7 @@ export function parse(text, { open = false } = {}) {
     }
     // A whole description may run past the ordinary length only as a pyramid, its cells any part;
     // a draft may be long.
-    if (!open && long && !pyramidRows(tree, { minLayers: 2 })) return { problem: 'character' }
+    if (!open && long && !pyramidRows(tree, { minLayers: 2 }) && !pyramidOnBase(tree)) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
