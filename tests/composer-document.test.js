@@ -184,6 +184,15 @@ describe('stroke contours and holes', () => {
     expect(made.source.geometry(document.root)?.pieces.map(piece => piece.cut)).toEqual([false, true])
   })
 
+  it('keeps the compound path when a stroke names a fractional contour index', () => {
+    const document = fromSequence('口')
+    const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0.5]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces).toHaveLength(1)
+    expect(geometry?.strokes).toBeUndefined()
+  })
+
   it('keeps a shared contour as one compound piece without stroke groups', () => {
     const document = fromSequence('口')
     const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'

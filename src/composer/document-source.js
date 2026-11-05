@@ -73,7 +73,7 @@ function partGeometry(part, d) {
   if (shared) return { pieces: [{ d, fillRule: 'nonzero' }] }
   const subpaths = splitSubpaths(d)
   const contours = subpaths.length
-  if (!contours || part.strokes.some(([, group]) => group.some(index => index < 0 || index >= contours))) {
+  if (!contours || part.strokes.some(([, group]) => group.some(index => !Number.isInteger(index) || index < 0 || index >= contours))) {
     return { pieces: [{ d, fillRule: 'nonzero' }] }
   }
   const areas = subpaths.map(signedAreaOf)
