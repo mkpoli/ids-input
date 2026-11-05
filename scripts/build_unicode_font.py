@@ -169,7 +169,8 @@ def characters_without_outline(metadata):
     needed.update(json.loads(gzip.decompress((ROOT / 'data/bopomofo-outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
     needed.update(han_ideographs())
-    return sorted(char for char in needed if char not in drawn)
+    # BabelStone's PUA glyphs have their own face (`IDS Numbered`); no Unicode font draws them.
+    return sorted(char for char in needed if char not in drawn and not 0xE080 <= ord(char) <= 0xF8DF)
 
 
 class ScalePen:
