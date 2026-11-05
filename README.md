@@ -556,7 +556,9 @@ the Find tab's drawing search uses. `components` writes
 out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
-reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
+components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
+stay in the unknown-stroke group without insertion. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
 than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
@@ -771,8 +773,8 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
-CJK strokes the prepared file covers, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with the 11,417 parts in the
+prepared sketch file and the CJK strokes it covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
 the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
@@ -894,7 +896,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   from those public-domain decompositions (16 KB); it adds no source and records no descent.
 - `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
   that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
-  the adapter reads descriptions by it.
+  the adapter reads descriptions by it, and the parts palette lists all 121 by number.
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
   currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).

@@ -225,6 +225,7 @@
   "parts.tab.components": "구성 요소",
   "parts.tab.recent": "최근",
   "parts.unknownStrokes": "획수 기록 없음",
+  "parts.numbered.readonly": "IDS 조각이 없어 참고용으로 표시",
   "parts.uses.other": "{count}자에 쓰임",
   "parts.seal.basic": "기본",
   "parts.seal.compound": "복합",

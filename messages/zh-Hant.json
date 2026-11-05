@@ -225,6 +225,7 @@
   "parts.tab.components": "部件",
   "parts.tab.recent": "最近",
   "parts.unknownStrokes": "未記錄筆畫數",
+  "parts.numbered.readonly": "無IDS構件，僅供查閱",
   "parts.uses.other": "用於{count}個字",
   "parts.seal.basic": "基礎",
   "parts.seal.compound": "複合",

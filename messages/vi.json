@@ -225,6 +225,7 @@
   "parts.tab.shuishu": "Thủy thư",
   "parts.tab.jurchen": "Nữ Chân",
   "parts.unknownStrokes": "Chưa có dữ liệu về số nét",
+  "parts.numbered.readonly": "Không có đoạn IDS, chỉ để tham khảo",
   "parts.uses.other": "dùng trong {count} chữ",
   "parts.seal.basic": "Cơ bản",
   "parts.seal.compound": "Phức hợp",
