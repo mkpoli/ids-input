@@ -11,7 +11,7 @@ try {
     const faces = [...document.fonts].filter(face => face.family.replace(/"/g, '') === 'IDS Operators')
     return { faces: faces.length, loaded: faces.every(face => face.status === 'loaded') }
   })
-  assert.ok(result.faces > 0, 'fonts.css registers the operators face')
+  assert.equal(result.faces, 2, 'fonts.css registers a face for each range, Noto for U+2FF0-2FFB and Jigmo for the four above')
   assert.ok(result.loaded, 'the face loads for the operators on the page')
   console.log('PASS the IDS operators render from the bundled face')
 } finally { await browser.close() }
