@@ -306,6 +306,22 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
 
+## `erjian-glyphs.json`
+
+The 二简字 forms the draft drew whole, kept for the descriptions the composer can only approximate:
+⿰忄井 for 警, ⿸厂九 for 厩, ⿱千田 for 臿. The composer builds such a description from parts, taking
+each from a whole character it resembles; the draft drew one outline instead. 14 entries, 24 KB.
+
+Each entry is keyed by the description and gives the table entry it follows (`table`), the character
+the form was made for (`character`), the private-use code point of the glyph (`codepoint`) and the
+outline (`d`, an SVG path in the composer's 1000-unit box, y down). The outlines are the glyphs of
+BabelStone Han PUA by Andrew West; the table is his [二简字 (Erjian)
+table](https://www.babelstone.co.uk/Fonts/Erjian.html), read 2026-11-06. Built by
+`uv run scripts/build_erjian_glyphs.py`, which pins the font at SHA-256
+`92e7155bd28f5570449f4dc71e9bb6fa919f67ef0120d4f83b58c61bed3ed4dc` (BabelStone Han PUA 1.472) and
+the table revision it read. Licence: Arphic Public License, the font's own
+(`fonts/LICENSE-BabelStoneHanPUA.txt`).
+
 ## component-names.tsv
 
 The names, words and readings people use for components, for the parts finder's search: 絞絲 and
