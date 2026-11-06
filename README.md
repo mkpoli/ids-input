@@ -1020,10 +1020,11 @@ draft; text built from a sequence's letters goes on to the editor first. A docum
 than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
 a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
-chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, the recent sequences, the theme and font choice stay
-in `localStorage`; the keys use the `ids-input:` prefix.
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Fangsong/Kaisho switch
+chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
+being built in each face. Other composed outlines use the configured export’s font. Settings,
+the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
+`ids-input:` prefix.
 
 ### Share cards
 
