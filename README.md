@@ -66,8 +66,9 @@ The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 
 sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
-reading in Unicode's records, numeric value or code point. No source decomposes these characters,
-so they have no descriptions of their own.
+reading in Unicode's records, numeric value or code point. Forty-four of the characters carry an
+editorial IDS, printed on the tile and in their title, and the tab says these are ours, since no
+source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -848,7 +849,7 @@ from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file 
 with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
-Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
 
@@ -941,7 +942,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic, Noto Sans CJK JP and BabelStone Han PUA subsets (about 490 KB together),
-  Noto Serif Tangut (1 MB), Kureedo (2.8 MB), Kureedo Label (23 KB) and GenZui Sans (2.3 MB); the
+  Noto Serif Tangut (1 MB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
+  Label (23 KB) and GenZui Sans (2.3 MB); the
   BabelStone subset is under the Arphic Public License, the rest SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
@@ -1267,7 +1269,8 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation. The card keeps clear of surfaces marked
+the adapter records and the data documentation; the line ends with the character's page
+on 字統网 (zi.tools). The card keeps clear of surfaces marked
 `data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
 place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

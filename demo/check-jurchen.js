@@ -60,6 +60,11 @@ try {
     assert.equal(await part.getAttribute('lang'), 'juc')
   }
 
+  // An editorial description is printed on its tile and finds its character.
+  await filter.fill('⿱\u{191BA}\u{191C8}')
+  assert.equal(await tiles.first().getAttribute('data-character'), '\u{18F6A}')
+  assert.equal(await tiles.first().locator('.part-ids').textContent(), '⿱\u{191BA}\u{191C8}')
+
   // A picked part goes into the field, and a description of two draws from the bundled outlines.
   await filter.fill('')
   const field = page.locator('.ids-field input')

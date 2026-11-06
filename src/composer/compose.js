@@ -17,7 +17,7 @@
 // before drawing again).
 import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
-import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
+import { ownFormsOnly, componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
 import { pyramidCells, pyramidOnBaseLayout } from './pyramid.js'
@@ -93,6 +93,9 @@ const BAR_ASPECT = 5
 // the flattest full component (工, 1.23 in the export) and the flattest one drawn as a band
 // (丷, 2.04) fall either side of it.
 const MIDDLE_FLAT = 1.5
+// How much of a cover's width a box head takes, and the part below it, so the two stay in balance.
+const BOX_HEAD = 0.72
+const BOX_BODY = 0.85
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -100,6 +103,15 @@ const SIDE_COVERS = new Set(['宀', '冖'])
 const COVER_BAR = 0.72
 /** How far a middle 冖's ink overlaps the parts above and below it, in font units. */
 const COVER_GAP = -24
+// How much of a middle 冖's width the part above it must span before the cover closes on it: a
+// narrow part would have the bar close on a post (⿳卜冖人).
+const COVER_CLOSE_SHARE = 0.5
+// The KRM ⿱⺊冖 top. `bar` is where the underside of the roof's bar falls, as a share of the roof's ink
+// height from its top; a brush roof's left tip stands well above its bar. `height` is the share of the
+// whole the top takes, where the face's own band leaves ⺊ too short. `KRM_GAP` is how far 人's apex
+// stands below the bar, as a share of the whole: the manuscript tucks it close under the roof.
+const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null } }
+const KRM_GAP = 0.035
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
@@ -302,8 +314,8 @@ export class Composer {
     // merged with its neighbour's). The export's own manifest says how many bytes of host lists it
     // carries.
     this.hosted = m.files?.hosts?.bytes !== 0
-    // A static brush face keeps its own stroke weights; a variable export weights its parts.
-    this.weighted = m.weighted ?? !(m.style === 'kaisho' && m.heavy === 400)
+    // A static face keeps its own stroke weights; a variable export weights its parts.
+    this.weighted = m.weighted ?? m.heavy !== 400
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -503,7 +515,8 @@ export class Composer {
       }
       if (!this.partial && this.weighted) this.balance(out)
       const construct = CONSTRUCTS[sequence]
-      if (construct && !this.excluded(construct.host)) out = constructParts(construct, out)
+      // The bundled body is Noto's: a face with its own forms keeps the drawing it made.
+      if (construct && !ownFormsOnly(this.fontStyle) && !this.excluded(construct.host)) out = constructParts(construct, out)
       // Loose marks annotate the whole drawing; they take no part in its layout or weight.
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
@@ -903,7 +916,7 @@ export class Composer {
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
-    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    if (this.hosted && this.layout && (!hasRepetition || ownFormsOnly(this.fontStyle)) && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -1124,7 +1137,7 @@ export class Composer {
   /** Place an arbitrary inner operand in the room designed for these native enclosures. */
   yanStackedDays(outer, contents) {
     const source = yanSources.get(keyOf(outer))
-    return !this.separate && this.fontStyle !== 'kaisho' && source && !this.excluded(source)
+    return !this.separate && !ownFormsOnly(this.fontStyle) && source && !this.excluded(source)
       && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
@@ -1132,7 +1145,7 @@ export class Composer {
 
   /** Any ⿸ whose contents begin ⿱儿: the native legs join the enclosing bar. */
   legEnclosure(children, region) {
-    if (this.separate || this.fontStyle === 'kaisho') return null
+    if (this.separate || ownFormsOnly(this.fontStyle)) return null
     const key = keyOf(children[0]), contents = children[1]
     if (yanSources.has(key) || this.excluded('儿') || this.excluded('元') || this.excluded('詹')
       || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
@@ -1170,7 +1183,7 @@ export class Composer {
   }
 
   yanEnclosure(children, region) {
-    if (this.fontStyle === 'kaisho') return null
+    if (ownFormsOnly(this.fontStyle)) return null
     const key = keyOf(children[0])
     if (!yanSources.has(key) || this.excluded(yanSources.get(key))) return null
     const outer = componentParts(key, region, this.fontStyle, true)
@@ -1397,6 +1410,10 @@ export class Composer {
     if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
     const pair = op === '⿳' ? '⿱' : '⿰'
     const children = node.slice(1)
+    // ⺊ over 冖 is one designed top (the KRM vulgar 處, K07097330), not two stack operands:
+    // draw the prepared ⿱⺊冖 and give it the top band, with the bottom operand below.
+    if (op === '⿳' && (children[0] === '⺊' || children[0] === '卜') && children[1] === '冖'
+      && isComponentForm('⿱⺊冖', this.fontStyle)) return ['⿱', ['⿱', '⺊', '冖'], children[2]]
     // An even run stays even, whatever cuts the export holds of a pair of it: three of the same
     // operand (品, 森, 焱), a pair of the same operand beside a third (⿲大糸糸), and a run that
     // reads the same from either end (呂, 粥), whose middle belongs to both sides at once.
@@ -1711,7 +1728,7 @@ export class Composer {
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
     const other = children[1]
     const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
-      && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
+      && yanSources.has(keyOf(other[1])) && !this.separate && !ownFormsOnly(this.fontStyle)
       && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
     // A font compresses a stacked middle band, but a full part reads better with the share its own
     // ink asks for than with 0.75 of it: at 0.75 the 六 of ⿳山六廾 was 217 units high. Bars and
@@ -2038,6 +2055,22 @@ export class Composer {
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
     if (this?.partial) return
+    if (op === '⿱' && Array.isArray(children[0]) && keyOf(children[0]) === '⿱⺊冖' && groups[0].length === 2 && KRM_TOP[this.fontStyle]) {
+      const { bar, height } = KRM_TOP[this.fontStyle]
+      const ink = inkBounds(groups[0]), lower = inkBounds(groups[1]), whole = ink[3] - lower[1]
+      if (height) {
+        const bottom = ink[3] - height * whole
+        const lengthen = y => ink[3] + (y - ink[3]) * (ink[3] - bottom) / (ink[3] - ink[1])
+        for (const p of groups[0]) p.target = [p.target[0], lengthen(p.target[1]), p.target[2], lengthen(p.target[3])]
+      }
+      const roof = inkBounds([groups[0][1]])
+      const top = roof[3] - bar * (roof[3] - roof[1]) - KRM_GAP * whole
+      if (top > lower[3] || height) {
+        const raise = y => lower[1] + (y - lower[1]) * (top - lower[1]) / (lower[3] - lower[1])
+        for (const p of groups[1]) p.target = [p.target[0], raise(p.target[1]), p.target[2], raise(p.target[3])]
+      }
+      return
+    }
     const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
     const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
       : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
@@ -2100,7 +2133,7 @@ export class Composer {
     }
     if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && children[1] === '冖') {
       const a = inkBounds(groups[0]), b = inkBounds(groups[1]), gap = a[1] - b[3]
-      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && gap > COVER_GAP) {
+      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && a[2] - a[0] >= COVER_CLOSE_SHARE * (b[2] - b[0]) && gap > COVER_GAP) {
         const shift = Math.min(gap - COVER_GAP, 0.25 * (b[3] - b[1]))
         if (shift > 0) for (const group of groups.slice(1)) for (const p of group)
           p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
@@ -2115,29 +2148,53 @@ export class Composer {
         for (const p of lower) p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
       }
     }
-    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])
-      && typeof children[1] === 'string') {
+    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])) {
       let topBox = null
       try {
-        const tree = this.parse(this.sequenceOf(children[1]) ?? '')
+        // The lower part written out, or named by a character whose sequence reads the same.
+        // A written lower part drawn as one whole glyph keeps that glyph's own proportions.
+        const tree = typeof children[1] === 'string' ? this.parse(this.sequenceOf(children[1]) ?? '')
+          : groups[1].length > 1 ? children[1] : null
         if (Array.isArray(tree) && tree[0] === '⿱' && ['日', '曰', '田', '罒', '目', '四'].includes(tree[1])) topBox = tree[1]
       } catch { /* not a box-headed sequence */ }
       if (topBox) {
         const coverBox = bounds(groups[0]), lowerInk = inkBounds(groups[1]), height = lowerInk[3] - lowerInk[1]
-        const split = lowerInk[3] - 0.45 * height, factor = 0.72 * (coverBox[2] - coverBox[0]) / Math.max(lowerInk[2] - lowerInk[0], 1)
+        const split = lowerInk[3] - 0.45 * height
         const centre = (coverBox[0] + coverBox[2]) / 2
+        // One map for the whole head: a box may be several contours (its counters, or a brush face's
+        // separate strokes), and each must keep its place in it.
+        // A counter inside a contour below stays with that contour.
+        const above = b => (b[1] + b[3]) / 2 >= split
+        const boxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox)), below = boxes.filter(b => !above(b))
+        const inHead = b => above(b) && !below.some(o => o[0] <= b[0] && o[1] <= b[1] && o[2] >= b[2] && o[3] >= b[3])
+        // A lower part written out names its head: the first operand's part, whatever its height.
+        const named = Array.isArray(children[1]) && groups[1].length > 1 ? groups[1][0] : null
+        const headBoxes = named ? drawnContours(named).map(pointsBox) : boxes.filter(inHead)
+        const headLeft = Math.min(...headBoxes.map(b => b[0])), headRight = Math.max(...headBoxes.map(b => b[2]))
+        const head = (headLeft + headRight) / 2
+        // A head already that narrow keeps its width.
+        const factor = Math.min(BOX_HEAD * (coverBox[2] - coverBox[0]) / Math.max(headRight - headLeft, 1), 1)
+        // What stands below takes one map of its own: left at its width, it outweighs the narrowed head.
+        const isHead = (p, b) => named ? p === named : inHead(b)
+        const bodyBoxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox).filter(b => !isHead(p, b)))
+        const bodyLeft = Math.min(...bodyBoxes.map(b => b[0])), bodyRight = Math.max(...bodyBoxes.map(b => b[2]))
+        const body = (bodyLeft + bodyRight) / 2
+        const bodyFactor = Math.min(BOX_BODY * (coverBox[2] - coverBox[0]) / Math.max(bodyRight - bodyLeft, 1), 1)
         for (const p of groups[1]) {
           const contours = p.part.contours.slice()
           let changed = false
           drawnContours(p).forEach((points, index) => {
             const b = pointsBox(points)
-            if ((b[1] + b[3]) / 2 < split) return
+            const [from, by] = isHead(p, b) ? [head, factor] : [body, bodyFactor]
             const c = { ...contours[index] }
             let lo = Infinity, hi = -Infinity
             for (let k = 0; k < c.light.length; k += 2) { lo = Math.min(lo, c.light[k]); hi = Math.max(hi, c.light[k]) }
             const mid = (lo + hi) / 2, scale = (p.target[2] - p.target[0]) / Math.max(p.source[2] - p.source[0], 1)
-            const shift = (centre - (b[0] + b[2]) / 2) / scale
-            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * factor; out[k + 1] = points[k + 1] } return out }
+            const middle = (b[0] + b[2]) / 2
+            // A part mirrored across x moves the other way on the page than in its own coordinates.
+            const side = (p.flips ?? []).reduce((sign, f) => f.x ? -sign : sign, 1)
+            const shift = side * (centre + (middle - from) * by - middle) / scale
+            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * by; out[k + 1] = points[k + 1] } return out }
             c.light = move(c.light); c.heavy = move(c.heavy); contours[index] = c; changed = true
           })
           if (changed) p.part = derived(p.part, contours)

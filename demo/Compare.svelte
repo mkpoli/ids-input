@@ -1,6 +1,7 @@
 <script>
   // A public gallery of the composer beside KAGE: the same IDS drawn by both, with the measured
   // agreement. Two sets: 44 unencoded KRM headwords and 20 common-use kanji.
+  import SiteSelect from './ui/SiteSelect.svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
@@ -63,10 +64,7 @@
 
 <div class="page">
   <header class="bar">
-    <a class="brand" href="./" aria-label={t('app.title')}>
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-      <span>{t('app.title')}</span>
-    </a>
+    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="./" />
     <span class="slash" aria-hidden="true">/</span>
     <h1>{t('compare.title')}</h1>
     <div class="end">
@@ -172,7 +170,6 @@
   .page{display:flex;flex-direction:column;min-height:100dvh}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .slash{color:var(--ui-color-border-strong)}
   h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .end{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}

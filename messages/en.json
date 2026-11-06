@@ -243,7 +243,7 @@
   "parts.shuishu.groups": "Shuishu groups",
   "parts.shuishu.filter": "Filter by name, reading, meaning, description or code point",
   "parts.shuishu.note": "Placed at the tentative code points of the proposed block; Unicode 18.0.0 leaves them unassigned.",
-  "parts.shuishu.ids": "The decompositions are editorial: no source gives one, so they cover only the characters whose split is clear.",
+  "parts.editorialIds": "The decompositions are editorial: no source gives one, so they cover only the characters whose split is clear.",
   "parts.jurchen.character": "Characters",
   "parts.jurchen.variant": "Variant forms",
   "parts.jurchen.radical": "Radicals",
@@ -383,5 +383,6 @@
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS list",
   "info.site.course": "Unicode",
+  "info.site.zitools": "zi.tools",
   "info.firstStrokeShort": "first"
 }

@@ -666,7 +666,7 @@
           <span class="part-text compound-text">{part.part}</span>
         {:else}
           <span class="part-text">{part.display ?? part.part}</span>
-          {#if part.kind === 'shui' && part.ids}<span class="shui-ids" aria-hidden="true">{part.ids}</span>{/if}
+          {#if (part.kind === 'shui' || part.kind === 'jur') && part.ids}<span class="part-ids" aria-hidden="true">{part.ids}</span>{/if}
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
@@ -809,7 +809,7 @@
   {/if}
   {#if tab === 'shuishu'}
     <p class="parts-note">{t('parts.shuishu.note')}</p>
-    <p class="parts-note">{t('parts.shuishu.ids')}</p>
+    <p class="parts-note">{t('parts.editorialIds')}</p>
   {/if}
   {#if tab === 'jurchen' && !query && jurGroups.length}
     <div class="script-groups" role="group" aria-label={t('parts.jurchen.groups')}>
@@ -999,6 +999,7 @@
   </div>
   {#if tab === 'jurchen'}
     <p class="parts-note">{t('parts.jurchen.note')}</p>
+    <p class="parts-note">{t('parts.editorialIds')}</p>
   {/if}
 </div>
 
@@ -1093,8 +1094,8 @@
      place them over a Latin base the way the standard dotted-circle notation expects. */
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
-  .part:has(> .shui-ids){padding-bottom:12px;font-size:20px}
-  .shui-ids{position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
+  .part:has(> .part-ids){padding-bottom:12px;font-size:20px}
+  .part-ids{font-family:"IDS Operators","IDS Shuishu","IDS Jurchen",var(--ids-font,var(--ids-glyph-fallback,sans-serif));position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}

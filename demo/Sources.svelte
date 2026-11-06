@@ -2,6 +2,7 @@
   // The full source catalogue: every top-level source the project reads or cites, followed by the
   // records behind the starter examples. One page, filters by category and tag, and a note for each
   // source that has one. The README links here instead of keeping a second list.
+  import SiteSelect from './ui/SiteSelect.svelte'
   import { onMount } from 'svelte'
   import { translator } from '../src/svelte/index.js'
   import { LOCALES, appMessages } from './lib/locales.js'
@@ -85,10 +86,7 @@
 
 <div class="page">
   <header class="bar">
-    <a class="brand" href={`./?lang=${locale}`} aria-label="IDS Workshop">
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-      <span>{t('app.title')}</span>
-    </a>
+    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
     <span class="slash" aria-hidden="true">/</span>
     <h1>{t('sources.title')}</h1>
     <div class="end">
@@ -193,7 +191,6 @@
   .page{display:flex;flex-direction:column;min-height:100dvh}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .slash{color:var(--ui-color-border-strong)}
   h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}
@@ -254,7 +251,7 @@
   .note :global(code){font-size:11.5px}
 
   @media (max-width:640px){
-    .brand span,.slash{display:none}
+    .slash{display:none}
     .lead{font-size:15px}
     .controls{position:static}
     .head{padding-right:0}

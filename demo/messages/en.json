@@ -53,7 +53,7 @@
   "app.examples.cards": "Cards",
   "app.examples.list": "List",
   "app.examples.seal": "Small Seal",
-  "app.examples.jurchen": "Jurchen numerals",
+  "app.examples.jurchen": "Jurchen",
   "app.examples.shuishu": "Shuishu logograms",
   "app.examples.tangut": "Tangut",
   "app.examples.none": "(unencoded)",
@@ -83,6 +83,7 @@
   "app.font.label": "Glyph font",
   "app.font.sans": "Sans",
   "app.font.serif": "Serif",
+  "app.font.fangsong": "Fangsong",
   "app.font.klee": "Kaisho",
   "app.footer.sources": "Sources",
   "app.history.label": "History",
@@ -381,5 +382,7 @@
   "sources.use.compare": "Engine comparison",
   "sources.files": "Files",
   "sources.citedBy": "Used by examples",
-  "app.atlas": "Component atlas"
+  "app.atlas": "Component atlas",
+  "app.sitesLabel": "Sites",
+  "app.sitesMore": "More writing-system projects"
 }
