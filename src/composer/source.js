@@ -60,6 +60,6 @@ export function sourceFor(sequence, { base, fontStyle = 'sans', separate = false
   if (traits.newKorean) source = newKoreanSource({ fallback: source, ...loaders.newKorean })
   if (traits.shuishu) source = shuishuSource({ fallback: source, ...loaders.shuishu })
   if (traits.jurchen) source = jurchenSource({ fallback: source, ...loaders.jurchen })
-  if (traits.palette) source = paletteSource({ fallback: source, under: fontStyle !== 'sans', ...loaders.palette })
+  if (traits.palette) source = paletteSource({ fallback: source, under: fontStyle !== 'sans', style: fontStyle, ...loaders.palette })
   return source ?? bundledSource({ load: async () => ({ records: {} }), matches: () => false })
 }

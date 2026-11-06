@@ -44,7 +44,7 @@ const loadersFor = env => ({
   newKorean: { load: outlines(env, 'data/new-korean-outlines.json.gz') },
   shuishu: { load: outlines(env, 'data/shuishu-outlines.json.gz') },
   jurchen: { load: outlines(env, 'data/jurchen-outlines.json.gz') },
-  palette: { load: outlines(env, 'data/palette-outlines.json.gz') },
+  palette: { load: outlines(env, 'data/palette-outlines.json.gz'), sans: outlines(env, 'data/numbered-sans-outlines.json.gz') },
   unicode: { load: async name => { const bytes = await read(env, `data/${name.replace('unicode/', 'unicode-outlines/')}.json.gz`); return bytes === null ? {} : JSON.parse(await unpack(bytes)) } },
 })
 

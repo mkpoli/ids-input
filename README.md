@@ -565,8 +565,10 @@ right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
 components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
-draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. They sit
-in the unknown-stroke group because BabelStone gives them no stroke count. `additionalIds` adds tables in the same
+draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. In the
+Sans face, 60 of them are cut from the host character's Noto Sans/Plangothic glyph; the other 9 fall
+back to the PUA glyph. They sit in the unknown-stroke group because BabelStone gives them no stroke
+count. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
 than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
