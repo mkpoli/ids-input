@@ -5,7 +5,7 @@
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
-// gukja's reading in Hangul.
+// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it.
 /**
  * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
