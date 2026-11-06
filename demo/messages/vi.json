@@ -382,6 +382,6 @@
   "sources.files": "Tệp",
   "sources.citedBy": "Dùng trong ví dụ",
   "app.atlas": "Danh mục bộ phận",
-  "app.sites": "Sites",
-  "app.sites.more": "More writing-system projects"
+  "app.sitesLabel": "Sites",
+  "app.sitesMore": "More writing-system projects"
 }

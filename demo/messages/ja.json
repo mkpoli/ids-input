@@ -382,6 +382,6 @@
   "sources.files": "ファイル",
   "sources.citedBy": "作例での使用",
   "app.atlas": "部品の一覧",
-  "app.sites": "サイト",
-  "app.sites.more": "他の文字プロジェクト"
+  "app.sitesLabel": "サイト",
+  "app.sitesMore": "他の文字プロジェクト"
 }

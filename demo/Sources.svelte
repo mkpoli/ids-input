@@ -86,7 +86,7 @@
 
 <div class="page">
   <header class="bar">
-    <SiteSelect title={t('app.title')} label={t('app.sites')} more={t('app.sites.more')} {locale} href={`./?lang=${locale}`} />
+    <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href={`./?lang=${locale}`} />
     <span class="slash" aria-hidden="true">/</span>
     <h1>{t('sources.title')}</h1>
     <div class="end">

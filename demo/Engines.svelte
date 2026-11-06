@@ -20,7 +20,7 @@
 
 <div class="page">
   <header class="bar">
-    <SiteSelect title="IDS Workshop" label={en['app.sites']} more={en['app.sites.more']} locale="en" href="./" />
+    <SiteSelect title="IDS Workshop" label={en['app.sitesLabel']} more={en['app.sitesMore']} locale="en" href="./" />
     <span class="slash" aria-hidden="true">/</span>
     <h1>Engine comparison</h1>
     <div class="end">
