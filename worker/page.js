@@ -46,7 +46,7 @@ export function routeFor(url, defaultSequence) {
     }
   }
   if ([...sequence].length > 200) return bad('Sequence too long', 414)
-  if (/[\u0000-\u001f\u007f-\u009f]/u.test(sequence)) return bad('Bad sequence')
+  if (/\p{Cc}/u.test(sequence)) return bad('Bad sequence')
   return { kind, sequence }
 }
 

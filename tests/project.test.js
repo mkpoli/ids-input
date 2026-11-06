@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { arity, parse } from '../src/core/ids.js'
+import { parse } from '../src/core/ids.js'
 import {
   DocumentError, allocatorFor, documentFromTree, emptyDocument, fromSequence, syncDocument, toSequence, treeFromDocument,
 } from '../src/document/index.js'

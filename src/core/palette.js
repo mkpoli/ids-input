@@ -23,6 +23,6 @@ export function adjacentVariants(parts) {
  * @param {boolean} [exact]
  */
 export function matchScriptParts(keys, text, exact = false) {
-  const chars = new Set([...text]), description = isSequence(text)
+  const chars = new Set(text), description = isSequence(text)
   return keys.filter(part => part === text || !exact && (isSequence(part) && part.includes(text) || !description && chars.has(part)))
 }

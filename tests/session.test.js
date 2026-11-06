@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { parse } from '../src/core/ids.js'
-import { DocumentError, createDocumentSession, documentIds, findLayer, fromSequence, toSequence, treeFromDocument, validateDocument } from '../src/document/index.js'
+import { DocumentError, createDocumentSession, documentIds, findLayer, fromSequence, treeFromDocument, validateDocument } from '../src/document/index.js'
 
 const transform = [{ type: 'affine', matrix: [1, 0, 0, 1, 12, -3] }]
 const tree = sequence => parse(sequence, { open: true }).tree

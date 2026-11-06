@@ -174,7 +174,7 @@
 
   $effect(() => {
     // Measure after the DOM has the new scheme, including when System mode follows the OS.
-    theme
+    void theme
     let frame = 0
     const schedule = () => {
       measured = false

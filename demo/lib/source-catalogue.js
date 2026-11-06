@@ -13,7 +13,7 @@ function recordTags(record) {
   if (record.id.startsWith('x-')) tags.push('social')
   if (/wikipedia\.org/.test(record.url ?? '')) tags.push('wikipedia')
   if (/^(?:irg-|n2572)/.test(record.id)) tags.push('irg')
-  if (/^l2-/.test(record.id)) tags.push('unicode')
+  if (record.id.startsWith('l2-')) tags.push('unicode')
   return tags
 }
 

@@ -4,7 +4,7 @@ import { retrying } from '../src/core/retry.js'
 /** A fetch that answers each call from `answers` in turn: a status, or 'drop' for a network error. */
 const scripted = answers => {
   const calls = []
-  const get = async (input, init) => {
+  const get = async input => {
     calls.push(input)
     const answer = answers[Math.min(calls.length - 1, answers.length - 1)]
     if (answer === 'drop') throw new TypeError('Failed to fetch')
