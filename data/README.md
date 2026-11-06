@@ -647,8 +647,13 @@ The 537 parts with `jurGroup: 'variant'` are the table's and the font's variant 
 U+FE00–U+FE04. They are Alari's convention: `StandardizedVariants.txt` of Unicode 18.0 records none
 for Jurchen, so another font may draw the base form. Each carries its base character's Unicode record
 and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
-end of its code, and drops the table's placeholder row for U+25A1. No source decomposes these
-characters, so the index has no IDS.
+end of its code, and drops the table's placeholder row for U+25A1.
+
+`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 22
+characters. No source states one, so each is a reading of the Alari glyph: it describes the shape
+and makes no claim about how the character arose. `scripts/build_jurchen.py` refuses an entry with an
+operator other than ⿰ and ⿱, a part outside the block, or strokes that do not add up; a radical's
+count is read from its stroke code, since Unicode gives none.
 
 Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
 index, outlines and font with `uv run --python 3.12 scripts/build_jurchen.py`, then

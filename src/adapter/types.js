@@ -25,7 +25,7 @@
  * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
  * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
  * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
- * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu characters that have one.
+ * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu and Jurchen characters that have one.
  * @property {'character' | 'variant' | 'radical'} [jurGroup] Jurchen palette group.
  * @property {number} [jurRadical] The radical number, for Jurchen.
  * @property {string} [jurCode] Alari's stroke code, for Jurchen.

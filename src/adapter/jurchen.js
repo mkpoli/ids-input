@@ -1,6 +1,6 @@
 // @ts-check
 import { babelStoneAdapter } from './babelstone.js'
-export { isJurchen, jurchenLabel, jurchenMatches, jurchenNames, jurchenTable } from './jurchen-data.js'
+export { isJurchen, jurchenLabel, jurchenMatches, jurchenNames, jurchenSequences, jurchenTable } from './jurchen-data.js'
 
 /**
  * Jurchen characters over the default adapter: Unicode's block as palette parts, findable by stroke
