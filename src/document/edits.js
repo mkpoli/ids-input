@@ -26,21 +26,31 @@ function keepIdentity(base, replacement) {
   return /** @type {Node} */ ({ ...common(base), ...replacement, id: base.id })
 }
 
-/** @param {Node} node @param {Allocator} allocator @param {string} [id] @returns {Node} */
-function assignIds(node, allocator, id) {
-  const copy = /** @type {Node} */ (structuredClone(node))
-  const walk = (/** @type {Node} */ current, /** @type {boolean} */ root) => {
-    current.id = root && id !== undefined ? id : allocator.next()
-    if (current.kind === 'operator') current.children.forEach(child => walk(child, false))
-    else if (current.kind === 'group') walk(current.child, false)
+/**
+ * Copy the subtree rooted at `id` with fresh layer IDs. The geometry edits aimed at the subtree's
+ * layers come with it, in their order, under fresh edit IDs and the copied layers' IDs. The
+ * document itself is unchanged; the caller places the copy.
+ * @param {Document} document @param {string} id @param {Allocator} allocator
+ * @returns {{ node: Node, geometryEdits: import('./model.js').GeometryEdit[] }}
+ */
+export function duplicateSubtree(document, id, allocator) {
+  const found = findLayer(document.root, id)
+  if (!found) throw new DocumentError([{ path: '', message: `no layer ${id}` }])
+  const node = /** @type {Node} */ (structuredClone(found.node))
+  /** @type {Map<string, string>} */
+  const renamed = new Map()
+  const walk = (/** @type {Node} */ current) => {
+    const fresh = allocator.next()
+    renamed.set(current.id, fresh)
+    current.id = fresh
+    if (current.kind === 'operator') current.children.forEach(walk)
+    else if (current.kind === 'group') walk(current.child)
   }
-  walk(copy, true)
-  return copy
-}
-
-/** @param {Node} node @param {Allocator} allocator @returns {Node} */
-export function duplicateSubtree(node, allocator) {
-  return assignIds(node, allocator)
+  walk(node)
+  const geometryEdits = (document.geometryEdits ?? [])
+    .filter(edit => renamed.has(edit.node))
+    .map(edit => ({ .../** @type {import('./model.js').GeometryEdit} */ (structuredClone(edit)), id: allocator.next(), node: /** @type {string} */ (renamed.get(edit.node)) }))
+  return { node, geometryEdits }
 }
 
 /** @param {Content} content @param {Allocator} allocator @param {string} id @returns {Node} */

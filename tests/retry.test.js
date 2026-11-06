@@ -4,7 +4,7 @@ import { retrying } from '@han-compose/composer/retry'
 /** A fetch that answers each call from `answers` in turn: a status, or 'drop' for a network error. */
 const scripted = answers => {
   const calls = []
-  const get = async (input, init) => {
+  const get = async input => {
     calls.push(input)
     const answer = answers[Math.min(calls.length - 1, answers.length - 1)]
     if (answer === 'drop') throw new TypeError('Failed to fetch')
@@ -61,5 +61,26 @@ describe('a download asked for again', () => {
     const get = async () => { calls.push(1); if (calls.length < 2) throw new Error('ConnectionRefused'); return new Response('ok') }
     expect((await retrying(get, quick)('/a')).status).toBe(200)
     expect(calls.length).toBe(2)
+  })
+  it('answers at once when the server asks for longer than a drawing waits', async () => {
+    const calls = []
+    const get = async input => { calls.push(input); return new Response('', { status: 429, headers: { 'retry-after': '30' } }) }
+    expect((await retrying(get, quick)('/a')).status).toBe(429)
+    expect(calls.length).toBe(1)
+  })
+  it('waits as long as a short Retry-After asks', async () => {
+    const answers = [new Response('', { status: 429, headers: { 'retry-after': '1' } }), new Response('ok')]
+    const started = Date.now()
+    expect((await retrying(async () => answers.shift(), [1])('/a')).status).toBe(200)
+    expect(Date.now() - started).toBeGreaterThanOrEqual(900)
+  })
+  it('stops waiting when a Request\'s own signal aborts', async () => {
+    const control = new AbortController()
+    const calls = []
+    const get = async input => { calls.push(input); return new Response('', { status: 503 }) }
+    const answer = retrying(get, [60_000])(new Request('http://example.org/a', { signal: control.signal }))
+    setTimeout(() => control.abort(new Error('stopped')), 10)
+    await expect(answer).rejects.toThrow('stopped')
+    expect(calls.length).toBe(1)
   })
 })

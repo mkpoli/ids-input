@@ -58,3 +58,10 @@ describe('Hangul letters as description sequences', () => {
     expect(hangulLetters('A')).toBeNull()
   })
 })
+
+describe('a description with an empty slot', () => {
+  it('draws as written instead of reading as a syllable', () => {
+    expect(hangulOfIds('⿰⬚⿰ㄱㅏ')).toBeNull()
+    expect(hangulOfIds('⿰ㄱㅏ')).toBe('가')
+  })
+})

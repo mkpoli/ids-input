@@ -32,7 +32,7 @@ function leaves(value) {
   const text = value.replace(/\{[^}]*\}/g, '').replace(/#\([^)]*\)/g, '').replace(/&[^;]+;/g, '')
   for (const char of text) {
     if (OPERATORS.has(char) || MARK.test(char)) continue
-    if (/[\x00-\x7F]/.test(char)) continue
+    if (char.codePointAt(0) <= 0x7f) continue
     found.add(`ucs:${char.codePointAt(0).toString(16).toUpperCase()}`)
   }
   return found

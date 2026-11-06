@@ -185,6 +185,9 @@
   "app.theme.system": "システムに合わせる",
   "app.title": "IDS工房",
   "app.toolbar": "ツール",
+  "app.components.other": "部品{count}個",
+  "app.recordedStrokes": "この文字に記録された画数です。",
+  "app.componentStrokes": "部品の画数の合計です。",
   "app.componentLookup.title": "部品を調べる",
   "app.componentLookup.containing": "部品を含む文字を探す",
   "app.componentLookup.parts": "文字の部品を調べる",
@@ -216,6 +219,7 @@
   "app.layers.failed": "この説明をレイヤー付きで描けませんでした。",
   "app.layers.nonlinear": "このレイヤーには非線形の変形があります。フィールドを使う前にリセットしてください。",
   "app.layers.reset": "変形をリセット",
+  "app.layers.strokes": "画",
   "app.layers.transform": "変形",
   "app.layers.x": "X",
   "app.layers.y": "Y",
@@ -381,5 +385,7 @@
   "sources.use.compare": "エンジン比較",
   "sources.files": "ファイル",
   "sources.citedBy": "作例での使用",
-  "app.atlas": "部品の一覧"
+  "app.atlas": "部品の一覧",
+  "app.sitesLabel": "サイト",
+  "app.sitesMore": "他の文字プロジェクト"
 }

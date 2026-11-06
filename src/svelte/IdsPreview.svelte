@@ -91,7 +91,7 @@
   // Raw: the session already hands out a fresh clone, and a deep proxy would make its plain
   // transform chains unclonable on the way back into the session.
   let localDoc = $state.raw(/** @type {Document | null} */ (null))
-  $effect(() => { version; localDoc = session?.document ?? document })
+  $effect(() => { void version; localDoc = session?.document ?? document })
   const view = $derived.by(() => {
     const drawn = shown?.drawn
     if (!localDoc || !drawn || !sketched || sketched.text !== sequence) return null

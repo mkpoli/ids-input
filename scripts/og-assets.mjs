@@ -7,8 +7,9 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { gzipSync } from 'node:zlib'
+import { gunzipSync, gzipSync } from 'node:zlib'
 import { join } from 'node:path'
+import { buildIdsIndex } from './lib/ids-index.mjs'
 
 const out = join(import.meta.dirname, '../dist/og')
 if (!existsSync(join(import.meta.dirname, '../dist/index.html'))) {
@@ -95,6 +96,7 @@ console.log(`fonts general.otf, planes.ttf, ${pairs.length - Object.keys(FONTS).
 // They are the drawing engine's data, so they come from its package.
 const ENGINE = join(import.meta.dirname, '../node_modules/@han-compose/composer/data')
 const DATA = ['tangut', 'bopomofo', 'small-seal', 'new-korean', 'shuishu', 'jurchen', 'palette']
+const NUMBERED = 'numbered-sans-outlines.json.gz'
 for (const name of DATA) {
   copyFileSync(join(ENGINE, `sources/${name}/outlines.json.gz`), join(out, `data/${name}-outlines.json.gz`))
   console.log(`data ${name}`)
@@ -105,23 +107,10 @@ for (const file of (await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards)
 }
 console.log(`data ${(await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards))).length} unicode shards`)
 
-// An IDS to the character it describes, from BabelStone's table: `一\t一(GHTJKPV)` is 一 under 一,
-// `鎶\t⿰釒哥(GTJV)` 鎶 under ⿰釒哥. A row may list several descriptions, each followed by the regions
-// that record it; the first character listed for a description stays its own.
+// An IDS to the character it describes, from BabelStone's table and the editorial descriptions.
 const table = await new Response(Bun.file(join(import.meta.dirname, '../data/babelstone-ids.tsv.gz')).stream()
   .pipeThrough(new DecompressionStream('gzip'))).text()
-/** @type {Record<string, string>} */
-const index = {}
-let rows = 0
-for (const line of table.split('\n')) {
-  if (!line || line.startsWith('#')) continue
-  const [char, written] = line.split('\t')
-  if (!char || !written) continue
-  rows++
-  for (const listed of written.split(' ')) {
-    const ids = listed.replace(/\([A-Z]+\)$/, '')
-    if (ids) index[ids] ??= char
-  }
-}
+const editorial = ['shuishu', 'jurchen'].map(name => JSON.parse(gunzipSync(readFileSync(join(import.meta.dirname, `../data/${name}.json.gz`)))))
+const { index, rows } = buildIdsIndex(table, editorial)
 writeFileSync(join(out, 'data/ids-index.json.gz'), gzipSync(JSON.stringify(index)))
 console.log(`index ${Object.keys(index).length} descriptions of ${rows} rows`)

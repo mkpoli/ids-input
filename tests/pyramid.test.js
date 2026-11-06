@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'bun:test'
 import { LONGEST, PYRAMID_LONGEST, isDescription, parse, pyramidCount, pyramidOnBase, pyramidRows, pyramidSequence, write } from '../src/core/index.js'
-import { PYRAMID_LAYERS, tooLarge } from '@han-compose/composer/loader'
+import { PYRAMID_LAYERS, compose, createSource, sketch, tooLarge } from '@han-compose/composer/loader'
+import { Composer } from '@han-compose/composer/compose'
+import { pyramidCells } from '@han-compose/composer/pyramid'
+import { groupParts } from '../src/core/preview.js'
+import { constants, files } from './fixtures/small-export.js'
+
+const sourceOf = (fetched = []) => createSource(async name => {
+  fetched.push(name)
+  const body = files[name]
+  return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+})
 
 const tree = text => parse(text).tree
 
@@ -208,5 +218,361 @@ describe('a pyramid on a base', () => {
     const deep = '⿴'.repeat(9) + '口'.repeat(10)
     expect(tooLarge(tree('⿳口⿰口口' + deep))).toBe(true)
     expect(tooLarge(tree('⿳口⿰口口木'))).toBe(false)
+  })
+})
+
+
+describe('pyramid cells', () => {
+  it('has none for a count of layers that is no whole number', () => {
+    expect(pyramidCells([0, 0, 1000, 1000], 2.5)).toEqual([])
+    expect(pyramidCells([0, 0, 1000, 1000], Number.NaN)).toEqual([])
+    expect(pyramidCells([0, 0, 1000, 1000], 3)).toHaveLength(6)
+  })
+  it('makes every cell the same square in centred rows', () => {
+    for (const layers of [3, 4, 5, 12]) {
+      const cells = pyramidCells([0, 0, 1000, 1000], layers)
+      expect(cells).toHaveLength(pyramidCount(layers))
+      const width = cells[0][2] - cells[0][0], height = cells[0][3] - cells[0][1]
+      expect(width).toBeCloseTo(height, 8)
+      for (const cell of cells) {
+        expect(cell[2] - cell[0]).toBeCloseTo(width, 8)
+        expect(cell[3] - cell[1]).toBeCloseTo(height, 8)
+      }
+      const centers = cells.map(cell => (cell[0] + cell[2]) / 2)
+      expect(centers[0]).toBeCloseTo(500, 8)
+      expect(cells[0][1]).toBeGreaterThan(cells[1][1])
+      expect(cells[0][0]).toBeGreaterThan(cells[1][0])
+      expect(cells.at(-1)[1]).toBeCloseTo(0, 8)
+      expect(cells[0][3]).toBeCloseTo(1000, 8)
+    }
+  })
+
+  it('centres a bottom pyramid without changing cell size or reading order', () => {
+    for (const layers of [1, 3, 4, 12]) {
+      const region = [100, -200, 1300, 800]
+      const normal = pyramidCells(region, layers)
+      const reversed = pyramidCells(region, layers, { direction: 'bottom' })
+      expect(pyramidCells(region, layers, { direction: 'top' })).toEqual(normal)
+      expect(reversed).toHaveLength(pyramidCount(layers))
+      let offset = 0
+      for (let count = layers; count >= 1; count--) {
+        const row = reversed.slice(offset, offset + count)
+        expect((row[0][0] + row.at(-1)[2]) / 2).toBeCloseTo(700, 8)
+        for (let i = 0; i < row.length; i++) {
+          const cell = row[i]
+          expect(cell[2] - cell[0]).toBeCloseTo(normal[0][2] - normal[0][0], 8)
+          expect(cell[3] - cell[1]).toBeCloseTo(cell[2] - cell[0], 8)
+          expect(cell[1]).toBeCloseTo(row[0][1], 8)
+          if (i) expect(cell[0]).toBeGreaterThan(row[i - 1][2])
+        }
+        if (offset) expect(row[0][3]).toBeLessThan(reversed[offset - 1][1])
+        offset += count
+      }
+      expect(reversed[0][3]).toBeCloseTo(800, 8)
+      expect(reversed.at(-1)[1]).toBeCloseTo(-200, 8)
+    }
+  })
+
+  it('draws a sideways pyramid in columns, with the cell size of the other directions', () => {
+    const region = [100, -200, 1300, 800], top = pyramidCells(region, 4)
+    for (const direction of ['left', 'right']) {
+      const cells = pyramidCells(region, 4, { direction })
+      expect(cells).toHaveLength(10)
+      expect(cells[0][2] - cells[0][0]).toBeCloseTo(top[0][2] - top[0][0], 8)
+      let offset = 0
+      for (let index = 0; index < 4; index++) {
+        const count = direction === 'left' ? index + 1 : 4 - index
+        const column = cells.slice(offset, offset + count)
+        const x = (column[0][0] + column[0][2]) / 2
+        for (const cell of column) expect((cell[0] + cell[2]) / 2).toBeCloseTo(x, 8)
+        for (let i = 1; i < column.length; i++) expect(column[i][1]).toBeLessThan(column[i - 1][1])
+        expect((column[0][3] + column.at(-1)[1]) / 2).toBeCloseTo(300, 8)
+        if (count === 4) {
+          expect(column[0][3]).toBeCloseTo(800, 8)
+          expect(column.at(-1)[1]).toBeCloseTo(-200, 8)
+        }
+        if (offset) expect(x).toBeGreaterThan((cells[offset - 1][0] + cells[offset - 1][2]) / 2)
+        offset += count
+      }
+    }
+  })
+
+  it('keeps the six-cell spacing of the original mouth pyramid', () => {
+    const cells = pyramidCells([0, 0, 900, 900], 3)
+    expect(cells[0][2] - cells[0][0]).toBeCloseTo(900 / 3.26, 8)
+    expect(cells[0][0] - cells[1][0]).toBeCloseTo(900 / 3.26 * 1.13 / 2, 8)
+    expect(cells[2][0] - cells[1][0]).toBeCloseTo(900 / 3.26 * 1.13, 8)
+  })
+})
+
+describe('drawing a pyramid', () => {
+  it('draws every cell at the same size with one glyph per cell', async () => {
+    for (const layers of [3, 4, 5]) {
+      const text = pyramidSequence('口', layers), source = sourceOf()
+      const leaves = await sketch(source, text)
+      expect(leaves).toHaveLength(pyramidCount(layers))
+      expect(leaves.every(leaf => !leaf.empty)).toBe(true)
+      const drawn = await compose(source, text)
+      expect(drawn.parts).toHaveLength(pyramidCount(layers))
+      expect(drawn.parts.every(part => part.origin === 'glyph 口')).toBe(true)
+      const boxes = drawn.parts.map(part => part.box)
+      for (const box of boxes) {
+        expect(box[2]).toBeCloseTo(boxes[0][2], 6)
+        expect(box[3]).toBeCloseTo(boxes[0][3], 6)
+      }
+    }
+  })
+
+  it('draws a bottom pyramid with upright glyphs and matching leaf ownership', async () => {
+    const source = sourceOf()
+    const normal = await compose(source, pyramidSequence('木', 4))
+    const text = pyramidSequence('木', 4, { direction: 'bottom' })
+    const drawn = await compose(source, text, { separate: true })
+    const leaves = await sketch(source, text)
+    expect(drawn.parts).toHaveLength(10)
+    expect(leaves).toHaveLength(10)
+    const localOutline = part => part.d.match(/-?\d+(?:\.\d+)?/g).map((n, i) => Number(n) - part.box[i % 2])
+    const upright = localOutline(normal.parts[0])
+    for (const part of drawn.parts) {
+      expect(part.origin).toBe('glyph 木')
+      expect(part.box[2]).toBeCloseTo(normal.parts[0].box[2], 6)
+      expect(part.box[3]).toBeCloseTo(normal.parts[0].box[3], 6)
+      const outline = localOutline(part)
+      expect(outline).toHaveLength(upright.length)
+      outline.forEach((n, i) => expect(n).toBeCloseTo(upright[i], 0))
+    }
+    for (let i = 1; i < 4; i++) {
+      expect(leaves[i].box[1]).toBeCloseTo(leaves[0].box[1], 8)
+      expect(drawn.parts[i].box[1]).toBeCloseTo(drawn.parts[0].box[1], 6)
+    }
+    expect(leaves[4].box[1]).toBeGreaterThan(leaves[0].box[1] + leaves[0].box[3])
+    expect(drawn.parts[4].box[1]).toBeGreaterThan(drawn.parts[0].box[1])
+    expect(drawn.parts.map(part => part.leaf)).toEqual([...Array(10).keys()])
+    expect(groupParts(drawn.parts, leaves)?.map(group => group.parts)).toEqual([...Array(10).keys()].map(i => [i]))
+  })
+
+  it('draws a sideways pyramid with upright glyphs and one leaf per cell', async () => {
+    const source = sourceOf(), text = pyramidSequence('木', 4, { direction: 'left' })
+    const drawn = await compose(source, text, { separate: true })
+    const leaves = await sketch(source, text)
+    const top = await compose(source, pyramidSequence('木', 4))
+    expect(drawn.parts).toHaveLength(10)
+    expect(leaves).toHaveLength(10)
+    const localOutline = part => part.d.match(/-?\d+(?:\.\d+)?/g).map((n, i) => Number(n) - part.box[i % 2])
+    const upright = localOutline(top.parts[0])
+    for (const part of drawn.parts) {
+      expect(part.origin).toBe('glyph 木')
+      expect(part.box[2]).toBeCloseTo(top.parts[0].box[2], 6)
+      expect(part.box[3]).toBeCloseTo(top.parts[0].box[3], 6)
+      const outline = localOutline(part)
+      expect(outline).toHaveLength(upright.length)
+      outline.forEach((n, i) => expect(n).toBeCloseTo(upright[i], 0))
+    }
+    expect(drawn.parts.map(part => part.leaf)).toEqual([...Array(10).keys()])
+    // The apex cell is centred on the widest column, and the columns run left to right.
+    const apex = drawn.parts[0], high = drawn.parts[6], low = drawn.parts[9]
+    expect(apex.box[1] + apex.box[3] / 2).toBeCloseTo((high.box[1] + low.box[1] + low.box[3]) / 2, 5)
+    expect(apex.box[0] + apex.box[2]).toBeLessThan(high.box[0])
+  })
+
+  it('draws the spellings of a 4-row pyramid alike', async () => {
+    const source = sourceOf(), rows = await compose(source, '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口')
+    const columns = await compose(source, '⿱⿳口⿰口口⿲口口口⿰⿰口口⿰口口')
+    expect(columns).toEqual(rows)
+    expect(columns.parts).toHaveLength(10)
+  })
+
+  it('gives every leaf its own piece in a separated drawing', async () => {
+    const text = pyramidSequence('口', 4), source = sourceOf()
+    const drawn = await compose(source, text, { separate: true })
+    expect(drawn.parts).toHaveLength(10)
+    expect(drawn.parts.map(part => part.leaf)).toEqual([...Array(10).keys()])
+    const groups = groupParts(drawn.parts, await sketch(source, text))
+    expect(groups?.map(group => group.parts)).toEqual([...Array(10).keys()].map(i => [i]))
+  })
+
+  it('loads each repeated part asset once instead of once per node', async () => {
+    const fetched = [], text = pyramidSequence('口', 12)
+    await compose(sourceOf(fetched), text)
+    // The part's own record is read, and the whole-sequence key adds a second file; the source
+    // caches by name, so a fetch per node would show up near the 78 leaves.
+    const glyphs = fetched.filter(name => name.startsWith('g/'))
+    expect(glyphs).toContain('g/037.json')
+    expect(glyphs.length).toBeLessThanOrEqual(2)
+    expect(new Set(glyphs).size).toBe(glyphs.length)
+    expect(fetched.some(name => name.startsWith('p/'))).toBe(false)
+  })
+
+  it('draws a pyramid of empty slots in its cells, numbered in reading order', async () => {
+    const source = sourceOf()
+    for (const layers of [3, 6]) {
+      const text = pyramidSequence('', layers)
+      const drawn = await compose(source, text)
+      expect(drawn.parts).toHaveLength(0)
+      expect(drawn.slots).toHaveLength(pyramidCount(layers))
+      expect(drawn.slots.map(slot => slot.index)).toEqual([...Array(pyramidCount(layers)).keys()])
+      const [first] = drawn.slots
+      for (const slot of drawn.slots) {
+        expect(slot.box[2]).toBeCloseTo(first.box[2], 6)
+        expect(slot.box[3]).toBeCloseTo(first.box[3], 6)
+      }
+      expect(await sketch(source, text)).toHaveLength(pyramidCount(layers))
+    }
+    // A cell of several slots renumbers its slots each time it repeats.
+    const mixed = await compose(source, pyramidSequence('⿰木⬚', 3))
+    expect(mixed.parts).toHaveLength(6)
+    expect(mixed.slots.map(slot => slot.index)).toEqual([0, 1, 2, 3, 4, 5])
+  })
+
+  it('lets a pyramid of empty slots through the preview limits', () => {
+    const text = pyramidSequence('', 24), tree = parse(text, { open: true }).tree
+    expect(tooLarge(tree)).toBe(false)
+    expect(pyramidRows(tree)?.layers).toBe(24)
+    expect(pyramidRows(tree)?.cell).toBeNull()
+    expect(pyramidRows(parse(text, { open: true }).tree)?.count).toBe(300)
+  })
+
+  it('draws a pyramid of a description, one cell per repeat and its leaves in order', async () => {
+    const source = sourceOf(), text = pyramidSequence('⿰木口', 3)
+    const leaves = await sketch(source, text)
+    expect(leaves).toHaveLength(pyramidCount(3) * 2)
+    const drawn = await compose(source, text)
+    expect(drawn.parts).toHaveLength(pyramidCount(3) * 2)
+    expect(drawn.parts.map(part => part.origin)).toEqual(
+      Array.from({ length: pyramidCount(3) }, () => ['glyph 木', 'glyph 口']).flat())
+    const separated = await compose(source, text, { separate: true })
+    expect(separated.parts.map(part => part.leaf)).toEqual([...Array(pyramidCount(3) * 2).keys()])
+    expect(groupParts(separated.parts, leaves)?.map(group => group.parts)).toEqual(
+      [...Array(pyramidCount(3) * 2).keys()].map(i => [i]))
+    // Every cell's two leaves share the cell: the cell is a third of the drawing each way.
+    const cells = new Map()
+    separated.parts.forEach((part, i) => {
+      const cell = Math.floor(i / 2)
+      const [x, y, width, height] = part.box
+      const box = cells.get(cell) ?? [x, y, x + width, y + height]
+      cells.set(cell, [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x + width), Math.max(box[3], y + height)])
+    })
+    for (const box of cells.values()) expect(box[2] - box[0]).toBeGreaterThan(80)
+  })
+
+  it('draws a two-row pyramid of a description in equal cells', async () => {
+    const source = sourceOf(), text = pyramidSequence('⿰木口', 2)
+    expect(pyramidRows(tree(text), { minLayers: 2 })?.layers).toBe(2)
+    expect(pyramidRows(tree(text))).toBeNull()
+    expect(await sketch(source, text)).toHaveLength(6)
+    const drawn = await compose(source, text)
+    expect(drawn.cells).toBeUndefined()
+    // The fixture draws each cell as its two glyphs; group them into the three pyramid cells.
+    expect(drawn.parts).toHaveLength(6)
+    const boxes = drawn.parts.map(part => part.box)
+    const union = group => group.reduce((box, [x, y, width, height]) =>
+      [Math.min(box[0], x), Math.min(box[1], y), Math.max(box[2], x + width), Math.max(box[3], y + height)],
+    [Infinity, Infinity, -Infinity, -Infinity])
+    const cells = [union(boxes.slice(0, 2)), union(boxes.slice(2, 4)), union(boxes.slice(4, 6))]
+    for (const cell of cells) {
+      expect(cell[2] - cell[0]).toBeCloseTo(cells[0][2] - cells[0][0], 5)
+      expect(cell[3] - cell[1]).toBeCloseTo(cells[0][3] - cells[0][1], 5)
+    }
+    expect((cells[0][0] + cells[0][2]) / 2).toBeCloseTo((cells[1][0] + cells[2][2]) / 2, 5)
+    expect(cells[0][3]).toBeLessThan(cells[1][1])
+    expect(cells[2][0]).toBeGreaterThan(cells[1][2])
+  })
+
+  it('keeps a two-row pyramid of one part in the composer', async () => {
+    const source = sourceOf()
+    await source.ready()
+    const composer = new Composer(source.store())
+    expect(composer.pyramid(composer.parse('⿱口⿰口口'))).toBeNull()
+    expect(composer.pyramid(composer.parse('⿱木⿰木木'))).toBeNull()
+    expect(composer.pyramid(composer.parse(pyramidSequence('⿰木口', 2)))?.layers).toBe(2)
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 3)))?.layers).toBe(3)
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 3, { direction: 'left' })))?.direction).toBe('left')
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 2, { direction: 'right' })))).toBeNull()
+    expect(composer.pyramid(composer.parse(pyramidSequence('口', 2, { direction: 'bottom' })))).toBeNull()
+    // An empty slot has no designed form; the cells lay it out.
+    expect(composer.pyramid(composer.parse(pyramidSequence('', 2)))?.layers).toBe(2)
+  })
+
+  it('draws a two-layer slot scaffold in the pyramid\'s cells', async () => {
+    const source = sourceOf()
+    for (const direction of ['top', 'bottom', 'left', 'right']) {
+      const drawn = await compose(source, pyramidSequence('', 2, { direction }))
+      expect(drawn.parts).toHaveLength(0)
+      expect(drawn.slots).toHaveLength(3)
+      expect(drawn.slots.map(slot => slot.index)).toEqual([0, 1, 2])
+      const boxes = drawn.slots.map(slot => slot.box)
+      for (const box of boxes) {
+        expect(box[2]).toBeCloseTo(boxes[0][2], 6)
+        expect(box[3]).toBeCloseTo(boxes[0][3], 6)
+      }
+    }
+  })
+
+  it('draws a pyramid on a base in its cells, whichever way the stack is grouped', async () => {
+    const source = sourceOf(), texts = ['⿳口⿰口口木', '⿱⿱口⿰口口木', '⿱口⿱⿰口口木']
+    const drawings = []
+    for (const text of texts) drawings.push((await compose(source, text, { separate: true })).parts)
+    for (const parts of drawings.slice(1)) expect(parts).toEqual(drawings[0])
+    const [top, left, right, base] = drawings[0]
+    expect(drawings[0]).toHaveLength(4)
+    const cells = [top, left, right]
+    // Equal cells, each wider than it is tall, so the rows read 扁 as they are written by hand.
+    expect(new Set(cells.map(cell => cell.box[2].toFixed(6)))).toHaveLength(1)
+    expect(new Set(cells.map(cell => cell.box[3].toFixed(6)))).toHaveLength(1)
+    for (const cell of cells) expect(cell.box[2]).toBeGreaterThan(cell.box[3] * 1.2)
+    // The widest row spans the em's face, and the top sits over its middle.
+    const [fx0, , fx1] = constants.face
+    const [topBox, leftBox, rightBox, baseBox] = (await sketch(source, texts[0])).map(leaf => leaf.box)
+    expect(leftBox[0]).toBeCloseTo(fx0, 6)
+    expect(rightBox[0] + rightBox[2]).toBeCloseTo(fx1, 6)
+    expect(topBox[0] + topBox[2] / 2).toBeCloseTo((leftBox[0] + rightBox[0] + rightBox[2]) / 2, 6)
+    expect(left.box[1]).toBeCloseTo(right.box[1], 6)
+    expect(left.box[0]).toBeLessThan(right.box[0])
+    expect(top.box[1] + top.box[3]).toBeLessThan(left.box[1])
+    expect(base.box[1]).toBeGreaterThan(left.box[1] + left.box[3])
+    // The base takes the row's width, so a 木 stands as wide as the 品 above it.
+    expect(baseBox[0]).toBeCloseTo(fx0, 6)
+    expect(baseBox[0] + baseBox[2]).toBeCloseTo(fx1, 6)
+  })
+
+  it('draws a deeper pyramid on a base in its cells too', async () => {
+    const source = sourceOf(), text = '⿱' + pyramidSequence('口', 3) + '木'
+    const parts = (await compose(source, text, { separate: true })).parts
+    expect(parts).toHaveLength(pyramidCount(3) + 1)
+    const cells = parts.slice(0, -1), base = parts.at(-1)
+    expect(new Set(cells.map(cell => cell.box[2].toFixed(3)))).toHaveLength(1)
+    expect(base.box[1]).toBeGreaterThan(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])))
+  })
+
+  it('draws a stacked cell and a stacked base whole', async () => {
+    const source = sourceOf()
+    // Three cells of the stacked description ⿱木口, then the base.
+    expect((await compose(source, '⿱' + pyramidSequence('⿱木口', 2) + '永', { separate: true })).parts).toHaveLength(7)
+    const parts = (await compose(source, '⿳口⿰口口⿱木口', { separate: true })).parts
+    expect(parts).toHaveLength(5)
+    const cells = parts.slice(0, 3), base = parts.slice(3)
+    for (const part of base) expect(part.box[1]).toBeGreaterThan(Math.max(...cells.map(cell => cell.box[1] + cell.box[3])))
+  })
+
+  it('numbers a pyramid on a base in reading order', async () => {
+    const source = sourceOf(), drawn = await compose(source, '⿳⬚⿰⬚⬚⬚', { separate: true })
+    expect(drawn.parts).toHaveLength(0)
+    expect(drawn.slots.map(slot => slot.index)).toEqual([0, 1, 2, 3])
+    const [first, left, right, base] = drawn.slots.map(slot => slot.box)
+    expect(first[0] + first[2] / 2).toBeCloseTo((left[0] + right[0] + right[2]) / 2, 6)
+    expect(first[1] + first[3]).toBeLessThan(left[1])
+    expect(left[0] + left[2]).toBeLessThan(right[0])
+    expect(right[1] + right[3]).toBeLessThan(base[1])
+    expect(base[2]).toBeGreaterThan(first[2])
+  })
+
+  it('draws a pyramid nested in another description', async () => {
+    const source = sourceOf(), text = `⿱木${pyramidSequence('口', 4)}`
+    const drawn = await compose(source, text, { separate: true })
+    expect(drawn.parts).toHaveLength(11)
+    // Dense as a whole, so the top description is laid out in cells and its parts say so.
+    expect(drawn.parts.at(-1)?.origin).toBe('cells 口')
+    const groups = groupParts(drawn.parts, await sketch(source, text))
+    expect(groups).toHaveLength(11)
   })
 })

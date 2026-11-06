@@ -2,7 +2,9 @@ import { expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
 import { gunzipSync } from 'node:zlib'
 import { isComponentForm } from '@han-compose/composer/component-forms'
-import { hasPaletteGlyph } from '@han-compose/composer/palette'
+import { hasPaletteGlyph, paletteSource } from '@han-compose/composer/palette'
+import { compose } from '@han-compose/composer'
+import { onlyBundled } from '@han-compose/composer/local'
 import { hasUnicodeGlyph } from '@han-compose/composer/unicode'
 import { paletteRows } from '../src/adapter/babelstone.js'
 import { GONGCHE_PARTS } from '../src/core/gongche.js'
@@ -12,6 +14,23 @@ import { COMPOSER_BASE } from '../demo/lib/composer.js'
 const read = name => JSON.parse(readFileSync(new URL(`../data/${name}`, import.meta.url)))
 const gz = url => JSON.parse(gunzipSync(readFileSync(url)))
 const engine = name => new URL(`../node_modules/@han-compose/composer/data/sources/${name}/outlines.json.gz`, import.meta.url)
+it('draws every palette fallback as an editable component', async () => {
+  // The palette's own lists and outlines ship with the engine's package; the numbered forms stay here.
+  const engineData = 'node_modules/@han-compose/composer/data'
+  const chars = JSON.parse(readFileSync(new URL(`../${engineData}/palette/fallback-characters.json`, import.meta.url)))
+  const numbered = new Set(Object.keys(JSON.parse(readFileSync(new URL('../data/numbered-forms.json', import.meta.url))).forms.sans))
+  const outlines = JSON.parse(gunzipSync(readFileSync(new URL(`../${engineData}/sources/palette/outlines.json.gz`, import.meta.url))))
+  expect(Object.keys(outlines.records).sort()).toEqual([...chars].sort())
+  const source = paletteSource({ load: async () => outlines })
+  for (const char of chars) {
+    if (numbered.has(char)) continue
+    expect(hasPaletteGlyph(char)).toBe(true)
+    expect(onlyBundled(`⿰${char}⬚`)).toBe(true)
+    const drawn = await compose(source, `⿰${char}⬚`, { separate: true })
+    expect(drawn.origins).toContain(`glyph ${char}`)
+    expect(drawn.parts[0].d.length).toBeGreaterThan(10)
+  }
+})
 
 it('accounts for the leaves of every shipped palette entry', () => {
   const rows = [...GONGCHE_PARTS, ...paletteRows(read('ids-parts.json')), ...gz(new URL('../data/small-seal.json.gz', import.meta.url)).parts]

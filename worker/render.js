@@ -11,6 +11,7 @@ import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
+import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
 import { CARD_VERSION } from './card-version.js'
 
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
@@ -88,7 +89,11 @@ async function drawUnits(env, units, first) {
   return await Promise.all(units.map((unit) => draw(env, unit).catch(() => null)))
 }
 
-/** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
+/**
+ * The sequence drawn, or null where it could not be. A 二简字 form the draft drew whole is drawn as
+ * that drawing; the parts would otherwise be crops of other characters.
+ * @param {any} env @param {string} sequence
+ */
 async function draw(env, sequence) {
   const { loaders, read } = loadFor(env)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders, read })
@@ -127,7 +132,7 @@ async function png(env, sequence, drawing, char, shown = null, document = null) 
 
 /**
  * The character an example names for a sequence: the one it writes, or for an abbreviation the
- * standard character it stands for. `composed` is the character the table says the sequence is, where
+ * standard character it stands for. `composed` is the character the index says the sequence is, where
  * the example writes none.
  * @param {string} sequence @param {string | null} [composed]
  */
@@ -137,7 +142,13 @@ export function namedFor(sequence, composed = null) {
   return named && isOneCharacter(named) ? named : null
 }
 
-/** The character a card and its page both name: the example's, else the table's. @param {any} env @param {string} sequence */
+/**
+ * The character a sequence is only read with: the named one, unless the index says it composes it.
+ * @param {string | null} named @param {string | null} composed
+ */
+export const readWith = (named, composed) => named && named !== composed ? named : null
+
+/** The character a card and its page both name: the example's, else the index's. @param {any} env @param {string} sequence */
 export async function characterFor(env, sequence) {
   return namedFor(sequence, await characterOf(env, sequence))
 }
@@ -176,12 +187,12 @@ export async function cardResponse(env, ctx, sequence, document = null, token = 
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
-  // The example names the character, else the table does. A sequence read with a character it does
+  // The example names the character, else the index does. A sequence read with a character it does
   // not compose is shown as the characters it writes.
   const composed = await characterOf(env, sequence)
   const named = namedFor(sequence, composed)
   const char = named
-  const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
+  const units = await unitsFor(env, sequence, readWith(named, composed))
   // A document is one drawing, not the characters a sequence writes; when its layers cannot be
   // scoped, the card falls back to the separated drawing and still says it is a document. The
   // plain drawing is only made when no document drawing answered.

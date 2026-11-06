@@ -5,6 +5,7 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
+  import SiteSelect from './ui/SiteSelect.svelte'
   import { tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
@@ -13,7 +14,8 @@
   import { hasTangut } from '@han-compose/composer/tangut'
   import { composerPreview as composerAt } from '@han-compose/composer'
   import engineOutlines from 'ids-engine-outlines'
-  import { EMPTY_MARKS, OPERATORS, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -37,8 +39,10 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { createSampleDrawings } from './lib/sample-drawings.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
+  import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
@@ -50,6 +54,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import FaceSample from './ui/FaceSample.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
@@ -205,6 +210,9 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
+      // The draft drew some 二简字 forms whole; those drawings stand in for the composed parts, which
+      // could only be crops of other characters.
+      if (hasErjian(sequence)) return /** @type {import('../src/adapter/types.js').Drawing} */ (erjianDrawing(sequence))
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
@@ -297,6 +305,28 @@
         (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
+  }
+  /** The four faces the switch names, each with its composer style and message key. @type {{ key: 'sans' | 'serif' | 'fangsong' | 'klee', style: 'sans' | 'serif' | 'fangsong' | 'kaisho', label: string }[]} */
+  const FONT_FACES = [
+    { key: 'sans', style: 'sans', label: 'app.font.sans' },
+    { key: 'serif', style: 'serif', label: 'app.font.serif' },
+    { key: 'fangsong', style: 'fangsong', label: 'app.font.fangsong' },
+    { key: 'klee', style: 'kaisho', label: 'app.font.klee' },
+  ]
+  /** The export a face's sample draws from, as the chosen face's preview does: one named in `?composer=`, the build or Preferences, else the face's own. @param {typeof FONT_FACES[number]['key']} key */
+  const faceExport = key => composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[key] || COMPOSER_BASE
+  // The switch's samples, one drawer per face and export: a newer sequence replaces the drawing in
+  // flight, and the toolbar and large view asking for one sequence share its answer.
+  /** @type {Map<string, ReturnType<typeof createSampleDrawings>>} */
+  const sampleDrawings = new Map()
+  /** @param {typeof FONT_FACES[number]} option */
+  const sampleDraw = option => {
+    const at = faceExport(option.key), key = `${at}\0${option.style}`
+    if (!sampleDrawings.has(key)) {
+      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
+    }
+    return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
@@ -521,6 +551,21 @@
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
   })
+  // The strokes the output shows: an encoded character's recorded count when the description names
+  // one, else the components' counts added up. A single component is its own character. The table
+  // is 285 KB gzipped, so it loads once there is a description to count.
+  let strokeRecords = $state.raw(/** @type {Map<string, import('../src/svelte/strokes.js').StrokeRecord> | null} */ (null))
+  /** @type {Promise<void> | null} */ let strokeRead = null
+  $effect(() => {
+    if (strokeRecords || strokeRead || editor.tree === null) return
+    strokeRead = loadStrokeRecords().then(records => { strokeRecords = records }, () => { strokeRead = null })
+  })
+  const drawnStrokes = $derived.by(() => {
+    const tree = editor.tree, records = strokeRecords
+    if (tree === null || !records) return null
+    return characterStrokes(tree, char => records.get(char)?.strokes ?? null,
+      encoded.map(char => records.get(char)?.strokes ?? null))
+  })
   /** @param {string} ch */
   const cp = ch => `U+${/** @type {number} */ (ch.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
   const points = $derived([...editor.whole].map(ch => ({ ch, cp: cp(ch) })))
@@ -621,7 +666,7 @@
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
   }
-  $effect(() => { activeId; phonePane = 'input' })
+  $effect(() => { void activeId; phonePane = 'input' })
   /** @param {'input' | 'compose' | 'output'} pane */
   function phoneTab(pane) {
     phonePane = pane
@@ -661,7 +706,7 @@
   function swipeCancel() { swipe = null }
   /** The active tab's document title, kept current by the document revision. */
   const currentTitle = $derived.by(() => {
-    documentTick
+    void documentTick
     const tab = current()
     return tab ? sessionFor(tab).document.title ?? '' : ''
   })
@@ -1194,6 +1239,19 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
+{#snippet fontSwitch(wait)}
+  <div class="font-switch" role="group" aria-label={t('app.font.label')}>
+    {#each FONT_FACES as option (option.key)}
+      <button type="button" class="font-choice" aria-pressed={face === option.key} aria-label={t(option.label)} title={t(option.label)} onclick={() => face = option.key}>
+        <span class="aa {option.key}"><FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
+          {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
+        </FaceSample></span>
+        <span class="wide {option.key}">{t(option.label)}</span>
+      </button>
+    {/each}
+  </div>
+{/snippet}
+
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
   onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
 <svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
@@ -1202,10 +1260,7 @@
   style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
   <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
-      <a class="brand" href="/" aria-label={t('app.title')}>
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-        <span>{t('app.title')}</span>
-      </a>
+      <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="/" compact />
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
@@ -1216,12 +1271,7 @@
           <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
         <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
-      <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-        <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
-      </div>
+      {@render fontSwitch(400)}
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-face" aria-hidden="true">
@@ -1344,6 +1394,16 @@
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
+                  {#if drawnStrokes}
+                    <span class="component-counts" title={drawnStrokes.strokes == null ? undefined : t(drawnStrokes.approximate ? 'app.componentStrokes' : 'app.recordedStrokes')}>
+                      {#if encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
+                      {t('app.components', { count: drawnStrokes.components })}
+                      {#if drawnStrokes.strokes != null}
+                        <span class="strokes-sep" aria-hidden="true">·</span>
+                        {drawnStrokes.approximate ? '≈ ' : ''}{t('parts.strokeCount', { count: drawnStrokes.strokes })}
+                      {/if}
+                    </span>
+                  {/if}
                 {/snippet}
               </IdsPreview>
             {/key}
@@ -1372,12 +1432,7 @@
           }}>
           <div class="large-bar">
             <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
-            <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
-            </div>
+            {#if large}{@render fontSwitch(0)}{/if}
             <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
               {#each [...editor.whole] as ch}
                 {#if operatorSet.has(ch)}<OperatorIcon op={ch} size={18} />{:else}<span>{ch}</span>{/if}
@@ -1465,13 +1520,11 @@
   .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
-  .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
   .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
   .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
+  .font-choice .aa{display:grid;place-items:center;width:18px;height:18px;font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
   .font-choice .wide{font-family:var(--cjk-label-sans)}
   .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
   .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}
@@ -1569,6 +1622,8 @@
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
   .encoded-character button:focus-visible{outline:2px solid var(--ui-color-focus)}
+  .component-counts{display:inline-flex;align-items:center;gap:4px;color:var(--ui-color-ink-muted);font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .component-counts .strokes-sep{opacity:.55}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
@@ -1661,8 +1716,8 @@
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
-    .brand{margin-right:auto}
-    .brand span,.wide,.wide-only,.end{display:none}
+    .bar > :global(.site-select){margin-right:auto}
+    .wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
     .group > :global(.ui-button:last-of-type){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
     .work{padding:12px;gap:12px}

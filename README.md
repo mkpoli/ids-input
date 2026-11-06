@@ -268,8 +268,10 @@ character spells it as a whole, it uses only alignment and exact enclosure opera
 has a glyph. Each part takes its own cell in the tree's reading order, so no two parts overlap. The
 cell layout gives a single top part less than a third of the height and lets it fill the width,
 shares an alignment axis below the top by the ink of its parts (one holding an empty slot keeps leaf shares), insets a side-split enclosure's inner part and a three-row middle,
-and fits each glyph by its ink. A dense description then reads as one character rather than a list
-of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
+and fits each glyph by its ink. A face that lacks an enclosure's own form presses it; where it
+draws the same kind of foot elsewhere, the composer grafts it — see
+[enclosure grafts](docs/enclosure-graft.md). A dense description then reads as one character rather
+than a list of parts. The 108-stroke created character 「ぼんのう」 by しょかき is
 such a description; its [reference drawing](https://wikiwiki.jp/sosakukanji/%E3%81%BC%E3%82%93%E3%81%AE%E3%81%86%28%E3%81%97%E3%82%87%E3%81%8B%E3%81%8D%29)
 puts 苦 above, 耳/舌/鼻 left, 平/惡/意/眼 centre, 淨/染 below and 女/子/身 right.
 
@@ -569,8 +571,10 @@ right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
 reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
 components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
-draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. They sit
-in the unknown-stroke group because BabelStone gives them no stroke count. `additionalIds` adds tables in the same
+draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. In the
+Sans face, 60 of them are cut from the host character's Noto Sans/Plangothic glyph; the other 9 fall
+back to the PUA glyph. They sit in the unknown-stroke group because BabelStone gives them no stroke
+count. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
 than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
@@ -952,6 +956,7 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   A drawing with a part cut along KanjiVG's component groups (`drawn.kanjivg`) adapts KanjiVG and is
   shared alike under CC BY-SA 3.0.
 
+- `data/erjian-glyphs.json`: the 二简字 forms the draft drew whole, taken from the bundled BabelStone
 `data/README.md` and `fonts/README.md` give versions, checksums and build notes.
 `scripts/build_ids_data.py`, `scripts/build_ids_parts.py`, `scripts/build_component_names.py` and
 `scripts/build_character_vocabulary.py` (`uv run scripts/…`) rebuild them.
@@ -1210,7 +1215,7 @@ Every panel follows the chosen tab: the sequence, its code points, the operators
 at the start; the Shape or indented Tree view and the search under it; and at the end
 the drawing in a square panel with export as SVG or PNG (256 to 2048 px) on a transparent, white, black or chosen
 background, in an ink that suits it or a chosen one, with a margin, empty slots left out unless asked
-for. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
+for. The output shows the drawing's component count and stroke total beside the code points, using the character's recorded count when it has one and marking a sum from the components with `≈`. Export can include empty slots on request, including through the scoped document drawing. An incomplete drawing blocks normal export until the partial checkbox is set. File → Document title sets the title saved in `.ids.json` and embedded in SVG/PNG exports; the page title follows it. Exported SVG and PNG files carry the editable document, so Open document restores the tree, IDs and transforms. Dropping one or more `.ids.json`, SVG or PNG files anywhere on the app opens each as a tab; a drop target shows while files are over the window. Adjust layout moves, scales and turns document layers without changing the sequence; arrow keys
 nudge, `+` and `-` scale evenly, `[` and `]` turn, and `0` resets. An edge handle scales one axis,
 a corner handle scales both, and Shift makes a corner even. The changes stay with their tab and export
 through the scoped drawing. The Layers dialog edits the same layer
@@ -1251,10 +1256,11 @@ draft; text built from a sequence's letters goes on to the editor first. A docum
 than its sequence rides along as `?doc=`, so copying the location keeps a placement and opening such
 a link keeps the token. Tabs use
 `sessionStorage` to keep each browser window's working set separate through reloads, and
-`localStorage` to seed a new window. The toolbar’s Sans/Serif/Kaisho switch
-chooses the face for Han text and Sans/Serif bundled component forms. Other composed outlines use
-the configured export’s font. Settings, the recent sequences, the theme and font choice stay
-in `localStorage`; the keys use the `ids-input:` prefix.
+`localStorage` to seed a new window. The toolbar’s Sans/Serif/Fangsong/Kaisho switch
+chooses the face for Han text and Sans/Serif bundled component forms, and shows the description
+being built in each face. Other composed outlines use the configured export’s font. Settings,
+the recent sequences, the theme and font choice stay in `localStorage`; the keys use the
+`ids-input:` prefix.
 
 ### Share cards
 
@@ -1341,7 +1347,7 @@ reused as whole glyphs); 17 of the common kanji are whole glyphs on both sides; 
 composed by this site, so their scores include composition. The rest compare type style and
 variant choice. The page explains how the three numbers are measured and why the heavier
 typeface lowers the first two. The gallery shows 48 cards at a time, with Show more for the rest,
-and filters by set and structure. The drawings are a snapshot of the 2026-10-29 run in
+and filters by set and structure. The drawings are a snapshot of the 2026-11-07 run in
 `demo/lib/comparison.json`; after a composer change, rebuild it with
 `bun scripts/build_comparison.mjs`. GlyphWiki's glyph data is free to use and the KAGE engine is
 GPL-3.0. The About dialog links the page.
@@ -1505,8 +1511,9 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation; the line ends with the character's page
-on 字統网 (zi.tools). The card keeps clear of surfaces marked
+the adapter records and the data documentation. The row ends with the character's
+pages on 字統网 (zi.tools), 字海 (yedict), 漢典 (zdic) and CHISE, and carries no
+caption; 字海 and 漢典 cover Han characters. The card keeps clear of surfaces marked
 `data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
 place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

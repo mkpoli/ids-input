@@ -30,7 +30,7 @@ function lazyFallbackFont() {
         asset.source = text.replace(CSS_FACE, '')
         // The published shards' names, which the app reads to build each face's URL.
         const files = {}
-        for (const [name, file] of Object.entries(bundle)) {
+        for (const name of Object.keys(bundle)) {
           const match = /^(?:assets\/)?([0-9a-f]{3})-[^/]+\.woff2$/.exec(name)
           if (match) files[match[1]] = name
         }

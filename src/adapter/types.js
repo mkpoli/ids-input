@@ -60,6 +60,7 @@
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
+ * @property {[number, number[]][]} [strokes] The source's stroke groups as [stroke ID, contour indices] within `d`.
  *
  * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
@@ -71,6 +72,7 @@
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
+ * @property {string[]} [origins] What each part was drawn from, in reading order.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
  * @property {boolean} [composed] Whether the face had no glyph and the character was assembled from its description. Such a drawing is an approximation and hosts show it apart from a real glyph.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).

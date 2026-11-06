@@ -186,6 +186,10 @@
   "app.theme.system": "System theme",
   "app.title": "IDS Workshop",
   "app.toolbar": "Tools",
+  "app.components.one": "{count} component",
+  "app.components.other": "{count} components",
+  "app.recordedStrokes": "The character's recorded stroke count.",
+  "app.componentStrokes": "The strokes of its components.",
   "app.componentLookup.title": "Component lookup",
   "app.componentLookup.containing": "Find characters containing a component",
   "app.componentLookup.parts": "Find the components of a character",
@@ -217,6 +221,7 @@
   "app.layers.failed": "Could not draw this description with layers.",
   "app.layers.nonlinear": "This layer has a nonlinear transform. Reset it before using the fields.",
   "app.layers.reset": "Reset transform",
+  "app.layers.strokes": "Strokes",
   "app.layers.transform": "Transform",
   "app.layers.x": "X",
   "app.layers.y": "Y",
@@ -382,5 +387,7 @@
   "sources.use.compare": "Engine comparison",
   "sources.files": "Files",
   "sources.citedBy": "Used by examples",
-  "app.atlas": "Component atlas"
+  "app.atlas": "Component atlas",
+  "app.sitesLabel": "Sites",
+  "app.sitesMore": "More writing-system projects"
 }

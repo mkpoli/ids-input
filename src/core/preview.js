@@ -7,7 +7,6 @@ import { entryDescription, isDescription as isWhole } from './ids.js'
 export { drawingSvg, EMOJI_CUT_MATRIX, emojiPlace, EMOJI_SCALE, emojiTransform } from '@han-compose/composer/drawing-svg'
 export { groupParts, placeholder, STROKE } from '@han-compose/composer'
 
-/** The colour matrix that keeps an emoji glyph's alpha and paints it opaque black, so a luminance mask takes the glyph's shape. */
 /**
  * The badge of a preview: `{ label, params }`, `label` a key under `ids.preview.`. `step` is
  * `loading`, `composed`, `final`, `failed` or `capped` (too large to draw); `drawn` is the composer's
@@ -111,3 +110,29 @@ export function runPreview(text, { preview, drawing, signal }, update) {
     if (!signal.aborted && !final) update({ step: error?.name === 'TooLargeError' ? 'capped' : error?.name === 'UnavailableError' ? 'unavailable' : 'failed' })
   })
 }
+
+/** Path data with nothing but its commands and numbers, its line breaks and tabs kept as separators. */
+const pathData = d => String(d ?? '').replace(/[\t\n\r]/g, ' ').replace(/[^MLHVCSQTAZmlhvcsqtaz0-9.,eE+\- ]/g, '')
+/** A transform list with nothing but SVG transform functions: its letters, numbers, spaces, commas and brackets. */
+const transformData = t => String(t ?? '').slice(0, 500).replace(/[^a-zA-Z0-9()., -]/g, '')
+/** A colour as an SVG attribute takes it: `#rgb`, `#rrggbb`, `#rrggbbaa` or `currentColor`; anything else is refused. */
+const colour = (value, fallback) => /^#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value ?? '') ? value : /^currentcolor$/i.test(value ?? '') ? 'currentColor' : fallback
+
+/**
+ * A drawing (`Drawing` in the adapter types) as a file of its own: an SVG of its ink in `ink` on
+ * `background` (none for a transparent one), `padding` the share of the 1000-unit box added on each
+ * side, `size` its width and height in pixels, `idPrefix` the start of the ids of its mask and filter, for a page that holds several. Empty slots are left out unless `placeholders`, which
+ * draws each as the editor does, in the ink at half strength.
+ * @param {{ d: string, cut?: string, slots?: { index: number, box: number[] }[], stroke?: number[] | null,
+ *   parts?: { d: string, cut?: boolean, leaf?: number }[], transforms?: (string | null)[], emoji?: { text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[] }} drawing
+ * @param {{ background?: string | null, ink?: string, padding?: number, size?: number, placeholders?: boolean, idPrefix?: string }} [options]
+ * @returns {string}
+ */
+
+/** The area two [x, y, width, height] boxes share. */
+const shared = (a, b) => {
+  const w = Math.min(a[0] + a[2], b[0] + b[2]) - Math.max(a[0], b[0])
+  const h = Math.min(a[1] + a[3], b[1] + b[3]) - Math.max(a[1], b[1])
+  return w > 0 && h > 0 ? w * h : 0
+}
+

@@ -23,7 +23,6 @@ import argparse
 import gzip
 import hashlib
 import json
-import sys
 import urllib.request
 from pathlib import Path
 

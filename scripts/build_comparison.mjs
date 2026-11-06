@@ -47,7 +47,7 @@ const overlap = (a, b) => { let n = 0; for (let i = 0; i < a.length; i++) n += a
 
 /** The ink shares of a mask in a 3 × 3 grid. */
 function shares(mask) {
-  const cells = new Array(9).fill(0)
+  const cells = Array.from({ length: 9 }, () => 0)
   for (let y = 0; y < SIZE; y++) for (let x = 0; x < SIZE; x++)
     if (mask[y * SIZE + x]) cells[Math.floor(y * 3 / SIZE) * 3 + Math.floor(x * 3 / SIZE)]++
   const total = cells.reduce((a, b) => a + b, 0) || 1

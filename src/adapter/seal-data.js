@@ -13,7 +13,7 @@ export function sealTable(doc) {
 /** @param {SmallSealData} doc @param {string} query */
 export function sealNames(doc, query) {
   if (isSmallSeal(query)) return (doc.modern[query] ?? []).map(char => ({ char, label: `CJK · U+${char.codePointAt(0)?.toString(16).toUpperCase()}` }))
-  return Object.entries(doc.modern).filter(([char, names]) => names.includes(query))
+  return Object.entries(doc.modern).filter(([, names]) => names.includes(query))
     .map(([char, names]) => ({ char, label: `小篆 · ${names.join(' / ')} · U+${char.codePointAt(0)?.toString(16).toUpperCase()}` }))
 }
 

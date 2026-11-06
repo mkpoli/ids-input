@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
-import { fromSequence, renderLayers } from '../src/document/index.js'
+import { applyGeometryEdits, fingerprintGeometry, fromSequence, renderLayers } from '../src/document/index.js'
 import { compose, composeDocumentSource, createSource, documentSource, sketch as composerSketch } from '@han-compose/composer'
-import { files } from './fixtures/small-export.js'
+import { files } from './fixtures/composer-export.js'
 
 const square = (x, width) => `M${x} 0L${x + width} 0L${x + width} 1000L${x} 1000Z`
 const sketch = (boxes) => boxes.map((box, index) => ({ index, box, empty: false }))
@@ -104,6 +104,14 @@ describe('a composer-backed document source', () => {
     expect(made.complete).toBe(false)
     expect(made.issues).toContain('part leaf 0 has path data that is not a path')
   })
+  it('reports a layout box with a number that is not finite', () => {
+    const { complete, issues } = sourceOf('⿰木口', [[Number.NaN, 0, 500, 1000], [500, 0, 500, 1000]], [
+      { leaf: 0, d: square(0, 500) },
+      { leaf: 1, d: square(500, 500) },
+    ])
+    expect(complete).toBe(false)
+    expect(issues.join()).toContain('no layout box')
+  })
   it('draws a document through a preview and forwards its sketch', async () => {
     const document = fromSequence('⿰木口')
     const boxes = [[0, 0, 500, 1000], [500, 0, 500, 1000]]
@@ -129,11 +137,35 @@ describe('a composer-backed document source', () => {
     const drawing = await compose(source, '⿰木口', { separate: true })
     const made = documentSource(document, drawing, await composerSketch(source, '⿰木口'))
     expect(made.complete).toBe(true)
+    const whole = await compose(source, '木', { separate: true })
+    expect(whole.parts.some(part => part.strokes?.length)).toBe(true)
     const rendered = renderLayers(document, made.source)
     expect(rendered.complete).toBe(true)
-    expect(rendered.pieces).toHaveLength(2)
+    expect(rendered.pieces).toHaveLength(3)
     expect(rendered.pieces.every(piece => piece.d.length > 0)).toBe(true)
   })
+  it('maps stroke groups to document pieces and applies a stroke edit', async () => {
+    const source = createSource(async name => {
+      const body = files[name]
+      return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
+    })
+    const document = fromSequence('木')
+    const drawing = await compose(source, '木', { separate: true })
+    const made = documentSource(document, drawing, await composerSketch(source, '木'))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces).toHaveLength(2)
+    expect(geometry?.strokes).toEqual([{ id: '0', pieces: [0] }, { id: '1', pieces: [1] }])
+    document.geometryEdits = [{
+      id: 'e1', node: document.root.id, geometry: fingerprintGeometry(geometry),
+      target: { kind: 'stroke', id: '0' }, transform: [{ type: 'affine', matrix: [1, 0, 0, 1, 5, 0] }],
+    }]
+    const rendered = renderLayers(document, made.source)
+    const plain = renderLayers({ ...document, geometryEdits: [] }, made.source)
+    expect(rendered.complete).toBe(true)
+    expect(rendered.pieces[0].d).not.toBe(plain.pieces[0].d)
+    expect(rendered.pieces[1].d).toBe(plain.pieces[1].d)
+  })
+
   it('keeps cut pieces and rejects a zero box', () => {
     const { document, source } = sourceOf('⿰木口', [[0, 0, 500, 1000], [500, 0, 0, 1000]], [
       { leaf: 0, d: square(0, 500), cut: true },
@@ -141,5 +173,95 @@ describe('a composer-backed document source', () => {
     ])
     expect(source.geometry(document.root.children[0])?.pieces[0].cut).toBe(true)
     expect(source.geometry(document.root.children[1])).toBeNull()
+  })
+})
+
+describe('stroke contours and holes', () => {
+const ring = (x0, y0, x1, y1, reverse = false) => {
+  const corners = [[x0, y0], [x1, y0], [x1, y1], [x0, y1]]
+  return `M${(reverse ? corners.reverse() : corners).map(point => point.join(' ')).join('L')}Z`
+}
+const cutsOf = contours => {
+  const document = fromSequence('口')
+  const d = contours.join(' ')
+  const strokes = contours.map((_, index) => [index, [index]])
+  const made = documentSource(document, { parts: [{ leaf: 0, d, strokes }] }, sketch([[0, 0, 1000, 1000]]))
+  return made.source.geometry(document.root)
+}
+
+  it('keeps a counter as a cut when the stroke groups are valid', () => {
+    const document = fromSequence('口')
+    const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
+  it('measures a contour away from the origin once, so its counter is still a cut', () => {
+    const document = fromSequence('口')
+    const d = 'M200 0L300 0L300 100L200 100Z M220 20L220 80L280 80L280 20Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    expect(made.source.geometry(document.root)?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
+  it('measures a curved outline by its curves, not its end points', () => {
+    const document = fromSequence('口')
+    const d = 'M0 0Q500 -500 1000 0Q500 500 0 0Z M400 -50L400 50L600 50L600 -50Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    expect(made.source.geometry(document.root)?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
+  it('does not cut a stroke that crosses an outline', () => {
+    const geometry = cutsOf([ring(0, 0, 450, 450), ring(200, 100, 600, 200)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, false])
+  })
+
+  it('does not cut a contour wound like the one that holds it', () => {
+    const geometry = cutsOf([ring(0, 0, 1000, 1000), ring(200, 200, 800, 800)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, false])
+  })
+
+  it('keeps the compound path when a counter would erase a stroke inside or across its hole', () => {
+    const outer = ring(0, 0, 1000, 1000), hole = ring(200, 200, 800, 800, true)
+    for (const extra of [ring(400, 400, 600, 600), ring(100, 450, 900, 550), ring(300, 300, 500, 500, true)]) {
+      const geometry = cutsOf([outer, hole, extra])
+      expect(geometry?.pieces).toHaveLength(1)
+      expect(geometry?.strokes).toBeUndefined()
+    }
+  })
+
+  it('keeps a counter as a cut when no other stroke meets its hole', () => {
+    const geometry = cutsOf([ring(0, 0, 1000, 1000), ring(200, 200, 800, 800, true)])
+    expect(geometry?.pieces.map(piece => piece.cut)).toEqual([false, true])
+  })
+
+  it('qualifies a stroke ID that two parts of one leaf both use', () => {
+    const document = fromSequence('口')
+    const parts = [
+      { leaf: 0, d: ring(0, 0, 400, 400), strokes: [[0, [0]]] },
+      { leaf: 0, d: ring(500, 500, 900, 900) + ring(600, 600, 700, 700), strokes: [[0, [0]], [1, [1]]] },
+    ]
+    const made = documentSource(document, { parts }, sketch([[0, 0, 1000, 1000]]))
+    expect(made.source.geometry(document.root)?.strokes).toEqual([
+      { id: '0:0', pieces: [0] }, { id: '1:0', pieces: [1] }, { id: '1', pieces: [2] },
+    ])
+  })
+
+  it('keeps the compound path when a stroke names a fractional contour index', () => {
+    const document = fromSequence('口')
+    const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0.5]], [1, [1]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces).toHaveLength(1)
+    expect(geometry?.strokes).toBeUndefined()
+  })
+
+  it('keeps a shared contour as one compound piece without stroke groups', () => {
+    const document = fromSequence('口')
+    const d = 'M0 0L1000 0L1000 1000L0 1000Z M200 200L200 800L800 800L800 200Z'
+    const made = documentSource(document, { parts: [{ leaf: 0, d, strokes: [[0, [0]], [1, [0]]] }] }, sketch([[0, 0, 1000, 1000]]))
+    const geometry = made.source.geometry(document.root)
+    expect(geometry?.pieces).toHaveLength(1)
+    expect(geometry?.strokes).toBeUndefined()
   })
 })

@@ -22,7 +22,9 @@ describe('sending a report', () => {
     expect(answer.number).toBe(7)
     expect(init?.signal).toBeInstanceOf(AbortSignal)
     expect(init?.signal?.aborted).toBe(false)
-    expect(/** @type {FormData} */ (init?.body).get('symptom')).toBe('it broke')
+    const form = init?.body
+    expect(form).toBeInstanceOf(FormData)
+    expect(/** @type {FormData} */ (form).get('symptom')).toBe('it broke')
   })
   it('lets an abort through to the caller, which keeps the text', async () => {
     globalThis.fetch = async () => { throw new DOMException('The operation timed out.', 'TimeoutError') }

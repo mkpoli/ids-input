@@ -512,7 +512,9 @@ export function splitDescription(text) {
   const chars = [...(text ?? '')]
   if (!isMark(chars[chars.length - 1])) return { base: text ?? '', marks: '' }
   const read = parse(text, { open: true })
-  if (read.problem || read.tree === null) return { base: text ?? '', marks: '' }
+  if (read.problem) return { base: text ?? '', marks: '' }
+  // A slot alone holds no marks of its own, so they stay beside it.
+  if (read.tree === null) return { base: chars[0], marks: chars.slice(1).join('') }
   const marks = marksOf(read.tree)
   return marks ? { base: write(withoutMarks(read.tree)), marks } : { base: text ?? '', marks: '' }
 }

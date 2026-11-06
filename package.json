@@ -72,6 +72,7 @@
     "types": "node scripts/emit-types.mjs",
     "check": "tsrs -p tsconfig.json --noEmit && tsrs -p tsconfig.worker.json --noEmit && svelte-check --tsconfig ./tsconfig.svelte.json --threshold warning",
     "lint": "oxlint src demo scripts tests worker",
+    "lint:py": "uv run --with ruff ruff check scripts",
     "i18n": "x18n check",
     "verify": "bun run test && bun run check && bun run i18n",
     "coverage": "bun scripts/audit_render_coverage.mjs cache/coverage-sans docs/coverage/sans.json sans && bun scripts/audit_render_coverage.mjs cache/coverage-serif docs/coverage/serif.json serif && bun scripts/audit_render_coverage.mjs cache/coverage-fangsong docs/coverage/fangsong.json fangsong && bun scripts/audit_render_coverage.mjs cache/coverage-klee docs/coverage/klee.json klee",

@@ -185,6 +185,9 @@
   "app.examples.unencoded": "Không có điểm mã",
   "app.examples.noMatch": "Không có ví dụ phù hợp.",
   "app.examples.abbreviation": "Chữ tắt",
+  "app.components.other": "{count} bộ phận",
+  "app.recordedStrokes": "Số nét được ghi cho chữ này.",
+  "app.componentStrokes": "Tổng số nét của các bộ phận.",
   "app.componentLookup.title": "Tra bộ phận",
   "app.componentLookup.containing": "Tìm chữ chứa bộ phận",
   "app.componentLookup.parts": "Tìm bộ phận của chữ",
@@ -216,6 +219,7 @@
   "app.layers.failed": "Không thể vẽ mô tả này theo lớp.",
   "app.layers.nonlinear": "Lớp này có biến đổi phi tuyến. Hãy đặt lại trước khi dùng các trường.",
   "app.layers.reset": "Đặt lại biến đổi",
+  "app.layers.strokes": "Nét",
   "app.layers.transform": "Biến đổi",
   "app.layers.x": "X",
   "app.layers.y": "Y",
@@ -381,5 +385,7 @@
   "sources.use.compare": "So sánh công cụ",
   "sources.files": "Tệp",
   "sources.citedBy": "Dùng trong ví dụ",
-  "app.atlas": "Danh mục bộ phận"
+  "app.atlas": "Danh mục bộ phận",
+  "app.sitesLabel": "Các trang web",
+  "app.sitesMore": "Các dự án khác về hệ chữ viết"
 }
