@@ -201,8 +201,10 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   const pieces = Array.isArray(drawing.parts) ? drawing.parts : null
   const emoji = drawing.emoji ?? []
   const hasCut = Boolean(cut || emoji.some(item => item.cut))
+  /** Whether an emoji names a drawn part, so it paints in that part's turn. @param {{ part?: number }} item */
+  const inPart = item => Number.isInteger(item.part) && item.part >= 0 && item.part < (pieces?.length ?? 0)
   const groupedEmoji = !hasCut && emoji.length && pieces?.every(piece => Number.isInteger(piece.leaf))
-    && emoji.every(item => Number.isInteger(item.part) && item.part >= 0)
+    && emoji.some(inPart)
   const split = !hasCut && (groupedEmoji || transforms?.some(transform => typeof transform === 'string' && transform))
     && pieces?.every(piece => typeof piece.d === 'string')
   /** @param {{ text: string, box: number[], part?: number, flip?: [boolean, boolean], cut?: boolean }} item @param {string} [attribute] */
@@ -224,16 +226,16 @@ export function drawingSvg(drawing, { background = null, ink = '#000000', paddin
   if (split) {
     const order = pieces.map((piece, index) => ({ piece, index }))
     for (const { piece, index } of order) {
-      const item = emoji.find(item => item.part === index)
+      const items = groupedEmoji ? emoji.filter(item => item.part === index) : []
       const path = pathData(piece.d)
-      const content = item ? textOf(item) : path ? `<path d="${path}" fill="${fill}"/>` : ''
+      const content = items.length ? items.map(item => textOf(item)).join('') : path ? `<path d="${path}" fill="${fill}"/>` : ''
       if (!content) continue
       const transform = transformData(transforms?.[index])
       out.push(transform ? `<g transform="${transform}">${content}</g>` : content)
     }
   } else if (d) out.push(`<path d="${d}" fill="${fill}"${hasCut ? ` mask="url(#${cutId})"` : ''}/>`)
-  if (!groupedEmoji) for (const item of emoji) {
-    if (item.cut) continue
+  for (const item of emoji) {
+    if (item.cut || (split && groupedEmoji && inPart(item))) continue
     const content = textOf(item, hasCut && !item.restored ? ` mask="url(#${cutId})"` : '')
     if (!content) continue
     const transform = Number.isInteger(item.part) && transforms ? transformData(transforms[item.part]) : ''
