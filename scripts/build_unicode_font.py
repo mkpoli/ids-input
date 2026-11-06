@@ -14,7 +14,6 @@ Characters the app shows but cannot draw -- palette parts, the empty-slot mark a
 come from Jigmo, the CC0 glyphs of GlyphWiki, with `--jigmo JIGMO.ttf`. The app asks for the shard of
 a character only when it first shows one the reader's fonts lack, so the whole set never loads at once.
 """
-import argparse
 import base64
 import gzip
 import hashlib
@@ -255,7 +254,7 @@ def main():
     shard_names = outlines | set(by_shard)
     for path in OUT.glob('*.woff2'):
         path.unlink()
-    faces, files, points = [], {}, []
+    faces, files = [], {}
     for name in sorted(shard_names):
         rows = (json.loads(gzip.decompress((OUTLINES / f'{name}.json.gz').read_bytes()))
                 if name in outlines else {})
