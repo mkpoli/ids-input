@@ -63,7 +63,7 @@
 <div class="site-select" bind:this={root}>
   <button bind:this={trigger} type="button" class="trigger" aria-haspopup="menu" aria-expanded={open} aria-label={`${title} — ${label}`}
     onclick={() => open ? hide() : show()} onkeydown={triggerKey}>
-    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
+    <svg viewBox="2.5 2.5 19 19" width="30" height="30" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
     <span class="name">{title}</span>
     <span class="chev" class:up={open}><Icon name="chevron" size={14} /></span>
   </button>
@@ -73,7 +73,7 @@
         {@const current = site.id === 'ids'}
         <a class="ui-menu-item item" role="menuitem" tabindex="-1" href={current ? href : site.href}
           aria-current={current ? 'true' : undefined} onclick={current ? home : () => hide()}>
-          <img src={site.logo} alt="" width="26" height="26" />
+          <img src={site.logo} alt="" width="28" height="28" />
           <span class="site">{site.name}</span>
           {#if current}<span class="tick"><Icon name="check" size={16} /></span>{/if}
         </a>
