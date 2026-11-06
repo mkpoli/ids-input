@@ -239,7 +239,7 @@
   "parts.shuishu.groups": "水书分类",
   "parts.shuishu.filter": "按名称、读音、意义、分解或码位筛选",
   "parts.shuishu.note": "置于提案区块的暂定码位；Unicode 18.0.0尚未分配。",
-  "parts.shuishu.ids": "分解是编者所加，资料中并没有，因此只收拆分清楚的字符。",
+  "parts.editorialIds": "分解是编者所加，资料中并没有，因此只收拆分清楚的字符。",
   "parts.jurchen.character": "文字",
   "parts.jurchen.variant": "异体",
   "parts.jurchen.radical": "部首",
