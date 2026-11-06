@@ -2,7 +2,7 @@
   // A document view of the active description: the composer's separated drawing, rendered through
   // the layer document, with a layer list and an affine transform for the chosen layer.
   import { documentSource } from '../../src/composer/index.js'
-  import { affineForChain, applyAffine, boxCorners, findLayer, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
+  import { affineForChain, applyAffine, boxCorners, findLayer, fingerprintGeometry, invertAffine, layerAtPath, layerFrames, pathOfLayer, renderScopes, scopesSvg } from '../../src/document/index.js'
   import Dialog from './Dialog.svelte'
 
   /** @typedef {import('../../src/document/index.js').DocumentSession} DocumentSession */
@@ -39,6 +39,7 @@
   let splitOptions = $state(/** @type {string[]} */ ([]))
   let splitMessage = $state('')
   let splitTarget = $state(/** @type {Node | null} */ (null))
+  let strokeId = $state(/** @type {string | null} */ (null))
 
   const layers = $derived.by(() => {
     if (!doc) return []
@@ -81,6 +82,35 @@
     if (!entry) return null
     return { entry, box: boxCorners(entry.canvas, entry.box) }
   })
+  const strokeGeometry = $derived.by(() => {
+    if (!selected || !source || selected.kind !== 'component') return null
+    try { return source.geometry(selected) } catch { return null }
+  })
+  const strokes = $derived(strokeGeometry?.strokes ?? [])
+  // A chosen stroke belongs to the chosen layer.
+  let strokeOwner = null
+  $effect(() => {
+    const id = selected?.id ?? null
+    if (id === strokeOwner) return
+    strokeOwner = id
+    strokeId = null
+  })
+  // A chosen stroke the layer no longer draws, after a split or a new composer drawing, is dropped.
+  $effect(() => {
+    if (strokeId && !strokes.some(stroke => stroke.id === strokeId)) strokeId = null
+  })
+  /** Every geometry edit moving the chosen stroke, in the order the renderer applies them. */
+  const strokeEdits = $derived.by(() => {
+    if (!strokeId || !selected || !doc?.geometryEdits) return []
+    return doc.geometryEdits.filter(edit => edit.node === selected.id && edit.target.kind === 'stroke' && edit.target.id === strokeId)
+  })
+  const strokeEdit = $derived(strokeEdits[0] ?? null)
+  /** @param {string} id */
+  function chooseStroke(id) {
+    strokeId = strokeId === id ? null : id
+    if (strokeId) { mode = 'affine'; applyError = '' }
+  }
+
   /** @param {Node} node */
   const label = node => node.kind === 'component' ? node.char : node.kind === 'operator' ? node.op : node.kind === 'slot' ? '⬚' : 'group'
   /** @param {Node} node */
@@ -134,6 +164,25 @@
 
   // Read the selected layer's transform into the fields.
   $effect(() => {
+    if (strokeId) {
+      const flat = affineForChain(strokeEdits.flatMap(edit => edit.transform))
+      if (!flat) { nonlinear = true; return }
+      nonlinear = false
+      mode = 'affine'
+      matrix = flat
+      const [a, b, c, d, e, f] = flat
+      const cx = 500, cy = 500
+      x = Math.round((e - cx + a * cx + c * cy) * 100) / 100
+      y = Math.round((f - cy + b * cx + d * cy) * 100) / 100
+      scaleX = Math.round(Math.hypot(a, b) * 1000) / 1000
+      scaleY = Math.round(Math.hypot(c, d) * 1000) / 1000
+      rotate = Math.round(Math.atan2(b, a) * 1800 / Math.PI) / 10
+      const radians = rotate * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
+      const expected = [cos * scaleX, sin * scaleX, -sin * scaleY, cos * scaleY]
+      simple = expected.every((value, index) => Math.abs(value - flat[index]) < 0.002)
+      applyError = ''
+      return
+    }
     if (!selected) { nonlinear = false; return }
     const chain = selected.transform ?? []
     applyError = ''
@@ -183,6 +232,28 @@
     if (typeof coalesce !== 'string') coalesce = ''
     applyError = ''
     try {
+      if (strokeId && strokeGeometry) {
+        const radians = rotate * Math.PI / 180
+        // A stroke edit with shear or a reflection keeps its linear part; only X and Y move it.
+        const [a, b, c, d] = simple
+          ? [Math.cos(radians) * scaleX, Math.sin(radians) * scaleX, -Math.sin(radians) * scaleY, Math.cos(radians) * scaleY]
+          : matrix
+        const cx = 500, cy = 500
+        const next = [a, b, c, d, cx + x - a * cx - c * cy, cy + y - b * cx - d * cy]
+        if (next.every((value, index) => value === [1, 0, 0, 1, 0, 0][index])) {
+          if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id), coalesce ? { coalesce } : {})
+        } else {
+          session.setGeometryEdit({
+            id: strokeEdit?.id ?? session.allocator.next(), node: selected.id,
+            geometry: strokeEdit?.geometry ?? fingerprintGeometry(strokeGeometry),
+            target: { kind: 'stroke', id: strokeId }, transform: [{ type: 'affine', matrix: next }],
+          }, { ...(coalesce ? { coalesce } : {}), replace: strokeEdits.map(edit => edit.id) })
+        }
+        doc = session.document
+        chosen = session.chosen
+        onchange()
+        return
+      }
       if (mode === 'mobius') {
         session.setTransform([{ type: 'mobius', a: [...mobius.a], b: [...mobius.b], c: [...mobius.c], d: [...mobius.d] }], selected.id, coalesce ? { coalesce } : {})
       } else if (mode === 'matrix') {
@@ -208,7 +279,8 @@
 
   function reset() {
     if (!session || !selected) return
-    session.clearTransform(selected.id)
+    if (strokeId) { if (strokeEdits.length) session.clearGeometryEdit(strokeEdits.map(edit => edit.id)) }
+    else session.clearTransform(selected.id)
     doc = session.document
     chosen = session.chosen
     onchange()
@@ -282,8 +354,8 @@
     if (!svg) return
     const point = pointAt(svg, event)
     if (!point) return
-    const [x, y, width, height] = selection.box
-    const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
+    const [boxX, boxY, width, height] = selection.box
+    const center = /** @type {[number, number]} */ ([boxX + width / 2, boxY + height / 2])
     drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
       local0: (() => { const inverse = invertAffine(selection.entry.place); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
@@ -394,21 +466,30 @@
     {/if}
     {#if splitMessage}<p class="note" role="alert">{splitMessage}</p>{/if}
     {#if selected}
+      {#if strokes.length}
+        <div class="strokes" role="group" aria-label={t('app.layers.strokes')}>
+          <span class="ui-label">{t('app.layers.strokes')}</span>
+          {#each strokes as stroke (stroke.id)}
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={strokeId === stroke.id}
+              onclick={() => chooseStroke(stroke.id)}>{stroke.id}</button>
+          {/each}
+        </div>
+      {/if}
       <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
         <div class="transform-body">
           <div class="modes" role="group" aria-label={t('app.layers.mode')}>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={Boolean(strokeId) || (mode === 'matrix' && !simple)} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} disabled={Boolean(strokeId)} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} disabled={Boolean(strokeId)} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
           </div>
           {#if mode === 'affine'}
             <div class="affine">
               <label class="ui-field field"><span class="ui-label">{t('app.layers.x')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={x} onchange={apply} /></span></label>
               <label class="ui-field field"><span class="ui-label">{t('app.layers.y')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={y} onchange={apply} /></span></label>
-              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleX')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} onchange={apply} /><span class="unit">×</span></span></label>
-              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleY')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} onchange={apply} /><span class="unit">×</span></span></label>
-              <label class="ui-field field rotate"><span class="ui-label">{t('app.layers.rotate')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={rotate} onchange={apply} /><span class="unit">°</span></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleX')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleX} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field"><span class="ui-label">{t('app.layers.scaleY')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="0.01" min="0.05" max="20" bind:value={scaleY} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">×</span></span></label>
+              <label class="ui-field field rotate"><span class="ui-label">{t('app.layers.rotate')}</span><span class="control"><input class="ui-input num" data-mono type="number" step="1" bind:value={rotate} disabled={Boolean(strokeId) && !simple} onchange={apply} /><span class="unit">°</span></span></label>
             </div>
           {:else if mode === 'matrix'}
             <div class="matrix">
@@ -434,7 +515,7 @@
       {#if applyError}<p class="note" role="alert">{applyError}</p>{/if}
       {@const history = doc && session ? { done: [...session.steps.done], undone: [...session.steps.undone] } : { done: [], undone: [] }}
       <div class="actions">
-        <button type="button" class="ui-button" disabled={!selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
+        <button type="button" class="ui-button" disabled={strokeId ? !strokeEdit : !selected.transform?.length} onclick={reset}>{t('app.layers.reset')}</button>
         <button type="button" class="ui-button" onclick={() => { open = false; oncanvas?.() }}>{t('app.layers.oncanvas')}</button>
       </div>
       {#if history.done.length || history.undone.length}
@@ -483,6 +564,8 @@
   .transform{margin-top:var(--ui-space-lg)}
   .transform legend{padding:0 var(--ui-space-xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .transform-body{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
+  .strokes{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs)}
+  .strokes .ui-button[aria-pressed="true"]{background:var(--ui-color-accent);color:var(--ui-color-on-accent)}
   .transform-body .note{margin:0}
   .modes{display:inline-flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken)}
   .modes .ui-button{min-block-size:var(--ui-control-h-xs);padding-inline:var(--ui-space-md);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);box-shadow:none}
