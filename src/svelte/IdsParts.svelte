@@ -3,7 +3,9 @@
   // (難輸入部件), as the adapter's `parts()` gives them (the shipped `data/ids-parts.json`). Components
   // offers frequent character components, character components by stroke count, and a separate
   // stroke-symbol view. Counted groups use the first-stroke classes (横 豎 撇 點 折, where recorded,
-  // unknown last). Search and Recent place stroke symbols under their own heading.
+  // unknown last). Counted groups also carry BabelStone's numbered components: the fragment where
+  // note 6 gives one, BabelStone Han PUA's glyph where it does not, and the number alone for a
+  // reference with neither. Search and Recent place stroke symbols under their own heading.
   // Tangut shows the Tangut components in code point order, Small Seal the seal forms,
   // Bopomofo the bopomofo letters, Letters & numbers the Latin, Cyrillic and ASCII parts, Hangul the
   // Hangul letters, Gongche the gongche notation, Recent the parts picked here before (kept in this
@@ -16,6 +18,7 @@
   import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
   import { hangulIdsOf } from '../core/hangul-ids.js'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
+  import { jurchenLabel, jurchenMatches } from '../adapter/jurchen-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
@@ -34,14 +37,16 @@
   /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
   let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
   const t = $derived(translator(messages, locale))
+  /** @type {HTMLElement | null} */
+  let partsRoot = $state(null)
   const uid = $props.id()
 
   const RECENT_MAX = 30
   /** @type {('横' | '豎' | '撇' | '點' | '折')[]} */
   const CLASSES = ['横', '豎', '撇', '點', '折']
   const CLASS_KEY = { 横: 'h', 豎: 's', 撇: 'p', 點: 'd', 折: 'z' }
-  /** @type {('components' | 'gongche' | 'tangut' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'recent' | 'other')[]} */
-  const TABS = ['components', 'gongche', 'tangut', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'recent', 'other']
+  /** @type {('components' | 'gongche' | 'tangut' | 'jurchen' | 'seal' | 'shuishu' | 'bopomofo' | 'marks' | 'alphabet' | 'hangul' | 'recent' | 'other')[]} */
+  const TABS = ['components', 'gongche', 'tangut', 'jurchen', 'seal', 'shuishu', 'bopomofo', 'marks', 'alphabet', 'hangul', 'recent', 'other']
 
   /** @param {string} key @returns {unknown} */
   const stored = key => { try { return JSON.parse(localStorage.getItem(key) ?? 'null') } catch { return null } }
@@ -276,12 +281,14 @@
     if (pick(text) === false) return
     clearCompose()
   }
-  const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'shuishu' ? 'parts.shuishu.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
+  const filterLabel = $derived(t(tab === 'components' && characters ? 'parts.characters.find' : tab === 'seal' ? 'parts.seal.filter' : tab === 'shuishu' ? 'parts.shuishu.filter' : tab === 'jurchen' ? 'parts.jurchen.filter' : tab === 'hangul' && hangulGroup === 'syllable' ? 'parts.hangul.find' : 'parts.filter'))
   let otherScript = $state('Grek'), otherPage = $state(0)
   /** @type {Record<string, string[]> | null} */
   let otherData = $state.raw(null)
   let otherFailed = $state(false), otherLoading = false
   const partsByScript = $derived(groupPaletteParts(parts ?? []))
+  // A host that passes no Jurchen data has nothing to list there.
+  const tabs = $derived(parts && !partsByScript.has('jurchen') ? TABS.filter(name => name !== 'jurchen') : TABS)
   const scriptNames = $derived.by(() => { try { return new Intl.DisplayNames([locale], { type: 'script' }) } catch { return null } })
   // Symbols and mixed-script descriptions are not scripts, so they have no display name of their own.
   // @x18n-keys
@@ -336,8 +343,10 @@
   const COMMON_USE = 50
   const countedParts = $derived((parts ?? []).filter(part => (part.kind === 'c' || part.kind === 'd') && !isStroke(part.part)))
   const strokeSymbols = $derived((parts ?? []).filter(part => isStroke(part.part)))
+  /** BabelStone's numbered components are references, not common characters. @param {PalettePart} part */
+  const numbered = part => /^\{\d+\}$/.test(part.part)
   const commonParts = $derived(adjacentVariants(countedParts.filter(part =>
-    part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE)))
+    !numbered(part) && (part.uses == null ? part.kind === 'c' : part.uses >= COMMON_USE))))
   // The stroke counts the counted parts hold, in order, null (not recorded) last. Counts from
   // HAN_TAIL up share one chip, as the character list does.
   const counts = $derived([...new Set(countedParts.map(part => part.strokes ?? null))].sort((a, b) => (a ?? Infinity) - (b ?? Infinity)))
@@ -438,6 +447,14 @@
   const shuiParts = $derived((parts ?? []).filter(part => part.kind === 'shui'))
   const shuiGroups = $derived(SHUI_GROUPS.map(group => ({ ...group, parts: shuiParts.filter(part => part.shuiGroup === group.name) })).filter(group => group.parts.length))
   const selectedShuiGroup = $derived(shuiGroups.find(group => group.name === shuiGroup) ?? shuiGroups[0])
+  const JUR_GROUPS = /** @type {const} */ ([{ name: 'character', message: 'character' }, { name: 'variant', message: 'variant' }, { name: 'radical', message: 'radical' }])
+  let jurGroup = $state(/** @type {(typeof JUR_GROUPS)[number]['name']} */ ('character'))
+  /** The radical the characters are narrowed to; undefined for all of them. @type {number | undefined} */
+  let jurRadical = $state()
+  const jurParts = $derived(/** @type {import('../adapter/jurchen-data.js').JurchenPart[]} */ (partsByScript.get('jurchen') ?? []))
+  const jurGroups = $derived(JUR_GROUPS.map(group => ({ ...group, parts: jurParts.filter(part => (part.jurGroup ?? 'character') === group.name) })).filter(group => group.parts.length))
+  const selectedJurGroup = $derived(jurGroups.find(group => group.name === jurGroup) ?? jurGroups[0])
+  const jurRadicals = $derived(jurParts.filter(part => part.jurGroup === 'radical'))
   const query = $derived(filter.trim())
   const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
@@ -457,9 +474,16 @@
       return shuiParts.filter(part => part.part === query)
         .concat(shuiParts.filter(part => part.part !== query && shuiWords(part).some(word => word.includes(lowered))))
     }
-    if (/^\d+$/.test(query)) return adjacentVariants(parts.filter(part => part.strokes === Number(query)))
+    if (tab === 'jurchen') return jurchenMatches(jurParts, query)
+    if (/^\d+$/.test(query)) {
+      const stroked = parts.filter(part => part.strokes === Number(query))
+      if (stroked.length) return adjacentVariants(stroked)
+      return parts.filter(part => /^\{\d+\}$/.test(part.part) && part.part.slice(1, -1) === query)
+    }
+    // A numbered reference is its own query, not the digits inside it.
+    if (/^\{\d+\}$/.test(query)) return parts.filter(part => part.part === query || part.aliases?.some(alias => alias.includes(query)))
     const chars = new Set([...query])
-    return adjacentVariants(parts.filter(part => !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.aliases?.some(alias => alias.includes(query))))
+    return adjacentVariants(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || part.glyph === query || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 
   /** @type {{ cls: string | null | undefined, parts: PalettePart[] }[]} */
@@ -471,6 +495,7 @@
     if (tab === 'hangul') return [{ cls: undefined, parts: hangul.map(part => byPart.get(part)).filter(/** @returns {part is PalettePart} */ (part => !!part)) }]
     if (tab === 'seal') return [{ cls: undefined, parts: selectedSealGroup?.parts ?? [] }]
     if (tab === 'shuishu') return [{ cls: undefined, parts: selectedShuiGroup?.parts ?? [] }]
+    if (tab === 'jurchen') return [{ cls: undefined, parts: (selectedJurGroup?.parts ?? []).filter(part => selectedJurGroup?.name === 'radical' || jurRadical === undefined || part.jurRadical === jurRadical) }]
     if (tab === 'tangut') return [{ cls: undefined, parts: parts.filter(part => part.kind === 't') }]
     return [{ cls: undefined, parts: recent.map(part => byPart.get(part) ?? { part, kind: 'd' }) }]
   })
@@ -497,7 +522,8 @@
     if (part !== undefined) pick(part)
   }
   onMount(() => {
-    const stopWatching = watchFallback(document.querySelector('.ids-parts'))
+    // The element the panel renders: a page can hold another `.ids-parts` earlier in the document.
+    const stopWatching = watchFallback(partsRoot)
     /** @param {PointerEvent} event */
     const pointer = event => {
       if (pendingTarget && !event.composedPath().includes(pendingTarget) && !(event.target instanceof Element && event.target.closest('.part'))) flushPick()
@@ -571,6 +597,7 @@
   /** @param {PalettePart} part */
   const title = part => {
     if (part.kind === 'shui') return shuishuLabel(/** @type {import('../adapter/shuishu-data.js').ShuishuPart} */ (part))
+    if (characterScript(part.part) === 'jurchen') return jurchenLabel(/** @type {import('../adapter/jurchen-data.js').JurchenPart} */ (part))
     const nko = tab === 'hangul' ? newKoreanNames[part.part] : null
     const romanization = tab === 'hangul' && hangulGroup === 'syllable' ? romanizeHangul(part.part) : null
     // A syllable says how its letters are set: 가 is ⿰ㄱㅏ.
@@ -582,6 +609,8 @@
     const identity = componentIdentity(part.part)
     return [
       isNewKorean(part.part) ? null : part.part,
+      part.description ?? null,
+      part.glyph ? `U+${part.glyph.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : part.fragment ?? null,
       (identity || tab === 'gongche' && !isSequence(part.part) || tab === 'marks' || composerCharacters) ? `U+${part.part.codePointAt(0)?.toString(16).toUpperCase().padStart(4, '0')}` : null,
       identity ? t(`parts.identity.${identity.type}`) : null,
       identity?.type === 'stroke' ? identity.name : null,
@@ -593,7 +622,7 @@
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,
-      nko || romanization ? null : tab === 'gongche' && strokeCount == null ? null : strokeCount == null ? t('parts.unknownStrokes') : `${part.derived && identity?.type !== 'stroke' ? '≈ ' : ''}${t('parts.strokeCount', { count: strokeCount })}`,
+      nko || romanization ? null : part.readonly === 1 ? t('parts.numbered.readonly') : tab === 'gongche' && strokeCount == null ? null : strokeCount == null ? t('parts.unknownStrokes') : `${part.derived && identity?.type !== 'stroke' ? '≈ ' : ''}${t('parts.strokeCount', { count: strokeCount })}`,
       part.uses != null ? t(identity ? 'parts.idsUses' : 'parts.uses', { count: part.uses }) : null,
     ].filter(Boolean).join(' · ')
   }
@@ -602,11 +631,11 @@
   let tabButtons = $state([])
   /** @param {KeyboardEvent} event @param {number} index */
   function tabKey(event, index) {
-    const last = TABS.length - 1
+    const last = tabs.length - 1
     const to = /** @type {Record<string, number>} */ ({ ArrowRight: index === last ? 0 : index + 1, ArrowLeft: index === 0 ? last : index - 1, Home: 0, End: last })[event.key]
     if (to === undefined) return
     event.preventDefault()
-    tab = TABS[to]
+    tab = tabs[to]
     tabButtons[to]?.focus()
   }
   // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes. The components written
@@ -620,16 +649,26 @@
   <div class="parts-grid">
     {#each list as part (part.part)}
       {@const identity = componentIdentity(part.part)}
-      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part)} {disabled} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
-        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
-        ondragstart={event => { if (event.target === event.currentTarget) event.dataTransfer?.setData('text/plain', part.part) }}
-        onclick={event => clickPart(event, part.part)} ondblclick={selectPart} onkeydown={selectionKey}>
-        {#if isSequence(part.part)}
+      <button type="button" class="part" data-component-type={identity?.type} data-part-uses={part.uses} data-character={part.part} data-mark={part.display ? 'true' : undefined} class:compound={isSequence(part.part) || Boolean(part.fragment && isSequence(part.fragment))} class:numbered={Boolean(part.glyph || part.fragment && !isSequence(part.fragment))} class:readonly={part.readonly === 1} disabled={disabled} aria-disabled={part.readonly === 1 || undefined} lang={tab === 'other' ? /** @type {Record<string, string>} */ ({ Arab: 'ar', Hebr: 'he', Hira: 'ja', Kana: 'ja', Deva: 'hi' })[otherScript] : tab === 'hangul' && newKoreanNames[part.part] ? 'ko' : part.kind === 't' ? 'txg' : part.kind === 'shui' ? 'swi' : characterScript(part.part) === 'jurchen' ? 'juc' : 'ja'} dir={tab === 'other' ? 'auto' : undefined} title={title(part)} aria-label={title(part)}
+        onpointerdown={event => { selectionAtDown = window.getSelection()?.toString() ?? ''; event.currentTarget.draggable = !disabled && part.readonly !== 1 && !(/** @type {Element} */ (event.target).closest('.part-text')) }}
+        ondragstart={event => { if (event.target === event.currentTarget && part.readonly !== 1) event.dataTransfer?.setData('text/plain', part.fragment ?? part.glyph ?? part.part) }}
+        onclick={event => { if (part.readonly !== 1) clickPart(event, part.fragment ?? part.glyph ?? part.part) }} ondblclick={selectPart} onkeydown={selectionKey}>
+        {#if part.fragment && !isSequence(part.fragment)}
+          <span class="part-text">{part.fragment}</span>
+          <span class="numbered-ref" aria-hidden="true">{part.part}</span>
+        {:else if part.fragment}
+          <IdsPartIcon sequence={part.fragment} {adapter} />
+          <span class="part-text visually-hidden">{part.fragment}</span>
+          <span class="numbered-ref" aria-hidden="true">{part.part}</span>
+        {:else if part.glyph}
+          <span class="part-text">{part.glyph}</span>
+          <span class="numbered-ref" aria-hidden="true">{part.part}</span>
+        {:else if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />
           <span class="part-text compound-text">{part.part}</span>
         {:else}
           <span class="part-text">{part.display ?? part.part}</span>
-          {#if part.kind === 'shui' && part.ids}<span class="shui-ids" aria-hidden="true">{part.ids}</span>{/if}
+          {#if (part.kind === 'shui' || part.kind === 'jur') && part.ids}<span class="part-ids" aria-hidden="true">{part.ids}</span>{/if}
           {#if part.sealBasis === 'cjk-ids'}<span class="seal-estimate" aria-hidden="true">≈</span>{/if}
         {/if}
       </button>
@@ -705,10 +744,10 @@
   </div>
 {/snippet}
 
-<div class="ids-parts" role="group" aria-label={t('parts.label')}>
+<div class="ids-parts" role="group" aria-label={t('parts.label')} bind:this={partsRoot}>
   <div class="parts-top">
     <div class="parts-tabs" role="tablist" aria-label={t('parts.label')}>
-      {#each TABS as name, index (name)}
+      {#each tabs as name, index (name)}
         <button type="button" role="tab" id={`${uid}-tab-${name}`} aria-controls={`${uid}-panel`} bind:this={tabButtons[index]}
           class:active={tab === name} aria-selected={tab === name} tabindex={tab === name ? 0 : -1}
           onclick={() => { tab = name; filter = '' }} onkeydown={event => tabKey(event, index)}>{name === 'other' ? t('parts.script.choose') : t(`parts.tab.${name}`)}</button>
@@ -772,7 +811,27 @@
   {/if}
   {#if tab === 'shuishu'}
     <p class="parts-note">{t('parts.shuishu.note')}</p>
-    <p class="parts-note">{t('parts.shuishu.ids')}</p>
+    <p class="parts-note">{t('parts.editorialIds')}</p>
+  {/if}
+  {#if tab === 'jurchen' && !query && jurGroups.length}
+    <div class="script-groups" role="group" aria-label={t('parts.jurchen.groups')}>
+      {#each jurGroups as group (group.name)}
+        <button type="button" class:active={selectedJurGroup?.name === group.name} aria-pressed={selectedJurGroup?.name === group.name}
+          onclick={() => jurGroup = group.name}>{t(`parts.jurchen.${group.message}`)} <span>{group.parts.length}</span></button>
+      {/each}
+    </div>
+    {#if selectedJurGroup?.name !== 'radical'}
+      <div class="parts-counts jurchen-radicals" role="group" aria-label={t('parts.jurchen.radicals')}>
+        <button type="button" class:active={jurRadical === undefined} aria-pressed={jurRadical === undefined}
+          onclick={() => { jurRadical = undefined }}>{t('parts.jurchen.anyRadical')}</button>
+        {#each jurRadicals as radical (radical.part)}
+          {@const label = t('parts.jurchen.radicalNumber', { number: radical.jurRadical ?? 0 })}
+          <button type="button" lang="juc" class:active={jurRadical === radical.jurRadical} aria-pressed={jurRadical === radical.jurRadical}
+            title={label} aria-label={label}
+            onclick={() => { jurRadical = radical.jurRadical }}>{radical.part}</button>
+        {/each}
+      </div>
+    {/if}
   {/if}
   {#if tab === 'components'}
     <div class="parts-counts" role="group" aria-label={t('parts.groups')}>
@@ -940,6 +999,10 @@
       {/each}
     {/if}
   </div>
+  {#if tab === 'jurchen'}
+    <p class="parts-note">{t('parts.jurchen.note')}</p>
+    <p class="parts-note">{t('parts.editorialIds')}</p>
+  {/if}
 </div>
 
 <style>
@@ -975,7 +1038,7 @@
   .compose-actions button{padding:0 8px;font-size:12px;color:var(--_muted)}
   .compose-actions .compose-backspace{font-size:16px;line-height:1}
   .compose-result{display:flex;align-items:center;justify-content:center;gap:14px;flex:1;min-width:0;min-height:104px;padding:12px;border-color:var(--_line);
-    background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
+    background:var(--_surface-subtle);font-family:"IDS Numbered","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .compose-result:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-glyph{font-size:48px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .compose-detail{display:flex;flex-direction:column;align-items:flex-start;gap:3px;max-width:15em;font-family:var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
@@ -993,25 +1056,36 @@
   .tone-mark{font-size:20px;line-height:1;font-family:var(--ids-font,var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
   .jamo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(34px,1fr));gap:3px;max-height:168px;overflow:auto;padding:1px}
   .jamo-key{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:19px;line-height:1;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Numbered","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .jamo-key:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .compose-live{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;margin:0}
   .parts-counts{display:flex;flex-wrap:wrap;gap:4px;user-select:none}
   .parts-counts button{min-width:30px;padding:4px 7px;white-space:nowrap;font-variant-numeric:tabular-nums}
+  /* Two rows of the 51, so the characters stay in view; the rest scroll. */
+  .jurchen-radicals{max-height:68px;overflow:auto}
+  .jurchen-radicals button{font:16px/1.25 "IDS Jurchen",var(--ids-ui-font,system-ui,sans-serif);padding:3px 7px}
+  .jurchen-radicals button:first-child{font-size:12px}
   .part[data-component-type="stroke"]{color:var(--_muted)}
   .stroke-results{display:flex;flex-direction:column;gap:8px;min-width:0}
   .parts-panel{display:flex;flex-direction:column;gap:8px;min-width:0}
   /* The subset faces first: their ranges cover only the strokes and rare parts, so other text falls
      through to the page's own fonts. */
-  .parts-class,.parts-filter{font-family:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu",var(--ids-ui-font,system-ui,sans-serif)}
+  .parts-class,.parts-filter{font-family:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen",var(--ids-ui-font,system-ui,sans-serif)}
   .parts-class{margin:4px 0 0;font-size:11px;font-weight:500;color:var(--_muted);user-select:none}
   .parts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:3px;max-height:260px;overflow:auto}
   .part{display:flex;align-items:center;justify-content:center;aspect-ratio:1;padding:0;font-size:22px;line-height:1;user-select:text;
-    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
+    border-color:transparent;background:var(--_surface-subtle);font-family:"IDS Numbered","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Strokes",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .part.compound{position:relative;padding:5px}
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
     font:8px/1 var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);color:var(--_muted);background:transparent}
+  .part.numbered{flex-direction:column;gap:1px;font-size:18px}
+  .numbered-ref{font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
+  .part.compound .numbered-ref{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;background:var(--_surface)}
+  .part.readonly{color:var(--_muted);cursor:default}
+  .part.readonly .part-text{font-family:var(--ids-ui-font,system-ui,sans-serif);font-size:13px;max-width:100%;overflow-wrap:anywhere}
+  .part[aria-disabled="true"]:hover{border-color:transparent;background:var(--_surface-subtle)}
+  .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
   .part:not(:disabled):hover{border-color:var(--_accent);background:var(--_accent-light)}
   .script-groups{display:flex;flex-wrap:wrap;gap:4px}
   .script-groups button{padding:5px 8px;font-size:12px;background:transparent;border-color:transparent;color:var(--_muted)}
@@ -1022,8 +1096,8 @@
      place them over a Latin base the way the standard dotted-circle notation expects. */
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
-  .part:has(> .shui-ids){padding-bottom:12px;font-size:20px}
-  .shui-ids{position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
+  .part:has(> .part-ids){padding-bottom:12px;font-size:20px}
+  .part-ids{font-family:"IDS Operators","IDS Shuishu","IDS Jurchen",var(--ids-font,var(--ids-glyph-fallback,sans-serif));position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}

@@ -47,7 +47,7 @@ export function frequencies(table, rejected = []) {
 }
 
 export function strokeCounter(table, rows) {
-  const known = new Map(rows.filter(row => row[2] != null && !arity([...row[0]][0])).map(row => [row[0], row[2]]))
+  const known = new Map(rows.filter(row => row[2] != null && !arity([...row[0]][0]) && !/^\{\d+\}$/.test(row[0])).map(row => [row[0], row[2]]))
   // The JP dotted 者 is nine strokes; a regional nine-stroke base plus 丶 double-counts its dot.
   known.set('⿻者丶', 9)
   // Reviewed subtractions: native host stroke count minus the removed component.
@@ -147,12 +147,15 @@ export function build(root = new URL('../', import.meta.url)) {
   const written = existsSync(components) ? expandNumberedComponents(table, readNumberedComponents(readFileSync(components, 'utf8'))) : table
   const palette = JSON.parse(readFileSync(data('ids-parts.json'), 'utf8'))
   // Remove previously generated compounds so running the builder again is deterministic.
-  const rows = palette.parts.filter(row => !arity([...row[0]][0]))
+  // BabelStone's numbered components are palette rows too, and their counts follow the source
+  // spellings, not the written-out table.
+  const numbered = row => /^\{\d+\}$/.test(row[0])
+  const rows = palette.parts.filter(row => numbered(row) || !arity([...row[0]][0]))
   const count = strokeCounter(table, rows)
   const rejected = []
   const entries = frequencies(table, rejected)
   const usage = new Map(frequencies(written, []).map(entry => [entry.text, entry.uses]))
-  for (const row of rows) row[1] = usage.get(row[0]) ?? 0
+  for (const row of rows) if (!numbered(row)) row[1] = usage.get(row[0]) ?? 0
   const threshold = 30
   const selected = entries.filter(entry => entry.op && entry.nestedUses >= threshold && !parse(entry.text).problem).map(entry => ({ ...entry }))
   for (const text of MANUAL_PARTS) {

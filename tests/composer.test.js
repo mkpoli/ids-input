@@ -10,6 +10,7 @@ import { Composer, composableDescription, fitInside, parseTree } from '../src/co
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
+import gaizhaGlyph from './fixtures/gaizha-glyph.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
 import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
 import constants from '../src/composer/constants.json' with { type: 'json' }
@@ -38,8 +39,17 @@ const encodedSource = () => {
     extra.set(name, gzipSync(JSON.stringify(file)))
   }
   add('⿰木口', { k: '⿰木口', e: '𪱳' })
+  // A description typed with a described character: ⿰𪱴口 spells out to ⿰⿱木口口.
+  add('𪱴', { k: '𪱴', e: '𪱵', s: '⿱木口' })
+  add('𪱵', { k: '𪱵', G: boxGlyph([300, 40, 700, 700]), ink: 3200, nl: 1, o: 1 })
+  add('⿰⿱木口口', { k: '⿰⿱木口口', e: '𪱶' })
+  add('𪱶', { k: '𪱶', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
+  // Two levels: ⿰𪱴𪱴 spells out to ⿰⿱木口⿱木口.
+  add('⿰⿱木口⿱木口', { k: '⿰⿱木口⿱木口', e: '𪱷' })
+  add('𪱷', { k: '𪱷', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
   const glyph = boxGlyph([40, 40, 960, 960])
   add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
+  add('皶', { k: '皶', ...gaizhaGlyph })
   return createSource(async name => {
     const body = extra.get(name) ?? files[name]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
@@ -394,6 +404,25 @@ describe('the composer', () => {
     expect(split.d).toBe(split.parts.map(part => part.d).join(''))
     expect(await compose(encodedSource(), '⿰木口', { separate: true })).toEqual(split)
   })
+  it('finds the character a description spells out through the characters it names', async () => {
+    const spelling = await compose(encodedSource(), '⿰𪱴口')
+    expect(spelling.parts.map(part => part.origin)).toEqual(['glyph 𪱶'])
+    expect((await compose(encodedSource(), '⿰𪱴𪱴')).parts.map(part => part.origin)).toEqual(['glyph 𪱷'])
+    expect(await compose(encodedSource(), '⿰木口')).toMatchObject({ origins: ['glyph 𪱳'] })
+    expect(await compose(encodedSource(), '⿰木木')).toMatchObject({ origins: ['glyph 木', 'glyph 木'] })
+  })
+  it('splits the designed glyph a variant description names', async () => {
+    const whole = await compose(encodedSource(), '皶')
+    const plain = await compose(encodedSource(), '⿰查皮')
+    const split = await compose(encodedSource(), '⿰查皮', { separate: true })
+    expect(plain.parts.map(part => part.origin)).toEqual(['glyph 皶'])
+    expect(plain.d).toBe(whole.d)
+    expect(split.parts.map(part => part.origin)).toEqual(['glyph 皶', 'glyph 皶'])
+    expect(split.parts).toHaveLength(2)
+    // The partition itself: eight contours around 査, seven around 皮.
+    expect(split.parts.map(part => (part.d.match(/M/g) ?? []).length)).toEqual([8, 7])
+    expect(split.d).toBe(whole.d)
+  })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'
     const nest = n => n ? ['⿰', '木', nest(n - 1)] : '口'
@@ -427,6 +456,20 @@ describe('the composer', () => {
     await source.ready()
     await source.load(Array.from({ length: 20 }, (_, i) => `g/${i.toString(16).padStart(3, '0')}.json`))
     expect(most).toBe(10)
+  })
+})
+
+describe('a stack of three operands', () => {
+  it('gives a full middle glyph its own share of the stack', async () => {
+    const drawn = await compose(sourceOf(), '⿳山六廾')
+    const middle = drawn.parts.find(part => part.origin === 'glyph 六')
+    expect(middle).toBeDefined()
+    const [, , width, height] = middle.box
+    // 六 takes the middle's full share. At 0.75 of it the glyph was 235 units high, and stretched
+    // across the row it read as a flat stripe.
+    expect(height).toBeGreaterThan(265)
+    expect(width / height).toBeLessThan(3.5)
+    expect(width).toBeGreaterThan(850)
   })
 })
 

@@ -124,7 +124,18 @@ def main():
     sources = [raw.decode() for raw in source_files.values()]
     if len(sources) != 540: raise ValueError('Expected the 540 Shuowen radical files')
     source_files['IDS-SW-JIGUGE.txt'] = ids.encode()
-    source_files['COPYING'] = (ROOT / 'data/COPYING-small-seal.txt').read_bytes()
+    source_files['COPYING'] = (ROOT / 'data/COPYING-chise-ids.txt').read_bytes()
+    manifest = json.loads((ROOT / 'data/chise-sources.json').read_text(encoding='utf-8'))
+    source_files['CHISE-README.md'] = fetch(manifest['readme']['url'], args.cache / manifest['readme']['file'],
+                                            manifest['readme']['sha256']).read_bytes()
+    source_files['README'] = '\n'.join([
+        'CHISE-IDS files for data/small-seal.json.gz, GPL-2.0-or-later.',
+        'The grant is in CHISE-README.md, section License; the text is in COPYING, GNU\'s copy,',
+        'because CHISE ships none. The rows keep their source text; the build adds the explicit',
+        'same-record Unicode mappings and the 540 Shuowen mappings it read.', '',
+        f'IDS-SW-JIGUGE.txt at {IDS_REV}', f'Shuowen mappings at {MAP_REV}',
+        'The output dates from 2026-11-04, when the corpus gained the licence text.', '',
+    ]).encode()
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode='w') as tar:
         for name, raw in sorted(source_files.items()):

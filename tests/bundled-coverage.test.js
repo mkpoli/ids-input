@@ -10,6 +10,7 @@ import { hasTangut } from '../src/composer/tangut.js'
 import { hasBopomofo } from '../src/composer/bopomofo.js'
 import { hasSmallSeal } from '../src/composer/small-seal.js'
 import { hasShuishu } from '../src/composer/shuishu.js'
+import { hasJurchen } from '../src/composer/jurchen.js'
 
 it('indexes the exact scalar outlines in each dedicated bundle', () => {
   for (const name of ['tangut', 'bopomofo', 'small-seal', 'shuishu']) {
@@ -62,10 +63,10 @@ it('pins the host outline inventory to the default composer export', () => {
 })
 
 it('keeps every indexed bundle glyph inside its bundle matcher', () => {
-  const matchers = { tangut: hasTangut, bopomofo: hasBopomofo, 'small-seal': hasSmallSeal, shuishu: hasShuishu }
+  const matchers = { tangut: hasTangut, bopomofo: hasBopomofo, 'small-seal': hasSmallSeal, shuishu: hasShuishu, jurchen: hasJurchen }
   for (const [name, ranges] of Object.entries(coverage)) {
     for (const [first, last] of ranges) for (let cp = first; cp <= last; cp++) {
-      expect(matchers[name](String.fromCodePoint(cp))).toBe(true)
+      expect(matchers[name.split(':')[0]](String.fromCodePoint(cp))).toBe(true)
     }
   }
 })

@@ -4,10 +4,11 @@
 import { LOCAL_SANS } from './desktop.js'
 
 export const COMPOSER_BASE = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/'
-// The Kaisho and Serif exports (han-compose `export-web`) are uploaded beside the sans one.
+// The Kaisho, Fangsong and Serif exports (han-compose `export-web`) are uploaded beside the sans one.
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
-  serif: 'https://glyphatlas.org/atlas/composer/8156f838798c-serif-compose-layout-v4-serif-f6/',
+  serif: 'https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f6/',
+  fangsong: 'https://ids-input-composer.mkpoli.workers.dev/9f797e2322d2-fangsong-compose-layout-v4-fangsong-f6/',
   klee: 'https://glyphatlas.org/atlas/composer/e1e0af4b94e6-kaisho-compose-layout-v4-kaisho-f5/',
 
 }

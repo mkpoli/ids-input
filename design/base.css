@@ -98,11 +98,19 @@ body {
   }
 }
 
+/* A reader who asks for more contrast gets stronger lines, text and focus; the control
+   boundaries reach the text colour, which is 3:1 or better everywhere they sit. */
 @media (prefers-contrast: more) {
   :root {
-    --ui-color-ink-muted: light-dark(#4a4a56, #c2c2ce);
-    --ui-color-border: light-dark(#c2c2cc, #4a4a55);
-    --ui-color-control-border: var(--ui-color-ink-muted);
-    --ui-color-control-border-hover: var(--ui-color-ink-muted);
+    --ui-color-ink-soft: var(--ui-color-ink);
+    --ui-color-ink-muted: light-dark(#3c3c46, #d4d4de);
+    --ui-color-border: light-dark(#8a8a96, #6f6f7e);
+    --ui-color-border-strong: light-dark(#5a5a66, #a2a2ae);
+    --ui-color-control-border: var(--ui-color-ink);
+    --ui-color-control-border-hover: var(--ui-color-ink);
+    --ui-color-accent: light-dark(#1b2d94, #b9caff);
+    --ui-color-accent-hover: light-dark(#142270, #d0dbff);
+    --ui-color-accent-active: light-dark(#0f1a5c, #e2e9ff);
+    --ui-ring-width: 3px;
   }
 }

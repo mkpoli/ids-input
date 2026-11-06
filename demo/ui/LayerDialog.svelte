@@ -25,7 +25,7 @@
   let source = $state.raw(null)
   /** @type {Map<string, import('../../src/document/frames.js').LayerFrame>} */
   let layout = $state.raw(new Map())
-  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, frame: number[] } | null} */
+  /** @type {{ gesture: number, kind: 'move' | 'scale' | 'rotate', p0: { x: number, y: number }, start: { x: number, y: number, scaleX: number, scaleY: number, rotate: number }, center: [number, number], local0: [number, number], d0: number, a0: number, place: number[] } | null} */
   let drag = $state.raw(null)
   let gesture = 0
 
@@ -286,8 +286,8 @@
     const center = /** @type {[number, number]} */ ([x + width / 2, y + height / 2])
     drag = { gesture: ++gesture, kind, p0: { x: point.x, y: point.y }, start: { x, y, scaleX, scaleY, rotate }, center,
       d0: Math.max(1, Math.hypot(point.x - center[0], point.y - center[1])),
-      local0: (() => { const inverse = invertAffine(selection.entry.frame); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
-      a0: Math.atan2(point.y - center[1], point.x - center[0]), frame: selection.entry.frame }
+      local0: (() => { const inverse = invertAffine(selection.entry.place); return inverse ? /** @type {[number, number]} */ (applyAffine(inverse, [point.x, point.y])) : /** @type {[number, number]} */ ([500, 500]) })(),
+      a0: Math.atan2(point.y - center[1], point.x - center[0]), place: selection.entry.place }
     svg.setPointerCapture?.(event.pointerId)
   }
 
@@ -301,14 +301,14 @@
     const point = pointAt(svg, event)
     if (!point) return
     if (drag.kind === 'move') {
-      const inverse = invertAffine(drag.frame)
+      const inverse = invertAffine(drag.place)
       if (!inverse) return
       const origin = applyAffine(inverse, [0, 0])
       const local = applyAffine(inverse, [point.x - drag.p0.x, point.y - drag.p0.y])
       x = Math.round((drag.start.x + local[0] - origin[0]) * 100) / 100
       y = Math.round((drag.start.y + local[1] - origin[1]) * 100) / 100
     } else if (drag.kind === 'scale') {
-      const inverse = invertAffine(drag.frame)
+      const inverse = invertAffine(drag.place)
       if (!inverse) return
       const local = applyAffine(inverse, [point.x, point.y])
       const ratioX = Math.abs(drag.local0[0] - 500) < 1 ? 1 : (local[0] - 500) / (drag.local0[0] - 500)
@@ -345,7 +345,7 @@
       <div class="figure">
         <div class="canvas">
           {#if step === 'loading'}
-            <span class="spinner" aria-hidden="true"></span>
+            <span class="ui-spinner" aria-hidden="true"></span>
             <p class="note">{t('app.layers.prepare')}</p>
           {:else if step === 'failed'}
             <p class="note">{failed || t('app.layers.failed')}</p>
@@ -372,9 +372,9 @@
           {/if}
         </div>
       </div>
-      <div class="list" role="tree" aria-label={t('app.layers.label')}>
+      <div class="ui-list list" role="tree" aria-label={t('app.layers.label')}>
         {#each layers as row (row.node.id)}
-          <button type="button" class:chosen={row.node.id === chosen} style:--depth={row.depth}
+          <button type="button" class="ui-list-row" data-interactive class:chosen={row.node.id === chosen} style:--depth={row.depth}
             role="treeitem" aria-selected={row.node.id === chosen} aria-level={row.depth + 1}
             onclick={() => select(row.node.id)} ondblclick={() => decompose(row.node)}>
             <span class="glyph">{label(row.node)}</span>
@@ -474,9 +474,9 @@
   .figure .note{color:#686874}
   .list{display:flex;flex-direction:column;gap:var(--ui-space-3xs);max-height:48vh;overflow:auto}
   .list button{display:grid;grid-template-columns:1.5em minmax(0,1fr) auto;gap:var(--ui-space-xs);align-items:center;width:100%;min-height:var(--ui-control-h-lg);
-    padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
-  .list button:hover{background:var(--ui-color-surface-hover)}
-  .list button.chosen{background:var(--ui-color-accent-soft)}
+    padding:0 var(--ui-space-xs) 0 calc(var(--ui-space-xs) + var(--depth) * var(--ui-space-md));border:1px solid transparent;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink);text-align:left;font:inherit;cursor:pointer}
+  .list button:hover{border-color:var(--ui-color-border);background:var(--ui-color-surface-hover)}
+  .list button.chosen{border-color:var(--ui-color-accent);background:var(--ui-color-accent-soft);color:var(--ui-color-ink)}
   .glyph{font-size:var(--ui-text-lg)}
   .layer-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .list code{font-family:var(--ui-font-mono);font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
@@ -484,7 +484,12 @@
   .transform legend{padding:0 var(--ui-space-xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .transform-body{display:flex;flex-direction:column;gap:var(--ui-space-lg)}
   .transform-body .note{margin:0}
-  .modes{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs)}
+  .modes{display:inline-flex;align-self:flex-start;gap:2px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface-sunken)}
+  .modes .ui-button{min-block-size:var(--ui-control-h-xs);padding-inline:var(--ui-space-md);border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);box-shadow:none}
+  .modes .ui-button:not(:disabled):hover{background:color-mix(in srgb,var(--ui-color-surface) 60%,transparent);color:var(--ui-color-ink)}
+  .modes .ui-button[aria-pressed='true']{background:var(--ui-color-surface);color:var(--ui-color-ink);box-shadow:var(--ui-shadow-1)}
+  .modes .ui-button[aria-pressed='true']:not(:disabled):hover{background:var(--ui-color-surface);color:var(--ui-color-ink)}
+  .modes .ui-button:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .affine{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--ui-space-md)}
   .field.rotate{grid-column:2/4}
   /* The unit sits inside the field's box, after the number. */
@@ -500,7 +505,7 @@
   .splits{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs);margin-top:var(--ui-space-lg);padding:var(--ui-space-sm) var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
   .splits span{font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .splits button{height:var(--ui-control-h-sm);padding:0 var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:var(--ui-text-sm);cursor:pointer}
-  .splits button:hover{background:var(--ui-color-surface-hover)}
+  .splits button:hover{border-color:var(--ui-color-border-strong);background:var(--ui-color-surface-hover)}
   .actions{display:flex;gap:var(--ui-space-sm);margin-top:var(--ui-space-lg)}
   .history{margin-top:var(--ui-space-md);font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .history summary{cursor:pointer}
@@ -511,7 +516,5 @@
   .history-list p{margin:var(--ui-space-xs) 0 0;font-size:var(--ui-text-2xs);color:var(--ui-color-ink-muted)}
   .note,.hint{margin:var(--ui-space-sm) 0 0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs)}
   .hint{grid-column:1/-1}
-  .spinner{width:20px;height:20px;border:2px solid color-mix(in srgb,var(--ui-color-ink-muted) 30%,transparent);border-top-color:var(--ui-color-accent);border-radius:var(--ui-radius-pill);animation:spin .8s linear infinite}
-  @keyframes spin{to{transform:rotate(1turn)}}
   @media (max-width:640px){.layers{grid-template-columns:1fr}.affine{grid-template-columns:repeat(2,minmax(0,1fr))}.field.rotate{grid-column:auto}.matrix{grid-template-columns:repeat(2,minmax(0,1fr))}.mobius{grid-template-columns:1fr}}
 </style>

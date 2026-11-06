@@ -153,7 +153,7 @@ VISIBLE = set()
 def characters_without_outline(metadata):
     """The characters the app shows that no bundled outline draws: palette parts, their fallbacks,
     the characters the palette draws from its own outlines, the empty-slot mark, the description
-    characters and the standard Han ideographs."""
+    characters, the bopomofo bundle and the standard Han ideographs."""
     drawn = set()
     drawn.update(VISIBLE)
     palette = json.loads((ROOT / 'data/ids-parts.json').read_text())
@@ -165,9 +165,12 @@ def characters_without_outline(metadata):
             needed.update(value)
     needed.update(json.loads((ROOT / 'data/palette-fallback-characters.json').read_text()))
     needed.update(json.loads(gzip.decompress((ROOT / 'data/palette-outlines.json.gz').read_bytes()))['records'])
+    # The bopomofo palette draws from its own outline bundle, which no webfont face carries.
+    needed.update(json.loads(gzip.decompress((ROOT / 'data/bopomofo-outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
     needed.update(han_ideographs())
-    return sorted(char for char in needed if char not in drawn)
+    # BabelStone's PUA glyphs have their own face (`IDS Numbered`); no Unicode font draws them.
+    return sorted(char for char in needed if char not in drawn and not 0xE080 <= ord(char) <= 0xF8DF)
 
 
 class ScalePen:
