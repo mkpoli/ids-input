@@ -1179,7 +1179,7 @@ layout of every possible IDS tree. Private-use characters need an explicit host 
 Each report records the hashes of the files that decide what the preview draws, listed in
 `scripts/lib/coverage-sources.mjs`. `bun scripts/check_coverage_freshness.mjs` compares those
 hashes against the tree and names the files that moved, and `bun run coverage` re-renders all
-three styles into `docs/coverage/`. Both are manual. Gating merges on them fired on nearly every
+four styles into `docs/coverage/`. Both are manual. Gating merges on them fired on nearly every
 change to the composer while saying nothing about whether the change was right, so the scheduled
 `Coverage` workflow renders nightly and opens a pull request when a report moved; the committed
 reports trail the exports by at most a day.
