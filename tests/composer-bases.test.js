@@ -9,6 +9,6 @@ describe('composer faces', () => {
     expect(new Set(Object.values(COMPOSER_BASES)).size).toBe(4)
     expect(COMPOSER_BASES.serif).toContain('8156f838798c-serif-compose-layout-v4-serif-f6')
     expect(COMPOSER_BASES.fangsong).toContain('9f797e2322d2-fangsong-compose-layout-v4-fangsong-f6')
-    expect(COMPOSER_BASES.klee).toContain('kaisho-compose-layout-v4-kaisho-f5')
+    expect(COMPOSER_BASES.klee).toContain('ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f6')
   })
 })
