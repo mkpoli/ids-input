@@ -4,6 +4,7 @@ import { gunzipSync } from 'node:zlib'
 import { createStructuralSearch, STRUCTURAL_PRESETS } from '../src/core/structural-search.js'
 import { readStructuralForms } from '../src/core/search.js'
 import { babelStoneAdapter, parseIdsTable } from '../src/adapter/babelstone.js'
+import { load as loadSearchWorker } from '../src/adapter/search-worker.js'
 import catalog from '../src/composer/pyramid-glyphs.json' with { type: 'json' }
 
 const table = new Map([
@@ -56,6 +57,21 @@ it('exposes structural matching through the local adapter and respects abortion'
   expect((await adapter.findByStructure('⿱A⿰AA')).total).toBe(4)
   const c = new AbortController(); c.abort()
   await expect(adapter.findByStructure('⿱A⿰AA',{signal:c.signal})).rejects.toThrow()
+})
+
+it('searches an unknown structure through the local adapter and respects abortion', async () => {
+  const adapter = babelStoneAdapter({ table: new Map([
+    ['杏', [{ text: '⿱木口' }]], ['呆', [{ text: '⿱口木' }]], ['木', [{ text: '木' }]], ['口', [{ text: '口' }]],
+  ]) })
+  expect((await adapter.findByUnknownStructure('⿰木口')).hits.map(hit => hit.char)).toEqual(['呆', '杏'])
+  const c = new AbortController(); c.abort()
+  await expect(adapter.findByUnknownStructure('⿰木口', { signal: c.signal })).rejects.toThrow()
+})
+
+it('searches an unknown structure through the worker loader', async () => {
+  const ids = '杏\t⿱木口\n呆\t⿱口木\n木\t木\n口\t口\n'
+  const search = await loadSearchWorker(`data:text/plain,${encodeURIComponent(ids)}`, undefined, undefined, '', undefined, '', undefined, '', undefined, undefined)
+  expect(search.unknownStructure('⿰木口', { limit: 5 }).hits.map(hit => hit.char)).toEqual(['呆', '杏'])
 })
 
 it('keeps one compatible expansion for every occurrence of a variable', () => {

@@ -20,7 +20,9 @@ import { TransformError, chainIsAffine, affineForChain, transformPieces } from '
 /** @typedef {{ kind: 'group', node: string, child: Scope }} GroupScope */
 /** @typedef {{ kind: 'slot', node: string }} SlotScope */
 /** @typedef {ComponentScope | OperatorScope | GroupScope | SlotScope} Scope */
-/** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[] }} ScopeTree */
+/** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[], leafFrames: Map<number, number[]> }} ScopeTree
+ *  `leafFrames` is filled by the caller that knows the layout: the canvas matrix of the layer each
+ *  composer leaf stands for, for anything drawn apart from the ink, such as an emoji. */
 
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
@@ -143,7 +145,7 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     return { kind: 'operator', node: node.id, op: node.op, children }
   }
   const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
-  return { root, complete: issues.length === 0, issues }
+  return { root, complete: issues.length === 0, issues, leafFrames: new Map() }
 }
 
 export { chainIsAffine, affineForChain }

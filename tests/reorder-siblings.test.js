@@ -17,7 +17,7 @@ test('moving requires distinct existing siblings and can move empty slots', () =
 })
 
 test('collapsed descendants follow their subtree when siblings move', async () => {
-  const { remapSiblingPath } = await import('../src/svelte/sibling-drag.js')
+  const { remapSiblingPath } = await import('../src/svelte/part-drag.js')
   expect(remapSiblingPath([0, 1], [0], [2])).toEqual([2, 1])
   expect(remapSiblingPath([1, 0], [0], [2])).toEqual([0, 0])
   expect(remapSiblingPath([2, 0], [0], [2])).toEqual([1, 0])

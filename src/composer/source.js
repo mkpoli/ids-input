@@ -12,6 +12,7 @@ import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
 import { hasNewKorean, newKoreanSource } from './new-korean.js'
 import { hasShuishu, shuishuSource } from './shuishu.js'
+import { hasJurchen, jurchenSource } from './jurchen.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { leaves, parse, splitDescription } from '../core/ids.js'
 
@@ -32,6 +33,7 @@ export function traitsOf(sequence) {
     seal: hasSmallSeal(sequence),
     newKorean: hasNewKorean(sequence),
     shuishu: hasShuishu(sequence),
+    jurchen: hasJurchen(sequence),
     palette: [...sequence].some(hasPaletteGlyph),
   }
 }
@@ -57,6 +59,7 @@ export function sourceFor(sequence, { base, fontStyle = 'sans', separate = false
   if (traits.seal) source = smallSealSource({ fallback: source, ...loaders.seal })
   if (traits.newKorean) source = newKoreanSource({ fallback: source, ...loaders.newKorean })
   if (traits.shuishu) source = shuishuSource({ fallback: source, ...loaders.shuishu })
-  if (traits.palette) source = paletteSource({ fallback: source, ...loaders.palette })
+  if (traits.jurchen) source = jurchenSource({ fallback: source, ...loaders.jurchen })
+  if (traits.palette) source = paletteSource({ fallback: source, under: fontStyle !== 'sans', ...loaders.palette })
   return source ?? bundledSource({ load: async () => ({ records: {} }), matches: () => false })
 }

@@ -392,11 +392,6 @@
       "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb"
     },
     {
-      "file": "NotoSansMono-Regular.ttf",
-      "sha256": "6b692c4b6d15ccf59f1c1fe8d11cb8a92f51960f3e9f1f523781755a3af7e29f",
-      "url": "https://archive.ubuntu.com/ubuntu/pool/universe/f/fonts-noto/fonts-noto-extra_20201225-2_all.deb"
-    },
-    {
       "file": "NotoSansMro-Regular.ttf",
       "sha256": "6e054fa6b6a160e4ddd41fc9be84d6d62851b75e1e2872dcdfe5fd003958b33f",
       "url": "https://archive.ubuntu.com/ubuntu/pool/main/f/fonts-noto/fonts-noto-core_20201225-2_all.deb"
@@ -803,15 +798,6 @@
       "sha256": "1ba24b81d82df65a68c9d0bb44bda306fdcdb5d7763afe89b0dea29ea827d1a2",
       "url": "https://github.com/be5invis/Iosevka/releases/download/v34.9.1/PkgTTF-Iosevka-34.9.1.zip",
       "license": "SIL OFL 1.1"
-    }
-  ],
-  "svgSources": [
-    {
-      "file": "glyphwiki-jurchen.svg.json.gz",
-      "sha256": "c2616958073b60e6e371e95d3bf455e425e0cedf625dbfe2e8fece14abd04ca4",
-      "url": "https://glyphwiki.org/glyph/",
-      "license": "GlyphWiki data terms",
-      "copyright": "GlyphWiki contributors"
     }
   ]
 }

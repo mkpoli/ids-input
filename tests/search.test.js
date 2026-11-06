@@ -53,6 +53,67 @@ describe('similar structures', () => {
   })
 })
 
+describe('unknown structures', () => {
+  it('asks for every top-level element, at any depth and in any arrangement', () => {
+    const hits = search.unknownStructure('⿰木口', { limit: 10 }).hits
+    expect(hits.map(hit => hit.char)).toEqual(['呆', '杏'])
+    // 啉 is ⿰口林: 木 is one level deeper, inside 林.
+    const nested = createSearch(new Map([['啉', ['⿰口林']], ['林', ['⿰木木']], ['木', ['木']], ['口', ['口']]]))
+    expect(nested.unknownStructure('⿰木口').hits.map(hit => hit.char)).toEqual(['啉'])
+    expect(nested.unknownStructure('⿰木口').hits[0].sequence).toBe('⿰口⿰木木')
+    expect(nested.unknownStructure('⿰木口').hits[0].spans).toEqual([[1, 2], [3, 4]])
+  })
+  it('takes a run of components as the same request as an ignored operator', () => {
+    expect(search.unknownStructure('木口').hits).toEqual(search.unknownStructure('⿰木口').hits)
+    expect(search.unknownStructure('木木').hits.map(hit => hit.char)).toEqual(['林', '森', '淋'])
+    expect(search.unknownStructure('木A').problem).toBe('pattern')
+  })
+  it('counts repeated elements like a run of components', () => {
+    expect(search.unknownStructure('⿱木木').hits.map(hit => hit.char)).toEqual(['林', '森', '淋'])
+    expect(search.unknownStructure('⿱木木').hits.map(hit => hit.char)).not.toContain('本')
+  })
+  it('marks every repeated component, opening components to reach them', () => {
+    const nested = createSearch(new Map([['淋', ['⿰氵林']], ['森', ['⿱木林']], ['林', ['⿰木木']], ['木', ['木']], ['氵', ['氵']]]))
+    const forest = nested.unknownStructure('⿱木木').hits.find(hit => hit.char === '森')
+    expect(forest.sequence).toBe('⿱木⿰木木')
+    expect(forest.spans).toEqual([[1, 2], [3, 4]])
+    const shower = nested.unknownStructure('⿱木木').hits.find(hit => hit.char === '淋')
+    expect(shower.sequence).toBe('⿰氵⿰木木')
+    expect(shower.spans).toEqual([[3, 4], [4, 5]])
+  })
+  it('needs separate occurrences of a repeated compound element', () => {
+    const repeated = createSearch(new Map([
+      ['甲', ['⿰木木']], ['乙', ['⿱甲甲']], ['丙', ['⿰甲口']], ['木', ['木']], ['口', ['口']],
+    ]))
+    const two = repeated.unknownStructure('⿰⿰木木⿰木木')
+    expect(two.hits.map(hit => hit.char)).toEqual(['乙'])
+    expect(two.hits[0].sequence).toBe('⿱⿰木木⿰木木')
+    expect(two.hits[0].spans).toHaveLength(2)
+    expect(repeated.unknownStructure('⿰⿰木木口').hits.map(hit => hit.char)).toEqual(['丙'])
+  })
+  it('takes a compound element whole and finds it anywhere', () => {
+    const compound = createSearch(new Map(Object.entries({
+      木: ['木'], 口: ['口'], 林: ['⿰木木'], 森: ['⿱木林'], 啉: ['⿰口林'], 噪: ['⿰口森'],
+    })))
+    expect(compound.unknownStructure('⿰⿰木木口').hits.map(hit => hit.char)).toContain('啉')
+    expect(compound.unknownStructure('⿰⿰木木口').hits.map(hit => hit.char)).not.toContain('森')
+    expect(compound.unknownStructure('⿰⿰木木口').hits[0].sequence).toBe('⿰口⿰木木')
+  })
+  it('unions alternatives and returns every matching character', () => {
+    expect(search.unknownStructure('⿰木口 | ⿰木目').hits.map(hit => hit.char)).toEqual(expect.arrayContaining(['呆', '杏', '相']))
+    const all = search.unknownStructure('木', { limit: 1 })
+    expect(all.hits).toHaveLength(1)
+    expect(all.total).toBeGreaterThan(1)
+    expect([...all.characters]).toHaveLength(all.total)
+  })
+  it('rejects variables, incomplete patterns and empty patterns', () => {
+    expect(search.unknownStructure('⿱A⿰AA').problem).toBe('pattern')
+    expect(search.unknownStructure('⿰木').problem).toBe('pattern')
+    expect(search.unknownStructure('⬚').problem).toBe('empty')
+    expect(search.unknownStructure('').problem).toBe('empty')
+  })
+})
+
 describe('the search', () => {
   it('matches a whole description first, then the same shape deeper inside', () => {
     expect(chars('⿰木木')).toEqual(['林', '森', '淋'])

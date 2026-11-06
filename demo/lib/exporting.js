@@ -7,13 +7,32 @@ import { load, save } from './storage.js'
 /** @typedef {{ format: 'svg' | 'png', size: number, background: 'none' | 'white' | 'black' | 'custom', custom: string, ink: 'auto' | 'custom', inkColour: string, padding: number, placeholders: boolean }} ExportSettings */
 
 /** @type {ExportSettings} */
-export const DEFAULTS = { format: 'svg', size: 1024, background: 'none', custom: '#f4efe4', ink: 'auto', inkColour: '#1d1d21', padding: 0.06, placeholders: false }
+export const DEFAULTS = { format: 'png', size: 1024, background: 'white', custom: '#f4efe4', ink: 'auto', inkColour: '#1d1d21', padding: 0.06, placeholders: false }
 export const SIZES = [256, 512, 1024, 2048]
 
-/** @returns {ExportSettings} */
-export const storedSettings = () => ({ ...DEFAULTS, ...load('export', {}) })
+/** The format of a stored record. A record without it predates the PNG and white defaults. */
+const VERSION = 2
+/** The defaults a version 1 record was written with. A field still at its old default was not
+ *  chosen, so it follows today's default. */
+const PREVIOUS = { format: 'svg', background: 'none' }
+
+/** @typedef {ExportSettings & { version?: number }} StoredExportSettings */
+
+/** The viewer's saved settings, with the defaults for anything they did not choose. @returns {ExportSettings} */
+export const storedSettings = () => {
+  const saved = load('export', {})
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return { ...DEFAULTS }
+  const { version, ...settings } = /** @type {StoredExportSettings} */ (saved)
+  /** @type {Partial<ExportSettings>} */
+  const kept = { ...settings }
+  if (typeof version !== 'number' || version < VERSION) {
+    if (kept.format === PREVIOUS.format) delete kept.format
+    if (kept.background === PREVIOUS.background) delete kept.background
+  }
+  return { ...DEFAULTS, ...kept }
+}
 /** @param {ExportSettings} settings */
-export const keepSettings = settings => save('export', settings)
+export const keepSettings = settings => save('export', { ...settings, version: VERSION })
 
 /** The background colour, or null for none. @param {ExportSettings} s */
 export const backgroundOf = s => s.background === 'none' ? null : s.background === 'white' ? '#ffffff' : s.background === 'black' ? '#000000' : s.custom
@@ -30,8 +49,8 @@ export function inkOf(s) {
 /** @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @param {number} [size] */
 export const svgOf = (drawing, s, size = s.size) => drawingSvg(drawing, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, placeholders: s.placeholders })
 
-/** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] @param {number[][]} [slots] */
-export const scopedSvgOf = (scopes, s, size = s.size, slots = []) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [] })
+/** @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number} [size] @param {number[][]} [slots] @param {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] @param {string} [cut] @param {number | null} [cutLeaf] */
+export const scopedSvgOf = (scopes, s, size = s.size, slots = [], emoji = [], cut = '', cutLeaf = null) => scopesSvg(scopes, { background: backgroundOf(s), ink: inkOf(s), padding: s.padding, size, slots: s.placeholders ? slots : [], emoji, cut, cutLeaf })
 
 /** The SVG string as a PNG blob at its pixel size, on `back` where a colour is given (an SVG drawn
  *  without a background of its own is transparent otherwise). @param {string} svg @param {number} size @param {string | null} [back] @returns {Promise<Blob>} */
@@ -53,5 +72,5 @@ export async function pngOfSvg(svg, size, back = null) {
 /** The drawing as a PNG blob at its pixel size. @param {import('../../src/adapter/types.js').Drawing} drawing @param {ExportSettings} s @returns {Promise<Blob>} */
 export const pngOf = (drawing, s) => pngOfSvg(svgOf(drawing, s), s.size)
 
-/** The scoped drawing as a PNG blob at its pixel size. @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number[][]} [slots] @returns {Promise<Blob>} */
-export const scopedPngOf = (scopes, s, slots = []) => pngOfSvg(scopedSvgOf(scopes, s, s.size, slots), s.size)
+/** The scoped drawing as a PNG blob at its pixel size. @param {import('../../src/document/index.js').ScopeTree} scopes @param {ExportSettings} s @param {number[][]} [slots] @param {{ text: string, box: number[], flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] @param {string} [cut] @param {number | null} [cutLeaf] @returns {Promise<Blob>} */
+export const scopedPngOf = (scopes, s, slots = [], emoji = [], cut = '', cutLeaf = null) => pngOfSvg(scopedSvgOf(scopes, s, s.size, slots, emoji, cut, cutLeaf), s.size)

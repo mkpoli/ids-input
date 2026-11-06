@@ -135,10 +135,16 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿴囗⿱エン', refs: [11,31,32,33,34,35,36], char: '' },
     { sequence: '⿱月朋', refs: [29], char: '' },
     { sequence: '⿺廴占', refs: [59, 60, 61, 62, 63], char: '' },
-    { sequence: '⿰讠冓', refs: [59], char: '講', parts: '讠冓' },
+    // A car below 車, to show an emoji operand; it writes no character and no source records it.
+    { sequence: '⿱車🚗', refs: [], char: '' },
+  ] },
+  // The station sign's 講 and 証, and its 菓 and 苐. The sequence writes the 讠 part as 设
+  // (U+8BBE) because 讠 (U+8BA0) is no character of its own.
+  { key: 'sign', refs: [59], examples: [
+    { sequence: '⿰设冓', refs: [59], char: '講', parts: '设冓' },
     { sequence: '⿱艹果', refs: [1], char: '菓' },
     { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
-    { sequence: '⿰讠正', refs: [59], char: '証', parts: '讠正' },
+    { sequence: '⿰设正', refs: [59], char: '証', parts: '设正' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
   // since a component runs its own description in its own IDS. Each names the character it writes,
@@ -392,6 +398,16 @@ export const EXAMPLE_GROUPS = [
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
   ] },
+  // Hangul ligatures (합자): two syllables written in one block, which Unicode cannot encode since
+  // it precomposes each syllable alone. Both come from a Buddhist manuscript: ᄋ + ᆞ over ㄹ + ㅏ,
+  // marked with the double dot above and the single dot below, and ㄷ + ᆞ over 륵, marked on its
+  // lower syllable only. Each mark follows its own syllable.
+  { key: 'hangul', refs: [30, 65], examples: [
+    // ᄋᆞ〯 over 라〮: Old Korean, read @ra.
+    { sequence: '⿱ᄋᆞ〯라〮', refs: [65], char: '', reading: '@ra' },
+    // ᄃᆞ over 륵〮: Old Korean, read d@ruk.
+    { sequence: '⿱ᄃᆞ륵〮', refs: [65], char: '', reading: 'd@ruk' },
+  ] },
   // Korean gugyeol (口訣字): the article's second table, in reading order. A few of these shapes
   // also occur outside Korea, and 亪 and 𠃌 carry no K region in BabelStone.
   { key: 'gugyeol', refs: [1, 30], examples: [
@@ -615,6 +631,46 @@ export const EXAMPLE_GROUPS = [
     {"sequence": "⿹𽄐𽌤", "char": "𽄑", "modern": "氛", "source": "data/small-seal.json.gz"},
     {"sequence": "⿴𽌣𽄘", "char": "𽌠", "modern": "小", "source": "data/small-seal.json.gz"},
   ] },
+  { key: 'jurchen', refs: [66], examples: [
+    // The numerals Unicode gives a value in kJURC_Numeric; `modern` is the Han numeral for that value.
+    { "sequence": "𙁉", "char": "𙁉", "modern": "一", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙁊", "char": "𙁊", "modern": "二", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙄩", "char": "𙄩", "modern": "三", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘺹", "char": "𘺹", "modern": "四", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙄫", "char": "𙄫", "modern": "五", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙅁", "char": "𙅁", "modern": "六", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸼", "char": "𘸼", "modern": "七", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸽", "char": "𘸽", "modern": "八", "source": "data/jurchen.json.gz" },
+    { "sequence": "𙀔", "char": "𙀔", "modern": "九", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘹏", "char": "𘹏", "modern": "十", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘹂", "char": "𘹂", "modern": "百", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘻂", "char": "𘻂", "modern": "千", "source": "data/jurchen.json.gz" },
+    { "sequence": "𘸁", "char": "𘸁", "modern": "万", "source": "data/jurchen.json.gz" },
+    // Composed characters: the editorial decompositions in data/jurchen/ids.json. No source states a
+    // decomposition, so each sequence is a reading of the glyph.
+    { "sequence": "⿰𘻳𙆰", "char": "𘼆", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙇇", "char": "𘼕", "reading": "xən", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙆩", "char": "𘼖", "reading": "dir", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙆫", "char": "𘼗", "reading": "dʒafa", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆺𙇈", "char": "𘽪", "reading": "dʒə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𘿅𙇐", "char": "𘿚", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𘿆𙇐", "char": "𘿝", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𘿬𙇐", "char": "𘿸", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙆿𙅞", "char": "𙀾", "reading": "ə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆠𙁉", "char": "𙁊", "reading": "dʒo", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆩", "char": "𙁮", "reading": "(g)un", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆨", "char": "𙁯", "reading": "nialma", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆬", "char": "𙁰", "reading": "bən", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘾹", "char": "𙁻", "reading": "tʃu", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘻑", "char": "𙂆", "reading": "uru", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘽳", "char": "𙂍", "reading": "gio", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇃𙆩", "char": "𙂒", "reading": "nindʒu", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇄𙄃", "char": "𙂞", "reading": "gə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇇𙆣", "char": "𙃊", "reading": "ə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇈𙆣", "char": "𙃔", "reading": "bandi", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇉𙆩", "char": "𙃛", "reading": "amba", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇑𘼜", "char": "𙅇", "reading": "maçi", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+  ] },
   { key: 'shuishu', refs: [52, 53], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the
     // block's tentative code points; `modern` names the Han character each one covers. Names,
@@ -651,6 +707,28 @@ export const EXAMPLE_GROUPS = [
     { "sequence": "𛌈", "char": "𛌈", "modern": "酉", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌉", "char": "𛌉", "modern": "戌", "source": "data/shuishu.json.gz" },
     { "sequence": "𛌶", "char": "𛌶", "modern": "亥", "source": "data/shuishu.json.gz" },
+    // Composed characters: the editorial decompositions in data/shuishu/ids.json. Neither the charts
+    // nor Shuishu.xlsx states a decomposition, so each sequence is a reading of the glyph. `modern`
+    // stays the Han character the data names, which six of these have none of; their meaning shows in
+    // the character information panel.
+    { "sequence": "⿱𛔀𛔥", "char": "𛌉", "modern": "戌", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔀𛔤", "char": "𛌑", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔁𛔀", "char": "𛌘", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿴𛔉𛔁", "char": "𛍢", "modern": "甲", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿰𛔛𛔛", "char": "𛍫", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔊𛔔", "char": "𛍭", "modern": "本", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔛𛔈", "char": "𛍳", "modern": "离", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿵𛔅𛔐", "char": "𛎷", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔒𛔉", "char": "𛏓", "modern": "吉", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔚𛔈", "char": "𛐐", "modern": "冬", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔛𛔠", "char": "𛐖", "modern": "石", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔜𛔗", "char": "𛐚", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔒𛔫", "char": "𛐨", "modern": "床", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔍𛔦", "char": "𛐬", "modern": "睡", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔤𛔇", "char": "𛑺", "modern": "忌", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔩𛔞", "char": "𛑾", "modern": "坏", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔪𛔙", "char": "𛒁", "modern": "要", "source": "data/shuishu/ids.json" },
+    { "sequence": "⿱𛔀𛔩", "char": "𛒌", "source": "data/shuishu/ids.json" },
   ] },
   // Tangut descriptions: Andrew West, BabelStone Tangut IDS, https://www.babelstone.co.uk/Tangut/TangutIDS.txt
   // (the bundled data/babelstone-ids.tsv.gz retains the source descriptions).

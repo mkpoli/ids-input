@@ -13,9 +13,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSER = (ROOT / 'demo/lib/composer.js').read_text()
-match = re.search(r"export const COMPOSER_BASE = '([^']+)'", COMPOSER)
-if match is None:
-    raise SystemExit('COMPOSER_BASE is missing from demo/lib/composer.js')
+style = sys.argv[2] if len(sys.argv) > 2 else 'sans'
+if style == 'sans':
+    match = re.search(r"export const COMPOSER_BASE = '([^']+)'", COMPOSER)
+    if match is None:
+        raise SystemExit('COMPOSER_BASE is missing from demo/lib/composer.js')
+else:
+    match = re.search(rf"{style}: '([^']+)'", COMPOSER)
+    if match is None:
+        raise SystemExit(f'COMPOSER_BASES.{style} is missing from demo/lib/composer.js')
 base = match.group(1)
 cache = Path(sys.argv[1])
 hashes = {}
@@ -50,6 +56,6 @@ report = {
     'ranges': ranges,
     'sha256': hashes,
 }
-(ROOT / 'data/host-glyph-coverage.json').write_text(
-    json.dumps(report, separators=(',', ':')) + '\n')
-print(len(points), 'host glyphs')
+out = ROOT / ('data/host-glyph-coverage.json' if style == 'sans' else f'data/host-glyph-coverage-{style}.json')
+out.write_text(json.dumps(report, separators=(',', ':')) + '\n')
+print(len(points), 'host glyphs', f'({style})')

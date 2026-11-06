@@ -106,10 +106,16 @@ def ranges_of(points):
     return out
 
 
+# The shards are cut from the pinned sources for everything but the CJK area: their radicals sit
+# between the Unified Ideographs and Extension A, and their compatibility ideographs take no
+# outlines, so these are filled from Jigmo and Unifont instead.
+UNIFONT_CREDIT = 'Compatibility ideographs: Unifont 18.0.01, SIL OFL 1.1'
 JIGMO = 'https://kamichikoichi.github.io/jigmo/Jigmo-20250912.zip'
 JIGMO_CACHE = Path.home() / '.cache/ids-input/Jigmo-20250912'
+UNIFONT = 'https://unifoundry.com/pub/unifont/unifont-18.0.01/font-builds/unifont-18.0.01.otf'
+UNIFONT_CACHE = Path.home() / '.cache/ids-input/unifont-18.0.01.otf'
 EMPTY = ROOT / 'fonts/NotoSansCJKjp-ids-operators.woff2'
-SHARDS = Path('/tmp/unicode-shards.json')
+
 
 
 def jigmo():
@@ -125,13 +131,31 @@ def jigmo():
     return TTFont(JIGMO_CACHE / 'Jigmo.ttf')
 
 
+def unifont():
+    """Unifont's glyphs, fetched once: it draws the CJK radicals between the Unified Ideographs and
+    Extension A, and the compatibility ideographs, that Jigmo leaves out."""
+    if not UNIFONT_CACHE.exists():
+        UNIFONT_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        urllib.request.urlretrieve(UNIFONT, UNIFONT_CACHE)
+    return TTFont(UNIFONT_CACHE)
+
+
+def han_ideographs():
+    """The Han ideographs the app shows that a reader's own CJK font may lack: the standard ones (CJK
+    Unified Ideographs, Extension A and Compatibility Ideographs). The extensions of the supplementary
+    planes stay with the reader's font; the composer's own characters already have outlines."""
+    return [chr(code) for code in (*range(0x9FFF + 1), *range(0xF900, 0xFADA)) if code >= 0x4E00]
+
+
+VISIBLE = set()
+
+
 def characters_without_outline(metadata):
     """The characters the app shows that no bundled outline draws: palette parts, their fallbacks,
-    the characters the palette draws from its own outlines, the empty-slot mark and the description
-    characters."""
+    the characters the palette draws from its own outlines, the empty-slot mark, the description
+    characters, the bopomofo bundle and the standard Han ideographs."""
     drawn = set()
-    for chars in json.loads(SHARDS.read_text()).values():
-        drawn.update(chars)
+    drawn.update(VISIBLE)
     palette = json.loads((ROOT / 'data/ids-parts.json').read_text())
     records = palette if isinstance(palette, list) else palette['parts']
     needed = {'⬚'}
@@ -141,8 +165,12 @@ def characters_without_outline(metadata):
             needed.update(value)
     needed.update(json.loads((ROOT / 'data/palette-fallback-characters.json').read_text()))
     needed.update(json.loads(gzip.decompress((ROOT / 'data/palette-outlines.json.gz').read_bytes()))['records'])
+    # The bopomofo palette draws from its own outline bundle, which no webfont face carries.
+    needed.update(json.loads(gzip.decompress((ROOT / 'data/bopomofo-outlines.json.gz').read_bytes()))['records'])
     needed.update(chr(code) for code in range(0x2FF0, 0x2FFC))
-    return sorted(char for char in needed if char not in drawn)
+    needed.update(han_ideographs())
+    # BabelStone's PUA glyphs have their own face (`IDS Numbered`); no Unicode font draws them.
+    return sorted(char for char in needed if char not in drawn and not 0xE080 <= ord(char) <= 0xF8DF)
 
 
 class ScalePen:
@@ -211,43 +239,54 @@ def build(rows, extra=None, family=FAMILY):
 def main():
     metadata = json.loads((ROOT / 'data/unicode-outlines.json').read_text())
     OUT.mkdir(exist_ok=True)
-    for path in OUT.glob('*.woff2'):
-        path.unlink()
-    shard_names = set(metadata['shards'])
-    fill = {char: glyph for char, glyph in jigmo_glyphs(jigmo(), characters_without_outline(metadata)).items()
-            if f'{ord(char) >> 8:03x}' in shard_names}
+    outlines = {path.name.split('.')[0] for path in OUTLINES.glob('*.json.gz')}
+    global VISIBLE
+    VISIBLE = {char for name in outlines
+               for char in json.loads(gzip.decompress((OUTLINES / f'{name}.json.gz').read_bytes()))}
+    needed = characters_without_outline(metadata)
+    fill = jigmo_glyphs(jigmo(), needed)
+    wanted = [char for char in needed if char not in fill]
+    fill.update(jigmo_glyphs(unifont(), wanted))
+    # A shard per range that holds anything: the composer's outlines, or the characters a font fills
+    # in. The app finds a character's shard by its range, so every filled range needs its own file.
     by_shard = {}
     for char, glyph in fill.items():
-        by_shard.setdefault(ord(char) >> 8, {})[char] = glyph
+        by_shard.setdefault(f'{ord(char) >> 8:03x}', {})[char] = glyph
+    shard_names = outlines | set(by_shard)
+    for path in OUT.glob('*.woff2'):
+        path.unlink()
     faces, files, points = [], {}, []
-    for name in sorted(metadata['shards']):
-        rows = json.loads(gzip.decompress((OUTLINES / f'{name}.json.gz').read_bytes()))
-        extra = by_shard.pop(int(name, 16), {})
+    for name in sorted(shard_names):
+        rows = (json.loads(gzip.decompress((OUTLINES / f'{name}.json.gz').read_bytes()))
+                if name in outlines else {})
+        extra = {char: glyph for char, glyph in by_shard.pop(name, {}).items() if char not in rows}
         target = OUT / f'{name}.woff2'
         build(rows, extra).save(target)
         with TTFont(target) as font:
             if set(font.getBestCmap()) != {ord(char) for char in rows} | {ord(char) for char in extra}:
                 raise ValueError(f'{name}.woff2 does not carry every character of its shard')
-        codes = sorted(ord(char) for char in rows)
-        files[name] = {'count': len(rows), 'bytes': target.stat().st_size,
+        # The range the shard declares is what it holds: the faces carry no range of their own, and a
+        # character outside the declared range would fall to the next face instead of this one.
+        codes = sorted({ord(char) for char in rows} | {ord(char) for char in extra})
+        files[name] = {'count': len(rows) + len(extra), 'bytes': target.stat().st_size,
                        'sha256': hashlib.sha256(target.read_bytes()).hexdigest()}
         if extra:
-            files[name]['jigmo'] = len(extra)
+            files[name]['fill'] = len(extra)
         ranges = ','.join(f'U+{lo:X}' if lo == hi else f'U+{lo:X}-{hi:X}' for lo, hi in ranges_of(codes))
-        faces.append(f'@font-face{{font-family:"{FAMILY}";src:url("./unicode/{name}.woff2") format("woff2");'
-                     f'font-display:swap;unicode-range:{ranges}}}')
+        faces.append(f'@font-face{{font-family:"{FAMILY}";font-style:oblique 0deg;'
+                     f'src:url("./unicode/{name}.woff2") format("woff2");font-display:swap;unicode-range:{ranges}}}')
     if by_shard:
-        raise ValueError(f'Jigmo glyphs outside the bundled shards: {sorted(by_shard)}')
+        raise ValueError(f'glyphs outside the shards: {sorted(by_shard)}')
     css = ('/* The characters the composer can draw, as a webfont for text no installed font covers.\n'
            f'   Generated by scripts/build_unicode_font.py from {len(files)} shards; do not edit. */\n'
            + '\n'.join(faces) + '\n')
     (ROOT / 'fonts/unicode.css').write_text(css)
     doc = {'family': FAMILY, 'upem': UPEM, 'ascent': ASCENT, 'descent': DESCENT,
-           'count': sum(entry['count'] for entry in files.values()), 'jigmo': len(fill),
+           'count': sum(entry['count'] for entry in files.values()), 'fill': len(fill),
            'files': files, 'sources': metadata['sources'], 'build': metadata['build']}
     (ROOT / 'fonts/unicode.json').write_text(json.dumps(doc, ensure_ascii=False, indent=1) + '\n')
     total = sum(entry['bytes'] for entry in files.values())
-    print(f'{doc["count"]} glyphs in {len(files)} shards, {total / 1e6:.2f} MB, {len(fill)} from Jigmo')
+    print(f'{doc["count"]} glyphs in {len(files)} shards, {total / 1e6:.2f} MB, {len(fill)} filled')
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@
 import data from './component-identity.json' with { type: 'json' }
 
 /**
- * @typedef {{ label: string, url: string, license?: string }} IdentitySource
+ * @typedef {{ label: string, url: string, license?: string, note?: 'editorial' }} IdentitySource
  *
  * @typedef {object} ComponentIdentity What Unicode records about one component's identity.
  * @property {'stroke' | 'radical' | 'ideograph'} type Whether it is a CJK stroke, a CJK or Kangxi radical, or the unified ideograph a family is equivalent to.
@@ -37,7 +37,7 @@ const STROKES = data.strokes
 const [EQUIVALENTS, UNICODE_DATA, CORE_SPEC, APPENDIX_F, , APPENDIX_F_18] = data.sources
 /** The English words are this module's gloss of the Pīnyīn, not Unicode's wording. */
 const EDITORIAL = {
-  label: 'Editorial English stroke glosses',
+  label: 'Editorial English stroke glosses', note: /** @type {const} */ ('editorial'),
   url: 'https://github.com/mkpoli/ids-input/blob/main/src/core/component-identity.js',
 }
 

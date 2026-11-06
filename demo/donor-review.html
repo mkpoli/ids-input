@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Donor parts review</title>
+  <meta name="description" content="Every character written as a stack standing on 山, with its glyph cut into the parts its description names, for checking row by row.">
+  <script>
+    // The theme kept from the last visit, set before the page paints.
+    try { const theme = JSON.parse(localStorage.getItem('ids-input:theme') ?? 'null'); if (theme === 'light' || theme === 'dark') document.documentElement.dataset.theme = theme } catch {}
+  </script>
+</head>
+<body>
+  <div id="review"></div>
+  <script type="module" src="./donor-review.js"></script>
+</body>
+</html>

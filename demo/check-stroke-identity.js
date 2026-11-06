@@ -116,7 +116,8 @@ try {
   await card.getByText('Stroke symbol', { exact: true }).waitFor()
   await card.getByText('U+31D0', { exact: true }).waitFor()
   await card.getByText('IDS records: 0', { exact: true }).waitFor()
-  const sources = await card.locator('.identity-sources a').evaluateAll(links => links.map(link => link.href))
+  // The card has one list of sources; the records that name the stroke are in it.
+  const sources = await card.locator('.sources a').evaluateAll(links => links.map(link => link.href))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt'))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt'))
   assert.ok(sources.includes('https://www.unicode.org/versions/Unicode15.1.0/appF.pdf'))
@@ -161,7 +162,11 @@ try {
   await picked.filter({ hasText: /^㇣$/ }).waitFor()
   await stroke.press('Enter')
   await picked.filter({ hasText: /^㇐$/ }).waitFor()
-  await palette.getByRole('tab', { name: 'Recent', exact: true }).click()
+  // A tile keeps its card while it has the focus, and that card can sit over the tabs. Take the tab
+  // by keyboard: the focus leaves the tile with it, and no floating card stands in the way.
+  await page.mouse.move(2, 2)
+  await palette.getByRole('tab', { name: 'Recent', exact: true }).focus()
+  await page.keyboard.press('Enter')
   assert.deepEqual(await values(cells), ['一', '㇐', '㇣'])
   await assertStrokeSection(palette, 1, 2)
   await palette.getByRole('tab', { name: 'Components', exact: true }).click()
@@ -260,7 +265,10 @@ try {
     assert.deepEqual(await values(parts.locator('.part')), onlyStrokes)
     // Equivalent stroke forms keep their pick order in Recent.
     for (const symbol of ['㇒', '㇐', '㇓']) await parts.locator(`[data-character="${symbol}"]`).press('Enter')
-    await parts.getByRole('tab', { name: 'Recent', exact: true }).click()
+    // The last tile keeps its card over the tabs; take the tab by keyboard instead of pressing it.
+    await full.mouse.move(2, 2)
+    await parts.getByRole('tab', { name: 'Recent', exact: true }).focus()
+    await full.keyboard.press('Enter')
     await assertStrokeSection(parts, 0, 3)
     assert.deepEqual(await values(parts.locator('section.stroke-results .part')), ['㇓', '㇐', '㇒'])
     await full.close()

@@ -73,6 +73,9 @@ export default defineConfig({
   plugins: [lazyFallbackFont(), svelte(), ortAssets()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
-    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
+    // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
+    // the first scripts as base64, which hardly compresses.
+    assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
+    rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
   server: { fs: { allow: ['..'] } },
 })

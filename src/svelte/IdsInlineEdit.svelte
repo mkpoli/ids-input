@@ -3,6 +3,7 @@
   import { tick, untrack } from 'svelte'
   import { parse, place, samePath, write } from '../core/ids.js'
   import { unalias } from '../core/aliases.js'
+  import { loadFallbackText } from './fallback-font.js'
   /** @type {{ editor: import('./editor.svelte.js').Editor, path: import('../core/ids.js').Path, owner: HTMLElement | null, variant?: 'label' | 'leaf', onclose: () => void, onreveal?: (path: import('../core/ids.js').Path) => void }} */
   let { editor, path, owner, variant = 'label', onclose, onreveal } = $props()
   const targetPath = untrack(() => path)
@@ -50,8 +51,8 @@
 </script>
 
 <span class="inline-edit" class:leaf={variant === 'leaf'}>
-  <input bind:this={input} bind:value disabled={editor.disabled} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
-    lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} oninput={() => error = ''} onblur={() => apply(false)} oncompositionstart={() => composing = true}
+  <input bind:this={input} bind:value disabled={editor.disabled} oninput={event => { loadFallbackText(event.currentTarget.value); error = '' }} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
+    lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} onblur={() => apply(false)} oncompositionstart={() => composing = true}
     oncompositionend={() => { composing = false; if (document.activeElement !== input) apply(false) }}
     onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()}
     ondragstart={event => event.stopPropagation()} ondragover={event => event.stopPropagation()} ondrop={event => event.stopPropagation()} />
@@ -61,7 +62,7 @@
 <style>
   .inline-edit{display:inline-flex;position:relative;flex:1;min-width:0;pointer-events:auto}
   .inline-edit.leaf{width:100%;height:100%}
-  input{width:100%;min-width:0;box-sizing:border-box;padding:3px 5px;border:1px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));border-radius:5px;background:var(--ids-surface,light-dark(#fff,#1b1b20));color:var(--ids-ink,light-dark(#1c1c22,#ececf2));font:16px var(--_font,var(--ids-font,"IDS Operators",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif))}
+  input{width:100%;min-width:0;box-sizing:border-box;padding:3px 5px;border:1px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));border-radius:5px;background:var(--ids-surface,light-dark(#fff,#1b1b20));color:var(--ids-ink,light-dark(#1c1c22,#ececf2));font:16px var(--_font,var(--ids-font,"IDS Operators",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif))}
   .leaf input{text-align:center;font-size:min(var(--ids-part-size,32px),max(0px,calc(66cqh - 3px)),max(0px,calc(66cqw - 3px)))}
   input:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:0}
   .error{position:absolute;z-index:2;top:100%;left:0;min-width:max-content;max-width:240px;padding:3px 5px;border-radius:4px;background:var(--ids-surface,light-dark(#fff,#1b1b20));color:var(--ids-fault,light-dark(#b42318,#ff8a80));font:12px system-ui,sans-serif;white-space:normal}

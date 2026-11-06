@@ -35,6 +35,9 @@ const readable = text => wholeOf(text) || text
 /** `sequence` as the editor writes it, for comparing with a tab's text. @param {string} sequence */
 export const canonical = sequence => readable(sequence)
 
+/** A tab's sequence for its name, or '' when it has none; the caller adds its untitled label. @param {Tab} tab */
+export const tabName = tab => (tab.whole || (tab.sequence && tab.sequence !== '⬚')) ? tab.sequence : ''
+
 /** A new tab over `sequence`, clean against `saved` (the sequence itself by default). @param {string} sequence @param {string} [saved] @param {Tab['document']} [document] @returns {Tab} */
 export function makeTab(sequence = '', saved = sequence, document = undefined) {
   return { id: newId(), sequence: readable(sequence), saved: readable(saved), whole: wholeOf(sequence), ...(document ? { document } : {}) }

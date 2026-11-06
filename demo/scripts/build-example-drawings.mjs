@@ -10,6 +10,7 @@ import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
 import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
 import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
 import { hasShuishu, shuishuSource } from '../../src/composer/shuishu.js'
+import { hasJurchen, jurchenSource } from '../../src/composer/jurchen.js'
 import { onlyBundled } from '../../src/composer/local.js'
 import { bundledSource } from '../../src/composer/bundled.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
@@ -17,12 +18,15 @@ import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
 const source = fromUrl(COMPOSER_BASE)
-// Examples whose parts are all bundled draw from a local source, not the export.
-const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false })
+// Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
+// whole sequence that matches a component form, then skips its parts, so the export stays behind
+// the source for the character's own glyph.
+const bundled = bundledSource({ load: async () => ({ records: {} }), matches: () => false, fallback: source })
 const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/tangut-outlines.json.gz', import.meta.url))))
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
 const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))))
+const loadJurchen = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/jurchen-outlines.json.gz', import.meta.url))))
 const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
 const bopomofoSources = new Map()
 await source.ready()
@@ -38,6 +42,7 @@ for (const example of EXAMPLES) {
     }
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
+    if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
     const drawn = await compose(selected, example.char || example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)

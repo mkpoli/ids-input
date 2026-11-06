@@ -19,13 +19,14 @@ try {
     await dialog.getByRole('treeitem').nth(1).click()
     await dialog.getByRole('button', { name: 'Edit on canvas', exact: true }).click()
     await dialog.waitFor({ state: 'hidden' })
-    const handle = page.locator('.ids-preview .handle.move')
-    await handle.waitFor({ timeout: 10000 })
-    const grip = await handle.boundingBox()
-    assert.ok(grip, 'the main preview has a move handle')
-    await page.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+    await page.locator('.ids-preview .handle.resize').first().waitFor({ timeout: 10000 })
+    const surface = await page.locator('.ids-preview-large svg[role="application"]').boundingBox()
+    assert.ok(surface, 'the main preview has a drawing box')
+    // The chosen component fills the left half; its middle is clear of the eight handles.
+    const grip = { x: surface.x + surface.width * 0.25, y: surface.y + surface.height * 0.5 }
+    await page.mouse.move(grip.x, grip.y)
     await page.mouse.down()
-    await page.mouse.move(grip.x + grip.width / 2 + 60, grip.y + grip.height / 2 + 10)
+    await page.mouse.move(grip.x + 60, grip.y + 10)
     await page.mouse.up()
     await page.waitForTimeout(500)
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.document)
@@ -74,7 +75,8 @@ try {
       mkdirSync(process.env.IDS_ADJUST_SHOTS, { recursive: true })
       await page.locator('.ids-preview').screenshot({ path: `${process.env.IDS_ADJUST_SHOTS}/adjust-${scheme}.png` })
     }
-    // Export the scoped drawing, not the old merged drawing.
+    // Export the scoped drawing, not the old merged drawing; the default PNG is not what this reads.
+    await page.getByRole('radio', { name: 'SVG', exact: true }).click()
     const downloadPromise = page.waitForEvent('download')
     await page.getByRole('button', { name: /Save SVG/i }).click()
     const download = await downloadPromise

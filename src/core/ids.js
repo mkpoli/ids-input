@@ -2,7 +2,7 @@
 import { hangulClusterAt } from './hangul.js'
 import { unicodeProperty } from './unicode.js'
 import { emojiPrefix } from './emoji.js'
-import { isMark, normalizeMarks, marksOf, withMarks, withoutMarks } from './marks.js'
+import { isMark, marksOf, normalizeMarks, toneMarksAt, withMarks, withoutMarks } from './marks.js'
 import { strokeChain } from './strokes.js'
 export { UNICODE_VERSION } from './unicode.js'
 export * from './marks.js'
@@ -24,7 +24,7 @@ export * from './marks.js'
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
 
-import { pyramidRows } from './pyramid-shape.js'
+import { pyramidOnBase, pyramidRows } from './pyramid-shape.js'
 
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
@@ -81,6 +81,13 @@ export const isNewKorean = text => NEW_KOREAN.test(text ?? '')
 export const SHUISHU = /[\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}]/u
 /** Whether `text` contains a Shuishu character. @param {string | null | undefined} text */
 export const isShuishu = text => SHUISHU.test(text ?? '')
+
+/** The Jurchen characters of Unicode 18.0, U+18E00..U+19191, and its 51 radicals, U+191A0..U+191D2. */
+export const JURCHEN = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}]/u
+/** A Jurchen character with one of the selectors its variant sequences use. */
+export const JURCHEN_VARIANT = /^[\u{18E00}-\u{19191}][\uFE00-\uFE04]$/u
+/** Whether `text` contains a Jurchen character or radical. @param {string | null | undefined} text */
+export const isJurchen = text => JURCHEN.test(text ?? '')
 
 /** @param {string | undefined} char */
 export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(char)
@@ -199,7 +206,8 @@ export function modifierLength(text, at) {
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
- * of two or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
+ * of two or more rows, or such a pyramid on a base, up to `PYRAMID_LONGEST` code points; a draft may
+ * be that long.
  *
  * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
  * definition after it are left out (see `entryDescription`).
@@ -223,12 +231,14 @@ export function parse(text, { open = false } = {}) {
       const char = emoji || chars[at]
       at += emoji ? [...emoji].length : 1
       if (char === undefined) { if (open) return null; throw 'missing' }
+      // A tone mark names the tone of the syllable it follows, not of the whole description.
+      const tones = () => { const end = toneMarksAt(chars, at); const marks = chars.slice(at, end).join(''); at = end; return marks }
       // A stroke chain that names a character stands for that character.
       if (char === '#' && !emoji) {
         const chain = strokeChain(chars, at - 1)
         if (chain) {
           at = chain.end
-          return isSelector(chars[at]) ? chain.char + chars[at++] : chain.char
+          return (isSelector(chars[at]) ? chain.char + chars[at++] : chain.char) + tones()
         }
       }
       const n = arity(char)
@@ -238,8 +248,8 @@ export function parse(text, { open = false } = {}) {
         if (!emoji && /[\p{Cc}\p{Cf}\p{Z}]/u.test(char)) throw 'character'
         if (!isComponent(char)) throw 'component'
         const cluster = hangulClusterAt(chars, at - 1)
-        if (cluster) { at = cluster.end; return cluster.text }
-        return !emoji && isSelector(chars[at]) ? char + chars[at++] : char
+        if (cluster) { at = cluster.end; return cluster.text + tones() }
+        return (!emoji && isSelector(chars[at]) ? char + chars[at++] : char) + tones()
       }
       const note = takesModifier(char) ? modifierAt(chars, at) : ''
       if (note) at += [...note].length + 2
@@ -258,7 +268,7 @@ export function parse(text, { open = false } = {}) {
     }
     // A whole description may run past the ordinary length only as a pyramid, its cells any part;
     // a draft may be long.
-    if (!open && long && !pyramidRows(tree, { minLayers: 2 })) return { problem: 'character' }
+    if (!open && long && !pyramidRows(tree, { minLayers: 2 }) && !pyramidOnBase(tree)) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
@@ -284,15 +294,16 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
-  if (chain) return chain.end
+  // A stroke chain stands for the character it names, and takes a variation selector like one.
+  if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1
     const emoji = /^(?:\p{Extended_Pictographic}|\p{Regional_Indicator}|[0-9#*])/u.test(char) ? emojiPrefix(chars.slice(at).join('')) : ''
-    if (emoji) return at + [...emoji].length
+    if (emoji) return toneMarksAt(chars, at + [...emoji].length)
     const cluster = hangulClusterAt(chars, at)
-    if (cluster) return cluster.end
-    return isSelector(chars[at + 1]) ? at + 2 : at + 1
+    if (cluster) return toneMarksAt(chars, cluster.end)
+    return toneMarksAt(chars, isSelector(chars[at + 1]) ? at + 2 : at + 1)
   }
   let end = at + 1
   const note = takesModifier(char) ? modifierAt(chars, end) : ''
@@ -390,6 +401,21 @@ export function reorderSiblings(tree, from, to) {
   return replaceAt(tree, parentPath, { ...parent, parts })
 }
 
+/** Whether `path` names the part at `of` or one below it. @param {Path} path @param {Path} of */
+const within = (path, of) => path.length >= of.length && of.every((n, i) => path[i] === n)
+
+/**
+ * `tree` with the parts at `from` and `to` exchanged. Both must exist and neither may lie inside the
+ * other; an empty slot takes the place of a part and leaves its own slot behind.
+ * @param {Part} tree @param {Path} from @param {Path} to @returns {Part} */
+export function swapParts(tree, from, to) {
+  if (!from.length || !to.length || within(from, to) || within(to, from)) return tree
+  const a = partAt(tree, from), b = partAt(tree, to)
+  if (a === undefined || b === undefined) return tree
+  const next = replaceAt(replaceAt(tree, from, b), to, a)
+  return write(next) === write(tree) ? tree : next
+}
+
 /**
  * `part` under `op`: the part first and an empty slot for every other part the operator takes, so a
  * component can be split in place (⿰ round 失 gives ⿰失⬚).
@@ -476,7 +502,8 @@ export function place(tree, at, part) {
 /**
  * `text` split at its loose marks: the description without them and the marks it ends with. A text
  * that is not one description, or has none, answers itself and ''. Where a mark fills an operand
- * (⿰ㄅˊ with ⿰ short of one) it stays a component, as it reads.
+ * (⿰ㄅˊ with ⿰ short of one) it stays a component, as it reads. A Hangul tone mark stays with the
+ * syllable it follows, so it splits off only where that syllable stands alone.
  * @param {string | null | undefined} text
  * @returns {{ base: string, marks: string }}
  */

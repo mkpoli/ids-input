@@ -1,13 +1,15 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
-  import { SIBLING_DRAG, siblings, neighbor, remapSiblingPath } from './sibling-drag.js'
+  import { PART_DRAG, siblings, swappable, neighbor, remapSiblingPath, remapSwapPath } from './part-drag.js'
   // The description as an indented list of its operators and parts, for choosing by row rather than by
   // box. A click on a row chooses that part, a click on its arrow opens or closes its parts, and a
-  // part dragged from a palette or a search drops onto the row. Arrow keys move, ArrowRight opens a
-  // row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
-  import { isNode, write } from '../core/ids.js'
+  // part dragged from a palette or a search drops onto the row; a row of the list dropped beside a
+  // sibling moves there or on any other row switches places with it. Arrow keys move, ArrowRight
+  // opens a row or steps into it, ArrowLeft closes it or steps out, and Enter chooses the row.
+  import { isNode, samePath, write } from '../core/ids.js'
   import OperatorIcon from './OperatorIcon.svelte'
 
   /** @typedef {import('../core/ids.js').Part} Part */
@@ -27,28 +29,33 @@
     if (current === rememberedTree) return
     if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(untrack(() => collapsed)))
     const saved = isNode(current) ? collapsedByTree.get(current) : undefined
-    const reorder = untrack(() => editor.change?.reorder)
+    const reorder = untrack(() => editor.change?.reorder), swap = untrack(() => editor.change?.swap)
     if (saved) collapsed = new Set(saved)
     else if (reorder) collapsed = new Set([...untrack(() => collapsed)].map(value => key(remapSiblingPath(value ? value.split('.').map(Number) : [], reorder.from, reorder.to))))
+    else if (swap) collapsed = new Set([...untrack(() => collapsed)].map(value => key(remapSwapPath(value ? value.split('.').map(Number) : [], swap.from, swap.to))))
     rememberedTree = current
   })
   /** @type {string | null} */
   let focusKey = $state(null)
   /** @type {string | null} */
-  let over = $state(null)
+  let overKey = $state(null)
+  let overSwap = $state(false)
+  /** @param {Row} row */
+  const overKind = row => overKey !== row.key ? null : overSwap ? 'swap' : 'move'
   /** @type {{ path: Path, tree: Part } | null} */ let dragging = $state.raw(null)
   /** @param {DragEvent} event @param {Path} path */
   function startDrag(event, path) {
     if (editor.disabled || !path.length || !event.dataTransfer) return
     dragging = { path, tree: editor.tree }
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData(SIBLING_DRAG, '1')
+    event.dataTransfer.setData(PART_DRAG, '1')
     event.stopPropagation()
   }
-  function endDrag() { dragging = null; over = null }
+  function endDrag() { dragging = null; overKey = null; overSwap = false }
 
   /** @type {HTMLElement | null} */
   let listEl = $state(null)
+  $effect(() => { if (listEl) return watchFallback(listEl) })
   /** @type {{ path: Path } | null} */ let editing = $state(null)
   /** @type {{ key: string, x: number, y: number, time: number } | null} */ let firstClick = null
   /** @param {Row} row */
@@ -107,6 +114,41 @@
       if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(collapsed))
     }
   }
+  /** @param {Path} from @param {Path} to */
+  function exchange(from, to) {
+    const before = editor.tree
+    if (isNode(before)) collapsedByTree.set(before, new Set(collapsed))
+    editor.swap(from, to)
+    if (editor.tree !== before) {
+      collapsed = new Set([...collapsed].map(value => key(remapSwapPath(value ? value.split('.').map(Number) : [], from, to))))
+      focusKey = key(to)
+      rememberedTree = editor.tree
+      if (isNode(rememberedTree)) collapsedByTree.set(rememberedTree, new Set(collapsed))
+    }
+  }
+  // Lifting a box with the space bar: Space lifts the focused row, Space on another row places it,
+  // Escape lets it go. The arrows move the focus between rows in the meantime.
+  /** @type {{ path: Path, tree: Part } | null} */ let carry = $state.raw(null)
+  $effect(() => {
+    const tree = editor.tree
+    untrack(() => { if (carry && carry.tree !== tree) carry = null })
+  })
+  // Escape lets a lifted box go. The character card takes the first Escape (keydown) to close
+  // itself, so the release is read on keyup, where nothing has stopped the event.
+  $effect(() => {
+    /** @param {KeyboardEvent} event */
+    const release = event => { if (event.key === 'Escape' && carry) carry = null }
+    window.addEventListener('keyup', release)
+    return () => window.removeEventListener('keyup', release)
+  })
+  /** @param {Path} to */
+  function placeCarry(to) {
+    const held = carry
+    carry = null
+    if (!held || held.tree !== editor.tree) return
+    if (siblings(held.path, to)) move(held.path, to)
+    else if (swappable(held.path, to)) exchange(held.path, to)
+  }
   /** @param {Row} row */
   function toggle(row) {
     const next = new Set(collapsed)
@@ -126,6 +168,16 @@
     if (event.target !== event.currentTarget) return
     const row = rows[index]
     if (!row) return
+    if (event.key === ' ') {
+      event.preventDefault()
+      if (!row.path.length || editor.disabled) return
+      if (carry && samePath(carry.path, row.path)) { carry = null; return }
+      if (carry) { placeCarry(row.path); return }
+      carry = { path: row.path, tree: editor.tree }
+      editor.choose(row.path)
+      return
+    }
+    if (event.key === 'Escape' && carry) { event.preventDefault(); carry = null; return }
     if (event.key === 'Escape' && !event.isComposing && !editor.disabled && editor.chosen !== null) { event.preventDefault(); editor.choose(null); return }
     if (event.key === 'F2') { event.preventDefault(); editRow(row); return }
     if (event.altKey && !event.ctrlKey && !event.metaKey && !event.isComposing && ['ArrowLeft', 'ArrowUp', 'ArrowRight', 'ArrowDown'].includes(event.key)) {
@@ -133,7 +185,7 @@
       if (row.path.length && !editor.disabled) { event.preventDefault(); if (next) { move(row.path, next); focusRow(key(next)) } }
       return
     }
-    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
+    if (event.key === 'Enter') { event.preventDefault(); if (!editor.disabled) editor.choose(row.path); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
       const next = rows[index + (event.key === 'ArrowDown' ? 1 : -1)]
@@ -157,21 +209,28 @@
   /** @param {DragEvent} event @param {Row} row */
   function dragOver(event, row) {
     if (editor.disabled || !event.dataTransfer) return
-    if (event.dataTransfer.types.includes(SIBLING_DRAG)) {
-      if (!dragging || dragging.tree !== editor.tree || !siblings(dragging.path, row.path)) return
-      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; over = row.key; return
+    if (event.dataTransfer.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const swap = !siblings(dragging.path, row.path)
+      if (swap && !swappable(dragging.path, row.path)) return
+      event.preventDefault(); event.dataTransfer.dropEffect = 'move'; overKey = row.key; overSwap = swap; return
     }
     if (!event.dataTransfer.types.includes('text/plain')) return
     event.preventDefault()
     event.dataTransfer.dropEffect = 'copy'
-    over = row.key
+    overKey = row.key; overSwap = false
   }
   /** @param {DragEvent} event @param {Row} row */
   function drop(event, row) {
-    over = null
-    if (event.dataTransfer?.types.includes(SIBLING_DRAG)) {
-      if (dragging && dragging.tree === editor.tree && siblings(dragging.path, row.path)) { event.preventDefault(); move(dragging.path, row.path) }
-      dragging = null; return
+    overKey = null; overSwap = false
+    if (event.dataTransfer?.types.includes(PART_DRAG)) {
+      if (!dragging || dragging.tree !== editor.tree) return
+      const from = dragging.path, same = siblings(from, row.path), swap = !same && swappable(from, row.path)
+      dragging = null
+      if (!same && !swap) return
+      event.preventDefault()
+      if (same) move(from, row.path); else exchange(from, row.path)
+      return
     }
     const given = event.dataTransfer?.getData('text/plain')?.trim()
     if (!given || editor.disabled) return
@@ -204,12 +263,12 @@
   <ul role="tree" aria-label={t('ids.structure')}>
     {#each rows as row, index (row.key)}
       <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:node={row.node} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={over === row.key} data-path={row.key}
-        aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined}
+      <li role="treeitem" data-character={row.node ? undefined : row.part ?? undefined} draggable={!editor.disabled && row.path.length > 0 && (!editing || key(editing.path) !== row.key)} ondragstart={event => startDrag(event, row.path)} ondragend={endDrag} class:dragged={dragging !== null && key(dragging.path) === row.key} class:node={row.node} class:carried={carry !== null && carry.path.join('.') === row.key} class:chosen={selected(row)} class:hovered={editor.isHovered(row.path)} class:tinted={editor.isTinted(row.path)} class:over={overKind(row) === 'move'} class:swap={overKind(row) === 'swap'} data-path={row.key}
+        aria-level={row.level + 1} aria-selected={selected(row)} aria-expanded={row.node ? !collapsed.has(row.key) : undefined} aria-keyshortcuts="Space"
         aria-label={rowLabel(row)} title={`${rowLabel(row)}${row.path.length ? ` · ${t('ids.dragSibling')}` : ''}`} tabindex={row.key === tabStop ? 0 : -1}
         style:--level={row.level} style:--tint={tint(row.path)}
         onpointerenter={() => editor.hover(row.path)} onpointerleave={() => editor.hover(null)} onfocus={() => focusKey = row.key} onclick={event => clickRow(event, row)} onkeydown={event => keyRow(event, index)}
-        ondragover={event => dragOver(event, row)} ondragleave={() => over = null} ondrop={event => drop(event, row)}>
+        ondragover={event => dragOver(event, row)} ondragleave={() => { overKey = null; overSwap = false }} ondrop={event => drop(event, row)}>
         <span class="toggle" data-toggle aria-hidden="true">{row.node ? collapsed.has(row.key) ? '▸' : '▾' : ''}</span>
         {#if editing && key(editing.path) === row.key}
           {#key editing}<IdsInlineEdit {editor} path={row.path} owner={listEl} onreveal={reveal} onclose={() => editing = null} />{/key}
@@ -232,15 +291,18 @@
     --_line:var(--ids-line,light-dark(#e1e1e8,#2e2e36));--_surface:var(--ids-surface,light-dark(#fff,#1b1b20));
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     height:100%;min-height:0;overflow:auto;padding:4px;color:var(--_ink)}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:1px}
-  li{display:flex;align-items:center;gap:8px;min-height:32px;padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:8px;cursor:pointer}
+  li{display:flex;align-items:center;gap:8px;min-height:var(--ids-control-h-sm,32px);padding:3px 8px 3px calc(4px + var(--level) * 16px);border:1px solid transparent;border-radius:var(--ids-radius-sm,8px);cursor:pointer}
   li[draggable="true"]{cursor:grab}
   li[draggable="true"]:active{cursor:grabbing}
-  li:hover{background:var(--_surface-subtle)}
+  li:hover{border-color:var(--_line);background:var(--_surface-subtle)}
   li.chosen{border-color:var(--_accent);background:var(--_accent-light)}
   li.over{border-color:var(--_accent)}
+  li.carried{outline:2px dashed var(--_accent);outline-offset:-2px}
+  li.swap{border-color:var(--_accent);background:var(--_accent-light)}
+  li.dragged{opacity:.45}
   li:focus-visible{outline:2px solid var(--_focus);outline-offset:-2px}
   .toggle{display:grid;place-items:center;width:14px;flex:none;color:var(--_muted);font-size:11px}
   .part{display:grid;place-items:center;min-width:22px;font-family:var(--_font);font-size:20px;line-height:1.1}

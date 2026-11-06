@@ -1,0 +1,21 @@
+[package]
+name = "ids-workshop"
+version = "0.1.2"
+description = "The IDS Workshop as a desktop app"
+license = "MIT"
+repository = "https://github.com/mkpoli/ids-input"
+edition = "2021"
+rust-version = "1.90"
+
+[build-dependencies]
+tauri-build = { version = "2.7", features = [] }
+
+[dependencies]
+tauri = { version = "2.12", features = [] }
+tauri-plugin-opener = "2.7"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

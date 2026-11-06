@@ -2,6 +2,7 @@
 // and shared by the search boxes that narrow their results by stroke count and the tooltips that
 // say how many strokes a character has and which stroke it begins with.
 import { unpack } from '../composer/loader.js'
+import { download } from '../core/retry.js'
 
 /** @typedef {{ strokes: number | null, first: '横' | '豎' | '撇' | '點' | '折' | null }} StrokeRecord */
 
@@ -14,7 +15,7 @@ let reading = null
  * @returns {Promise<Map<string, StrokeRecord>>}
  */
 export function loadStrokeRecords() {
-  reading ??= fetch(new URL('../../data/han-parts.json.gz', import.meta.url))
+  reading ??= download(new URL('../../data/han-parts.json.gz', import.meta.url))
     .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('strokes')))
     .then(unpack).then(JSON.parse).then((/** @type {{ keys: string[], strokes: (number | null)[], firsts?: ('横' | '豎' | '撇' | '點' | '折' | null)[] }} */ data) => {
       const keys = data.keys, strokes = data.strokes, firsts = data.firsts ?? []
