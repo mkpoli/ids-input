@@ -1095,7 +1095,7 @@
   .part[data-mark]{font-family:"Noto Sans","DejaVu Sans","Liberation Sans",var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif)}
   .seal-estimate{position:absolute;right:3px;bottom:1px;font:11px system-ui;color:var(--_muted);user-select:none}
   .part:has(> .part-ids){padding-bottom:12px;font-size:20px}
-  .part-ids{position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
+  .part-ids{font-family:"IDS Operators","IDS Shuishu","IDS Jurchen",var(--ids-font,var(--ids-glyph-fallback,sans-serif));position:absolute;inset:auto 1px 1px;font-size:10px;line-height:1;text-align:center;color:var(--_ink);background:inherit;white-space:nowrap;overflow:hidden;user-select:none}
   .gongche-guide p{margin:8px 0;font-size:12px;color:var(--_muted)}
   .gongche-guide{font-size:12px;color:var(--_muted)}.gongche-guide summary{cursor:pointer}.gongche-guide a{display:block;color:var(--_accent);margin:5px 0}
   .parts-note{margin:0;font-size:12px;color:var(--_muted)}
