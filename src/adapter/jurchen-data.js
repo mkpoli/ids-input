@@ -4,14 +4,18 @@
 import { isJurchen } from '../core/ids.js'
 export { isJurchen }
 
+/** One typed character or radical, with its variation selector if it has one. */
+const TYPED = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}][\uFE00-\uFE04]?/gu
+
 /**
  * A Jurchen palette part. `jurRadical` is its radical number, `jurCode` Alari's stroke code,
  * `jurReading` the dictionary's reading as Unicode records it, `jurNumeric` Unicode's numeric value
- * and `jurSource` Unicode's source reference. A radical carries only its number and code, and a
- * host's own part may carry none of them.
- * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'radical', jurRadical?: number, jurCode?: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
+ * and `jurSource` Unicode's source reference. A variant sequence carries its base character's record
+ * and its own code. A radical carries only its number and code, and a host's own part may carry
+ * none of them.
+ * @typedef {import('./types.js').PalettePart & { part: string, kind: 'jur', jurGroup: 'character' | 'variant' | 'radical', jurRadical?: number, jurCode?: string, jurReading?: string | null, jurNumeric?: number | null, jurSource?: string }} JurchenPart
  *
- * @typedef {{ format: number, parts: JurchenPart[], unicode?: string, sources?: unknown }} JurchenData
+ * @typedef {{ format: number, parts: JurchenPart[], unicode?: string, sources?: unknown, ids?: { note: string, count: number } }} JurchenData
  */
 
 /** @param {JurchenData} doc @returns {JurchenPart[]} */
@@ -20,16 +24,26 @@ export function jurchenTable(doc) {
   return doc.parts
 }
 
+/**
+ * The editorial decompositions as the descriptions the rest of the editor reads. They carry no
+ * source region: no source states one.
+ * @param {JurchenData} doc
+ */
+export function jurchenSequences(doc) {
+  return new Map(jurchenTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '' }]]] : []))
+}
+
 /** What a part is called wherever the editor names one. @param {JurchenPart} part */
 export const jurchenLabel = part => [
-  `女真 ${part.jurGroup === 'radical' ? '部首' : '字'}`,
+  `女真 ${part.jurGroup === 'radical' ? '部首' : part.jurGroup === 'variant' ? '異體' : '字'}`,
   part.jurReading,
   part.jurNumeric,
   part.jurCode,
+  part.ids,
   part.jurRadical == null ? null : `部首 ${part.jurRadical}`,
   part.strokes == null ? null : `${part.strokes} 畫`,
   part.jurSource,
-  `U+${part.part.codePointAt(0)?.toString(16).toUpperCase()}`,
+  [...part.part].map(char => `U+${char.codePointAt(0)?.toString(16).toUpperCase()}`).join(' '),
 ].filter(value => value != null).join(' · ')
 
 // The readings are written in IPA-like letters a reader rarely has to hand, so a reading and a query
@@ -56,13 +70,15 @@ function readingTier(part, query) {
 }
 
 /**
- * The parts a query names, closest first: a code point, or the numeral with that value and the
+ * The parts a query names, closest first: the character a description builds, a code point with its variants, or the numeral with that value and the
  * characters of that stroke count, or the characters typed, or a stroke code and a reading at once.
  * @param {JurchenPart[]} parts @param {string} query @returns {JurchenPart[]}
  */
 export function jurchenMatches(parts, query) {
   const text = query.trim()
   if (!text) return parts
+  const built = parts.filter(part => part.ids === text)
+  if (built.length) return built
   const hex = /^(u\+)?([0-9a-f]{4,6})$/i.exec(text)
   if (hex) {
     const point = parseInt(hex[2], 16)
@@ -75,8 +91,10 @@ export function jurchenMatches(parts, query) {
     return [...parts.filter(part => part.jurNumeric === value), ...parts.filter(part => part.strokes === value && part.jurNumeric !== value)]
   }
   if (isJurchen(text)) {
-    const typed = new Set([...text])
-    return [...typed].flatMap(char => parts.filter(part => part.part === char))
+    const typed = [...new Set(text.match(TYPED))]
+    const named = typed.flatMap(char => parts.filter(part => part.part === char))
+    // A typed part also lists the characters written with it.
+    return [...named, ...parts.filter(part => part.ids && typed.some(char => part.ids?.includes(char)) && !named.includes(part))]
   }
   const code = text.toLowerCase()
   const tiers = /** @type {JurchenPart[][]} */ ([[], [], [], [], []])
@@ -100,6 +118,9 @@ export function jurchenMatches(parts, query) {
 export function jurchenNames(doc, query, limit = 12) {
   const text = query.trim()
   if (!text) return []
+  // A whole description before the characters it is made of.
+  const built = doc.parts.filter(part => part.ids === text)
+  if (built.length) return built.slice(0, limit).map(part => ({ char: part.part, label: jurchenLabel(part), rank: 0 }))
   if (isJurchen(text)) {
     return jurchenMatches(doc.parts, text).slice(0, limit).map(part => ({ char: part.part, label: jurchenLabel(part) }))
   }

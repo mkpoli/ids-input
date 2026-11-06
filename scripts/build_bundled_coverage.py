@@ -17,5 +17,17 @@ for name in ['tangut', 'small-seal', 'bopomofo', 'shuishu', 'jurchen']:
         else:
             ranges.append([cp, cp])
     coverage[name] = ranges
+    # Variant sequences, by selector, under `<bundle>:<selector>`.
+    selectors = sorted({ord(key[1]) for key in records if len(key) == 2})
+    for selector in selectors:
+        points = sorted(ord(key[0]) for key, record in records.items()
+                        if len(key) == 2 and ord(key[1]) == selector and record.get('G', {}).get('p'))
+        ranges = []
+        for cp in points:
+            if ranges and cp == ranges[-1][1] + 1:
+                ranges[-1][1] = cp
+            else:
+                ranges.append([cp, cp])
+        coverage[f'{name}:{selector:x}'] = ranges
 (ROOT / 'data/bundled-coverage.json').write_text(
     json.dumps(coverage, separators=(',', ':')) + '\n')

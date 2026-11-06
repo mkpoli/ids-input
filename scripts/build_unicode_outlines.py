@@ -11,13 +11,10 @@ import gzip
 import hashlib
 import json
 import sys
-import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from fontTools.ttLib import TTFont
 from fontTools.pens.boundsPen import BoundsPen
-from fontTools.pens.transformPen import TransformPen
-from fontTools.svgLib.path import parse_path
 from fontTools.pens.cu2quPen import Cu2QuPen
 from fontTools.pens.perimeterPen import PerimeterPen
 from build_tangut_outlines import Contours
@@ -46,7 +43,7 @@ def main():
     for lo, hi in host_ranges:
         allowed.difference_update(host_points.intersection(range(lo, hi + 1)))
     # Dedicated bundles have holes too. Their exact records are the coverage boundary.
-    for name in ['tangut', 'bopomofo', 'small-seal', 'palette']:
+    for name in ['tangut', 'bopomofo', 'small-seal', 'jurchen', 'palette']:
         bundle = json.loads(gzip.decompress((ROOT / f'data/{name}-outlines.json.gz').read_bytes()))
         allowed.difference_update(ord(key) for key, record in bundle['records'].items()
                                   if len(key) == 1 and record.get('G', {}).get('p'))
@@ -86,34 +83,6 @@ def main():
                 count += 1
             if count:
                 provenance.append({**source, 'count': count, 'copyright': font['name'].getDebugName(0)})
-    for source in lock.get('svgSources', []):
-        raw = (ROOT / 'data' / source['file']).read_bytes()
-        if hashlib.sha256(raw).hexdigest() != source['sha256']:
-            raise ValueError(f"Checksum mismatch: {source['file']}")
-        rows = json.loads(gzip.decompress(raw))
-        count = 0
-        for char, row in rows.items():
-            point = ord(char)
-            if point not in allowed or point in records:
-                continue
-            if hashlib.sha256(row['svg'].encode()).hexdigest() != row['sha256']:
-                raise ValueError(f'SVG checksum mismatch: U+{point:04X}')
-            svg = ET.fromstring(row['svg'])
-            if svg.attrib.get('viewBox') != '0 0 200 200':
-                raise ValueError('Unexpected GlyphWiki viewBox')
-            pen, bounds, perimeter = Contours(None, 1), BoundsPen(None), PerimeterPen(None)
-            paths = list(svg.iter('{http://www.w3.org/2000/svg}path'))
-            if any('transform' in element.attrib for element in svg.iter()):
-                raise ValueError('SVG transform needs explicit handling')
-            for path in paths:
-                for target in [Cu2QuPen(pen, max_err=0.5), bounds, perimeter]:
-                    parse_path(path.attrib['d'], TransformPen(target, (5, 0, 0, -5, 0, 880)))
-            if not pen.contours or not bounds.bounds:
-                raise ValueError(f'Empty SVG: U+{point:04X}')
-            records[point] = {'k': char, 'G': {'v': 0, 'b': list(bounds.bounds), 'p': pen.contours},
-                              'ink': round(perimeter.value, 4), 'o': len(pen.contours)}
-            count += 1
-        provenance.append({**source, 'count': count})
     shards, ranges = {}, []
     for point, record in sorted(records.items()):
         shards.setdefault(f'{point >> 8:03x}', {})[chr(point)] = record

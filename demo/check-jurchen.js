@@ -15,7 +15,7 @@ try {
 
   const groups = page.locator('.script-groups button')
   const texts = (await groups.allTextContents()).map(text => text.replace(/\s+/g, ' ').trim())
-  assert.deepEqual(texts, ['Characters 914', 'Radicals 51'])
+  assert.deepEqual(texts, ['Characters 914', 'Variant forms 537', 'Radicals 51'])
   assert.equal(await tiles.count(), 914)
 
   // The radical row: all, then the 51 radicals drawn as glyphs.
@@ -26,8 +26,24 @@ try {
   const narrowed = await tiles.count()
   assert.ok(narrowed > 0 && narrowed < 914, 'a radical narrows the characters')
   await radicals.nth(0).click()
-  await groups.nth(1).click()
+  await groups.nth(2).click()
   assert.equal(await tiles.count(), 51)
+  await groups.nth(1).click()
+  assert.equal(await tiles.count(), 537)
+  // A variant draws as its own glyph in text, and a Han selector sequence stays with its own face.
+  const widths = await page.evaluate(async () => {
+    const paint = text => {
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 64
+      const context = canvas.getContext('2d')
+      context.font = '48px "IDS Jurchen"'
+      context.fillText(text, 4, 50)
+      return [...context.getImageData(0, 0, 64, 64).data].join()
+    }
+    await document.fonts.load('48px "IDS Jurchen"', '\u{18E01}\uFE00')
+    return { base: paint('\u{18E01}'), variant: paint('\u{18E01}\uFE00') }
+  })
+  assert.notEqual(widths.base, widths.variant, 'the selector reaches the face')
   await groups.nth(0).click()
 
   const filter = page.locator('.parts-filter')
@@ -43,6 +59,11 @@ try {
     assert.ok((await part.getAttribute('title')).includes(text), query)
     assert.equal(await part.getAttribute('lang'), 'juc')
   }
+
+  // An editorial description is printed on its tile and finds its character.
+  await filter.fill('⿱\u{191BA}\u{191C8}')
+  assert.equal(await tiles.first().getAttribute('data-character'), '\u{18F6A}')
+  assert.equal(await tiles.first().locator('.part-ids').textContent(), '⿱\u{191BA}\u{191C8}')
 
   // A picked part goes into the field, and a description of two draws from the bundled outlines.
   await filter.fill('')

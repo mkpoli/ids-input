@@ -7,7 +7,7 @@ import { documentView } from '../src/composer/document-view.js'
 import { boxCorners } from '../src/document/index.js'
 import { sourceFor } from '../src/composer/source.js'
 import { cardSvg, SIZE, codePoint } from './card.js'
-import { OPERATORS } from '../src/core/ids.js'
+import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
@@ -55,13 +55,16 @@ const idsIndex = env => index ??= read(env, 'data/ids-index.json.gz')
   .then(text => JSON.parse(text))
   .catch(() => ({}))
 
+/** One character, a Jurchen variant sequence counting as one. @param {string} text */
+const isOneCharacter = text => [...text].length === 1 || JURCHEN_VARIANT.test(text)
+
 /**
- * The character a sequence is, or describes: the sequence itself when it is one character, else a
- * character whose IDS it exactly is.
+ * The character a sequence is, or describes: the sequence itself when it is one character or a
+ * Jurchen variant sequence, else a character whose IDS it exactly is.
  * @param {any} env @param {string} sequence
  */
 export async function characterOf(env, sequence) {
-  if ([...sequence].length === 1 && !OPERATORS.some(([operator]) => operator === sequence)) return sequence
+  if (isOneCharacter(sequence) && !OPERATORS.some(([operator]) => operator === sequence)) return sequence
   return (await idsIndex(env))[sequence] ?? null
 }
 
@@ -118,7 +121,7 @@ async function png(env, sequence, drawing, char, shown = null, document = null) 
 export function namedFor(sequence, composed = null) {
   const example = EXAMPLES.find(example => example.sequence === sequence)
   const named = example?.char || example?.abbreviates || composed
-  return named && [...named].length === 1 ? [...named][0] : null
+  return named && isOneCharacter(named) ? named : null
 }
 
 /** The character a card and its page both name: the example's, else the table's. @param {any} env @param {string} sequence */

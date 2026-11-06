@@ -6,10 +6,13 @@
   import { EMPTY_KEY, KEY_OF } from '../core/keys.js'
   import OperatorIcon from './OperatorIcon.svelte'
   import { shortcut } from './shortcut.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, size?: number }} */
   let { editor, keyHints = true, size = 24 } = $props()
   const t = $derived(editor.t)
+  /** @type {HTMLElement | null} */ let operatorRoot = $state(null)
+  $effect(() => { if (operatorRoot) return watchFallback(operatorRoot) })
   const uid = $props.id()
   const picked = $derived(editor.picked)
   // The short groups side by side first, the empty slot's key after them, then the long group across.
@@ -17,7 +20,7 @@
     : /** @type {typeof OPERATOR_GROUPS[number]} */ (OPERATOR_GROUPS.find(group => group.arity === n)))
 </script>
 
-<div class="ids-operators" role="group" aria-label={t('ids.operators')}>
+<div class="ids-operators" role="group" aria-label={t('ids.operators')} bind:this={operatorRoot}>
   {#each groups as item (typeof item === 'string' ? item : item.arity)}
     {#if item === 'empty'}
       <div class="ids-op-group" data-arity="0" role="group" aria-labelledby={`${uid}-ops-empty`}>
@@ -54,7 +57,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-wrap:wrap;gap:10px 16px;min-width:0;color:var(--_ink)}
   .ids-op-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .ids-op-group[data-arity="2"]{flex:1 1 100%}

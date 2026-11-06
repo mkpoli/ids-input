@@ -5,6 +5,7 @@
   // and hands the sequence to `onuse` once it is whole. A host wanting its own layout uses the parts
   // (IdsSequence, IdsOperators, IdsTree, IdsPartTools, IdsPicker, IdsPreview) over its own editor.
   import { untrack } from 'svelte'
+  import { watchFallback } from './fallback-font.js'
   import { isSequence, parse } from '../core/ids.js'
   import { replacementQuery } from '../core/replacement.js'
   import { replacementExpression } from '../core/replacement-expression.js'
@@ -27,6 +28,7 @@
   const editor = createEditor(() => ({ adapter, messages, locale, disabled, tintMode }))
   const t = $derived(editor.t)
   /** @type {HTMLElement | null} */ let root = $state(null)
+  $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLInputElement | null} */ let slot = $state(null)
 
   // The text the editor last handed out, so a `value` set from outside is told from its own.
@@ -85,7 +87,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-direction:column;gap:12px;min-width:0;color:var(--_ink)}
   .ids-top{display:flex;gap:12px;align-items:flex-start}
   .ids-top-field{flex:1;min-width:0}

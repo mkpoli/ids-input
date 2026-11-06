@@ -20,7 +20,7 @@
         "record": "SW-JIGUGE-03913",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D3B7 to 君; CHISE SW-JIGUGE-03913 lists 君 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -45,7 +45,7 @@
         "record": "SW-JIGUGE-04905",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D4B4 to 歸; CHISE SW-JIGUGE-04905 lists 帰、歸 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -69,7 +69,7 @@
         "record": "SW-JIGUGE-04907",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D4B6 to 疌; CHISE SW-JIGUGE-04907 lists 疌 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -93,7 +93,7 @@
         "record": "SW-JIGUGE-04912",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D4BB to 登; CHISE SW-JIGUGE-04912 lists 登 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -117,7 +117,7 @@
         "record": "SW-JIGUGE-05505",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D554 to 遠; CHISE SW-JIGUGE-05505 lists 遠 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -141,7 +141,7 @@
         "record": "SW-JIGUGE-05718",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D59A to 御; CHISE SW-JIGUGE-05718 lists 御 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -165,7 +165,7 @@
         "record": "SW-JIGUGE-07001",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D685 to 廿; CHISE SW-JIGUGE-07001 lists 廿 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -189,7 +189,7 @@
         "record": "SW-JIGUGE-09011",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D88E to 父; CHISE SW-JIGUGE-09011 lists 父 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -213,7 +213,7 @@
         "record": "SW-JIGUGE-09019",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D897 to 尹; CHISE SW-JIGUGE-09019 lists 尹 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -237,7 +237,7 @@
         "record": "SW-JIGUGE-09102",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D89C to 及; CHISE SW-JIGUGE-09102 lists 及 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -261,7 +261,7 @@
         "record": "SW-JIGUGE-09119",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D8AD to 叚; CHISE SW-JIGUGE-09119 lists 叚 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -286,7 +286,7 @@
         "record": "SW-JIGUGE-09605",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D8FB to 𢒫; CHISE SW-JIGUGE-09605 lists 尋、𢒫 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -310,7 +310,7 @@
         "record": "SW-JIGUGE-10018",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D96E to 兆; CHISE SW-JIGUGE-10018 lists 兆 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -335,7 +335,7 @@
         "record": "SW-JIGUGE-10921",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3D9AA to 瞏; CHISE SW-JIGUGE-10921 lists 睘、瞏 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -359,7 +359,7 @@
         "record": "SW-JIGUGE-12705",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DB47 to 焉; CHISE SW-JIGUGE-12705 lists 焉 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -383,7 +383,7 @@
         "record": "SW-JIGUGE-12910",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DB56 to 幾; CHISE SW-JIGUGE-12910 lists 幾 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -408,7 +408,7 @@
         "record": "SW-JIGUGE-13108",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DB6E to 爭; CHISE SW-JIGUGE-13108 lists 争、爭 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -432,7 +432,7 @@
         "record": "SW-JIGUGE-13120",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DB7A to 睿; CHISE SW-JIGUGE-13120 lists 睿 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -456,7 +456,7 @@
         "record": "SW-JIGUGE-13306",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DB9A to 𠂈; CHISE SW-JIGUGE-13306 lists 𠂈 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -480,7 +480,7 @@
         "record": "SW-JIGUGE-15213",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DDAC to 𠀠; CHISE SW-JIGUGE-15213 lists 𠀠 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -507,7 +507,7 @@
         "record": "SW-JIGUGE-15216",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Curated crosswalk: Unicode maps U+3DDAF to 𠔝; the CHISE record lists 𠔝, 其, 𢍌 and 𠔐 together. This does not resolve the source IDS entities.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -531,7 +531,7 @@
         "record": "SW-JIGUGE-15403",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DDC3 to 巨; CHISE SW-JIGUGE-15403 lists 巨 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -556,7 +556,7 @@
         "record": "SW-JIGUGE-17700",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3DF49 to 𣌩; CHISE SW-JIGUGE-17700 lists 良、𣌩 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -580,7 +580,7 @@
         "record": "SW-JIGUGE-21514",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E2BF to 郎; CHISE SW-JIGUGE-21514 lists 郎 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -604,7 +604,7 @@
         "record": "SW-JIGUGE-23109",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E398 to 夗; CHISE SW-JIGUGE-23109 lists 夗 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -628,7 +628,7 @@
         "record": "SW-JIGUGE-23619",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E3EA to 朮; CHISE SW-JIGUGE-23619 lists 朮 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -652,7 +652,7 @@
         "record": "SW-JIGUGE-23909",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E43A to 兼; CHISE SW-JIGUGE-23909 lists 兼 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -676,7 +676,7 @@
         "record": "SW-JIGUGE-24613",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E4B3 to 宛; CHISE SW-JIGUGE-24613 lists 宛 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -700,7 +700,7 @@
         "record": "SW-JIGUGE-26110",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E637 to 帚; CHISE SW-JIGUGE-26110 lists 帚 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -724,7 +724,7 @@
         "record": "SW-JIGUGE-26120",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E642 to 布; CHISE SW-JIGUGE-26120 lists 布 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -748,7 +748,7 @@
         "record": "SW-JIGUGE-26506",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E673 to 𡰥; CHISE SW-JIGUGE-26506 lists 𡰥 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -773,7 +773,7 @@
         "record": "SW-JIGUGE-26919",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E6F9 to 㑴; CHISE SW-JIGUGE-26919 lists 㑴、侵 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -798,7 +798,7 @@
         "record": "SW-JIGUGE-27504",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E791 to 𥃩; CHISE SW-JIGUGE-27504 lists 艮、𥃩 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -822,7 +822,7 @@
         "record": "SW-JIGUGE-28022",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E7FA to 袁; CHISE SW-JIGUGE-28022 lists 袁 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -847,7 +847,7 @@
         "record": "SW-JIGUGE-28104",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E804 to 𧞻; CHISE SW-JIGUGE-28104 lists 襄、𧞻 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -871,7 +871,7 @@
         "record": "SW-JIGUGE-28301",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3E83C to 求; CHISE SW-JIGUGE-28301 lists 求 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -895,7 +895,7 @@
         "record": "SW-JIGUGE-30705",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3EA0D to 卸; CHISE SW-JIGUGE-30705 lists 卸 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -919,7 +919,7 @@
         "record": "SW-JIGUGE-31625",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3EAC5 to 廉; CHISE SW-JIGUGE-31625 lists 廉 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -943,7 +943,7 @@
         "record": "SW-JIGUGE-31829",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3EB03 to 厃; CHISE SW-JIGUGE-31829 lists 厃 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -967,7 +967,7 @@
         "record": "SW-JIGUGE-38103",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F02D to 氾; CHISE SW-JIGUGE-38103 lists 氾 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -991,7 +991,7 @@
         "record": "SW-JIGUGE-42919",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F459 to 妻; CHISE SW-JIGUGE-42919 lists 妻 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1015,7 +1015,7 @@
         "record": "SW-JIGUGE-43002",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F465 to 母; CHISE SW-JIGUGE-43002 lists 母 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1039,7 +1039,7 @@
         "record": "SW-JIGUGE-43804",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F552 to 乂; CHISE SW-JIGUGE-43804 lists 乂 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1063,7 +1063,7 @@
         "record": "SW-JIGUGE-43809",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F557 to 弋; CHISE SW-JIGUGE-43809 lists 弋 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1088,7 +1088,7 @@
         "record": "SW-JIGUGE-47806",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3F92D to 畱; CHISE SW-JIGUGE-47806 lists 留、畱 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1112,7 +1112,7 @@
         "record": "SW-JIGUGE-50710",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3FB7A to 㐅; CHISE SW-JIGUGE-50710 lists 㐅 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1137,7 +1137,7 @@
         "record": "SW-JIGUGE-51603",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3FBDB to 㠯; CHISE SW-JIGUGE-51603 lists 㠯、以 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1161,7 +1161,7 @@
         "record": "SW-JIGUGE-51707",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3FBE7 to 丣; CHISE SW-JIGUGE-51707 lists 丣 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"
@@ -1185,7 +1185,7 @@
         "record": "SW-JIGUGE-51711",
         "relation": "<-Small-Seal@shuowen",
         "revision": "0dc65c74293d3b74eda1a9861273675a5b26fd99",
-        "archiveSha256": "c7c9efeec94df3bd3e683ea4762fe7c54be635ea116384ba98fb70588334365c"
+        "archiveSha256": "13f6c81fc0cd60a69610f83d13212ec64f08a13b79a54cfb1b1189d306d53121"
       },
       "basis": "Unicode SealSources maps U+3FBEB to 釀; CHISE SW-JIGUGE-51711 lists 釀 in one record.",
       "license": "fonts/LICENSE-IDSSeal.txt"

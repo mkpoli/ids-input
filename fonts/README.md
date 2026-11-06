@@ -1,10 +1,11 @@
 # Fonts
 
-Two webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
-Radicals Supplement, and the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), with
-the editor's empty-slot mark ⬚ (U+2B1A). A third draws the sixteen ideographic description characters
-for sequence text where no installed font has them. Kureedo and GenZui Sans supply the optional
-Kaisho face.
+Several webfont subsets draw the palette parts that few installed fonts cover: the CJK strokes, CJK
+Radicals Supplement, the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), the
+BabelStone PUA glyphs for numbered components with no IDS fragment, and the editor's empty-slot mark
+⬚ (U+2B1A). Another draws the sixteen ideographic description characters for sequence text where no
+installed font has them. Zhuque Fangsong supplies the optional Fangsong face, and Kureedo and GenZui Sans the optional Kaisho
+face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
@@ -30,6 +31,12 @@ comes from the reader's own CJK font.
   `6d0b56a57d435cfc59c1dda56cbeb123ec081f0b586898bfe5b2c0d31399ef50`. Rebuild with
   `uv run --with 'fonttools[woff]' pyftsubset Jigmo.ttf --unicodes=2FFC-2FFF --flavor=woff2
   --output-file=fonts/Jigmo-ids-operators.woff2`.
+- `IDSNumbered.woff2` (38 KB, 69 characters): BabelStone Han PUA 1.472 by Andrew West
+  (<https://www.babelstone.co.uk/Fonts/PUA.html>), cut to the PUA code points IDS.TXT note 6 gives
+  the numbered components with no IDS fragment, U+E080–U+F8DF. Named `IDS Numbered`; the source is
+  under the Arphic Public License (`LICENSE-BabelStoneHanPUA.txt`). The PUA code points are not
+  stable; `data/numbered-pua-outlines.json.gz` records the font version and digest. Rebuild with
+  `uv run scripts/build_numbered_pua.py`.
 - `Plangothic-ids-parts.woff2` (444 KB, 3,486 characters): Plangothic (遍黑体) P1 and P2 V2.9.5795 by
   Fitzgerald P. Köeingsegg
   (<https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project>), merged into one
@@ -44,6 +51,10 @@ comes from the reader's own CJK font.
 `Kureedo-Regular.woff2` (2.8 MB) supplies the optional `Kureedo` Kaisho face. Kureedo v0.4.3, Copyright The Klee Project Authors, SIL Open Font License 1.1 (`OFL-Kureedo.txt`), from [mkpoli/kureedo](https://github.com/mkpoli/kureedo); this woff2 SHA-256 `678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430`.
 
 `Kureedo-label.woff2` (23 KB, 97 characters: ASCII, 楷 and 書) is a subset of the same Kureedo file, under the same licence, named `Kureedo Label`, with the copyright and licence records of the original. The font switch draws the Kaisho option's name and its Aa sample with it, so a page keeps the full face until the reader chooses Kaisho. SHA-256 `90cb39895d10fb19299becf0e03ba53b04df2becf459276aff27a4cffef9a538`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/Kureedo-Regular.woff2 --unicodes='U+0020-007E,U+66F8,U+6977' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Kureedo-label.woff2`.
+
+`ZhuqueFangsong-Regular.woff2` (4.8 MB) supplies the optional `Zhuque Fangsong` Fangsong face. Zhuque Fangsong v0.212, a technical preview by TrionesType, Copyright 2023 JadeFoci, SIL Open Font License 1.1 with no Reserved Font Name (`OFL-Zhuque.txt`), from [TrionesType/zhuque](https://github.com/TrionesType/zhuque), recompressed from the release's TTF with its outlines unchanged; this woff2 SHA-256 `5cb9aca8a85825a204ba58c9e975d8298e7370494b845694ee8a6882d0d6ed37`. Its Latin, Cyrillic and Greek glyphs are Alegreya's, Copyright 2011 The Alegreya Project Authors, under the same licence. Its README asks that versions modified by others not be widely distributed before the official release; the label subset below and the export's cut outlines are shipped with that request noted, and it is not a licence term.
+
+`Zhuque-label.woff2` (10 KB, 99 characters: ASCII, ỏ, ố, 仿 and 宋) is a subset of the same file, under the same licence, named `Zhuque Label`, with the copyright and licence records of the original. The font switch draws the Fangsong option's name and its Aa sample with it. SHA-256 `0a0b75cdbfee749ceafb4f8c3d9a633ca0f389925610039bb18b2e6adb6b7136`. Rebuild with `uv run --with 'fonttools[woff]' pyftsubset fonts/ZhuqueFangsong-Regular.woff2 --unicodes='U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B' --flavor=woff2 --name-IDs='*' --name-languages='*' --output-file=fonts/Zhuque-label.woff2`.
 
 `GenZuiSans-Regular.woff2` (2.3 MB) supplies the characters Kureedo lacks. GenZui Sans 0.105, SIL Open Font License 1.1 (`OFL-GenZuiSans.txt`), from [mkpoli/GenZui](https://github.com/mkpoli/GenZui); woff2 SHA-256 `efb3b0bf65f178b52ede78a552cf7d642d1c9bbd47c3fbddf860d70ec92d7f7a`.
 
@@ -131,11 +142,13 @@ Rebuild the font and `data/shuishu-outlines.json.gz` with `uv run --python 3.12 
 ## IDS Jurchen
 
 `IDSJurchen.woff2` maps Unicode 18.0's 914 Jurchen characters and 51 radicals (U+18E00–U+19191 and
-U+191A0–U+191D2); `fonts.css` gives the face the matching `unicode-range`.
+U+191A0–U+191D2), and 537 variant sequences through U+FE00–U+FE04 in a format 14 cmap; `fonts.css`
+gives the face the matching `unicode-range`.
 
 The outlines are those of Alari Xuwasun Jurchen, public beta of 2026-10-12, by Sulfa, Dooran and
-Raxon7, under the SIL OFL 1.1 ([LICENSE-IDSJurchen.txt](LICENSE-IDSJurchen.txt)). This face keeps the
-base code points, leaves out the style sets, and is converted from cubic to quadratic outlines.
+Raxon7, under the SIL OFL 1.1 ([LICENSE-IDSJurchen.txt](LICENSE-IDSJurchen.txt)). This face reaches the
+variants through the selectors alone, leaves out the style sets, and is converted from cubic to
+quadratic outlines.
 Rebuild the font and `data/jurchen-outlines.json.gz` with `uv run --python 3.12 scripts/build_jurchen.py`.
 
 ## Unicode fallback glyphs
@@ -145,7 +158,7 @@ lacks a glyph, and the same outlines ship as a webfont for text. Sources, rebuil
 coverage limits are in the [data notices](../data/README.md#unicode-fallback-outlines);
 [OFL-NotoUnicode.txt](OFL-NotoUnicode.txt) contains the original Noto copyright notices and SIL OFL
 1.1. Extended sources use `LICENSE-Jigmo.txt`, `LICENSE-Unifont.txt`,
-`OFL-UniHieroglyphica.txt`, `OFL-Iosevka.md` and `LICENSE-GlyphWiki.txt`; per-source copyright
+`OFL-UniHieroglyphica.txt` and `OFL-Iosevka.md`; per-source copyright
 notices are preserved in the outline metadata.
 
 `unicode/*.woff2` is the `IDS Fallback` family: one file per 256-code-point shard, each declared in

@@ -5,6 +5,7 @@
   import { replacementExpression, replacementInput } from '../core/replacement-expression.js'
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
+  import { loadFallbackText } from './fallback-font.js'
   let scroll = $state(0)
   let composing = $state(false)
   let metrics = $state('')
@@ -25,6 +26,8 @@
     return () => editor.cancelResolution()
   })
   /** @type {HTMLInputElement | null} */ let field = $state(null)
+  // The field draws what is typed into it, including characters only the shards have.
+  $effect(() => { loadFallbackText(editor.draft) })
   $effect(() => {
     if (!field) return
     const element = field
@@ -157,7 +160,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     display:flex;flex-direction:column;gap:4px;min-width:0;color:var(--_ink)}
   .ids-title{font-size:11px;color:var(--_muted)}
   .sequence-wrap{position:relative;min-width:0}

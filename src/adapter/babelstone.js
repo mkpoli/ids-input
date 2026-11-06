@@ -5,7 +5,7 @@ import { createRelationSearch } from './character-relations.js'
 import { createCharacterInfo, componentExamples, mergeSources, openTangutSource } from './character-info.js'
 import { sealTable, sealNames, sealForms, isSmallSeal } from './seal-data.js'
 import { shuishuNames, shuishuSequences, shuishuTable } from './shuishu-data.js'
-import { jurchenNames, jurchenTable } from './jurchen-data.js'
+import { jurchenNames, jurchenSequences, jurchenTable } from './jurchen-data.js'
 import { componentIndex } from './containing.js'
 import { createSearch, readForms, readStructuralForms } from '../core/search.js'
 import { createNameSearch, readFolds, readNames } from '../core/names.js'
@@ -286,7 +286,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         forms: forms ? new URL(String(forms), base).href : undefined, formsText,
         layers: layers ? new URL(String(layers), base).href : undefined, layersText,
         smallSeal: smallSeal instanceof URL || typeof smallSeal === 'string' ? new URL(String(smallSeal), base).href : smallSeal,
-        shuishu: shuishu instanceof URL || typeof shuishu === 'string' ? new URL(String(shuishu), base).href : shuishu })
+        shuishu: shuishu instanceof URL || typeof shuishu === 'string' ? new URL(String(shuishu), base).href : shuishu,
+        jurchen: jurchen instanceof URL || typeof jurchen === 'string' ? new URL(String(jurchen), base).href : jurchen })
     })
   }
 
@@ -372,11 +373,12 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
    * @type {{ generation: number, table: Promise<Map<string, Sequence[]>> } | null} */
   let searchTable = null
   /** The extra readings the table was built from, to notice a retried file bringing something else.
-   * @type {{ derived: Map<string, string>, shui: Map<string, string> }} */
-  let searchUsed = { derived: new Map(), shui: new Map() }
+   * @type {{ derived: Map<string, string>, shui: Map<string, string>, jur: Map<string, string> }} */
+  let searchUsed = { derived: new Map(), shui: new Map(), jur: new Map() }
   /** The optional readings still missing, and the retry running for them. */
   let lostLayers = false
   let lostShui = false
+  let lostJur = false
   /** @type {Promise<void> | null} */
   let retrying = null
   /** The readings as comparable text. @param {Map<string, { text: string }[]>} sequences */
@@ -388,7 +390,8 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
   const retryLost = () => retrying ??= Promise.all([
     lostLayers ? readLayers().then(derived => derived, () => null) : null,
     lostShui ? readShuishu().then(shuiDoc => shuiDoc, () => null) : null,
-  ]).then(([derived, shuiDoc]) => {
+    lostJur ? readJurchen().then(jurDoc => jurDoc, () => null) : null,
+  ]).then(([derived, shuiDoc, jurDoc]) => {
     let changed = false
     if (derived) {
       lostLayers = false
@@ -399,6 +402,11 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
       const shui = byText(shuishuSequences(shuiDoc))
       if (differs(shui, searchUsed.shui)) { searchUsed.shui = shui; changed = true }
     }
+    if (jurDoc) {
+      lostJur = false
+      const jur = byText(jurchenSequences(jurDoc))
+      if (differs(jur, searchUsed.jur)) { searchUsed.jur = jur; changed = true }
+    }
     if (changed) searchTable = null
   }, () => {}).finally(() => { retrying = null })
   /**
@@ -408,17 +416,19 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
    */
   const readSearch = async () => {
     if (searchTable) {
-      if (lostLayers || lostShui) await retryLost()
+      if (lostLayers || lostShui || lostJur) await retryLost()
       if (searchTable) return { generation: searchTable.generation, table: await searchTable.table }
     }
     lostLayers = false
     lostShui = false
+    lostJur = false
     const generation = ++searchGeneration
     const table = Promise.all([
       read(),
       readLayers().catch(() => { lostLayers = true; return new Map() }),
       readShuishu().catch(() => { lostShui = true; return null }),
-    ]).then(([found, derived, shuiDoc]) => {
+      readJurchen().catch(() => { lostJur = true; return null }),
+    ]).then(([found, derived, shuiDoc, jurDoc]) => {
       /** @type {Map<string, Sequence[]>} */
       const merged = new Map(found)
       for (const [char, text] of derived) {
@@ -426,15 +436,17 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         if (sequences.some(sequence => sequence.text === text)) continue
         merged.set(char, [{ text, regions: '', derived: true }, ...sequences])
       }
-      // The Shuishu decompositions are editorial and carry no source region; a source description
-      // of the same character stays behind them.
+      // The Shuishu and Jurchen decompositions are editorial and carry no source region; a source
+      // description of the same character stays ahead of them.
       /** @type {Map<string, Sequence[]>} */
       const shui = shuiDoc ? shuishuSequences(shuiDoc) : new Map()
-      for (const [char, sequences] of shui) {
+      /** @type {Map<string, Sequence[]>} */
+      const jur = jurDoc ? jurchenSequences(jurDoc) : new Map()
+      for (const [char, sequences] of [...shui, ...jur]) {
         const had = merged.get(char) ?? []
         merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
       }
-      searchUsed = { derived, shui: byText(shui) }
+      searchUsed = { derived, shui: byText(shui), jur: byText(jur) }
       return merged
     }).catch(error => { searchTable = null; throw error })
     searchTable = { generation, table }
@@ -744,7 +756,13 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
         try {
           const doc = await readJurchen()
           // As with Shuishu: a typed character stands with the components, a reading or stroke code below.
-          if (doc) hits = [...hits, ...jurchenNames(doc, text, limit)]
+          if (doc) {
+            const named = jurchenNames(doc, text, limit)
+            // A typed variant sequence is what was asked for, ahead of the base the direct hits split
+            // off; so is the character a whole description builds, ahead of its parts.
+            const first = named.filter(hit => hit.rank === 0 || hit.rank === undefined && [...hit.char].length > 1)
+            hits = [...first, ...hits, ...named.filter(hit => !first.includes(hit))]
+          }
         } catch {
           signal?.throwIfAborted() // The other hits stand without the Jurchen index.
         }

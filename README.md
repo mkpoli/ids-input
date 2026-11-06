@@ -62,11 +62,13 @@ in their title; a description finds its character, a typed part lists the charac
 it, and the structure panel treats the decomposition as the character's parts. The tab says the
 decompositions are ours, since no source gives them.
 
-The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals, with outlines from
+The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 537 variant
+sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
-reading in Unicode's records, numeric value or code point. No source decomposes these characters,
-so they have no descriptions of their own.
+reading in Unicode's records, numeric value or code point. Twenty-two of the characters carry an
+editorial IDS, printed on the tile and in their title, and the tab says these are ours, since no
+source gives them.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/phone-dark.png">
@@ -212,7 +214,7 @@ control are in [design/README.md](design/README.md).
 ### Core
 
 ```js
-import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
+import { parse, write, applyOperator, unwrap, unalias, commandFor, createHistory, enclosedRepeatSequence, pyramidOnBase, pyramidRows, pyramidSequence, repeatSequence } from 'ids-input'
 
 parse('⿰亻⿱七木').tree        // { op: '⿰', parts: ['亻', { op: '⿱', parts: ['七', '木'] }] }
 parse('⿰亻').problem           // 'missing'
@@ -224,6 +226,7 @@ commandFor({ key: '&', code: 'Digit1' })  // { command: 'operator', op: '⿰' },
 pyramidSequence('口', 4)       // '⿱⿱口⿰口口⿱⿲口口口⿰⿰口口⿰口口'
 pyramidSequence('口', 3, { direction: 'left' })  // '⿲口⿱口口⿳口口口'
 pyramidRows(parse(pyramidSequence('口', 4)).tree)  // { cell: '口', layers: 4, count: 10, direction: 'top' }
+pyramidOnBase(parse('⿳口⿰口口木').tree)  // { cell: '口', layers: 2, base: '木' }
 pyramidSequence('⿱众⿰众众', 2) // '⿱⿱众⿰众众⿰⿱众⿰众众⿱众⿰众众', a description repeated
 pyramidSequence('', 3)         // '⿳⬚⿰⬚⬚⿲⬚⬚⬚', empty slots to fill
 repeatSequence('口', [2, 3])   // '⿱⿰口口⿲口口口'
@@ -283,7 +286,10 @@ cross axis uses `⿱`/`⿳`, and answers the repeated part in `cell` and the way
 description, as equal square cells in the chosen direction, so the 4-layer spellings given for `口`
 above draw alike, and deeper triangles keep the same cell size; a cell that is a description is
 composed inside its cell. A two-layer pyramid of one part follows the composer's designed forms
-instead (品, 森). A whole description may run past the ordinary 64-code-point length as a pyramid
+instead (品, 森). `pyramidOnBase` reads a pyramid standing on one more part, ⿳口⿰口口木 and
+⿱⿱口⿰口口木 alike, as `{ cell, layers, base }`; the composer spreads the rows over the full width
+above the base, each cell wider than it is tall, draws the base as a cell in the row below, and
+draws the spellings alike. A whole description may run past the ordinary 64-code-point length as a pyramid
 of two or more layers, its cells any part; a draft may be longer still. The composer draws up to
 64 layers (2,080 cells). The workshop's Templates tab inserts one-click pyramids of 2 to 24
 layers, its sizes in a scrollable row, and its four-icon switch points the pyramid up, down, left
@@ -413,7 +419,8 @@ Han–seal compositions also need the host's Han export.
 The source has 11,114 records. Unresolved identifiers, extended operators and missing
 mappings remain in the downloadable data with their original text and status. They are
 excluded from decomposition lookup. See [the data notes](data/README.md#small-seal) for coverage,
-provenance and rebuilding. CHISE data is GPL-2.0-or-later; the font has separate terms.
+provenance and rebuilding. CHISE data, whose IDS is maintained by MORIOKA Tomohiko and
+contributors, is GPL-2.0-or-later; the font has separate terms.
 
 ### Documents
 
@@ -556,7 +563,10 @@ the Find tab's drawing search uses. `components` writes
 out BabelStone's numbered components (`{12}`, the
 right of 龍, as `⿷己三`), so 龍's description reads `⿰𦚏⿷己三` and its parts can be taken
 individually; `{82}`, the top of 書, writes out as the encoded 聿, so 書 reads `⿱聿日` and 畫 and 晝
-reach the same 聿 that 建 and 律 use, through 𤱪 and 書. `additionalIds` adds tables in the same
+reach the same 聿 that 建 and 律 use, through 𤱪 and 書. The parts palette lists all 121 numbered
+components by number; the 52 with a fragment draw it and insert it, and the 69 the note leaves `？`
+draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. They sit
+in the unknown-stroke group because BabelStone gives them no stroke count. `additionalIds` adds tables in the same
 format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
 than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
 whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
@@ -771,8 +781,8 @@ by KANJIDIC2's newspaper frequency or Unihan's school grade.
 
 The Find tab has a pen beside its field. Draw a part or character in the box, and the tab lists the
 characters the adapter recognizes and the palette parts whose shapes are closest; picking one puts
-it in the chosen slot, like a typed find. The parts are compared with all 11,417 palette parts and
-CJK strokes the prepared file covers, each fitted to a square twice.
+it in the chosen slot, like a typed find. The parts are compared with the 11,417 parts in the
+prepared sketch file and the CJK strokes it covers, each fitted to a square twice.
 
 `babelStoneAdapter({ sketches })` takes `data/sketch-parts.json.gz` (or its decoded document), and
 the workshop passes it: the pad opens from 1.8 MB of prepared 40×40 masks, independent of which
@@ -839,7 +849,7 @@ from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file 
 with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
-Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
 
@@ -876,9 +886,14 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 
 ## Licences
 
-- Code: MIT (`LICENSE`).
+- Code: MIT (`LICENSE`). The data files carry their own terms, below; a file built from
+  several sources carries all of theirs.
 - `data/small-seal.json.gz` and `data/small-seal-sources.tar.gz`: CHISE, GPL-2.0-or-later
-  (`data/COPYING-small-seal.txt`).
+  (`data/COPYING-chise-ids.txt`).
+- `data/ids-corpus.json.gz` and its sources `data/ids-corpus-sources.tar.gz`: GPL-2.0-or-later as
+  a whole, because 102,894 of its 211,319 descriptions are CHISE's (`data/COPYING-chise-ids.txt`,
+  source record `data/chise-sources.json`); the other 108,425 are public-domain BabelStone rows and
+  each row says which it is. Code stays MIT.
 - `data/seal-sources.txt.gz`: Unicode SealSources, Unicode-3.0
   (`data/COPYING-seal-sources.txt`).
 - `fonts/IDSSeal*` and `data/small-seal-outlines.json.gz`: derived Kaiyuan glyphs under
@@ -894,7 +909,11 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   from those public-domain decompositions (16 KB); it adds no source and records no descent.
 - `data/ids-components.tsv`: BabelStone IDS.TXT note 6's numbered components and the IDS fragments
   that write them out, `{12}`, the right of 龍, as `⿷己三` and `{82}`, the top of 書, as 聿 (5 KB);
-  the adapter reads descriptions by it.
+  the adapter reads descriptions by it, and the parts palette lists all 121 by number.
+- `data/numbered-pua-outlines.json.gz` and `fonts/IDSNumbered.woff2`: BabelStone Han PUA 1.472
+  outlines for the 69 numbered components with no fragment, Arphic Public License
+  (`fonts/LICENSE-BabelStoneHanPUA.txt`), 31 KB and 38 KB; the PUA code points are tied to that
+  version, which the outline document records with its digest.
 - `data/ids-project.tsv.gz`: this project's descriptions for characters newer than BabelStone's
   Unicode 16.0 edition, built from `data/ids-project.tsv` by `scripts/build_ids_project.py`;
   currently empty, as 𳳳 (U+33473) is a 獨體字 (0.2 KB gzipped).
@@ -922,8 +941,10 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   rows, 1.7 MB gzipped.
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
-- `fonts/`: Plangothic and Noto Sans CJK JP subsets (458 KB together), Noto Serif Tangut (1 MB),
-  Kureedo (2.8 MB), Kureedo Label (23 KB) and GenZui Sans (2.3 MB), SIL Open Font License 1.1.
+- `fonts/`: Plangothic, Noto Sans CJK JP and BabelStone Han PUA subsets (about 490 KB together),
+  Noto Serif Tangut (1 MB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
+  Label (23 KB) and GenZui Sans (2.3 MB); the
+  BabelStone subset is under the Arphic Public License, the rest SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's

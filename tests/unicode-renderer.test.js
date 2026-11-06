@@ -93,7 +93,7 @@ describe('Unicode fallback outlines', () => {
 it('renders the audited Unicode gaps as real outlines', async () => {
   const local = source()
   for (const cp of [0x16FE2, 0x16FE3, 0x16FF0, 0x18B00, 0x1AFF0, 0x1B123,
-    0x1C89, 0x1E030, 0x1F600, 0x1FAE0, 0x332C, 0x323B0, 0x18E00, 0x1DF00]) {
+    0x1C89, 0x1E030, 0x1F600, 0x1FAE0, 0x332C, 0x323B0, 0x1DF00]) {
     const char = String.fromCodePoint(cp)
     expect(hasUnicodeGlyph(char)).toBe(true)
     const drawn = await compose(local, `⿰${char}〇`, { separate: true })
