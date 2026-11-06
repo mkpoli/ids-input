@@ -110,7 +110,8 @@ const COVER_CLOSE_SHARE = 0.5
 // height from its top; a brush roof's left tip stands well above its bar. `height` is the share of the
 // whole the top takes, where the face's own band leaves ⺊ too short. `KRM_GAP` is how far 人's apex
 // stands below the bar, as a share of the whole: the manuscript tucks it close under the roof.
-const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null } }
+// Kureedo's roof underside at the centred stem is about 448 in its 274–546 ink band.
+const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null }, kaisho: { bar: 0.36, height: null } }
 const KRM_GAP = 0.035
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
