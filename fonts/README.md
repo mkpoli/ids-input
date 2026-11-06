@@ -4,7 +4,8 @@ Several webfont subsets draw the palette parts that few installed fonts cover: t
 Radicals Supplement, the parts beyond the Basic Multilingual Plane (CJK Extensions B–J), the
 BabelStone PUA glyphs for numbered components with no IDS fragment, and the editor's empty-slot mark
 ⬚ (U+2B1A). Another draws the sixteen ideographic description characters for sequence text where no
-installed font has them. Zhuque Fangsong, Kureedo and GenZui Sans supply the optional Kaisho face.
+installed font has them. Zhuque Fangsong supplies the optional Fangsong face, and Kureedo and GenZui Sans the optional Kaisho
+face.
 
 `scripts/build_ids_parts.py --font` cuts them from
 `data/ids-parts.json`, so they are rebuilt with the palette. `fonts.css` names them `IDS Strokes`
