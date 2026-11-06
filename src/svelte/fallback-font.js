@@ -109,21 +109,17 @@ const PENDING = new WeakMap()
  * @returns {() => void}
  */
 export function watchFallback(root) {
-  if (!root || typeof IntersectionObserver !== 'function') return () => {}
-  const observer = new IntersectionObserver(entries => {
-    for (const entry of entries) {
-      if (!entry.isIntersecting) continue
-      observer.unobserve(entry.target)
-      loadFallbackText(entry.target.textContent)
-    }
-  }, { rootMargin: '300px' })
+  if (!root || typeof MutationObserver !== 'function') return () => {}
   /** @type {WeakSet<Element>} */
   const watched = new WeakSet()
+  // What a panel renders is what it shows: the shards of those characters come with the render, so a
+  // part never waits for a scroll to stop drawing a box. A panel that re-renders loads only the
+  // characters it gained, since a shard is fetched once.
   const scan = () => {
     for (const element of root.querySelectorAll('*')) {
       if (element.childElementCount || watched.has(element)) continue
       watched.add(element)
-      observer.observe(element)
+      loadFallbackText(element.textContent)
     }
   }
   const mutation = new MutationObserver(() => {
@@ -133,7 +129,6 @@ export function watchFallback(root) {
   scan()
   mutation.observe(root, { childList: true, subtree: true, characterData: true })
   return () => {
-    observer.disconnect()
     mutation.disconnect()
     const pending = PENDING.get(root)
     if (pending) { clearTimeout(pending); PENDING.delete(root) }
