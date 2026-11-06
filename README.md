@@ -66,7 +66,7 @@ The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 
 sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
-reading in Unicode's records, numeric value or code point. Twenty-two of the characters carry an
+reading in Unicode's records, numeric value or code point. Forty-four of the characters carry an
 editorial IDS, printed on the tile and in their title, and the tab says these are ours, since no
 source gives them.
 

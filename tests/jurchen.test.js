@@ -150,19 +150,22 @@ describe('Jurchen editorial descriptions', () => {
   const built = data.parts.filter(part => part.ids)
   const SAMPLE = '\u{18F6A}', TOP = '\u{191BA}', BOTTOM = '\u{191C8}'
 
-  it('holds the 22 of ids.json, each two parts of the block', () => {
-    expect(built).toHaveLength(22)
-    expect(data.ids.count).toBe(22)
+  it('holds the 44 of ids.json, each two parts of the block', () => {
+    expect(built).toHaveLength(44)
+    expect(data.ids.count).toBe(44)
     expect(data.ids.note.length).toBeGreaterThan(0)
     const known = new Set(data.parts.map(part => part.part))
     for (const part of built) {
       expect(part.jurGroup).toBe('character')
       const [op, ...rest] = [...part.ids]
-      expect(['⿰', '⿱']).toContain(op)
+      expect(['⿰', '⿱', '⿷', '⿸']).toContain(op)
       expect(rest).toHaveLength(2)
       expect(rest.every(char => known.has(char) && char !== part.part)).toBe(true)
     }
     expect(data.parts.find(part => part.part === SAMPLE).ids).toBe(`⿱${TOP}${BOTTOM}`)
+    // A dot held in a corner names the character that holds it first.
+    expect(data.parts.find(part => part.part === '\u{18EB9}').ids).toBe('⿸\u{191A8}\u{191D0}')
+    expect(data.parts.find(part => part.part === '\u{18E7A}').ids).toBe('⿷\u{18E75}\u{191D0}')
   })
 
   it('reads them as descriptions, found by their parts', async () => {
