@@ -370,7 +370,6 @@
   "info.copy": "Sao chép {char}",
   "info.copied": "Đã sao chép",
   "info.copyFailed": "Lỗi sao chép",
-  "info.source.sections": "Nguồn",
   "info.site.openTangut": "Open Tangut",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
@@ -380,5 +379,8 @@
   "info.site.tangutIds": "Danh sách Tangut IDS",
   "info.site.course": "Unicode",
   "info.site.zitools": "zi.tools",
+  "info.site.yedict": "yedict",
+  "info.site.zdic": "zdic",
+  "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "nét đầu"
 }
