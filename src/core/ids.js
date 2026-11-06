@@ -294,7 +294,8 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
-  if (chain) return toneMarksAt(chars, chain.end)
+  // A stroke chain stands for the character it names, and takes a variation selector like one.
+  if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1

@@ -366,7 +366,7 @@
   .leading{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink);font-family:var(--cjk);font-size:26px;line-height:1}
   .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .label:is(:lang(ja),:lang(txg),:lang(swi)){font-family:var(--cjk)}
+  .label:is(:lang(ja),:lang(txg),:lang(swi),:lang(juc)){font-family:var(--cjk)}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
   .note{flex:none;color:var(--ui-color-ink-muted);font:var(--ui-weight-medium) var(--ui-text-2xs)/var(--ui-leading-normal) var(--ui-font-mono);letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:var(--ui-text-xs);font-style:italic}
