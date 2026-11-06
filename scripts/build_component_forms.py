@@ -6,7 +6,7 @@
 
 Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
 """
-import hashlib, json, re, sys
+import hashlib, json, sys
 import pathops
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -53,6 +53,35 @@ def group(cs):
     pen = Contours()
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
+
+def seal_dot_top(cs, style):
+    """Compose the manuscript's joined ⺊冖 from each face's 上 and 冖.
+
+    Remove 上's baseline, then place its stem and rightward bar over the
+    native cover. Each face retains its own cover width, terminals and
+    stroke weights; only the stem's open intervals are shortened.
+    """
+    if style == 'sans':
+        # The plain bar reaches the cover's right edge. Keep its native 75
+        # unit weight; the stem below it is the longer run, as in the manuscript.
+        levels = [(100, 562), (441, 725), (516, 800), (825, 860)]
+        dx = 34
+    elif style == 'serif':
+        # Keep 上's triangular bar terminal and stem entry, and 冖's
+        # asymmetric brush endings. The thin bar sits lower than Sans.
+        levels = [(100, 543), (435, 697), (529, 791), (789, 810), (829, 850)]
+        dx = 25
+    else:
+        raise ValueError('No attested Kaisho outline has been prepared')
+
+    def ymap(y):
+        a, b = next(((a, b) for a, b in zip(levels, levels[1:]) if y <= b[0]), levels[-2:])
+        return a[1] + (y - a[0]) * (b[1] - a[1]) / (b[0] - a[0])
+
+    top = crop_group(cs('上'), (-2000, 100, 3000, 2000))
+    top = [[ops, [round(ymap(v) if i % 2 else v + dx, 2)
+                  for i, v in enumerate(points)]] for ops, points in top]
+    return [top, group(cs('冖'))]
 
 def compress_chang(outlines, style):
     """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
@@ -237,23 +266,61 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
-    # 萬 with 両's bottom: 萬's 艹田 over the 冂 and 山 of 両. The two pieces meet at the bar
-    # under 田; 両's lower body is widened to 萬's frame and left hanging, with no edge added
-    # below it. 万 itself ends at the 冂's hook, so a closed bottom turns the box into a frame.
-    top_y = 200 if style == 'sans' else 280
-    bot_y = 452 if style == 'sans' else 530
-    sy = 0.395 if style == 'sans' else 0.46
-    sx = 1.0 if style == 'sans' else 1.02
-    top = crop_group(cs('萬'), (-2000, top_y, 3000, 2000))
-    bot = crop_group(cs('両'), (-2000, -2000, 3000, bot_y))
-    def lower(group):
-        ops, points = group
-        out = []
-        for i in range(0, len(points), 2):
-            out.append((points[i] - 500) * sx + 500)
-            out.append((points[i + 1] - bot_y) * sy + top_y)
-        return [ops, out]
-    forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
+    # 萬's own outline with 山 where its 禸 sits. One contour of 萬 carries the outer
+    # edge, 田's box, the legs and the 禸 pencil as a single run of filled ink, so a
+    # boolean cut cannot lift the pencil out. Splice it out of that contour instead:
+    # the run from the right leg's inner edge round to the left leg's inner edge keeps
+    # 艹, 田, the bar under 田, the legs and the hook untouched, and closing it flat
+    # across the band's inner top drops the pencil. 山 then stands on the band floor.
+    wan = cs('萬')
+    if style == 'sans':
+        # 萬's own contour order differs between the two faces.
+        cao, counters, frame = wan[5:6], wan[:4], wan[4]
+        # The band's inner top, the frame commands between its two ends, and 山's box:
+        # it rests on the band floor and stops short of the inner top and of the hook's
+        # tongue, which reaches in to x=713 along the bottom of the right leg.
+        inner_top, keep = (826, 208), slice(5, 25)
+        shan_box = (238, -80, 700, 180)
+    else:
+        cao, counters, frame = wan[0:1], wan[1:5], wan[5]
+        # The serif hook reaches further in, to x=664, so 山 is narrower here.
+        inner_top, keep = (814, 240), slice(6, 42)
+        shan_box = (240, -78, 655, 215)
+    # Reopening the contour at the band's inner top: the splice starts on the right
+    # leg's inner edge and `closePath` draws the flat edge back from the left one.
+    band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
+
+    def path_of(recordings):
+        path = pathops.Path()
+        for recording in recordings: replayRecording(recording, path.getPen())
+        return path
+
+    # The command indices are not safe to take on trust: a slice that starts one command late
+    # still closes along the band's inner top, and only nicks a leg. Compare against 萬 itself.
+    native, spliced = path_of(wan), path_of([band] + cao + counters)
+    assert pathops.op(spliced, native, pathops.PathOp.DIFFERENCE).area < 0.1, 'The 萬 splice draws outside 萬'
+    removed = pathops.op(native, spliced, pathops.PathOp.DIFFERENCE)
+    assert removed.area > 1000, 'The 萬 splice removes no 禸 pencil'
+    assert removed.bounds[3] <= inner_top[1] + 0.1, 'The 萬 splice reaches above the band inner top'
+
+    def fitted_into(recordings, box):
+        """`recordings` scaled together into `box`, keeping their winding and corner order."""
+        points = [p for recording in recordings for _, values in recording for p in values if p is not None]
+        x0, y0 = min(p[0] for p in points), min(p[1] for p in points)
+        x1, y1 = max(p[0] for p in points), max(p[1] for p in points)
+        sx, sy = (box[2] - box[0]) / (x1 - x0), (box[3] - box[1]) / (y1 - y0)
+        return [[(op, tuple(None if p is None else (box[0] + (p[0] - x0) * sx, box[1] + (p[1] - y0) * sy)
+                            for p in values)) for op, values in recording] for recording in recordings]
+
+    # 萬's ink winds one way in both faces and its 田 counters the other; the spliced band
+    # keeps the frame's direction and 山 is placed as ink, so 田's counters read as holes
+    # against it. 山 has to clear the hook's tongue as well as the legs.
+    shan = fitted_into(cs('山'), shan_box)
+    assert pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION).area < 0.1, '山 runs into 萬'
+    forms['⿳艹田⿵冂山'] = [group([band] + cao + counters), group(shan)]
+    # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
+    # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
+    forms['⿱⺊冖'] = seal_dot_top(cs, style)
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
@@ -283,7 +350,22 @@ result['sources']['kaisho'] = {
     'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
     'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
 }
-result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
-    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
-}}}
+result['editorial'] = {
+    'JYN00003': {**XIE_PROVENANCE, 'donors': {
+        'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
+    }},
+    'KRM-07097330': {
+        'kind': 'editorial manuscript-informed donor composition',
+        'reference': 'KRM K07097330; K01035410 glosses the ⺊ form 俗處字',
+        'url': 'https://viewer.hdic.jp/krm-public/show/K0709733',
+        'witness': 'Kanchi-in manuscript of the Ruiju Myōgishō, Hōge 97.3.3 (Tenri 391.3.3), copied 1241/1251',
+        'image': 'https://dl.ndl.go.jp/api/iiif/2586897/R0000052/full/1200,/0/default.jpg',
+        'limitation': 'Regularized editorial outlines, not a facsimile or an encoded-character identification. The manuscript informs the joined centred stem and extended rightward horizontal dot; each face uses its own 上 and 冖 donors with editorial stem spacing. GlyphWiki is a comparison witness, not an outline donor.',
+        'comparison': 'https://glyphwiki.org/glyph/hdic_hkrm-01035410.svg',
+        'gloss': 'K07097330: 俗; K01035410: 俗處字',
+        'kaisho': 'No prepared form; retain ordinary Kaisho composition without a Sans fallback.',
+        'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖']},
+        'forms': ['⿱⺊冖'],
+    },
+}
 Path('src/composer/component-forms.json').write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n')

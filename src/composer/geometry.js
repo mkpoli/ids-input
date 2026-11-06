@@ -171,6 +171,16 @@ export function rings(contours, points, steps = 6) {
     const ring = []
     let last = null
     for (const [kind, seg] of segments(contour.ops, points[k])) {
+      if (kind === 'C') {
+        const [one, two, on] = seg
+        for (let s = 1; s <= steps; s++) {
+          const t = s / steps, u = 1 - t
+          ring.push(u * u * u * last[0] + 3 * u * u * t * one[0] + 3 * u * t * t * two[0] + t * t * t * on[0],
+            u * u * u * last[1] + 3 * u * u * t * one[1] + 3 * u * t * t * two[1] + t * t * t * on[1])
+        }
+        last = on
+        continue
+      }
       if (kind !== 'Q') { last = seg[0]; ring.push(last[0], last[1]); continue }
       const [off, on] = seg
       for (let s = 1; s <= steps; s++) {
@@ -271,6 +281,7 @@ export function partInk(part) {
 }
 
 export const area = b => Math.max(b[2] - b[0], 0) * Math.max(b[3] - b[1], 0)
+export const centre = b => [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2]
 export const union = boxes => [Math.min(...boxes.map(b => b[0])), Math.min(...boxes.map(b => b[1])),
   Math.max(...boxes.map(b => b[2])), Math.max(...boxes.map(b => b[3]))]
 

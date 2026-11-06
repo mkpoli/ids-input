@@ -7,8 +7,9 @@
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
-import { gzipSync } from 'node:zlib'
+import { gunzipSync, gzipSync } from 'node:zlib'
 import { join } from 'node:path'
+import { buildIdsIndex } from './lib/ids-index.mjs'
 
 const out = join(import.meta.dirname, '../dist/og')
 if (!existsSync(join(import.meta.dirname, '../dist/index.html'))) {
@@ -27,6 +28,7 @@ const FONTS = {
   'seal.ttf': 'IDSSeal-Regular.woff2',
   'tangut.ttf': 'NotoSerifTangut-Regular.woff2',
   'shuishu.ttf': 'IDSShuishu.woff2',
+  'jurchen.ttf': 'IDSJurchen.woff2',
   'new-korean.ttf': 'IDSNewKorean.woff2',
 }
 // Two faces are too big to keep in the repository: fetched at pinned releases, checked, then
@@ -52,7 +54,7 @@ copyFileSync(join(import.meta.dirname, '../fonts/OFL-GenZuiSans.txt'), join(out,
 const pairs = Object.entries(FONTS).map(([name, file]) => [join(out, 'fonts', name), join(import.meta.dirname, '../fonts', file)])
 pairs.push([fetched[0], fetched[0]], [fetched[1], fetched[1]])
 /** The family each face is named in the build; the sources' own names differ or collide. */
-const FAMILY = { operators: 'IDS Operators', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
+const FAMILY = { operators: 'IDS Operators', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', jurchen: 'IDS Jurchen', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
 // The shard faces of the bundled glyphs are one family upstream; each is given its own name here so
 // a character resolves to the shard that has it.
 const shardFonts = join(import.meta.dirname, '../fonts/unicode')
@@ -91,7 +93,7 @@ for (const file of Object.keys(FONTS)) console.log(`font ${file} ${readFileSync(
 console.log(`fonts general.otf, planes.ttf, ${pairs.length - Object.keys(FONTS).length} shards`)
 
 // The scripts with bundled outlines, and the glyphs of the parts beyond what an installed font draws.
-const DATA = ['tangut-outlines', 'bopomofo-outlines', 'small-seal-outlines', 'new-korean-outlines', 'shuishu-outlines', 'palette-outlines']
+const DATA = ['tangut-outlines', 'bopomofo-outlines', 'small-seal-outlines', 'new-korean-outlines', 'shuishu-outlines', 'jurchen-outlines', 'palette-outlines', 'numbered-sans-outlines']
 for (const name of DATA) {
   copyFileSync(join(import.meta.dirname, `../data/${name}.json.gz`), join(out, `data/${name}.json.gz`))
   console.log(`data ${name}`)
@@ -102,23 +104,10 @@ for (const file of (await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards)
 }
 console.log(`data ${(await Array.fromAsync(new Bun.Glob('*.json.gz').scan(shards))).length} unicode shards`)
 
-// An IDS to the character it describes, from BabelStone's table: `一\t一(GHTJKPV)` is 一 under 一,
-// `鎶\t⿰釒哥(GTJV)` 鎶 under ⿰釒哥. A row may list several descriptions, each followed by the regions
-// that record it; the first character listed for a description stays its own.
+// An IDS to the character it describes, from BabelStone's table and the editorial descriptions.
 const table = await new Response(Bun.file(join(import.meta.dirname, '../data/babelstone-ids.tsv.gz')).stream()
   .pipeThrough(new DecompressionStream('gzip'))).text()
-/** @type {Record<string, string>} */
-const index = {}
-let rows = 0
-for (const line of table.split('\n')) {
-  if (!line || line.startsWith('#')) continue
-  const [char, written] = line.split('\t')
-  if (!char || !written) continue
-  rows++
-  for (const listed of written.split(' ')) {
-    const ids = listed.replace(/\([A-Z]+\)$/, '')
-    if (ids) index[ids] ??= char
-  }
-}
+const editorial = ['shuishu', 'jurchen'].map(name => JSON.parse(gunzipSync(readFileSync(join(import.meta.dirname, `../data/${name}.json.gz`)))))
+const { index, rows } = buildIdsIndex(table, editorial)
 writeFileSync(join(out, 'data/ids-index.json.gz'), gzipSync(JSON.stringify(index)))
 console.log(`index ${Object.keys(index).length} descriptions of ${rows} rows`)

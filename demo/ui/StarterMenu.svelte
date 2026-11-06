@@ -1,20 +1,27 @@
 <script>
   // The tab strip's starter: the chevron opens a popover whose Template tab is the editor's full
-  // template catalogue (the same component the input pane shows) and whose Examples tab lists the
-  // examples the toolbar menu draws. A template or example opens a new tab.
+  // template catalogue (the same component the input pane shows), whose Examples tab lists the
+  // examples the toolbar menu draws, and whose Recently closed tab holds the tabs and groups closed
+  // this session. A template or example opens a new tab; a closed entry brings its tabs back.
   import { tick } from 'svelte'
   import Icon from './Icon.svelte'
   import MenuList from './MenuList.svelte'
+  import TabIcon from './TabIcon.svelte'
   import { IdsTemplates } from '../../src/svelte/index.js'
+  /** @typedef {'templates' | 'examples' | 'recent'} StarterTab */
+  /** @type {StarterTab[]} */
+  const TABS = ['templates', 'examples', 'recent']
   /**
    * @type {{ t: (key: string, params?: Record<string, string | number>) => string, editor: any,
    *   items: import('./Menu.svelte').Item[], view: { list: string, cards: string, cardsSelected: boolean, onchange: (cards: boolean) => void } | null,
-   *   onstart: (sequence: string) => void, onstarted?: () => void }}
+   *   onstart: (sequence: string) => void, onstarted?: () => void,
+   *   draw: (sequence: string) => Promise<any>,
+   *   recent?: { key: string, name: string, sequence: string, reopen: () => void }[] }}
    */
-  let { t, editor, items, view, onstart, onstarted } = $props()
+  let { t, editor, items, view, onstart, onstarted, draw, recent = [] } = $props()
   const uid = $props.id()
   let open = $state(false)
-  /** @type {'templates' | 'examples'} */ let tab = $state('templates')
+  /** @type {StarterTab} */ let tab = $state('templates')
   /** @type {HTMLDivElement | null} */ let wrap = $state(null)
   /** @type {HTMLButtonElement | null} */ let trigger = $state(null)
   /** @type {HTMLDivElement | null} */ let panel = $state(null)
@@ -29,7 +36,7 @@
     await tick()
     wrap?.querySelector('.starter-tab[aria-selected="true"]')?.focus()
   }
-  /** Open the starter on a tab, for a menu entry elsewhere. @param {'templates' | 'examples'} [which] */
+  /** Open the starter on a tab, for a menu entry elsewhere. @param {StarterTab} [which] */
   export function openAt(which = 'templates') {
     tab = which
     show()
@@ -44,14 +51,20 @@
     hide(true)
     onstart(sequence)
   }
+  /** Bring a closed tab or group back, and let the workshop show and focus it. @param {{ reopen: () => void }} entry */
+  function reopenClosed(entry) {
+    hide()
+    entry.reopen()
+  }
   /** @param {KeyboardEvent} event */
   function tabKey(event) {
+    const at = TABS.indexOf(tab)
     if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
       event.preventDefault()
-      tab = tab === 'templates' ? 'examples' : 'templates'
+      tab = TABS[(at + (event.key === 'ArrowRight' ? 1 : -1) + TABS.length) % TABS.length]
     } else if (event.key === 'Home' || event.key === 'End') {
       event.preventDefault()
-      tab = event.key === 'Home' ? 'templates' : 'examples'
+      tab = event.key === 'Home' ? TABS[0] : TABS[TABS.length - 1]
     } else if (event.key === 'Escape') {
       event.preventDefault()
       hide(true)
@@ -89,7 +102,7 @@
     <Icon name="chevron" size={14} />
   </button>
   {#if open}
-    <div class="starter-panel" role="dialog" aria-label={t('app.tabs.start')} bind:this={panel}>
+    <div class="starter-panel" role="dialog" aria-label={t('app.tabs.start')} data-tab={tab} bind:this={panel}>
       <div class="starter-tabs" role="tablist" aria-label={t('app.tabs.start')}>
         <button type="button" class="starter-tab" role="tab" data-tab="templates" id={`${uid}-tab-templates`}
           aria-controls={`${uid}-panel-templates`} aria-selected={tab === 'templates'} tabindex={tab === 'templates' ? 0 : -1}
@@ -97,14 +110,36 @@
         <button type="button" class="starter-tab" role="tab" data-tab="examples" id={`${uid}-tab-examples`}
           aria-controls={`${uid}-panel-examples`} aria-selected={tab === 'examples'} tabindex={tab === 'examples' ? 0 : -1}
           onclick={() => tab = 'examples'} onkeydown={tabKey}>{t('app.examples.label')}</button>
+        <button type="button" class="starter-tab" role="tab" data-tab="recent" id={`${uid}-tab-recent`}
+          aria-controls={`${uid}-panel-recent`} aria-selected={tab === 'recent'} tabindex={tab === 'recent' ? 0 : -1}
+          onclick={() => tab = 'recent'} onkeydown={tabKey}>{t('app.tabs.recent')}</button>
       </div>
       {#if tab === 'templates'}
         <div class="starter-body" role="tabpanel" id={`${uid}-panel-templates`} aria-labelledby={`${uid}-tab-templates`} tabindex="0">
           <IdsTemplates {editor} onpick={choose} />
         </div>
-      {:else}
+      {:else if tab === 'examples'}
         <div class="starter-body" role="tabpanel" id={`${uid}-panel-examples`} aria-labelledby={`${uid}-tab-examples`} tabindex="0">
           <MenuList label={t('app.examples.label')} items={exampleItems} {view} onpick={() => hide(true)} />
+        </div>
+      {:else}
+        <div class="starter-body starter-recent" role="tabpanel" id={`${uid}-panel-recent`} aria-labelledby={`${uid}-tab-recent`} tabindex="0">
+          {#if recent.length}
+            <ul class="starter-recent-list" aria-label={t('app.tabs.recent')}>
+              {#each recent as entry (entry.key)}
+                {@const name = entry.name}
+                <li>
+                  <button type="button" class="starter-recent-item" title={name} aria-label={t('app.tabs.reopenRecent', { name })}
+                    onclick={() => reopenClosed(entry)}>
+                    <span class="starter-recent-thumb"><TabIcon sequence={entry.sequence} {draw} delay={0} /></span>
+                    <span class="starter-recent-name">{name}</span>
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {:else}
+            <p class="starter-recent-empty">{t('app.tabs.recentEmpty')}</p>
+          {/if}
         </div>
       {/if}
     </div>
@@ -118,10 +153,22 @@
   .starter-trigger:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-1px}
   .starter-panel{position:absolute;z-index:40;top:calc(100% + 6px);left:0;display:flex;flex-direction:column;width:min(960px,calc(100vw - 24px));max-height:min(82vh,760px);
     overflow:auto;padding:6px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-2)}
+  .starter-panel[data-tab="recent"]{width:min(560px,calc(100vw - 24px))}
   .starter-tabs{position:sticky;top:-6px;z-index:2;display:flex;gap:2px;margin:0 0 5px;padding:3px;border-radius:var(--ui-radius-lg);background:var(--ui-color-surface)}
   .starter-tab{flex:1;padding:5px 10px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
   .starter-tab[aria-selected="true"]{background:var(--ui-color-surface-hover);color:var(--ui-color-ink)}
   .starter-tab:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  /* The third tab's name is long; on phones it fits on one line at these sizes. */
+  @media (max-width:400px){.starter-tab{padding:5px 5px;font-size:11px}}
+  @media (max-width:340px){.starter-tab{font-size:10.5px}}
   .starter-body{padding:4px 4px 2px}
   .starter-body:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:-2px;border-radius:var(--ui-radius-md)}
+  .starter-recent-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
+  .starter-recent-item{display:flex;align-items:center;gap:var(--ui-space-md);width:100%;min-height:52px;padding:var(--ui-space-2xs) var(--ui-space-sm);
+    border:0;border-radius:var(--ui-radius-lg);background:none;color:var(--ui-color-ink);font:inherit;font-size:var(--ui-text-md);text-align:left;cursor:pointer}
+  .starter-recent-item:hover{background:var(--ui-color-surface-hover)}
+  .starter-recent-item:focus-visible{background:var(--ui-color-surface-hover);outline:2px solid var(--ui-color-focus);outline-offset:-2px}
+  .starter-recent-thumb{display:grid;place-items:center;flex:none;width:40px;height:40px;color:var(--ui-color-ink)}
+  .starter-recent-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:var(--ids-font);font-size:var(--ui-text-md)}
+  .starter-recent-empty{margin:0;padding:var(--ui-space-md) var(--ui-space-sm);color:var(--ui-color-ink-muted);font-size:12.5px}
 </style>

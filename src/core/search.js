@@ -14,7 +14,7 @@
 // the match lies, how many components had to be opened to reach it, and how much else the character
 // holds, and among equals the common ideographs first. Each hit carries the description it matched in, opened where the match needed it, and the
 // spans of it the terms matched, for highlighting.
-import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isNode, isSequence, nextEmpty, parse, splitDescription, write } from './ids.js'
+import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescription, isNode, isSequence, leaves, nextEmpty, parse, partAt, replaceAt, splitDescription, write } from './ids.js'
 
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
@@ -60,6 +60,60 @@ export function similarStructures(text) {
   const tree = parsed.tree
   return tree.parts.map((_, index) => tree.op
     + tree.parts.map((part, i) => i === index ? UNKNOWN : write(part)).join(''))
+}
+
+/**
+ * The terms an unknown-structure pattern asks for: its top-level operands, or the components of
+ * a run such as 木口. The operator joining a structure is not part of what a character must
+ * hold, so `⿰木口` and `木口` each ask for 木 and 口 anywhere in a character. A–Z variables
+ * belong to whole-character structural search, not here.
+ * @param {string} text
+ * @returns {{ terms: string[], elements: (string | import('./ids.js').Node)[], problem?: undefined } | { terms?: undefined, elements?: undefined, problem: 'empty' | 'pattern' }}
+ */
+export function unknownStructureTerms(text) {
+  const body = (text ?? '').replace(/\s/gu, '').replace(/[⬚＋]/gu, UNKNOWN)
+  if (!body) return { problem: 'empty' }
+  const parsed = parse(body)
+  if (parsed.problem) {
+    // One component, read as the editor reads it: a Hangul jamo run stays one syllable and a
+    // variation selector stays with its character.
+    const single = parse(body, { open: true })
+    if (!single.problem && typeof single.tree === 'string') {
+      if (/^[A-Z]$/.test(single.tree)) return { problem: 'pattern' }
+      return single.tree === UNKNOWN ? { problem: 'empty' } : { terms: [single.tree], elements: [single.tree] }
+    }
+    // A run of components, as the parts search takes it; a draft with a missing operand or an
+    // operator among the parts is not one.
+    const run = tokens(body)
+    if (!run.length || run.some(token => arity(token) || !isComponent(token))) return { problem: 'pattern' }
+    if (run.some(token => /^[A-Z]$/.test(token))) return { problem: 'pattern' }
+    const elements = run.filter(token => token !== UNKNOWN)
+    return elements.length ? { terms: [body], elements } : { problem: 'empty' }
+  }
+  const tree = parsed.tree
+  if (tree === null) return { problem: 'pattern' }
+  const parts = isNode(tree) ? tree.parts : [tree]
+  if (parts.some(part => part === null || part === undefined)) return { problem: 'pattern' }
+  // With the structure gone, a variable would silently read as a Latin letter.
+  if (parts.some(part => leaves(part).some(leaf => leaf.char === null || /^[A-Z]$/.test(leaf.char)))) return { problem: 'pattern' }
+  /** @type {string[]} */
+  const terms = []
+  /** @type {(string | import('./ids.js').Node)[]} */
+  const elements = []
+  let run = ''
+  for (const part of parts) {
+    if (typeof part === 'string') {
+      if (part === UNKNOWN) continue
+      run += part
+      // A run of components is one term; each component is one element to mark.
+      for (const token of tokens(part)) elements.push(token)
+    } else if (part) {
+      terms.push(write(part))
+      elements.push(part)
+    }
+  }
+  if (run) terms.unshift(run)
+  return terms.length ? { terms, elements } : { problem: 'empty' }
 }
 
 /** A description's tokens as a tree; a token short of its operands reads as ？. @param {string[]} list @param {{ at: number }} cursor @returns {Tree} */
@@ -538,6 +592,126 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return best
   }
 
+  /** A parsed element as a query pattern: ？ stands for any part. @param {import('./ids.js').Part} part @returns {Pattern} */
+  function toPattern(part) {
+    if (typeof part === 'string') return part === UNKNOWN ? null : part
+    if (part === null) return null
+    return { op: part.op, parts: part.parts.map(toPattern) }
+  }
+
+  /**
+   * The first place a component stands in `data`, opening encoded components to reach it: the
+   * data rebuilt with those openings, the path to the component, and how many were opened.
+   * @param {string} char @param {Tree} data @param {number} depth
+   * @returns {{ tree: Tree, path: number[], opened: number } | null}
+   */
+  function placeLeaf(char, data, depth) {
+    if (typeof data === 'string') {
+      if (fold(data) === fold(char)) return { tree: data, path: [], opened: 0 }
+      if (depth >= OPEN_DEPTH || data === UNKNOWN || unencoded(data) !== null) return null
+      for (const tree of treesOf(data)) {
+        const inner = placeLeaf(char, tree, depth + 1)
+        if (inner) return { tree: typeof inner.tree === 'string' ? inner.tree : { ...inner.tree, from: data }, path: inner.path, opened: inner.opened + 1 }
+      }
+      return null
+    }
+    // A subtraction's operands do not necessarily survive in the resulting character.
+    if (data.op === '㇯') return null
+    /** @type {{ tree: Tree, path: number[], opened: number } | null} */
+    let best = null
+    data.parts.forEach((part, i) => {
+      const inner = placeLeaf(char, part, depth)
+      if (!inner || (best && best.opened <= inner.opened)) return
+      const parts = data.parts.slice()
+      parts[i] = inner.tree
+      best = { tree: { ...data, parts }, path: [i, ...inner.path], opened: inner.opened }
+    })
+    return best
+  }
+
+  /**
+   * A hit's description opened enough to show each element, with the spans to mark. The plain
+   * description search counts a component inside an unopened component but cannot mark it there;
+   * unknown-structure hits open the way to it, so every element can be seen.
+   * @param {Hit} hit @param {(string | import('./ids.js').Node)[]} elements
+   * @returns {Hit}
+   */
+  function showElements(hit, elements) {
+    const keys = elements.map(element => typeof element === 'string' ? fold(element) : write(element))
+    const repeated = new Set(keys.filter((key, at) => keys.indexOf(key) !== at))
+    const ordered = [...elements].sort((a, b) => (typeof a === 'string' ? 1 : 0) - (typeof b === 'string' ? 1 : 0))
+    /** @type {{ text: string, spans: [number, number][], opened: number } | null} */
+    let best = null
+    for (const description of treesOf(hit.char)) {
+      let root = description, opened = 0, ok = true
+      /** @type {number[][]} */
+      const paths = []
+      /** @type {{ path: number[], original: Tree }[]} */
+      const marked = []
+      for (const element of ordered) {
+        const found = typeof element === 'string' ? placeLeaf(element, root, 0) : find(toPattern(element), root, 0)
+        if (!found) { ok = false; break }
+        root = found.tree
+        opened += found.opened
+        paths.push(found.path)
+        // A repeated element takes a distinct occurrence: hide this one from the next placement.
+        if (repeated.has(typeof element === 'string' ? fold(element) : write(element))) {
+          const original = /** @type {Tree} */ (partAt(root, found.path))
+          marked.push({ path: found.path, original })
+          root = /** @type {Tree} */ (replaceAt(root, found.path, `\u0000${marked.length}`))
+        }
+      }
+      for (const { path, original } of marked) root = /** @type {Tree} */ (replaceAt(root, path, original))
+      if (!ok) continue
+      const shown = written(root, paths), length = [...shown.text].length
+      if (!best || opened < best.opened || (opened === best.opened && length < [...best.text].length))
+        best = { ...shown, opened }
+    }
+    return best ? { ...hit, sequence: best.text, spans: best.spans } : hit
+  }
+
+  /** A structure's key, with leaves folded; equal keys name the same concrete element. @param {import('./ids.js').Part} part @returns {string} */
+  function elementKey(part) {
+    if (typeof part === 'string') return fold(part)
+    if (part === null) return UNKNOWN
+    return part.op + '(' + part.parts.map(elementKey).join(',') + ')'
+  }
+
+  /** Whether `element` stands exactly at `data`, its leaves folded and ？ matching any part.
+   * @param {import('./ids.js').Part} element @param {Tree} data @returns {boolean} */
+  function matchesElement(element, data) {
+    if (element === null || element === UNKNOWN) return true
+    if (typeof element === 'string') return typeof data === 'string' && fold(data) === fold(element)
+    if (typeof data === 'string') return false
+    return data.op === element.op && data.parts.length === element.parts.length
+      && element.parts.every((part, i) => matchesElement(part, data.parts[i]))
+  }
+
+  /**
+   * How many times `element` stands in `data`, opening encoded components to reach it. Of several
+   * descriptions of one component, the one that holds the most counts; they are alternatives, not
+   * copies of each other.
+   * @param {import('./ids.js').Node} element @param {Tree} data @param {number} depth
+   */
+  function countElement(element, data, depth) {
+    if (typeof data === 'string') {
+      if (depth >= OPEN_DEPTH || data === UNKNOWN || unencoded(data) !== null) return 0
+      let best = 0
+      for (const tree of treesOf(data)) best = Math.max(best, countElement(element, tree, depth + 1))
+      return best
+    }
+    let count = matchesElement(element, data) ? 1 : 0
+    // A subtraction's operands do not necessarily survive in the resulting character.
+    if (data.op !== '㇯') for (const part of data.parts) count += countElement(element, part, depth)
+    return count
+  }
+
+  /** Whether a character holds a structure element at least `n` times.
+   * @param {import('./ids.js').Node} element @param {string} char @param {number} n */
+  function holdsElement(element, char, n) {
+    for (const tree of treesOf(char)) if (countElement(element, tree, 0) >= n) return true
+    return false
+  }
   /** A tree written out, with the code-point span of the part at each of `paths`. @param {Tree} tree @param {number[][]} paths */
   function written(tree, paths) {
     const out = /** @type {string[]} */ ([]), spans = /** @type {[number, number][]} */ ([])
@@ -635,12 +809,13 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
   }
 
   /**
-   * The characters `query` finds, closest first, at most `limit`, and how many there are.
+   * The characters `query` finds, closest first, at most `limit`, and how many there are. With
+   * `all`, every matching character is also returned in order, however few hits are written.
    * @param {string} query
-   * @param {{ limit?: number, literal?: boolean, componentLookup?: boolean }} [options]
-   * @returns {{ hits: Hit[], total: number, problem?: 'empty' | 'extra' | 'terms' }}
+   * @param {{ limit?: number, literal?: boolean, componentLookup?: boolean, all?: boolean }} [options]
+   * @returns {{ hits: Hit[], total: number, characters?: string, problem?: 'empty' | 'extra' | 'terms' }}
    */
-  function search(query, { limit = 60, literal = false, componentLookup = true } = {}) {
+  function search(query, { limit = 60, literal = false, componentLookup = true, all = false } = {}) {
     // zi.tools uses a wildcard on one side of ㇯ for component lookup. An empty editor slot
     // means the same thing for search, while ？ remains accepted in imported expressions.
     const special = componentLookup ? componentQuery(query) : null
@@ -748,7 +923,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
       })
       return { char, sequence: text, spans, score }
     })
-    return { hits, total: found.length }
+    return { hits, total: found.length, ...(all ? { characters: found.map(found => found.char).join('') } : {}) }
   }
   const structural = createStructuralSearch(table, { forms: structuralForms })
   /** Characters whose description shares the top-level shape of `text` with one operand free,
@@ -778,5 +953,62 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     return { hits, total: byChar.size }
   }
 
-  return { search, similar, structure: structural.search, index: () => { index() }, fold }
+  /**
+   * The characters holding every element of an IDS pattern, whatever structure joins them: each
+   * top-level operand is found anywhere in the character, at any depth and in any arrangement.
+   * `⿰木口` therefore finds 杏, 呆 and any other character holding 木 and 口; `⿰⿰木木口` asks for
+   * a `⿰木木` subtree and a 口. `|` separates alternatives, as in whole-character search.
+   * @param {string} query
+   * @param {{ limit?: number }} [options]
+   * @returns {{ hits: Hit[], total: number, characters: string, problem?: 'empty' | 'pattern' }}
+   */
+  function unknownStructure(query, { limit = 60 } = {}) {
+    const texts = (query ?? '').split('|').map(text => text.replace(/\s/gu, ''))
+    if (!texts.some(Boolean)) return { hits: [], total: 0, characters: '', problem: 'empty' }
+    if (texts.length > 8 || texts.some(text => !text)) return { hits: [], total: 0, characters: '', problem: 'pattern' }
+    /** @type {{ terms: string[], elements: (string | import('./ids.js').Node)[] }[]} */
+    const alternatives = []
+    for (const text of texts) {
+      const parsed = unknownStructureTerms(text)
+      if (parsed.problem) return { hits: [], total: 0, characters: '', problem: parsed.problem }
+      alternatives.push({ terms: parsed.terms, elements: parsed.elements })
+    }
+    /** @type {Map<string, Hit>} */
+    const byChar = new Map()
+    /** @type {Set<string>} */
+    const all = new Set()
+    for (const { terms, elements } of alternatives) {
+      const found = search(terms.join(' '), { limit, componentLookup: false, all: true })
+      if (found.problem) return { hits: [], total: 0, characters: '', problem: found.problem === 'empty' ? 'empty' : 'pattern' }
+      // The description search places each structure term independently, so two equal compound
+      // operands could both stand on one subtree. Count those operands before accepting a hit.
+      /** @type {Map<string, { element: import('./ids.js').Node, count: number }>} */
+      const repeated = new Map()
+      for (const element of elements) {
+        if (typeof element === 'string') continue
+        const key = elementKey(element), held = repeated.get(key)
+        if (held) held.count++
+        else repeated.set(key, { element, count: 1 })
+      }
+      const needs = [...repeated.values()].filter(need => need.count > 1)
+      /** @param {string} char */
+      const enough = char => needs.every(need => holdsElement(need.element, char, need.count))
+      for (const hit of found.hits) {
+        if (!enough(hit.char)) continue
+        const shown = showElements(hit, elements), prior = byChar.get(shown.char)
+        if (!prior || shown.score < prior.score) byChar.set(shown.char, shown)
+      }
+      for (const char of found.characters ?? '') if (enough(char)) all.add(char)
+    }
+    const hits = [...byChar.values()]
+      .sort((a, b) => a.score - b.score || tier(a.char) - tier(b.char)
+        || /** @type {number} */ (a.char.codePointAt(0)) - /** @type {number} */ (b.char.codePointAt(0)))
+      .slice(0, Math.max(0, limit))
+    const characters = [...all]
+      .sort((a, b) => tier(a) - tier(b) || /** @type {number} */ (a.codePointAt(0)) - /** @type {number} */ (b.codePointAt(0)))
+      .join('')
+    return { hits, total: all.size, characters }
+  }
+
+  return { search, similar, structure: structural.search, unknownStructure, index: () => { index() }, fold }
 }

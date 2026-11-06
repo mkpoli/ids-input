@@ -1,6 +1,7 @@
 // @ts-check
 import { createCharacterInfo, characterScript } from './character-info.js'
 import { createNameSearch, foldName } from '../core/names.js'
+import { indexReadings, searchReadings } from '../core/tangut-readings.js'
 
 /** Emoji presentation selectors do not change a search term. @param {string} text */
 const key = text => /\p{Extended_Pictographic}/u.test(text) ? text.replace(/[\uFE0E\uFE0F]/g, '').trim() : text.trim()
@@ -26,6 +27,7 @@ export function createRelationSearch(doc, seal, table) {
   /** @type {Map<string, Meaning>} */ const aliases = new Map()
   /** @type {Map<string, string>} */ const senseLabels = new Map()
   /** @type {import('../core/names.js').ComponentName[]} */ const names = []
+  const readings = indexReadings(doc.entries)
   const senses = new Map(doc.aids.flatMap(aid => aid.en.map(term => [foldName(term), foldName(aid.en[0])])) )
   /** @param {string} text */
   const senseOf = text => senses.get(foldName(lemma(text))) ?? foldName(lemma(text))
@@ -49,8 +51,10 @@ export function createRelationSearch(doc, seal, table) {
   function alias(char, name, label, sense, curated = false) {
     if (!name.trim()) return
     const id = `${char}\0${foldName(key(name))}`
-    if (!aliases.has(id)) names.push({ char, name: key(name), source: '', detail: '' })
-    aliases.set(id, { label, sense, curated })
+    const previous = aliases.get(id)
+    if (!previous) names.push({ char, name: key(name), source: '', detail: '' })
+    // The first meaning a word names is the one the card shows; a curated aid may replace it.
+    if (!previous || (curated && !previous.curated)) aliases.set(id, { label, sense, curated })
     if (sense && !senseLabels.has(`${char}\0${sense}`)) senseLabels.set(`${char}\0${sense}`, label)
   }
   const drawable = new Set([...Object.keys(seal?.table ?? {}), ...(seal?.parts ?? []).map(p => p.part)])
@@ -59,10 +63,19 @@ export function createRelationSearch(doc, seal, table) {
     const info = lookup(char)
     if (!info || info.script === 'seal' && !drawable.has(char)) continue
     node(char)
-    labels.set(char, info.glosses[0] ?? info.association ?? code(char))
+    labels.set(char, info.glosses[0] ?? info.meanings?.zh?.[0] ?? info.meanings?.ja?.[0] ?? info.association ?? code(char))
     for (const gloss of info.glosses) {
       alias(char, gloss, gloss)
       for (const term of gloss.split(';')) {
+        alias(char, term.trim(), gloss, senseOf(term))
+        alias(char, lemma(term), gloss, senseOf(term))
+      }
+    }
+    // A Tangut record can have Chinese or Japanese meanings without English. They label the
+    // character and are searchable like an English gloss.
+    for (const gloss of [...(info.meanings?.zh ?? []), ...(info.meanings?.ja ?? [])]) {
+      alias(char, gloss, gloss, senseOf(gloss))
+      for (const term of gloss.split(/[；;]/)) {
         alias(char, term.trim(), gloss, senseOf(term))
         alias(char, lemma(term), gloss, senseOf(term))
       }
@@ -87,7 +100,7 @@ export function createRelationSearch(doc, seal, table) {
   }
   // All glossed occurrences, including examples beyond the panel's four-row limit.
   for (const [word, entry] of Object.entries(doc.entries)) {
-    if (entry.source !== 'wiktionary') continue
+    if (entry.source !== 'openTangut') continue
     for (const sequence of table.get(word) ?? []) for (const part of sequence.text) {
       if (characterScript(part) === 'component') link(word, part, 'usage')
     }
@@ -112,11 +125,18 @@ export function createRelationSearch(doc, seal, table) {
     for (const char of direct ?? []) add(char, labels.get(char) ?? code(char), 0, 0, true)
     for (const hit of seeds) {
       const matched = aliases.get(`${hit.char}\0${foldName(written)}`)
-      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 1.5), 0, true, matched?.sense)
+      add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 1.5), 0, true, matched?.sense)
+    }
+    // A reconstruction names a character, but a spelling can belong to many characters. Readings
+    // sit after names, vocabulary and meanings, so a short Latin word keeps the meaning hits it
+    // had; when nothing else matches, the readings are the result.
+    for (const hit of searchReadings(readings, written, { limit: Math.max(64, limit * 2) })) {
+      const first = hit.readings.find(reading => reading.raw.trim().toLowerCase() === written.toLowerCase()) ?? hit.readings[0]
+      add(hit.char, `${first.raw} · ${first.systemShort}`, 20 + hit.tier, 0, false)
     }
     const matches = meanings.search(written, { limit: Infinity }).map(hit => {
       const matched = aliases.get(`${hit.char}\0${foldName(hit.label)}`)
-      const rank = hit.score === 0 ? matched?.curated || doc.entries[hit.char]?.source === 'wiktionary' ? 1 : 4 : 10 + hit.score / 100
+      const rank = hit.score === 0 ? matched?.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 10 + hit.score / 100
       return { hit, matched, rank }
     }).sort((a, b) => a.rank - b.rank).slice(0, Math.max(64, limit * 2))
     for (const { hit, matched, rank } of matches) {
@@ -136,7 +156,15 @@ export function createRelationSearch(doc, seal, table) {
         add(edge.char, label, edge.kind === 'usage' ? 100 + current.rank : Math.max(2, current.rank + 1), current.depth + 1, expand, sense)
       }
     }
-    return [...result.values()].sort((a, b) => a.rank - b.rank).slice(0, limit).map(({ char, label }) => ({ char, label }))
+    const ranked = [...result.values()].sort((a, b) => a.rank - b.rank)
+    // Leave room for exact readings after the names and meanings. A short Latin word can be both
+    // an English meaning and a reading; reading hits never take every slot from the meanings.
+    // Usage edges rank 100; they are examples, not readings, and must not take reading slots.
+    const reading = ranked.filter(hit => hit.rank >= 20 && hit.rank < 100)
+    const other = ranked.filter(hit => hit.rank < 20 || hit.rank >= 100)
+    const reserved = reading.length ? Math.min(8, Math.max(0, limit - 8)) : 0
+    const shown = [...other.slice(0, limit - reserved), ...reading.slice(0, limit - Math.min(other.length, limit - reserved))]
+    return shown.map(({ char, label }) => ({ char, label }))
   }
   return { search }
 }

@@ -10,10 +10,11 @@
   /** @type {{ open: boolean, endpoint: string, sequence: string, link: string,
    *   drawing: import('../../src/adapter/types.js').Drawing | null,
    *   scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][],
+   *   emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null,
    *   preview: () => Element | null, workspace: () => unknown, version?: number,
    *   locale: string, theme: string, face: string, composer: string,
    *   t: (key: string, params?: Record<string, string | number>) => string }} */
-  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
+  let { open = $bindable(false), endpoint, sequence, link, drawing, scopes = null, slots = [], emoji = null, cut = null, cutLeaf = null, preview, workspace, version = 0, locale, theme, face, composer, t } = $props()
   // The output panel draws either the composed drawing or the scoped document; the report attaches
   // whichever it has, as the export does. Where a composition failed there is still the preview's
   // own picture, which is the one a maintainer most wants to see.
@@ -35,12 +36,13 @@
   let answer = $state(null)
   /** @type {HTMLTextAreaElement | null} */ let account = $state(null)
   /** @type {HTMLAnchorElement | null} */ let saved = $state(null)
+  const uid = $props.id()
   const build = `${__APP_VERSION__} · ${String(__BUILD_COMMIT__).slice(0, 8)}`
   // The drawing as the report attaches it, at a size that fits the dialog.
   const thumbnail = $derived.by(() => {
     if (!open || !drawn) return ''
     const settings = { ...DEFAULTS, size: 256, background: /** @type {const} */ ('white'), placeholders: true }
-    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots) : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
+    try { return scopes ? scopedSvgOf(scopes, settings, 256, slots, emoji ?? [], cut ?? '', cutLeaf) : svgOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings) } catch { return '' }
   })
   const along = $derived([
     t('app.report.version', { version: build }),
@@ -75,7 +77,7 @@
     // screen when Send was pressed.
     const said = symptom, reach = contact, image = withImage
     try {
-      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, preview: preview(), locale, theme, face, composer })
+      const snapshot = await reportSnapshot({ sequence, link, workspace: workspace(), drawing, scopes, slots, emoji, cut, cutLeaf, preview: preview(), locale, theme, face, composer })
       answer = await sendReport(endpoint, { symptom: said, contact: reach, image, snapshot })
       // The form is gone with the focused Send button; the issue is what to look at now.
       tick().then(() => requestAnimationFrame(() => saved?.focus()))
@@ -95,20 +97,24 @@
   {:else}
     <form class="report" onsubmit={submit}>
       <p class="lead">{t('app.report.lead')}</p>
-      <label class="field">
-        <span>{t('app.report.symptom')}</span>
-        <textarea bind:this={account} bind:value={symptom} rows="5" required maxlength={LIMITS.symptom} placeholder={t('app.report.symptomHint')}></textarea>
-      </label>
-      <label class="field">
-        <span>{t('app.report.contact')}</span>
-        <input bind:value={contact} maxlength={LIMITS.contact} placeholder={t('app.report.contactHint')} />
-      </label>
+      <div class="ui-field">
+        <label class="ui-label" for="{uid}-symptom">{t('app.report.symptom')}</label>
+        <textarea id="{uid}-symptom" class="ui-textarea" bind:this={account} bind:value={symptom} rows="5" required maxlength={LIMITS.symptom} placeholder={t('app.report.symptomHint')}></textarea>
+      </div>
+      <div class="ui-field">
+        <label class="ui-label" for="{uid}-contact">{t('app.report.contact')}</label>
+        <input id="{uid}-contact" class="ui-input" data-size="lg" bind:value={contact} maxlength={LIMITS.contact} placeholder={t('app.report.contactHint')} />
+      </div>
       <div class="shot">
         <!-- The thumbnail is the exporter's own SVG for this drawing. -->
         {#if thumbnail}<div class="thumb" aria-hidden="true">{@html thumbnail}</div>{/if}
-        <div class="shot-text">
-          <label class="check"><input type="checkbox" checked={withImage} onchange={event => { chosenImage = event.currentTarget.checked }} />{t('app.report.image')}</label>
-          {#if !shootable}<p class="none">{t('app.report.imageNone')}</p>{/if}
+        <div class="ui-check-field">
+          <label class="ui-check-row">
+            <input class="ui-checkbox" type="checkbox" checked={withImage} onchange={event => { chosenImage = event.currentTarget.checked }}
+              aria-describedby={shootable ? undefined : `${uid}-none`} />
+            <span class="ui-check-text"><span>{t('app.report.image')}</span></span>
+          </label>
+          {#if !shootable}<span id="{uid}-none" class="ui-hint ui-check-hint">{t('app.report.imageNone')}</span>{/if}
         </div>
       </div>
       <h3>{t('app.report.along')}</h3>
@@ -117,36 +123,26 @@
         {#each along as item (item)}<li>{item}</li>{/each}
       </ul>
       {#if failure}<p class="fault" role="alert">{failure}</p>{/if}
-      <button type="submit" class="send" disabled={busy || !symptom.trim()}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <button type="submit" class="ui-button send" data-size="lg" data-variant="primary" disabled={busy || !symptom.trim()} aria-busy={busy || undefined}>{busy ? t('app.report.sending') : failure ? t('app.report.retry') : t('app.report.send')}</button>
+      <span class="ui-visually-hidden" role="status">{busy ? t('app.report.sending') : ''}</span>
     </form>
   {/if}
 </Dialog>
 
 <style>
-  .report{display:flex;flex-direction:column;gap:12px;font-size:13.5px}
-  .lead{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
-  .field{display:flex;flex-direction:column;gap:4px}
-  .field span{font-size:11px;font-weight:600;letter-spacing:.03em;color:var(--muted)}
-  textarea,input:not([type]){width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);font:inherit;font-size:13px}
-  textarea{resize:vertical;line-height:1.5}
-  :is(textarea,input,button,a):focus-visible{outline:2px solid var(--focus);outline-offset:1px}
-  .shot{display:flex;align-items:center;gap:12px}
-  .thumb{flex:none;width:72px;height:72px;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .report{display:flex;flex-direction:column;gap:var(--ui-space-lg);font-size:var(--ui-text-sm)}
+  .lead{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:var(--ui-leading-normal)}
+  .shot{display:flex;align-items:center;gap:var(--ui-space-lg)}
+  .thumb{flex:none;width:72px;height:72px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg);overflow:hidden;background:#fff}
   .thumb :global(svg){display:block;width:100%;height:100%}
-  .shot-text{display:flex;flex-direction:column;gap:2px;min-width:0}
-  .check{display:flex;align-items:center;gap:7px;font-size:13px}
-  .check input{width:16px;height:16px;accent-color:var(--accent)}
-  .none{margin:0;color:var(--muted);font-size:12px}
-  h3{margin:4px 0 0;font-size:11px;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
-  .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;color:var(--muted);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
-  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback,"IDS Fallback"),sans-serif)}
-  .fault{margin:0;color:var(--fault);font-size:12.5px}
-  .send{align-self:flex-start;height:36px;padding:0 16px;border:1px solid transparent;border-radius:9px;background:var(--accent);color:var(--on-accent);font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-  .send:hover:not(:disabled){filter:brightness(1.05)}
-  .send:disabled{background:var(--surface-2);color:var(--muted);border-color:var(--line);cursor:default}
-  .sent{display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+  h3{margin:var(--ui-space-2xs) 0 0;font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
+  .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--ui-space-3xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.45;overflow-wrap:anywhere}
+  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),"Noto Sans CJK JP",sans-serif)}
+  .fault{margin:0;color:var(--ui-color-danger);font-size:var(--ui-text-sm)}
+  .send{align-self:flex-start}
+  .sent{display:flex;flex-direction:column;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}
   .thanks{margin:0}
-  .duplicate{margin:0;color:var(--muted);font-size:12.5px;line-height:1.5}
+  .duplicate{margin:0;color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm);line-height:var(--ui-leading-normal)}
   .issue{margin:0}
-  .issue a{color:var(--accent);font-size:20px;font-weight:650;text-underline-offset:3px}
+  .issue a{color:var(--ui-color-accent);font-size:var(--ui-text-xl);font-weight:var(--ui-weight-bold);text-underline-offset:3px}
 </style>

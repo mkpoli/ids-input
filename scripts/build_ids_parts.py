@@ -12,13 +12,14 @@ Each part counts the ideographs whose sequences use it, leaving out the sequence
 hfhchan/ids keeps whole. BabelStone's numbered components are written out first, as IDS.TXT note 6
 gives them, so 書 counts 聿 and 畫 counts 𤱪's own parts; a number the note leaves `？` stays unread and
 counts for nothing. Every character of the CJK Strokes block (U+31C0–U+31E5) is a part, used or
-not; CJK Radicals Supplement characters are parts when used. Operators and `？` are not parts.
+not, and so is 〇, which no sequence names; CJK Radicals Supplement characters are parts when used.
+Operators and `？` are not parts.
 
 Each part carries:
 - `strokes`: Unihan's kTotalStrokes (its first value, which Unihan gives for the zh-Hans form where
   the forms differ). A part Unihan lacks gets the sum over the leaves of its first compound sequence
-  whose leaves all have counts, marked derived; a CJK stroke counts 1 and is marked derived.
-  The fourteen radical forms absent from Unihan use explicit counts; anything else stays null.
+  whose leaves all have counts, marked derived; a CJK stroke counts 1, marked derived. The fourteen
+  radical forms absent from Unihan and 〇 use explicit counts; anything else stays null.
 - `first`: the first stroke in Rime's five-stroke dictionary, using its first listed code when
   it lists alternatives, except that an s/z-only choice uses s (vertical hooks count as 豎).
   h/s/p/n/z map to 横/豎/撇/點/折. Unicode equivalents of CJK strokes use CLASS directly.
@@ -101,6 +102,9 @@ RIME_SHA256 = "b3e93dce89c185f45c3d6e189b86b3a8626913352cc85e1094c786579a665791"
 RIME_SOURCE = f"Rime five-stroke dictionary, {RIME_REVISION}, LGPL-3.0, {RIME_URL}"
 # CJK Radicals Supplement forms absent from Unihan kTotalStrokes.
 RADICAL_COUNTS = dict(zip("⺊⺌⺗⺼⺈⺶⺄⺝⺀⺆⺻⻀⺂⺕", (2, 3, 4, 4, 2, 6, 1, 4, 2, 2, 5, 4, 1, 3), strict=True))
+# 〇 is an ideograph, one stroke, that no sequence names; it enters the palette beside the strokes. The
+# count is the one `MARK_COUNTS` in `build_han_parts.mjs` gives the same character.
+EXTRA_PARTS = {"〇": 1}
 
 # Binary and ternary description characters, and the unary ones (〾 ⿾ ⿿); ㇯ subtracts.
 OPERATORS = set("⿰⿱⿲⿳⿴⿵⿶⿷⿸⿹⿺⿻⿼⿽⿾⿿㇯〾")
@@ -292,6 +296,8 @@ def stroke_counts(
             return RADICAL_COUNTS[char], False
         if char in STROKES:
             return 1, True
+        if char in EXTRA_PARTS:
+            return EXTRA_PARTS[char], False
         if char in seen:
             return None, False
         # The first sequence whose leaves all have counts; a later one is tried when an earlier fails.
@@ -344,6 +350,8 @@ def palette(
     d(ifficult) or s(troke)."""
     uses = parts(written, atomic)
     strokes = STROKES
+    for char in EXTRA_PARTS:
+        uses.setdefault(char, 0)
     names = sorted(set(uses) | set(strokes), key=lambda char: (-uses.get(char, 0), ord(char)))
     counts = stroke_counts(names, written, unihan["kTotalStrokes"])
     common = common_set(unihan)
@@ -353,6 +361,55 @@ def palette(
         kind = "s" if name in strokes else "c" if name in common else "d"
         cls = CLASS.get(name) if kind == "s" else first.get(name)
         rows.append([name, uses.get(name, 0), count, 1 if derived else 0, cls, kind])
+    return rows
+
+
+def numbered_rows(
+    source: dict[str, list[str]],
+    fragments: dict[int, str],
+    known_strokes: dict[str, int | None],
+    known_first: dict[str, str],
+    atomic: set[str],
+    components_path: Path,
+) -> list[list]:
+    """BabelStone's numbered components as palette rows, with the fragment that writes each out.
+
+    `strokes` sums the fragment's parts; a component note 6 leaves `？` has no fragment and no
+    count. Those rows are marked read-only, since the editor cannot insert `{n}` itself.
+    """
+    users: dict[int, set[str]] = defaultdict(set)
+    for char, sequences in source.items():
+        if char in atomic:
+            continue
+        for sequence in sequences:
+            for digits in re.findall(r"\{(\d+)\}", sequence):
+                users[int(digits)].add(char)
+    rows = []
+    for line in components_path.read_text(encoding="utf-8").splitlines():
+        if not line or line.startswith("#"):
+            continue
+        symbol, description, fragment = line.split("\t")
+        number = int(symbol[1:-1])
+        expanded = written_out(fragment, fragments) if fragment else ""
+        leaves = components(expanded) if expanded else []
+        counts = [known_strokes.get(leaf) for leaf in leaves]
+        count = sum(counts) if counts and all(value is not None for value in counts) else None
+        cls = next((known_first[leaf] for leaf in leaves if leaf in known_first), None)
+        # Note 6 gives a PUA code point for every component, including those with no fragment.
+        found = re.search(r"\(([0-9A-F]{4,6})\)", description)
+        glyph = None if fragment or not found else chr(int(found.group(1), 16))
+        rows.append([
+            f"{{{number}}}",
+            len(users.get(number, ())),
+            count,
+            1 if count is not None and (len(leaves) > 1 or compound(fragment)) else 0,
+            cls,
+            "d",
+            fragment or None,
+            description,
+            0 if fragment or glyph else 1,
+            glyph,
+        ])
     return rows
 
 
@@ -383,13 +440,19 @@ def subset_piece(source: Path, codes: list[int], path: Path) -> Path:
     return path
 
 
+def font_codes(rows: list[list]) -> list[int]:
+    """The code points the subset faces need. Numbered references (`{42}`) are not characters;
+    their fragments' parts are rows of their own."""
+    return sorted({ord(row[0]) for row in rows if len(row[0]) == 1 and needs_font(row[0])} | set(MARKS))
+
+
 def font(rows: list[list], cache: Path, refresh: bool, out: Path = FONT_DIR) -> None:
     """Subset Noto Sans CJK JP and Plangothic P1 and P2 (merged) to the parts `needs_font` names and the
     editor's `MARKS`, one woff2 per family, so a page that shows no stroke never loads the strokes."""
     from fontTools.merge import Merger
     from fontTools.ttLib import TTFont
 
-    wanted = sorted({ord(row[0]) for row in rows if needs_font(row[0])} | set(MARKS))
+    wanted = font_codes(rows)
     covered: set[int] = set()
     for target, (names, ranges) in FONT_FILES.items():
         pieces = []
@@ -433,17 +496,18 @@ def main(argv: list[str] | None = None) -> int:
     rime_path = fetch(RIME_URL, args.cache / "rime-stroke.dict.yaml", RIME_SHA256, args.refresh)
     ids_path = args.ids or fetch(IDS_URL, args.cache / "IDS.TXT", refresh=args.refresh)
 
-    ids, written, ids_date = read_ids(ids_path)
-    rows = palette(
-        written,
-        hfhchan_atomic(hfhchan_path.read_text(encoding="utf-8")),
-        unihan_fields(unihan_path),
-        first_strokes(rime_path.read_text(encoding="utf-8"), (ROOT / "data/component-forms.tsv").read_text(encoding="utf-8")),
-    )
+    source, written, ids_date = read_ids(ids_path)
+    first = first_strokes(rime_path.read_text(encoding="utf-8"), (ROOT / "data" / "component-forms.tsv").read_text(encoding="utf-8"))
+    atomic = hfhchan_atomic(hfhchan_path.read_text(encoding="utf-8"))
+    rows = palette(written, atomic, unihan_fields(unihan_path), first)
+    fragments = numbered_fragments(ids_path.read_text(encoding="utf-8-sig"))
+    rows.extend(numbered_rows(source, fragments, {row[0]: row[2] for row in rows},
+                              {row[0]: row[4] for row in rows if row[4]}, atomic,
+                              ROOT / "data" / "ids-components.tsv"))
     from tangut import read_tangut, tangut_parts, SOURCE
     rows.extend(tangut_parts(read_tangut(args.cache)))
     document = {
-        "columns": ["part", "uses", "strokes", "derived", "first", "kind"],
+        "columns": ["part", "uses", "strokes", "derived", "first", "kind", "fragment", "description", "readonly", "glyph"],
         "common": f"常用漢字 (Unihan kJoyoKanji) or 通用规范汉字表 level 1 (Unihan kTGH ≤ {TGH_FIRST_LEVEL})",
         "sources": [
             f"BabelStone IDS.TXT, File Date {ids_date}, PD, Andrew West, {IDS_URL}"

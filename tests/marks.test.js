@@ -44,6 +44,18 @@ describe('loose marks', () => {
     expect(isDescription('ˊ')).toBe(false)
   })
 
+  it('keeps a Hangul tone mark on the syllable it follows', () => {
+    expect(parse('⿰가〮나〯').tree).toEqual({ op: '⿰', parts: ['가〮', '나〯'] })
+    expect(write(parse('⿰가〮나〯').tree)).toBe('⿰가〮나〯')
+    expect(parse('⿰가〮木').tree).toEqual({ op: '⿰', parts: ['가〮', '木'] })
+    // The mark no longer fills an operand of its own.
+    expect(parse('⿰가〮', { open: true }).tree).toEqual({ op: '⿰', parts: ['가〮', null] })
+    expect(parse('가〮', { open: true }).tree).toBe('가〮')
+    // Other marks still hoist off the syllable, and go before the tones in the run.
+    expect(normalizeMarks({ op: '⿰', parts: ['가〮ˇ', '木ˊ'] })).toEqual({ op: '⿰', parts: ['가〮', '木'], marks: 'ˇˊ' })
+    expect(tokens('⿰가〮나〯').map(token => token.text)).toEqual(['⿰', '가〮', '나〯'])
+  })
+
   it('tells the description apart from the marks it ends with', () => {
     expect(splitDescription('⿰亻木ˊ')).toEqual({ base: '⿰亻木', marks: 'ˊ' })
     expect(splitDescription('⿰ㄅㄚˇ¹')).toEqual({ base: '⿰ㄅㄚ', marks: 'ˇ¹' })
@@ -133,11 +145,15 @@ describe('drawing loose marks', () => {
     // A combining mark over the drawing keeps the character its size.
     const attached = await compose(local, '⿰ㄅㄚ\u0301')
     expect(box(base(attached))[3]).toBeCloseTo(plainBox[3], 0)
-    // A Hangul tone mark takes the left, so the character shrinks toward the right.
+    // A Hangul tone mark takes the left of its own syllable, so that syllable shrinks to the right.
     const hangul = await compose(local, '⿰ㄅㄚ〮')
-    const hangulBase = box(base(hangul)), left = box(hangul.parts.filter(part => part.origin === 'mark 〮'))
-    expect(hangulBase[0]).toBeGreaterThan(plainBox[0] + 80)
-    expect(left[2]).toBeLessThanOrEqual(hangulBase[0])
+    const syllable = box(hangul.parts.filter(part => part.origin === 'glyph ㄚ'))
+    const plainSyllable = box(plain.parts.filter(part => part.origin === 'glyph ㄚ'))
+    const left = box(hangul.parts.filter(part => part.origin === 'mark 〮'))
+    expect(syllable[0]).toBeGreaterThan(plainSyllable[0] + 40)
+    expect(left[2]).toBeLessThanOrEqual(syllable[0])
+    // The mark stays on the syllable it follows, not on the whole description.
+    expect(left[0]).toBeGreaterThan(500)
   })
 
   it('attaches a combining mark over the drawing and a Hangul tone mark at the left', async () => {
@@ -152,7 +168,20 @@ describe('drawing loose marks', () => {
     const tone = await compose(local, '⿰ㄅㄚ〮')
     const left = tone.parts.at(-1)
     expect(left.origin).toBe('mark 〮')
-    expect(left.box[0]).toBeLessThan(200)
+    // At the left of ㄚ itself.
+    const syllable = tone.parts.find(part => part.origin === 'glyph ㄚ')
+    expect(left.box[0] + left.box[2]).toBeLessThanOrEqual(syllable.box[0])
+  })
+
+  it('keeps a tone mark on each syllable of a longer description', async () => {
+    const local = source()
+    const drawn = await compose(local, '⿰가〮나〯')
+    const marks = drawn.parts.filter(part => part.origin?.startsWith('mark ')).map(part => part.origin)
+    expect(marks).toEqual(['mark 〮', 'mark 〯'])
+    const [first, second] = ['가', '나'].map(char => drawn.parts.find(part => part.origin === `glyph ${char}`).box)
+    const [high, rising] = drawn.parts.filter(part => part.origin?.startsWith('mark ')).map(part => part.box)
+    expect(high[2]).toBeLessThanOrEqual(first[0])
+    expect(rising[2]).toBeLessThanOrEqual(second[0])
   })
 
   it('fits long mark runs inside the drawing box', async () => {
@@ -172,5 +201,11 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ')).toBe(true)
     expect(hasUnicodeGlyph('ˊ')).toBe(true)
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
+  })
+})
+
+describe('splitting a part from its marks', () => {
+  it('keeps the modifier of an operator that carries marks', () => {
+    expect(splitDescription('⿴[1]囗水́')).toEqual({ base: '⿴[1]囗水', marks: '́' })
   })
 })

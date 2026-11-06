@@ -12,7 +12,7 @@
 </script>
 
 <div class="ui-field">
-  <label class="ui-label value-label" for={id}><span>{label}</span>{#if valueLabel}{@render valueLabel()}{/if}</label>
+  <label class="ui-label value-label" for={id}><span class="value-name">{label}</span>{#if valueLabel}<span class="value-out" aria-hidden="true">{@render valueLabel()}</span>{/if}</label>
   <input {id} class="ui-range" type="range" bind:value {name} {disabled} {min} {max} {step}
     aria-invalid={error ? 'true' : undefined} aria-describedby={describedby} {onchange} {oninput} {onkeydown} />
   {#if hint}<span class="ui-hint" id={hintId}>{hint}</span>{/if}
@@ -20,5 +20,6 @@
 </div>
 
 <style>
-  .value-label{display:flex;align-items:baseline;justify-content:space-between;gap:var(--ui-space-sm)}
+  .value-label{display:flex;align-items:baseline;gap:var(--ui-space-2xs)}
+  .value-out{margin-inline-start:auto}
 </style>

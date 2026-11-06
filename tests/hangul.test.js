@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import {
-  HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, composeHangul, composeJamo, findSyllablesByRomanization, hangulClusterAt, jamoClass,
-  normalizeRomanization, romanizeHangul,
+  HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, hangulClusterAt, jamoClass,
+  normalizeRomanization, romanizeHangul, toConjoiningJamo,
 } from '../src/core/hangul.js'
 import { descriptionEnd, parse, write } from '../src/core/ids.js'
 
@@ -48,6 +48,16 @@ describe('composing Hangul', () => {
     expect(composeHangul(a, a)).toBeNull()
     expect(composeHangul('木', a)).toBeNull()
     expect(composeHangul('ㄱ', 'ㅏ', 'ㄴㅎ')).toBeNull()
+  })
+  it('appends a tone mark to the syllable, precomposed or not', () => {
+    expect(composeHangul(g, a, '', HANGUL_TONE_MARKS.high)).toEqual({ text: `가${HANGUL_TONE_MARKS.high}`, precomposed: true })
+    expect(composeHangul(g, a, k, HANGUL_TONE_MARKS.rising)).toEqual({ text: `각${HANGUL_TONE_MARKS.rising}`, precomposed: true })
+    expect(composeHangul(g, a, oldFinal, HANGUL_TONE_MARKS.high)).toEqual({ text: `${g}${a}${oldFinal}${HANGUL_TONE_MARKS.high}`, precomposed: false })
+    expect(composeHangul('ㄱ', 'ㅏ', '', HANGUL_TONE_MARKS.rising)).toEqual({ text: `가${HANGUL_TONE_MARKS.rising}`, precomposed: true })
+  })
+  it('leaves the syllable alone without a tone, and rejects a mark that is neither one', () => {
+    expect(composeHangul(g, a, '', '')).toEqual({ text: '가', precomposed: true })
+    expect(composeHangul(g, a, '', 'ˊ')).toBeNull()
   })
   it('composes jamo a filter receives', () => {
     expect(composeJamo('ㄱㅏ')).toBe('가')
@@ -96,5 +106,12 @@ describe('Romanized syllables', () => {
     expect(findSyllablesByRomanization('zzz')).toEqual([])
     expect(findSyllablesByRomanization('kŏn')).toContain('건')
     expect(normalizeRomanization('KŎN')).toBe('keon')
+  })
+})
+
+describe('a letter taken as a jamo', () => {
+  it('takes one letter at a time', () => {
+    expect(toConjoiningJamo('ㄱx', 'L')).toBeNull()
+    expect(toConjoiningJamo('ㄱ', 'L')).toBe('\u1100')
   })
 })

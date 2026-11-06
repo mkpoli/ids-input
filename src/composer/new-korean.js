@@ -3,10 +3,11 @@
 import { isNewKorean } from '../core/ids.js'
 import { bundledSource } from './bundled.js'
 import { unpack } from './loader.js'
+import { download } from '../core/retry.js'
 
 export const hasNewKorean = isNewKorean
 const loadOutlines = async () => {
-  const response = await fetch(new URL('../../data/new-korean-outlines.json.gz', import.meta.url))
+  const response = await download(new URL('../../data/new-korean-outlines.json.gz', import.meta.url))
   if (!response.ok) throw new Error(`New Korean outlines: ${response.status}`)
   return JSON.parse(await unpack(await response.arrayBuffer()))
 }

@@ -3,10 +3,11 @@
 import { isShuishu } from '../core/ids.js'
 import { bundledSource } from './bundled.js'
 import { unpack } from './loader.js'
+import { download } from '../core/retry.js'
 
 export const hasShuishu = isShuishu
 const loadOutlines = async () => {
-  const response = await fetch(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))
+  const response = await download(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))
   if (!response.ok) throw new Error(`Shuishu outlines: ${response.status}`)
   return JSON.parse(await unpack(await response.arrayBuffer()))
 }

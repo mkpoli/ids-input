@@ -4,12 +4,15 @@
 
 import { sequenceOfPath } from '../src/core/address.js'
 import { parse } from '../src/core/ids.js'
+import { CARD_VERSION } from './card-version.js'
+import { isEditorial } from './editorial.js'
 
 export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
 
 /** The code point of `char`, written `U+93B6`. @param {string} char */
-export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
+/** @param {string} char */
+export const codePoint = char => [...char].map(unit => `U+${(unit.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ')
 
 /** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
  *  included and text the IDS parser rejects. A share link builds its address the same way.
@@ -17,7 +20,7 @@ export const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)
 export const pathOf = sequence => !sequence ? '/' : (/[./]/.test(sequence) || !parse(sequence, { open: true }).tree)
   ? `/?ids=${encodeURIComponent(sequence)}` : `/${encodeURIComponent(sequence)}`
 
-const RESERVED = new Set(['embed', 'compare', 'engines', 'index', 'og'])
+const RESERVED = new Set(['embed', 'compare', 'engines', 'sources', 'design', 'index', 'og'])
 const bad = (error, status = 400) => ({ error, status })
 
 /** Classify requests without loading fonts or rendering. Bounds never truncate a sequence. */
@@ -44,40 +47,50 @@ export function routeFor(url, defaultSequence) {
     }
   }
   if ([...sequence].length > 200) return bad('Sequence too long', 414)
-  if (/[\u0000-\u001f\u007f-\u009f]/u.test(sequence)) return bad('Bad sequence')
+  if (/\p{Cc}/u.test(sequence)) return bad('Bad sequence')
   return { kind, sequence }
 }
 
 /**
- * The title, description, tags and image of a shared sequence.
- * @param {{ sequence: string, char: string | null, origin: string }} share
+ * The title, description, tags and image of a shared sequence or document. `char` is the character
+ * the card draws and names, so the page and its image say the same thing; `doc` is the document
+ * token, and `documentTitle` the title it carries.
+ * @param {{ sequence: string, char: string | null, origin: string, doc?: string | null, documentTitle?: string | null }} share
  */
-export function metaFor({ sequence, char, origin }) {
-  const url = `${origin}${pathOf(sequence)}`
-  const title = char ? `${sequence} = ${char} (${codePoint(char)}) — IDS Workshop` : `${sequence} — IDS Workshop`
-  const description = char
-    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
-    : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
-  const image = `${origin}/og/${encodeURIComponent(sequence)}.png`
+export function metaFor({ sequence, char, origin, doc = '', documentTitle = null }) {
+  const url = new URL(pathOf(sequence), origin)
+  if (doc) url.searchParams.set('doc', doc)
+  const image = new URL(`/og/${encodeURIComponent(sequence)}.png`, origin)
+  image.searchParams.set('v', CARD_VERSION)
+  if (doc) image.searchParams.set('doc', doc)
+  const named = documentTitle || (char ? `${sequence} = ${char} (${codePoint(char)})` : sequence)
+  const title = `${named} — IDS Workshop`
+  const description = documentTitle
+    ? `The IDS document ${documentTitle} (${sequence}), shared from IDS Workshop.`
+    : doc
+      ? `The ideographic description sequence ${sequence}, shared as a document from IDS Workshop.`
+      : char
+        ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}).${isEditorial(sequence, char) ? ' The description is an editorial reading of the glyph.' : ''} Drawn by IDS Workshop.`
+        : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
   return {
     title,
     tags: [
       `<meta name="description" content="${escaped(description)}">`,
-      `<link rel="canonical" href="${escaped(url)}">`,
+      `<link rel="canonical" href="${escaped(url.href)}">`,
       `<meta property="og:type" content="article">`,
       `<meta property="og:site_name" content="IDS Workshop">`,
-      `<meta property="og:url" content="${escaped(url)}">`,
+      `<meta property="og:url" content="${escaped(url.href)}">`,
       `<meta property="og:title" content="${escaped(title)}">`,
       `<meta property="og:description" content="${escaped(description)}">`,
-      `<meta property="og:image" content="${escaped(image)}">`,
+      `<meta property="og:image" content="${escaped(image.href)}">`,
       `<meta property="og:image:type" content="image/png">`,
       `<meta property="og:image:width" content="${OG_WIDTH}">`,
       `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
+      `<meta property="og:image:alt" content="${escaped(documentTitle ? `The IDS document ${documentTitle}, the sequence ${sequence}` : doc ? `The sequence ${sequence} shared as a document` : char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
       `<meta name="twitter:card" content="summary_large_image">`,
       `<meta name="twitter:title" content="${escaped(title)}">`,
       `<meta name="twitter:description" content="${escaped(description)}">`,
-      `<meta name="twitter:image" content="${escaped(image)}">`,
+      `<meta name="twitter:image" content="${escaped(image.href)}">`,
     ].join('\n    '),
   }
 }

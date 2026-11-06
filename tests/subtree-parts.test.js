@@ -38,7 +38,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
-  const compounds = palette.parts.filter(row => [...row[0]].length > 1)
+  const compounds = palette.parts.filter(row => !/^\{\d+\}$/.test(row[0]) && [...row[0]].length > 1)
   expect(compounds).toHaveLength(32)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
@@ -75,6 +75,19 @@ it('keeps raw counts when a literal manual shortcut crosses the frequency cutoff
   } finally { rmSync(root, { recursive: true, force: true }) }
 })
 
+
+it('keeps numbered palette rows and their source uses through the subtree builder', () => {
+  const root = mkdtempSync(`${tmpdir()}/ids-subtrees-numbered-`)
+  try {
+    mkdirSync(`${root}/data`)
+    writeFileSync(`${root}/data/babelstone-ids.tsv.gz`, gzipSync('甲\t⿱口{42}(G)'))
+    const row = ['{42}', 42, 3, 0, '折', 'd', '彐', 'top of 录 (F2D4)', 0, null]
+    writeFileSync(`${root}/data/ids-parts.json`, JSON.stringify({ parts: [row] }))
+    build(pathToFileURL(root + '/'))
+    const palette = JSON.parse(readFileSync(`${root}/data/ids-parts.json`))
+    expect(palette.parts).toContainEqual(row)
+  } finally { rmSync(root, { recursive: true, force: true }) }
+})
 
 it('normalizes exact encoded shortcuts without losing source counts or IDS search aliases', () => {
   const palette = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url)))

@@ -5,6 +5,10 @@ const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PAT
 const url = process.env.IDS_URL ?? 'http://localhost:5264'
 const values = locator => locator.evaluateAll(nodes => nodes.map(node => node.dataset.character))
 const unicodeStrokes = Array.from({ length: 38 }, (_, index) => String.fromCodePoint(0x31c0 + index))
+// The Components group counts the ideograph and radical kinds; a numeric search spans every part in
+// the palette, so it also reaches the Jurchen character U+19049 and its U+FE00 variation sequence,
+// which carry a stroke count of one and have their own tab.
+const searchOnly = ['\u{19049}', '\u{19049}\u{fe00}']
 const assertNoExtraControls = async palette => {
   assert.equal(await palette.locator('.stroke-badge, .stroke-legend, .component-types').count(), 0)
   assert.equal(await palette.getByRole('group', { name: 'Component type', exact: true }).count(), 0)
@@ -116,7 +120,8 @@ try {
   await card.getByText('Stroke symbol', { exact: true }).waitFor()
   await card.getByText('U+31D0', { exact: true }).waitFor()
   await card.getByText('IDS records: 0', { exact: true }).waitFor()
-  const sources = await card.locator('.identity-sources a').evaluateAll(links => links.map(link => link.href))
+  // The card has one list of sources; the records that name the stroke are in it.
+  const sources = await card.locator('.sources a').evaluateAll(links => links.map(link => link.href))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/UnicodeData.txt'))
   assert.ok(sources.includes('https://www.unicode.org/Public/18.0.0/ucd/EquivalentUnifiedIdeograph.txt'))
   assert.ok(sources.includes('https://www.unicode.org/versions/Unicode15.1.0/appF.pdf'))
@@ -161,7 +166,11 @@ try {
   await picked.filter({ hasText: /^㇣$/ }).waitFor()
   await stroke.press('Enter')
   await picked.filter({ hasText: /^㇐$/ }).waitFor()
-  await palette.getByRole('tab', { name: 'Recent', exact: true }).click()
+  // A tile keeps its card while it has the focus, and that card can sit over the tabs. Take the tab
+  // by keyboard: the focus leaves the tile with it, and no floating card stands in the way.
+  await page.mouse.move(2, 2)
+  await palette.getByRole('tab', { name: 'Recent', exact: true }).focus()
+  await page.keyboard.press('Enter')
   assert.deepEqual(await values(cells), ['一', '㇐', '㇣'])
   await assertStrokeSection(palette, 1, 2)
   await palette.getByRole('tab', { name: 'Components', exact: true }).click()
@@ -180,7 +189,8 @@ try {
   assert.equal(await page.getByText('OLD GLOSS', { exact: true }).count(), 0)
   await page.close()
 
-  // Real bundle: 23 one-stroke CJK/radical parts and all 38 symbols remain reachable.
+  // Real bundle: 24 one-stroke parts (23 CJK forms and radicals, and 〇) and all 38 symbols remain
+  // reachable, and a numeric search adds the two Jurchen parts beside them.
   for (const colorScheme of ['light', 'dark']) {
     const full = await browser.newPage({ viewport: { width: 1440, height: 1400 }, deviceScaleFactor: 2, colorScheme })
     full.on('pageerror', error => errors.push(error.message))
@@ -198,21 +208,25 @@ try {
     await assertNoExtraControls(parts)
     await one.click()
     const oneStrokeParts = await values(parts.locator('.part'))
-    assert.equal(oneStrokeParts.length, 23)
-    assert.equal(new Set(oneStrokeParts).size, 23)
-    assert.equal(await parts.locator('.part:not([data-component-type="ideograph"]):not([data-component-type="radical"])').count(), 0)
+    assert.equal(oneStrokeParts.length, 24)
+    assert.equal(new Set(oneStrokeParts).size, 24)
+    assert.deepEqual(
+      await values(parts.locator('.part:not([data-component-type="ideograph"]):not([data-component-type="radical"])')),
+      ['〇'],
+      '〇 is the only one-stroke part that is neither an ideograph nor a radical',
+    )
     await assertNoStrokeSymbols(parts)
-    // Numeric searches span both kinds of component and keep their identities explicit.
+    // Numeric searches span every part in the palette and keep their identities explicit.
     const search = parts.getByRole('searchbox')
     await search.fill('1')
     const all = await values(parts.locator('.part'))
-    assert.equal(all.length, 61)
-    assert.equal(new Set(all).size, 61)
-    assert.deepEqual([...all].sort(), [...oneStrokeParts, ...unicodeStrokes].sort())
-    await assertStrokeSection(parts, 23, 38)
+    assert.equal(all.length, 64)
+    assert.equal(new Set(all).size, 64)
+    assert.deepEqual([...all].sort(), [...oneStrokeParts, ...searchOnly, ...unicodeStrokes].sort())
+    await assertStrokeSection(parts, 26, 38)
     for (const [part, symbol] of [['一', '㇐'], ['丨', '㇑'], ['丶', '㇔'], ['丿', '㇒'], ['乚', '㇟'], ['亅', '㇚']]) {
-      assert.ok(all.slice(0, 23).includes(part), `${part} stays in the ordinary results`)
-      assert.ok(all.slice(23).includes(symbol), `${symbol} stays in the stroke section`)
+      assert.ok(all.slice(0, 26).includes(part), `${part} stays in the ordinary results`)
+      assert.ok(all.slice(26).includes(symbol), `${symbol} stays in the stroke section`)
     }
     assert.equal(await parts.locator('[data-character="⺄"]').getAttribute('data-component-type'), 'radical')
     assert.match(await parts.locator('[data-character="⺄"]').getAttribute('aria-label'), /Radical/)
@@ -260,7 +274,10 @@ try {
     assert.deepEqual(await values(parts.locator('.part')), onlyStrokes)
     // Equivalent stroke forms keep their pick order in Recent.
     for (const symbol of ['㇒', '㇐', '㇓']) await parts.locator(`[data-character="${symbol}"]`).press('Enter')
-    await parts.getByRole('tab', { name: 'Recent', exact: true }).click()
+    // The last tile keeps its card over the tabs; take the tab by keyboard instead of pressing it.
+    await full.mouse.move(2, 2)
+    await parts.getByRole('tab', { name: 'Recent', exact: true }).focus()
+    await full.keyboard.press('Enter')
     await assertStrokeSection(parts, 0, 3)
     assert.deepEqual(await values(parts.locator('section.stroke-results .part')), ['㇓', '㇐', '㇒'])
     await full.close()
@@ -296,5 +313,5 @@ try {
   assert.ok(bounds.x >= 0 && bounds.x + bounds.width <= await touch.evaluate(() => innerWidth))
   await touch.close()
   assert.deepEqual(errors, [])
-  console.log('PASS stroke identity: Strokes, 23 CJK/radical parts, 38 symbols, split searches/Recent, readable neutral gray, exact selection/copy, source-backed keyboard/touch cards and adapter swaps')
+  console.log('PASS stroke identity: Strokes, 24 one-stroke parts and 2 Jurchen beside them, 38 symbols, split searches/Recent, readable neutral gray, exact selection/copy, source-backed keyboard/touch cards and adapter swaps')
 } finally { await browser.close() }

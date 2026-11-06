@@ -12,8 +12,10 @@ import { hasBopomofo, bopomofoSource } from './bopomofo.js'
 import { hasSmallSeal, smallSealSource } from './small-seal.js'
 import { hasNewKorean, newKoreanSource } from './new-korean.js'
 import { hasShuishu, shuishuSource } from './shuishu.js'
+import { hasJurchen, jurchenSource } from './jurchen.js'
 import { hasPaletteGlyph, paletteSource } from './palette.js'
 import { leaves, parse, splitDescription } from '../core/ids.js'
+import { tonesOf } from '../core/marks.js'
 
 /**
  * What in a sequence calls for bundled outlines instead of the export: a tree of empty slots draws
@@ -26,12 +28,13 @@ export function traitsOf(sequence) {
   const empty = parsed !== null && !parsed.problem && parsed.tree !== null && leaves(parsed.tree).every(leaf => leaf.char === null)
   return {
     empty,
-    loose: splitDescription(sequence).marks !== '',
+    loose: splitDescription(sequence).marks !== '' || (parsed !== null && !parsed.problem && parsed.tree !== null && tonesOf(parsed.tree) !== ''),
     tangut: hasTangut(sequence),
     bopomofo: hasBopomofo(sequence),
     seal: hasSmallSeal(sequence),
     newKorean: hasNewKorean(sequence),
     shuishu: hasShuishu(sequence),
+    jurchen: hasJurchen(sequence),
     palette: [...sequence].some(hasPaletteGlyph),
   }
 }
@@ -57,6 +60,7 @@ export function sourceFor(sequence, { base, fontStyle = 'sans', separate = false
   if (traits.seal) source = smallSealSource({ fallback: source, ...loaders.seal })
   if (traits.newKorean) source = newKoreanSource({ fallback: source, ...loaders.newKorean })
   if (traits.shuishu) source = shuishuSource({ fallback: source, ...loaders.shuishu })
-  if (traits.palette) source = paletteSource({ fallback: source, ...loaders.palette })
+  if (traits.jurchen) source = jurchenSource({ fallback: source, ...loaders.jurchen })
+  if (traits.palette) source = paletteSource({ fallback: source, under: fontStyle !== 'sans', style: fontStyle, ...loaders.palette })
   return source ?? bundledSource({ load: async () => ({ records: {} }), matches: () => false })
 }

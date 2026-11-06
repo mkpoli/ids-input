@@ -4,6 +4,8 @@
 // authored layer transforms, applies them to the geometry, and reports what it could not evaluate.
 // Compositing (the ㇯ subtraction and the union of operators) belongs to the consumer of the pieces.
 import { TransformError, chainIsAffine, affineForChain, transformPieces } from './transform.js'
+import { applyGeometryEdits } from './geometry-edit.js'
+import { findLayer } from './model.js'
 
 /** @typedef {import('./model.js').Document} Document */
 /** @typedef {import('./model.js').Node} Node */
@@ -20,10 +22,35 @@ import { TransformError, chainIsAffine, affineForChain, transformPieces } from '
 /** @typedef {{ kind: 'group', node: string, child: Scope }} GroupScope */
 /** @typedef {{ kind: 'slot', node: string }} SlotScope */
 /** @typedef {ComponentScope | OperatorScope | GroupScope | SlotScope} Scope */
-/** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[] }} ScopeTree */
+/** @typedef {{ root: Scope, complete: boolean, issues: LayerIssue[], leafFrames: Map<number, number[]> }} ScopeTree
+ *  `leafFrames` is filled by the caller that knows the layout: the canvas matrix of the layer each
+ *  composer leaf stands for, for anything drawn apart from the ink, such as an emoji. */
 
 /** @param {unknown} value @returns {value is number[]} */
 const matrix = value => Array.isArray(value) && value.length === 6 && value.every(entry => typeof entry === 'number' && Number.isFinite(entry))
+
+/** The component's geometry with its authored edits applied; unresolved edits are reported.
+ * @param {Geometry | null} geometry @param {import('./model.js').GeometryEdit[]} edits @param {string} node @param {LayerIssue[]} issues @param {number} tolerance */
+function editedGeometry(geometry, edits, node, issues, tolerance) {
+  if (!geometry || !Array.isArray(geometry.pieces)) return geometry
+  const result = applyGeometryEdits(geometry, edits, node, { tolerance })
+  for (const edit of result.unresolved) issues.push({ node, reason: 'geometry', message: `unresolved geometry edit ${edit.id}` })
+  return result.geometry
+}
+
+/**
+ * Report geometry edits that no rendered component received: a target that is not in the tree, or a
+ * layer that is not a component. A component the walk skipped has its own issue already.
+ * @param {Document} document @param {Set<string>} seen @param {LayerIssue[]} issues
+ */
+function missingEditTargets(document, seen, issues) {
+  for (const edit of document.geometryEdits ?? []) {
+    if (seen.has(edit.node)) continue
+    const found = findLayer(document.root, edit.node)
+    if (!found) issues.push({ node: edit.node, reason: 'geometry', message: `no layer ${edit.node} for geometry edit ${edit.id}` })
+    else if (found.node.kind !== 'component') issues.push({ node: edit.node, reason: 'geometry', message: `geometry edit ${edit.id} targets ${edit.node}, which is not a component` })
+  }
+}
 
 /**
  * Draw the transformed local pieces of a document. `source.geometry(node)` answers a component's
@@ -37,6 +64,8 @@ const matrix = value => Array.isArray(value) && value.length === 6 && value.ever
 export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
   /** @type {(Piece & { node: string, approximate: boolean })[]} */
   const pieces = []
+  /** @type {Set<string>} */
+  const seen = new Set()
   /** @type {LayerIssue[]} */
   const issues = []
   /** @param {Node} node @param {Chain} parentChain */
@@ -44,8 +73,9 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     const authored = node.transform ?? []
     const chain = [...authored, ...parentChain]
     if (node.kind === 'component') {
+      seen.add(node.id)
       let geometry
-      try { geometry = source.geometry(node) } catch (error) {
+      try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
         return
       }
@@ -82,6 +112,7 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
     })
   }
   visit(document.root, [])
+  missingEditTargets(document, seen, issues)
   return { pieces, complete: issues.length === 0, issues }
 }
 
@@ -92,6 +123,8 @@ export function renderLayers(document, source, { tolerance = 0.1 } = {}) {
  * @param {Document} document @param {LayerSource} source @param {{ tolerance?: number }} [options] @returns {ScopeTree}
  */
 export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
+  /** @type {Set<string>} */
+  const seen = new Set()
   /** @type {LayerIssue[]} */
   const issues = []
   /** @param {Node} node @param {Chain} parentChain @returns {Scope | null} */
@@ -99,8 +132,9 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     const chain = [...(node.transform ?? []), ...parentChain]
     if (node.kind === 'slot') return { kind: 'slot', node: node.id }
     if (node.kind === 'component') {
+      seen.add(node.id)
       let geometry
-      try { geometry = source.geometry(node) } catch (error) {
+      try { geometry = editedGeometry(source.geometry(node), document.geometryEdits ?? [], node.id, issues, tolerance) } catch (error) {
         issues.push({ node: node.id, reason: 'geometry', message: error instanceof Error ? error.message : String(error) })
         return null
       }
@@ -143,7 +177,8 @@ export function renderScopes(document, source, { tolerance = 0.1 } = {}) {
     return { kind: 'operator', node: node.id, op: node.op, children }
   }
   const root = visit(document.root, []) ?? { kind: 'slot', node: document.root.id }
-  return { root, complete: issues.length === 0, issues }
+  missingEditTargets(document, seen, issues)
+  return { root, complete: issues.length === 0, issues, leafFrames: new Map() }
 }
 
 export { chainIsAffine, affineForChain }

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "IDS Workshop",
+  "mainBinaryName": "ids-workshop",
+  "version": "../package.json",
+  "identifier": "li.mkpo.ids-workshop",
+  "build": {
+    "beforeDevCommand": "bun run dev:desktop-page",
+    "devUrl": "http://localhost:5173",
+    "beforeBuildCommand": "bun run build:desktop-page",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "nsis",
+      "dmg",
+      "app",
+      "appimage",
+      "deb"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Write, edit and draw ideographic description sequences",
+    "copyright": "mkpoli",
+    "license": "MIT",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "atlas/": "atlas/"
+    },
+    "macOS": {
+      "signingIdentity": "-",
+      "minimumSystemVersion": "11.0",
+      "dmg": {
+        "background": "installer/dmg-background.tiff",
+        "windowSize": {
+          "width": 660,
+          "height": 400
+        },
+        "appPosition": {
+          "x": 180,
+          "y": 190
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 190
+        }
+      }
+    },
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "headerImage": "installer/header.bmp",
+        "sidebarImage": "installer/sidebar.bmp",
+        "uninstallerHeaderImage": "installer/header.bmp",
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "languages": [
+          "English",
+          "Japanese",
+          "SimpChinese",
+          "TradChinese",
+          "Korean",
+          "Vietnamese"
+        ],
+        "displayLanguageSelector": false,
+        "startMenuFolder": "IDS Workshop"
+      }
+    }
+  }
+}

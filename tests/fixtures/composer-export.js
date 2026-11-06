@@ -28,7 +28,7 @@ export const ops = ['⿰', '⿱', '⿸', '⿺', '⿵', '⿹', '⿶', '⿴', '⿷
 export const layout = { ops, defaults: Object.fromEntries(['L', 'R', 'T', 'B', ...ops.slice(2).flatMap(op => [`${op}0`, `${op}1`])].map(p => [p, [0, 0, 1000, 1000]])),
   features: {}, seeds: [[{ shape: [ops.length + 2 * 81, 8], data: Buffer.alloc(2 * (ops.length + 162) * 8).toString('base64') }, Buffer.alloc(32).toString('base64')]] }
 const records = {
-  木: character('木', [[100, -60, 900, 0], [470, -80, 530, 820]]),
+  木: { ...character('木', [[100, -60, 900, 0], [470, -80, 530, 820]]), sg: [[0, [0]], [1, [1]]] },
   厃: character('厃', [[100, 700, 900, 800], [100, 0, 180, 800], [820, 0, 900, 800]]),
   儿: character('儿', [[250, 0, 330, 620], [670, 0, 750, 620]]),
   扌: character('扌', [[300, 0, 380, 800], [120, 500, 700, 580]]),
@@ -56,6 +56,11 @@ const records = {
       ['MLQ5Q3Q5', int16([1228,376,1764,376,1728,204,1576,-52,1264,-236,732,-356,320,-392,292,-300,152,-52,84,24,428,36,856,88,1092,168,1204,288,1228,376]), int16([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0])],
     ] }, ink: 5120, nl: 16, o: 16 },
   三: character('三', [[120, 60, 880, 160], [160, 320, 840, 420], [120, 580, 880, 680]]),
+  // The operands of ⿳山六廾: 六 is a full character, not a band, so a stacked middle must not
+  // flatten it into one.
+  山: character('山', [[120, -40, 880, 60], [120, 600, 200, 810], [460, 700, 540, 820], [820, 600, 900, 810]]),
+  六: character('六', [[110, 330, 890, 410], [455, 720, 545, 830], [170, 90, 370, 270], [630, 90, 830, 270]]),
+  廾: character('廾', [[120, 430, 880, 510], [300, -50, 380, 790], [620, -50, 700, 790]]),
 }
 /** Each file of the export by its name: JSON text, or gzip bytes for a shard. */
 export const files = {

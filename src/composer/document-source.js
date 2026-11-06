@@ -4,7 +4,7 @@
 // local placements, normalizes each leaf's canvas paths into its own 1000-unit frame, and leaves the
 // authored layer transforms to the document renderer. The caller must request `separate: true` and
 // pass the sketch it received with the drawing.
-import { TransformError, parsePath, toSequence, transformPath } from '../document/index.js'
+import { TransformError, parsePath, splitSubpaths, toSequence, transformPath } from '../document/index.js'
 
 /** @typedef {import('../document/index.js').Document} Document */
 /** @typedef {import('../document/index.js').Node} Node */
@@ -14,7 +14,7 @@ import { TransformError, parsePath, toSequence, transformPath } from '../documen
 /** @typedef {import('../adapter/types.js').SketchLeaf} SketchLeaf */
 /** @typedef {[number, number, number, number]} Box */
 /** @typedef {{ node: Node, leaf: number | null, region: Box | null }} LayerInfo */
-/** @typedef {{ source: LayerSource, complete: boolean, issues: string[] }} DocumentSource */
+/** @typedef {{ source: LayerSource, complete: boolean, issues: string[], info: Map<string, LayerInfo>, partsByLeaf: Map<number, DrawingPart[]> }} DocumentSource */
 
 const CANVAS = /** @type {Box} */ ([0, 0, 1000, 1000])
 
@@ -23,6 +23,107 @@ const union = (a, b) => {
   const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1])
   const x1 = Math.max(a[0] + a[2], b[0] + b[2]), y1 = Math.max(a[1] + a[3], b[1] + b[3])
   return [x, y, x1 - x, y1 - y]
+}
+
+const CURVE_STEPS = 16
+
+/** The polygon a closed subpath traces, with each curve sampled. @param {string} d @returns {number[][]} */
+function flatten(d) {
+  const points = []
+  for (const segment of parsePath(d).segments) {
+    if (segment.type === 'Z') continue
+    if (segment.type === 'M' || segment.type === 'L') { points.push(segment.p); continue }
+    for (let step = 1; step <= CURVE_STEPS; step++) {
+      const t = step / CURVE_STEPS, u = 1 - t
+      if (segment.type === 'Q') {
+        const { p, c, end } = segment
+        points.push([0, 1].map(k => u * u * p[k] + 2 * u * t * c[k] + t * t * end[k]))
+      } else if (segment.type === 'C') {
+        const { p, c1, c2, end } = segment
+        points.push([0, 1].map(k => u * u * u * p[k] + 3 * u * u * t * c1[k] + 3 * u * t * t * c2[k] + t * t * t * end[k]))
+      }
+    }
+  }
+  return points
+}
+
+/** The signed area of a polygon. @param {number[][]} points */
+function signedAreaOf(points) {
+  let area = 0
+  for (let i = 0; i < points.length; i++) {
+    const a = points[i], b = points[(i + 1) % points.length]
+    area += a[0] * b[1] - b[0] * a[1]
+  }
+  return area / 2
+}
+
+/** Whether `point` lies inside the polygon through `points`, by the even-odd rule.
+ * @param {number[]} point @param {number[][]} points */
+function inside(point, points) {
+  let hit = false
+  for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+    const a = points[i], b = points[j]
+    if ((a[1] > point[1]) !== (b[1] > point[1]) && point[0] < (b[0] - a[0]) * (point[1] - a[1]) / (b[1] - a[1]) + a[0]) hit = !hit
+  }
+  return hit
+}
+
+/** Whether segment ab properly crosses segment cd. @param {number[]} a @param {number[]} b @param {number[]} c @param {number[]} d */
+function crosses(a, b, c, d) {
+  const side = (/** @type {number[]} */ p, /** @type {number[]} */ q, /** @type {number[]} */ r) => Math.sign((q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]))
+  return side(a, b, c) * side(a, b, d) < 0 && side(c, d, a) * side(c, d, b) < 0
+}
+
+/** Whether any edge of one polygon properly crosses an edge of the other. @param {number[][]} one @param {number[][]} other */
+function edgesCross(one, other) {
+  for (let i = 0; i < one.length; i++) {
+    for (let j = 0; j < other.length; j++) {
+      if (crosses(one[i], one[(i + 1) % one.length], other[j], other[(j + 1) % other.length])) return true
+    }
+  }
+  return false
+}
+
+/** Whether `inner` lies wholly inside `outer`: every vertex is inside and no edge crosses.
+ * @param {number[][]} outer @param {number[][]} inner */
+function contains(outer, inner) {
+  return inner.every(point => inside(point, outer)) && !edgesCross(outer, inner)
+}
+
+/**
+ * A drawing part as document pieces and stroke groups. A part with stroke groups becomes one piece
+ * per closed contour, so each group names piece indices. Under the nonzero rule a contour is a cut
+ * (a counter) when the contours that wholly enclose it wind to a nonzero total and its own winding
+ * cancels it. Cuts erase every positive piece of the component, so a part where a cut meets a
+ * positive contour that does not enclose it keeps its compound path and has no stroke groups.
+ * Parts without groups keep their compound path.
+ * @param {{ d: string, cut?: boolean, strokes?: [number, number[]][] }} part @param {string} d
+ * @returns {{ pieces: import('../document/render.js').LocalPiece[], strokes?: { id: string, pieces: number[] }[] }}
+ */
+function partGeometry(part, d) {
+  if (part.cut || !part.strokes?.length) return { pieces: [{ d, fillRule: 'nonzero', cut: Boolean(part.cut) }] }
+  const groups = part.strokes
+  const shared = groups.flatMap(([, group]) => group).some((contour, index, all) => all.indexOf(contour) !== index)
+  if (shared) return { pieces: [{ d, fillRule: 'nonzero' }] }
+  const subpaths = splitSubpaths(d)
+  const contours = subpaths.length
+  if (!contours || part.strokes.some(([, group]) => group.some(index => !Number.isInteger(index) || index < 0 || index >= contours))) {
+    return { pieces: [{ d, fillRule: 'nonzero' }] }
+  }
+  const polygons = subpaths.map(flatten)
+  const turns = polygons.map(polygon => Math.sign(signedAreaOf(polygon)))
+  const enclosers = polygons.map((polygon, index) => polygons.map((_, at) => at).filter(at => at !== index && contains(polygons[at], polygon)))
+  const cuts = polygons.map((_, index) => {
+    const winding = enclosers[index].reduce((sum, at) => sum + turns[at], 0)
+    return winding !== 0 && winding + turns[index] === 0
+  })
+  const meets = (/** @type {number} */ one, /** @type {number} */ other) => edgesCross(polygons[one], polygons[other]) || contains(polygons[one], polygons[other]) || contains(polygons[other], polygons[one])
+  const erased = cuts.some((cut, index) => cut && polygons.some((_, at) => at !== index && !cuts[at] && !enclosers[index].includes(at) && meets(index, at)))
+  if (erased) return { pieces: [{ d, fillRule: 'nonzero' }] }
+  /** @type {import('../document/render.js').LocalPiece[]} */
+  const pieces = subpaths.map((subpath, index) => ({ d: subpath, fillRule: 'nonzero', cut: cuts[index] }))
+  const strokes = part.strokes.map(([id, group]) => ({ id: String(id), pieces: [...group] }))
+  return { pieces, strokes }
 }
 
 /** The affine map from a child's 1000-unit local frame into its parent's, by their boxes.
@@ -67,7 +168,7 @@ export function documentSource(document, drawing, sketch) {
       const leaf = leaves++
       if (node.kind === 'component') components++
       const box = sketch?.[leaf]?.box
-      const region = Array.isArray(box) && box.length === 4 && Number.isFinite(box[2]) && box[2] > 0 && Number.isFinite(box[3]) && box[3] > 0
+      const region = Array.isArray(box) && box.length === 4 && box.every(Number.isFinite) && box[2] > 0 && box[3] > 0
         ? /** @type {Box} */ ([...box])
         : null
       if (!region) issues.push(`leaf ${leaf} has no layout box`)
@@ -139,7 +240,7 @@ export function documentSource(document, drawing, sketch) {
   }
   if (!sketch) issues.push('the drawing has no sketch')
 
-  /** @param {Node} node @returns {{ pieces: import('../document/render.js').LocalPiece[] } | null} */
+  /** @param {Node} node @returns {{ pieces: import('../document/render.js').LocalPiece[], strokes?: { id: string, pieces: number[] }[] } | null} */
   const geometry = node => {
     const at = info.get(node.id)
     if (!at || at.leaf === null || !at.region) return null
@@ -147,13 +248,27 @@ export function documentSource(document, drawing, sketch) {
     const matrix = localOf(at.region)
     if (!list?.length || !matrix) return null
     try {
-      return {
-        pieces: list.map(part => ({
-          d: transformPath(part.d, [{ type: 'affine', matrix }]).d,
-          fillRule: /** @type {'nonzero'} */ ('nonzero'),
-          cut: Boolean(part.cut),
-        })),
-      }
+      /** @type {import('../document/render.js').LocalPiece[]} */
+      const pieces = []
+      /** @type {{ id: string, pieces: number[] }[]} */
+      const strokes = []
+      /** @type {Map<string, number>} */
+      const counts = new Map()
+      const made = list.map(part => {
+        const result = partGeometry(part, transformPath(part.d, [{ type: 'affine', matrix }]).d)
+        for (const stroke of result.strokes ?? []) counts.set(stroke.id, (counts.get(stroke.id) ?? 0) + 1)
+        return result
+      })
+      // Glyphs number their strokes independently, so an ID that more than one part uses is
+      // qualified by the part's index and every stroke stays addressable.
+      made.forEach((result, part) => {
+        const offset = pieces.length
+        pieces.push(...result.pieces)
+        for (const stroke of result.strokes ?? []) {
+          strokes.push({ id: (counts.get(stroke.id) ?? 0) > 1 ? `${part}:${stroke.id}` : stroke.id, pieces: stroke.pieces.map(index => index + offset) })
+        }
+      })
+      return strokes.length ? { pieces, strokes } : { pieces }
     } catch (error) {
       if (error instanceof TransformError) return null
       throw error
@@ -169,6 +284,8 @@ export function documentSource(document, drawing, sketch) {
     source: { geometry, placement },
     complete: issues.length === 0,
     issues,
+    info,
+    partsByLeaf: parts,
   }
 }
 

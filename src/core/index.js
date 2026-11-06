@@ -1,9 +1,11 @@
 // @ts-check
 export * from './ids.js'
+export * from './hangul-ids.js'
 export * from './pyramid.js'
 export * from './repeat.js'
 export * from './aliases.js'
 export * from './strokes.js'
+export * from './component-strokes.js'
 export * from './keys.js'
 export * from './history.js'
 export * from './decompose.js'

@@ -20,7 +20,7 @@ for (const row of report.rows) {
 const rows = report.rows.filter(row => row.char && (family === 'enclosures'
   ? row.flags.some(flag => flag.code === 'auto-cells-enclosure')
   : row.char.codePointAt(0) >= 0x4e00 && row.char.codePointAt(0) <= 0x9fff && row.metrics.overlay &&
-    !/[\[⿾⿿〾㇯⿼⿽]/u.test(row.sequence) && mappings.get(row.sequence).size === 1 &&
+    !/[[⿾⿿〾㇯⿼⿽]/u.test(row.sequence) && mappings.get(row.sequence).size === 1 &&
     row.flags.some(flag => flag.code === 'low-native-overlap')))
   .sort((a, b) => (a.raster?.iou ?? 1) - (b.raster?.iou ?? 1))
 const seen = new Set()

@@ -1,0 +1,10 @@
+{
+  // The composer exports ids-input draws from (`src/index.js`), in this project's own bucket: an export
+  // is published by copying it in, so a new version needs no deploy here.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ids-input-composer",
+  "main": "src/index.js",
+  "compatibility_date": "2025-10-01",
+  "workers_dev": true,
+  "r2_buckets": [{ "binding": "COMPOSER", "bucket_name": "ids-input-composer" }]
+}

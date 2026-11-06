@@ -18,7 +18,7 @@ export function characterScript(char) {
     else if (cp > /** @type {number} */ (last)) lo = mid + 1
     else {
       if (script === 'Zyyy' || script === 'Zinh') return null
-      return /** @type {Record<string, string>} */ ({ Hani: 'han', Latn: 'latin', Cyrl: 'cyrillic', Hang: 'hangul', Bopo: 'bopomofo', Tang: 'tangut' })[/** @type {string} */ (script)] ?? /** @type {string} */ (script)
+      return /** @type {Record<string, string>} */ ({ Hani: 'han', Latn: 'latin', Cyrl: 'cyrillic', Hang: 'hangul', Bopo: 'bopomofo', Tang: 'tangut', Jurc: 'jurchen' })[/** @type {string} */ (script)] ?? /** @type {string} */ (script)
     }
   }
   return null
@@ -39,7 +39,7 @@ export function partScript(part) {
 export function groupPaletteParts(parts) {
   const groups = new Map()
   for (const part of parts) {
-    const group = part.kind === 'seal' ? 'seal' : part.kind === 'shui' ? 'shuishu' : part.kind === 't' ? 'tangut' : part.kind === 's' ? 'strokes' : partScript(part.part)
+    const group = part.kind === 'seal' ? 'seal' : part.kind === 'shui' ? 'shuishu' : part.kind === 'jur' ? 'jurchen' : part.kind === 't' ? 'tangut' : part.kind === 's' ? 'strokes' : partScript(part.part)
     if (!group) continue
     const found = groups.get(group)
     if (found) found.push(part)
@@ -49,8 +49,8 @@ export function groupPaletteParts(parts) {
 }
 
 // These groups already have palette views: Han, Latin and Cyrillic tabs, Hangul, Bopomofo, Tangut,
-// Small Seal, Shuishu and the one-stroke Components group. Symbols and mixed-script descriptions have
+// Jurchen, Small Seal, Shuishu and the one-stroke Components group. Symbols and mixed-script descriptions have
 // none, so the Other scripts selector carries them too.
-const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'seal', 'shuishu', 'strokes'])
+const EXISTING_GROUPS = new Set(['han', 'latin', 'cyrillic', 'hangul', 'bopomofo', 'tangut', 'jurchen', 'seal', 'shuishu', 'strokes'])
 /** @param {string | null | undefined} group */
 export const isOtherScript = group => Boolean(group && !EXISTING_GROUPS.has(group))

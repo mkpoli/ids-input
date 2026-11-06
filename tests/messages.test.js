@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { translator } from '../src/svelte/i18n.js'
 import { STRUCTURAL_PRESETS } from '../src/core/structural-search.js'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
+import { SOURCE_KINDS } from '../src/adapter/character-info.js'
 
 const catalogue = name => JSON.parse(readFileSync(new URL(`../messages/${name}.json`, import.meta.url), 'utf8'))
 const en = catalogue('en')
@@ -18,6 +19,28 @@ describe('the message catalogues', () => {
       }
     }
   })
+  it('name every kind of source the character card can list', () => {
+    // The card names a source by its kind, and the kinds extend the ones the adapter defines.
+    for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
+      const messages = catalogue(name)
+      for (const kind of SOURCE_KINDS) expect(typeof messages[`info.site.${kind}`], `${name}: ${kind}`).toBe('string')
+      expect(typeof messages['info.site.course'], name).toBe('string')
+    }
+  })
+  it('keep the keys the data names listed for the checker', () => {
+    // The checker sees `t('…')` calls, not the data tables that name these keys; the list in the
+    // config stands in for them, and an entry that no table names any more would hide a dead key.
+    const config = JSON.parse(readFileSync(new URL('../x18n.config.json', import.meta.url), 'utf8'))
+    const data = [
+      readFileSync(new URL('../demo/lib/sources.js', import.meta.url), 'utf8'),
+      readFileSync(new URL('../src/svelte/IdsParts.svelte', import.meta.url), 'utf8'),
+    ].join('\n')
+    expect(config.usage.keysInUse.length).toBeGreaterThan(0)
+    for (const listed of config.usage.keysInUse) {
+      const key = listed.replace(/^(?:core|demo):/, '')
+      expect(data.includes(`'${key}'`), `${listed} is listed but no data table names it`).toBe(true)
+    }
+  })
   it('hold the keys the components build at runtime', () => {
     for (const name of ['leftRight', 'variant']) expect(`ids.op.${name}` in en).toBe(true)
     for (const tab of ['find', 'parts', 'from', 'templates']) expect(`ids.pick.${tab}` in en).toBe(true)
@@ -25,6 +48,8 @@ describe('the message catalogues', () => {
     for (const name of ['en', 'ja', 'ko', 'vi', 'zh-Hans', 'zh-Hant']) {
       const messages = catalogue(name)
       for (const preset of STRUCTURAL_PRESETS) expect(`ids.structural.${preset.id}` in messages, `${name}: ${preset.id}`).toBe(true)
+      for (const key of ['mode', 'exact', 'unknown', 'unknownHelp', 'unknownInvalid'])
+        expect(`ids.structural.${key}` in messages, `${name}: ${key}`).toBe(true)
       for (const key of ['generatorPart', 'repeatCustom', 'repeatAdd', 'repeatRowsHint', 'repeatRowsInvalid', 'five', 'fiveHost', 'fiveHostHint', 'fiveInsert', 'fiveInsertEnclosed', 'fiveUnsupported', 'fiveHostUnsupported', 'fiveTooLong', 'fiveTarget'])
         expect(`ids.templates.${key}` in messages, `${name}: ${key}`).toBe(true)
     }

@@ -2,8 +2,8 @@ import { describe, expect, test } from 'bun:test'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 import { EXAMPLE_SOURCES, sourceNumber } from '../demo/lib/example-sources.js'
 
-// The sequence whose origin the repository does not record; it stays uncited until one is found.
-const UNRECORDED = new Set(['⿰言⿱⿰幺幺⿰幺幺'])
+// The sequences whose origin the repository does not record; they stay uncited until one is found.
+const UNRECORDED = new Set(['⿰言⿱⿰幺幺⿰幺幺', '⿱車🚗'])
 
 const entries = EXAMPLE_GROUPS.flatMap(group => group.examples.map(example => ({ group, example })))
 /** @param {number} n */

@@ -11,19 +11,21 @@
   import Swatches from './controls/Swatches.svelte'
   import Icon from './Icon.svelte'
 
-  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][], incomplete?: boolean, document?: import('../../src/document/index.js').Document | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
-  let { drawing = null, scopes = null, slots = [], incomplete = false, document = null, sequence, t, onnote } = $props()
+  /** @type {{ drawing?: import('../../src/adapter/types.js').Drawing | null, scopes?: import('../../src/document/index.js').ScopeTree | null, slots?: number[][], emoji?: NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null, cut?: string | null, cutLeaf?: number | null, incomplete?: boolean, document?: import('../../src/document/index.js').Document | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, onnote: (text: string) => void }} */
+  let { drawing = null, scopes = null, slots = [], emoji = null, cut = null, cutLeaf = null, incomplete = false, document = null, sequence, t, onnote } = $props()
   let partial = $state(false)
   let s = $state(storedSettings())
-  $effect(() => keepSettings($state.snapshot(s)))
+  let touched = $state(false)
+  $effect(() => { const settings = $state.snapshot(s); if (touched) keepSettings(settings) })
   const ready = $derived(Boolean(scopes ?? drawing))
   const canExport = $derived(ready && (!incomplete || partial))
-  const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
+  const thumb = $derived(scopes ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(scopedSvgOf(scopes, s, 96, slots, emoji ?? [], cut ?? '', cutLeaf))}` : drawing ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgOf(drawing, s, 96))}` : '')
   const uid = $props.id()
 
   /** @param {import('../../src/adapter/types.js').Drawing | null} drawing @param {import('../../src/document/index.js').ScopeTree | null} scopes @param {ExportSettings} settings @param {import('../../src/document/index.js').Document | null} document */
-  async function pngOutput(drawing, scopes, settings, document) {
-    const blob = scopes ? await scopedPngOf(scopes, settings, slots) : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings)
+  /** @param {import('../../src/adapter/types.js').Drawing | null} drawing @param {import('../../src/document/index.js').ScopeTree | null} scopes @param {ExportSettings} settings @param {string} document @param {NonNullable<import('../../src/adapter/types.js').Drawing['emoji']> | null} emoji @param {string | null} cut @param {number | null} cutLeaf */
+  async function pngOutput(drawing, scopes, settings, document, emoji, cut, cutLeaf) {
+    const blob = scopes ? await scopedPngOf(scopes, settings, slots, emoji ?? [], cut ?? '', cutLeaf) : await pngOf(/** @type {NonNullable<typeof drawing>} */ (drawing), settings)
     return document ? new Blob([embedPngDocument(await blob.arrayBuffer(), document)], { type: 'image/png' }) : blob
   }
 
@@ -31,18 +33,25 @@
   export async function save(format) {
     if (!canExport) return
     // The click's drawing, name and settings: the export runs on after the page has moved on.
-    const drawn = drawing, drawnScopes = scopes, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
+    const drawn = drawing, drawnScopes = scopes, drawnEmoji = emoji, drawnCut = cut, drawnCutLeaf = cutLeaf, name = sequence, settings = { ...$state.snapshot(s), format: format ?? s.format }
     try {
-      if (settings.format === 'svg') download(new Blob([embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
-      else download(await pngOutput(drawn, drawnScopes, settings, document), fileName(name, 'png'))
+      if (settings.format === 'svg') download(new Blob([embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots, drawnEmoji ?? [], drawnCut ?? '', drawnCutLeaf) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document)], { type: 'image/svg+xml' }), fileName(name, 'svg'))
+      else download(await pngOutput(drawn, drawnScopes, settings, document, drawnEmoji, drawnCut, drawnCutLeaf), fileName(name, 'png'))
     } catch { onnote(t('app.export.failed')) }
   }
   async function copy() {
     if (!canExport) return
-    const drawn = drawing, drawnScopes = scopes, settings = $state.snapshot(s), format = settings.format.toUpperCase()
+    const drawn = drawing, drawnScopes = scopes, drawnEmoji = emoji, drawnCut = cut, drawnCutLeaf = cutLeaf, settings = $state.snapshot(s), format = settings.format.toUpperCase()
+    // WebKit drops the click's activation when the page awaits before clipboard.write, and then
+    // rejects with NotAllowedError; the PNG is handed over as a promise for the clipboard to settle.
     try {
-      if (settings.format === 'svg') await navigator.clipboard.writeText(embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document))
-      else await navigator.clipboard.write([new ClipboardItem({ 'image/png': await pngOutput(drawn, drawnScopes, settings, document) })])
+      if (settings.format === 'svg') await navigator.clipboard.writeText(embedSvgDocument(drawnScopes ? scopedSvgOf(drawnScopes, settings, settings.size, slots, drawnEmoji ?? [], drawnCut ?? '', drawnCutLeaf) : svgOf(/** @type {NonNullable<typeof drawn>} */ (drawn), settings), document))
+      else {
+        const png = pngOutput(drawn, drawnScopes, settings, document, drawnEmoji, drawnCut, drawnCutLeaf)
+        // A write WebKit refuses leaves the PNG it was handed unread; its failure is told by the note.
+        png.catch(() => {})
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })])
+      }
       onnote(t('app.export.copied', { format }))
     } catch { onnote(t('app.copyFailed')) }
   }
@@ -61,7 +70,7 @@
 
 <section class="export" aria-labelledby="{uid}-title">
   <h3 id="{uid}-title">{t('app.export.title')}</h3>
-  <div class="rows">
+  <div class="rows" onchange={() => { touched = true }} oninput={() => { touched = true }}>
     <div class="row">
       <span class="name" aria-hidden="true">{t('app.export.format')}</span>
       <Segmented label={t('app.export.format')} bind:value={s.format}

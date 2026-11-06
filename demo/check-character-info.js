@@ -17,6 +17,12 @@ try {
     await page.getByText('associated with horses',{exact:true}).waitFor()
     assert.match(await panel.innerText(),/馬/); assert.match(await panel.innerText(),/🐎/)
     assert.match(await panel.innerText(),/Examples/)
+    // The card keeps every marked surface in view, taking a place beside it.
+    assert.ok(await page.evaluate(()=>{
+      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+      const shapes=[...document.querySelectorAll('[data-character-info-avoid]')].map(el=>el.getBoundingClientRect())
+      return shapes.length>0&&shapes.every(s=>card.right<=s.left||card.left>=s.right||card.bottom<=s.top||card.top>=s.bottom)
+    }),'the card leaves every marked surface uncovered')
     // Keep the card open while entering it; explanatory/source sections stay absent.
     await panel.hover();await page.waitForTimeout(300);assert.ok(await panel.isVisible())
     assert.equal(await panel.locator('details, footer').count(),0)
@@ -119,17 +125,36 @@ try {
     await paletteHorse.click();await panel.waitFor({state:'visible'});await page.waitForTimeout(600)
     // A click keeps the card up, so it is the one that carries the close button.
     assert.equal(await panel.getByRole('button',{name:'Close character information'}).count(),1,'a pinned card offers the close button')
-    const covered=await page.evaluate(()=>{
-      const card=document.querySelector('.ids-character-info').getBoundingClientRect()
+    // A point on the card's own surface, not on one of its controls: a press on a control belongs to
+    // the control, while a press on the surface reaches what the card covers. A tile centre is
+    // preferred, because the point is also meant to sit over a tile the card covers. The card
+    // re-anchors when it starts describing another character, so this is asked again after such a
+    // click: the point has to come from the card as it stands now.
+    const coveredPoint=()=>page.evaluate(()=>{
+      const panel=document.querySelector('.ids-character-info'), card=panel.getBoundingClientRect()
+      const control='button,a,input,select,textarea,summary,label,[role="button"]'
       const node=[...document.querySelectorAll('.parts-grid .part[data-character]')].find(n=>{
-        const box=n.getBoundingClientRect()
-        return box.top>card.top&&box.bottom<card.bottom&&box.left>card.left&&box.right<card.right&&n.dataset.character!=='馬'
+        const box=n.getBoundingClientRect(), x=box.x+box.width/2, y=box.y+box.height/2
+        if(x<=card.left||x>=card.right||y<=card.top||y>=card.bottom||n.dataset.character==='馬')return false
+        const hit=document.elementFromPoint(x,y)
+        return hit===panel||(panel.contains(hit)&&!hit.closest(control))
       })
-      if(!node)return null
-      const box=node.getBoundingClientRect()
-      return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+      if(node){
+        const box=node.getBoundingClientRect()
+        return {value:node.dataset.character,x:box.x+box.width/2,y:box.y+box.height/2}
+      }
+      // No tile centre lands on the card here: take the first point of its bare surface instead,
+      // so the press still ends on the card rather than wherever a tile happens to be.
+      for(let fy=.9;fy>=.25;fy-=.05){
+        for(let fx=.06;fx<=.94;fx+=.04){
+          const x=card.left+card.width*fx, y=card.top+card.height*fy
+          if(document.elementFromPoint(x,y)===panel)return {value:null,x,y}
+        }
+      }
+      return null
     })
-    assert.ok(covered,'the card covers a tile')
+    const covered=await coveredPoint()
+    assert.ok(covered?.value,'the card covers a tile')
     await page.mouse.click(covered.x,covered.y);await page.waitForTimeout(700)
     assert.ok((await field.inputValue()).includes(covered.value),'the tile under the card takes the click')
     assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
@@ -141,10 +166,13 @@ try {
     assert.ok(await panel.isVisible(),'a selection inside the card keeps it')
     assert.equal(await panel.locator('header .glyph').innerText(),covered.value)
     await page.evaluate(()=>getSelection().removeAllRanges())
-    // A press that starts on a card button and ends on a tile below stays the button's press.
+    // A press that starts on a card button and ends on a tile below stays the button's press. The
+    // click above moved the card, so the point under it is taken again.
+    const under=await coveredPoint()
+    assert.ok(under,'the card has a surface to press after it re-anchors')
     const pressButton=await panel.locator('header button').last().boundingBox(),beforePress=await field.inputValue()
     await page.mouse.move(pressButton.x+pressButton.width/2,pressButton.y+pressButton.height/2);await page.mouse.down()
-    await page.mouse.move(covered.x,covered.y,{steps:8});await page.mouse.up()
+    await page.mouse.move(under.x,under.y,{steps:8});await page.mouse.up()
     await page.waitForTimeout(500)
     assert.equal(await field.inputValue(),beforePress,'a press that leaves a card button does not reach the tile below')
     await panel.waitFor({state:'hidden'})
@@ -241,23 +269,28 @@ try {
   }
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true})
   await page.route('https://glyphatlas.org/**',r=>r.abort());await page.goto(`${process.env.IDS_URL ?? 'http://127.0.0.1:5194'}/?lang=en`,{timeout:120000})
+  const card=page.locator('.ids-character-info')
   await page.locator('.ids-field input').fill('⿰馬木')
-  await page.locator('.ids-tree [data-character="馬"]').focus()
-  await page.locator('.ids-character-info').waitFor({state:'visible'})
-  // A tap keeps the card up; its buttons stay reachable without hover.
-  await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
-  await page.locator('.parts-grid .part[data-character="馬"]').first().tap()
-  await page.waitForTimeout(500)
-  assert.ok(await page.locator('.ids-character-info').isVisible())
-  // Painted text takes a tap too, where there is no hover to fall back on.
-  await page.keyboard.press('Escape');await page.locator('.ids-character-info').waitFor({state:'hidden'})
-  await page.locator('.ids-field').scrollIntoViewIfNeeded()
-  await page.evaluate(()=>scrollBy(0,-90));await page.waitForTimeout(200)
+  // Painted text takes a tap, where there is no hover to fall back on.
   const painted=await page.locator('.sequence-paint [data-character="馬"]').first().boundingBox()
   await page.touchscreen.tap(painted.x+painted.width/2,painted.y+painted.height/2)
-  await page.locator('.ids-character-info').waitFor({state:'visible'})
-  assert.equal(await page.locator('.ids-character-info header .glyph').innerText(),'馬')
-  assert.ok(await page.locator('.ids-character-info').evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.bottom<=innerHeight+1}))
+  await card.waitFor({state:'visible'})
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
+  assert.ok(await card.evaluate(el=>{const b=el.getBoundingClientRect();return b.left>=0&&b.right<=innerWidth&&b.bottom<=innerHeight+1}))
   if(process.env.IDS_INFO_SHOTS)await page.screenshot({path:`${process.env.IDS_INFO_SHOTS}/mobile.png`})
+  // The structure sits in the second pane on a phone, where focus opens the card as well.
+  await page.keyboard.press('Escape');await card.waitFor({state:'hidden'})
+  const phoneTabs=page.locator('.phone-tabs button')
+  await phoneTabs.filter({hasText:'Compose'}).click()
+  await page.locator('.ids-tree [data-character="馬"]').focus()
+  await card.waitFor({state:'visible'})
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
+  // A tap on a palette tile keeps its card up, so its buttons stay reachable without hover.
+  await page.keyboard.press('Escape');await card.waitFor({state:'hidden'})
+  await phoneTabs.filter({hasText:'Input'}).click()
+  await page.locator('.parts-grid .part[data-character="馬"]').first().tap()
+  await page.waitForTimeout(500)
+  assert.ok(await card.isVisible())
+  assert.equal(await card.locator('header .glyph').innerText(),'馬')
   await page.close();console.log('PASS mobile viewport')
 } finally { await browser.close() }

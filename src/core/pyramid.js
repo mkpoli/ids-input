@@ -6,7 +6,7 @@ import { parse, sameTree } from './ids.js'
 import { PYRAMID_DIRECTIONS, pyramidRows } from './pyramid-shape.js'
 import { repeatedPart, repeatedText } from './repeat-part.js'
 
-export { pyramidRows } from './pyramid-shape.js'
+export { pyramidRows, pyramidOnBase } from './pyramid-shape.js'
 
 /**
  * The cells in a pyramid of `layers` rows.

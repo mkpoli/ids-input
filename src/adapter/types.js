@@ -25,14 +25,24 @@
  * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
  * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
  * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
- * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu characters that have one.
+ * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu and Jurchen characters that have one.
+ * @property {'character' | 'variant' | 'radical'} [jurGroup] Jurchen palette group.
+ * @property {number} [jurRadical] The radical number, for Jurchen.
+ * @property {string} [jurCode] Alari's stroke code, for Jurchen.
+ * @property {string | null} [jurReading] The reading of Jin Qizong's dictionary as Unicode records it, for Jurchen.
+ * @property {number | null} [jurNumeric] Unicode's numeric value, for Jurchen.
+ * @property {string} [jurSource] Unicode's source reference, for Jurchen.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
+ * @property {string | null} [fragment] The IDS fragment that writes out a numbered component (`{42}` as 彐); null where the part is not one or BabelStone gives no fragment.
+ * @property {string} [description] Where a numbered component occurs, as BabelStone's note 6 gives it.
+ * @property {0 | 1} [readonly] Whether the palette lists the part without inserting it (a numbered component with no fragment or glyph).
+ * @property {string} [glyph] BabelStone Han PUA's glyph for a numbered component that has no IDS fragment. The PUA code point is not stable; its version is recorded with the outlines.
  * @property {number} [uses] How many ideographs use it.
  * @property {number | null} [strokes]
  * @property {0 | 1} [derived] Whether the stroke count was derived, not read from Unihan.
  * @property {'横' | '豎' | '撇' | '點' | '折' | null} [first] The class of its first stroke.
- * @property {'c' | 't' | 'seal' | 'shui' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, Shuishu, difficult (hard to type) or a CJK stroke.
+ * @property {'c' | 't' | 'seal' | 'shui' | 'jur' | 'd' | 's' | 'extra'} kind Common (including frequent compound IDS), Tangut, Small Seal, Shuishu, Jurchen, difficult (hard to type) or a CJK stroke.
  *
  * @typedef {{ signal?: AbortSignal, limit?: number }} Options
  * @typedef {{ x: number, y: number }} DrawingPoint
@@ -50,18 +60,21 @@
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
+ * @property {[number, number[]][]} [strokes] The source's stroke groups as [stroke ID, contour indices] within `d`.
  *
  * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
  * @property {string} [cut] The path of what ㇯ takes away, masked out of `d`.
  * @property {{ index: number, box: number[] }[]} [slots] Each empty slot (⬚), numbered in reading order, in the box the layout gives it.
- * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask.
+ * @property {{ text: string, box: number[], leaf?: number, part?: number, flip?: [boolean, boolean], cut?: boolean, restored?: boolean, family?: 'hangul' }[]} [emoji] Emoji positioned as text in the drawing; `cut` ones mask ink instead, `restored` ones are put back by a nested subtraction and take no mask. `family` names the letters a font shapes for the text, `hangul` for a conjoining jamo run.
  * @property {number[] | null} [stroke] The stroke widths across x and y the drawing is weighted to; placeholders take them.
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
+ * @property {string[]} [origins] What each part was drawn from, in reading order.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
+ * @property {boolean} [composed] Whether the face had no glyph and the character was assembled from its description. Such a drawing is an approximation and hosts show it apart from a real glyph.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
  * @property {string[]} [missing] Characters the export has no glyph for, drawn from their sequences instead.
  *
@@ -71,7 +84,7 @@
  *
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
- * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
+ * @property {'sans' | 'serif' | 'fangsong' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived Tangut character-first description replaces its source description and is marked `derived`. A description may be a single distinct component; [] means no smaller parts are recorded.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components and characters found by what is typed: a character, a code point, a name, a word or a reading.
@@ -82,6 +95,7 @@
  * @property {(text: string, options?: Options) => Promise<string | null>} [chainCharacter] The character a zi.tools description carrying a stroke chain names, when the host supplies that table.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number }>} [findSimilar] Characters whose description shares the query's top-level shape with one operand free.
  * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByStructure] Whole-character IDS patterns; repeated A–Z letters bind equal components, ⬚ matches any part, | separates alternatives.
+ * @property {(query: string, options?: Options) => Promise<{ hits: IdsHit[], total: number, characters: string, problem?: 'empty' | 'pattern' }>} [findByUnknownStructure] Characters holding every top-level element of an IDS pattern, whatever structure joins them, at any depth; | separates alternatives.
  * @property {(parts: string, options?: Options) => Promise<{ items: string[], more?: boolean }>} [containing] Characters built from every part in `parts` (counted: 木木 asks for two), best first.
  * @property {(options?: Options) => Promise<PalettePart[]>} [parts] The parts palette.
  * @property {(strokes: DrawingPoint[][], options?: Options) => Promise<string[]>} [recognizeDrawing] Whole characters a drawing names, closest first.

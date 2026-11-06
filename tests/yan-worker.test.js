@@ -20,4 +20,5 @@ it('requests the Kaisho export for native Noto enclosure combinations', async ()
     globalThis.self = previousSelf
     globalThis.fetch = previousFetch
   }
-})
+  // An unreachable export is asked for again before the worker answers unavailable.
+}, 30000)

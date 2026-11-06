@@ -6,12 +6,14 @@ import { createHash } from 'node:crypto'
 import { gzipSync } from 'node:zlib'
 import { createDrawer } from '../src/composer/client.js'
 import { LIMITS, compose, createSource, size, sketch, svgBox, tooLarge } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
+import { Composer, composableDescription, fitInside, parseTree } from '../src/composer/compose.js'
 import { badge, groupParts, placeholder } from '../src/core/preview.js'
 import { files, layout, ops, shards } from './fixtures/composer-export.js'
 import notoRightEnclosure from './fixtures/noto-right-enclosure.json' with { type: 'json' }
+import sansOpenEnclosure from './fixtures/sans-open-enclosure.json' with { type: 'json' }
+import gaizhaGlyph from './fixtures/gaizha-glyph.json' with { type: 'json' }
 import { parse } from '../src/core/ids.js'
-import { drawnBox, makePart, placed } from '../src/composer/geometry.js'
+import { drawnBox, makePart, partOf, placed } from '../src/composer/geometry.js'
 import constants from '../src/composer/constants.json' with { type: 'json' }
 
 const sourceOf = (fetched = []) => createSource(async name => {
@@ -38,13 +40,43 @@ const encodedSource = () => {
     extra.set(name, gzipSync(JSON.stringify(file)))
   }
   add('⿰木口', { k: '⿰木口', e: '𪱳' })
+  // A description typed with a described character: ⿰𪱴口 spells out to ⿰⿱木口口.
+  add('𪱴', { k: '𪱴', e: '𪱵', s: '⿱木口' })
+  add('𪱵', { k: '𪱵', G: boxGlyph([300, 40, 700, 700]), ink: 3200, nl: 1, o: 1 })
+  add('⿰⿱木口口', { k: '⿰⿱木口口', e: '𪱶' })
+  add('𪱶', { k: '𪱶', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
+  // Two levels: ⿰𪱴𪱴 spells out to ⿰⿱木口⿱木口.
+  add('⿰⿱木口⿱木口', { k: '⿰⿱木口⿱木口', e: '𪱷' })
+  add('𪱷', { k: '𪱷', G: boxGlyph([40, 40, 960, 960]), ink: 3680, nl: 1, o: 1 })
   const glyph = boxGlyph([40, 40, 960, 960])
   add('𪱳', { k: '𪱳', G: glyph, ink: 3680, nl: 1, o: 1 })
+  add('皶', { k: '皶', ...gaizhaGlyph })
   return createSource(async name => {
     const body = extra.get(name) ?? files[name]
     return body === undefined ? null : new Uint8Array(Buffer.from(body)).buffer
   })
 }
+
+describe('the composer\u2019s parser', () => {
+  const arity = ch => constants.BINARY.includes(ch) ? 2 : constants.TERNARY.includes(ch) ? 3 : constants.UNARY.includes(ch) ? 1 : 0
+  it('reads a run of conjoining jamo as one component', () => {
+    // ᄋ + ᆞ + ᆯ and ᄅ + ᅡ are syllables, so the block takes two operands and has both.
+    expect(parseTree('\u2ff1\u110b\u119e\u11af\u1105\u1161', arity)).toEqual(['\u2ff1', '\u110b\u119e\u11af', '\u1105\u1161'])
+    expect(parseTree('\u110b\u119e\u11af', arity)).toBe('\u110b\u119e\u11af')
+  })
+})
+
+describe('what may be composed from a description', () => {
+  it('allows the operators whose placement is predictable', () => {
+    for (const description of ['⿰月句', '⿱一乙', '⿲丨丨丨', '⿳亠口一', '⿵冂夂', '⿶凵夕', '⿸广林', '⿹勹米', '⿺辶束', '⿿口正'])
+      expect(composableDescription(description)).toBe(true)
+  })
+  it('refuses a description carrying one anywhere in its layers', () => {
+    for (const description of ['⿻丂丿', '㇯丘丨', '〾車年', '⿾止', '⿼弓丨', '⿽中二', '⿴囗人', '⿷匚人',
+      '⿰亻⿱𭇁大㇯', '⿰木⿴囗木'])
+      expect(composableDescription(description)).toBe(false)
+  })
+})
 
 describe('the composer', () => {
   it('places a lower-right enclosure fallback above and left of its closed sides', async () => {
@@ -60,6 +92,20 @@ describe('the composer', () => {
       expect((inner.target[0] + inner.target[2]) / 2).toBeLessThan((region[0] + region[2]) / 2)
       expect((inner.target[1] + inner.target[3]) / 2).toBeGreaterThan((region[1] + region[3]) / 2)
     }
+  })
+
+  it('reaches the last ink column in the room of an enclosure open on the right', async () => {
+    // 厂 as the pinned Sans export draws it (SIL OFL 1.1), placed over four fifths of the face.
+    const input = { ...files, ...shards('g', Object.entries(sansOpenEnclosure)) }
+    const source = createSource(async name => input[name] === undefined ? null : new Uint8Array(Buffer.from(input[name])).buffer)
+    await source.ready()
+    const composer = new Composer(source.store())
+    const part = partOf(sansOpenEnclosure['厂'].G), face = composer.face
+    const target = [face[0], face[1], face[0] + (face[2] - face[0]) * 0.8, face[3]]
+    const room = composer.room('⿸', [placed(part, part.box, target, 0, 'test')], face)
+    // One cell is 1/48 of the face; the room ends at the cell after the ink, 773, not at the one before.
+    expect(room[2]).toBeGreaterThan(765)
+    expect(room[2]).toBeLessThan(785)
   })
 
   it('keeps the fallback above the centre when an enclosing glyph leaves no detected room', async () => {
@@ -88,6 +134,17 @@ describe('the composer', () => {
     } finally {
       Composer.prototype.room = originalRoom
     }
+  })
+
+  it('still fits a part into an opening too tight for the starting scale', async () => {
+    // A 冖 cover leaves a slot a twentieth of the em tall: the part has to shrink into it rather than
+    // stay across the bar, where the scale the room allows alone would not reach.
+    const source = sourceOf()
+    await source.ready()
+    await source.load(Object.keys(files).filter(name => name.includes('/')))
+    const composer = new Composer(source.store())
+    const tight = [200, 480, 800, 530]
+    expect(fitInside(composer.compose('冂'), composer.compose('木'), [40, 40, 960, 960], 16, constants, { room: tight })).toBe(true)
   })
 
   it('renders the four-mouth grid by row while keeping the original leaf order', async () => {
@@ -362,6 +419,25 @@ describe('the composer', () => {
     expect(split.d).toBe(split.parts.map(part => part.d).join(''))
     expect(await compose(encodedSource(), '⿰木口', { separate: true })).toEqual(split)
   })
+  it('finds the character a description spells out through the characters it names', async () => {
+    const spelling = await compose(encodedSource(), '⿰𪱴口')
+    expect(spelling.parts.map(part => part.origin)).toEqual(['glyph 𪱶'])
+    expect((await compose(encodedSource(), '⿰𪱴𪱴')).parts.map(part => part.origin)).toEqual(['glyph 𪱷'])
+    expect(await compose(encodedSource(), '⿰木口')).toMatchObject({ origins: ['glyph 𪱳'] })
+    expect(await compose(encodedSource(), '⿰木木')).toMatchObject({ origins: ['glyph 木', 'glyph 木'] })
+  })
+  it('splits the designed glyph a variant description names', async () => {
+    const whole = await compose(encodedSource(), '皶')
+    const plain = await compose(encodedSource(), '⿰查皮')
+    const split = await compose(encodedSource(), '⿰查皮', { separate: true })
+    expect(plain.parts.map(part => part.origin)).toEqual(['glyph 皶'])
+    expect(plain.d).toBe(whole.d)
+    expect(split.parts.map(part => part.origin)).toEqual(['glyph 皶', 'glyph 皶'])
+    expect(split.parts).toHaveLength(2)
+    // The partition itself: eight contours around 査, seven around 皮.
+    expect(split.parts.map(part => (part.d.match(/M/g) ?? []).length)).toEqual([8, 7])
+    expect(split.d).toBe(whole.d)
+  })
   it('draws nothing larger than its limits', async () => {
     const chain = n => '⿰木'.repeat(n) + '口'
     const nest = n => n ? ['⿰', '木', nest(n - 1)] : '口'
@@ -398,6 +474,20 @@ describe('the composer', () => {
   })
 })
 
+describe('a stack of three operands', () => {
+  it('gives a full middle glyph its own share of the stack', async () => {
+    const drawn = await compose(sourceOf(), '⿳山六廾')
+    const middle = drawn.parts.find(part => part.origin === 'glyph 六')
+    expect(middle).toBeDefined()
+    const [, , width, height] = middle.box
+    // 六 takes the middle's full share. At 0.75 of it the glyph was 235 units high, and stretched
+    // across the row it read as a flat stripe.
+    expect(height).toBeGreaterThan(265)
+    expect(width / height).toBeLessThan(3.5)
+    expect(width).toBeGreaterThan(850)
+  })
+})
+
 // A worker that answers each drawing when told to, and notes when it is ended.
 class FakeWorker {
   static made = []
@@ -421,6 +511,19 @@ describe('the drawer', () => {
     one.answer({ id: one.posted[0].id, drawn: { d: 'M0 0Z' } })
     two.answer({ id: two.posted[0].id, drawn: { d: 'M1 1Z' } })
     expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' } })
+  })
+  it('ignores what a replaced worker says late', async () => {
+    FakeWorker.made = []
+    const drawer = createDrawer(() => new FakeWorker(), '/b/')
+    drawer.draw('⿰木口')
+    const [one] = FakeWorker.made
+    const second = drawer.draw('⿱木口')
+    const two = FakeWorker.made[1]
+    one.onerror({ message: 'late', preventDefault() {} })
+    one.answer({ id: two.posted[0].id, drawn: { d: 'M9 9Z' } })
+    two.answer({ id: two.posted[0].id, drawn: { d: 'M1 1Z' } })
+    expect(await second).toEqual({ status: 'composed', drawn: { d: 'M1 1Z' } })
+    expect(two.ended).toBe(false)
   })
   it('reports a failed drawing, and a cancelled one', async () => {
     FakeWorker.made = []

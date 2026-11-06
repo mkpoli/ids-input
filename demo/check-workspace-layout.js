@@ -55,5 +55,43 @@ try {
   assert(!wide.pageScrolls, 'no page scroll at 1280 and up')
   assert.equal(wide.gridCap, 'none', 'the parts grid is not capped at 1280 and up')
   assert((wide.nested ?? 0) === 0, `nested scrollers in the input pane at 1280 and up: ${wide.nested}`)
-  console.log('PASS the panels fill the row at middle widths, and each pane scrolls once at 1280 and up')
+
+  // A wrapped tools row once made the square canvas wider than the height left for it, so the tree
+  // scrolled and lost the padding above and below it.
+  await open(page, 1300, 800)
+  const shape = await page.evaluate(() => {
+    const rect = (/** @type {string} */ selector) => document.querySelector(selector)?.getBoundingClientRect()
+    const box = rect('.tree-box'), tree = rect('.ids-tree'), root = rect('.ids-tree-root')
+    const element = /** @type {HTMLElement | null} */ (document.querySelector('.ids-tree'))
+    if (!box || !tree || !root || !element) return null
+    return {
+      width: box.width,
+      height: box.height,
+      pads: [root.left - tree.left, root.top - tree.top, tree.right - root.right, tree.bottom - root.bottom],
+      threeColumns: getComputedStyle(/** @type {HTMLElement} */ (document.querySelector('.middle'))).display === 'grid',
+      scrolls: element.scrollHeight > element.clientHeight + 2,
+    }
+  })
+  assert(shape, 'the shape canvas is on the page at 1300')
+  assert(shape.threeColumns, 'the three-column layout is in effect at 1300')
+  assert(Math.abs(shape.width - shape.height) < 2, `the shape canvas is square: ${shape.width} against ${shape.height}`)
+  const [left, top, right, bottom] = shape.pads
+  assert(Math.abs(top - 16) < 1.5 && Math.abs(bottom - 16) < 1.5, `the canvas keeps its vertical padding: ${shape.pads.join(', ')}`)
+  assert(left >= 15 && right >= 15, `the canvas keeps its horizontal padding: ${shape.pads.join(', ')}`)
+  assert(!shape.scrolls, 'the canvas fits its box without scrolling')
+
+  // A canvas dragged small keeps a readable floor and the pane scrolls, rather than shrinking to a dot.
+  await open(page, 1280, 700)
+  await page.locator('.split').focus()
+  await page.keyboard.press('Home')
+  await page.waitForTimeout(200)
+  const small = await page.evaluate(() => {
+    const box = document.querySelector('.tree-box')?.getBoundingClientRect()
+    const pane = /** @type {HTMLElement | null} */ (document.querySelector('section.pane.tree'))
+    return box && pane ? { width: box.width, paneScrolls: pane.scrollHeight > pane.clientHeight + 2 } : null
+  })
+  assert(small, 'the shape canvas is on the page when the splitter is at its minimum')
+  assert(small.width >= 139, `the canvas keeps a readable floor: ${small.width}`)
+  assert(small.paneScrolls, 'the pane scrolls when the canvas has no room')
+  console.log('PASS the panels fill the row at middle widths, each pane scrolls once at 1280 and up, and the shape canvas keeps its padding')
 } finally { await browser.close() }
