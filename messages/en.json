@@ -374,7 +374,6 @@
   "info.copy": "Copy {char}",
   "info.copied": "Copied",
   "info.copyFailed": "Copy failed",
-  "info.source.sections": "Sources",
   "info.site.openTangut": "Open Tangut",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
@@ -384,5 +383,8 @@
   "info.site.tangutIds": "Tangut IDS list",
   "info.site.course": "Unicode",
   "info.site.zitools": "zi.tools",
+  "info.site.yedict": "yedict",
+  "info.site.zdic": "zdic",
+  "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "first"
 }

@@ -370,7 +370,6 @@
   "info.copy": "{char} 복사",
   "info.copied": "복사됨",
   "info.copyFailed": "복사 실패",
-  "info.source.sections": "출처",
   "info.site.openTangut": "Open Tangut",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
@@ -380,5 +379,8 @@
   "info.site.tangutIds": "Tangut IDS 목록",
   "info.site.course": "Unicode",
   "info.site.zitools": "zi.tools",
+  "info.site.yedict": "yedict",
+  "info.site.zdic": "zdic",
+  "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "첫 획"
 }
