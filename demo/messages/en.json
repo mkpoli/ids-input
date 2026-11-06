@@ -382,5 +382,7 @@
   "sources.use.compare": "Engine comparison",
   "sources.files": "Files",
   "sources.citedBy": "Used by examples",
-  "app.atlas": "Component atlas"
+  "app.atlas": "Component atlas",
+  "app.sitesLabel": "Sites",
+  "app.sitesMore": "More writing-system projects"
 }

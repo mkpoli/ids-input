@@ -381,5 +381,7 @@
   "sources.use.compare": "引擎对比",
   "sources.files": "文件",
   "sources.citedBy": "示例中的使用",
-  "app.atlas": "部件表"
+  "app.atlas": "部件表",
+  "app.sitesLabel": "网站",
+  "app.sitesMore": "更多文字项目"
 }

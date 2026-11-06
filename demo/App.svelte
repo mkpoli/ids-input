@@ -5,6 +5,7 @@
   // sequence, the character it encodes, its code points, export). File and Edit menus lead the toolbar;
   // the toolbar holds undo, redo, examples, sharing, the language, settings and sources; the tab
   // strip's + opens a blank tab and its chevron opens the templates and examples as starting points.
+  import SiteSelect from './ui/SiteSelect.svelte'
   import { tick, untrack } from 'svelte'
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
@@ -1198,10 +1199,7 @@
   style:--chrome-height="{chromeHeight}px" style:--phone-tabs-height="{tabsHeight}px">
   <div class="chrome" bind:offsetHeight={chromeHeight}>
     <header class="bar">
-      <a class="brand" href="/" aria-label={t('app.title')}>
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-        <span>{t('app.title')}</span>
-      </a>
+      <SiteSelect title={t('app.title')} label={t('app.sitesLabel')} more={t('app.sitesMore')} {locale} href="/" compact />
       <span class="wide-only"><MenuBar label={t('app.menu')} menus={[{ label: t('app.file.label'), items: fileItems }, { label: t('app.edit.label'), items: editItems }]} {keyHints} /></span>
       <nav class="tools" aria-label={t('app.toolbar')}>
         <div class="group">
@@ -1461,8 +1459,6 @@
   .chrome{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px)}
   .bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;
     padding:max(8px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 8px max(16px,env(safe-area-inset-left))}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
-  .brand svg{flex:none}
   .tools,.end,.group{display:flex;align-items:center;gap:6px}
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
   .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
@@ -1657,8 +1653,8 @@
   @media (max-width:640px){
     .bar{flex-wrap:nowrap;gap:6px;padding-left:max(12px,env(safe-area-inset-left));padding-right:max(12px,env(safe-area-inset-right))}
     .tabs-slot{padding-inline:max(12px,env(safe-area-inset-left)) max(12px,env(safe-area-inset-right))}
-    .brand{margin-right:auto}
-    .brand span,.wide,.wide-only,.end{display:none}
+    .bar > :global(.site-select){margin-right:auto}
+    .wide,.wide-only,.end{display:none}
     .phone-only{display:inline-flex}
     .group > :global(.ui-button:last-of-type){border-radius:0 var(--ui-radius-md) var(--ui-radius-md) 0}
     .work{padding:12px;gap:12px}

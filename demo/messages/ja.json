@@ -381,5 +381,7 @@
   "sources.use.compare": "エンジン比較",
   "sources.files": "ファイル",
   "sources.citedBy": "作例での使用",
-  "app.atlas": "部品の一覧"
+  "app.atlas": "部品の一覧",
+  "app.sitesLabel": "サイト",
+  "app.sitesMore": "他の文字プロジェクト"
 }
