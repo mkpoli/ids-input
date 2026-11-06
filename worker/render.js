@@ -114,7 +114,7 @@ async function png(env, sequence, drawing, char, shown = null, document = null) 
 
 /**
  * The character an example names for a sequence: the one it writes, or for an abbreviation the
- * standard character it stands for. `composed` is the character the table says the sequence is, where
+ * standard character it stands for. `composed` is the character the index says the sequence is, where
  * the example writes none.
  * @param {string} sequence @param {string | null} [composed]
  */
@@ -124,7 +124,13 @@ export function namedFor(sequence, composed = null) {
   return named && isOneCharacter(named) ? named : null
 }
 
-/** The character a card and its page both name: the example's, else the table's. @param {any} env @param {string} sequence */
+/**
+ * The character a sequence is only read with: the named one, unless the index says it composes it.
+ * @param {string | null} named @param {string | null} composed
+ */
+export const readWith = (named, composed) => named && named !== composed ? named : null
+
+/** The character a card and its page both name: the example's, else the index's. @param {any} env @param {string} sequence */
 export async function characterFor(env, sequence) {
   return namedFor(sequence, await characterOf(env, sequence))
 }
@@ -163,12 +169,12 @@ export async function cardResponse(env, ctx, sequence, document = null, token = 
   const cache = globalThis.caches?.default
   const hit = await cache?.match(key)
   if (hit) return hit
-  // The example names the character, else the table does. A sequence read with a character it does
+  // The example names the character, else the index does. A sequence read with a character it does
   // not compose is shown as the characters it writes.
   const composed = await characterOf(env, sequence)
   const named = namedFor(sequence, composed)
   const char = named
-  const units = await unitsFor(env, sequence, named && named !== composed ? named : null)
+  const units = await unitsFor(env, sequence, readWith(named, composed))
   // A document is one drawing, not the characters a sequence writes; when its layers cannot be
   // scoped, the card falls back to the separated drawing and still says it is a document. The
   // plain drawing is only made when no document drawing answered.
