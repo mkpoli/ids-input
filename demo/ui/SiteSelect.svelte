@@ -4,8 +4,8 @@
   // returns the focus; the menu's keys stay in it so the page's shortcuts do not act behind it.
   import Icon from './Icon.svelte'
 
-  /** @type {{ title: string, label: string, more: string, locale?: string, href: string, onhome?: (event: MouseEvent) => void }} */
-  let { title, label, more, locale = 'en', href, onhome } = $props()
+  /** @type {{ title: string, label: string, more: string, locale?: string, href: string, compact?: boolean }} */
+  let { title, label, more, locale = 'en', href, compact = false } = $props()
 
   const SITES = [
     { id: 'tangut', name: 'Tangut Input', href: 'https://tangut.mkpo.li/', logo: '/brand/tangut-input.svg' },
@@ -48,8 +48,6 @@
       list[(to + list.length) % list.length].focus()
     }
   }
-  /** @param {MouseEvent} event */
-  function home(event) { hide(); onhome?.(event) }
 
   $effect(() => {
     if (!open) return
@@ -64,7 +62,7 @@
   <button bind:this={trigger} type="button" class="trigger" aria-haspopup="menu" aria-expanded={open} aria-label={`${title} — ${label}`}
     onclick={() => open ? hide() : show()} onkeydown={triggerKey}>
     <svg viewBox="2.5 2.5 19 19" width="30" height="30" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-    <span class="name">{title}</span>
+    <span class="name" class:compact>{title}</span>
     <span class="chev" class:up={open}><Icon name="chevron" size={14} /></span>
   </button>
   {#if open}
@@ -72,7 +70,7 @@
       {#each SITES as site (site.id)}
         {@const current = site.id === 'ids'}
         <a class="ui-menu-item item" role="menuitem" tabindex="-1" href={current ? href : site.href}
-          aria-current={current ? 'true' : undefined} onclick={current ? home : () => hide()}>
+          aria-current={current ? 'true' : undefined} onclick={() => hide(current)}>
           <img src={site.logo} alt="" width="28" height="28" />
           <span class="site">{site.name}</span>
           {#if current}<span class="tick"><Icon name="check" size={16} /></span>{/if}
@@ -104,6 +102,6 @@
   .tick{display:grid;color:var(--ui-color-accent)}
   .more{color:var(--ui-color-ink-muted);font-size:var(--ui-text-sm)}
   .out{color:var(--ui-color-ink-muted)}
-  @media (max-width:640px){.name{display:none}}
+  @media (max-width:640px){.name.compact{display:none}}
   @media (prefers-reduced-motion:reduce){.chev{transition:none}}
 </style>
