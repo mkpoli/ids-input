@@ -93,7 +93,7 @@ for (const file of Object.keys(FONTS)) console.log(`font ${file} ${readFileSync(
 console.log(`fonts general.otf, planes.ttf, ${pairs.length - Object.keys(FONTS).length} shards`)
 
 // The scripts with bundled outlines, and the glyphs of the parts beyond what an installed font draws.
-const DATA = ['tangut-outlines', 'bopomofo-outlines', 'small-seal-outlines', 'new-korean-outlines', 'shuishu-outlines', 'jurchen-outlines', 'palette-outlines']
+const DATA = ['tangut-outlines', 'bopomofo-outlines', 'small-seal-outlines', 'new-korean-outlines', 'shuishu-outlines', 'jurchen-outlines', 'palette-outlines', 'numbered-sans-outlines']
 for (const name of DATA) {
   copyFileSync(join(import.meta.dirname, `../data/${name}.json.gz`), join(out, `data/${name}.json.gz`))
   console.log(`data ${name}`)
