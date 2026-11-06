@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'bun:test'
 import { Composer } from '../src/composer/compose.js'
 import { drawnContours, makePart, placed } from '../src/composer/geometry.js'
+import { componentParts, isGroupedForm, isComponentForm } from '../src/composer/component-forms.js'
 
 const contour = (x0, y0, x1, y1) => {
   const light = new Float64Array([x0, y0, x1, y0, x1, y1, x0, y1])
@@ -42,6 +43,18 @@ describe('a cover', () => {
     const width = Math.max(...xs) - Math.min(...xs)
     expect(width).toBeGreaterThan(0.6 * 700)
     expect(width).toBeLessThan(0.75 * 700)
+  })
+
+  it('leaves a middle 冖 open over a narrow part', () => {
+    const c = lonely()
+    const top = [at(part(contour(350, 500, 650, 800)), [350, 500, 650, 800])]
+    const cover = [at(part(contour(0, 350, 900, 450)), [0, 350, 900, 450])]
+    const lower = [at(part(contour(0, -50, 900, 300)), [0, -50, 900, 300])]
+    c.fitUnderCover('⿳', ['卜', '冖', '人'], [top, cover, lower])
+    // The top spans a third of the cover's width: the bar stays where the share put it.
+    expect(cover[0].target[1]).toBe(350)
+    // The part below still closes on the cover from underneath.
+    expect(lower[0].target[1]).toBeGreaterThan(-50)
   })
 
   it('closes a middle 冖 on the part above and the part below', () => {
@@ -145,3 +158,30 @@ describe('a cover over two parts', () => {
     expect(bottom[0].target[2] - bottom[0].target[0]).toBeCloseTo(0.66 * 900, 0)
   })
 })
+
+describe('the KRM ⿱⺊冖 top', () => {
+  it('is one prepared component in a flat stack, and only where a form exists', () => {
+    const c = lonely()
+    c.fontStyle = 'sans'
+    c.spelled = new Map()
+    expect(c.groupedStack(['⿳', '⺊', '冖', '人'])).toEqual(['⿱', ['⿱', '⺊', '冖'], '人'])
+    expect(c.groupedStack(['⿳', '卜', '冖', '人'])).toEqual(['⿱', ['⿱', '⺊', '冖'], '人'])
+    expect(isComponentForm('⿱⺊冖', 'sans')).toBe(true)
+    expect(isComponentForm('⿱⺊冖', 'kaisho')).toBe(false)
+  })
+})
+
+for (const style of ['sans', 'serif']) {
+  it(`keeps the ${style} manuscript top joined with a rightward bar in separate view`, () => {
+    expect(isGroupedForm('⿱⺊冖', style)).toBe(true)
+    const [top, roof] = componentParts('⿱⺊冖', undefined, style)
+    const points = top.part.contours[0].light
+    const xs = Array.from(points).filter((_, i) => i % 2 === 0)
+    // The bar projects to the right; the centred stem reaches the roof seam.
+    expect(Math.min(...xs)).toBeGreaterThanOrEqual(450)
+    expect(Math.max(...xs)).toBeGreaterThanOrEqual(900)
+    expect(top.part.box[1]).toBe(style === 'sans' ? 562 : 543)
+    expect(roof.part.box[3]).toBeGreaterThanOrEqual(top.part.box[1])
+    expect(top.origin).toContain(`Noto ${style === 'sans' ? 'Sans' : 'Serif'} CJK`)
+  })
+}
