@@ -12,6 +12,6 @@ const loadOutlines = async () => {
   if (!response.ok) throw new Error(`Palette outlines: ${response.status}`)
   return JSON.parse(await unpack(await response.arrayBuffer()))
 }
-/** @param {{ load?: () => Promise<any>, fallback?: any }} options */
+/** @param {{ load?: () => Promise<any>, fallback?: any, under?: boolean }} options */
 export const paletteSource = ({ load = loadOutlines, fallback = null, under = false } = {}) =>
   bundledSource({ load, matches: hasPaletteGlyph, fallback, under })
