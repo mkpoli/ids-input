@@ -46,8 +46,8 @@ LICENCE = ROOT / 'fonts/LICENSE-IDSJurchen.txt'
 CHARS = range(0x18E00, 0x19192)
 RADICALS = range(0x191A0, 0x191D3)
 SELECTORS = range(0xFE00, 0xFE05)
-# The operators `ids.json` may use: side by side and stacked.
-IDS_OPS = '⿰⿱'
+# The operators `ids.json` may use: side by side, stacked, and the two enclosures that hold a dot.
+IDS_OPS = '⿰⿱⿷⿸'
 # In font units of a 1000-unit em: small enough to keep the corners, large enough to keep the file down.
 MAX_ERROR = 1.0
 

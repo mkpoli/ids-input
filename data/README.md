@@ -649,10 +649,10 @@ for Jurchen, so another font may draw the base form. Each carries its base chara
 and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
 end of its code, and drops the table's placeholder row for U+25A1.
 
-`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 22
+`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 44
 characters. No source states one, so each is a reading of the Alari glyph: it describes the shape
 and makes no claim about how the character arose. `scripts/build_jurchen.py` refuses an entry with an
-operator other than ⿰ and ⿱, a part outside the block, or strokes that do not add up; a radical's
+operator other than ⿰, ⿱, ⿷ and ⿸, a part outside the block, or strokes that do not add up; a radical's
 count is read from its stroke code, since Unicode gives none.
 
 Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the

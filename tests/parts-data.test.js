@@ -8,6 +8,15 @@ const document = JSON.parse(readFileSync(new URL('../data/ids-parts.json', impor
 const parts = paletteRows(document)
 const byPart = new Map(parts.map(part => [part.part, part]))
 
+describe('palette fragments', () => {
+  it('gives a numbered component with no written form a null fragment and no part a fragment that is not a string', () => {
+    const unwritten = parts.filter(part => part.fragment === null)
+    expect(unwritten.length).toBeGreaterThan(60)
+    expect(unwritten.every(part => part.glyph)).toBe(true)
+    expect(parts.every(part => part.fragment == null || typeof part.fragment === 'string')).toBe(true)
+  })
+})
+
 describe('palette stroke metadata', () => {
   it('carries 〇, which no sequence names, as a one-stroke part', () => {
     expect(byPart.get('〇')).toMatchObject({ uses: 0, strokes: 1, first: '折', kind: 'd' })

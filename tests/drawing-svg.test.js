@@ -113,3 +113,22 @@ it('keeps a merged cut on the frame its merged ink keeps', () => {
   expect(svg).toContain('<path d="M0 0Z" fill="#000000" mask="url(#cut)"/>')
   expect(svg).not.toContain('<path d="M0 0L10 0L10 10Z" fill="#000" transform=')
 })
+
+it('paints an emoji between the ink around it, as the parts stand', () => {
+  const svg = drawingSvg({
+    d: 'M0 0H9V9Z M5 5H9V9Z',
+    parts: [{ leaf: 0, d: 'M0 0H9V9Z' }, { leaf: 1, d: '' }, { leaf: 2, d: 'M5 5H9V9Z' }],
+    emoji: [{ text: '😀', box: [0, 0, 500, 500], part: 1 }],
+  }, { ink: 'currentColor' })
+  expect(svg).toContain('fill="currentColor"')
+  expect(svg.indexOf('M0 0H9V9Z')).toBeLessThan(svg.indexOf('>😀</text>'))
+  expect(svg.indexOf('>😀</text>')).toBeLessThan(svg.indexOf('M5 5H9V9Z"'))
+})
+
+it('prefixes the ids of its mask and filter, and refuses any other colour word', () => {
+  const svg = drawingSvg({ d: 'M0 0Z', emoji: [{ text: '😀', box: [0, 0, 500, 500], cut: true }] }, { idPrefix: 'tab-3-' })
+  expect(svg).toContain('<mask id="tab-3-cut">')
+  expect(svg).toContain('<filter id="tab-3-emoji-cut-ink"')
+  expect(svg).toContain('mask="url(#tab-3-cut)"')
+  expect(drawingSvg({ d: 'M0 0Z' }, { ink: 'red' })).toContain('fill="#000000"')
+})

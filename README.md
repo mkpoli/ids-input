@@ -69,7 +69,7 @@ The Jurchen tab holds Unicode 18.0's 914 characters and 51 radicals and Alari's 
 sequences, with outlines from
 [Alari Xuwasun Jurchen](https://dorontu.com/#/cloud) bundled for previews and export with the
 `IDS Jurchen` face. Narrow the characters by radical, or filter them by Alari's stroke code, the
-reading in Unicode's records, numeric value or code point. Twenty-two of the characters carry an
+reading in Unicode's records, numeric value or code point. Forty-four of the characters carry an
 editorial IDS, printed on the tile and in their title, and the tab says these are ours, since no
 source gives them.
 
@@ -1505,7 +1505,8 @@ their editor, where `root` is the containing element. The parts, search, sequenc
 tree components expose `data-character` targets; custom character controls can use
 the same attribute. Optional `data-path` identifies a tree position; without it, the
 host chooses the insertion target. `disabled` prevents insertion. Sources remain in
-the adapter records and the data documentation. The card keeps clear of surfaces marked
+the adapter records and the data documentation; the line ends with the character's page
+on 字統网 (zi.tools). The card keeps clear of surfaces marked
 `data-character-info-avoid` inside `root`, such as a shape canvas, and takes the nearest
 place outside them while the window has room. Hosts without `characterInfo` retain
 their existing titles.

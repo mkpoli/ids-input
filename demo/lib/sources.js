@@ -135,7 +135,7 @@ const USED_IN = /** @type {Record<string, string[]>} */ ({
   nightfury: ['decompose'],
   tatami: ['examples'],
   'l2-19-230r': ['palette', 'examples'],
-  zitools: ['decompose', 'palette'],
+  zitools: ['decompose', 'palette', 'info'],
   yedict: ['decompose'],
   mojidata: ['search', 'compare'],
   chise: ['decompose', 'search'],
@@ -1027,7 +1027,7 @@ export const SOURCES = [
     url: 'https://zi.tools/?secondary=ids',
     read: '2026-10-24',
     summaryKey: 'app.inspired.zitools',
-    note: 'The ASCII operator names were read from its page script (action_abbr_map) on 2026-10-24; the editor ideas are from its IDS search.',
+    note: 'The ASCII operator names were read from its page script (action_abbr_map) on 2026-10-24; the editor ideas are from its IDS search. Character cards link each character to its page on the site.',
   },
   {
     id: 'yedict',
