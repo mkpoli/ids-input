@@ -13,7 +13,8 @@
   import { APPROXIMATE, composableDescription } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview as composerAt } from '../src/composer/index.js'
-  import { EMPTY_MARKS, OPERATORS, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
@@ -517,6 +518,21 @@
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
     return () => { live = false }
+  })
+  // The strokes the output shows: an encoded character's recorded count when the description names
+  // one, else the components' counts added up. A single component is its own character. The table
+  // is 285 KB gzipped, so it loads once there is a description to count.
+  let strokeRecords = $state.raw(/** @type {Map<string, import('../src/svelte/strokes.js').StrokeRecord> | null} */ (null))
+  /** @type {Promise<void> | null} */ let strokeRead = null
+  $effect(() => {
+    if (strokeRecords || strokeRead || editor.tree === null) return
+    strokeRead = loadStrokeRecords().then(records => { strokeRecords = records }, () => { strokeRead = null })
+  })
+  const drawnStrokes = $derived.by(() => {
+    const tree = editor.tree, records = strokeRecords
+    if (tree === null || !records) return null
+    return characterStrokes(tree, char => records.get(char)?.strokes ?? null,
+      encoded.map(char => records.get(char)?.strokes ?? null))
   })
   /** @param {string} ch */
   const cp = ch => `U+${/** @type {number} */ (ch.codePointAt(0)).toString(16).toUpperCase().padStart(4, '0')}`
@@ -1338,6 +1354,16 @@
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
+                  {#if drawnStrokes}
+                    <span class="component-counts" title={drawnStrokes.strokes == null ? undefined : t(drawnStrokes.approximate ? 'app.componentStrokes' : 'app.recordedStrokes')}>
+                      {#if encoded.length}<span class="strokes-sep" aria-hidden="true">·</span>{/if}
+                      {t('app.components', { count: drawnStrokes.components })}
+                      {#if drawnStrokes.strokes != null}
+                        <span class="strokes-sep" aria-hidden="true">·</span>
+                        {drawnStrokes.approximate ? '≈ ' : ''}{t('parts.strokeCount', { count: drawnStrokes.strokes })}
+                      {/if}
+                    </span>
+                  {/if}
                 {/snippet}
               </IdsPreview>
             {/key}
@@ -1561,6 +1587,8 @@
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
   .encoded-character button:focus-visible{outline:2px solid var(--ui-color-focus)}
+  .component-counts{display:inline-flex;align-items:center;gap:4px;color:var(--ui-color-ink-muted);font:11px ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .component-counts .strokes-sep{opacity:.55}
   .preview :global(.ids-preview-meta){position:absolute;top:10px;left:10px;z-index:1}
   .preview :global(.ids-preview-large){border-radius:var(--ui-radius-xl);background:var(--ui-color-surface-sunken)}
   .adjust{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding-top:8px}
