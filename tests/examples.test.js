@@ -67,6 +67,7 @@ describe('the demo examples', () => {
             const part = jurchen.parts.find(part => part.part === char)
             if ('reading' in example) expect(example.reading).toBe(part?.jurReading)
             expect(example.refs).toContain(sourceNumber('jurchen-ids'))
+            expect(example.refs).toContain(sourceNumber('jurchen-numeric'))
             expect(drawings.drawings[sequence]?.drawn.d.length).toBeGreaterThan(10)
           } else if ('source' in example && example.source === 'data/shuishu.json.gz') {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
