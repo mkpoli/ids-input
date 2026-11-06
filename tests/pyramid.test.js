@@ -221,6 +221,11 @@ describe('a pyramid on a base', () => {
 })
 
 describe('pyramid cells', () => {
+  it('has none for a count of layers that is no whole number', () => {
+    expect(pyramidCells([0, 0, 1000, 1000], 2.5)).toEqual([])
+    expect(pyramidCells([0, 0, 1000, 1000], Number.NaN)).toEqual([])
+    expect(pyramidCells([0, 0, 1000, 1000], 3)).toHaveLength(6)
+  })
   it('makes every cell the same square in centred rows', () => {
     for (const layers of [3, 4, 5, 12]) {
       const cells = pyramidCells([0, 0, 1000, 1000], layers)

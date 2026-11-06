@@ -76,6 +76,9 @@ describe('a whole description', () => {
     // A variation selector after the chain stays with the character.
     expect(parse('⿰#(H)\u{E0100}木').tree.parts[0]).toBe('一\u{E0100}')
     expect(descriptionEnd([...'⿰#(H)木'])).toBe(6)
+    // A variation selector and a tone mark after a stroke chain belong to it.
+    expect(descriptionEnd([...'#(H)\uFE00'])).toBe(5)
+    expect(descriptionEnd([...'#(H)\uFE00\u302E木'])).toBe(6)
     // A chain that names no character stays as it is, to be read or rejected as usual.
     expect(parse('⿰#(ZZZ)木').problem).toBe('extra')
     expect(write(parse('⿰#木').tree)).toBe('⿰#木')

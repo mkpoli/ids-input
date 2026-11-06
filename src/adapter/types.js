@@ -25,7 +25,7 @@
  * @property {string | null} [shuiReading] The proposed reading, for Shuishu.
  * @property {string | null} [shuiMeaning] The dictionaries' meaning, for Shuishu.
  * @property {string | null} [shuiGloss] The English gloss, for Shuishu.
- * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu characters that have one.
+ * @property {string | null} [ids] An editorial IDS decomposition, for Shuishu and Jurchen characters that have one.
  * @property {'character' | 'variant' | 'radical'} [jurGroup] Jurchen palette group.
  * @property {number} [jurRadical] The radical number, for Jurchen.
  * @property {string} [jurCode] Alari's stroke code, for Jurchen.
@@ -34,7 +34,7 @@
  * @property {string} [jurSource] Unicode's source reference, for Jurchen.
  * @property {string} part
  * @property {string} [display] What the palette shows in the cell when it is not `part` itself, such as a combining mark over a dotted circle.
- * @property {string} [fragment] The IDS fragment that writes out a numbered component (`{42}` as 彐).
+ * @property {string | null} [fragment] The IDS fragment that writes out a numbered component (`{42}` as 彐); null where the part is not one or BabelStone gives no fragment.
  * @property {string} [description] Where a numbered component occurs, as BabelStone's note 6 gives it.
  * @property {0 | 1} [readonly] Whether the palette lists the part without inserting it (a numbered component with no fragment or glyph).
  * @property {string} [glyph] BabelStone Han PUA's glyph for a numbered component that has no IDS fragment. The PUA code point is not stable; its version is recorded with the outlines.
@@ -60,6 +60,7 @@
  * @property {number[]} box [x, y, width, height] in the drawing's 1000-unit box, y down.
  * @property {string} d The piece's ink as an SVG path, filled by the nonzero rule.
  * @property {boolean} [cut] Whether the piece is what ㇯ takes away, masked out of the drawing's `d`.
+ * @property {[number, number[]][]} [strokes] The source's stroke groups as [stroke ID, contour indices] within `d`.
  *
  * @typedef {object} Drawing A sequence drawn as outlines in a 1000-unit box, y down.
  * @property {string} d The SVG path of its ink, filled by the nonzero rule.
@@ -71,6 +72,7 @@
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
+ * @property {string[]} [origins] What each part was drawn from, in reading order.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
  * @property {boolean} [composed] Whether the face had no glyph and the character was assembled from its description. Such a drawing is an approximation and hosts show it apart from a real glyph.
  * @property {boolean} [kanjivg] Whether a part was cut along KanjiVG's groups (its drawing is then shared alike under CC BY-SA 3.0).
@@ -82,7 +84,7 @@
  *
  * @typedef {object} IdsAdapter
  * @property {(char: string, options?: Options) => Promise<import('./character-info.js').CharacterInfo | null>} [characterInfo] Sourced meanings and explicit correspondences for one character.
- * @property {'sans' | 'serif' | 'kaisho'} [fontStyle] Style for bundled component outlines.
+ * @property {'sans' | 'serif' | 'fangsong' | 'kaisho'} [fontStyle] Style for bundled component outlines.
  * @property {(char: string, options?: Options) => Promise<Sequence[]>} structure A character's descriptions, each with its source regions; a derived Tangut character-first description replaces its source description and is marked `derived`. A description may be a single distinct component; [] means no smaller parts are recorded.
  * @property {(part: string, options?: Options) => Promise<Swap[]>} [variants] Components that can stand in place of `part`.
  * @property {(query: string, options?: Options) => Promise<Found[]>} [search] Components and characters found by what is typed: a character, a code point, a name, a word or a reading.

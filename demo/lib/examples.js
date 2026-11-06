@@ -5,7 +5,7 @@
 //
 // `abbreviates` names the standard character a Geba form stands for; `char` is empty for a form
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
-// gukja's reading in Hangul.
+// gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it.
 /**
  * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
@@ -251,7 +251,7 @@ export const EXAMPLE_GROUPS = [
   // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
   // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). 唯吾知足, 黃金萬兩 and 吉祥如意 share strokes
   // between their characters. 唯吾知足 sets 五 above 矢, 口 and 隹, with 龰, the bottom of 足, below,
-  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with 両's bottom, 冂 around 山, drawn as a prepared
+  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 over a 冂 around 山, drawn as a prepared
   // form;
   // 吉祥如意 shares one 口 between 吉 (士 above it) and 如 (女 beside it), with 意 and 祥 around.
   { key: 'ligature', examples: [
@@ -261,7 +261,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
-    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, and
+    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on a 冂 around 山, and
     // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
     { sequence: '⿱黃⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
@@ -646,6 +646,52 @@ export const EXAMPLE_GROUPS = [
     { "sequence": "𘹂", "char": "𘹂", "modern": "百", "source": "data/jurchen.json.gz" },
     { "sequence": "𘻂", "char": "𘻂", "modern": "千", "source": "data/jurchen.json.gz" },
     { "sequence": "𘸁", "char": "𘸁", "modern": "万", "source": "data/jurchen.json.gz" },
+    // Composed characters: the editorial decompositions in data/jurchen/ids.json. No source states a
+    // decomposition, so each sequence is a reading of the glyph.
+    { "sequence": "⿱𙆠𘸏", "char": "𘸕", "reading": "(g)an", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆢𙆪", "char": "𘹌", "reading": "pə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿷𘹵𙇐", "char": "𘹺", "reading": "no", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿷𘺅𙇐", "char": "𘺉", "reading": "xala", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿸𙆨𙇐", "char": "𘺹", "reading": "duin", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿸𙆩𙇐", "char": "𘻁", "reading": "dalba", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𘻳𙆰", "char": "𘼆", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙇇", "char": "𘼕", "reading": "xən", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙆩", "char": "𘼖", "reading": "dir", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆳𙆫", "char": "𘼗", "reading": "dʒafa", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆺𙇈", "char": "𘽪", "reading": "dʒə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿸𙆼𙇐", "char": "𘾅", "reading": "weixa", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𘿅𙇐", "char": "𘿚", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𘿆𙇐", "char": "𘿝", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿸𘿖𙇐", "char": "𘿭", "reading": "ʃan", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𘿬𙇐", "char": "𘿸", "reading": "ʃïn", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿷𘿬𙇐", "char": "𙀁", "reading": "uli", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙆿𘺹", "char": "𙀚", "reading": "dzo", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿸𙀱𙇐", "char": "𙀷", "reading": "dʒo", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙆿𙅞", "char": "𙀾", "reading": "ə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙆠𙁉", "char": "𙁊", "reading": "dʒo", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆩", "char": "𙁮", "reading": "(g)un", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆨", "char": "𙁯", "reading": "nialma", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆬", "char": "𙁰", "reading": "bən", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘺹", "char": "𙁵", "reading": "ti", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙆯", "char": "𙁹", "reading": "li", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘾵", "char": "𙁺", "reading": "gi", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘾹", "char": "𙁻", "reading": "tʃu", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘻑", "char": "𙂆", "reading": "uru", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𘽳", "char": "𙂍", "reading": "gio", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇂𙂻", "char": "𙂎", "reading": "y", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇃𙆩", "char": "𙂒", "reading": "nindʒu", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇃𙄑", "char": "𙂔", "reading": "dei", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇄𘺹", "char": "𙂜", "reading": "ei", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇄𙄃", "char": "𙂞", "reading": "gə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇇𙆣", "char": "𙃊", "reading": "ə", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇇𙆩", "char": "𙃌", "reading": "un", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇈𙆣", "char": "𙃔", "reading": "bandi", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇉𙆩", "char": "𙃛", "reading": "amba", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿰𙇌𙇐", "char": "𙃺", "reading": "bia", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇑𘼜", "char": "𙅇", "reading": "maçi", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇒𙆩", "char": "𙆌", "reading": "xula", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇒𘺹", "char": "𙆏", "source": "data/jurchen/ids.json", "refs": [66, 67] },
+    { "sequence": "⿱𙇒𙆼", "char": "𙆐", "source": "data/jurchen/ids.json", "refs": [66, 67] },
   ] },
   { key: 'shuishu', refs: [52, 53], examples: [
     // The ten numbers, the ten stems and the twelve branches as Shuishu characters, at the

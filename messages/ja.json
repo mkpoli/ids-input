@@ -239,7 +239,7 @@
   "parts.shuishu.groups": "水書の分類",
   "parts.shuishu.filter": "名前・読み・意味・分解・符号位置で絞り込み",
   "parts.shuishu.note": "提案ブロックの暫定符号位置に置いています。Unicode 18.0.0では未割り当てです。",
-  "parts.shuishu.ids": "分解は編集によるもので、資料にはありません。分け方が明らかな字だけを載せています。",
+  "parts.editorialIds": "分解は編集によるもので、資料にはありません。分け方が明らかな字だけを載せています。",
   "parts.jurchen.character": "文字",
   "parts.jurchen.variant": "異体字",
   "parts.jurchen.radical": "部首",
@@ -370,7 +370,6 @@
   "info.copy": "{char}をコピー",
   "info.copied": "コピーしました",
   "info.copyFailed": "コピー失敗",
-  "info.source.sections": "出典",
   "info.site.openTangut": "Open Tangut",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
@@ -379,5 +378,9 @@
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Tangut IDS 一覧",
   "info.site.course": "Unicode",
+  "info.site.zitools": "字統網",
+  "info.site.yedict": "字海",
+  "info.site.zdic": "漢典",
+  "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "最初の画"
 }

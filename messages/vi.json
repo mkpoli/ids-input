@@ -239,7 +239,7 @@
   "parts.shuishu.groups": "Phân loại Thủy thư",
   "parts.shuishu.filter": "Lọc theo tên, cách đọc, nghĩa, cách tách chữ hoặc mã điểm",
   "parts.shuishu.note": "Đặt tại các vị trí mã tạm thời của khối đề nghị; Unicode 18.0.0 để trống.",
-  "parts.shuishu.ids": "Cách tách chữ do người biên tập đặt, không nguồn nào ghi, nên chỉ gồm những chữ có cách tách rõ ràng.",
+  "parts.editorialIds": "Cách tách chữ do người biên tập đặt, không nguồn nào ghi, nên chỉ gồm những chữ có cách tách rõ ràng.",
   "parts.jurchen.character": "Chữ",
   "parts.jurchen.variant": "Dị thể",
   "parts.jurchen.radical": "Bộ thủ",
@@ -370,7 +370,6 @@
   "info.copy": "Sao chép {char}",
   "info.copied": "Đã sao chép",
   "info.copyFailed": "Lỗi sao chép",
-  "info.source.sections": "Nguồn",
   "info.site.openTangut": "Open Tangut",
   "info.site.unihan": "Unihan",
   "info.site.unicodeSealSource": "Unicode SealSources",
@@ -379,5 +378,9 @@
   "info.site.component": "Andrew West",
   "info.site.tangutIds": "Danh sách Tangut IDS",
   "info.site.course": "Unicode",
+  "info.site.zitools": "zi.tools",
+  "info.site.yedict": "yedict",
+  "info.site.zdic": "zdic",
+  "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "nét đầu"
 }

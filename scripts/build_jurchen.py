@@ -44,6 +44,8 @@ LICENCE = ROOT / 'fonts/LICENSE-IDSJurchen.txt'
 CHARS = range(0x18E00, 0x19192)
 RADICALS = range(0x191A0, 0x191D3)
 SELECTORS = range(0xFE00, 0xFE05)
+# The operators `ids.json` may use: side by side, stacked, and the two enclosures that hold a dot.
+IDS_OPS = '⿰⿱⿷⿸'
 # In font units of a 1000-unit em: small enough to keep the corners, large enough to keep the file down.
 MAX_ERROR = 1.0
 
@@ -178,6 +180,34 @@ def build_font(codes):
     return font, {text: name for text, (_, name) in drawn.items()}
 
 
+def editorial(parts):
+    """The decompositions of `ids.json`, each checked against the parts it names and their strokes."""
+    by_part = {part['part']: part for part in parts}
+
+    def strokes(part):
+        # Unicode counts no radical's strokes; a code spells out up to four strokes and the last.
+        if part['strokes'] is not None:
+            return part['strokes']
+        letters = part['jurCode'].removesuffix('b')
+        if len(letters) >= 5:
+            raise ValueError(f"{part['part']!r}: its code does not give a stroke count")
+        return len(letters)
+
+    document = json.loads((SOURCE / 'ids.json').read_text(encoding='utf-8'))
+    for point, text in document['entries'].items():
+        target = by_part.get(chr(int(point, 16)))
+        if target is None or target['jurGroup'] != 'character':
+            raise ValueError(f'ids.json names U+{point}, which is not a character')
+        if len(text) != 3 or text[0] not in IDS_OPS:
+            raise ValueError(f'{point}: {text} is not an operator with two parts')
+        if target['part'] in text[1:] or not all(char in by_part for char in text[1:]):
+            raise ValueError(f'{point}: {text} names a part it cannot')
+        if sum(strokes(by_part[char]) for char in text[1:]) != target['strokes']:
+            raise ValueError(f'{point}: the strokes of {text} do not add up')
+        target['ids'] = text
+    return {'note': document['note'], 'count': len(document['entries'])}
+
+
 def write(path, document):
     raw = json.dumps(document, ensure_ascii=False, separators=(',', ':')).encode()
     data = bytearray(gzip.compress(raw, compresslevel=9, mtime=0))
@@ -232,7 +262,8 @@ def main():
             'jurCode': codes[chr(point)],
             'strokes': None,
         })
-    write(INDEX, {'format': 1, 'unicode': '18.0.0', 'sources': json.loads((SOURCE / 'sources.json').read_text()), 'parts': parts})
+    ids = editorial(parts)
+    write(INDEX, {'format': 1, 'unicode': '18.0.0', 'sources': json.loads((SOURCE / 'sources.json').read_text()), 'ids': ids, 'parts': parts})
     write(OUTLINES, {'records': outlines, 'font': 'IDS Jurchen', 'fontSha256': hashlib.sha256(FONT.read_bytes()).hexdigest()})
     print(f'{len(parts)} parts, {len(outlines)} outlines; font {FONT.stat().st_size} bytes')
 

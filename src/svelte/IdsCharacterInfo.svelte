@@ -48,7 +48,8 @@
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
-  // the character itself. A data record is named by its site; each course record keeps its own title.
+  // the character itself, then the sites that hold it. A data record is named by its site; each
+  // course record keeps its own title.
   /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
   const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
   /** @type {{ key: string, site: string, what: string, url: string }[]} */
@@ -71,6 +72,17 @@
     const shared = new Map()
     for (const entry of list) shared.set(entry.site, (shared.get(entry.site) ?? 0) + 1)
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
+    // The sites that hold the character in their own records, after the records the card read.
+    // zi.tools and CHISE list every script the card shows; 字海 and 漢典 cover Han characters.
+    if (char) {
+      list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
+      if (/^\p{Unified_Ideograph}$/u.test(char)) {
+        const point = (char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
+        list.push({ key: 'yedict', site: t('info.site.yedict'), what: 'yedict', url: `http://www.yedict.com/z/U${point}` })
+        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') ? 'hant' : 'hans'}/${encodeURIComponent(char)}` })
+      }
+      list.push({ key: 'chise', site: t('info.site.chise'), what: 'CHISE IDS', url: `https://www.chise.org/est/view/character/${encodeURIComponent(char)}` })
+    }
     return list
   })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
@@ -327,10 +339,13 @@
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
     if (!anchor) return
-    // A scroll that clips the anchor out of its own box takes the card with it.
+    // A hit inside the anchor or the card keeps the card where it stands. A painted input, a shadow
+    // root or another overlay can retarget the hit outside both, so a card the pointer rests on still
+    // follows its anchor while that anchor sits in the window.
     const box = anchor.getBoundingClientRect()
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-    if (hit && anchor.contains(hit) || panel?.matches(':hover')) position()
+    const inWindow = box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth
+    if (hit && (anchor.contains(hit) || panel?.contains(hit)) || inWindow && panel?.matches(':hover')) position()
     else close()
   }
   /** Controls inside the card that keep their own press. @constant {string} */
@@ -375,7 +390,7 @@
   }
   $effect(() => {
     const node = root
-    adapter.characterInfo
+    void adapter.characterInfo
     if (!node) return
     const resized = new ResizeObserver(position)
     if (panel) resized.observe(panel)
@@ -507,7 +522,7 @@
       {/each}
     {/if}
     {#if sources.length}
-      <p class="sources" id={`${uid}-sources`}><span class="label">{t('info.source.sections')}</span>{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
+      <p class="sources">{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
     {/if}
   {/if}
 </div>
@@ -522,7 +537,6 @@
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
   .sources{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:4px;row-gap:2px;margin:10px 0 0;font-size:11.5px;line-height:1.6;color:var(--info-muted)}
-  .sources .label{margin:0 4px 0 0;font-size:11px}
   .sources a{color:var(--info-muted);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--info-muted) 55%,transparent);text-underline-offset:2px}
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
   .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}

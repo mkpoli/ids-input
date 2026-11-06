@@ -89,7 +89,7 @@ function shareHref(value) {
   try {
     const url = new URL(value, globalThis.location?.href)
     if (url.protocol === 'file:') return ''
-    for (const name of [...url.searchParams.keys()]) if (name !== 'ids' && name !== 'doc') url.searchParams.delete(name)
+    for (const name of Array.from(url.searchParams.keys())) if (name !== 'ids' && name !== 'doc') url.searchParams.delete(name)
     url.hash = ''
     const site = new URL(SITE)
     url.protocol = site.protocol

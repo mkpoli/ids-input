@@ -52,7 +52,7 @@
   "app.examples.cards": "카드",
   "app.examples.list": "목록",
   "app.examples.seal": "소전",
-  "app.examples.jurchen": "여진 문자 숫자",
+  "app.examples.jurchen": "여진 문자",
   "app.examples.shuishu": "수서",
   "app.examples.tangut": "서하 문자",
   "app.examples.none": "(미부호화)",
@@ -82,6 +82,7 @@
   "app.font.label": "글꼴",
   "app.font.sans": "산세리프",
   "app.font.serif": "세리프",
+  "app.font.fangsong": "방송체",
   "app.font.klee": "해서",
   "app.footer.sources": "출처",
   "app.history.label": "기록",
@@ -184,6 +185,9 @@
   "app.theme.system": "시스템 설정",
   "app.title": "IDS 공방",
   "app.toolbar": "도구",
+  "app.components.other": "구성 요소 {count}개",
+  "app.recordedStrokes": "이 글자에 기록된 획수입니다.",
+  "app.componentStrokes": "구성 요소의 획수를 합한 값입니다.",
   "app.componentLookup.title": "부품 검색",
   "app.componentLookup.containing": "부품이 포함된 글자 찾기",
   "app.componentLookup.parts": "글자의 부품 찾기",
@@ -215,6 +219,7 @@
   "app.layers.failed": "이 설명을 레이어로 그릴 수 없습니다.",
   "app.layers.nonlinear": "이 레이어에는 비선형 변형이 있습니다. 필드를 사용하기 전에 초기화하세요.",
   "app.layers.reset": "변형 초기화",
+  "app.layers.strokes": "획",
   "app.layers.transform": "변형",
   "app.layers.x": "X",
   "app.layers.y": "Y",
@@ -380,5 +385,7 @@
   "sources.use.compare": "엔진 비교",
   "sources.files": "파일",
   "sources.citedBy": "예시에서 사용",
-  "app.atlas": "부품 목록"
+  "app.atlas": "부품 목록",
+  "app.sitesLabel": "사이트",
+  "app.sitesMore": "다른 문자 프로젝트"
 }

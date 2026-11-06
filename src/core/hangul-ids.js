@@ -76,10 +76,9 @@ export function hangulIdsOf(syllable) {
   return letters ? describeSyllable(letters.initial, letters.medial, letters.final) : null
 }
 
-/** The leaves of a description in reading order. @param {import('./ids.js').Part} part
- *  @returns {Generator<string>} */
+/** The leaves of a description in reading order, an empty slot as null.
+ *  @param {import('./ids.js').Part} part @returns {Generator<string | null>} */
 function* flatten(part) {
-  if (part === null) return
   if (!isNode(part)) { yield part; return }
   for (const child of part.parts) yield* flatten(child)
 }
@@ -93,7 +92,10 @@ export function hangulOfIds(text) {
   if (!/[\u3131-\u318E]/u.test(text)) return null
   const read = parse(text, { open: true })
   if (read.problem || read.tree === null) return null
-  const letters = [...flatten(read.tree)].flatMap(leaf => {
+  const leaves = [...flatten(read.tree)]
+  // A slot still to be filled is a part of the drawing: the description draws as written.
+  if (leaves.includes(null)) return null
+  const letters = /** @type {string[]} */ (leaves).flatMap(leaf => {
     const written = hangulLetters(leaf)
     if (!written) return [...(VOWEL_PARTS.get(leaf) ?? FINAL_PARTS.get(leaf) ?? leaf)]
     const vowel = VOWEL_PARTS.get(written.medial) ?? written.medial

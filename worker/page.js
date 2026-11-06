@@ -5,6 +5,7 @@
 import { sequenceOfPath } from '../src/core/address.js'
 import { parse } from '../src/core/ids.js'
 import { CARD_VERSION } from './card-version.js'
+import { isEditorial } from './editorial.js'
 
 export const OG_WIDTH = 1200
 export const OG_HEIGHT = 630
@@ -46,7 +47,7 @@ export function routeFor(url, defaultSequence) {
     }
   }
   if ([...sequence].length > 200) return bad('Sequence too long', 414)
-  if (/[\u0000-\u001f\u007f-\u009f]/u.test(sequence)) return bad('Bad sequence')
+  if (/\p{Cc}/u.test(sequence)) return bad('Bad sequence')
   return { kind, sequence }
 }
 
@@ -69,7 +70,7 @@ export function metaFor({ sequence, char, origin, doc = '', documentTitle = null
     : doc
       ? `The ideographic description sequence ${sequence}, shared as a document from IDS Workshop.`
       : char
-        ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
+        ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}).${isEditorial(sequence, char) ? ' The description is an editorial reading of the glyph.' : ''} Drawn by IDS Workshop.`
         : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
   return {
     title,

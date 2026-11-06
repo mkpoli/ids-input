@@ -225,9 +225,17 @@ export const svgBox = b => [b[0], ASCENT - b[3], b[2] - b[0], b[3] - b[1]]
 export async function sketch(source, sequence, { fontStyle = 'sans' } = {}) {
   await source.ready()
   // Loose marks hang off the drawing; they are not leaves of it.
-  const { base } = splitDescription(sequence)
+  const { base, marks } = splitDescription(sequence)
   const arity = ch => { const c = source.manifest.constants; return c.BINARY.includes(ch) ? 2 : c.TERNARY.includes(ch) ? 3 : c.UNARY.includes(ch) ? 1 : 0 }
-  return new Composer(source.store(), { fontStyle }).sketch(normaliseHangul(hangulOfIds(base) ?? base, arity)).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
+  const description = normaliseHangul(hangulOfIds(base) ?? base, arity)
+  // A mark beside the drawing takes room from the face, so its outline is read before the layout.
+  if (marks) {
+    await source.load(source.filesOf([...marks]))
+    const store = source.store()
+    new Composer(store, { fontStyle }).faceBeside(marks)
+    if (store.missing.size) await source.load(store.missing)
+  }
+  return new Composer(source.store(), { fontStyle }).sketch(description, marks).map(leaf => ({ ...leaf, box: svgBox(leaf.box) }))
 }
 
 /**
@@ -287,7 +295,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       missing: [...(composer.missingGlyphs ?? [])],
       stroke: composer.stroke ?? null,
-      parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut) })), origins: ink.map(p => p.origin),
+      parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut), ...(p.part.strokes ? { strokes: p.part.strokes.map(([id, contours]) => [id, [...contours]]) } : {}) })), origins: ink.map(p => p.origin),
       kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv),
       approximate: [...new Set([...extraOperators(composer.cancelTransforms(tree), composer), ...composer.approximate, ...modifiedOperators(sequence)])],
       ...(cells ? { cells: true } : {}) }

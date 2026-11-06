@@ -44,7 +44,7 @@
   })
   /** @type {HTMLDivElement | null} */ let paint = $state(null)
   $effect(() => {
-    editor.selectionVersion
+    void editor.selectionVersion
     untrack(() => {
       const range = editor.selectionRange
       if (field && range) field.setSelectionRange(range.start, range.end)

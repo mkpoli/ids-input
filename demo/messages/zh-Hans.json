@@ -52,7 +52,7 @@
   "app.examples.cards": "卡片",
   "app.examples.list": "列表",
   "app.examples.seal": "小篆",
-  "app.examples.jurchen": "女真文数字",
+  "app.examples.jurchen": "女真文",
   "app.examples.shuishu": "水书",
   "app.examples.tangut": "西夏文",
   "app.examples.none": "（未编码）",
@@ -82,6 +82,7 @@
   "app.font.label": "字体",
   "app.font.sans": "无衬线",
   "app.font.serif": "衬线",
+  "app.font.fangsong": "仿宋",
   "app.font.klee": "楷书",
   "app.footer.sources": "来源",
   "app.history.label": "历史",
@@ -184,6 +185,9 @@
   "app.theme.system": "跟随系统",
   "app.title": "IDS工坊",
   "app.toolbar": "工具",
+  "app.components.other": "{count}个部件",
+  "app.recordedStrokes": "该字记录的笔画数。",
+  "app.componentStrokes": "各部件笔画数之和。",
   "app.componentLookup.title": "部件查询",
   "app.componentLookup.containing": "查找包含该部件的字",
   "app.componentLookup.parts": "查找该字的部件",
@@ -215,6 +219,7 @@
   "app.layers.failed": "无法按图层绘制此描述。",
   "app.layers.nonlinear": "此图层具有非线性变换。请先重置再使用字段。",
   "app.layers.reset": "重置变换",
+  "app.layers.strokes": "笔画",
   "app.layers.transform": "变换",
   "app.layers.x": "X",
   "app.layers.y": "Y",
@@ -380,5 +385,7 @@
   "sources.use.compare": "引擎对比",
   "sources.files": "文件",
   "sources.citedBy": "示例中的使用",
-  "app.atlas": "部件表"
+  "app.atlas": "部件表",
+  "app.sitesLabel": "网站",
+  "app.sitesMore": "更多文字项目"
 }
