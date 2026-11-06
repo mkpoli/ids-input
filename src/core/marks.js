@@ -55,7 +55,9 @@ export const isMarks = text => {
 export function splitMarks(part) {
   if (typeof part !== 'string') {
     if (part === null || part === undefined) return { base: part ?? null, marks: '' }
-    return part.marks ? { base: { op: part.op, parts: part.parts }, marks: part.marks } : { base: part, marks: '' }
+    if (!part.marks) return { base: part, marks: '' }
+    const { marks, ...base } = part
+    return { base, marks }
   }
   const chars = [...part]
   // A conjoining jamo run is one component, not the initial jamo and a mark after it.

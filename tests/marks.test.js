@@ -203,3 +203,9 @@ describe('drawing loose marks', () => {
     expect(onlyBundled('⿰ㄅㄚˊ木')).toBe(false)
   })
 })
+
+describe('splitting a part from its marks', () => {
+  it('keeps the modifier of an operator that carries marks', () => {
+    expect(splitDescription('⿴[1]囗水́')).toEqual({ base: '⿴[1]囗水', marks: '́' })
+  })
+})
