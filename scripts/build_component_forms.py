@@ -54,6 +54,35 @@ def group(cs):
     for c in cs: replayRecording(c, Cu2QuPen(pen, 0.5))
     return pen.result
 
+def seal_dot_top(cs, style):
+    """Compose the manuscript's joined ⺊冖 from each face's 上 and 冖.
+
+    Remove 上's baseline, then place its stem and rightward bar over the
+    native cover. Each face retains its own cover width, terminals and
+    stroke weights; only the stem's open intervals are shortened.
+    """
+    if style == 'sans':
+        # The plain bar reaches the cover's right edge. Keep its native 75
+        # unit weight; the stem below it is the longer run, as in the manuscript.
+        levels = [(100, 562), (441, 725), (516, 800), (825, 860)]
+        dx = 34
+    elif style == 'serif':
+        # Keep 上's triangular bar terminal and stem entry, and 冖's
+        # asymmetric brush endings. The thin bar sits lower than Sans.
+        levels = [(100, 543), (435, 697), (529, 791), (789, 810), (829, 850)]
+        dx = 25
+    else:
+        raise ValueError('No attested Kaisho outline has been prepared')
+
+    def ymap(y):
+        a, b = next(((a, b) for a, b in zip(levels, levels[1:]) if y <= b[0]), levels[-2:])
+        return a[1] + (y - a[0]) * (b[1] - a[1]) / (b[0] - a[0])
+
+    top = crop_group(cs('上'), (-2000, 100, 3000, 2000))
+    top = [[ops, [round(ymap(v) if i % 2 else v + dx, 2)
+                  for i, v in enumerate(points)]] for ops, points in top]
+    return [top, group(cs('冖'))]
+
 def compress_chang(outlines, style):
     """Shorten 菖's 昌 by contracting counters and gaps more than its bars."""
     if style == 'sans':
@@ -252,6 +281,9 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
             out.append((points[i + 1] - bot_y) * sy + top_y)
         return [ops, out]
     forms['⿳艹田⿵冂山'] = [top, [lower(group) for group in bot]]
+    # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
+    # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
+    forms['⿱⺊冖'] = seal_dot_top(cs, style)
     # The expanded U+30EDE description retains its native enclosure and eleven
     # editable leaves, including the junctions between neighboring components.
     biang = biang_noto(cs, style)
@@ -281,9 +313,24 @@ result['sources']['kaisho'] = {
     'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
     'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
 }
-result['editorial'] = {'JYN00003': {**XIE_PROVENANCE, 'donors': {
-    'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
-}}}
+result['editorial'] = {
+    'JYN00003': {**XIE_PROVENANCE, 'donors': {
+        'sans': ['寫'], 'serif': ['寫'], 'kaisho': ['寫', '旧', '目'],
+    }},
+    'KRM-07097330': {
+        'kind': 'editorial manuscript-informed donor composition',
+        'reference': 'KRM K07097330; K01035410 glosses the ⺊ form 俗處字',
+        'url': 'https://viewer.hdic.jp/krm-public/show/K0709733',
+        'witness': 'Kanchi-in manuscript of the Ruiju Myōgishō, Hōge 97.3.3 (Tenri 391.3.3), copied 1241/1251',
+        'image': 'https://dl.ndl.go.jp/api/iiif/2586897/R0000052/full/1200,/0/default.jpg',
+        'limitation': 'Regularized editorial outlines, not a facsimile or an encoded-character identification. The manuscript informs the joined centred stem and extended rightward horizontal dot; each face uses its own 上 and 冖 donors with editorial stem spacing. GlyphWiki is a comparison witness, not an outline donor.',
+        'comparison': 'https://glyphwiki.org/glyph/hdic_hkrm-01035410.svg',
+        'gloss': 'K07097330: 俗; K01035410: 俗處字',
+        'kaisho': 'No prepared form; retain ordinary Kaisho composition without a Sans fallback.',
+        'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖']},
+        'forms': ['⿱⺊冖'],
+    },
+}
 # The table is the engine's: it is committed in a han-compose checkout, which `bun run data` copies
 # into the package, so the file written is the source of truth rather than an installed copy.
 from engine_data import WRITE_SRC as SRC
