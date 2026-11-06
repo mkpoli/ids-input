@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["fonttools[woff]==4.63.0", "brotli==1.2.0"]
 # ///
-"""Replace the Sans {5} cut with the native component in 暇.
+"""Replace the Sans {5} cut with the native component in 遐.
 
 Run with the Noto Sans CJK JP 2.004 collection and its JP face index:
     uv run scripts/build_numbered_five.py /path/to/NotoSansCJK-Regular.ttc --font-number 0
@@ -29,27 +29,27 @@ if '2.004' not in (font['name'].getDebugName(5) or '') or font['head'].unitsPerE
     raise ValueError('Expected Noto Sans CJK JP 2.004 with 1000 units per em')
 glyphs = font.getGlyphSet()
 recording = RecordingPen()
-glyphs[font.getBestCmap()[ord('暇')]].draw(recording)
+glyphs[font.getBestCmap()[ord('遐')]].draw(recording)
 contours, current = [], []
 for command, points in recording.value:
     current.append((command, points))
     if command in ('closePath', 'endPath'):
         bounds = BoundsPen(glyphs)
         replayRecording(current, bounds)
-        if bounds.bounds in ((377, -77, 636, 796), (447, 547, 570, 732)):
+        if bounds.bounds in ((325, 66, 607, 807), (395, 600, 535, 746)):
             contours.append(current)
         current = []
 if len(contours) != 2:
-    raise ValueError('The expected 暇 contours were not found')
+    raise ValueError('The expected 遐 contours were not found')
 # Translation centres the cut in the em. Its dimensions and stroke widths remain native.
 pen = Contours(glyphs, 1)
 for contour in contours:
-    replayRecording(contour, TransformPen(Cu2QuPen(pen, max_err=0.5), (1, 0, 0, 1, -6.5, 0)))
-record = {'v': 0, 'b': [370.5, -77, 629.5, 796], 'p': pen.contours}
+    replayRecording(contour, TransformPen(Cu2QuPen(pen, max_err=0.5), (1, 0, 0, 1, 34, 0)))
+record = {'v': 0, 'b': [359, 66, 641, 807], 'p': pen.contours}
 # Keep ink as the native perimeter, matching bundled glyph records.
 from fontTools.pens.perimeterPen import PerimeterPen
 perimeter = PerimeterPen(glyphs)
 for contour in contours:
     replayRecording(contour, perimeter)
-result = {'source': 'Noto Sans CJK JP 2.004, 暇', 'license': 'SIL OFL 1.1', 'G': record, 'ink': round(perimeter.value, 4)}
+result = {'source': 'Noto Sans CJK JP 2.004, 遐', 'license': 'SIL OFL 1.1', 'G': record, 'ink': round(perimeter.value, 4)}
 (ROOT / 'data/numbered-five-context.json').write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n')

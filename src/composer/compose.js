@@ -899,7 +899,7 @@ export class Composer {
       if (tree && (this.stroked(tree) || this.atomic(encoded))) squeezed = false
       if (glyph && !(squeezed && tree)) {
         if (sideBySide && encoded === '\u{F2A9}' && this.fontStyle === 'sans') {
-          // The native cut from 暇 already has its narrow contextual proportions.
+          // The native cut from 遐 already has its contextual proportions.
           const context = partOf(numberedFiveContext.G)
           const [x0, y0, x1, y1] = context.box
           const scale = Math.min((region[2] - region[0]) / (x1 - x0), (region[3] - region[1]) / (y1 - y0))
