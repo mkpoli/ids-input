@@ -381,5 +381,7 @@
   "sources.use.compare": "엔진 비교",
   "sources.files": "파일",
   "sources.citedBy": "예시에서 사용",
-  "app.atlas": "부품 목록"
+  "app.atlas": "부품 목록",
+  "app.sites": "사이트",
+  "app.sites.more": "다른 문자 프로젝트"
 }

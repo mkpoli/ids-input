@@ -1,9 +1,13 @@
 <script>
   // A feature reference for the engines this site is compared with. One table, one column per
   // engine; cells say "—" where no public source documents a value.
+  import SiteSelect from './ui/SiteSelect.svelte'
+  import { appMessages } from './lib/locales.js'
   import { applyTheme, storedTheme } from './lib/theme.js'
   import ThemeSwitch from './ui/ThemeSwitch.svelte'
   import { ENGINES, SECTIONS, SOURCES } from './lib/engine-table.js'
+
+  const en = appMessages('en')
 
   let theme = $state(storedTheme())
   /** @param {import('./lib/theme.js').Theme} next */
@@ -16,10 +20,7 @@
 
 <div class="page">
   <header class="bar">
-    <a class="brand" href="./" aria-label="IDS Workshop">
-      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="2.5" y="2.5" width="19" height="19" rx="4" fill="var(--ui-color-accent)" /><path d="M7 7h4v10H7zM13 7h4v4h-4zM13 13h4v4h-4z" fill="var(--ui-color-on-accent)" /></svg>
-      <span>IDS Workshop</span>
-    </a>
+    <SiteSelect title="IDS Workshop" label={en['app.sites']} more={en['app.sites.more']} locale="en" href="./" />
     <span class="slash" aria-hidden="true">/</span>
     <h1>Engine comparison</h1>
     <div class="end">
@@ -80,7 +81,6 @@
   .page{display:flex;flex-direction:column;min-height:100dvh}
   .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px max(18px,env(safe-area-inset-right)) 10px max(18px,env(safe-area-inset-left));
     border-bottom:1px solid var(--ui-color-border);background:color-mix(in srgb,var(--ui-color-canvas) 88%,transparent);backdrop-filter:blur(10px);position:sticky;top:0;z-index:10}
-  .brand{display:flex;align-items:center;gap:8px;color:var(--ui-color-ink);text-decoration:none;font-weight:650;font-size:15px;white-space:nowrap}
   .slash{color:var(--ui-color-border-strong)}
   h1{margin:0;font-size:15px;font-weight:600;color:var(--ui-color-ink-muted);white-space:nowrap}
   .end{display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap}

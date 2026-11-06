@@ -381,5 +381,7 @@
   "sources.use.compare": "So sánh công cụ",
   "sources.files": "Tệp",
   "sources.citedBy": "Dùng trong ví dụ",
-  "app.atlas": "Danh mục bộ phận"
+  "app.atlas": "Danh mục bộ phận",
+  "app.sites": "Sites",
+  "app.sites.more": "More writing-system projects"
 }
