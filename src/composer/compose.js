@@ -93,6 +93,9 @@ const BAR_ASPECT = 5
 // the flattest full component (工, 1.23 in the export) and the flattest one drawn as a band
 // (丷, 2.04) fall either side of it.
 const MIDDLE_FLAT = 1.5
+// How much of a cover's width a box head takes, and the part below it, so the two stay in balance.
+const BOX_HEAD = 0.72
+const BOX_BODY = 0.85
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -2116,29 +2119,53 @@ export class Composer {
         for (const p of lower) p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
       }
     }
-    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])
-      && typeof children[1] === 'string') {
+    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])) {
       let topBox = null
       try {
-        const tree = this.parse(this.sequenceOf(children[1]) ?? '')
+        // The lower part written out, or named by a character whose sequence reads the same.
+        // A written lower part drawn as one whole glyph keeps that glyph's own proportions.
+        const tree = typeof children[1] === 'string' ? this.parse(this.sequenceOf(children[1]) ?? '')
+          : groups[1].length > 1 ? children[1] : null
         if (Array.isArray(tree) && tree[0] === '⿱' && ['日', '曰', '田', '罒', '目', '四'].includes(tree[1])) topBox = tree[1]
       } catch { /* not a box-headed sequence */ }
       if (topBox) {
         const coverBox = bounds(groups[0]), lowerInk = inkBounds(groups[1]), height = lowerInk[3] - lowerInk[1]
-        const split = lowerInk[3] - 0.45 * height, factor = 0.72 * (coverBox[2] - coverBox[0]) / Math.max(lowerInk[2] - lowerInk[0], 1)
+        const split = lowerInk[3] - 0.45 * height
         const centre = (coverBox[0] + coverBox[2]) / 2
+        // One map for the whole head: a box may be several contours (its counters, or a brush face's
+        // separate strokes), and each must keep its place in it.
+        // A counter inside a contour below stays with that contour.
+        const above = b => (b[1] + b[3]) / 2 >= split
+        const boxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox)), below = boxes.filter(b => !above(b))
+        const inHead = b => above(b) && !below.some(o => o[0] <= b[0] && o[1] <= b[1] && o[2] >= b[2] && o[3] >= b[3])
+        // A lower part written out names its head: the first operand's part, whatever its height.
+        const named = Array.isArray(children[1]) && groups[1].length > 1 ? groups[1][0] : null
+        const headBoxes = named ? drawnContours(named).map(pointsBox) : boxes.filter(inHead)
+        const headLeft = Math.min(...headBoxes.map(b => b[0])), headRight = Math.max(...headBoxes.map(b => b[2]))
+        const head = (headLeft + headRight) / 2
+        // A head already that narrow keeps its width.
+        const factor = Math.min(BOX_HEAD * (coverBox[2] - coverBox[0]) / Math.max(headRight - headLeft, 1), 1)
+        // What stands below takes one map of its own: left at its width, it outweighs the narrowed head.
+        const isHead = (p, b) => named ? p === named : inHead(b)
+        const bodyBoxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox).filter(b => !isHead(p, b)))
+        const bodyLeft = Math.min(...bodyBoxes.map(b => b[0])), bodyRight = Math.max(...bodyBoxes.map(b => b[2]))
+        const body = (bodyLeft + bodyRight) / 2
+        const bodyFactor = Math.min(BOX_BODY * (coverBox[2] - coverBox[0]) / Math.max(bodyRight - bodyLeft, 1), 1)
         for (const p of groups[1]) {
           const contours = p.part.contours.slice()
           let changed = false
           drawnContours(p).forEach((points, index) => {
             const b = pointsBox(points)
-            if ((b[1] + b[3]) / 2 < split) return
+            const [from, by] = isHead(p, b) ? [head, factor] : [body, bodyFactor]
             const c = { ...contours[index] }
             let lo = Infinity, hi = -Infinity
             for (let k = 0; k < c.light.length; k += 2) { lo = Math.min(lo, c.light[k]); hi = Math.max(hi, c.light[k]) }
             const mid = (lo + hi) / 2, scale = (p.target[2] - p.target[0]) / Math.max(p.source[2] - p.source[0], 1)
-            const shift = (centre - (b[0] + b[2]) / 2) / scale
-            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * factor; out[k + 1] = points[k + 1] } return out }
+            const middle = (b[0] + b[2]) / 2
+            // A part mirrored across x moves the other way on the page than in its own coordinates.
+            const side = (p.flips ?? []).reduce((sign, f) => f.x ? -sign : sign, 1)
+            const shift = side * (centre + (middle - from) * by - middle) / scale
+            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * by; out[k + 1] = points[k + 1] } return out }
             c.light = move(c.light); c.heavy = move(c.heavy); contours[index] = c; changed = true
           })
           if (changed) p.part = derived(p.part, contours)
