@@ -10,6 +10,7 @@
   const SITES = [
     { id: 'tangut', name: 'Tangut Input', href: 'https://tangut.mkpo.li/', logo: '/brand/tangut-input.svg' },
     { id: 'jurchen', name: 'Jurchen Input', href: 'https://jurchen.mkpo.li/', logo: '/brand/jurchen-input.svg' },
+    { id: 'han', name: 'Han Input', href: 'https://han.mkpo.li/', logo: '/brand/han-input.svg' },
     { id: 'ids', name: 'IDS Workshop', href: '', logo: '/brand/ids-workshop.svg' },
   ]
   const GALLERY = ['ja', 'zh-Hans', 'zh-Hant', 'ko']
