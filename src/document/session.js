@@ -95,7 +95,7 @@ export function createDocumentSession(initial = emptyDocument(), { reserved = []
     } catch { /* The error path itself must not fail an edit. */ }
   }
   const notify = () => {
-    for (const listener of [...listeners]) {
+    for (const listener of listeners.slice()) {
       try { listener(session) } catch (error) { reportListenerError(error) }
     }
   }

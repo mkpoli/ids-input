@@ -459,7 +459,7 @@
   const gongcheShown = $derived(gongcheGroups(query))
   const filtered = $derived.by(() => {
     if (!query || !parts || tab === 'other') return null
-    if (tab === 'alphabet') { const chars = new Set([...query]); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
+    if (tab === 'alphabet') { const chars = new Set(query); return alphabet.filter(part => chars.has(part)).map(part => byPart.get(part) ?? { part, kind: /** @type {const} */ ('extra') }) }
     if (tab === 'seal') return sealParts.filter(part => [...query].includes(part.part) || isSequence(part.part) && part.part.includes(query) || part.modern?.some(char => [...query].includes(char)))
     if (tab === 'shuishu') {
       // A code point written U+1B300, or as bare hex when that is all there is.
@@ -482,7 +482,7 @@
     }
     // A numbered reference is its own query, not the digits inside it.
     if (/^\{\d+\}$/.test(query)) return parts.filter(part => part.part === query || part.aliases?.some(alias => alias.includes(query)))
-    const chars = new Set([...query])
+    const chars = new Set(query)
     return adjacentVariants(parts.filter(part => part.part === query || !isSequence(query) && chars.has(part.part) || isSequence(part.part) && part.part.includes(query) || part.fragment?.includes(query) || part.glyph === query || query.length >= 3 && part.description?.includes(query) || part.aliases?.some(alias => alias.includes(query))))
   })
 

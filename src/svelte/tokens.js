@@ -12,6 +12,11 @@ export function tokens(text) {
   if (!text || parse(text, { open: true }).problem) return []
   /** @type {Token[]} */ const out = []
   let at = 0
+  /** The code point at `at`, or undefined past the end. */
+  const codePointAtCursor = () => {
+    const code = text.codePointAt(at)
+    return code === undefined ? undefined : String.fromCodePoint(code)
+  }
   /** @param {number[]} path */
   function read(path) {
     const start = at
@@ -20,13 +25,13 @@ export function tokens(text) {
     const chain = char === '#' ? strokeChainLength(text, start) : 0
     if (chain) {
       at = start + chain
-      if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
-      while (isToneMark([...text.slice(at)][0])) at += 1
+      if (isSelector(codePointAtCursor())) at += /** @type {string} */ (codePointAtCursor()).length
+      while (isToneMark(codePointAtCursor())) at += 1
       out.push({ path, start, tokenEnd: at, end: at, text: text.slice(start, at) })
       return
     }
     const n = arity(char)
-    const cluster = hangulClusterAt([...text.slice(at)], 0)
+    const cluster = hangulClusterAt(Array.from(text.slice(at)), 0)
     let noteStart = 0, noteEnd = 0
     if (cluster) at += cluster.text.length
     else {
@@ -34,11 +39,11 @@ export function tokens(text) {
       if (n) {
         const note = takesModifier(char) ? modifierLength(text, at) : 0
         if (note) { noteStart = at; at += note; noteEnd = at }
-      } else if (isSelector([...text.slice(at)][0])) at += [...text.slice(at)][0].length
+      } else if (isSelector(codePointAtCursor())) at += /** @type {string} */ (codePointAtCursor()).length
     }
     // A tone mark is part of the syllable before it, so it stays in that component's token. An
     // empty slot keeps the mark out, as it parses.
-    if (!n && !EMPTY_MARKS.includes(char)) while (isToneMark([...text.slice(at)][0])) at += 1
+    if (!n && !EMPTY_MARKS.includes(char)) while (isToneMark(codePointAtCursor())) at += 1
     const token = { path, start, tokenEnd: at, end: at, text: text.slice(start, at), ...(noteStart ? { noteStart, noteEnd } : {}) }
     out.push(token)
     for (let i = 0; i < n; i++) read([...path, i])
@@ -47,7 +52,7 @@ export function tokens(text) {
   read([])
   // Loose marks trail the whole description: they get a token of their own at the end, belonging to
   // the root, while the root's span reaches over them so a selection of the whole still finds it.
-  if (out.length && at < text.length && isMark([...text.slice(at)][0])) {
+  if (out.length && at < text.length && isMark(codePointAtCursor())) {
     out[0].end = text.length
     out.push({ path: [], start: at, tokenEnd: text.length, end: text.length, text: text.slice(at) })
   }
