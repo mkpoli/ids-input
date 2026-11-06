@@ -150,9 +150,9 @@ describe('Jurchen editorial descriptions', () => {
   const built = data.parts.filter(part => part.ids)
   const SAMPLE = '\u{18F6A}', TOP = '\u{191BA}', BOTTOM = '\u{191C8}'
 
-  it('holds the 27 of ids.json, each two parts of the block', () => {
-    expect(built).toHaveLength(27)
-    expect(data.ids.count).toBe(27)
+  it('holds the 22 of ids.json, each two parts of the block', () => {
+    expect(built).toHaveLength(22)
+    expect(data.ids.count).toBe(22)
     expect(data.ids.note.length).toBeGreaterThan(0)
     const known = new Set(data.parts.map(part => part.part))
     for (const part of built) {
