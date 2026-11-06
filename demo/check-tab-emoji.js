@@ -36,6 +36,10 @@ try {
 
   /** Type a description and wait for its emoji to reach the active tab's preview. @param {string} sequence @param {string} text */
   async function draw(sequence, text) {
+    // The tab keeps the last drawing until the next one arrives, so an emoji already on the strip
+    // would answer for the new sequence: empty the field and wait for that drawing to go first.
+    await page.locator('.ids-field input').fill('')
+    await page.waitForFunction(() => !document.querySelector('.tabbar .tab.on .tab-glyph text'), null, { timeout: 120000 })
     await page.locator('.ids-field input').fill(sequence)
     await page.waitForFunction(({ sequence, text }) => {
       const field = document.querySelector('.ids-field input')

@@ -12,6 +12,7 @@ import { jurchenAdapter } from '../src/adapter/jurchen.js'
 import { characterOf, namedFor } from '../worker/render.js'
 import { codePoint } from '../worker/card.js'
 import { codePoint as pageCodePoint } from '../worker/page.js'
+import { load as loadSearchWorker, recovered } from '../src/adapter/search-worker.js'
 import { jurchenLabel, jurchenMatches, jurchenNames } from '../src/adapter/jurchen-data.js'
 
 const data = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))).toString())
@@ -152,6 +153,68 @@ describe('Jurchen variant sequences', () => {
     expect(write(parse(`⿰${VARIANT}${FIRST}`).tree)).toBe(`⿰${VARIANT}${FIRST}`)
     expect(jurchenLabel(variants[0])).toContain('女真 異體')
     expect(jurchenLabel(variants[0])).toContain('U+18E01 U+FE00')
+  })
+})
+
+describe('Jurchen editorial descriptions', () => {
+  const built = data.parts.filter(part => part.ids)
+  const SAMPLE = '\u{18F6A}', TOP = '\u{191BA}', BOTTOM = '\u{191C8}'
+
+  it('holds the 44 of ids.json, each two parts of the block', () => {
+    expect(built).toHaveLength(44)
+    expect(data.ids.count).toBe(44)
+    expect(data.ids.note.length).toBeGreaterThan(0)
+    const known = new Set(data.parts.map(part => part.part))
+    for (const part of built) {
+      expect(part.jurGroup).toBe('character')
+      const [op, ...rest] = [...part.ids]
+      expect(['⿰', '⿱', '⿷', '⿸']).toContain(op)
+      expect(rest).toHaveLength(2)
+      expect(rest.every(char => known.has(char) && char !== part.part)).toBe(true)
+    }
+    expect(data.parts.find(part => part.part === SAMPLE).ids).toBe(`⿱${TOP}${BOTTOM}`)
+    // A dot held in a corner names the character that holds it first.
+    expect(data.parts.find(part => part.part === '\u{18EB9}').ids).toBe('⿸\u{191A8}\u{191D0}')
+    expect(data.parts.find(part => part.part === '\u{18E7A}').ids).toBe('⿷\u{18E75}\u{191D0}')
+  })
+
+  it('reads them as descriptions, found by their parts', async () => {
+    const adapter = jurchenAdapter({ data, palette: [] })
+    expect((await adapter.table()).get(SAMPLE)).toEqual([{ text: `⿱${TOP}${BOTTOM}`, regions: '' }])
+    expect((await adapter.containing(TOP + BOTTOM)).items).toContain(SAMPLE)
+    expect((await adapter.findByIds(TOP)).hits.map(hit => hit.char)).toContain(SAMPLE)
+  })
+
+  it('finds a character by its description, ahead of its parts', async () => {
+    expect(found(`⿱${TOP}${BOTTOM}`)).toEqual([SAMPLE])
+    expect(found(TOP)[0]).toBe(TOP)
+    expect(found(TOP)).toContain(SAMPLE)
+    const adapter = jurchenAdapter({ data, palette: [] })
+    expect((await adapter.search(`⿱${TOP}${BOTTOM}`))[0].char).toBe(SAMPLE)
+    expect(jurchenLabel(data.parts.find(part => part.part === SAMPLE))).toContain(`⿱${TOP}${BOTTOM}`)
+  })
+
+  it('carries them into the search worker, and survives a missing file', async () => {
+    const parts = [{ part: SAMPLE, ids: `⿱${TOP}${BOTTOM}` }, { part: TOP, ids: null }, { part: BOTTOM, ids: null }]
+    const args = ['data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined]
+    const search = await loadSearchWorker(...args, { format: 1, parts })
+    expect(search.search(TOP, { limit: 3 }).hits.map(hit => hit.char)).toEqual([SAMPLE])
+    const other = await loadSearchWorker(...args, { format: 2, parts: [] })
+    expect(other.search(TOP, { limit: 3 }).hits).toEqual([])
+  })
+
+  it('notices when a file the worker search went without comes back', async () => {
+    const good = Buffer.from(JSON.stringify({ format: 1, parts: [] })).toString('base64')
+    const realFetch = globalThis.fetch
+    let up = false
+    globalThis.fetch = async (url, init) => String(url).endsWith('jurchen')
+      ? (up ? new Response(Buffer.from(good, 'base64')) : new Response('', { status: 404 })) : realFetch(url, init)
+    try {
+      await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined, 'https://example.invalid/jurchen')
+      expect(await recovered()).toBe(false)
+      up = true
+      expect(await recovered()).toBe(true)
+    } finally { globalThis.fetch = realFetch }
   })
 })
 

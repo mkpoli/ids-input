@@ -269,7 +269,7 @@
   .leading.spacer{visibility:hidden}
   .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item.rich .label{overflow:visible;text-overflow:clip;white-space:normal;line-height:1.35;word-break:break-word}
-  .label:is(:lang(ja),:lang(txg)){font-family:var(--cjk)}
+  .label:is(:lang(ja),:lang(txg),:lang(swi),:lang(juc)){font-family:var(--cjk)}
   .note{flex:none;color:var(--ui-color-ink-muted);font:var(--ui-weight-medium) var(--ui-text-2xs)/var(--ui-leading-normal) var(--ui-font-mono);letter-spacing:.02em;white-space:nowrap}
   .note.unencoded{font:inherit;font-size:var(--ui-text-xs);font-style:italic}
   .sep{height:1px;margin:var(--ui-space-2xs);background:var(--ui-color-border)}

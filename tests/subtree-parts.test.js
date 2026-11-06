@@ -81,7 +81,7 @@ it('keeps numbered palette rows and their source uses through the subtree builde
   try {
     mkdirSync(`${root}/data`)
     writeFileSync(`${root}/data/babelstone-ids.tsv.gz`, gzipSync('甲\t⿱口{42}(G)'))
-    const row = ['{42}', 42, 3, 0, '折', 'd', '彐', 'top of 录 (F2D4)', 0]
+    const row = ['{42}', 42, 3, 0, '折', 'd', '彐', 'top of 录 (F2D4)', 0, null]
     writeFileSync(`${root}/data/ids-parts.json`, JSON.stringify({ parts: [row] }))
     build(pathToFileURL(root + '/'))
     const palette = JSON.parse(readFileSync(`${root}/data/ids-parts.json`))
