@@ -63,8 +63,8 @@ def seal_dot_top(cs, style):
     """
     if style == 'sans':
         # The plain bar reaches the cover's right edge. Keep its native 75
-        # unit weight and a 75 unit rise above it.
-        levels = [(100, 562), (441, 710), (516, 785), (825, 860)]
+        # unit weight; the stem below it is the longer run, as in the manuscript.
+        levels = [(100, 562), (441, 725), (516, 800), (825, 860)]
         dx = 34
     elif style == 'serif':
         # Keep 上's triangular bar terminal and stem entry, and 冖's
