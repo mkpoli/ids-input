@@ -13,7 +13,7 @@
     { id: 'ids', name: 'IDS Workshop', href: '', logo: '/brand/ids-workshop.svg' },
   ]
   const GALLERY = ['ja', 'zh-Hans', 'zh-Hant', 'ko']
-  const gallery = $derived(`https://scripts.mkpo.li/${GALLERY.includes(locale) ? `${locale}/` : ''}`)
+  const gallery = $derived(`https://moji.mkpo.li/${GALLERY.includes(locale) ? `${locale}/` : ''}`)
 
   let open = $state(false)
   /** @type {HTMLElement | undefined} */ let root = $state()
