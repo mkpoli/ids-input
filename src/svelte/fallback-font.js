@@ -6,7 +6,6 @@
 
 import { download } from '../core/retry.js'
 
-const FAMILY = 'IDS Fallback'
 // The shards are registered under `IDS Fallback Shared`, and `--fallback-font` names it in the
 // stacks: a family that a stylesheet also declares would match nothing in Firefox and WeChat.
 const SHARED = 'IDS Fallback Shared'

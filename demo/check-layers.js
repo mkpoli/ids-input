@@ -1,7 +1,6 @@
 // Run against a local devrun server with IDS_URL and optional IDS_LAYER_SHOTS.
 import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
-import { mkdirSync } from 'node:fs'
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
 try {
   for (const scheme of ['light', 'dark']) {
