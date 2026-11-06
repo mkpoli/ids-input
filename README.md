@@ -947,6 +947,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
   Noto Serif Tangut (1 MB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
   Label (23 KB) and GenZui Sans (2.3 MB); the
   BabelStone subset is under the Arphic Public License, the rest SIL Open Font License 1.1.
+- `data/erjian-glyphs.json`: the 二简字 forms the draft drew whole, taken from the bundled BabelStone
+  Han PUA subset; each entry names the table entry it follows (see `data/README.md`).
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
 - `src/composer/`: a port of han-compose's composer, MIT. Han drawings use the host export's
