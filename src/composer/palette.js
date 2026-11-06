@@ -1,4 +1,4 @@
-// Outlines for palette parts absent from the pinned default composer export.
+// Noto outlines for palette parts an export lacks. The export answers first, so each face keeps its own.
 import characters from '../../data/palette-fallback-characters.json' with { type: 'json' }
 import { bundledSource } from './bundled.js'
 import { unpack } from './loader.js'
@@ -13,4 +13,4 @@ const loadOutlines = async () => {
 }
 /** @param {{ load?: () => Promise<any>, fallback?: any }} options */
 export const paletteSource = ({ load = loadOutlines, fallback = null } = {}) =>
-  bundledSource({ load, matches: hasPaletteGlyph, fallback })
+  bundledSource({ load, matches: hasPaletteGlyph, fallback, under: true })
