@@ -1,6 +1,7 @@
 <script>
   import { untrack } from 'svelte'
   import { tint } from './tokens.js'
+  import { watchFallback } from './fallback-font.js'
   import IdsInlineEdit from './IdsInlineEdit.svelte'
   import { PART_DRAG, siblings, swappable, neighbor } from './part-drag.js'
   // The tree of `editor`'s description as boxes laid out as the operators place their parts: a row, a
@@ -172,6 +173,7 @@
   let menu = $state(/** @type {{ path: Path, x: number, y: number } | null} */ (null))
   /** @type {HTMLElement | null} */ let menuEl = $state(null)
   /** @type {HTMLElement | null} */ let rootEl = $state(null)
+  $effect(() => { if (rootEl) return watchFallback(rootEl) })
   /** @type {{ path: Path } | null} */ let editing = $state(null)
   /** The first click's target, retained if selection changes the layout before the second click. @type {string | null} */ let clickPath = null
   /** @param {Path} path */
@@ -346,7 +348,7 @@
     --_surface-subtle:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));--_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));
     --_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));--_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));
     --_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));--_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     position:relative;display:grid;place-items:center;min-width:0;min-height:0;padding:16px;color:var(--_ink)}
   .ids-tree-root{display:grid;width:min(100%,420px);aspect-ratio:1;min-height:0;container-type:size}
   .ids-tree-root > *{height:100%;min-height:0}

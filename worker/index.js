@@ -2,9 +2,10 @@
 // Static assets serve the workshop; sequence links receive their own preview tags, and a path that
 // names no sequence gets a page that says so.
 import { EMPTY_MARKS, OPERATORS, UNKNOWN, isComponent, isSelector, parse } from '../src/core/ids.js'
+import { assertDocument, readShareDocument, toSequence } from '../src/document/index.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
 import { shareHtml, routeFor } from './page.js'
-import { cardResponse, characterOf } from './render.js'
+import { cardResponse, characterFor } from './render.js'
 
 const ORIGIN = 'https://ids.mkpo.li'
 const failure = (message, status) => new Response(message, { status, headers: { 'cache-control': 'no-store' } })
@@ -17,6 +18,17 @@ const escapeHtml = text => text.replace(/[&<>"]/g, c => `&#${c.charCodeAt(0)};`)
 
 /** @param {string} sequence */
 const reads = sequence => Boolean(parse(sequence, { open: true }).tree)
+
+/** The document a share token carries, or null where it is absent or unreadable.
+ *  @param {string | null} token */
+const documentFrom = token => {
+  if (!token) return null
+  try {
+    const document = readShareDocument(token)
+    assertDocument(document)
+    return document
+  } catch { return null }
+}
 
 /** Whether the text is spelt in a sequence's own letters, even where it does not parse: an older
  *  link, or a draft's address, which is worth opening rather than a miss. Latin letters and digits
@@ -127,37 +139,45 @@ export default {
     const route = routeFor(url, EXAMPLES[0].sequence)
     let response
     if (route.error) response = failure(route.error, route.status)
-    else if (route.kind === 'asset') response = url.pathname === '/' ? await env.ASSETS.fetch(request) : await miss(request, env, url)
-    // The root reads the text its `ids` holds whether or not it parses, so a miss there is the
-    // share page; only a path can be no sequence.
-    else if (route.kind === 'page' && url.pathname !== '/' && !reads(route.sequence)) {
-      // A token carries its own document, whatever the address says, but the address is its
-      // subject only where it parses, so the shell keeps the root canonical.
-      if (url.searchParams.has('doc')) {
-        const plain = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
-        response = render(request, await plain.text(), plain.status)
-      // Text in a sequence's letters but not a sequence: an older link or a draft. It belongs in
-      // the editor, and a redirect leaves the address it came from readable.
-      } else if (spells(route.sequence)) response = new Response(null, { status: 303, headers: { location: draft(url, route.sequence).href } })
-      else response = render(request, notFound(url, route.sequence), 404)
-    } else {
-      try {
-        if (route.kind === 'card') response = await cardResponse(env, ctx, route.sequence)
-        else {
-          const template = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
-          if (!template.ok) throw new Error('Page unavailable')
-          const html = await template.text()
-          if (!html.includes('<title>IDS Workshop — Ideographic Description Sequence Editor</title>')) response = render(request, notFound(url, route.sequence), 404)
-          else response = new Response(shareHtml(html, {
-            sequence: route.sequence, char: await characterOf(env, route.sequence), origin: ORIGIN,
-          }), { headers: {
-            'content-type': 'text/html; charset=utf-8',
-            'cache-control': 'max-age=0, must-revalidate',
-            'x-og-sequence': encodeURIComponent(route.sequence),
-          } })
+    else {
+      // The token carries the document, and the document carries its sequence. A document at the
+      // root is a page of its own even when the address names no sequence; a token beside a file
+      // is ignored, as it is everywhere else.
+      const token = url.searchParams.get('doc')
+      const linked = token && (route.kind !== 'asset' || url.pathname === '/') ? documentFrom(token) : null
+      const sequence = linked ? toSequence(linked.root) : route.sequence
+      const kind = linked && route.kind === 'asset' && url.pathname === '/' && !url.searchParams.get('ids') ? 'page' : route.kind
+      if (kind === 'asset') response = url.pathname === '/' ? await env.ASSETS.fetch(request) : await miss(request, env, url)
+      // The root reads the text its `ids` holds whether or not it parses, so a miss there is the
+      // share page; only a path can be no sequence.
+      else if (kind === 'page' && url.pathname !== '/' && !reads(sequence)) {
+        // An unreadable token leaves the address as it was; no document can say what it meant.
+        if (url.searchParams.has('doc')) {
+          const plain = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
+          response = render(request, await plain.text(), plain.status)
+        // Text in a sequence's letters but not a sequence: an older link or a draft. It belongs in
+        // the editor, and a redirect leaves the address it came from readable.
+        } else if (spells(sequence)) response = new Response(null, { status: 303, headers: { location: draft(url, sequence).href } })
+        else response = render(request, notFound(url, sequence), 404)
+      } else {
+        try {
+          if (kind === 'card') response = await cardResponse(env, ctx, sequence, linked, token ?? '')
+          else {
+            const template = await env.ASSETS.fetch(new URL('/index.html', url.origin).href)
+            if (!template.ok) throw new Error('Page unavailable')
+            const html = await template.text()
+            // The page names the character its card draws, so the title, the description and the image agree.
+            const char = await characterFor(env, sequence).catch(() => null)
+            if (!html.includes('<title>IDS Workshop — Ideographic Description Sequence Editor</title>')) response = render(request, notFound(url, sequence), 404)
+            else response = new Response(shareHtml(html, { sequence, char, origin: ORIGIN, doc: linked ? token : null, documentTitle: linked?.title ?? null }), { headers: {
+              'content-type': 'text/html; charset=utf-8',
+              'cache-control': 'max-age=0, must-revalidate',
+              'x-og-sequence': encodeURIComponent(sequence),
+            } })
+          }
+        } catch {
+          response = failure('Preview unavailable', 500)
         }
-      } catch {
-        response = failure('Preview unavailable', 500)
       }
     }
     // Dynamic responses need their own indexing policy.

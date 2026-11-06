@@ -29,6 +29,66 @@ describe('a workshop share card', () => {
     expect(svg).toContain('ids.mkpo.li')
     expect(svg).toContain('U+93B6')
   })
+  it('asks the font table for every cell, the operators included', () => {
+    // The table answers IDS Operators for an operator and the character's own face for a character;
+    // a face is never assembled here.
+    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing], familyOf: c => (c === '⿰' ? 'IDS Operators' : c === '设' || c === '冓' ? 'a' : 'b') })
+    expect(svg).toContain('font-family="IDS Operators" font-size="88"')
+    expect(svg).toContain('font-family="a" font-size="88"')
+    expect(svg).not.toContain('font-family="a, IDS Operators"')
+  })
+  it('keeps the face the table gives an operator, including one the IDC face lacks', () => {
+    const svg = cardSvg({ sequence: '⿺木子', familyOf: () => 'IDS Strokes' })
+    expect(svg).toContain('font-family="IDS Strokes" font-size="88"')
+  })
+  it('shows the character of a sequence read with one it does not compose, at that code point', () => {
+    const svg = cardSvg({ sequence: '⿰设冓', char: '講', units: ['講', '设', '冓'], drawings: [drawing, drawing, drawing] })
+    expect(svg).toContain('Characters of the description, each drawn on its own')
+    expect(svg).toContain('>講</text>')
+    expect(svg).toContain('U+8B1B')
+    expect(svg.match(/data-character="true"/g)).toHaveLength(1)
+  })
+
+  it('draws a shared document with its scoped layers and title', () => {
+    const scopes = { root: { kind: 'component', node: 'root', positive: [{ d: 'M0 0L100 0L100 100Z' }], negative: [] }, complete: true, issues: [], leafFrames: new Map() }
+    const svg = cardSvg({ sequence: '⿰木口', document: { scopes, title: 'Moved 木' } })
+    expect(svg).toContain('>Shared document</text>')
+    expect(svg).toContain('>Document</text>')
+    expect(svg).toContain('data-document="true"')
+    expect(svg).toContain('Moved 木')
+    expect(svg).toContain('<svg x="106" y="172" width="348" height="348" viewBox="-16 -16 1032 1032">')
+    expect(svg).toContain('M0 0L100 0L100 100Z')
+    expect(svg).not.toContain('data-character="true"')
+    expect(svg).not.toContain('data-codepoint="true"')
+  })
+
+  it('draws an empty slot where the document moved it', () => {
+    const scopes = { root: { kind: 'component', node: 'root', positive: [{ d: 'M0 0L100 0L100 100Z' }], negative: [] }, complete: true, issues: [], leafFrames: new Map() }
+    const svg = cardSvg({ sequence: '⿰木⬚', drawing: { slots: [{ index: 0, box: [500, 0, 500, 1000] }] }, document: { scopes, title: null, slots: [[350, 0, 500, 1000]] } })
+    expect(svg).toContain('<rect x="350" y="0" width="500" height="1000" rx="18"')
+    expect(svg).not.toContain('<rect x="500" y="0" width="500" height="1000" rx="18"')
+  })
+  it('falls back to the sequence drawing when a document has no scoped drawing', () => {
+    const svg = cardSvg({ sequence: '⿰木口', drawing, document: { scopes: null, title: null } })
+    expect(svg).toContain('>Shared document</text>')
+    expect(svg).toContain('<path d="M0 0L100 0L100 100Z" fill="#1c1c22"/>')
+    expect(svg).not.toContain('data-document="true"')
+  })
+  it('names a sequence with no character instead of leaving its character row blank', () => {
+    const svg = cardSvg({ sequence: '⿺廴占', drawing })
+    expect(svg).toContain('>Composes</text>')
+    expect(svg).toContain('No character at this code point')
+    expect(svg).not.toContain('data-character="true"')
+  })
+  it('puts the character left of its code point even when it has none', () => {
+    const svg = cardSvg({ sequence: '⿰木子', char: '子' })
+    const row = svg.slice(svg.indexOf('data-character="true"'), svg.indexOf('data-codepoint'))
+    expect(row).toContain('>子</text>')
+    const none = cardSvg({ sequence: '⿰木', drawing, char: '设', codepoint: 'U+8BBE', familyOf: () => 'IDS Operators' })
+    expect(none).toContain('>设</text>')
+    expect(none).toContain('U+8BBE')
+    expect(none).toContain('data-codepoint="true"')
+  })
   it('renders every IDC as a text glyph, never a button icon', () => {
     for (const [operator] of OPERATORS) {
       const svg = cardSvg({ sequence: operator + '木', drawing })
@@ -40,7 +100,7 @@ describe('a workshop share card', () => {
   it('labels unavailable previews and unknown code points without a false Unicode claim', () => {
     const svg = cardSvg({ sequence: '⿰木' })
     expect(svg).toContain('Preview unavailable')
-    expect(svg).toContain('No Unicode match')
+    expect(svg).toContain('No character at this code point')
     expect(svg).not.toContain('U+')
   })
   it('keeps seven characters on one line', () => {

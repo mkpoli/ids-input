@@ -218,7 +218,9 @@ async function checkStates(page) {
   const colour = page.getByLabel('Disabled colour', { exact: true })
   assert.equal(await colour.isDisabled(), true, 'the colour control is disabled')
   assert.ok(Number(await colour.evaluate(el => getComputedStyle(el).opacity)) < 1, 'the disabled colour control is dimmed')
-  pass('read-only and disabled fields follow their native state')
+  const marker = await page.locator('.ui-field:has(input[required]) .ui-label').first().evaluate(el => getComputedStyle(el, '::after').content)
+  assert.ok(marker.includes('*'), 'a required field marks its label')
+  pass('read-only and disabled fields follow their native state, and a required label is marked')
 }
 
 /** @param {import('playwright-core').Page} page */
@@ -240,7 +242,7 @@ async function checkContrast(page) {
     add('body text', 'body', el => getComputedStyle(el).color, 4.5)
     add('label', '.ui-label', el => getComputedStyle(el).color, 4.5)
     add('hint', '.ui-hint', el => getComputedStyle(el).color, 4.5)
-    add('input border', '.ui-input', el => getComputedStyle(el).borderTopColor, 3)
+    add('input border', '.ui-input:not(:disabled):not([readonly]):not([aria-invalid="true"])', el => getComputedStyle(el).borderTopColor, 3)
     add('unchecked checkbox border', '.ui-checkbox:not(:checked):not(:disabled)', el => getComputedStyle(el).borderTopColor, 3)
     add('checked checkbox fill', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el).backgroundColor, 3, el => background(el.parentElement))
     add('checked checkbox mark', '.ui-checkbox:checked:not(:disabled)', el => getComputedStyle(el, '::before').borderRightColor, 4.5, fill)
@@ -250,6 +252,11 @@ async function checkContrast(page) {
     add('button label', '.ui-button:not([data-variant])', el => getComputedStyle(el).color, 4.5)
     add('primary button label', '.ui-button[data-variant="primary"]', el => getComputedStyle(el).color, 4.5)
     add('danger button label', '.ui-button[data-variant="danger"]', el => getComputedStyle(el).color, 4.5)
+    add('switch label', '.sample-switch .ui-button[aria-pressed="false"]', el => getComputedStyle(el).color, 4.5, el => background(el))
+    add('selected switch label', '.sample-switch .ui-button[aria-pressed="true"]', el => getComputedStyle(el).color, 4.5, el => background(el))
+    add('current chip', '.ui-chip[aria-current="true"]', el => getComputedStyle(el).color, 4.5, el => background(el))
+    add('selected list row', '.ui-list-row[aria-selected="true"]', el => getComputedStyle(el).color, 4.5, el => background(el))
+    add('checked menu row', '.ui-menu-item[aria-checked="true"]', el => getComputedStyle(el).color, 4.5, el => background(el))
     add('segment label', '.ui-segment > input:not(:checked) + .ui-segment-face', el => getComputedStyle(el).color, 4.5, el => background(el.closest('.ui-segmented')))
     add('invalid input border', '.ui-input[aria-invalid="true"]', el => getComputedStyle(el).borderTopColor, 3)
     add('error text', '.ui-error', el => getComputedStyle(el).color, 4.5)
@@ -513,6 +520,34 @@ try {
   }
 
   {
+    const { context, page } = await open({})
+    const measure = () => page.evaluate(() => {
+      const el = document.querySelector('.ui-input:not(:disabled):not([readonly]):not([aria-invalid="true"])')
+      const parse = value => value.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/).slice(1, 4).map(Number)
+      const luminance = rgb => rgb.map(value => {
+        const c = value / 255
+        return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+      }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+      const ratio = (a, b) => {
+        const [light, dark] = [luminance(parse(a)), luminance(parse(b))].sort((x, y) => y - x)
+        return Math.round(((light + 0.05) / (dark + 0.05)) * 100) / 100
+      }
+      return {
+        border: ratio(getComputedStyle(el).borderTopColor, getComputedStyle(el).backgroundColor),
+        ring: parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ui-ring-width')),
+      }
+    })
+    const base = await measure()
+    await page.emulateMedia({ contrast: 'more' })
+    await page.waitForTimeout(300)
+    const more = await measure()
+    assert.ok(more.border > base.border && more.border >= 3, `more contrast strengthens the field boundary (${base.border}:1 to ${more.border}:1)`)
+    assert.ok(more.ring > base.ring && more.ring === 3, `more contrast widens the focus ring (${base.ring}px to ${more.ring}px)`)
+    pass('more contrast strengthens boundaries and the focus ring')
+    await context.close()
+  }
+
+  {
     const { context, page } = await open({ forcedColors: 'active' })
     const checkbox = page.getByLabel('Copy the outline', { exact: true })
     const before = await checkbox.isChecked()
@@ -538,6 +573,22 @@ try {
       background: getComputedStyle(el.nextElementSibling).backgroundColor,
     }))
     assert.notEqual(checkedRing.outline, checkedRing.background, 'a focused checked segment draws its ring clear of the highlight in forced colours')
+    const switchFaces = await page.locator('.sample-switch .ui-button').evaluateAll(elements => elements.map(el => ({
+      background: getComputedStyle(el).backgroundColor,
+      color: getComputedStyle(el).color,
+    })))
+    assert.notEqual(switchFaces[0].background, switchFaces[1].background, 'the selected switch half keeps its system highlight in forced colours')
+    const progressFaces = await page.locator('.ui-progress').evaluate(el => ({
+      fill: getComputedStyle(el, '::after').backgroundColor,
+      track: getComputedStyle(el).backgroundColor,
+    }))
+    assert.notEqual(progressFaces.fill, progressFaces.track, 'the progress fill stays visible in forced colours')
+    const chipBorders = await page.locator('.ui-chip').evaluateAll(elements => elements.map(el => ({
+      current: el.getAttribute('aria-current') === 'true',
+      border: getComputedStyle(el).borderTopColor,
+    })))
+    assert.notEqual(chipBorders.find(chip => chip.current)?.border, chipBorders.find(chip => !chip.current)?.border, 'the current chip keeps a distinct boundary in forced colours')
+
     const selectedSwatch = page.locator('.ui-swatches input:checked').first()
     await selectedSwatch.focus()
     await page.keyboard.press('Shift')

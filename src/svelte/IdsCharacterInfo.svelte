@@ -4,6 +4,7 @@
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
   import { loadStrokeRecords } from './strokes.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
@@ -13,6 +14,7 @@
   const readingName = reading => /^(ja|zh|ko)/.test(locale) ? reading.zh : reading.name
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let panel = $state(null)
+  $effect(() => { if (panel) return watchFallback(panel) })
   /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ let info = $state.raw(null)
   let char = $state(''), status = $state('idle'), open = $state(false), x = $state(0), y = $state(0)
   /** @type {HTMLElement | null} */ let anchor = null
@@ -46,7 +48,8 @@
   const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
-  // the character itself. A data record is named by its site; each course record keeps its own title.
+  // the character itself, and the character's page on zi.tools. A data record is named by its site;
+  // each course record keeps its own title.
   /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
   const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
   /** @type {{ key: string, site: string, what: string, url: string }[]} */
@@ -69,6 +72,9 @@
     const shared = new Map()
     for (const entry of list) shared.set(entry.site, (shared.get(entry.site) ?? 0) + 1)
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
+    // zi.tools indexes the same characters from its own records; the card ends by handing the reader
+    // that page once it has named what it read.
+    if (char) list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
     return list
   })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
@@ -325,10 +331,13 @@
   function scrolled(event) {
     if (panel?.contains(/** @type {Node} */ (event.target))) return
     if (!anchor) return
-    // A scroll that clips the anchor out of its own box takes the card with it.
+    // A hit inside the anchor or the card keeps the card where it stands. A painted input, a shadow
+    // root or another overlay can retarget the hit outside both, so a card the pointer rests on still
+    // follows its anchor while that anchor sits in the window.
     const box = anchor.getBoundingClientRect()
     const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2)
-    if (hit && anchor.contains(hit) || panel?.matches(':hover')) position()
+    const inWindow = box.bottom > 0 && box.top < innerHeight && box.right > 0 && box.left < innerWidth
+    if (hit && (anchor.contains(hit) || panel?.contains(hit)) || inWindow && panel?.matches(':hover')) position()
     else close()
   }
   /** Controls inside the card that keep their own press. @constant {string} */
@@ -511,18 +520,18 @@
 </div>
 
 <style>
-  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
+  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.stroke-glyph{font-family:var(--info-font);font-size:16px;line-height:1;color:var(--ids-ink,light-dark(#24242b,#f0f0f5))}.stroke-facts{display:flex;align-items:center;gap:5px;margin:2px 0 0;font-size:12px;white-space:nowrap}.stroke-count{color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-weight:600;font-variant-numeric:tabular-nums}.stroke-first{color:var(--info-muted)}.stroke-sep{align-self:stretch;width:1px;background:var(--ids-line,light-dark(#e1e1e8,#3a3a43))}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
-  .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:3px}
+  .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:3px}
   p{margin:0 0 6px}.label{color:var(--info-muted);font-size:11px;margin:0 0 3px}.glosses{padding-left:17px;margin:0 0 10px}.glosses li+li{margin-top:3px}.meanings{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;margin:0 0 10px}.meanings dt{color:var(--info-muted);font-size:11px;line-height:1.6}.meanings dd{min-width:0;margin:0}.meanings .glosses{margin:0}.meanings dd[lang=ja],.meanings dd[lang=zh]{overflow-wrap:anywhere}.readings{margin-top:12px}.readings dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0}.readings dt{color:var(--info-muted);font-size:11.5px;line-height:1.45}.readings dd{margin:0;font-variant-numeric:tabular-nums;line-height:1.45;overflow-wrap:anywhere}.muted{color:var(--info-muted)}.mnemonics{display:flex;align-items:center;gap:8px;margin:10px 0}.mnemonics .emoji{font:23px/1.3 system-ui,sans-serif}section{margin-top:12px}.relations{display:flex;gap:8px;flex-wrap:wrap}.relation{border:1px solid transparent;color:inherit;font:inherit;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:6px;background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a))}.related-glyph{font:28px/1.4 var(--info-font)}.meaning{font-size:12px;overflow-wrap:anywhere}.examples{flex-direction:column}.examples .relation{align-items:flex-start}
-  .relation:not(:disabled):hover{border-color:var(--ids-accent,#608cf0)}.relation:disabled{cursor:default}
+  .relation:not(:disabled):hover{border-color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.relation:disabled{cursor:default}
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
   .sources{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:4px;row-gap:2px;margin:10px 0 0;font-size:11.5px;line-height:1.6;color:var(--info-muted)}
   .sources .label{margin:0 4px 0 0;font-size:11px}
   .sources a{color:var(--info-muted);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--info-muted) 55%,transparent);text-underline-offset:2px}
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
-  .sources a:focus-visible{outline:2px solid var(--ids-focus,#608cf0);outline-offset:2px;border-radius:2px}
+  .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}
   .sep{color:var(--ids-line,#d6d6de)}
 </style>

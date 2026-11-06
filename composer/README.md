@@ -31,7 +31,7 @@ rewritten to list it first. `COMPOSER_BUCKET` names another bucket.
 type its extension names. A version never changes once stored, so a file is cached for good, and one a
 version lacks stays missing for five minutes. Any site may read them: `access-control-allow-origin: *`.
 
-`https://<worker>/versions.json` lists the versions, newest first.
+`https://<worker>/versions` lists the versions, newest first, read from the bucket on every request.
 
 ## Deploying the Worker
 
@@ -46,7 +46,7 @@ when one is chosen.
 ## Reading it from another site
 
 A version's URL is stable, so another site points at it directly. To follow the newest export instead,
-read `versions.json` and take the first entry. Nothing here requires the reader to be this project.
+read `/versions` and take the first entry. Nothing here requires the reader to be this project.
 
 `glyph-atlas` keeps serving the exports it already holds at `/atlas/composer/`; an export published
 here can replace one there once its readers point at this domain.

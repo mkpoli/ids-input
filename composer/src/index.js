@@ -18,7 +18,9 @@ export const preflight = () => new Response(null, { status: 204, headers: {
 function split(path) {
   const trimmed = path.replace(/^\/+/, '')
   const slash = trimmed.indexOf('/')
-  if (slash < 0) return trimmed === 'versions.json' ? { key: 'versions.json' } : null
+  // The list of versions is read from the bucket every time: it changes with a publish, and it has no
+  // long cache to overtake.
+  if (slash < 0) return trimmed === 'versions' ? { key: 'versions.json' } : null
   const version = trimmed.slice(0, slash), file = trimmed.slice(slash + 1)
   if (!/^[A-Za-z0-9_.+-]{1,96}$/.test(version) || !FILE.test(file) || file.includes('..')) return null
   return { key: `${version}/${file}`, version }
@@ -37,7 +39,10 @@ const isShard = key => /^[^/]+\/[gp]\//.test(key)
 export async function composerFile(env, path, request, ctx) {
   const found = split(path)
   if (!found) return null
-  const cache = request && typeof caches !== 'undefined' ? caches.default : null
+  // A version's files never change, but the list of versions does: it is read from the bucket every
+  // time, so a publish shows up at once.
+  const live = found.key === 'versions.json'
+  const cache = !live && request && typeof caches !== 'undefined' ? caches.default : null
   const key = request ? new Request(new URL(new URL(request.url).pathname, request.url)) : null
   const hit = cache && key ? await cache.match(key) : undefined
   if (hit) return hit
@@ -54,7 +59,8 @@ export async function composerFile(env, path, request, ctx) {
     'content-type': isShard(found.key) || found.key.endsWith('.gz')
       ? 'application/octet-stream' : TYPES[found.key.split('.').pop()] ?? 'application/octet-stream',
     'content-length': String(object.size), etag: object.httpEtag,
-    'cache-control': 'public, max-age=31536000, immutable', 'x-content-type-options': 'nosniff', ...SHARED,
+    'cache-control': live ? 'public, max-age=60' : 'public, max-age=31536000, immutable',
+    'x-content-type-options': 'nosniff', ...SHARED,
   } }) : Response.json({ detail: 'No such composer file.' },
     { status: 404, headers: { 'cache-control': 'public, max-age=300', ...SHARED } })
   if (cache && key && ctx) ctx.waitUntil(cache.put(key, response.clone()))

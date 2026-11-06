@@ -7,7 +7,7 @@
 //   bun run check:demo -- --retries 2      more attempts for a check that fails (one by default)
 //   bun run check:demo -- --jobs 1         run the checks one after another (two at a time by default)
 //   bun run check:demo -- --skip gongche   leave the slow or focused checks out (comma separated)
-//   bun run check:demo -- --limit 900      stop a check after fifteen minutes (600 seconds by default)
+//   bun run check:demo -- --limit 600      stop a check after ten minutes (fifteen by default)
 //   bun run check:demo -- --watchdog 5     stop when nothing finishes for five minutes (by default a
 //                                          minute past every attempt at one check)
 //   bun run check:demo -- --timeout 30     the page timeout each check gets in seconds (120 by default;
@@ -35,9 +35,10 @@ const port = Number(arg('--port') ?? 5186)
 const retries = Number(arg('--retries') ?? 1)
 /** How many checks run at once; each owns a browser, and the dev server serves them all. */
 const jobs = Math.max(1, Number(arg('--jobs') ?? 2))
-/** One attempt at one check; a wedged check is stopped at this many seconds. A check that runs both
- *  schemes over a long list needs minutes on a busy machine, so the bound is generous. */
-const CHECK_LIMIT = Number(arg('--limit') ?? 600)
+/** One attempt at one check; a wedged check is stopped at this many seconds. The longest check
+ *  draws every Gongche tile in both schemes and takes about eight minutes with two running at once,
+ *  so the bound leaves room for a machine that is busy with something else. */
+const CHECK_LIMIT = Number(arg('--limit') ?? 900)
 // A check may be tried `retries + 1` times, so the run's own guard has to outlast that.
 const watchdogMinutes = Number(arg('--watchdog') ?? Math.ceil((CHECK_LIMIT * (retries + 1) + 120) / 60))
 const root = join(import.meta.dirname, '..')

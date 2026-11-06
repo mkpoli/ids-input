@@ -19,7 +19,7 @@ try {
     assert.ok(box, 'the preview has a drawing box')
     await page.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.5)
     await page.waitForTimeout(300)
-    await page.locator('.ids-preview .handle.move').waitFor({ timeout: 5000 })
+    await page.locator('.ids-preview .handle.resize').first().waitFor({ timeout: 5000 })
     const first = await page.evaluate(() => JSON.parse(localStorage.getItem('ids-input:tabs') ?? '[]')[0]?.document?.chosen)
     assert.ok(first, 'clicking a layer chooses it')
     await page.mouse.click(box.x + box.width * 0.25, box.y + box.height * 0.5)

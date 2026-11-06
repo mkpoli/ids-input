@@ -74,10 +74,16 @@ if (errors.length) throw Error(errors.join('\n'))
 const archive = process.argv[2] ? readFileSync(process.argv[2]) : Buffer.from(await (await fetch(UNIHAN.url)).arrayBuffer())
 if (createHash('sha256').update(archive).digest('hex') !== UNIHAN.sha256) throw Error(`Unexpected Unihan: ${UNIHAN.url}`)
 const total = new Map()
+// A compatibility ideograph is another encoding of one unified ideograph; Unihan names it.
+const compat = new Map()
 for (const line of unzipEntry(archive, 'Unihan_IRGSources.txt').toString().split('\n')) {
   if (!line.startsWith('U+')) continue
   const [point, field, value] = line.split('\t')
   if (field === 'kTotalStrokes' && value) total.set(String.fromCodePoint(parseInt(point.slice(2), 16)), Number(value.split(' ')[0]))
+  if (field === 'kCompatibilityVariant' && value) {
+    const variant = value.split('<')[0].trim()
+    if (variant.startsWith('U+')) compat.set(String.fromCodePoint(parseInt(point.slice(2), 16)), String.fromCodePoint(parseInt(variant.slice(2), 16)))
+  }
 }
 
 // The bundled fallback outlines, then the palette's own fallback outlines, cover characters the
@@ -111,6 +117,13 @@ const MARK_COUNTS = new Map([
   ['𖿢', 1], ['𖿣', 2], ['𖿰', 3], ['𖿱', 1], ['𖿲', 2], ['𖿳', 7], ['𖿴', 3], ['𖿵', 4], ['𖿶', 2],
 ])
 const strokes = list.map(key => total.get(key) ?? total.get(forms.get(key)) ?? MARK_COUNTS.get(key) ?? null)
+// The first stroke of the marks and numerals the dictionary does not name, read from the shapes as
+// their counts are: 々 begins with a dot, the Hangzhou numerals 〡〢〣 and 〦〧〨 with a vertical,
+// 〤〥〩 with a falling stroke, and 〸〹〺 with a horizontal.
+const MARK_FIRSTS = new Map([
+  ['々', '點'], ['〡', '豎'], ['〢', '豎'], ['〣', '豎'], ['〤', '撇'], ['〥', '撇'],
+  ['〦', '豎'], ['〧', '豎'], ['〨', '豎'], ['〩', '撇'], ['〸', '横'], ['〹', '横'], ['〺', '横'],
+])
 
 // Rime's dictionary writes each stroke of a character as one letter: h 横, s 豎, p 撇, n or d 點,
 // z 折. A character's first stroke is the first letter of its first complete code, except that codes
@@ -157,7 +170,14 @@ for (const line of readFileSync(new URL('../data/component-forms.tsv', import.me
 // The four-stroke grass radical begins with a horizontal; CJK RADICAL SECOND ONE (⺂) is a single
 // horizontal-fold stroke, which the five classes call 折.
 const OVERRIDES = new Map([['⻀', '横'], ['⺂', '折']])
-const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char))
+// A radical form Rime does not name takes the first stroke of the character `component-forms.tsv`
+// says it stands for, the way its stroke count already does. The dictionary records ideographs and
+// their variants, not the Kangxi and Radicals Supplement forms.
+const firsts = list.map(char => EQUIVALENT.get(char) ?? OVERRIDES.get(char) ?? firstStroke(char)
+  ?? MARK_FIRSTS.get(char)
+  ?? firstStroke(forms.get(char))
+  // A compatibility ideograph copies the unified ideograph Unihan says it encodes.
+  ?? firstStroke(compat.get(char)))
 
 const json = JSON.stringify({ base: root, commit: manifest.composer.commit, keys: list, strokes, firsts })
 writeFileSync(new URL('../data/han-parts.json.gz', import.meta.url), gzipSync(json, { level: 9, mtime: 0 }))

@@ -2,7 +2,7 @@
 @import url("./unicode.css");
 /* The parts few installed fonts draw: CJK strokes and the empty-slot mark ⬚ (IDS Strokes), CJK
    Radicals Supplement and the supplementary planes (IDS Parts), the New Korean Orthography
-   letters (IDS New Korean) and the Shuishu characters (IDS Shuishu). gongche.css repeats 17 Gongche code points inside the supplementary
+   letters (IDS New Korean), the Shuishu characters (IDS Shuishu) and the Jurchen characters (IDS Jurchen). gongche.css repeats 17 Gongche code points inside the supplementary
    range and is imported first; it is the face that carries those glyphs, since the general subset
    omits them. The fallback outlines (`IDS Fallback`, unicode.css) are not in the stylesheet: each
    shard is a `FontFace` the app registers when a character it draws appears
@@ -15,13 +15,28 @@
   unicode-range:U+33473}
 @font-face{font-family:"IDS Strokes";src:url("./NotoSansCJKjp-ids-strokes.woff2") format("woff2");font-display:swap;
   unicode-range:U+2B1A,U+31C0-31E3}
+/* BabelStone Han PUA's glyphs for the numbered components IDS.TXT note 6 gives no fragment. */
+@font-face{font-family:"IDS Numbered";src:url("./IDSNumbered.woff2") format("woff2");font-display:swap;
+  unicode-range:U+E080-F8DF}
 
-/* The twelve ideographic description characters, for sequence text on machines with no font that
-   draws them. */
+/* The sixteen ideographic description characters, for sequence text on machines with no font that
+   draws them. The four after U+2FFB are newer than the pinned Noto Sans CJK, so they come from
+   Jigmo. */
 @font-face{font-family:"IDS Operators";src:url("./NotoSansCJKjp-ids-operators.woff2") format("woff2");font-display:swap;
   unicode-range:U+2FF0-2FFB}
+@font-face{font-family:"IDS Operators";src:url("./Jigmo-ids-operators.woff2") format("woff2");font-display:swap;
+  unicode-range:U+2FFC-2FFF}
 
 @font-face{font-family:"Kureedo";src:url("./Kureedo-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs Kureedo draws for the Kaisho option's name and its Aa sample, so the switch avoids the
+   2.8 MB face. */
+@font-face{font-family:"Kureedo Label";src:url("./Kureedo-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+66F8,U+6977}
+@font-face{font-family:"Zhuque Fangsong";src:url("./ZhuqueFangsong-Regular.woff2") format("woff2");font-display:swap}
+/* The glyphs Zhuque draws for the Fangsong option's name and its Aa sample, so the switch avoids the
+   4.8 MB face. */
+@font-face{font-family:"Zhuque Label";src:url("./Zhuque-label.woff2") format("woff2");font-display:swap;
+  unicode-range:U+0020-007E,U+1ECF,U+1ED1,U+4EFF,U+5B8B}
 @font-face{font-family:"GenZui Sans";src:url("./GenZuiSans-Regular.woff2") format("woff2");font-display:swap}
 @font-face{font-family:"IDS Tangut";src:url("./NotoSerifTangut-Regular.woff2") format("woff2");font-display:swap;
   unicode-range:U+17000-18AFF,U+18D00-18DFF}
@@ -36,3 +51,8 @@
 /* The proposed Shuishu block: its logograms and 47 radicals at the tentative allocations of PDAM 2.2. */
 @font-face{font-family:"IDS Shuishu";src:url("./IDSShuishu.woff2") format("woff2");font-display:swap;
   unicode-range:U+1B300-1B4E5,U+1B500-1B52E}
+
+/* Unicode's Jurchen characters and radicals, from Alari Xuwasun Jurchen. The selectors are in the
+   range so a variant sequence reaches the face whole. */
+@font-face{font-family:"IDS Jurchen";src:url("./IDSJurchen.woff2") format("woff2");font-display:swap;
+  unicode-range:U+18E00-19191,U+191A0-191D2,U+FE00-FE04}

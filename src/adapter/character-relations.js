@@ -1,6 +1,7 @@
 // @ts-check
 import { createCharacterInfo, characterScript } from './character-info.js'
 import { createNameSearch, foldName } from '../core/names.js'
+import { indexReadings, searchReadings } from '../core/tangut-readings.js'
 
 /** Emoji presentation selectors do not change a search term. @param {string} text */
 const key = text => /\p{Extended_Pictographic}/u.test(text) ? text.replace(/[\uFE0E\uFE0F]/g, '').trim() : text.trim()
@@ -26,6 +27,7 @@ export function createRelationSearch(doc, seal, table) {
   /** @type {Map<string, Meaning>} */ const aliases = new Map()
   /** @type {Map<string, string>} */ const senseLabels = new Map()
   /** @type {import('../core/names.js').ComponentName[]} */ const names = []
+  const readings = indexReadings(doc.entries)
   const senses = new Map(doc.aids.flatMap(aid => aid.en.map(term => [foldName(term), foldName(aid.en[0])])) )
   /** @param {string} text */
   const senseOf = text => senses.get(foldName(lemma(text))) ?? foldName(lemma(text))
@@ -125,6 +127,13 @@ export function createRelationSearch(doc, seal, table) {
       const matched = aliases.get(`${hit.char}\0${foldName(written)}`)
       add(hit.char, matched?.label ?? hit.label ?? labels.get(hit.char) ?? code(hit.char), hit.rank ?? (matched ? matched.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 1.5), 0, true, matched?.sense)
     }
+    // A reconstruction names a character, but a spelling can belong to many characters. Readings
+    // sit after names, vocabulary and meanings, so a short Latin word keeps the meaning hits it
+    // had; when nothing else matches, the readings are the result.
+    for (const hit of searchReadings(readings, written, { limit: Math.max(64, limit * 2) })) {
+      const first = hit.readings.find(reading => reading.raw.trim().toLowerCase() === written.toLowerCase()) ?? hit.readings[0]
+      add(hit.char, `${first.raw} · ${first.systemShort}`, 20 + hit.tier, 0, false)
+    }
     const matches = meanings.search(written, { limit: Infinity }).map(hit => {
       const matched = aliases.get(`${hit.char}\0${foldName(hit.label)}`)
       const rank = hit.score === 0 ? matched?.curated || doc.entries[hit.char]?.source === 'openTangut' ? 1 : 4 : 10 + hit.score / 100
@@ -147,7 +156,15 @@ export function createRelationSearch(doc, seal, table) {
         add(edge.char, label, edge.kind === 'usage' ? 100 + current.rank : Math.max(2, current.rank + 1), current.depth + 1, expand, sense)
       }
     }
-    return [...result.values()].sort((a, b) => a.rank - b.rank).slice(0, limit).map(({ char, label }) => ({ char, label }))
+    const ranked = [...result.values()].sort((a, b) => a.rank - b.rank)
+    // Leave room for exact readings after the names and meanings. A short Latin word can be both
+    // an English meaning and a reading; reading hits never take every slot from the meanings.
+    // Usage edges rank 100; they are examples, not readings, and must not take reading slots.
+    const reading = ranked.filter(hit => hit.rank >= 20 && hit.rank < 100)
+    const other = ranked.filter(hit => hit.rank < 20 || hit.rank >= 100)
+    const reserved = reading.length ? Math.min(8, Math.max(0, limit - 8)) : 0
+    const shown = [...other.slice(0, limit - reserved), ...reading.slice(0, limit - Math.min(other.length, limit - reserved))]
+    return shown.map(({ char, label }) => ({ char, label }))
   }
   return { search }
 }

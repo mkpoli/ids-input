@@ -24,7 +24,7 @@ export * from './marks.js'
  * @typedef {'component' | 'missing' | 'extra' | 'character'} Problem
  */
 
-import { pyramidRows } from './pyramid-shape.js'
+import { pyramidOnBase, pyramidRows } from './pyramid-shape.js'
 
 /** @type {ReadonlyArray<readonly [string, number]>} The operators, each with how many descriptions it takes, in keyboard order. */
 export const OPERATORS = [
@@ -81,6 +81,13 @@ export const isNewKorean = text => NEW_KOREAN.test(text ?? '')
 export const SHUISHU = /[\u{1B300}-\u{1B4E5}\u{1B500}-\u{1B52E}]/u
 /** Whether `text` contains a Shuishu character. @param {string | null | undefined} text */
 export const isShuishu = text => SHUISHU.test(text ?? '')
+
+/** The Jurchen characters of Unicode 18.0, U+18E00..U+19191, and its 51 radicals, U+191A0..U+191D2. */
+export const JURCHEN = /[\u{18E00}-\u{19191}\u{191A0}-\u{191D2}]/u
+/** A Jurchen character with one of the selectors its variant sequences use. */
+export const JURCHEN_VARIANT = /^[\u{18E00}-\u{19191}][\uFE00-\uFE04]$/u
+/** Whether `text` contains a Jurchen character or radical. @param {string | null | undefined} text */
+export const isJurchen = text => JURCHEN.test(text ?? '')
 
 /** @param {string | undefined} char */
 export const isSelector = char => char !== undefined && /^[︀-️\u{E0100}-\u{E01EF}]$/u.test(char)
@@ -199,7 +206,8 @@ export function modifierLength(text, at) {
  * operator is still missing at the end read as one, an empty text is the empty tree, and a lone
  * component stands as a tree of its own (⿰亻 is ⿰亻 and an empty slot, ⿰⬚木 an empty slot and 木).
  * ？ stays the component it is. A whole text longer than `LONGEST` reads only when it is a pyramid
- * of two or more rows, up to `PYRAMID_LONGEST` code points; a draft may be that long.
+ * of two or more rows, or such a pyramid on a base, up to `PYRAMID_LONGEST` code points; a draft may
+ * be that long.
  *
  * A zi.tools entry reads as its description: the unique separator before it and the glyph-variant
  * definition after it are left out (see `entryDescription`).
@@ -260,7 +268,7 @@ export function parse(text, { open = false } = {}) {
     }
     // A whole description may run past the ordinary length only as a pyramid, its cells any part;
     // a draft may be long.
-    if (!open && long && !pyramidRows(tree, { minLayers: 2 })) return { problem: 'character' }
+    if (!open && long && !pyramidRows(tree, { minLayers: 2 }) && !pyramidOnBase(tree)) return { problem: 'character' }
     return at < chars.length ? { problem: 'extra' } : { tree }
   } catch (problem) { return { problem: /** @type {Problem} */ (problem) } }
 }
@@ -286,7 +294,8 @@ export function descriptionEnd(chars, at = 0) {
   const char = chars[at]
   if (char === undefined) return -1
   const chain = strokeChain(chars, at)
-  if (chain) return toneMarksAt(chars, chain.end)
+  // A stroke chain stands for the character it names, and takes a variation selector like one.
+  if (chain) return toneMarksAt(chars, isSelector(chars[chain.end]) ? chain.end + 1 : chain.end)
   const n = arity(char)
   if (!n) {
     if (!isComponent(char)) return -1

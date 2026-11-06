@@ -17,11 +17,11 @@
 // before drawing again).
 import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fitted, grown, groupRings, makePart, mapped, partInk, partOf,
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
-import { componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
+import { ownFormsOnly, componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
 import { CONSTRUCTS, constructParts } from './constructs.js'
-import { pyramidCells } from './pyramid.js'
-import { pyramidRows } from '../core/pyramid.js'
+import { pyramidCells, pyramidOnBaseLayout } from './pyramid.js'
+import { pyramidRows, pyramidOnBase } from '../core/pyramid.js'
 import { hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
 import { toConjoiningJamo } from '../core/hangul.js'
@@ -89,6 +89,13 @@ const COVER_ROOTS = new Set(['冖', '宀', '穴', '雨'])
 const BODY_WITNESSES = 2
 // How much wider than it is tall a single-contour operand is before it counts as a bar.
 const BAR_ASPECT = 5
+// How much wider than tall a whole glyph may be before a stacked middle band flattens it as a bar:
+// the flattest full component (工, 1.23 in the export) and the flattest one drawn as a band
+// (丷, 2.04) fall either side of it.
+const MIDDLE_FLAT = 1.5
+// How much of a cover's width a box head takes, and the part below it, so the two stay in balance.
+const BOX_HEAD = 0.72
+const BOX_BODY = 0.85
 // Covers whose only ink below the bar is their side strokes. 穴 and 雨 hang a middle stroke too,
 // where a child touching it is drawn as it is.
 const SIDE_COVERS = new Set(['宀', '冖'])
@@ -96,6 +103,15 @@ const SIDE_COVERS = new Set(['宀', '冖'])
 const COVER_BAR = 0.72
 /** How far a middle 冖's ink overlaps the parts above and below it, in font units. */
 const COVER_GAP = -24
+// How much of a middle 冖's width the part above it must span before the cover closes on it: a
+// narrow part would have the bar close on a post (⿳卜冖人).
+const COVER_CLOSE_SHARE = 0.5
+// The KRM ⿱⺊冖 top. `bar` is where the underside of the roof's bar falls, as a share of the roof's ink
+// height from its top; a brush roof's left tip stands well above its bar. `height` is the share of the
+// whole the top takes, where the face's own band leaves ⺊ too short. `KRM_GAP` is how far 人's apex
+// stands below the bar, as a share of the whole: the manuscript tucks it close under the roof.
+const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null } }
+const KRM_GAP = 0.035
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
@@ -234,6 +250,17 @@ const ENCLOSURE_CUTS = {
   }],
 }
 
+// Descriptions written with a variant of a component: ⿰查皮 names 皶, whose own sequence is ⿰査皮.
+// The export has no cut for it because the left 一 and 皮's stroke overlap, so the font's designed
+// glyph is partitioned here instead, one piece per leaf. The digest ties each partition to the
+// outlines it was read from; another export keeps the geometric composition.
+const VARIANT_CUTS = {
+  '⿰查皮': ['皶', {
+    'c8c37fe8c089233bb6a36f3e3170c0f173b4b9d6c155b470d0066fd8b4cd95a9': [[0,1,2,3,4,5,6,7],[8,9,10,11,12,13,14]],
+    '0569d2e44325d2d0dc3c4a2ee2f26f044aa3fa08d623bd06a935b39dc5b419fe': [[0,1,2,3,4,5,6,7,8],[9,10,11,12,13,14,15]],
+  }],
+}
+
 // Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
 // box of such a glyph to this share of the width and draws its foot out to the right edge.
 const ENCLOSURE_SHARE = 0.485
@@ -244,6 +271,13 @@ const FOOT_RATIO = 1.5
 // (⿺电言) in Noto Sans CJK JP and Noto Serif CJK JP, whose swept foot han-compose will not take for
 // a host cut. The digest names the glyph's outlines; a font without that glyph presses its own
 // outline instead (`pressedEnclosure`).
+// The tail of a pressed enclosure, where the face draws one: Kureedo's 巴 as drawn round 三 in 𠀧
+// (its outline and two windows). 巴's sweep — the leg below its box, the floor and the rising tip —
+// becomes 电's 乚. The digest names the glyph; an export without it keeps the pressed foot.
+const ENCLOSURE_TAILS = {
+  电: ['𠀧', { '97647776e6a744399c766db1da6c1eb408c37901e4607ff6f613de6a71a99646': [0, 1, 2] }],
+}
+
 const ENCLOSURE_FORMS = {
   '⿺': {
     电: ['𫌷', {
@@ -280,8 +314,8 @@ export class Composer {
     // merged with its neighbour's). The export's own manifest says how many bytes of host lists it
     // carries.
     this.hosted = m.files?.hosts?.bytes !== 0
-    // A static brush face keeps its own stroke weights; a variable export weights its parts.
-    this.weighted = m.weighted ?? !(m.style === 'kaisho' && m.heavy === 400)
+    // A static face keeps its own stroke weights; a variable export weights its parts.
+    this.weighted = m.weighted ?? m.heavy !== 400
     this.stem0 = c.stem
     this.arities = new Map([...c.BINARY.map(op => [op, 2]), ...c.TERNARY.map(op => [op, 3]), ...c.UNARY.map(op => [op, 1])])
     this.expanding = new Set()
@@ -290,6 +324,7 @@ export class Composer {
     // Characters whose glyph the export lacks and whose sequence stands in for it.
     this.missingGlyphs = new Set()
     this.pyramids = new WeakMap()
+    this.bases = new WeakMap()
     this.nativeEnclosures = new Set()
   }
 
@@ -314,11 +349,79 @@ export class Composer {
     return answer
   }
 
+  /**
+   * The pyramid standing on a base that a node draws as, remembered for this drawing: rows of 1, 2,
+   * … cells with one part under them, however the stack groups the rows. The rows are the drawing,
+   * so a 品-shaped top spreads over the width in flat cells rather than stacking square ones.
+   */
+  pyramidWithBase(node) {
+    if (typeof node === 'string' || !node || typeof node !== 'object') return pyramidOnBase(node)
+    if (this.bases.has(node)) return this.bases.get(node)
+    const answer = pyramidOnBase(node)
+    this.bases.set(node, answer)
+    return answer
+  }
+
+  /**
+   * The parts of a pyramid standing on a base: its cells in the top `layers` of `layers + 1` rows,
+   * the base across the rest. The cells spread over the full width, so each is wider than it is
+   * tall; the base is drawn as a cell too, so a 木 under a 品 spans the width instead of standing
+   * thin in the middle of it. A pyramid of empty slots numbers its cells in reading order, as one
+   * drawn alone does.
+   */
+  baseParts({ cell, layers, base }, region) {
+    const { cells, base: baseBox } = pyramidOnBaseLayout(region, layers)
+    const drawn = hasSlot(cell)
+      ? cells.flatMap((box, i) => this.node(i ? shiftedSlots(cell, i * slotsIn(cell)) : cell, box))
+      : cells.flatMap(box => this.node(cell, box))
+    return [...drawn, ...this.basePart(base, baseBox)]
+  }
+
+  /**
+   * The base of a pyramid, drawn as a cell: a plain component fits its box with the wider stretch
+   * a cell allows, so a wide, short base row fills its width. Anything else is drawn as usual.
+   * @param {any} base @param {number[]} region */
+  basePart(base, region) {
+    if (typeof base === 'string' && base && !splitToneMarks(base).tones) {
+      const glyph = this.glyph(base)
+      if (glyph) {
+        const ink = tightBox(glyph)
+        return [placed(glyph, ink, fitted(ink, region, Math.max(this.C.STRETCH, CELL_STRETCH)), this.ink(base), `glyph ${base}`)]
+      }
+    }
+    return this.node(base, region)
+  }
+
   glyphRecord(ch) { return this.rec(ch)?.G ?? null }
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }
-  bySequence(k) { return this.rec(k)?.e ?? null }
+  /**
+   * The character a description draws, if one is drawn for it. A description may name a character
+   * that is itself described (⿰查皮 for 皶), so an absent key is tried again with its described
+   * operands written out, twice over.
+   */
+  bySequence(k) {
+    let key = k
+    for (let depth = 0; depth <= 2; depth += 1) {
+      const encoded = this.rec(key)?.e
+      if (encoded) return encoded
+      const spelled = this.spell(key)
+      if (spelled === key) return null
+      key = spelled
+    }
+    return null
+  }
+  /** `key` with every described operand written out, or `key` itself. A key that does not parse is
+   *  left alone: a caller with no tree to draw checks the tree's own parse.
+   *  @param {string} key */
+  spell(key) {
+    let tree
+    try { tree = this.parse(key) } catch { return key }
+    /** @param {any} node @returns {any} */
+    const walk = node => typeof node === 'string' ? this.sequenceOf(node) ?? node : node.slice(0, 1).concat(node.slice(1).map(walk))
+    return keyOf(walk(tree))
+  }
   sequenceOf(ch) { return this.rec(ch)?.s ?? null }
   atomic(ch) { return this.rec(ch)?.at === 1 }
 
@@ -412,7 +515,8 @@ export class Composer {
       }
       if (!this.partial && this.weighted) this.balance(out)
       const construct = CONSTRUCTS[sequence]
-      if (construct && !this.excluded(construct.host)) out = constructParts(construct, out)
+      // The bundled body is Noto's: a face with its own forms keeps the drawing it made.
+      if (construct && !ownFormsOnly(this.fontStyle) && !this.excluded(construct.host)) out = constructParts(construct, out)
       // Loose marks annotate the whole drawing; they take no part in its layout or weight.
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
@@ -427,7 +531,7 @@ export class Composer {
     if (marks || this.exclude.size) return false
     const key = keyOf(tree)
     if (this.bySequence(key) || this.spelled.has(key)) return false
-    if (this.pyramid(tree)) return false
+    if (this.pyramid(tree) || this.pyramidWithBase(tree)) return false
     if (isGroupedForm(key, this.fontStyle) || isComponentForm(key, this.fontStyle)) return false
     let leaves = 0, supported = true
     const walk = node => {
@@ -587,6 +691,13 @@ export class Composer {
         for (const box of pyramidCells(region, pyramid.layers, { direction: pyramid.direction })) walk(pyramid.cell, box, false)
         return
       }
+      const stacked = this.pyramidWithBase(node)
+      if (stacked) {
+        const { cells, base } = pyramidOnBaseLayout(region, stacked.layers)
+        for (const box of cells) walk(stacked.cell, box, false)
+        walk(stacked.base, base, false)
+        return
+      }
       const repeated = isGroupedForm(keyOf(node), this.fontStyle) ? componentParts(keyOf(node), region, this.fontStyle, atRoot) : null
       if (repeated) {
         for (const part of repeated) out.push({ index: out.length, box: part.target, empty: false })
@@ -733,6 +844,8 @@ export class Composer {
     }
     const native = this.enclosureParts(node, region)
     if (native) return native
+    const designed = this.variantParts(node, region)
+    if (designed) return designed
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
     const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key, this.fontStyle))
       ? componentParts(key, region, this.fontStyle, atRoot) : null
@@ -782,6 +895,8 @@ export class Composer {
     const coverHead = Array.isArray(node) && typeof node[1] === 'string' && this.isCover(node[1])
     const found = this.separate || hasRepetition || isRepeatedRow(node) || this.spelled.has(keyOf(node)) || coverHead ? null : this.instance(node, region)
     if (found) return [found]
+    const stacked = this.pyramidWithBase(node)
+    if (stacked) return this.baseParts(stacked, region)
     const written = this.respelled(node)
     // Once nothing draws this node whole, a run of it the export designs as one body is regrouped.
     // A rewrite stands as it is: an enclosure written as a stack (㗊 as ⿳吅X吅) holds its operand
@@ -801,7 +916,7 @@ export class Composer {
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
-    if (this.hosted && this.layout && (!hasRepetition || this.fontStyle === 'kaisho') && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
+    if (this.hosted && this.layout && (!hasRepetition || ownFormsOnly(this.fontStyle)) && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       const learned = this.learned(op, children, atRoot ? null : region)
       if (learned) return learned
     }
@@ -967,6 +1082,18 @@ export class Composer {
     return { record: { h: char }, piece: derived(glyph, indices.map(i => glyph.contours[i])) }
   }
 
+  /** The designed tail of `node`'s pressed enclosure, or null where the face draws none. */
+  tailForm(node) {
+    const entry = typeof node === 'string' ? ENCLOSURE_TAILS[node] : null
+    if (!entry) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record || this.excluded(char)) return null
+    const indices = cuts[hexOf(JSON.stringify(record.p))]
+    if (!indices) return null
+    const glyph = partOf(record)
+    return derived(glyph, indices.map(i => glyph.contours[i]))
+  }
+
   /** Preserve the font's designed shape while retaining one adjustable piece per leaf. */
   enclosureParts(node, region) {
     const entry = ENCLOSURE_CUTS[keyOf(node)]
@@ -985,10 +1112,32 @@ export class Composer {
     })
   }
 
+  /** The font's designed glyph of a description written with a variant component, partitioned one
+   *  piece per leaf. The export has no cut for it: the operands' strokes overlap, so the parts do
+   *  not separate into contours the way a host cut expects. */
+  variantParts(node, region) {
+    const entry = Array.isArray(node) ? VARIANT_CUTS[keyOf(node)] : null
+    if (!entry || this.expanding.size || this.excluded(entry[0]) || !node.slice(1).every(child => typeof child === 'string')) return null
+    if (node.slice(1).some(child => this.excluded(child))) return null
+    const [char, cuts] = entry, record = this.glyphRecord(char)
+    if (!record) return null
+    const glyph = partOf(record)
+    if (!this.separate) return [this.place(glyph, region, this.ink(char), `glyph ${char}`)]
+    const groups = cuts[hexOf(JSON.stringify(record.p))]
+    if (!groups || groups.length !== node.length - 1) return null
+    const used = groups.flat().sort((a, b) => a - b)
+    if (used.length !== glyph.contours.length || used.some((index, i) => index !== i)) return null
+    const target = fitted(glyph.box, region, this.C.STRETCH)
+    return groups.map(group => {
+      const part = derived(glyph, group.map(index => glyph.contours[index]))
+      return { ...placed(part, part.box, mapped(part.box, glyph.box, target), this.ink(char), `glyph ${char}`), balanceBox: glyph.box }
+    })
+  }
+
   /** Place an arbitrary inner operand in the room designed for these native enclosures. */
   yanStackedDays(outer, contents) {
     const source = yanSources.get(keyOf(outer))
-    return !this.separate && this.fontStyle !== 'kaisho' && source && !this.excluded(source)
+    return !this.separate && !ownFormsOnly(this.fontStyle) && source && !this.excluded(source)
       && !this.excluded('昌') && !this.excluded('菖') && !this.excluded('儿') && !this.excluded('元')
       && Array.isArray(contents) && contents[0] === '⿱' && contents[1] === '儿'
       && ['昌', '⿱日日'].includes(keyOf(contents[2]))
@@ -996,7 +1145,7 @@ export class Composer {
 
   /** Any ⿸ whose contents begin ⿱儿: the native legs join the enclosing bar. */
   legEnclosure(children, region) {
-    if (this.separate || this.fontStyle === 'kaisho') return null
+    if (this.separate || ownFormsOnly(this.fontStyle)) return null
     const key = keyOf(children[0]), contents = children[1]
     if (yanSources.has(key) || this.excluded('儿') || this.excluded('元') || this.excluded('詹')
       || !Array.isArray(contents) || contents[0] !== '⿱' || contents[1] !== '儿') return null
@@ -1034,7 +1183,7 @@ export class Composer {
   }
 
   yanEnclosure(children, region) {
-    if (this.fontStyle === 'kaisho') return null
+    if (ownFormsOnly(this.fontStyle)) return null
     const key = keyOf(children[0])
     if (!yanSources.has(key) || this.excluded(yanSources.get(key))) return null
     const outer = componentParts(key, region, this.fontStyle, true)
@@ -1261,6 +1410,10 @@ export class Composer {
     if (key.includes(EMPTY) || this.spelled.has(key) || containsComponentForm(key, this.fontStyle)) return null
     const pair = op === '⿳' ? '⿱' : '⿰'
     const children = node.slice(1)
+    // ⺊ over 冖 is one designed top (the KRM vulgar 處, K07097330), not two stack operands:
+    // draw the prepared ⿱⺊冖 and give it the top band, with the bottom operand below.
+    if (op === '⿳' && (children[0] === '⺊' || children[0] === '卜') && children[1] === '冖'
+      && isComponentForm('⿱⺊冖', this.fontStyle)) return ['⿱', ['⿱', '⺊', '冖'], children[2]]
     // An even run stays even, whatever cuts the export holds of a pair of it: three of the same
     // operand (品, 森, 焱), a pair of the same operand beside a third (⿲大糸糸), and a run that
     // reads the same from either end (呂, 粥), whose middle belongs to both sides at once.
@@ -1441,7 +1594,8 @@ export class Composer {
       }
       let { record: drawn, piece: source } = part
       if (op === '⿺' && i === 1 && groups[0].length === 1 && groups[0][0].origin.startsWith('glyph')) {
-        const swept = sweptPart(groups[0][0], box[0] - C.FACING[0], C)
+        const tail = this.tailForm(keyOf(children[0]))
+        const swept = sweptPart(groups[0][0], box[0] - C.FACING[0], C, tail)
         if (swept) {
           groups[0] = swept
           const opening = this.room(op, groups[0], frameOf)
@@ -1574,9 +1728,14 @@ export class Composer {
     const [power, middle] = C.SHARES[`${op},${children.length}`] ?? [0.5, 1.0]
     const other = children[1]
     const compactYan = op === '⿰' && children[0] === '朱' && Array.isArray(other) && other[0] === '⿸'
-      && yanSources.has(keyOf(other[1])) && !this.separate && this.fontStyle !== 'kaisho'
+      && yanSources.has(keyOf(other[1])) && !this.separate && !ownFormsOnly(this.fontStyle)
       && !this.excluded('朱') && !this.excluded('鴸') && !this.excluded(yanSources.get(keyOf(other[1])))
-    const weights = children.map((child, k) => this.ink(child) ** power * (k > 0 && k < children.length - 1 ? middle : 1))
+    // A font compresses a stacked middle band, but a full part reads better with the share its own
+    // ink asks for than with 0.75 of it: at 0.75 the 六 of ⿳山六廾 was 217 units high. Bars and
+    // covers (一, 冖, 丷) still take the compression.
+    const wholeMiddles = children.map((child, k) => op === '⿳' && k > 0 && k < children.length - 1 && this.middleWhole(child))
+    const weights = children.map((child, k) => this.ink(child) ** power
+      * (k > 0 && k < children.length - 1 && !wholeMiddles[k] ? middle : 1))
     // A gap of its own width between rows of a dense stack reads as air around fine parts; keeping
     // it to a share of the span leaves the parts the room instead (𰻞's 穴 and 心).
     const gap = compactYan ? 0.01 : op === '⿳' && children.length === 3 ? 0.005 : 0.04
@@ -1638,6 +1797,16 @@ export class Composer {
       for (const part of group) part.target = mapped(part.source, frame, target)
     }
     return group
+  }
+
+  /** A whole glyph a stack's middle band cannot compress: bars and covers (一, 冖, 丷) lie flat
+   *  enough to be one, a full character such as 六 or 水 does not. */
+  middleWhole(child) {
+    if (typeof child !== 'string') return false
+    const glyph = this.glyph(child)
+    if (!glyph) return false
+    const ink = tightBox(glyph)
+    return this.outlines(child) > 1 && ink[2] - ink[0] <= MIDDLE_FLAT * (ink[3] - ink[1])
   }
 
   /** A sequence drawn whole somewhere in the font, in any place but the left or the top (`_instance`). */
@@ -1886,6 +2055,22 @@ export class Composer {
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
     if (this?.partial) return
+    if (op === '⿱' && Array.isArray(children[0]) && keyOf(children[0]) === '⿱⺊冖' && groups[0].length === 2 && KRM_TOP[this.fontStyle]) {
+      const { bar, height } = KRM_TOP[this.fontStyle]
+      const ink = inkBounds(groups[0]), lower = inkBounds(groups[1]), whole = ink[3] - lower[1]
+      if (height) {
+        const bottom = ink[3] - height * whole
+        const lengthen = y => ink[3] + (y - ink[3]) * (ink[3] - bottom) / (ink[3] - ink[1])
+        for (const p of groups[0]) p.target = [p.target[0], lengthen(p.target[1]), p.target[2], lengthen(p.target[3])]
+      }
+      const roof = inkBounds([groups[0][1]])
+      const top = roof[3] - bar * (roof[3] - roof[1]) - KRM_GAP * whole
+      if (top > lower[3] || height) {
+        const raise = y => lower[1] + (y - lower[1]) * (top - lower[1]) / (lower[3] - lower[1])
+        for (const p of groups[1]) p.target = [p.target[0], raise(p.target[1]), p.target[2], raise(p.target[3])]
+      }
+      return
+    }
     const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
     const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
       : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
@@ -1948,7 +2133,7 @@ export class Composer {
     }
     if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && children[1] === '冖') {
       const a = inkBounds(groups[0]), b = inkBounds(groups[1]), gap = a[1] - b[3]
-      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && gap > COVER_GAP) {
+      if (b[2] - b[0] >= 0.9 * (a[2] - a[0]) && a[2] - a[0] >= COVER_CLOSE_SHARE * (b[2] - b[0]) && gap > COVER_GAP) {
         const shift = Math.min(gap - COVER_GAP, 0.25 * (b[3] - b[1]))
         if (shift > 0) for (const group of groups.slice(1)) for (const p of group)
           p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
@@ -1961,6 +2146,59 @@ export class Composer {
       if (op === '⿳' && children[1] === '冖' && lowerInk[2] - lowerInk[0] >= 0.9 * (coverInk[2] - coverInk[0]) && gap > COVER_GAP) {
         const shift = Math.min(gap - COVER_GAP, 0.25 * (lowerInk[3] - lowerInk[1]))
         for (const p of lower) p.target = [p.target[0], p.target[1] + shift, p.target[2], p.target[3] + shift]
+      }
+    }
+    if (op === '⿱' && groups.length >= 2 && typeof children[0] === 'string' && cover(children[0])) {
+      let topBox = null
+      try {
+        // The lower part written out, or named by a character whose sequence reads the same.
+        // A written lower part drawn as one whole glyph keeps that glyph's own proportions.
+        const tree = typeof children[1] === 'string' ? this.parse(this.sequenceOf(children[1]) ?? '')
+          : groups[1].length > 1 ? children[1] : null
+        if (Array.isArray(tree) && tree[0] === '⿱' && ['日', '曰', '田', '罒', '目', '四'].includes(tree[1])) topBox = tree[1]
+      } catch { /* not a box-headed sequence */ }
+      if (topBox) {
+        const coverBox = bounds(groups[0]), lowerInk = inkBounds(groups[1]), height = lowerInk[3] - lowerInk[1]
+        const split = lowerInk[3] - 0.45 * height
+        const centre = (coverBox[0] + coverBox[2]) / 2
+        // One map for the whole head: a box may be several contours (its counters, or a brush face's
+        // separate strokes), and each must keep its place in it.
+        // A counter inside a contour below stays with that contour.
+        const above = b => (b[1] + b[3]) / 2 >= split
+        const boxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox)), below = boxes.filter(b => !above(b))
+        const inHead = b => above(b) && !below.some(o => o[0] <= b[0] && o[1] <= b[1] && o[2] >= b[2] && o[3] >= b[3])
+        // A lower part written out names its head: the first operand's part, whatever its height.
+        const named = Array.isArray(children[1]) && groups[1].length > 1 ? groups[1][0] : null
+        const headBoxes = named ? drawnContours(named).map(pointsBox) : boxes.filter(inHead)
+        const headLeft = Math.min(...headBoxes.map(b => b[0])), headRight = Math.max(...headBoxes.map(b => b[2]))
+        const head = (headLeft + headRight) / 2
+        // A head already that narrow keeps its width.
+        const factor = Math.min(BOX_HEAD * (coverBox[2] - coverBox[0]) / Math.max(headRight - headLeft, 1), 1)
+        // What stands below takes one map of its own: left at its width, it outweighs the narrowed head.
+        const isHead = (p, b) => named ? p === named : inHead(b)
+        const bodyBoxes = groups[1].flatMap(p => drawnContours(p).map(pointsBox).filter(b => !isHead(p, b)))
+        const bodyLeft = Math.min(...bodyBoxes.map(b => b[0])), bodyRight = Math.max(...bodyBoxes.map(b => b[2]))
+        const body = (bodyLeft + bodyRight) / 2
+        const bodyFactor = Math.min(BOX_BODY * (coverBox[2] - coverBox[0]) / Math.max(bodyRight - bodyLeft, 1), 1)
+        for (const p of groups[1]) {
+          const contours = p.part.contours.slice()
+          let changed = false
+          drawnContours(p).forEach((points, index) => {
+            const b = pointsBox(points)
+            const [from, by] = isHead(p, b) ? [head, factor] : [body, bodyFactor]
+            const c = { ...contours[index] }
+            let lo = Infinity, hi = -Infinity
+            for (let k = 0; k < c.light.length; k += 2) { lo = Math.min(lo, c.light[k]); hi = Math.max(hi, c.light[k]) }
+            const mid = (lo + hi) / 2, scale = (p.target[2] - p.target[0]) / Math.max(p.source[2] - p.source[0], 1)
+            const middle = (b[0] + b[2]) / 2
+            // A part mirrored across x moves the other way on the page than in its own coordinates.
+            const side = (p.flips ?? []).reduce((sign, f) => f.x ? -sign : sign, 1)
+            const shift = side * (centre + (middle - from) * by - middle) / scale
+            const move = points => { const out = new Float64Array(points.length); for (let k = 0; k < points.length; k += 2) { out[k] = mid + shift + (points[k] - mid) * by; out[k + 1] = points[k + 1] } return out }
+            c.light = move(c.light); c.heavy = move(c.heavy); contours[index] = c; changed = true
+          })
+          if (changed) p.part = derived(p.part, contours)
+        }
       }
     }
   }
@@ -2364,7 +2602,7 @@ export function fitInside(outer, inner, region, stem, C, { size = 64, room = nul
  * A glyph drawn round the lower left of another part as a designer draws it there (`_swept`): its
  * strokes pressed left of `edge`, the stroke sweeping along its foot drawn out under the other part.
  */
-export function sweptPart(p, edge, C) {
+export function sweptPart(p, edge, C, tail = null) {
   const contours = drawnContours(p)
   const boxes = contours.map(pointsBox)
   const x0 = Math.min(...boxes.map(b => b[0])), y0 = Math.min(...boxes.map(b => b[1]))
@@ -2379,7 +2617,7 @@ export function sweptPart(p, edge, C) {
   // 日. Press the whole glyph, counters and all.
   const sweepRing = rings([p.part.contours[sweep]], [pts])[0]
   if (contours.every((c, k) => k === sweep || insideRing(rings([p.part.contours[k]], [c])[0], sweepRing)))
-    return [pressedEnclosure(p, sweep) ?? { ...p, origin: `enclosure ${p.origin}` }]
+    return [pressedEnclosure(p, sweep, ENCLOSURE_SHARE, tail) ?? { ...p, origin: `enclosure ${p.origin}` }]
   let lowMin = Infinity, lowMax = -Infinity
   for (let i = 0; i < pts.length; i += 2) if (pts[i + 1] <= y0 + 0.2 * (y1 - y0)) { lowMin = Math.min(lowMin, pts[i]); lowMax = Math.max(lowMax, pts[i]) }
   if (lowMax < lowMin || lowMax - lowMin < C.SWEEP_FOOT * (x1 - x0)) return null
@@ -2420,7 +2658,7 @@ export function sweptPart(p, edge, C) {
  * edge, as Kureedo draws 巴 round 三 in 𠀧 (⿺巴三). Every contour takes the same x map, so the
  * counters stay inside the outline and the box keeps its windows.
  */
-export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE) {
+export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE, tail = null) {
   // The map belongs to the glyph's own coordinates: the placement scales the pressed part whole.
   const boxes = p.part.contours.map(c => pointsBox(c.light))
   const x0 = Math.min(...boxes.map(b => b[0])), x1 = Math.max(...boxes.map(b => b[2]))
@@ -2441,7 +2679,292 @@ export function pressedEnclosure(p, sweep, share = ENCLOSURE_SHARE) {
     return out
   }
   const mapped = p.part.contours.map(c => ({ ops: c.ops, light: mapX(c.light), heavy: mapX(c.heavy), width: c.width }))
+  if (tail) {
+    const grafted = graftTail(mapped, sweep, x0, width, tail)
+    if (grafted) return placed(makePart(grafted, p.part.box.slice()), p.source, p.target, p.native, `enclosure ${p.origin}`, p.weight)
+  }
   return placed(makePart(mapped, p.part.box.slice()), p.source, p.target, p.native, `enclosure ${p.origin}`, p.weight)
+}
+
+// How far the grafted tail's leg runs up inside the host's own leg, so the seam leaves no hairline;
+// how far down the host's leg a cut is looked for, and how much wider than the leg the floor reads.
+const GRAFT_OVERLAP = 8
+const GRAFT_STEPS = 48
+const GRAFT_FLARE = 1.3
+// How far past a bottom stroke's measured edge a cut clears it, where that edge is not flat, and
+// how far above a rising tip the donor's cut stays, so the cut crosses its leg alone.
+const GRAFT_CLEAR = 1.15
+const GRAFT_RISE = 4
+
+/**
+ * The tail of a pressed enclosure taken from a face's own ⿺ glyph: 电's 乚 — the leg hanging from
+ * the stroke drawn between its counters, the floor and the rising tip — replaced by 巴's, as
+ * Kureedo draws it round 三 in 𠀧. The host keeps everything above the cut, the donor's leg lands
+ * on the host's, and the donor's tip reaches the glyph's right edge. Font units, y up.
+ */
+function graftTail(contours, sweep, x0, width, tail) {
+  const others = contours.filter((_, k) => k !== sweep)
+  if (tail.contours.length < 2 || others.length < 2) return null
+  const masters = ['light', 'heavy']
+  const plan = graftPlan(masters.map(m => flattenRing(contours[sweep], m)), masters.map(m => flattenRing(tail.contours[0], m)),
+    masters.map(m => others.map(c => pointsBox(c[m]))), masters.map(m => tail.contours.slice(1).map(c => pointsBox(c[m]))))
+  if (!plan) return null
+  // Both masters are cut at the same places along their outlines, so their points stay paired.
+  const light = graftPieces(contours[sweep], tail.contours[0], 'light', plan, x0, width)
+  if (!light) return null
+  const heavy = graftPieces(contours[sweep], tail.contours[0], 'heavy', plan, x0, width) ?? light
+  const out = [ringContour(light.body, heavy.body)]
+  for (const c of others) out.push(ringContour(flattenRing(c, 'light'), flattenRing(c, 'heavy'), false))
+  out.push(ringContour(light.tail, heavy.tail))
+  return out
+}
+
+/** Where the host and the donor are cut: the levels, and the places along each outline the cut
+ *  falls, as [edge, position] pairs. The levels clear every master, since one cut serves them all. */
+function graftPlan(hosts, donors, windows, donorWindows) {
+  // The column between the host's counters, where 电's 乚 hangs from the stroke drawn through it.
+  // A heavier master's counters stand closer together, so the column is the one they share.
+  const gaps = windows.map(columnGap)
+  if (gaps.some(g => !g)) return null
+  const gap = [Math.max(...gaps.map(g => g[0])), Math.min(...gaps.map(g => g[1]))]
+  if (!(gap[1] > gap[0])) return null
+  const legAt = (ring, y) => spansAt(ring, y).find(([a, b]) => b > gap[0] && a < gap[1])
+  // Under the thickest master's bottom stroke, so that level crosses the leg in all of them.
+  const bar = Math.min(...hosts.map((ring, k) => {
+    const barTop = Math.min(...windows[k].map(b => b[1]))
+    return barTop - bottomStroke(ring, windows[k], barTop) * GRAFT_CLEAR
+  }))
+  const stems = hosts.map(ring => legAt(ring, bar))
+  if (stems.some(s => !s || !(s[1] - s[0] > 0))) return null
+  // The cut runs as far down the leg as the leg stays a leg in every master — it widens where the
+  // floor leaves it — so the host keeps its left frame's own foot and hands over no more than the sweep.
+  const lows = hosts.map(ring => Math.min(...ring.map(([, y]) => y)))
+  const low = Math.min(...lows)
+  let cut = bar
+  for (let k = 1; k <= GRAFT_STEPS; k++) {
+    const y = bar - (bar - low) * k / GRAFT_STEPS
+    const spans = hosts.map(ring => legAt(ring, y))
+    if (spans.some((s, i) => !s || s[1] - s[0] > GRAFT_FLARE * (stems[i][1] - stems[i][0]))) break
+    cut = y
+  }
+  const inside = [(windows[0][0][0] + windows[0][0][2]) / 2, (windows[0][0][1] + windows[0][0][3]) / 2]
+  const body = cutAt(hosts[0], cut, true).find(ring => inPoly(materialise(hosts[0], ring), inside))
+  if (!body) return null
+  // The donor's own bottom stroke, and below it the leg its sweep hangs from.
+  const under = Math.min(...donors.map((ring, k) => {
+    const donorBar = Math.min(...donorWindows[k].map(b => b[1]))
+    return donorBar - bottomStroke(ring, donorWindows[k], donorBar) * GRAFT_CLEAR
+  }))
+  const legs = donors.map(ring => spansAt(ring, under))
+  if (legs.some(spans => !spans.length)) return null
+  // The donor is cut as low as its rising tip allows, so its leg lands on the host's own leg
+  // without reaching up past the host's bottom stroke.
+  const donorCut = Math.max(...donors.map((ring, k) => {
+    const dy = lows[k] - Math.min(...ring.map(([, y]) => y))
+    const hook = ring.filter(([x, y]) => x > legs[k][0][1] && y < under).map(([, y]) => y)
+    return Math.max(cut + GRAFT_OVERLAP - dy, hook.length ? Math.max(...hook) + GRAFT_RISE : -Infinity)
+  }))
+  if (!(donorCut <= under) || donors.some(ring => spansAt(ring, donorCut).length !== 1)) return null
+  const pieces = cutAt(donors[0], donorCut, false)
+  if (pieces.length !== 1) return null
+  return { gap, bar, cut, donorCut, body, tail: pieces[0] }
+}
+
+/** One master's two pieces: the host's body above the cut, and the donor's tail mapped under it. */
+function graftPieces(outline, donorOutline, master, plan, x0, width) {
+  const host = flattenRing(outline, master), donor = flattenRing(donorOutline, master)
+  const { gap, bar, cut, donorCut } = plan
+  const legAt = y => spansAt(host, y).find(([a, b]) => b > gap[0] && a < gap[1])
+  const stem = legAt(bar), seam = legAt(cut)
+  const donorLegs = spansAt(donor, donorCut)
+  if (!stem || !seam || !donorLegs.length) return null
+  const [legLeft, legRight] = donorLegs[0]
+  const tail = materialise(donor, plan.tail)
+  const tip = Math.max(...tail.map(([x]) => x))
+  const x1 = x0 + width, run = (x1 - seam[1]) / (tip - legRight)
+  if (!(seam[1] - seam[0] > 0) || !(legRight - legLeft > 0) || !(tip > legRight) || !(run > 0)) return null
+  // Where the donor's leg runs up beside the host's it takes the host's own two edges at that level,
+  // so the seam leaves no step and the leg reads one width from the counters down to the turn. Under
+  // the cut it keeps the width the host ends on, and with it the donor's own brush shape.
+  const column = y => {
+    if (y <= cut) return seam
+    const span = legAt(y)
+    return span && span[1] - span[0] <= GRAFT_FLARE * (stem[1] - stem[0]) ? span : y > bar ? stem : seam
+  }
+  // The floor beyond the leg runs out to the glyph's right edge through the Möbius map, whose
+  // stretch reaches 1 at the tip, so the hook keeps its width.
+  const dy = Math.min(...host.map(([, y]) => y)) - Math.min(...donor.map(([, y]) => y))
+  return {
+    body: materialise(host, plan.body),
+    tail: tail.map(([x, y]) => {
+      const at = y + dy
+      if (x > legRight) return [seam[1] + (x1 - seam[1]) * footMap((x - legRight) / (tip - legRight), run), at]
+      const [left, right] = column(at)
+      return [right - (legRight - x) * (right - left) / (legRight - legLeft), at]
+    }),
+  }
+}
+
+/** The first gap between the columns a glyph's counters stand in, where one stroke runs down. */
+function columnGap(windows) {
+  const cols = windows.map(b => [b[0], b[2]]).sort((a, b) => a[0] - b[0])
+  let reach = cols[0][1]
+  for (const [a, b] of cols.slice(1)) {
+    if (a > reach) return [reach, a]
+    reach = Math.max(reach, b)
+  }
+  return null
+}
+
+/** The x spans a polygon's ink covers along the line y = `cut`, left to right. */
+function spansAt(poly, cut) {
+  const xs = []
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length]
+    if ((a[1] <= cut) === (b[1] <= cut)) continue
+    xs.push(a[0] + (b[0] - a[0]) * (cut - a[1]) / (b[1] - a[1]))
+  }
+  xs.sort((p, q) => p - q)
+  const out = []
+  for (let i = 0; i + 1 < xs.length; i += 2) out.push([xs[i], xs[i + 1]])
+  return out
+}
+
+/** Whether a point lies inside a polygon (even-odd). */
+function inPoly(poly, [x, y]) {
+  let odd = false
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [ax, ay] = poly[i], [bx, by] = poly[j]
+    if ((ay > y) !== (by > y) && x < ax + (bx - ax) * (y - ay) / (by - ay)) odd = !odd
+  }
+  return odd
+}
+
+/** The points a cut names, read off a polygon: a vertex, or a place along the edge leaving it. */
+function materialise(poly, places) {
+  return places.map(([i, t]) => {
+    if (t === null) return poly[i]
+    const a = poly[i], b = poly[(i + 1) % poly.length]
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]
+  })
+}
+
+/**
+ * A simple polygon cut by the horizontal line y = `cut`, keeping the side above or below it, as the
+ * pieces it falls into, each named as [edge, position] pairs. Sutherland–Hodgman would join those
+ * pieces along the line; a glyph's outline is concave — the 乚 of a pressed 电 leaves its hook
+ * standing beside the leg — so the pieces are closed one by one instead, pairing the crossings
+ * along the line as a scanline fills them.
+ */
+function cutAt(poly, cut, above) {
+  const keep = y => above ? y > cut : y < cut
+  const walk = [], crossings = []
+  for (let i = 0; i < poly.length; i++) {
+    const a = poly[i], b = poly[(i + 1) % poly.length]
+    if (keep(a[1])) walk.push({ at: [i, null] })
+    if (keep(a[1]) === keep(b[1])) continue
+    const t = (cut - a[1]) / (b[1] - a[1])
+    const crossing = { at: [i, t], x: a[0] + (b[0] - a[0]) * t, id: crossings.length }
+    crossings.push(crossing)
+    walk.push(crossing)
+  }
+  if (!walk.length) return []
+  if (!crossings.length) return [poly.map((_, i) => [i, null])]
+  if (crossings.length % 2) return []
+  // Chains of kept points, each running from the crossing that enters to the one that leaves.
+  const start = walk.findIndex((v, i) => v.id !== undefined && walk[(i + 1) % walk.length].id === undefined)
+  if (start < 0) return []
+  const chains = []
+  let chain = null
+  for (let k = 0; k < walk.length; k++) {
+    const v = walk[(start + k) % walk.length]
+    if (v.id === undefined) chain?.push(v)
+    else if (chain) { chain.push(v); chain = null }
+    else { chain = [v]; chains.push(chain) }
+  }
+  // Along the line the ink lies between the crossings taken in pairs, left to right.
+  const order = crossings.slice().sort((a, b) => a.x - b.x)
+  const mate = new Map()
+  for (let i = 0; i + 1 < order.length; i += 2) {
+    mate.set(order[i].id, order[i + 1].id)
+    mate.set(order[i + 1].id, order[i].id)
+  }
+  const byStart = new Map(chains.map(c => [c[0].id, c]))
+  const out = [], used = new Set()
+  for (const first of chains) {
+    if (used.has(first[0].id)) continue
+    const ring = []
+    let at = first
+    while (at && !used.has(at[0].id)) {
+      used.add(at[0].id)
+      for (const v of at) ring.push(v.at)
+      at = byStart.get(mate.get(at.at(-1).id))
+    }
+    if (ring.length >= 3) out.push(ring)
+  }
+  return out
+}
+
+/** A contour flattened into a polygon of [x, y] points, its curve chains sampled in `steps`. */
+function flattenRing(contour, master = 'light', steps = 24) {
+  const [ring] = rings([contour], [contour[master]], steps)
+  const out = []
+  for (let i = 0; i + 1 < ring.length; i += 2) out.push([ring[i], ring[i + 1]])
+  return out
+}
+
+const ringArea = poly => poly.reduce((sum, [x, y], i) => sum + (x * poly[(i + 1) % poly.length][1] - poly[(i + 1) % poly.length][0] * y), 0) / 2
+/** How thick the bottom stroke under a glyph's counters is: the ink standing in the column under
+ *  the left-hand counter, measured from that counter's bottom edge down to where the stroke ends.
+ *  A floor sweeping past below is a separate span in that column and does not count. */
+function bottomStroke(ring, windows, bottom) {
+  const win = windows.reduce((a, b) => (b[0] < a[0] ? b : a))
+  const cx = (win[0] + win[2]) / 2
+  const ys = []
+  for (let i = 0; i < ring.length; i++) {
+    const [ax, ay] = ring[i], [bx, by] = ring[(i + 1) % ring.length]
+    if ((ax <= cx) === (bx <= cx)) continue
+    ys.push(ay + (by - ay) * (cx - ax) / (bx - ax))
+  }
+  ys.sort((p, q) => p - q)
+  for (let i = 0; i + 1 < ys.length; i += 2) if (ys[i] < bottom && ys[i + 1] > bottom) return Math.max(1, bottom - ys[i])
+  return Math.max(1, bottom - Math.min(bottom, ...ys))
+}
+
+/** A closed polygon resampled to `n` points by arc length, so the light and heavy rings pair up. */
+function resampleRing(poly, n) {
+  const m = poly.length, sides = []
+  let total = 0
+  for (let i = 0; i < m; i++) {
+    const [x0, y0] = poly[i], [x1, y1] = poly[(i + 1) % m]
+    const len = Math.hypot(x1 - x0, y1 - y0)
+    sides.push(len)
+    total += len
+  }
+  const out = []
+  for (let k = 0; k < n; k++) {
+    let at = (k / n) * total, i = 0
+    while (i < m - 1 && at > sides[i]) { at -= sides[i]; i++ }
+    const [x0, y0] = poly[i], [x1, y1] = poly[(i + 1) % m]
+    const t = sides[i] ? Math.min(at / sides[i], 1) : 0
+    out.push([x0 + (x1 - x0) * t, y0 + (y1 - y0) * t])
+  }
+  return out
+}
+/** A polygon as a part contour, wound as ink (clockwise) in both masters. */
+function ringContour(light, heavy = null, clockwise = true) {
+  const flip = (poly) => (ringArea(poly) > 0) === clockwise ? poly.slice().reverse() : poly
+  let ring = flip(light)
+  let twin = heavy ? flip(heavy) : ring
+  const n = Math.max(ring.length, twin.length)
+  if (ring.length !== n) ring = resampleRing(ring, n)
+  if (twin.length !== n) twin = resampleRing(twin, n)
+  return {
+    ops: Array.from({ length: ring.length }, (_, i) => [i ? 'L' : 'M', 1, false]),
+    light: Float64Array.from(ring.flat()),
+    heavy: Float64Array.from(twin.flat()),
+    width: null,
+  }
 }
 
 /** The Möbius map along a pressed enclosure's foot: `s` runs from 0 at the box's right edge to 1 at
