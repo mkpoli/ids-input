@@ -6,7 +6,7 @@ import { parse, sameTree } from './ids.js'
 import { PYRAMID_DIRECTIONS, pyramidRows } from '@han-compose/composer/pyramid-rows'
 import { repeatedPart, repeatedText } from './repeat-part.js'
 
-export { PYRAMID_DIRECTIONS, pyramidRows } from '@han-compose/composer/pyramid-rows'
+export { PYRAMID_DIRECTIONS, pyramidOnBase, pyramidRows } from '@han-compose/composer/pyramid-rows'
 
 /**
  * The cells in a pyramid of `layers` rows.

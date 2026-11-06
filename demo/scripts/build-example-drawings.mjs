@@ -12,6 +12,7 @@ import { hasTangut, tangutSource } from '@han-compose/composer/tangut'
 import { hasBopomofo, bopomofoSource } from '@han-compose/composer/bopomofo'
 import { hasSmallSeal, smallSealSource } from '@han-compose/composer/small-seal'
 import { hasShuishu, shuishuSource } from '@han-compose/composer/shuishu'
+import { hasJurchen, jurchenSource } from '@han-compose/composer/jurchen'
 import { onlyBundled } from '@han-compose/composer/local'
 import { bundledSource } from '@han-compose/composer/bundled'
 import { compose, fromUrl } from '@han-compose/composer/loader'
@@ -30,6 +31,7 @@ const loadTangut = async () => bundledOutlines('sources/tangut/outlines.json.gz'
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
 const loadShuishu = async () => bundledOutlines('sources/shuishu/outlines.json.gz')
+const loadJurchen = async () => bundledOutlines('sources/jurchen/outlines.json.gz')
 const loadBopomofo = async () => bundledOutlines('sources/bopomofo/outlines.json.gz')
 const bopomofoSources = new Map()
 await source.ready()
@@ -45,6 +47,7 @@ for (const example of EXAMPLES) {
     }
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../node_modules/@han-compose/composer/data/sources/small-seal/outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
+    if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
     const drawn = await compose(selected, example.char || example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)

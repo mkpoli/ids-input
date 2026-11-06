@@ -81,47 +81,41 @@ try {
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, inner.id, 'the enclosed part is still reachable with the enclosure chosen')
 
-    // The composer can paint a part past its layout box. The painted ink still belongs to the part,
-    // not to the enclosure whose box holds that point.
-    const overflow = await page.evaluate(id => {
+    // The selection hugs the painted bounds, including ink the composer draws outside the layout box.
+    const ink = await page.evaluate(id => {
       const svg = document.querySelector('.ids-preview-large svg[role="application"]')
       const group = svg?.querySelector(`[data-layer="${id}"]`)
       const grip = svg?.querySelector('.select-box')
       if (!svg || !group || !grip) return null
       const surface = svg.getBoundingClientRect()
       const numbers = (grip.getAttribute('points') ?? '').split(/[ ,]+/).map(Number)
-      const quad = Array.from({ length: numbers.length / 2 }, (_, index) => [numbers[index * 2], numbers[index * 2 + 1]])
-      /** @param {number} x @param {number} y */
-      const inside = (x, y) => {
-        let hit = false
-        for (let i = 0, j = quad.length - 1; i < quad.length; j = i++) {
-          const [xi, yi] = quad[i], [xj, yj] = quad[j]
-          if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) hit = !hit
-        }
-        return hit
-      }
+      const xs = numbers.filter((_, index) => index % 2 === 0), ys = numbers.filter((_, index) => index % 2 === 1)
+      const quadBox = { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) }
       const bounds = group.getBoundingClientRect()
-      for (let y = bounds.top + 2; y < bounds.bottom - 2; y += 4) {
-        for (let x = bounds.left + 2; x < bounds.right - 2; x += 4) {
-          if (inside((x - surface.left) / surface.width * 1000, (y - surface.top) / surface.height * 1000)) continue
-          const element = document.elementFromPoint(x, y)
-          if (element?.closest?.('[data-layer]') === group) return { x, y }
+      const inkBox = {
+        x0: (bounds.left - surface.left) / surface.width * 1000,
+        y0: (bounds.top - surface.top) / surface.height * 1000,
+        x1: (bounds.right - surface.left) / surface.width * 1000,
+        y1: (bounds.bottom - surface.top) / surface.height * 1000,
+      }
+      let point = null
+      outer: for (let x = bounds.left + 2; x < bounds.right - 2; x += 3) {
+        for (let y = bounds.top + 2; y < bounds.bottom - 2; y += 3) {
+          if (document.elementFromPoint(x, y)?.closest?.('[data-layer]') === group) { point = { x, y }; break outer }
         }
       }
-      return null
+      return { point, quadBox, inkBox }
     }, inner.id)
+    assert.ok(ink?.point, 'the inner part has painted ink')
+    for (const edge of ['x0', 'y0', 'x1', 'y1']) assert.ok(Math.abs(ink.quadBox[edge] - ink.inkBox[edge]) < 12, `the selection follows the painted ${edge}`)
     // A point inside the enclosure and outside the part it holds. The enclosure's box starts at
     // x≈100 once the sketch and the drawing agree, so the click is kept clear of that edge.
     await page.mouse.click(at(150, 500).x, at(150, 500).y)
     await page.waitForTimeout(300)
-    assert.equal((await stored())?.chosen, outer.id, 'the enclosure is chosen outside the part it holds')
-    // Where the composer paints a part past its layout box, that ink still belongs to the part. A
-    // sketch that follows the drawing leaves no such ink, and the block is skipped.
-    if (overflow) {
-      await page.mouse.click(overflow.x, overflow.y)
-      await page.waitForTimeout(300)
-      assert.equal((await stored())?.chosen, inner.id, 'ink outside the layout box still chooses its own part')
-    }
+    assert.equal((await stored())?.chosen, outer.id, 'the enclosure is chosen before the ink click')
+    await page.mouse.click(ink.point.x, ink.point.y)
+    await page.waitForTimeout(300)
+    assert.equal((await stored())?.chosen, inner.id, 'painted ink still chooses its own part')
     await page.mouse.click(middle.x, middle.y)
     await page.waitForTimeout(300)
 

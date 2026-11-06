@@ -128,9 +128,10 @@ const html = `<!doctype html>
 </div>
 <p class="note">
   Built ${data.built} from <code>data/ids-corpus.json.gz</code> (${data.counts.descriptions.toLocaleString()} descriptions,
-  ${data.licence}). Every component a description uses, most used first. A count covers only what the corpus
-  describes: a part named through a CHISE entity that is still unresolved is not yet counted, so treat
-  these as a floor.
+  ${data.licence} because the CHISE rows are, the BabelStone ones public domain, see
+  <code>data/COPYING-chise-ids.txt</code>). Every component a description uses, most used first. A count
+  covers only what the corpus describes: a part named through a CHISE entity that is still unresolved is not
+  yet counted, so treat these as a floor.
 </p>
 <input id="filter" type="search" placeholder="Character, cid, or a character it appears in" autofocus>
 <label class="check"><input id="onlyUnencoded" type="checkbox"> unencoded only</label>

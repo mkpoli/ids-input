@@ -4,6 +4,7 @@
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
   import { loadStrokeRecords } from './strokes.js'
+  import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
   let { root, adapter, messages, locale = 'en', disabled = false, onpick } = $props()
@@ -13,6 +14,7 @@
   const readingName = reading => /^(ja|zh|ko)/.test(locale) ? reading.zh : reading.name
   const uid = $props.id()
   /** @type {HTMLElement | null} */ let panel = $state(null)
+  $effect(() => { if (panel) return watchFallback(panel) })
   /** @type {import('../adapter/character-info.js').CharacterInfo | null} */ let info = $state.raw(null)
   let char = $state(''), status = $state('idle'), open = $state(false), x = $state(0), y = $state(0)
   /** @type {HTMLElement | null} */ let anchor = null
@@ -511,7 +513,7 @@
 </div>
 
 <style>
-  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
+  .ids-character-info{position:fixed;inset:auto;margin:0;box-sizing:border-box;width:320px;max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);overflow:auto;padding:16px;border:1px solid var(--ids-line,light-dark(#e1e1e8,#484850));border-radius:12px;background:var(--ids-surface,light-dark(#fff,#24242b));color:var(--ids-ink,light-dark(#24242b,#f0f0f5));box-shadow:0 8px 30px #0003;font:13px/1.5 system-ui,sans-serif;--info-muted:var(--ids-muted,light-dark(#686874,#b4b4c0));--info-font:"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif}
   header{display:flex;align-items:center;gap:14px;margin-bottom:12px}header>div{display:flex;flex-direction:column;gap:3px}.glyph{font:56px/1.15 var(--info-font)}.script{font-size:12px;color:var(--info-muted)}code{font-size:11px;letter-spacing:.02em}
   .code{display:flex;align-items:center;gap:4px;min-height:24px}.stroke-glyph{font-family:var(--info-font);font-size:16px;line-height:1;color:var(--ids-ink,light-dark(#24242b,#f0f0f5))}.stroke-facts{display:flex;align-items:center;gap:5px;margin:2px 0 0;font-size:12px;white-space:nowrap}.stroke-count{color:var(--ids-ink,light-dark(#24242b,#f0f0f5));font-weight:600;font-variant-numeric:tabular-nums}.stroke-first{color:var(--info-muted)}.stroke-sep{align-self:stretch;width:1px;background:var(--ids-line,light-dark(#e1e1e8,#3a3a43))}.copy{display:grid;place-items:center;flex:none;width:24px;height:24px;padding:0;border:0;border-radius:5px;background:none;color:var(--info-muted);cursor:pointer}.copy:hover{background:var(--ids-surface-subtle,light-dark(#f6f6f9,#16161a));color:inherit}.copy svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.copy-note{font-size:11px;color:var(--ids-accent,light-dark(#2944c7,#8ea8ff))}.copy-note.failed{color:var(--ids-fault,light-dark(#b42318,#ff8a80))}
   .close{align-self:flex-start;margin-left:auto;padding:0 4px;background:none;border:0;font:22px/1 system-ui;color:var(--info-muted);cursor:pointer}button:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:3px}

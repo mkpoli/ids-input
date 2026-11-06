@@ -8,11 +8,12 @@ import { hasUnicodeGlyph } from '@han-compose/composer/unicode'
 const GENERAL = 'general'
 const SHARDS = 'unicode'
 const ALWAYS = [GENERAL, 'parts', 'strokes']
-const FAMILY = { operators: 'IDS Operators', general: 'Noto Sans CJK JP', planes: 'Plangothic Planes', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean' }
+const FAMILY = { operators: 'IDS Operators', general: 'Noto Sans CJK JP', planes: 'Plangothic Planes', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', jurchen: 'IDS Jurchen', 'new-korean': 'IDS New Korean' }
 const SCRIPTS = [
   { face: 'seal', range: [0x3D000, 0x3FC3F] },
   { face: 'tangut', range: [0x17000, 0x18DFF] },
   { face: 'shuishu', range: [0x1B300, 0x1B52E] },
+  { face: 'jurchen', range: [0x18E00, 0x191D2] },
   { face: 'new-korean', range: [0xA97D, 0xA97F] },
 ]
 

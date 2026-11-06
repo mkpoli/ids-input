@@ -21,8 +21,10 @@ const visit = node => {
   if (isNode(node)) return node.parts.forEach(visit)
   if (!hasPaletteGlyph(node) && !hasUnicodeGlyph(node) && !local.some(records => records[node])) needed.add(node)
 }
-for (const { part } of rows) {
-  const result = parse(part, { open: true })
+for (const { part, fragment } of rows) {
+  const text = /^\{\d+\}$/.test(part) ? fragment : part
+  if (!text) continue
+  const result = parse(text, { open: true })
   if (result.problem) throw Error(`Invalid palette entry: ${part}`)
   visit(result.tree)
 }

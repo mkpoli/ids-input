@@ -1,0 +1,27 @@
+{
+  "note": "Editorial decompositions: no source states one, so each entry is a reading of the Alari glyph. Only characters that split cleanly into two parts of the block, with stroke counts that add up, are listed.",
+  "entries": {
+    "18F06": "⿰𘻳𙆰",
+    "18F15": "⿱𙆳𙇇",
+    "18F16": "⿱𙆳𙆩",
+    "18F17": "⿱𙆳𙆫",
+    "18F6A": "⿱𙆺𙇈",
+    "18FDA": "⿰𘿅𙇐",
+    "18FDD": "⿱𘿆𙇐",
+    "18FF8": "⿰𘿬𙇐",
+    "1903E": "⿰𙆿𙅞",
+    "1904A": "⿱𙆠𙁉",
+    "1906E": "⿰𙇂𙆩",
+    "1906F": "⿰𙇂𙆨",
+    "19070": "⿰𙇂𙆬",
+    "1907B": "⿰𙇂𘾹",
+    "19086": "⿰𙇂𘻑",
+    "1908D": "⿰𙇂𘽳",
+    "19092": "⿰𙇃𙆩",
+    "1909E": "⿰𙇄𙄃",
+    "190CA": "⿱𙇇𙆣",
+    "190D4": "⿱𙇈𙆣",
+    "190DB": "⿱𙇉𙆩",
+    "19147": "⿱𙇑𘼜"
+  }
+}

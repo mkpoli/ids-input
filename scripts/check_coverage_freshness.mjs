@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto'
 import { coverageSources } from './lib/coverage-sources.mjs'
 
 const root = new URL('../', import.meta.url)
-const styles = ['sans', 'serif', 'klee']
+const styles = ['sans', 'serif', 'fangsong', 'klee']
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')
 
 const names = await coverageSources(root)
@@ -30,6 +30,7 @@ if (stale) {
   console.error(`\n${stale} of ${styles.length} reports are stale. Re-render each style:`)
   console.error('  bun scripts/audit_render_coverage.mjs CACHE_DIR docs/coverage/sans.json sans')
   console.error('  bun scripts/audit_render_coverage.mjs CACHE_DIR docs/coverage/serif.json serif')
+  console.error('  bun scripts/audit_render_coverage.mjs CACHE_DIR docs/coverage/fangsong.json fangsong')
   console.error('  bun scripts/audit_render_coverage.mjs CACHE_DIR docs/coverage/klee.json klee')
   process.exit(1)
 }

@@ -27,6 +27,7 @@ const FONTS = {
   'seal.ttf': 'IDSSeal-Regular.woff2',
   'tangut.ttf': 'NotoSerifTangut-Regular.woff2',
   'shuishu.ttf': 'IDSShuishu.woff2',
+  'jurchen.ttf': 'IDSJurchen.woff2',
   'new-korean.ttf': 'IDSNewKorean.woff2',
 }
 // Two faces are too big to keep in the repository: fetched at pinned releases, checked, then
@@ -52,7 +53,7 @@ copyFileSync(join(import.meta.dirname, '../fonts/OFL-GenZuiSans.txt'), join(out,
 const pairs = Object.entries(FONTS).map(([name, file]) => [join(out, 'fonts', name), join(import.meta.dirname, '../fonts', file)])
 pairs.push([fetched[0], fetched[0]], [fetched[1], fetched[1]])
 /** The family each face is named in the build; the sources' own names differ or collide. */
-const FAMILY = { operators: 'IDS Operators', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
+const FAMILY = { operators: 'IDS Operators', parts: 'IDS Parts', strokes: 'IDS Strokes', seal: 'IDS Seal', tangut: 'IDS Tangut', shuishu: 'IDS Shuishu', jurchen: 'IDS Jurchen', 'new-korean': 'IDS New Korean', planes: 'Plangothic Planes' }
 // The shard faces of the bundled glyphs are one family upstream; each is given its own name here so
 // a character resolves to the shard that has it.
 const shardFonts = join(import.meta.dirname, '../fonts/unicode')
@@ -93,7 +94,7 @@ console.log(`fonts general.otf, planes.ttf, ${pairs.length - Object.keys(FONTS).
 // The scripts with bundled outlines, and the glyphs of the parts beyond what an installed font draws.
 // They are the drawing engine's data, so they come from its package.
 const ENGINE = join(import.meta.dirname, '../node_modules/@han-compose/composer/data')
-const DATA = ['tangut', 'bopomofo', 'small-seal', 'new-korean', 'shuishu', 'palette']
+const DATA = ['tangut', 'bopomofo', 'small-seal', 'new-korean', 'shuishu', 'jurchen', 'palette']
 for (const name of DATA) {
   copyFileSync(join(ENGINE, `sources/${name}/outlines.json.gz`), join(out, `data/${name}-outlines.json.gz`))
   console.log(`data ${name}`)

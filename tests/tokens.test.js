@@ -11,9 +11,7 @@ test('tokens map nested subtrees with UTF-16 ranges', () => {
   const text = '⿰⿱木' + SEAL + VS + '水'
   const spans = tokens(text)
   expect(spans.map(t => t.path)).toEqual([[], [0], [0, 0], [0, 1], [1]])
-  // The operator's span, read in code points: a slice by UTF-16 index can end between a surrogate
-  // pair, which reads as a lone half.
-  expect([...text].slice(spans[1].start, spans[1].end).join('')).toBe('⿱木' + SEAL + VS)
+  expect(text.slice(spans[1].start, spans[1].end)).toBe('⿱木' + SEAL + VS)
   expect(spans[3].text).toBe(SEAL + VS)
   expect(spans.map(t => t.text).join('')).toBe(text)
 })

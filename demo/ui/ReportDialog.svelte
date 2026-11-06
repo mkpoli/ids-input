@@ -137,7 +137,7 @@
   .thumb :global(svg){display:block;width:100%;height:100%}
   h3{margin:var(--ui-space-2xs) 0 0;font-size:var(--ui-text-2xs);font-weight:var(--ui-weight-bold);letter-spacing:.04em;text-transform:uppercase;color:var(--ui-color-ink-muted)}
   .along{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:var(--ui-space-3xs);color:var(--ui-color-ink-muted);font-size:var(--ui-text-xs);line-height:1.45;overflow-wrap:anywhere}
-  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),"Noto Sans CJK JP",sans-serif)}
+  .along .glyph{font-family:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),"Noto Sans CJK JP",sans-serif)}
   .fault{margin:0;color:var(--ui-color-danger);font-size:var(--ui-text-sm)}
   .send{align-self:flex-start}
   .sent{display:flex;flex-direction:column;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}

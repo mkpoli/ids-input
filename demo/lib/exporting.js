@@ -7,13 +7,32 @@ import { load, save } from './storage.js'
 /** @typedef {{ format: 'svg' | 'png', size: number, background: 'none' | 'white' | 'black' | 'custom', custom: string, ink: 'auto' | 'custom', inkColour: string, padding: number, placeholders: boolean }} ExportSettings */
 
 /** @type {ExportSettings} */
-export const DEFAULTS = { format: 'svg', size: 1024, background: 'none', custom: '#f4efe4', ink: 'auto', inkColour: '#1d1d21', padding: 0.06, placeholders: false }
+export const DEFAULTS = { format: 'png', size: 1024, background: 'white', custom: '#f4efe4', ink: 'auto', inkColour: '#1d1d21', padding: 0.06, placeholders: false }
 export const SIZES = [256, 512, 1024, 2048]
 
-/** @returns {ExportSettings} */
-export const storedSettings = () => ({ ...DEFAULTS, ...load('export', {}) })
+/** The format of a stored record. A record without it predates the PNG and white defaults. */
+const VERSION = 2
+/** The defaults a version 1 record was written with. A field still at its old default was not
+ *  chosen, so it follows today's default. */
+const PREVIOUS = { format: 'svg', background: 'none' }
+
+/** @typedef {ExportSettings & { version?: number }} StoredExportSettings */
+
+/** The viewer's saved settings, with the defaults for anything they did not choose. @returns {ExportSettings} */
+export const storedSettings = () => {
+  const saved = load('export', {})
+  if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return { ...DEFAULTS }
+  const { version, ...settings } = /** @type {StoredExportSettings} */ (saved)
+  /** @type {Partial<ExportSettings>} */
+  const kept = { ...settings }
+  if (typeof version !== 'number' || version < VERSION) {
+    if (kept.format === PREVIOUS.format) delete kept.format
+    if (kept.background === PREVIOUS.background) delete kept.background
+  }
+  return { ...DEFAULTS, ...kept }
+}
 /** @param {ExportSettings} settings */
-export const keepSettings = settings => save('export', settings)
+export const keepSettings = settings => save('export', { ...settings, version: VERSION })
 
 /** The background colour, or null for none. @param {ExportSettings} s */
 export const backgroundOf = s => s.background === 'none' ? null : s.background === 'white' ? '#ffffff' : s.background === 'black' ? '#000000' : s.custom

@@ -2,7 +2,11 @@
 # requires-python = ">=3.11"
 # dependencies = ["fonttools[woff]==4.63.0", "brotli==1.2.0"]
 # ///
-"""Build palette fallback outlines: uv run scripts/build_palette_outlines.py NOTO_CJK_TTC."""
+"""Build palette fallback outlines: uv run scripts/build_palette_outlines.py NOTO_CJK_TTC.
+
+The 69 BabelStone PUA glyphs for numbered components with no fragment come from
+`data/numbered-pua-outlines.json.gz`, built by `scripts/build_numbered_pua.py`.
+"""
 import gzip, hashlib, json, sys
 from pathlib import Path
 from fontTools.ttLib import TTFont
@@ -31,6 +35,13 @@ for path, index in fonts:
             if not pen.contours: continue
             records[char] = {'k': char, 'G': {'v': 0, 'b': [round(v * scale, 4) for v in bounds.bounds], 'p': pen.contours}, 'ink': round(perimeter.value * scale, 4), 'o': len(pen.contours)}
         missing.difference_update(records)
+# BabelStone's PUA glyphs for the numbered components note 6 leaves unfragmented. They are built
+# by `scripts/build_numbered_pua.py`; no Noto face draws a PUA code point.
+pua = root / 'data/numbered-pua-outlines.json.gz'
+if pua.exists():
+    extra = json.loads(gzip.decompress(pua.read_bytes()))['records']
+    records.update(extra)
+    missing.difference_update(extra)
 if missing: raise ValueError(f'Missing outlines: {sorted(missing)}')
 raw = json.dumps({'records': records}, ensure_ascii=False, separators=(',', ':')).encode()
 out = bytearray(gzip.compress(raw, compresslevel=9, mtime=0)); out[9] = 255

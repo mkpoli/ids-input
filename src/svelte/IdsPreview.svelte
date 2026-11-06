@@ -114,14 +114,46 @@
     return layerAtPath(localDoc.root, chosen)
   })
   const frame = $derived(chosenLayer ? view?.frames.get(chosenLayer.id) ?? null : null)
-  const SELECTION = /** @type {const} */ ([[0, 0], [1000, 0], [1000, 1000], [0, 1000]])
+  /** @type {[number, number, number, number]} */
+  const CELL = [0, 0, 1000, 1000]
+  /**
+   * The layer's painted bounds in its own frame. A glyph can paint outside the layout cell the
+   * composer gives it, so the selection hugs what is drawn rather than the cell.
+   * @param {import('../document/model.js').Node} node @param {import('../document/frames.js').LayerFrame} at
+   * @returns {[number, number, number, number]}
+   */
+  function inkBounds(node, at) {
+    if (!view || node.kind !== 'component') return CELL
+    const leaf = view.source.info.get(node.id)?.leaf
+    if (typeof leaf !== 'number') return CELL
+    const inverse = invertAffine(at.base)
+    if (!inverse) return CELL
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+    for (const part of view.partsByLeaf.get(leaf) ?? []) {
+      const box = /** @type {import('../adapter/types.js').DrawingPart} */ (part).box
+      if (!Array.isArray(box) || box.length < 4) continue
+      const [x, y, width, height] = box
+      if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue
+      for (const point of [[x, y], [x + width, y], [x + width, y + height], [x, y + height]]) {
+        const [lx, ly] = applyAffine(inverse, /** @type {[number, number]} */ (point))
+        x0 = Math.min(x0, lx); y0 = Math.min(y0, ly); x1 = Math.max(x1, lx); y1 = Math.max(y1, ly)
+      }
+    }
+    return x1 > x0 && y1 > y0 ? [x0, y0, x1, y1] : CELL
+  }
+  const bounds = $derived(chosenLayer && frame ? inkBounds(chosenLayer, frame) : CELL)
   // The eight resize handles, named by the side of the layer's own frame they hold.
   const HANDLES = /** @type {const} */ ([
-    ['nw', 0, 0], ['n', 500, 0], ['ne', 1000, 0], ['e', 1000, 500],
-    ['se', 1000, 1000], ['s', 500, 1000], ['sw', 0, 1000], ['w', 0, 500],
+    ['nw', 0, 0], ['n', 0.5, 0], ['ne', 1, 0], ['e', 1, 0.5],
+    ['se', 1, 1], ['s', 0.5, 1], ['sw', 0, 1], ['w', 0, 0.5],
   ])
-  /** The four canvas corners of a frame's local box. @param {{ full: number[] }} at */
-  const quadOf = at => SELECTION.map(([x, y]) => applyAffine(at.full, [x, y]))
+  /** A point in the layer's own frame, by fractions of its bounds. @param {number[]} bounds @param {number} fx @param {number} fy */
+  const pointIn = (bounds, fx, fy) => /** @type {[number, number]} */ ([
+    bounds[0] + (bounds[2] - bounds[0]) * fx,
+    bounds[1] + (bounds[3] - bounds[1]) * fy,
+  ])
+  /** The four canvas corners of a local box. @param {{ full: number[] }} at @param {number[]} bounds */
+  const quadOf = (at, bounds) => [[bounds[0], bounds[1]], [bounds[2], bounds[1]], [bounds[2], bounds[3]], [bounds[0], bounds[3]]].map(([x, y]) => applyAffine(at.full, /** @type {[number, number]} */ ([x, y])))
   /** @param {number[][]} quad */
   const quadArea = quad => Math.abs(quad.reduce((sum, point, index) => {
     const next = quad[(index + 1) % quad.length]
@@ -143,23 +175,21 @@
     return [...view.frames.values()]
       .filter(item => item.node.kind !== 'slot')
       .map(item => {
-        const quad = quadOf(item)
+        const quad = quadOf(item, CELL)
         return { frame: item, quad, area: quadArea(quad) }
       })
   })
-  const selectionQuad = $derived(frame ? quadOf(frame) : null)
+  const selectionQuad = $derived(frame ? quadOf(frame, bounds) : null)
   const flat = $derived(chosenLayer ? affineForChain(chosenLayer.transform ?? []) : null)
   const rotationValue = $derived(flat ? Math.round(Math.atan2(flat[1], flat[0]) * 1800 / Math.PI) / 10 : 0)
-  /** The handle's own place in the layer's 1000-unit frame. @param {string} key */
-  const handleOf = key => /** @type {[number, number]} */ ([
-    key.includes('w') ? 0 : key.includes('e') ? 1000 : 500,
-    key.includes('n') ? 0 : key.includes('s') ? 1000 : 500,
-  ])
-  /** The point a resize handle holds still, in the layer's own frame. @param {string} key */
-  const anchorOf = key => /** @type {[number, number]} */ ([
-    key.includes('w') ? 1000 : key.includes('e') ? 0 : 500,
-    key.includes('n') ? 1000 : key.includes('s') ? 0 : 500,
-  ])
+  /** The handle's own place in the layer's frame. @param {string} key @param {number[]} bounds */
+  const handleOf = (key, bounds) => pointIn(bounds,
+    key.includes('w') ? 0 : key.includes('e') ? 1 : 0.5,
+    key.includes('n') ? 0 : key.includes('s') ? 1 : 0.5)
+  /** The point a resize handle holds still, in the layer's frame. @param {string} key @param {number[]} bounds */
+  const anchorOf = (key, bounds) => pointIn(bounds,
+    key.includes('w') ? 1 : key.includes('e') ? 0 : 0.5,
+    key.includes('n') ? 1 : key.includes('s') ? 0 : 0.5)
   /** @typedef {{ gesture: number, kind: 'move' | 'scale' | 'rotate', id: string, svg: SVGSVGElement, p0: { x: number, y: number }, center: [number, number], place: number[], base: import('../document/index.js').Chain, inverseFull: number[] | null, corner: string, handle: [number, number], anchor: [number, number], q0: [number, number], perPixel: number, a0: number }} Drag */
   /** @type {Drag | null} */
   let docDrag = $state.raw(null)
@@ -215,15 +245,15 @@
       applyCanvas([1, 0, 0, 1, dx, dy], base, chosenLayer.id, frame.place, `key-${key}`)
       return
     }
-    const center = 500
+    const center = pointIn(inkBounds(chosenLayer, frame), 0.5, 0.5)
     if (key === '+' || key === '=' || key === '-') {
       const scale = key === '-' ? 1 / 1.05 : 1.05
-      applyLocal([scale, 0, 0, scale, center * (1 - scale), center * (1 - scale)], base, chosenLayer.id, `key-${key}`)
+      applyLocal([scale, 0, 0, scale, center[0] * (1 - scale), center[1] * (1 - scale)], base, chosenLayer.id, `key-${key}`)
       return
     }
     const degrees = key === '[' ? -(event.shiftKey ? 15 : 5) : event.shiftKey ? 15 : 5
     const radians = degrees * Math.PI / 180, cos = Math.cos(radians), sin = Math.sin(radians)
-    applyLocal([cos, sin, -sin, cos, center - cos * center + sin * center, center - sin * center - cos * center], base, chosenLayer.id, `key-${key}`)
+    applyLocal([cos, sin, -sin, cos, center[0] - cos * center[0] + sin * center[1], center[1] - sin * center[0] - cos * center[1]], base, chosenLayer.id, `key-${key}`)
   }
   /** @param {string} id */
   function chooseLayer(id) {
@@ -250,11 +280,12 @@
    * Begin a canvas gesture. The frame supplies the map from the canvas into the layer's own units,
    * so the same gesture means the same thing on a nested layer and on a root one.
    * @param {PointerEvent} event
-   * @param {{ kind: 'move' | 'scale' | 'rotate', node: import('../document/model.js').Node, frame: import('../document/frames.js').LayerFrame, corner?: string }} start
+   * @param {{ kind: 'move' | 'scale' | 'rotate', node: import('../document/model.js').Node, frame: import('../document/frames.js').LayerFrame, corner?: string, bounds?: [number, number, number, number] }} start
    */
   function startDrag(event, start) {
     const { kind, node, frame: at } = start
     if (!editable || !session || !at.supported) return
+    const bounds = start.bounds ?? inkBounds(node, at)
     if (event.button !== 0 || !event.isPrimary) return
     event.preventDefault()
     event.stopPropagation()
@@ -265,14 +296,14 @@
     if (!p) return
     const base = node.transform ?? []
     if (!affineForChain(base)) return
-    const center = applyAffine(at.full, [500, 500])
+    const center = applyAffine(at.full, pointIn(bounds, 0.5, 0.5))
     const inverseFull = invertAffine(at.full)
     const q0 = inverseFull ? applyAffine(inverseFull, [p.x, p.y]) : [500, 500]
     const corner = start.corner ?? ''
     const matrix = svg.getScreenCTM()
     const perPixel = matrix?.a ? 1 / matrix.a : 1
     docDrag = { gesture: ++gesture, kind, id: node.id, svg, p0: { x: p.x, y: p.y }, center: [center[0], center[1]], place: at.place, base,
-      inverseFull, corner, handle: handleOf(corner), anchor: anchorOf(corner), q0: /** @type {[number, number]} */ ([q0[0], q0[1]]), perPixel,
+      inverseFull, corner, handle: handleOf(corner, bounds), anchor: anchorOf(corner, bounds), q0: /** @type {[number, number]} */ ([q0[0], q0[1]]), perPixel,
       a0: Math.atan2(p.y - center[1], p.x - center[0]) }
     svg.setPointerCapture?.(event.pointerId)
     svg.focus?.({ preventScroll: true })
@@ -414,8 +445,8 @@
                 {@const size = 32}
                 {@const part = chosenLayer.kind === 'component' ? chosenLayer.char : ''}
                 {@const points = selectionQuad.map(point => `${round(point[0])} ${round(point[1])}`).join(' ')}
-                {@const top = applyAffine(frame.full, [500, 0])}
-                {@const inward = applyAffine(frame.full, [500, 200])}
+                {@const top = applyAffine(frame.full, pointIn(bounds, 0.5, 0))}
+                {@const inward = applyAffine(frame.full, pointIn(bounds, 0.5, 0.2))}
                 {@const span = Math.hypot(top[0] - inward[0], top[1] - inward[1]) || 1}
                 {@const turned = [top[0] + (top[0] - inward[0]) / span * 80, top[1] + (top[1] - inward[1]) / span * 80]}
                 <!-- The turn grip stays inside the canvas, so a layer against an edge keeps it reachable. -->
@@ -424,19 +455,19 @@
                   <polygon class="select-box" points={points} />
                   <polygon class="select-grip" points={points} role="button" tabindex="-1"
                     aria-label={t('ids.adjust.move', { part })}
-                    onpointerdown={event => startDrag(event, { kind: 'move', node: chosenLayer, frame })} />
+                    onpointerdown={event => startDrag(event, { kind: 'move', node: chosenLayer, frame, bounds })} />
                   <line class="turn-line" x1={top[0]} y1={top[1]} x2={turn[0]} y2={turn[1]} />
-                  {#each HANDLES as [key, hx, hy] (key)}
-                    {@const at = applyAffine(frame.full, [hx, hy])}
+                  {#each HANDLES as [key, fx, fy] (key)}
+                    {@const at = applyAffine(frame.full, pointIn(bounds, fx, fy))}
                     <g class={`handle resize ${key}`} role="button" tabindex="-1" aria-label={`${t('ids.adjust.scale', { part })} ${key.toUpperCase()}`}
-                      onpointerdown={event => startDrag(event, { kind: 'scale', node: chosenLayer, frame, corner: key })}>
+                      onpointerdown={event => startDrag(event, { kind: 'scale', node: chosenLayer, frame, corner: key, bounds })}>
                       <circle class="handle-hit" cx={at[0]} cy={at[1]} r={size * 0.95} fill="transparent" />
                       <rect class="handle-face" x={at[0] - size / 2} y={at[1] - size / 2} width={size} height={size} rx={size / 5} />
                     </g>
                   {/each}
                   <g class="handle rotate" role="slider" tabindex="-1" aria-label={t('ids.adjust.rotate', { part })}
                     aria-valuemin="-180" aria-valuemax="180" aria-valuenow={rotationValue}
-                    onpointerdown={event => startDrag(event, { kind: 'rotate', node: chosenLayer, frame })}>
+                    onpointerdown={event => startDrag(event, { kind: 'rotate', node: chosenLayer, frame, bounds })}>
                     <circle class="handle-hit" cx={turn[0]} cy={turn[1]} r={size * 0.9} fill="transparent" />
                     <circle class="handle-face" cx={turn[0]} cy={turn[1]} r={size * 0.55} />
                   </g>
@@ -491,7 +522,7 @@
   .ids-preview-spinner{flex:none;width:11px;height:11px;border:1.5px solid color-mix(in srgb,var(--_muted) 28%,transparent);border-top-color:var(--_accent);border-radius:50%;animation:ids-preview-spin .8s linear infinite}
   .ids-preview-meta{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px 8px;min-height:22px;max-width:100%}
   .ids-preview-small{width:20px;height:20px;color:var(--_ink)}
-  .ids-preview-detail{font:11px "IDS New Korean","IDS Shuishu",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
+  .ids-preview-detail{font:11px "IDS New Korean","IDS Shuishu","IDS Jurchen",ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted)}
   .frame{position:relative;width:100%;height:100%}
   .layer{position:absolute;inset:0}
   .ids-preview-large .layer{inset:5%}

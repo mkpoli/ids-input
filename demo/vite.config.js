@@ -45,7 +45,7 @@ function lazyFallbackFont() {
 // engine reads it at.
 const ENGINE_DATA = fileURLToPath(new URL('../node_modules/@han-compose/composer/data/', import.meta.url))
 const ENGINE_OUTLINES = [
-  ...['tangut', 'bopomofo', 'new-korean', 'small-seal', 'shuishu', 'palette'].map(name => `sources/${name}/outlines.json.gz`),
+  ...['tangut', 'bopomofo', 'new-korean', 'small-seal', 'shuishu', 'jurchen', 'palette'].map(name => `sources/${name}/outlines.json.gz`),
   ...readdirSync(join(ENGINE_DATA, 'unicode/outlines')).map(file => `unicode/outlines/${file}`),
 ]
 const ENGINE_MODULE = '\0ids-engine-outlines'
