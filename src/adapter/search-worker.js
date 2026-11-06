@@ -6,6 +6,7 @@
 // `{ id, result }` or `{ id, error }`.
 import { sealTable, sealForms } from './seal-data.js'
 import { shuishuSequences } from './shuishu-data.js'
+import { jurchenSequences } from './jurchen-data.js'
 import { createSearch, readStructuralForms } from '../core/search.js'
 import { expandNumberedComponents, mergeIdsTables, parseIdsTable, parseLayers, readNumberedComponents, readText } from './babelstone.js'
 import { download } from '../core/retry.js'
@@ -14,8 +15,8 @@ import { download } from '../core/retry.js'
 let ready = null
 /** A file's response, refused unless it came back whole. @param {string} url */
 const get = async url => { const response = await download(url); if (!response.ok) throw new Error(`${url}: ${response.status}`); return response }
-/** @param {string} ids @param {string[] | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal @param {string | import('./shuishu-data.js').ShuishuData | undefined} shuishu */
-export async function load(ids, additionalIds, components, componentsText, forms, given, layers, layersText, smallSeal, shuishu) {
+/** @param {string} ids @param {string[] | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal @param {string | import('./shuishu-data.js').ShuishuData | undefined} shuishu @param {string | import('./jurchen-data.js').JurchenData | undefined} jurchen */
+export async function load(ids, additionalIds, components, componentsText, forms, given, layers, layersText, smallSeal, shuishu, jurchen) {
   const [text, extras, numbered, formsText, layerText] = await Promise.all([
     get(ids).then(readText),
     Promise.all((additionalIds ?? []).map(url => get(url).then(readText))),
@@ -25,16 +26,24 @@ export async function load(ids, additionalIds, components, componentsText, forms
     layersText !== undefined ? layersText : layers ? get(layers).then(readText).catch(() => '') : '',
   ])
   const doc = typeof smallSeal === 'string' ? JSON.parse(await readText(await get(smallSeal))) : smallSeal
-  // The Shuishu decompositions are editorial and run beside the sources; a failed file costs the
-  // search those descriptions only.
+  // The Shuishu and Jurchen decompositions are editorial and run beside the sources; a failed file
+  // costs the search those descriptions only.
   const shuiDoc = typeof shuishu === 'string'
     ? await get(shuishu).then(readText).then(JSON.parse).then(doc => (shuishuSequences(doc), doc)).catch(() => undefined) : shuishu
+  const jurDoc = typeof jurchen === 'string'
+    ? await get(jurchen).then(readText).then(JSON.parse).then(doc => (jurchenSequences(doc), doc)).catch(() => undefined) : jurchen
   const parts = readNumberedComponents(numbered)
   /** @type {Map<string, import('../core/decompose.js').Sequence[]>} */
   const merged = new Map(extras.reduce((found, extra) => mergeIdsTables(found, expandNumberedComponents(parseIdsTable(extra), parts)), expandNumberedComponents(parseIdsTable(text), parts)))
   if (doc) for (const [char, sequences] of sealTable(doc)) merged.set(char, sequences)
   try {
     if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
+      const had = merged.get(char) ?? []
+      merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
+    }
+  } catch { /* An unreadable decomposition file leaves the sources standing. */ }
+  try {
+    if (jurDoc) for (const [char, sequences] of jurchenSequences(jurDoc)) {
       const had = merged.get(char) ?? []
       merged.set(char, [...had, ...sequences.filter(own => !had.some(sequence => sequence.text === own.text))])
     }
@@ -50,9 +59,9 @@ export async function load(ids, additionalIds, components, componentsText, forms
   const search = createSearch(table, { forms: sealForms(formsText, doc), structuralForms: readStructuralForms(formsText) })
   return search
 }
-self.onmessage = async ({ data: { id, ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, query, limit, mode, componentLookup } }) => {
+self.onmessage = async ({ data: { id, ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen, query, limit, mode, componentLookup } }) => {
   try {
-    ready ??= load(ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu).catch(error => { ready = null; throw error })
+    ready ??= load(ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen).catch(error => { ready = null; throw error })
     const search = await ready
     self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit })
       : mode === 'unknown' ? search.unknownStructure(query, { limit })
