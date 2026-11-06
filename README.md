@@ -849,7 +849,7 @@ from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file 
 with the source font's design; they do not imitate a selected serif or handwritten face.
 
 The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
-Serif from the serif export, and Kaisho from the Kureedo export; `?composer=<url>` or
+Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
 
@@ -942,7 +942,8 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-parts.json`: its first-stroke column adapts Rime’s five-stroke dictionary (LGPL-3.0);
   source notices and licence texts are in `data/licences/`.
 - `fonts/`: Plangothic, Noto Sans CJK JP and BabelStone Han PUA subsets (about 490 KB together),
-  Noto Serif Tangut (1 MB), Kureedo (2.8 MB), Kureedo Label (23 KB) and GenZui Sans (2.3 MB); the
+  Noto Serif Tangut (1 MB), Zhuque Fangsong (4.8 MB), Zhuque Label (10 KB), Kureedo (2.8 MB), Kureedo
+  Label (23 KB) and GenZui Sans (2.3 MB); the
   BabelStone subset is under the Arphic Public License, the rest SIL Open Font License 1.1.
 - `data/tangut-outlines.json.gz`: Noto Serif Tangut outlines, SIL OFL 1.1
   (`fonts/OFL-NotoSerifTangut.txt`), with exact-description mappings from BabelStone Tangut IDS.
