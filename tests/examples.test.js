@@ -60,6 +60,14 @@ describe('the demo examples', () => {
             const value = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10, 百: 100, 千: 1000, 万: 10000 }[example.modern]
             expect(jurchen.parts.find(part => part.part === char)?.jurNumeric).toBe(value)
             expect(example.refs ?? group.refs).toContain(sourceNumber('jurchen-numeric'))
+          } else if ('source' in example && example.source === 'data/jurchen/ids.json') {
+            const ids = JSON.parse(readFileSync(new URL('../data/jurchen/ids.json', import.meta.url), 'utf8'))
+            expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
+            const jurchen = JSON.parse(gunzipSync(readFileSync(new URL('../data/jurchen.json.gz', import.meta.url))))
+            const part = jurchen.parts.find(part => part.part === char)
+            if ('reading' in example) expect(example.reading).toBe(part?.jurReading)
+            expect(example.refs).toContain(sourceNumber('jurchen-ids'))
+            expect(drawings.drawings[sequence]?.drawn.d.length).toBeGreaterThan(10)
           } else if ('source' in example && example.source === 'data/shuishu.json.gz') {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
