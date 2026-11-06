@@ -36,6 +36,20 @@ for (const fontStyle of ['sans', 'serif']) {
   })
 }
 
+for (const fontStyle of ['sans', 'serif']) {
+  it(`${fontStyle} tucks the part below close under the KRM top's bar`, async () => {
+    const { parts } = await compose(await source(), '⿳⺊冖人', { fontStyle, separate: true })
+    const [stem, roof, body] = parts
+    const end = part => part.box[1] + part.box[3]
+    // The lower part starts inside the roof's own height, above the ends of its legs.
+    expect(body.box[1]).toBeGreaterThan(roof.box[1])
+    expect(body.box[1]).toBeLessThan(end(roof))
+    // It still reaches the bottom of the face, and the top stays above it.
+    expect(end(body)).toBeGreaterThan(900)
+    expect(stem.box[1]).toBeLessThan(body.box[1])
+  })
+}
+
 it('keeps the Kaisho drawing free of the editorial Sans/Serif top', async () => {
   expect(componentParts('⿱⺊冖', undefined, 'kaisho')).toBeNull()
   const drawn = await compose(await source(), '⿳⺊冖人', { fontStyle: 'kaisho', separate: true })

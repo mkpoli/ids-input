@@ -106,6 +106,12 @@ const COVER_GAP = -24
 // How much of a middle 冖's width the part above it must span before the cover closes on it: a
 // narrow part would have the bar close on a post (⿳卜冖人).
 const COVER_CLOSE_SHARE = 0.5
+// The KRM ⿱⺊冖 top. `bar` is where the underside of the roof's bar falls, as a share of the roof's ink
+// height from its top; a brush roof's left tip stands well above its bar. `height` is the share of the
+// whole the top takes, where the face's own band leaves ⺊ too short. `KRM_GAP` is how far 人's apex
+// stands below the bar, as a share of the whole: the manuscript tucks it close under the roof.
+const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null } }
+const KRM_GAP = 0.035
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
 const COVER_HEAD = 0.15, COVER_SPAN = 0.9
@@ -2049,6 +2055,22 @@ export class Composer {
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
     if (this?.partial) return
+    if (op === '⿱' && Array.isArray(children[0]) && keyOf(children[0]) === '⿱⺊冖' && groups[0].length === 2 && KRM_TOP[this.fontStyle]) {
+      const { bar, height } = KRM_TOP[this.fontStyle]
+      const ink = inkBounds(groups[0]), lower = inkBounds(groups[1]), whole = ink[3] - lower[1]
+      if (height) {
+        const bottom = ink[3] - height * whole
+        const lengthen = y => ink[3] + (y - ink[3]) * (ink[3] - bottom) / (ink[3] - ink[1])
+        for (const p of groups[0]) p.target = [p.target[0], lengthen(p.target[1]), p.target[2], lengthen(p.target[3])]
+      }
+      const roof = inkBounds([groups[0][1]])
+      const top = roof[3] - bar * (roof[3] - roof[1]) - KRM_GAP * whole
+      if (top > lower[3] || height) {
+        const raise = y => lower[1] + (y - lower[1]) * (top - lower[1]) / (lower[3] - lower[1])
+        for (const p of groups[1]) p.target = [p.target[0], raise(p.target[1]), p.target[2], raise(p.target[3])]
+      }
+      return
+    }
     const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
     const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
       : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
