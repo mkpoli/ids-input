@@ -1104,7 +1104,7 @@ reused as whole glyphs); 17 of the common kanji are whole glyphs on both sides; 
 composed by this site, so their scores include composition. The rest compare type style and
 variant choice. The page explains how the three numbers are measured and why the heavier
 typeface lowers the first two. The gallery shows 48 cards at a time, with Show more for the rest,
-and filters by set and structure. The drawings are a snapshot of the 2026-10-29 run in
+and filters by set and structure. The drawings are a snapshot of the 2026-11-06 run in
 `demo/lib/comparison.json`; after a composer change, rebuild it with
 `bun scripts/build_comparison.mjs`. GlyphWiki's glyph data is free to use and the KAGE engine is
 GPL-3.0. The About dialog links the page.
