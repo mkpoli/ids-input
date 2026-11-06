@@ -124,9 +124,9 @@
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
-  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
-  const previewAt = (at, split, style) => {
-    const key = `${at}\0${split ? '1' : '0'}\0${style}`
+  /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
+  const previewAt = (at, split, style, owner = '') => {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
     if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
@@ -187,15 +187,16 @@
    * default export. A sequence the face cannot compose still draws, and an example that names a
    * character draws that character when the face has it. @param {string} at @param {boolean} split
    * @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style
+   * @param {string} [owner] A view with its own worker, so the editor's drawings do not cancel its own.
    */
-  function previewFor(at, split, style) {
-    const key = `${at}\0${split ? '1' : '0'}\0${style}`
+  function previewFor(at, split, style, owner = '') {
+    const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
     const known = previewsWithExamples.get(key)
     if (known) return known
-    const composed = previewAt(at, split, style)
-    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif')
+    const composed = previewAt(at, split, style, owner)
+    const serif = previewAt(COMPOSER_BASES.serif, split, 'serif', owner)
     const sans = sansPreviewAt(split)
-    const defaultFace = exportUrl(at) === preparedBase && style === 'sans'
+    const defaultFace = !owner && exportUrl(at) === preparedBase && style === 'sans'
     const draw = defaultFace ? sans : composed
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
@@ -1430,7 +1431,7 @@
 <ReportDialog bind:open={reportOpen} {endpoint} sequence={editor.whole} link={linkTo(editor.whole, location, currentDocument())}
   {drawing} {scopes} {slots} {emoji} {cut} {cutLeaf} version={documentTick} preview={() => work?.querySelector('#output-panel .ids-preview') ?? null} workspace={reportWorkspace}
   {locale} {theme} {face} composer={base} {t} />
-<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle)} sequence={editor.whole} {t}
+<LayerDialog bind:open={layerOpen} session={currentSession()} preview={previewFor(base, true, componentStyle, 'layers')} sequence={editor.whole} {t}
   chosenPath={editor.chosen} structure={char => adapter.structure(char)} onchange={layerChanged}
   onchoose={path => editor.choose(path, { toggle: false })} onstructure={layerStructureChanged}
   oncanvas={() => { layerOpen = false; adjusting = true }} />
