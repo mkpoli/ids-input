@@ -11,10 +11,7 @@ export const OG_HEIGHT = 630
 
 /** The code point of `char`, written `U+93B6`. @param {string} char */
 /** @param {string} char */
-export const codePoint = char => {
-  const point = char.codePointAt(0)
-  return point === undefined ? '' : `U+${point.toString(16).toUpperCase().padStart(4, '0')}`
-}
+export const codePoint = char => [...char].map(unit => `U+${(unit.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(4, '0')}`).join(' ')
 
 /** The workshop's sequence URL: the path, or `?ids=` for text the path cannot carry, `.` and `/`
  *  included and text the IDS parser rejects. A share link builds its address the same way.
@@ -54,36 +51,45 @@ export function routeFor(url, defaultSequence) {
 }
 
 /**
- * The title, description, tags and image of a shared sequence. `char` is the character the card
- * draws and names, so the page and its image say the same thing.
- * @param {{ sequence: string, char: string | null, origin: string }} share
+ * The title, description, tags and image of a shared sequence or document. `char` is the character
+ * the card draws and names, so the page and its image say the same thing; `doc` is the document
+ * token, and `documentTitle` the title it carries.
+ * @param {{ sequence: string, char: string | null, origin: string, doc?: string | null, documentTitle?: string | null }} share
  */
-export function metaFor({ sequence, char, origin }) {
-  const url = `${origin}${pathOf(sequence)}`
-  const title = char ? `${sequence} = ${char} (${codePoint(char)}) — IDS Workshop` : `${sequence} — IDS Workshop`
-  const description = char
-    ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
-    : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
-  const image = `${origin}/og/${encodeURIComponent(sequence)}.png?v=${CARD_VERSION}`
+export function metaFor({ sequence, char, origin, doc = '', documentTitle = null }) {
+  const url = new URL(pathOf(sequence), origin)
+  if (doc) url.searchParams.set('doc', doc)
+  const image = new URL(`/og/${encodeURIComponent(sequence)}.png`, origin)
+  image.searchParams.set('v', CARD_VERSION)
+  if (doc) image.searchParams.set('doc', doc)
+  const named = documentTitle || (char ? `${sequence} = ${char} (${codePoint(char)})` : sequence)
+  const title = `${named} — IDS Workshop`
+  const description = documentTitle
+    ? `The IDS document ${documentTitle} (${sequence}), shared from IDS Workshop.`
+    : doc
+      ? `The ideographic description sequence ${sequence}, shared as a document from IDS Workshop.`
+      : char
+        ? `The ideographic description sequence ${sequence} composes ${char} (${codePoint(char)}). Drawn by IDS Workshop.`
+        : `The ideographic description sequence ${sequence}, composed by IDS Workshop.`
   return {
     title,
     tags: [
       `<meta name="description" content="${escaped(description)}">`,
-      `<link rel="canonical" href="${escaped(url)}">`,
+      `<link rel="canonical" href="${escaped(url.href)}">`,
       `<meta property="og:type" content="article">`,
       `<meta property="og:site_name" content="IDS Workshop">`,
-      `<meta property="og:url" content="${escaped(url)}">`,
+      `<meta property="og:url" content="${escaped(url.href)}">`,
       `<meta property="og:title" content="${escaped(title)}">`,
       `<meta property="og:description" content="${escaped(description)}">`,
-      `<meta property="og:image" content="${escaped(image)}">`,
+      `<meta property="og:image" content="${escaped(image.href)}">`,
       `<meta property="og:image:type" content="image/png">`,
       `<meta property="og:image:width" content="${OG_WIDTH}">`,
       `<meta property="og:image:height" content="${OG_HEIGHT}">`,
-      `<meta property="og:image:alt" content="${escaped(char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
+      `<meta property="og:image:alt" content="${escaped(documentTitle ? `The IDS document ${documentTitle}, the sequence ${sequence}` : doc ? `The sequence ${sequence} shared as a document` : char ? `The sequence ${sequence} composed as ${char} (${codePoint(char)})` : `The sequence ${sequence} composed`)}">`,
       `<meta name="twitter:card" content="summary_large_image">`,
       `<meta name="twitter:title" content="${escaped(title)}">`,
       `<meta name="twitter:description" content="${escaped(description)}">`,
-      `<meta name="twitter:image" content="${escaped(image)}">`,
+      `<meta name="twitter:image" content="${escaped(image.href)}">`,
     ].join('\n    '),
   }
 }

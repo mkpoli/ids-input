@@ -4,26 +4,40 @@ A design for one merged catalogue of components and descriptions, fusing BabelSt
 zi.tools forms and this project's own rows, so that a character can be built from parts that no
 Unicode block names.
 
-Status: design only. Nothing here is built yet; the artifact, the build script and the adapter
-option described below do not exist.
+Status: the artifact and its build script exist (`data/ids-corpus.json.gz`,
+`scripts/build_ids_corpus.mjs`); the adapter option does not, so no host loads the file yet. What is
+built is the first increment: BabelStone and the CHISE UCS files, with every CHISE entity still
+unresolved.
 
 ## Why
 
 Three gaps motivate it.
 
 - **5,319 ideographs have no description.** BabelStone describes 97,680 of the 102,999 assigned in
-  Unicode 18.0. CHISE supplies a real decomposition for 4,379 of the remainder; 940 stay unaddressed.
+  Unicode 18.0's unified and compatibility ideograph blocks. CHISE describes 5,214 of the remainder;
+  105 stay undescribed by either.
 - **Some sources name parts that have no code point.** CHISE writes `⿸虍&GT-K01666;`: the field over
   男 is a glyph of the CHISE ontology, not a character. Nothing in the current data can hold it.
 - **Scripts with whole characters and no named parts.** Small Seal and Shuishu have outlines for
   their characters but no component vocabulary, so they cannot be composed from parts at all.
 
+Wikisource transcribers meet these gaps in practice: a printed character nobody encoded, which they
+need a description to render in place of. Fish bowl's English Wikisource
+[user page](https://en.wikisource.org/wiki/User:Fish_bowl) keeps their running list of the places
+they met: a state cell such as `unify (39)`, `?unify?`, `error` or `accepted`, or none, the character
+the place should show, the IDS with the doubtful part marked where one is doubtful, the page or book
+needing it, and where a case is decided a GlyphWiki form. A draft template there would take the IDS,
+the character and a UCV number or a `moe=`, `ws=` or `img=` code, filed as similar to
+[Template:Sinogram](https://en.wikisource.org/wiki/Template:Sinogram) and
+[Template:參](https://zh.wikisource.org/wiki/Template:%E5%8F%82) (now
+[Template:另2](https://zh.wikisource.org/wiki/Template:%E5%8F%A62)).
+
 ## Licence, first
 
-The merged artifact would be **GPL-2.0-or-later**, because CHISE's IDS files and its ontology are
-GPL and their rows would be inside it. The package stays MIT: the corpus is an optional artifact a
-host loads the way it already loads `small-seal.json.gz`, and a host that cannot take GPL does not
-pass it. Every row carries provenance, so a GPL row is never mistaken for an editorial one.
+The artifact is **GPL-2.0-or-later**, because CHISE's IDS rows are inside it and CHISE-IDS is GPL.
+The package stays MIT: the corpus is an optional artifact a host loads the way it already loads
+`small-seal.json.gz`, and a host that cannot take GPL does not pass it. Every row carries provenance
+and the file states the terms, so a GPL row is never mistaken for one of this project's own.
 
 This is a real consequence, not a formality. It is the decision that gates the rest.
 
@@ -51,13 +65,17 @@ A CHISE name resolves through the pinned ontology, never by parsing its prefix. 
 ## Records
 
 One artifact, `data/ids-corpus.json.gz`, with columnar tables in the shape `ids-parts.json` already
-uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, `glyphs`, plus `sources`,
-`provenance`, `pua` and `counts`.
+uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, plus `sources`, `provenance`,
+`pua` and `counts`. Outlines stay where they already live, so the corpus carries no `glyphs` table.
 
 Every description row carries `subject` (a cid), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`
-(source, alternative, apparent, derived, editorial) and a `status` (ready, unresolved, unsupported,
-empty). A row is never invented: an unresolved designator stays unresolved rather than becoming `？`.
+(all of them `source` today; `alternative`, `apparent`, `derived` and `editorial` are the rest of
+the vocabulary) and a `status` (ready, unresolved, unsupported, empty). A row is never invented: an
+unresolved designator stays unresolved rather than becoming `？`, and an IDS a source gives stays in
+`text` while its unencoded leaves are tokenised in `resolved`, since both are what a transcriber
+renders. BabelStone lines without a region tag are the exception: the parse skips them, and with them
+any subject they alone describe.
 
 ## Merge
 
@@ -86,8 +104,10 @@ one leaf, which unites `bsp:22`, `chise:CDP-8BBF` and `chise:GT-K00125` under on
 
 ## First increment
 
-A build script limited to the Basic and Compatibility CHISE files (about 21,000 descriptions), the
-artifact, the ledger and equivalence inputs, a pinned-source manifest, this note, and tests that
-every `ready` row parses and that a rebuild reproduces the committed bytes.
+Built: `data/ids-corpus.json.gz` from BabelStone and the eighteen CHISE files (102,894 CHISE rows
+beside 108,425 BabelStone ones), `data/chise-sources.json` as the pinned-source manifest,
+`data/ids-corpus-sources.tar.gz` as the offered source, `data/COPYING-chise-ids.txt`, and a check
+that every `ready` row parses and that `bun scripts/build_ids_corpus.mjs --check` reproduces the
+committed bytes.
 
 Out of scope for it: outlines, the webfont, the palette and adapter wiring.

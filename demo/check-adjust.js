@@ -75,7 +75,8 @@ try {
       mkdirSync(process.env.IDS_ADJUST_SHOTS, { recursive: true })
       await page.locator('.ids-preview').screenshot({ path: `${process.env.IDS_ADJUST_SHOTS}/adjust-${scheme}.png` })
     }
-    // Export the scoped drawing, not the old merged drawing.
+    // Export the scoped drawing, not the old merged drawing; the default PNG is not what this reads.
+    await page.getByRole('radio', { name: 'SVG', exact: true }).click()
     const downloadPromise = page.waitForEvent('download')
     await page.getByRole('button', { name: /Save SVG/i }).click()
     const download = await downloadPromise

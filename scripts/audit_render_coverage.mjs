@@ -1,5 +1,5 @@
 // Exercise the preview worker for every accepted non-private scalar.
-// bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]
+// bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]
 import { mkdir, readFile, writeFile, rename } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
@@ -11,7 +11,7 @@ import { COMPOSER_BASES } from '../demo/lib/composer.js'
 import { coverageSources } from './lib/coverage-sources.mjs'
 
 const [cacheArg, output, style = 'sans'] = process.argv.slice(2)
-if (!cacheArg || !output || !COMPOSER_BASES[style]) throw Error('Usage: bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]')
+if (!cacheArg || !output || !COMPOSER_BASES[style]) throw Error('Usage: bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]')
 const base = COMPOSER_BASES[style], cache = resolve(cacheArg)
 await mkdir(cache, { recursive: true })
 const digest = bytes => createHash('sha256').update(bytes).digest('hex')

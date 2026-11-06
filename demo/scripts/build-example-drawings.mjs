@@ -10,6 +10,7 @@ import { hasTangut, tangutSource } from '../../src/composer/tangut.js'
 import { hasBopomofo, bopomofoSource } from '../../src/composer/bopomofo.js'
 import { hasSmallSeal, smallSealSource } from '../../src/composer/small-seal.js'
 import { hasShuishu, shuishuSource } from '../../src/composer/shuishu.js'
+import { hasJurchen, jurchenSource } from '../../src/composer/jurchen.js'
 import { onlyBundled } from '../../src/composer/local.js'
 import { bundledSource } from '../../src/composer/bundled.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
@@ -25,6 +26,7 @@ const loadTangut = async () => JSON.parse(gunzipSync(readFileSync(new URL('../..
 const tangut = tangutSource({ load: loadTangut })
 const mixed = tangutSource({ load: loadTangut, fallback: source })
 const loadShuishu = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/shuishu-outlines.json.gz', import.meta.url))))
+const loadJurchen = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/jurchen-outlines.json.gz', import.meta.url))))
 const loadBopomofo = async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/bopomofo-outlines.json.gz', import.meta.url))))
 const bopomofoSources = new Map()
 await source.ready()
@@ -40,6 +42,7 @@ for (const example of EXAMPLES) {
     }
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
+    if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
     const drawn = await compose(selected, example.char || example.sequence)
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)

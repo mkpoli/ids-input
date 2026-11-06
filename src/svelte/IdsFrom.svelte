@@ -17,6 +17,7 @@
   import { DEPTH, ROOTS, decomposable, lookupChar, namedParts, roots, searchParts, tokens, treeKey, unencoded, variants } from '../core/decompose.js'
   import { createLookup } from './lookup.svelte.js'
   import { translator } from './i18n.js'
+  import { watchFallback } from './fallback-font.js'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
@@ -53,6 +54,7 @@
   /** @type {number | null} */ let swapAt = $state(null)
   let live = $state('')
   /** @type {HTMLElement | null} */ let tree = $state(null)
+  $effect(() => { if (tree) return watchFallback(tree) })
   /** @type {HTMLInputElement | null} */ let input = $state(null)
 
   const typed = $derived(roots(text))
@@ -355,7 +357,7 @@
     --_surface-selected:var(--ids-surface-selected,light-dark(#eeeef3,#26262d));--_accent:var(--ids-accent,light-dark(#2944c7,#8ea8ff));
     --_accent-light:var(--ids-accent-light,light-dark(#e9edfd,#232c4c));--_focus:var(--ids-focus,light-dark(#2944c7,#8ea8ff));
     --_fault:var(--ids-fault,light-dark(#b42318,#ff8a80));
-    --_font:var(--ids-font,"IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
+    --_font:var(--ids-font,"IDS Numbered","IDS Strokes","IDS Seal","IDS Parts","IDS Tangut","IDS New Korean","IDS Shuishu","IDS Jurchen","IDS Operators","Noto Sans CJK JP","Noto Sans JP","Hiragino Sans","Yu Gothic","Microsoft YaHei","PingFang SC",var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);
     position:relative;display:flex;flex-direction:column;gap:6px;min-width:0;color:var(--_ink)}
   :where(.ids-from) :is(button,input){font:inherit;color:inherit;border:1px solid var(--_line);border-radius:6px;background:var(--_surface)}
   :where(.ids-from) input{border-color:var(--_control-border)}

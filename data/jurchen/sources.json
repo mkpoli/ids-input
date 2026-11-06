@@ -1,0 +1,41 @@
+{
+  "read": "2026-11-05",
+  "documents": [
+    {
+      "file": "JurchenSources-18.0.0.txt",
+      "kind": "character records",
+      "title": "JurchenSources.txt, Unicode Character Database 18.0.0",
+      "url": "https://www.unicode.org/Public/18.0.0/ucd/JurchenSources.txt",
+      "terms": "Unicode Terms of Use, https://www.unicode.org/terms_of_use.html",
+      "sha256": "e4135d2776ff18232dfe2d59b71ac0775f74f8704f141527079b9b8d6832cdaf"
+    },
+    {
+      "file": "Alari_jurc.dict.yaml",
+      "kind": "stroke codes",
+      "title": "Alari Jurchen Rime table, version 2026.05.29",
+      "authors": [
+        "Yehenara Ayasala",
+        "Sulfa",
+        "Tunggiya Uju"
+      ],
+      "url": "https://dorontu.com/#/cloud",
+      "path": "女真文资料/女真文rime输入法",
+      "terms": "none stated; published for readers to download and use",
+      "sha256": "16952da9ea874bf2418fef63febdc8fca3e9322adab97c4a38181b0dd684bca4"
+    },
+    {
+      "file": "AlariXuwasunJurchen-Regular.otf",
+      "kind": "font",
+      "title": "Alari Xuwasun Jurchen, public beta, name table version 0.000 of 2026-10-12",
+      "authors": [
+        "Sulfa",
+        "Dooran",
+        "Raxon7"
+      ],
+      "url": "https://dorontu.com/#/cloud",
+      "path": "女真文资料/女真文字体",
+      "terms": "SIL OFL 1.1, stated in the font's name table",
+      "sha256": "41c71fc276e80044034e9719779c7cbcb2ec9f4329e49eae9e37d27b06469df7"
+    }
+  ]
+}

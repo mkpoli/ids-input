@@ -59,6 +59,9 @@ BabelStone IDS (Ideographic Description Sequences for CJK Unified Ideographs) by
 BabelStone's numbered components: for each `{n}` IDS.TXT's note 6 names, the shape it describes and
 the IDS fragment that writes it out (`{22}`, outside of 与, as `⿺㇉一`). 121 components, 52 with a
 fragment, 4.6 KB; a component the note leaves `？` keeps its number in the descriptions that use it.
+The parts palette carries all 121 as rows, marked with their fragment, description, PUA glyph and
+whether they are read-only; the 52 with a fragment take the fragment's stroke count and first stroke,
+and the 69 without one take the PUA glyph BabelStone Han PUA draws for the code point note 6 gives.
 `{12}`, the right of 龍, is `⿷己三` here: the note leaves it unrepresentable, and 龍's description
 names its two halves, 𦚏 and ⿷己三.
 
@@ -74,6 +77,17 @@ adapter reads the file with `babelStoneAdapter({ components })`; the description
 searches name the parts rather than BabelStone's numbers. Built by
 `scripts/build_ids_components.py`, which fetches IDS.TXT and leaves the `{12}` and `{82}` entries in
 its own header note.
+
+## `numbered-pua-outlines.json.gz`
+
+The 69 numbered components IDS.TXT note 6 leaves `？` have a PUA code point in the same note 6 line
+but no IDS fragment. BabelStone Han PUA 1.472 draws them; this file records their outlines, and
+`fonts/IDSNumbered.woff2` cuts the same 69 from the font for the palette's text. The document records
+the font name, Arphic Public License and source SHA-256; the PUA code points are not stable across
+font versions, so the palette's `glyph` column is tied to that version. Built by
+`uv run scripts/build_numbered_pua.py`; the outlines are merged by
+`scripts/build_palette_outlines.py`, and the font is under the Arphic Public License
+(`fonts/LICENSE-BabelStoneHanPUA.txt`).
 
 ## `ids-project.tsv.gz`
 
@@ -191,23 +205,29 @@ signed off. The shapes derive from those fonts; Noto's SIL OFL 1.1 and Jigmo's C
 
 The parts palette (難輸入部件): every component BabelStone IDS names, with how many ideographs use
 each, its stroke count, the class of its first stroke, and whether it is common, hard to type or a
-CJK stroke. 10,683 Han entries (2,935 common, 7,710 hard to type, 38 strokes) plus 768 Tangut
-components; 292 KB, 54 KB gzipped. Built by `scripts/build_ids_parts.py` followed by
-`bun run build:subtrees`; see the rules below.
+CJK stroke. 10,805 Han entries (2,935 common, 7,832 hard to type, 38 strokes; 121 of the hard
+entries are BabelStone's numbered components) plus 768 Tangut components; 293 KB, 57 KB gzipped.
+Built by `scripts/build_ids_parts.py` followed by `bun run build:subtrees`; see the rules below.
 
 The panel's Common view lists the parts 50 or more ideographs use, judged by real IDS use rather than
-the kind column; a host part without a use count falls back to its c kind. Its stroke groups list
-every common and hard-to-type part of the chosen count, with counts from 23 strokes up sharing one
-chip.
+the kind column; a host part without a use count falls back to its c kind. BabelStone's numbered
+components stay out of Common and appear under their stroke counts. Its stroke groups list every
+common and hard-to-type part of the chosen count, with counts from 23 strokes up sharing one chip.
 
 - Licence: **LGPL-3.0** for the Rime-derived `first` column. The source authors and the LGPL/GPL
   texts are in `data/licences/`. The other columns use public-domain sequences, MIT-licensed
   decomposition choices, Unicode data and explicit radical counts.
-- Format: `columns` `[part, uses, strokes, derived, first, kind]` and one row per part, most used
-  first; `kind` is `c` (common), `d` (hard to type) or `s` (CJK stroke).
+- Format: `columns` `[part, uses, strokes, derived, first, kind, fragment, description, readonly,
+  glyph]` and one row per part, most used first; `kind` is `c` (common), `d` (hard to type) or `s`
+  (CJK stroke). `fragment`, `description`, `readonly` and `glyph` belong to the numbered components:
+  the IDS fragment note 6 gives, where it occurs, whether the palette lists it without inserting it,
+  and the PUA character BabelStone Han PUA draws for it. The 69 components note 6 leaves `？` have a
+  glyph and no stroke count, so they sit under `?`; the 52 with a fragment have a count and no glyph.
 - `uses`: the ideographs whose descriptions name the part, counted from the descriptions with
   BabelStone's numbered components written out as `data/ids-components.tsv` gives them, so 書 counts
-  聿. The three components only the write-out names, ⺂, ⺕ and 彐, are parts too.
+  聿. The three components only the write-out names, ⺂, ⺕ and 彐, are parts too. A numbered
+  component's own `uses` counts the source spelling, so `{42}` counts the descriptions that name it,
+  not the 彐 those descriptions read as.
 
 The displayed Common palette places traditional, simplified and positional forms
 from `component-forms.tsv` next to one another. Each family starts where its
@@ -253,7 +273,7 @@ Notes on the columns:
 
 ## `sketch-parts.json.gz`
 
-The drawing search's prepared glyph shapes: the palette's 11,417 parts, each fitted to the 40×40
+The drawing search's prepared glyph shapes: the 11,417 parts the sketch builder prepares, each fitted to the 40×40
 square twice (stretched and with its own proportions) and packed as 200 bytes of bits; 1.8 MB
 gzipped. Format:
 
@@ -601,6 +621,44 @@ decomposition file costs those descriptions only.
 `scripts/build_shuishu.py` refuses an entry with another operator shape, a part outside the block
 or the character itself.
 
+
+## Jurchen
+
+`jurchen.json.gz` is the palette index for Unicode 18.0's 914 Jurchen characters and 51 radicals, and
+`jurchen-outlines.json.gz` holds their 965 outlines.
+
+| Field | Source |
+| --- | --- |
+| `jurRadical`, `strokes`, `jurSource`, `jurReading`, `jurNumeric` | [`JurchenSources.txt`](https://www.unicode.org/Public/18.0.0/ucd/JurchenSources.txt), [Unicode Terms of Use](https://www.unicode.org/terms_of_use.html). The readings are 金啓孮, 『女真文辞典』 (文物出版社, 1984), one entry per character; 806 characters have one. |
+| `jurCode` | Alari Jurchen Rime table `Alari_jurc.dict.yaml`, version 2026.05.29, by Yehenara Ayasala, Sulfa and Tunggiya Uju, [朝花·夕拾 電子藏書閣](https://dorontu.com/#/cloud), folder 女真文资料/女真文rime输入法. It states no licence and is published for readers to download and use. Its header says Jurchen has no common stroke order and its codes may not be unique. |
+| Outlines | Alari Xuwasun Jurchen, public beta of 2026-10-12, by Sulfa, Dooran and Raxon7, same site, folder 女真文资料/女真文字体, SIL OFL 1.1. |
+
+Unicode gives a radical no stroke count, so `strokes` is null on the 51 radicals; a radical's number
+is its place in the block. Radical and stroke values come from `kJURC_RSUnicode`, whose second number
+is the total stroke count.
+
+The stroke definitions are from Sulfa and Ayasala's article
+[「没人给女真文做字体和输入法？那我们自己来」](https://mp.weixin.qq.com/s/YaUP6bq4xt_18ywlRxCQpA) (WeChat, read
+from a copy of its text; date not seen), which also says the font is a Fangsong restyling of the
+encoding proposal's forms, so it does not reproduce an inscription or manuscript. The site was found
+through 柳突破's [Bilibili video](https://www.bilibili.com/video/BV1odec6pEqp/) of 2026-09-16.
+
+The 537 parts with `jurGroup: 'variant'` are the table's and the font's variant sequences through
+U+FE00–U+FE04. They are Alari's convention: `StandardizedVariants.txt` of Unicode 18.0 records none
+for Jurchen, so another font may draw the base form. Each carries its base character's Unicode record
+and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
+end of its code, and drops the table's placeholder row for U+25A1.
+
+`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 22
+characters. No source states one, so each is a reading of the Alari glyph: it describes the shape
+and makes no claim about how the character arose. `scripts/build_jurchen.py` refuses an entry with an
+operator other than ⿰ and ⿱, a part outside the block, or strokes that do not add up; a radical's
+count is read from its stroke code, since Unicode gives none.
+
+Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
+index, outlines and font with `uv run --python 3.12 scripts/build_jurchen.py`, then
+`uv run --python 3.12 python scripts/build_bundled_coverage.py`.
+
 ## New Korean Orthography outlines
 
 `new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
@@ -803,7 +861,7 @@ frequency report and automatic cutoff are unchanged.
 
 `small-seal.json.gz` contains the Jiguge (汲古閣) edition's IDS from
 [CHISE-IDS](https://gitlab.chise.org/CHISE/ids), maintained by MORIOKA Tomohiko and
-contributors. It is GPL-2.0-or-later; see `COPYING-small-seal.txt`. The complete input
+contributors. It is GPL-2.0-or-later; see `COPYING-chise-ids.txt`. The complete input
 IDS and the 540 Shuowen mapping files are in `small-seal-sources.tar.gz`.
 
 | Coverage | Count |
@@ -878,10 +936,11 @@ description preserves `original`, `kind` (`structural` or `apparent`), resolved 
 that the editor cannot parse. These audit records remain available even when the
 character has no usable description.
 
-Rebuild with `python3 scripts/build_small_seal.py`; downloads are cached and checked
-against pinned SHA-256 digests. `--cache` and `--out` select their locations. The source
-archive is written beside the output. Test mapping safeguards with
-`python3 -m unittest discover -s scripts -p test_small_seal.py`.
+Rebuild with `python3 scripts/build_small_seal.py`, then `python3 scripts/build_small_seal_palette.py`,
+which merges the curated supplements and is not optional: without it the output lacks the 49 crosswalk
+entries its test expects. Downloads are cached and checked against pinned SHA-256 digests.
+`--cache` and `--out` select their locations. The source archive is written beside the output.
+Test mapping safeguards with `python3 -m unittest discover -s scripts -p test_small_seal.py`.
 
 `small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
 mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
@@ -890,8 +949,8 @@ quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 56,651 glyph outlines in 590 chunks, each covering at most
-256 code points. The full set is 26,503,554 compressed bytes; the composer fetches only chunks
+`unicode-outlines/*.json.gz` contains 56,657 glyph outlines in 590 chunks, each covering at most
+256 code points. The full set is 26,511,873 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
 `unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
 counts, source fonts, source digests and copyright notices.
@@ -976,14 +1035,17 @@ code points, transcriptions and limits.
 
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 79 glyphs whose palette entries are missing from the
+`palette-outlines.json.gz` contains 148 glyphs whose palette entries are missing from the
 pinned default composer export. `palette-fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
 come from the included Plangothic parts/Gongche and Noto CJK stroke subsets, plus Noto Sans CJK Regular
-(Japanese face) for the remaining BMP characters; their SIL OFL notices are in `fonts/`.
+(Japanese face) for the remaining BMP characters, and BabelStone Han PUA for the numbered components
+with no fragment; their SIL OFL and Arphic notices are in `fonts/`.
 Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
 CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.
+The 69 PUA outlines are built first by `uv run scripts/build_numbered_pua.py`; see
+`numbered-pua-outlines.json.gz`.
 
 ## Unicode character properties
 
@@ -1025,19 +1087,13 @@ export's glyphs take precedence.
 - [UniHieroglyphica](https://github.com/thesaurus-linguae-aegyptiae/unihieroglyphica/tree/9375eba4e2b626658e57e3a526118b8225c0581e):
   3,995 Egyptian Hieroglyphs Extended-A outlines, designed by Michel Suignard;
   copyright Regents of the University of California, [SIL OFL 1.1](../fonts/OFL-UniHieroglyphica.txt).
-- [GlyphWiki](https://glyphwiki.org/): four Jurchen glyphs, U+18E00–U+18E03, by GlyphWiki contributors.
-  `glyphwiki-jurchen.svg.json.gz` preserves the source SVGs, per-glyph URLs and SHA-256s.
-  Their terms permit reuse and modification; the [license copy](../fonts/LICENSE-GlyphWiki.txt)
-  is preserved from [Mozilla's repository](https://github.com/mozilla/gecko-dev/blob/master/layout/reftests/fonts/glyphwiki-license.txt),
-  because the live license page was unavailable when checked on 2026-10-28.
 
 `unicode-outline-gaps.json` lists assigned fallback candidates still lacking an outline in these
 sources, grouped by Unicode block. These are missing glyphs, not parser restrictions. It excludes
 exact dedicated-bundle outlines and CJK outlines in the pinned default export
 (`host-glyph-coverage.json`), but includes holes within those ranges that the previous range-based
 report omitted. This is an outline-source inventory; the worker audit described below measures
-rendering, including composition from other records. Jurchen coverage is limited to the four
-available source glyphs; the remaining characters need additional source outlines. Private-use
+rendering, including composition from other records. Jurchen has [its own bundle](#jurchen). Private-use
 characters require a host-supplied mapping and never inherit Unifont's private allocations.
 
 ### Other script parts
@@ -1068,15 +1124,16 @@ outlines 19, so the list matches what the preview can compose rather than what o
 hold.
 
 `firsts` gives 横, 豎, 撇, 點 or 折, the class of the first stroke Rime's five-stroke dictionary
-records, for 103,328 of the characters, read as the parts palette's `first` column is; the two agree
+records, for 103,341 of the characters, read as the parts palette's `first` column is; the two agree
 wherever both record a class. A radical form the dictionary does not name takes the class of the
 character `component-forms.tsv` says it stands for, the way its stroke count already does, so ⺅ reads
 as 撇 like 亻; a compatibility ideograph takes the class of the unified ideograph Unihan's
-`kCompatibilityVariant` says it encodes, so U+F900 豈 reads as 豎 like U+8C48 豈. The remaining 24 hold
-`null`, because no source names their stroke order: 23 marks and Hangzhou numerals that take a stroke
-count the project supplies but no stroke order, and one 𫠞. A search hit's tooltip and the character
-card show these two facts; the dictionary's stroke order follows Chinese order, which can differ from
-Japanese order.
+`kCompatibilityVariant` says it encodes, so U+F900 豈 reads as 豎 like U+8C48 豈. The marks and
+Hangzhou numerals take a class the project reads from their shapes, as their stroke counts are: 々
+begins with a dot, 〡〢〣 and 〦〧〨 with a vertical, 〤〥〩 with a falling stroke, and 〸〹〺 with a
+horizontal. The remaining 11 hold `null`: 〻𖿢𖿣𖿰𖿱𖿲𖿳𖿴𖿵𖿶𫠞, marks whose stroke order no source
+names. A search hit's tooltip and the character card show these two facts; the dictionary's stroke
+order follows Chinese order, which can differ from Japanese order.
 
 The Components tab offers the list as **All characters**, beside the curated components and their
 stroke-count groups, paged at 120, searchable by character or `U+` code point and filterable by
@@ -1093,13 +1150,26 @@ records from han-compose (MIT). Unihan is distributed under the Unicode License 
 dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 
 
-## Unencoded components
+## `ids-corpus.json.gz`
 
-The design for a merged component catalogue — CHISE, BabelStone, the zi.tools forms and this project's own rows as one identity model — is in [the corpus note](../docs/ids-corpus.md). It is a design, not data: no artifact or build script exists yet, and the merged file would be GPL-2.0-or-later because CHISE's rows are.
+One catalogue of component identities and the descriptions that name them, built by
+`scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
+108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
+CHISE's, and every row carries the source it came from.
+
+- Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
+  (`COPYING-chise-ids.txt`). The code stays MIT.
+- Sources: `ids-corpus-sources.tar.gz` holds the eighteen CHISE files, CHISE's README and the
+  licence; the pin, per-file digests and licence statement are in `chise-sources.json`.
+- Changes: CHISE writes each description with the character's code point and its parts as entities;
+  the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
+  rows with BabelStone's. Built on 2026-11-04.
+- Format: columnar JSON, gzipped; the design behind the identity model is in
+  [the corpus note](../docs/ids-corpus.md).
 
 ## Preview coverage audit
 
-`bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|klee]` renders every
+`bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every
 accepted non-private Unicode scalar through the actual preview worker. It preloads the selected
 export's record shards four at a time, caches bytes and missing-shard responses, and leaves later
 shard requests to the worker's loader. It stops on transport errors instead of treating them as
@@ -1114,7 +1184,7 @@ layout of every possible IDS tree. Private-use characters need an explicit host 
 Each report records the hashes of the files that decide what the preview draws, listed in
 `scripts/lib/coverage-sources.mjs`. `bun scripts/check_coverage_freshness.mjs` compares those
 hashes against the tree and names the files that moved, and `bun run coverage` re-renders all
-three styles into `docs/coverage/`. Both are manual. Gating merges on them fired on nearly every
+four styles into `docs/coverage/`. Both are manual. Gating merges on them fired on nearly every
 change to the composer while saying nothing about whether the change was right, so the scheduled
 `Coverage` workflow renders nightly and opens a pull request when a report moved; the committed
 reports trail the exports by at most a day.
