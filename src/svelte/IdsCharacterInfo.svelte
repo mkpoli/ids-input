@@ -382,7 +382,7 @@
   }
   $effect(() => {
     const node = root
-    adapter.characterInfo
+    void adapter.characterInfo
     if (!node) return
     const resized = new ResizeObserver(position)
     if (panel) resized.observe(panel)

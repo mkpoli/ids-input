@@ -111,9 +111,10 @@
       out.push({ key, level, kind: 'sequence', text: written, regions, take: null, openable: named.length > 0, open, note: 'unreadable', swaps: [] })
       if (open) named.forEach((part, i) => char(part, `${key}~${i}`, level + 1, ancestors))
     }
-    for (const root of all) root.kind === 'sequence'
-      ? sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [])
-      : char(root.char, root.key, 1, [], true)
+    for (const root of all) {
+      if (root.kind === 'sequence') sequence({ text: root.text, regions: '', tree: root.tree }, root.key, 1, [])
+      else char(root.char, root.key, 1, [], true)
+    }
     return out
   })
 
@@ -127,7 +128,7 @@
   /** @type {string | null} */
   let handOn = null
   $effect.pre(() => {
-    rows
+    void rows
     untrack(() => {
       const active = /** @type {HTMLElement | null} */ (document.activeElement)
       const key = active?.dataset?.key

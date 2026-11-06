@@ -617,7 +617,7 @@
     const tab = current()
     return tab ? addressDocument(sessionFor(tab).document) : null
   }
-  $effect(() => { activeId; phonePane = 'input' })
+  $effect(() => { void activeId; phonePane = 'input' })
   /** @param {'input' | 'compose' | 'output'} pane */
   function phoneTab(pane) {
     phonePane = pane
@@ -657,7 +657,7 @@
   function swipeCancel() { swipe = null }
   /** The active tab's document title, kept current by the document revision. */
   const currentTitle = $derived.by(() => {
-    documentTick
+    void documentTick
     const tab = current()
     return tab ? sessionFor(tab).document.title ?? '' : ''
   })
