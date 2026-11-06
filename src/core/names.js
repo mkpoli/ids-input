@@ -24,7 +24,7 @@ import { isComponent } from './ids.js'
 
 const KATAKANA = /[\u30A1-\u30F6]/g
 const MARK = /[\u0300-\u036f]/g
-const MARKS = /[\s　・·,，、.。:：;；/／|｜\\()（）「」『』【】\[\]{}<>《》〈〉'"“”‘’!?！？~〜～\-—–_ー]+/g
+const MARKS = /[\s　・·,，、.。:：;；/／|｜\\()（）「」『』【】[\]{}<>《》〈〉'"“”‘’!?！？~〜～\-—–_ー]+/g
 
 /**
  * A name folded for matching: NFKC, lower case, katakana as hiragana, Latin accents off, Chinese
