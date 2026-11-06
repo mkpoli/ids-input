@@ -168,7 +168,7 @@ export function documentSource(document, drawing, sketch) {
       const leaf = leaves++
       if (node.kind === 'component') components++
       const box = sketch?.[leaf]?.box
-      const region = Array.isArray(box) && box.length === 4 && Number.isFinite(box[2]) && box[2] > 0 && Number.isFinite(box[3]) && box[3] > 0
+      const region = Array.isArray(box) && box.length === 4 && box.every(Number.isFinite) && box[2] > 0 && box[3] > 0
         ? /** @type {Box} */ ([...box])
         : null
       if (!region) issues.push(`leaf ${leaf} has no layout box`)
