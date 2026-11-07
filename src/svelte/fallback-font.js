@@ -92,11 +92,77 @@ export function loadFallback(char) {
 }
 
 /**
- * Loads the shards of every character in `text`.
+ * Loads the shards of every character in `text`. With a `stack`, only the characters that stack
+ * cannot draw: a page whose fonts cover the text pays for no shard at all.
  * @param {string | null | undefined} text
+ * @param {string} [stack]
  */
-export function loadFallbackText(text) {
-  for (const char of text ?? '') loadFallback(char)
+export function loadFallbackText(text, stack) {
+  for (const char of stack ? uncovered(text ?? '', stack) : text ?? '') loadFallback(char)
+}
+
+/** What the reader's own fonts drew, per stack and character, so a panel re-rendering asks once. */
+const COVERED = new Map()
+/** The missing-glyph box of a stack, and the ink it draws. @type {Map<string, { data: Uint8ClampedArray, ink: number }>} */
+const BOX = new Map()
+const MEASURE = document.createElement('canvas')
+MEASURE.width = 64
+MEASURE.height = 64
+const CONTEXT = /** @type {CanvasRenderingContext2D} */ (MEASURE.getContext('2d'))
+
+/** `text` drawn with `stack`, as its alpha channel. @param {string} text @param {string} stack */
+function render(text, stack) {
+  CONTEXT.clearRect(0, 0, 64, 64)
+  CONTEXT.font = `32px ${stack}`
+  CONTEXT.fillText(text, 4, 48)
+  return CONTEXT.getImageData(0, 0, 64, 64).data
+}
+
+/**
+ * Whether the reader's fonts draw `char` in `stack`: a character they lack comes out as the same
+ * missing-glyph box an unassigned code point draws.
+ * @param {string} char
+ * @param {string} stack
+ */
+function covered(char, stack) {
+  let box = BOX.get(stack)
+  if (!box) {
+    const reference = render('\u{10FFFF}', stack)
+    let ink = 0
+    for (let i = 3; i < reference.length; i += 4) if (reference[i] > 100) ink++
+    box = { data: reference, ink }
+    BOX.set(stack, box)
+  }
+  const glyph = render(char, stack)
+  let ink = 0
+  let changed = 0
+  for (let i = 3; i < glyph.length; i += 4) {
+    if (glyph[i] > 100) ink++
+    if (Math.abs(glyph[i] - box.data[i]) > 40) changed++
+  }
+  if (!ink) return false
+  return changed / Math.max(box.ink, ink, 1) >= 0.15
+}
+
+/**
+ * The characters of `text` the reader's fonts cannot draw in `stack`, as far as the shards reach.
+ * @param {string} text
+ * @param {string} stack
+ */
+export function uncovered(text, stack) {
+  const out = []
+  for (const char of text ?? '') {
+    const name = ((char.codePointAt(0) ?? 0) >> 8).toString(16).padStart(3, '0')
+    if (!SHARDS.has(name)) continue
+    const key = `${stack}\u0000${char}`
+    let drawn = COVERED.get(key)
+    if (drawn === undefined) {
+      drawn = covered(char, stack)
+      COVERED.set(key, drawn)
+    }
+    if (!drawn) out.push(char)
+  }
+  return out
 }
 
 /** Debounce a panel's rescan as it re-renders. */
@@ -119,7 +185,8 @@ export function watchFallback(root) {
     for (const element of root.querySelectorAll('*')) {
       if (element.childElementCount || watched.has(element)) continue
       watched.add(element)
-      loadFallbackText(element.textContent)
+      // The reader's own fonts draw most of this; only what they leave as a box needs a shard.
+      loadFallbackText(element.textContent, getComputedStyle(element).fontFamily)
     }
   }
   const mutation = new MutationObserver(() => {
