@@ -1,0 +1,245 @@
+{
+  "license": "SIL OFL 1.1",
+  "sources": {
+    "sans": {
+      "url": "https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/",
+      "note": "Pinned composer export; outlines from Noto Sans CJK JP."
+    },
+    "serif": {
+      "url": "https://ids-input-composer.mkpoli.workers.dev/8156f838798c-serif-compose-layout-v4-serif-f6/",
+      "note": "Pinned composer export; outlines from Noto Serif CJK."
+    }
+  },
+  "forms": [
+    {
+      "id": "shou-hooked-top",
+      "kind": "editorial donor composition",
+      "description": "Three bars crossed by a straight stem, a right-turning 乛 at the third bar, a dot pair under the bars, and a full-width bar above the base.",
+      "evidence": [
+        {
+          "kind": "manuscript witness",
+          "reference": "MOE variant dictionary A00836-011, reviewed by 張文彬",
+          "url": "https://dict.variants.moe.edu.tw/dictView.jsp?ID=8882&q=1",
+          "image": "https://dict.variants.moe.edu.tw/rbt/sword/sworda/sa00836/011.jpg",
+          "citation": "《碑別字新編》〈魏元騰墓誌〉"
+        },
+        {
+          "kind": "outline comparison",
+          "reference": "zi.tools IDS outline",
+          "url": "https://zi.tools/api/ids/lookupidsasync/%E2%BF%B1%E2%BF%BB%E9%BE%B6%E2%BF%B1%E4%B9%9B%E4%B8%B7%E5%90%8B?replace_token",
+          "limitation": "Upstream glyph revision unspecified."
+        },
+        {
+          "kind": "component comparison",
+          "reference": "GlyphWiki twedu-a00836-011 version 9",
+          "url": "https://glyphwiki.org/json?name=twedu-a00836-011",
+          "limitation": "Related U+2D260 identifies a character, not an identical glyph; that character lacks this hook."
+        }
+      ],
+      "limitation": "The witness establishes the arrangement. Bar widths, stem length, hook placement, dot placement and contour selection are editorial, derived from donor outlines in each pinned face. The form is not a facsimile and does not identify the character.",
+      "patterns": [
+        "⿱⿻龶⿱乛丷",
+        "⿳⿻韦丷一",
+        "⿳⿱𰀁乛⿱⺌一"
+      ],
+      "faces": {
+        "sans": {
+          "bottom": [
+            120,
+            20,
+            880,
+            430
+          ],
+          "pieces": [
+            {
+              "donor": "丨",
+              "contour": null,
+              "box": [
+                472,
+                452,
+                528,
+                815
+              ],
+              "origin": "stem 丨"
+            },
+            {
+              "donor": "三",
+              "contour": 0,
+              "box": [
+                320,
+                795,
+                680,
+                825
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "三",
+              "contour": 1,
+              "box": [
+                250,
+                730,
+                750,
+                760
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "三",
+              "contour": 2,
+              "box": [
+                160,
+                665,
+                840,
+                697
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "乛",
+              "contour": null,
+              "box": [
+                720,
+                600,
+                950,
+                705
+              ],
+              "origin": "hook 乛"
+            },
+            {
+              "donor": "一",
+              "contour": null,
+              "box": [
+                50,
+                440,
+                950,
+                476
+              ],
+              "origin": "bar 一"
+            },
+            {
+              "donor": "丷",
+              "contour": 0,
+              "box": [
+                312,
+                478,
+                452,
+                556
+              ],
+              "origin": "dot 丷"
+            },
+            {
+              "donor": "丷",
+              "contour": 1,
+              "box": [
+                548,
+                478,
+                688,
+                556
+              ],
+              "origin": "dot 丷"
+            }
+          ]
+        },
+        "serif": {
+          "bottom": [
+            120,
+            20,
+            880,
+            430
+          ],
+          "pieces": [
+            {
+              "donor": "丨",
+              "contour": null,
+              "box": [
+                472,
+                452,
+                528,
+                815
+              ],
+              "origin": "stem 丨"
+            },
+            {
+              "donor": "三",
+              "contour": 0,
+              "box": [
+                320,
+                795,
+                680,
+                825
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "三",
+              "contour": 1,
+              "box": [
+                250,
+                730,
+                750,
+                760
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "三",
+              "contour": 2,
+              "box": [
+                160,
+                665,
+                840,
+                697
+              ],
+              "origin": "bar 三"
+            },
+            {
+              "donor": "乛",
+              "contour": null,
+              "box": [
+                720,
+                600,
+                950,
+                705
+              ],
+              "origin": "hook 乛"
+            },
+            {
+              "donor": "一",
+              "contour": null,
+              "box": [
+                50,
+                440,
+                950,
+                476
+              ],
+              "origin": "bar 一"
+            },
+            {
+              "donor": "丷",
+              "contour": 0,
+              "box": [
+                312,
+                478,
+                452,
+                556
+              ],
+              "origin": "dot 丷"
+            },
+            {
+              "donor": "丷",
+              "contour": 1,
+              "box": [
+                548,
+                478,
+                688,
+                556
+              ],
+              "origin": "dot 丷"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

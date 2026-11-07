@@ -32,6 +32,7 @@ import componentConstants from './constants.json' with { type: 'json' }
 import numberedFiveContext from '../../data/numbered-five-context.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
 import { createRenderNormalizer } from './normalization.js'
+import { matchVisualForm, visualFormParts } from './visual-forms.js'
 
 const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
   [sequence, `⿱${part}${pair}`, `⿱${part}⿰${part}${part}`].map(ids => [ids, char])))
@@ -409,6 +410,20 @@ export class Composer {
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }
+  /** Whether this drawing takes a registered visual form: its face has the pieces, none is excluded,
+   *  and the base parses. Donor outlines may still be loading, so their presence is not required here. */
+  sharedForm(node) {
+    if (this.separate) return false
+    const written = matchVisualForm(keyOf(node))
+    if (!written) return false
+    const match = matchVisualForm(this.renderKey(node))
+    if (!match || match.form.id !== written.form.id) return false
+    const face = match.form.faces[this.fontStyle]
+    // Donor outlines may still be loading; only their exclusion can be settled here.
+    if (!face || face.pieces.some(piece => this.excluded(piece.donor))) return false
+    try { this.parse(match.base) } catch { return false }
+    return true
+  }
   /** A source occurrence's rendering identity. A composer is recreated after each loading pass. */
   resolution(node) {
     const key = keyOf(node)
@@ -533,7 +548,7 @@ export class Composer {
    *  node is an axis or an enclosure this layout splits without approximation. A description this
    *  dense has no designed host forms; drawn in place, its parts overlap each other. */
   cellsFor(tree, marks = '') {
-    if (marks || this.exclude.size) return false
+    if (marks || this.exclude.size || this.sharedForm(tree)) return false
     // Cell scaffolds already have a complete layout; searching every repeated subtree adds no evidence.
     if (this.pyramid(tree) || this.pyramidWithBase(tree)) return false
     const key = keyOf(tree)
@@ -848,6 +863,8 @@ export class Composer {
 
   node(node, region, atRoot = false, sideBySide = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
+    const shared = visualFormParts(this, node, region, keyOf)
+    if (shared) return shared
     const pyramid = this.pyramid(node)
     if (pyramid) {
       const cells = pyramidCells(region, pyramid.layers, { direction: pyramid.direction })
