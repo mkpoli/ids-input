@@ -97,7 +97,7 @@ const SAMPLES = {
     ink: { 'the left leg': [155, 50], 'the right leg': [850, 50], 'the band over the opening': [500, 300],
       "田's left stem": [230, 480], "田's middle bar": [500, 480], "艹's bar": [300, 735],
       "山's stem": [503, 170], "山's bar": [503, 95], "山's left arm": [320, 150],
-      "山's right arm": [687, 150], "山's left foot": [320, 50], "山's right foot": [687, 50] },
+      "山's right arm": [687, 150], "山's left foot": [320, 50], "山's right foot": [660, 50] },
     clear: { "田's upper-left counter": [350, 420], "田's lower-right counter": [650, 550],
       "the channel over 山's arms": [320, 220], "the counter left of 山's stem": [410, 150],
       "the counter right of 山's stem": [595, 150], "the floor between 山's feet": [503, 50],
@@ -106,11 +106,8 @@ const SAMPLES = {
   },
 }
 
-it('draws 萬 with 山 where its 禸 sits, in the sans face', () => {
-  // The serif face has no prepared form for this description: its 山 cannot be placed in the
-  // compartment without losing its horizontal weight, so it composes from parts instead.
-  expect(isComponentForm(WAN_SHAN, 'serif')).toBe(false)
-  for (const style of ['sans']) {
+it('draws 萬 with a band-sized 山 in both Noto faces', () => {
+  for (const style of ['sans', 'serif']) {
     expect(isComponentForm(WAN_SHAN, style)).toBe(true)
     expect(isGroupedForm(WAN_SHAN, style)).toBe(true)
     expect(componentDrawing(WAN_SHAN, style).d).not.toMatch(/NaN|Infinity/)
@@ -144,11 +141,27 @@ it('draws 萬 with 山 where its 禸 sits, in the sans face', () => {
     expect(xs).toContain(spine[1])
     expect(y1).toBeGreaterThan(ceiling[0])
     expect(y1).toBeLessThan(ceiling[1])
-    // Both faces draw 山 from the band, so every corner has its mirror image about the spine.
+    // Sans is mirror-symmetric; Serif keeps 岡’s asymmetric curved feet and arm entries.
     const corners = new Set(shan[0][1].flatMap((_, i) => (i % 2 ? [] : [`${shan[0][1][i]},${shan[0][1][i + 1]}`])))
-    for (const corner of corners) {
+    for (const corner of style === 'sans' ? corners : []) {
       const [x, y] = corner.split(',').map(Number)
       expect(corners).toContain(`${spine[0] + spine[1] - x},${y}`)
+    }
+    // The horizontal retains the ceiling's weight, including the thin Serif bar.
+    const [barBottom, barTop] = style === 'sans' ? [40, 105] : [80, 109]
+    expect(barTop - barBottom).toBe(ceiling[1] - ceiling[0])
+    for (const x of [380, 600]) {
+      expect(inked(shan, x, barBottom - 1)).toBe(false)
+      expect(inked(shan, x, barBottom + 1)).toBe(true)
+      expect(inked(shan, x, barTop - 1)).toBe(true)
+      expect(inked(shan, x, barTop + 1)).toBe(false)
+    }
+    if (style === 'serif') {
+      expect(shan[0][0]).toContain('Q2')
+      expect([x0, y0, x1, y1]).toEqual([288.22, 24, 718.78, 254])
+      // The right foot ends at 41, safely above the native hook's upper edge (8).
+      expect(inked(shan, 660, 40)).toBe(false)
+      expect(inked(shan, 650, 42)).toBe(true)
     }
     const contours = [...wan, ...shan]
     for (const [where, [x, y]] of Object.entries(SAMPLES[style].ink)) {
