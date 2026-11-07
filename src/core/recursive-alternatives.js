@@ -4,7 +4,8 @@ import { isNode, partAt, parse, paths, replaceAt, splitMarks, withMarks, write }
 
 /** @typedef {import('./ids.js').Part} Part */
 /** @typedef {'results' | 'states' | 'depth' | 'work' | 'lookups' | 'lookup'} AlternativeCut */
-/** @typedef {{ type: 'alternative', tree: Part } | { type: 'truncated', reasons: AlternativeCut[] }} AlternativeEvent */
+/** @typedef {'expand' | 'merge' | 'both'} AlternativeOperation */
+/** @typedef {{ type: 'alternative', tree: Part, operation: AlternativeOperation } | { type: 'truncated', reasons: AlternativeCut[] }} AlternativeEvent */
 
 /** @param {Part} part @returns {unknown} */
 function identity(part) {
@@ -59,6 +60,8 @@ async function lookup(start, signal, timeoutMs) {
  * this excludes, for example, a loose mark inside a larger description. Lookups use the literal
  * component, including any variation selector.
  *
+ * Each alternative names the operations that built it from the input: 'expand' where components
+ * were opened into descriptions, 'merge' where subtrees became characters, 'both' for a mix.
  * Limits bound results, retained states, rewrite distance, inspected paths/candidates and lookups. If a
  * limit excludes work, the last event reports it; stopping iteration early omits that event.
  * Failed or timed-out lookups are reported as 'lookup' and other paths continue; cancellation propagates.
@@ -72,8 +75,8 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
     if (!Number.isSafeInteger(value) || value < minimum) throw new RangeError(`${name} must be an integer >= ${minimum}`)
   }
   if (!Number.isSafeInteger(lookupTimeoutMs) || lookupTimeoutMs < 1 || lookupTimeoutMs > 2147483647) throw new RangeError('lookupTimeoutMs must be an integer between 1 and 2147483647')
-  /** @type {{ tree: Part, depth: number }[]} */
-  const queue = [{ tree: part, depth: 0 }]
+  /** @type {{ tree: Part, depth: number, expand: boolean, merge: boolean }[]} */
+  const queue = [{ tree: part, depth: 0, expand: false, merge: false }]
   const seen = new Set([write(part)])
   /** @type {Map<string, Promise<import('./decompose.js').Sequence[]>>} */
   const structures = new Map()
@@ -83,7 +86,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
   const cuts = new Set()
   let work = 0, results = 0, lookups = 0
   outer: for (let i = 0; i < queue.length; i++) {
-    const { tree, depth } = queue[i]
+    const { tree, depth, expand: expanded, merge: merged } = queue[i]
     for (const path of paths(tree).sort((a, b) => b.length - a.length)) {
       signal?.throwIfAborted()
       if (++work > maxWork) { cuts.add('work'); break outer }
@@ -93,8 +96,11 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
       let choices = []
       /** @type {(text: string) => Part | undefined} */
       let replacementFor = () => undefined
+      /** @type {'expand' | 'merge' | null} */
+      let step = null
       try {
         if (typeof current === 'string' && decomposable(current)) {
+          step = 'expand'
           const { base, marks } = splitMarks(current)
           if (typeof base !== 'string') continue
           if (!structures.has(base)) {
@@ -111,6 +117,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
             return withMarks(parsed.tree, marks)
           }
         } else if (isNode(current) && adapter.encoded && mergeable(current)) {
+          step = 'merge'
           const { base, marks } = splitMarks(current)
           const sequence = write(base)
           if (!encoded.has(sequence)) {
@@ -137,6 +144,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
       for (const choice of choices) {
         signal?.throwIfAborted()
         if (++work > maxWork) { cuts.add('work'); break outer }
+        if (step === null) continue
         const replacement = replacementFor(choice)
         if (replacement === undefined) continue
         const next = replaceAt(tree, path, replacement)
@@ -147,10 +155,11 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
         if (depth >= maxDepth) { cuts.add('depth'); continue }
         if (results >= maxResults) { cuts.add('results'); break outer }
         if (queue.length >= maxStates) { cuts.add('states'); break outer }
+        const expand = expanded || step === 'expand', merge = merged || step === 'merge'
         seen.add(text)
-        queue.push({ tree: next, depth: depth + 1 })
+        queue.push({ tree: next, depth: depth + 1, expand, merge })
         results++
-        yield { type: 'alternative', tree: next }
+        yield { type: 'alternative', tree: next, operation: expand && merge ? 'both' : expand ? 'expand' : 'merge' }
       }
     }
   }

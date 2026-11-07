@@ -16,17 +16,36 @@ const adapter = (structures = {}, encodings = {}) => ({
 const collect = async (part, source, options) => {
   const events = []
   for await (const event of recursiveAlternatives(part, source, options)) events.push(event)
-  return { events, texts: events.filter(event => event.type === 'alternative').map(event => write(event.tree)) }
+  const alternatives = events.filter(event => event.type === 'alternative')
+  return {
+    events,
+    texts: alternatives.map(event => write(event.tree)),
+    operations: Object.fromEntries(alternatives.map(event => [write(event.tree), event.operation])),
+  }
 }
 
 describe('recursiveAlternatives', () => {
   test('independent expansions and merges combine in breadth-first order', async () => {
     const source = adapter({ 吋: ['⿰口寸'] }, { '⿰口寸': ['吋'] })
-    const { texts, events } = await collect(tree('⿰吋吋'), source)
+    const { texts, events, operations } = await collect(tree('⿰吋吋'), source)
     expect(texts).toEqual(['⿰⿰口寸吋', '⿰吋⿰口寸', '⿰⿰口寸⿰口寸'])
     expect(events.every(event => event.type === 'alternative')).toBe(true)
+    expect(new Set(Object.values(operations))).toEqual(new Set(['expand']))
     const reverse = await collect(tree('⿰⿰口寸⿰口寸'), source)
     expect(reverse.texts).toEqual(['⿰吋⿰口寸', '⿰⿰口寸吋', '⿰吋吋'])
+    expect(new Set(Object.values(reverse.operations))).toEqual(new Set(['merge']))
+  })
+
+  test('names alternatives that split and merge as both', async () => {
+    const source = adapter({ 甲: ['⿰口寸'], 吋: ['⿰口寸'] }, { '⿰口寸': ['吋'] })
+    const { operations } = await collect(tree('⿰甲吋'), source)
+    expect(operations).toEqual({
+      '⿰⿰口寸吋': 'expand',
+      '⿰甲⿰口寸': 'expand',
+      '⿰⿰口寸⿰口寸': 'expand',
+      '⿰吋吋': 'both',
+      '⿰吋⿰口寸': 'both',
+    })
   })
 
   test('opens aliases and recursively merges newly formed subtrees', async () => {

@@ -28,7 +28,7 @@ try {
   await open('⿱一口')
   await choose(0)
   await merge.first().waitFor({ timeout: 120000 })
-  assert.equal(await page.locator('.ids-title').textContent(), 'Merge ⿱一口 to a character', 'the list names the chosen node')
+  assert.equal(await page.locator('.ids-title').textContent(), 'In place of ⿱一口', 'the list names the chosen node')
   assert.equal(await merge.count(), 1, 'one character describes ⿱一口')
   assert.equal(await merge.first().textContent(), '𠮛', 'the character ⿱一口 encodes')
   assert.equal(await merge.first().getAttribute('title'), 'Merge ⿱一口 to 𠮛', 'the button names both sides')
