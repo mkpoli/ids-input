@@ -1,0 +1,19 @@
+KanjiVG — data/kana-strokes.json.gz
+====================================
+
+Copyright (C) 2009/2010/2011 Ulrich Apel.
+
+This work is distributed under the conditions of the Creative Commons
+Attribution-Share Alike 3.0 Licence.
+
+  https://creativecommons.org/licenses/by-sa/3.0/
+
+KanjiVG's own header asks that its use be attributed by naming KanjiVG and
+linking to its website:
+
+  KanjiVG, https://kanjivg.tagaini.net
+
+The table in this repository is built from the stroke paths of KanjiVG's
+per-character SVG files at revision 610091ce618cf757ed1357a8954cd65283e015d6,
+<https://github.com/KanjiVG/kanjivg>. It derives stroke counts from those paths
+and is therefore shared alike under the same licence.
