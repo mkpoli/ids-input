@@ -6,6 +6,37 @@
   import { untrack } from 'svelte'
   import { tokens, tint } from './tokens.js'
   import { loadFallbackText } from './fallback-font.js'
+  import { sequenceScopes } from './sequence-scopes.js'
+  /** @type {HTMLDivElement | null} */ let textRun = $state(null)
+  /** @type {{left:number, right:number}[]} */ let bounds = $state([])
+  $effect(() => {
+    void editor.draft
+    const run = textRun
+    if (!run) return
+    let frame = 0, alive = true
+    const measure = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() => {
+        if (!alive) return
+        const origin = run.getBoundingClientRect().left
+        bounds = [...run.querySelectorAll('span')].map(span => {
+          const box = span.getBoundingClientRect()
+          return {left: box.left - origin, right: box.right - origin}
+        })
+      })
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(run)
+    document.fonts.addEventListener('loadingdone', measure)
+    void document.fonts.ready.then(() => { if (alive) measure() })
+    measure()
+    return () => {
+      alive = false
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      document.fonts.removeEventListener('loadingdone', measure)
+    }
+  })
   let scroll = $state(0)
   let composing = $state(false)
   let metrics = $state('')
@@ -14,6 +45,8 @@
   /** @type {{ editor: import('./editor.svelte.js').Editor, label?: boolean, placeholder?: string, onenter?: () => void }} */
   let { editor, label = true, placeholder = '⿰⿱匕失⿱コ疋', onenter } = $props()
   const spans = $derived(tokens(editor.draft))
+  const scopes = $derived(sequenceScopes(spans, bounds))
+  const scopeHeight = $derived(scopes.length ? 12 + Math.max(...scopes.map(scope => scope.lane)) * 6 : 0)
   const t = $derived(editor.t)
   $effect(() => {
     const input = editor.draft, adapter = editor.adapter, disabled = editor.disabled
@@ -142,8 +175,8 @@
 
 <label class="ids-field">
   {#if label}<span class="ids-title">{t('ids.label')}</span>{/if}
-  <div class="sequence-wrap" class:composing>
-    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text} data-path={token.path.join('.')} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}</div></div></div>
+  <div class="sequence-wrap" class:composing style:--scope-height={`${scopeHeight}px`}>
+    <div class="sequence-paint" bind:this={paint} style={metrics} aria-hidden="true"><div class="sequence-viewport"><div class="sequence-run" bind:this={textRun} style:transform={`translateX(${-scroll}px)`}>{#if spans.length}{#each spans as token}<span data-character={token.text} data-path={token.path.join('.')} class:tinted={editor.isTinted(token.path)} class:hovered={editor.isHovered(token.path)} class:selected={editor.isSelected(token.path)} style:--tint={tint(token.path)}>{token.text}</span>{/each}{:else}{editor.draft}{/if}{#if scopes.length}<svg class="sequence-scopes" width="100%" height={scopeHeight} aria-hidden="true">{#each scopes as scope}<g data-path={scope.path.join('.')} class:scope-tinted={editor.isTinted(scope.path)} class:scope-hovered={editor.isHovered(scope.path)} class:scope-selected={editor.isSelected(scope.path)} style:--tint={tint(scope.path)}><path class="scope-lead" d={scope.lead}/>{#each scope.segments as segment}<path class="scope-segment" d={segment}/>{/each}</g>{/each}</svg>{/if}</div></div></div>
   <input bind:this={field} value={editor.draft} disabled={editor.disabled} lang="ja" spellcheck="false" autocomplete="off"
     aria-label={label ? undefined : t('ids.label')} {placeholder} aria-invalid={Boolean(editor.problem)}
     onselect={select} onkeyup={select} onclick={select} onbeforeinput={beforeInput} onpaste={paste} onpointermove={hover} onpointerleave={() => editor.hover(null)} onscroll={() => scroll = field?.scrollLeft ?? 0} oninput={edit} oncompositionstart={startComposition} oncompositionend={endComposition} onblur={() => editor.settle()}
@@ -167,14 +200,18 @@
   .sequence-paint{position:absolute;inset:1px;padding:6px 10px;overflow:hidden;pointer-events:none;border-radius:7px;font:22px var(--_font);white-space:pre}
   .sequence-paint span.tinted{color:color-mix(in oklab,var(--_ink) 76%,var(--tint));background:color-mix(in oklab,var(--tint) 12%,transparent)}
   .sequence-paint span:first-child{border-radius:3px 0 0 3px}
-  .sequence-paint span:last-child{border-radius:0 3px 3px 0}
-  .sequence-paint span:only-child{border-radius:3px}
-  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;padding:6px 10px;font-family:var(--_font);color:inherit;
+  .sequence-paint span:last-of-type{border-radius:0 3px 3px 0}
+  .sequence-paint span:only-of-type{border-radius:3px}
+  input{position:relative;box-sizing:border-box;width:100%;caret-color:var(--_ink);-webkit-text-fill-color:transparent;min-width:0;font:inherit;font-size:22px;line-height:1.5;padding:6px 10px calc(6px + var(--scope-height,0px));font-family:var(--_font);color:inherit;
     border:1px solid var(--_control-border);border-radius:8px;background:transparent}
   input::placeholder{-webkit-text-fill-color:var(--_muted);color:color-mix(in srgb,var(--_muted) 70%,transparent)}
   input:focus-visible{outline:2px solid var(--_focus);outline-offset:1px}
   input[aria-invalid="true"]{border-color:var(--_fault)}
-  .sequence-viewport{overflow:hidden}
+  .sequence-viewport{overflow:hidden;padding-bottom:var(--scope-height,0px);margin-bottom:calc(-1 * var(--scope-height,0px))}
+  .sequence-run{position:relative;width:max-content;min-width:0}
+  .sequence-scopes{position:absolute;top:100%;left:0;overflow:visible;fill:none;stroke:var(--_muted);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+  .sequence-scopes g.scope-tinted{stroke:color-mix(in oklab,var(--_ink-soft) 55%,var(--tint))}
+  .sequence-scopes g.scope-hovered,.sequence-scopes g.scope-selected{stroke:var(--_accent);stroke-width:1.6}
   .composing .sequence-paint{visibility:hidden}
   .composing input{-webkit-text-fill-color:var(--_ink)}
   @media (forced-colors: active){.sequence-paint{visibility:hidden} input{-webkit-text-fill-color:CanvasText}}
