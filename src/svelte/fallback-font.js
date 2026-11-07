@@ -105,6 +105,8 @@ export function loadFallbackText(text, stack) {
 const COVERED = new Map()
 /** The missing-glyph box of a stack, and the ink it draws. @type {Map<string, { data: Uint8ClampedArray, ink: number }>} */
 const BOX = new Map()
+// A face that arrives changes what the blocks above draw: ask again, and let the next scan decide.
+document.fonts?.addEventListener?.('loadingdone', () => { COVERED.clear(); BOX.clear() })
 const MEASURE = document.createElement('canvas')
 MEASURE.width = 64
 MEASURE.height = 64
@@ -152,6 +154,8 @@ function covered(char, stack) {
 export function uncovered(text, stack) {
   const out = []
   for (const char of text ?? '') {
+    // Whitespace and controls draw no ink, which would read as the missing-glyph box.
+    if (/[\s\u0000-\u001F]/u.test(char)) continue
     const name = ((char.codePointAt(0) ?? 0) >> 8).toString(16).padStart(3, '0')
     if (!SHARDS.has(name)) continue
     const key = `${stack}\u0000${char}`
