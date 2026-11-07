@@ -9,7 +9,9 @@
   const id = $props.id()
   const t = $derived(translator(messages, locale))
   let query = $state(STRUCTURAL_PRESETS[0].query)
-  $effect(() => { loadFallbackText(query) })
+  /** @type {HTMLInputElement | null} */
+  let field = $state(null)
+  $effect(() => { loadFallbackText(query, field ? getComputedStyle(field).fontFamily : undefined) })
   // With the structure unknown, the pattern's parts are each required somewhere in the
   // character, in any arrangement. The presets are whole-character patterns with A–Z variables,
   // so they leave the panel and a concrete example takes their place.
@@ -41,7 +43,7 @@
     </div>
   {/if}
   <label class="pattern">{t('ids.structural.pattern')}
-    <input type="text" bind:value={query} spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby={`${id}-help`} oninput={event => loadFallbackText(event.currentTarget.value)} />
+    <input type="text" bind:value={query} bind:this={field} spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby={`${id}-help`} />
   </label>
   <p id={`${id}-help`} class="help">{t(loose ? 'ids.structural.unknownHelp' : 'ids.structural.help')}</p>
   <IdsSearch {adapter} {query} {messages} {locale} mode={loose ? 'unknown' : 'structure'} {onopen} {ontake} />

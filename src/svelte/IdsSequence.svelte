@@ -27,7 +27,7 @@
   })
   /** @type {HTMLInputElement | null} */ let field = $state(null)
   // The field draws what is typed into it, including characters only the shards have.
-  $effect(() => { loadFallbackText(editor.draft) })
+  $effect(() => { loadFallbackText(editor.draft, field ? getComputedStyle(field).fontFamily : undefined) })
   $effect(() => {
     if (!field) return
     const element = field
