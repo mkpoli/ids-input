@@ -283,12 +283,10 @@
   .ui-empty{margin:var(--ui-space-sm) var(--ui-space-md);min-block-size:0;padding:var(--ui-space-lg) var(--ui-space-md)}
   .jump{display:flex;flex-wrap:wrap;gap:var(--ui-space-2xs);padding:1px 1px var(--ui-space-3xs)}
   .ui-chip{flex:none}
-  .view:focus-visible,.mode:focus-visible,.ui-chip:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
+  .ui-chip:focus-visible{outline-offset:calc(-1 * var(--ui-ring-width))}
   .filter{display:flex;flex-direction:column;align-items:stretch;gap:var(--ui-space-xs);margin:0 0 var(--ui-space-2xs)}
-  .modes{align-self:flex-start;padding:var(--ui-space-3xs)}
-  .mode{padding-inline:var(--ui-space-xs);font-size:var(--ui-text-2xs)}
-  .views{padding:var(--ui-space-3xs)}
-  .view{padding-inline:var(--ui-space-xs);font-size:var(--ui-text-2xs);white-space:nowrap}
+  .modes{align-self:flex-start}
+  .view{white-space:nowrap}
   .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:var(--ui-space-xs);padding:var(--ui-space-3xs) var(--ui-space-3xs) var(--ui-space-xs)}
   .card{display:flex;align-items:center;gap:var(--ui-space-xs);min-width:0;min-height:48px;padding:var(--ui-space-xs);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface);color:var(--ui-color-ink);font:inherit;text-align:left;cursor:pointer}
   .card:not(:disabled):is(:hover,:focus-visible){background:var(--ui-color-surface-hover)}
