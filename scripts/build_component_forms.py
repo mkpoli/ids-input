@@ -283,21 +283,15 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     # boolean cut cannot lift the pencil out. Splice it out of that contour instead:
     # the run from the right leg's inner edge round to the left leg's inner edge keeps
     # 艹, 田, the bar under 田, the legs and the hook untouched, and closing it flat
-    # across the band's inner top drops the pencil. 山 then stands on the band floor.
+    # across the band's inner top drops the pencil. 山 uses the compartment above the hook blade.
     wan = cs('萬')
     if style == 'sans':
         # 萬's own contour order differs between the two faces.
         cao, counters, frame = wan[5:6], wan[:4], wan[4]
-        # The band's inner top, the frame commands between its two ends, and 山's box:
-        # it rests on the band floor and stops short of the inner top and of the hook's
-        # tongue, which reaches in to x=713 along the bottom of the right leg.
         inner_top, keep = (826, 208), slice(5, 25)
-        shan_box = (238, -80, 700, 180)
     else:
         cao, counters, frame = wan[0:1], wan[1:5], wan[5]
-        # The serif hook reaches further in, to x=664, so 山 is narrower here.
         inner_top, keep = (814, 240), slice(6, 42)
-        shan_box = (240, -78, 655, 215)
     # Reopening the contour at the band's inner top: the splice starts on the right
     # leg's inner edge and `closePath` draws the flat edge back from the left one.
     band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
@@ -315,20 +309,44 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     assert removed.area > 1000, 'The 萬 splice removes no 禸 pencil'
     assert removed.bounds[3] <= inner_top[1] + 0.1, 'The 萬 splice reaches above the band inner top'
 
-    def fitted_into(recordings, box):
-        """`recordings` scaled together into `box`, keeping their winding and corner order."""
-        points = [p for recording in recordings for _, values in recording for p in values if p is not None]
-        x0, y0 = min(p[0] for p in points), min(p[1] for p in points)
-        x1, y1 = max(p[0] for p in points), max(p[1] for p in points)
-        sx, sy = (box[2] - box[0]) / (x1 - x0), (box[3] - box[1]) / (y1 - y0)
-        return [[(op, tuple(None if p is None else (box[0] + (p[0] - x0) * sx, box[1] + (p[1] - y0) * sy)
-                            for p in values)) for op, values in recording] for recording in recordings]
+    if style == 'sans':
+        # Reproduce the merged band-derived construction: 72-unit uprights, a
+        # 65-unit bar (the ceiling's weight), and 444/644 of the opening's width.
+        # Feet clear the hook blade by 16; the stem overlaps only the ceiling.
+        vertices = [(648,178),(648,105),(534,105),(534,232),
+                    (462,232),(462,105),(348,105),(348,178),
+                    (276,178),(276,0),(348,0),(348,40),
+                    (648,40),(648,0),(720,0),(720,178)]
+        shan = [[('moveTo', (vertices[0],))] +
+                [('lineTo', (p,)) for p in vertices[1:]] + [('closePath', ())]]
+    else:
+        # 岡 supplies an enclosure-sized 山 with a native 29-unit horizontal,
+        # matching 萬's ceiling. Keep its curved feet and slanted arm entries;
+        # shorten the straight runs between them, never scale the bar thinner.
+        # The full width is 69% of the opening, centred on 田's counter gap.
+        donor = cs('岡')[2]
+        assert donor[6] == ('lineTo', ((337,167),))
+        assert donor[21] == ('lineTo', ((655,167),))
+        levels = [(53,24),(91,62),(138,80),(167,109),(362,177),(395,210)]
+        def ymap(y):
+            a,b = next(((a,b) for a,b in zip(levels,levels[1:]) if y <= b[0]), levels[-2:])
+            return a[1] + (y-a[0])*(b[1]-a[1])/(b[0]-a[0])
+        def mapped(command):
+            op, points = command
+            return op, tuple((503.5+(x-512)*0.92, ymap(y)) for x,y in points)
+        shan = [[('moveTo', ((535,109),)), ('lineTo', ((535,254),)),
+                 ('lineTo', ((472,254),)), ('lineTo', ((472,109),))] +
+                [mapped(command) for command in donor[6:22]] + [('closePath', ())]]
 
-    # 萬's ink winds one way in both faces and its 田 counters the other; the spliced band
-    # keeps the frame's direction and 山 is placed as ink, so 田's counters read as holes
-    # against it. 山 has to clear the hook's tongue as well as the legs.
-    shan = fitted_into(cs('山'), shan_box)
-    assert pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION).area < 0.1, '山 runs into 萬'
+    # Only the stem may meet 萬, in the ceiling directly below 田's counter gap.
+    overlap = pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION)
+    spine = (462,534) if style == 'sans' else (472,535)
+    top = 232 if style == 'sans' else 254
+    allowed = pathops.Path()
+    allowed.moveTo(spine[0], inner_top[1]); allowed.lineTo(spine[1], inner_top[1])
+    allowed.lineTo(spine[1], top); allowed.lineTo(spine[0], top); allowed.close()
+    assert overlap.area > 0, '山 stem does not join the ceiling'
+    assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
     forms['⿳艹田⿵冂山'] = [group([band] + cao + counters), group(shan)]
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
