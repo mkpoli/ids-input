@@ -3,7 +3,8 @@
   // empty slot), buttons to clear it or take its level away, and the components that can stand in its
   // place or the descriptions it can be split into. A problem or the next slot to fill shows beneath;
   // the components float over the page, so choosing a part does not move what is around it.
-  import { isNode } from '../core/ids.js'
+  import { isNode, write } from '../core/ids.js'
+  import { recursiveAlternatives } from '../core/recursive-alternatives.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
 
@@ -17,8 +18,35 @@
   const merges = $derived(editor.merges)
   const at = $derived(editor.chosen ? editor.chosen.join('.') : '')
   const identity = $derived(`${at}\u0000${part}\u0000${written}`)
-  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0)
-  const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part }))
+  /** @type {{ text: string, tree: import('../core/ids.js').Part }[]} */
+  let recursive = $state([])
+  let truncated = $state(false)
+  let moreKey = $state(''), moreLevel = $state(0)
+  const level = $derived(moreKey === identity ? moreLevel : 0)
+  const additional = $derived(recursive.filter(({ text }) => !editor.splits.includes(text) && !merges.includes(text) && !editor.swaps.some(swap => swap.char === text)))
+  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0 || additional.length > 0 || truncated)
+  const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part: part || written }))
+
+  $effect(() => {
+    const selected = picked, adapter = editor.adapter, key = identity, count = level
+    recursive = []; truncated = false
+    if (!editor.chosen || !selected) return
+    const controller = new AbortController()
+    ;(async () => {
+      try {
+        const scale = 2 ** count
+        for await (const result of recursiveAlternatives(selected, adapter, {
+          signal: controller.signal, maxResults: 128 * scale, maxStates: 512 * scale,
+          maxDepth: 4 + 2 * count, maxWork: 8192 * scale, maxLookups: 64 * scale,
+        })) {
+          if (controller.signal.aborted || identity !== key) return
+          if (result.type === 'alternative') recursive = [...recursive, { text: write(result.tree), tree: result.tree }]
+          else truncated = true
+        }
+      } catch { /* Existing direct alternatives remain available if a lookup fails. */ }
+    })()
+    return () => controller.abort()
+  })
   /** @type {HTMLElement | null} */ let root = $state(null)
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
@@ -164,7 +192,14 @@
           <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.merge', { part: written, char })}
             aria-label={t('ids.merge', { part: written, char })} onclick={() => editor.merge(char)}>{char}</button>
         {/each}
+        {#each additional as option (option.text)}
+          <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
+        {/each}
       </div>
+      {#if truncated}
+        {#if level < 3}<button type="button" class="ids-more" onclick={() => { moreKey = identity; moreLevel = level + 1 }}>{t('ids.from.more')}</button>
+        {:else}<span class="ids-title">{t('ids.from.more')}</span>{/if}
+      {/if}
     </div>
   {/if}
 </div>
@@ -202,8 +237,9 @@
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
   .ids-options{display:flex;flex-wrap:wrap;gap:6px}
   .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
-  .ids-split{font-size:16px;color:var(--_muted)}
+  .ids-split{max-width:100%;overflow-wrap:anywhere;text-align:left;font-size:16px;color:var(--_muted)}
   .ids-merge{font-weight:500}
+  .ids-more{align-self:flex-start;padding:4px 8px;font-size:12px}
   .ids-swap:not(:disabled):hover{border-color:var(--_accent)}
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}
