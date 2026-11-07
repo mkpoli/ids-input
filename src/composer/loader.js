@@ -2,7 +2,7 @@
 // The composer in the browser: han-compose's export (manifest, layout and the drawing data of each
 // key) loaded as a sequence needs it, and the sequence drawn from it as an SVG path. A file is
 // fetched once a page; a gzipped one (the export writes them so) is unpacked with DecompressionStream.
-import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, parseTree } from './compose.js'
+import { APPROXIMATE, Composer, EMPTY, LookupError, keyOf, mapOperands, parseTree } from './compose.js'
 import { splitDescription } from '../core/ids.js'
 import { hangulOfIds } from '../core/hangul-ids.js'
 import { composeJamo } from '../core/hangul.js'
@@ -29,7 +29,7 @@ function normaliseJamo(part) {
     return written && [...written].length === 1 ? written + marks : part
   }
   // The composer's own tree holds each node as its operator followed by its operands.
-  return Array.isArray(part) ? [part[0], ...part.slice(1).map(normaliseJamo)] : part
+  return Array.isArray(part) ? mapOperands(part, normaliseJamo) : part
 }
 
 /** `text` with every jamo-run leaf written as the syllable it composes. @param {string} text @param {(ch: string) => number} arity @returns {string} */
@@ -294,6 +294,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
     return { d: svgPath(ink.filter(p => !p.cut)), cut: svgPath(ink.filter(p => p.cut)),
       slots: drawn.filter(p => p.empty !== undefined).map(p => ({ index: p.empty, box: svgBox(drawnBox(p)) })),
       missing: [...(composer.missingGlyphs ?? [])],
+      normalization: { capped: [...composer.resolutions.values()].some(plan => plan.capped) },
       stroke: composer.stroke ?? null,
       parts: ink.map(p => ({ ...(p.leaf === undefined ? {} : { leaf: p.leaf }), origin: p.origin, box: svgBox(drawnBox(p)), d: svgPath([p]), cut: Boolean(p.cut), ...(p.part.strokes ? { strokes: p.part.strokes.map(([id, contours]) => [id, [...contours]]) } : {}) })), origins: ink.map(p => p.origin),
       kanjivg: Boolean(composer.handForms) || drawn.some(p => p.part.kv),
