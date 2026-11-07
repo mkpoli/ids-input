@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { erjianDrawing, erjianEntry, hasErjian } from '../src/composer/erjian.js'
+import { erjianDrawing, erjianEntry, hasErjian } from '@han-compose/composer/erjian'
 import { drawingSvg } from '../src/core/preview.js'
 import { EXAMPLE_GROUPS } from '../demo/lib/examples.js'
 

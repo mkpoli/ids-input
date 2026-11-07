@@ -1,17 +1,21 @@
-// The stroke counts of the characters the composer can draw, loaded once from `data/han-parts.json.gz`
+// The stroke counts of the characters a description can draw, loaded once from `data/han-parts.json.gz`
 // and shared by the search boxes that narrow their results by stroke count and the tooltips that
 // say how many strokes a character has and which stroke it begins with.
-import { unpack } from '../composer/loader.js'
-import { download } from '../core/retry.js'
+import { unpack } from '@han-compose/composer'
+import { download } from '@han-compose/composer/retry'
 
-/** @typedef {{ strokes: number | null, first: '横' | '豎' | '撇' | '點' | '折' | null }} StrokeRecord */
+/**
+ * @typedef {object} StrokeRecord
+ * @property {number | null} strokes How many strokes the character is drawn in, where counted.
+ * @property {'横' | '豎' | '撇' | '點' | '折' | null} first The class of its first stroke.
+ */
 
 /** @type {Promise<Map<string, StrokeRecord>> | null} */
 let reading = null
 
 /**
  * Each Han character with its stroke count and the class of its first stroke, where either is
- * recorded. A character the table leaves out is not Han, or has no count.
+ * recorded. A character the table leaves out has no count.
  * @returns {Promise<Map<string, StrokeRecord>>}
  */
 export function loadStrokeRecords() {

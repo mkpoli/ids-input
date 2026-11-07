@@ -63,7 +63,7 @@ try {
   const parts = JSON.parse(readFileSync(new URL('../data/ids-parts.json', import.meta.url))).parts
   const covered = new Set()
   for (const name of ['02e', '031']) {
-    const rows = JSON.parse(gunzipSync(readFileSync(new URL(`../data/unicode-outlines/${name}.json.gz`, import.meta.url))))
+    const rows = JSON.parse(gunzipSync(readFileSync(new URL(`../node_modules/@han-compose/composer/data/unicode/outlines/${name}.json.gz`, import.meta.url))))
     for (const char of Object.keys(rows)) covered.add(char)
   }
   const sample = parts.map(record => record[0]).filter(part => [...part].length === 1 && part.codePointAt(0) > 0xffff).slice(0, 8)

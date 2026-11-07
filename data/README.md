@@ -85,7 +85,7 @@ but no IDS fragment. BabelStone Han PUA 1.472 draws them; this file records thei
 `fonts/IDSNumbered.woff2` cuts the same 69 from the font for the palette's text. The document records
 the font name, Arphic Public License and source SHA-256; the PUA code points are not stable across
 font versions, so the palette's `glyph` column is tied to that version. Built by
-`uv run scripts/build_numbered_pua.py`; the outlines are merged by
+`COMPOSER_REPO=<han-compose checkout> uv run scripts/build_numbered_pua.py`; the outlines are merged by
 `scripts/build_palette_outlines.py`, and the font is under the Arphic Public License
 (`fonts/LICENSE-BabelStoneHanPUA.txt`).
 
@@ -565,7 +565,7 @@ the eight malformed descriptions remain as source text. The source remains in
 `babelstone-ids.tsv.gz` and both forms remain searchable. Built by
 `node scripts/build_tangut_layers.mjs` from the table, which carries the pinned source digest.
 
-## `tangut-outlines.json.gz`
+## Tangut outlines
 
 Noto Serif Tangut 2.168 outlines, exported from the bundled WOFF2 by
 `uv run scripts/build_tangut_outlines.py`. The file records the font checksum and
@@ -576,7 +576,7 @@ Malformed descriptions and descriptions naming missing glyphs are excluded from 
 Tangut previews load these outlines locally. Exact descriptions use the corresponding
 character's glyph; edited descriptions use the composition engine's geometric layout.
 Mixed Han–Tangut descriptions also load the host's Han export. The shared layout
-constants in `src/composer/constants.json` come from han-compose at bd0829b (MIT),
+constants in the engine's package (`@han-compose/composer`, `src/constants.json`) come from han-compose at bd0829b (MIT),
 previously used by the composer's test fixture. Tangut Components Supplement glyphs
 are absent from this font version and report a missing glyph.
 
@@ -655,8 +655,8 @@ or the character itself.
 
 ## Jurchen
 
-`jurchen.json.gz` is the palette index for Unicode 18.0's 914 Jurchen characters and 51 radicals, and
-`jurchen-outlines.json.gz` holds their 965 outlines.
+`jurchen.json.gz` is the palette index for Unicode 18.0's 914 Jurchen characters and 51 radicals. The
+engine's `data/sources/jurchen/outlines.json.gz` holds their 965 outlines and those of the 537 variants.
 
 | Field | Source |
 | --- | --- |
@@ -687,12 +687,12 @@ operator other than ⿰, ⿱, ⿷ and ⿸, a part outside the block, or strokes 
 count is read from its stroke code, since Unicode gives none.
 
 Sources are pinned with SHA-256 digests in [`jurchen/sources.json`](jurchen/sources.json). Rebuild the
-index, outlines and font with `uv run --python 3.12 scripts/build_jurchen.py`, then
-`uv run --python 3.12 python scripts/build_bundled_coverage.py`.
+index, outlines and font with `COMPOSER_REPO=<han-compose checkout> uv run --python 3.12 scripts/build_jurchen.py`,
+then `COMPOSER_REPO=<han-compose checkout> uv run --python 3.12 python scripts/build_bundled_coverage.py`.
 
 ## New Korean Orthography outlines
 
-`new-korean-outlines.json.gz` holds the four letters the New Korean Orthography
+The engine's `data/sources/new-korean/outlines.json.gz` holds the four letters the New Korean Orthography
 (조선어 신철자법, 1948) added to Hangul, in seven proposed positions:
 
 - U+A97D / U+D7FC: 여린리을 (soft rieul), `HANGUL CHOSEONG RIEU` / `HANGUL JONGSEONG RIEU`
@@ -770,7 +770,7 @@ The generated report uses the same stroke calculation for every subtree.
 The report derives from the public-domain BabelStone Han and Tangut IDS and the
 stroke-count sources listed above. It contains no Rime stroke-order column.
 
-`src/composer/component-forms.json` contains selected Noto CJK JP outlines in
+the engine's `component-forms.json` contains selected Noto CJK JP outlines in
 Sans 2.004 and Serif 2.002. `scripts/build_component_forms.py` verifies the source
 TTC hashes recorded in the JSON before exporting them. Rebuild with
 `uv run scripts/build_component_forms.py <sans-ttc> <serif-ttc>`.
@@ -973,18 +973,18 @@ entries its test expects. Downloads are cached and checked against pinned SHA-25
 `--cache` and `--out` select their locations. The source archive is written beside the output.
 Test mapping safeguards with `python3 -m unittest discover -s scripts -p test_small_seal.py`.
 
-`small-seal-outlines.json.gz` holds the supported glyphs and unambiguous exact-description
-mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
+The engine's `data/sources/small-seal/outlines.json.gz` holds the supported glyphs and unambiguous
+exact-description mappings. The glyph sources depict the Chen Changzhi edition; they are a rendering aid
 for the Jiguge descriptions. See [the font notes](../fonts/README.md#ids-seal) for source
 quality, licensing and rebuilding.
 
 ## Unicode fallback outlines
 
-`unicode-outlines/*.json.gz` contains 56,657 glyph outlines in 590 chunks, each covering at most
+The engine's `data/unicode/outlines/*.json.gz` contains 56,657 glyph outlines in 590 chunks, each covering at most
 256 code points. The full set is 26,511,873 compressed bytes; the composer fetches only chunks
 needed for glyphs missing from the selected export. An export's own glyphs retain priority.
-`unicode-coverage.json` lists exact covered ranges; `unicode-outlines.json` records chunk hashes,
-counts, source fonts, source digests and copyright notices.
+`data/unicode/coverage.json` lists exact covered ranges; `data/unicode/outlines.json` records chunk
+hashes, counts, source fonts, source digests and copyright notices. Both ship in the engine's package.
 
 The original sources are Noto Sans CJK JP 2.004 and the regular Noto fonts from Ubuntu's
 `fonts-noto-core` and `fonts-noto-extra` 20201225-2 packages, under SIL OFL 1.1.
@@ -1013,7 +1013,7 @@ Unassigned and private-use characters without a source outline remain unavailabl
 
 ## Pyramid glyph catalog
 
-`src/composer/pyramid-glyphs.json` contains all 146 one-over-two repeated-component
+the engine's `pyramid-glyphs.json` contains all 146 one-over-two repeated-component
 characters found in the pinned BabelStone data above (147 attested descriptions).
 Run `python3 scripts/build_pyramid_glyphs.py` to regenerate it, or add `--check`
 to verify it. The generator accepts an explicit lower pair or an encoded pair
@@ -1066,8 +1066,8 @@ code points, transcriptions and limits.
 
 ### Palette fallback outlines
 
-`palette-outlines.json.gz` contains 148 glyphs whose palette entries are missing from the
-pinned default composer export. `palette-fallback-characters.json` lists them.
+The engine's `data/sources/palette/outlines.json.gz` contains 148 glyphs whose palette entries are
+missing from the pinned default composer export. `data/palette/fallback-characters.json` lists them.
 `palette-remote-glyphs.json` records the other palette leaves supplied by that export;
 `node scripts/audit_palette_outlines.mjs` verifies and refreshes the index. The outlines
 come from the included Plangothic parts/Gongche and Noto CJK stroke subsets, plus Noto Sans CJK Regular
@@ -1075,7 +1075,7 @@ come from the included Plangothic parts/Gongche and Noto CJK stroke subsets, plu
 with no fragment; their SIL OFL and Arphic notices are in `fonts/`.
 Rebuild with `uv run scripts/build_palette_outlines.py NOTO_CJK_TTC`, using the Noto Sans
 CJK Regular TTC from Debian `fonts-noto-cjk` `1:20230817+repack1-3`, with SHA-256 `b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a`.
-The 69 PUA outlines are built first by `uv run scripts/build_numbered_pua.py`; see
+The 69 PUA outlines are built first by `COMPOSER_REPO=<han-compose checkout> uv run scripts/build_numbered_pua.py`; see
 `numbered-pua-outlines.json.gz`.
 
 ## Unicode character properties

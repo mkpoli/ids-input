@@ -15,20 +15,20 @@
   import { onMount } from 'svelte'
   import { watchFallback } from './fallback-font.js'
   import { GONGCHE_PARTS, gongcheGroups } from '../core/gongche.js'
-  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '../core/hangul.js'
-  import { hangulIdsOf } from '../core/hangul-ids.js'
+  import { HANGUL_FINALS, HANGUL_INITIALS, HANGUL_MEDIALS, HANGUL_TONE_MARKS, composeHangul, composeJamo, findSyllablesByRomanization, romanizeHangul, toConjoiningJamo } from '@han-compose/composer/hangul'
+  import { hangulIdsOf } from '@han-compose/composer/hangul-ids'
   import { shuishuLabel } from '../adapter/shuishu-data.js'
   import { jurchenLabel, jurchenMatches } from '../adapter/jurchen-data.js'
   import { adjacentVariants, matchScriptParts } from '../core/palette.js'
   import { adjacentStrokeForms, componentIdentity, isStroke } from '../core/component-identity.js'
   import { characterScript, groupPaletteParts, isOtherScript } from '../core/scripts.js'
-  import coverage from '../../data/unicode-coverage.json' with { type: 'json' }
+  import { UNICODE_COVERAGE as coverage } from '@han-compose/composer'
   import scriptIndex from '../../data/script-parts-index.json' with { type: 'json' }
-  import { unpack } from '../composer/loader.js'
+  import { unpack } from '@han-compose/composer'
   import IdsPartIcon from './IdsPartIcon.svelte'
   import { isNewKorean, isSequence } from '../core/ids.js'
   import { translator } from './i18n.js'
-  import { download } from '../core/retry.js'
+  import { download } from '@han-compose/composer/retry'
 
   /**
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter

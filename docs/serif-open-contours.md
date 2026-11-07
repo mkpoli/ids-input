@@ -38,7 +38,7 @@ The `ids-input` column is what the workshop drew from the published `6` record, 
 ## The repairs
 
 - **han-compose#46**, merged as `8156f83`: `_grown` collapses repeated points, grows each vertex once, and gives every point the grown place of the vertex it copies. This closes the seam and the corners at the source, for every client.
-- **`partOf`**, `src/composer/geometry.js`: records read before an export is rebuilt still carry the tear. Each repeated copy takes the point before it, then a contour's last point takes its first. Contours that close on an implied point keep their control point.
+- **`partOf`**, the engine's `geometry.js`: records read before an export is rebuilt still carry the tear. Each repeated copy takes the point before it, then a contour's last point takes its first. Contours that close on an implied point keep their control point.
 
 Both are safe for records that are already whole: every assignment is a no-op where the points agree.
 

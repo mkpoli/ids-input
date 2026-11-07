@@ -71,7 +71,9 @@ try {
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, inner.id, 'the enclosed part answers a click at its own centre')
 
-    await page.mouse.click(at(100, 500).x, at(100, 500).y)
+    // A point inside the enclosure and outside the part it holds. The enclosure's box starts at
+    // x≈100 once the sketch and the drawing agree, so the click is kept clear of that edge.
+    await page.mouse.click(at(150, 500).x, at(150, 500).y)
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, outer.id, 'the enclosing part is chosen outside the inner one')
 
@@ -106,7 +108,9 @@ try {
     }, inner.id)
     assert.ok(ink?.point, 'the inner part has painted ink')
     for (const edge of ['x0', 'y0', 'x1', 'y1']) assert.ok(Math.abs(ink.quadBox[edge] - ink.inkBox[edge]) < 12, `the selection follows the painted ${edge}`)
-    await page.mouse.click(at(100, 500).x, at(100, 500).y)
+    // A point inside the enclosure and outside the part it holds. The enclosure's box starts at
+    // x≈100 once the sketch and the drawing agree, so the click is kept clear of that edge.
+    await page.mouse.click(at(150, 500).x, at(150, 500).y)
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, outer.id, 'the enclosure is chosen before the ink click')
     await page.mouse.click(ink.point.x, ink.point.y)
@@ -117,7 +121,7 @@ try {
 
     // The enclosing part moves by its own outline, and the part inside it still answers at its
     // moved place and moves by the pointer's own delta.
-    const border = at(100, 500)
+    const border = at(150, 500)
     await page.mouse.click(border.x, border.y)
     await page.waitForTimeout(300)
     assert.equal((await stored())?.chosen, outer.id, 'the enclosure is chosen again for its own move')

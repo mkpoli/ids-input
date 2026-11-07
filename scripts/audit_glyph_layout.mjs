@@ -4,8 +4,8 @@ import { mkdir, readFile, writeFile, readdir } from 'node:fs/promises'
 import { createHash } from 'node:crypto'
 import { execFileSync } from 'node:child_process'
 import { resolve, join } from 'node:path'
-import { compose, LookupError } from '../src/composer/loader.js'
-import { Composer } from '../src/composer/compose.js'
+import { compose, LookupError } from '@han-compose/composer/loader'
+import { Composer } from '@han-compose/composer/compose'
 import { splitDescription } from '../src/core/ids.js'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 import { loadGlyphAuditCatalogue, selectGlyphAuditCandidates } from './lib/glyph-audit-catalogue.mjs'
@@ -45,7 +45,7 @@ let source = sourceManager.create()
 const rows = []
 const sourcePaths = ['data/babelstone-ids.tsv.gz', 'data/yi-bai-ids.tsv.gz', 'demo/lib/examples.js', 'demo/lib/example-sources.js']
 const implementationPaths = ['scripts/audit_glyph_layout.mjs', ...['glyph-audit-catalogue', 'glyph-audit-metrics', 'glyph-audit-confidence', 'glyph-audit-source', 'glyph-audit-raster'].map(name => `scripts/lib/${name}.mjs`),
-  ...(await readdir(new URL('../src/composer/', import.meta.url))).filter(name => /\.(js|json)$/.test(name)).map(name => `src/composer/${name}`)]
+  ...(await readdir(resolve('node_modules/@han-compose/composer/src'))).map(name => `node_modules/@han-compose/composer/src/${name}`)]
 const hashesOf = async paths => Object.fromEntries(await Promise.all(paths.map(async path => [path, digest(await readFile(new URL(`../${path}`, import.meta.url)))])))
 const report = {
   schema: 1, commit: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), style,

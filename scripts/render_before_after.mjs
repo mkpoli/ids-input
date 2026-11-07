@@ -8,7 +8,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
 import { chromium } from 'playwright-core'
-import { compose, createSource } from '../src/composer/loader.js'
+import { compose, createSource } from '@han-compose/composer/loader'
 import { COMPOSER_BASES } from '../demo/lib/composer.js'
 
 const args = process.argv.slice(2)

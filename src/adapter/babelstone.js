@@ -13,7 +13,7 @@ import { unicodeProperty } from '../core/unicode.js'
 import { isComponent, isSequence, parse, write } from '../core/ids.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
-import { download } from '../core/retry.js'
+import { download } from '@han-compose/composer/retry'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter

@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, readFileSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -40,6 +40,43 @@ function lazyFallbackFont() {
   }
 }
 
+// The outlines the drawing engine draws without an export, served from the demo's own bundle: each
+// file as an asset of its own name under `assets/`, and a module naming every one by the path the
+// engine reads it at.
+const ENGINE_DATA = fileURLToPath(new URL('../node_modules/@han-compose/composer/data/', import.meta.url))
+const ENGINE_OUTLINES = [
+  ...['tangut', 'bopomofo', 'new-korean', 'small-seal', 'shuishu', 'jurchen', 'palette'].map(name => `sources/${name}/outlines.json.gz`),
+  ...readdirSync(join(ENGINE_DATA, 'unicode/outlines')).map(file => `unicode/outlines/${file}`),
+]
+const ENGINE_MODULE = '\0ids-engine-outlines'
+function engineOutlines() {
+  let done = false, base = '/'
+  return {
+    name: 'engine-outlines',
+    configResolved(config) { base = config.base.endsWith('/') ? config.base : `${config.base}/` },
+    resolveId: id => id === 'ids-engine-outlines' ? ENGINE_MODULE : null,
+    // The files are read from the package, which stands outside this checkout's root.
+    configureServer(server) { server.middlewares.use((request, response, next) => {
+      const path = decodeURIComponent((request.url ?? '').split('?')[0])
+      if (!path.startsWith(`${base}assets/`)) return next()
+      const name = path.slice(`${base}assets/`.length)
+      if (!ENGINE_OUTLINES.includes(name)) return next()
+      response.setHeader('content-type', 'application/octet-stream')
+      response.end(readFileSync(join(ENGINE_DATA, name)))
+    }) },
+    load(id) {
+      if (id !== ENGINE_MODULE) return null
+      // Emitted once, whatever asks for the module and however often it is loaded.
+      if (!done) {
+        done = true
+        for (const path of ENGINE_OUTLINES) this.emitFile({ type: 'asset', fileName: `assets/${path}`, source: readFileSync(join(ENGINE_DATA, path)) })
+      }
+      // The page's own address, so a page served under a path finds them too.
+      return `export default ${JSON.stringify(Object.fromEntries(ENGINE_OUTLINES.map(path => [path, `${base}assets/${path}`])))}`
+    },
+  }
+}
+
 function ortAssets() {
   return {
     name: 'ort-assets',
@@ -70,12 +107,17 @@ export default defineConfig({
     __APP_VERSION__: JSON.stringify(VERSION),
     __BUILD_COMMIT__: JSON.stringify(process.env.GITHUB_SHA || process.env.VITE_BUILD_COMMIT || 'dev'),
   },
-  plugins: [lazyFallbackFont(), svelte(), ortAssets()],
+  plugins: [lazyFallbackFont(), svelte(), ortAssets(), engineOutlines()],
   resolve: { alias: { 'onnxruntime-web/wasm': ORT_ALIAS } },
+  // The drawing engine starts its Worker from `new URL('./worker.js', import.meta.url)`, which Vite
+  // resolves from source; pre-bundled, that URL points nowhere.
+  optimizeDeps: { exclude: ['@han-compose/composer'] },
   build: { outDir: '../dist', emptyOutDir: true, target: 'es2022',
     // A fallback shard is fetched when a character needs it; inlined, the small ones would ride in
     // the first scripts as base64, which hardly compresses.
     assetsInlineLimit: file => file.endsWith('.woff2') ? false : undefined,
     rollupOptions: { input: { index: `${import.meta.dirname}/index.html`, compare: `${import.meta.dirname}/compare.html`, engines: `${import.meta.dirname}/engines.html`, sources: `${import.meta.dirname}/sources.html`, embed: `${import.meta.dirname}/embed.html`, design: `${import.meta.dirname}/design.html` } } },
-  server: { fs: { allow: ['..'] } },
+  // The drawing engine's files, outside this checkout's root: a dependency that is a directory is
+  // read where it stands, and its Worker is a `file:` module the page asks for by that path.
+  server: { fs: { strict: false, allow: ['..', join(import.meta.dirname, '..', 'node_modules', '@han-compose', 'composer')] } },
 })

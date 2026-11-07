@@ -10,9 +10,10 @@
   import { watchFallback } from '../src/svelte/fallback-font.js'
   import { IdsCharacterInfo, IdsOperators, IdsPartTools, IdsPicker, IdsPreview, IdsSearch, IdsStructuralSearch, IdsSequence, IdsTree, IdsTreeList, OperatorIcon, createEditor, shortcut, translator } from '../src/svelte/index.js'
   import { smallSealAdapter } from '../src/adapter/index.js'
-  import { APPROXIMATE, composableDescription } from '../src/composer/compose.js'
-  import { hasTangut } from '../src/composer/tangut.js'
-  import { composerPreview as composerAt } from '../src/composer/index.js'
+  import { APPROXIMATE, composableDescription } from '@han-compose/composer/compose'
+  import { hasTangut } from '@han-compose/composer/tangut'
+  import { composerPreview as composerAt } from '@han-compose/composer'
+  import engineOutlines from 'ids-engine-outlines'
   import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
@@ -129,10 +130,13 @@
   const separate = true
   /** @type {Map<string, ReturnType<typeof composerPreview>>} */
   const previews = new Map()
+  // The outlines the engine draws without the export, as the page serves the package's `data/`: the
+  // names the package reads, and the URL Vite gives each file it bundles. See `vite.config.js`.
+  const bundles = engineOutlines
   /** @param {string} at @param {boolean} split @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style @param {string} [owner] A view whose drawings the others must not cancel. */
   const previewAt = (at, split, style, owner = '') => {
     const key = `${at}\0${split ? '1' : '0'}\0${style}\0${owner}`
-    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style }))
+    if (!previews.has(key)) previews.set(key, composerPreview({ base: at, separate: split, fontStyle: style, loaders: bundles }))
     return /** @type {ReturnType<typeof composerPreview>} */ (previews.get(key))
   }
   // The drawings demo/scripts/build-example-drawings.mjs prepares for this export, one per example.
@@ -277,9 +281,9 @@
   const iconDrawings = new Map()
   /** A face's drawer for tabs and the tree, falling back to the default export. @param {string} at @param {'sans' | 'serif' | 'fangsong' | 'kaisho'} style */
   const drawerAt = (at, style) => {
-    const composed = composerPreview({ base: at, fontStyle: style })
+    const composed = composerPreview({ base: at, fontStyle: style, loaders: bundles })
     if (exportUrl(at) === preparedBase && style === 'sans') return composed
-    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans' })
+    const sans = composerPreview({ base: COMPOSER_BASE, fontStyle: 'sans', loaders: bundles })
     return async (/** @type {string} */ sequence) => {
       const adapted = await babel.overwrite?.(sequence).catch(() => []) ?? []
       for (const char of adapted) {

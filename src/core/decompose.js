@@ -2,7 +2,7 @@
 // Decomposition: the characters or the description typed into "Take parts from", each character's
 // descriptions as an adapter gives them, and the way the tree of them is stepped through by keys.
 import { arity, isComponent, isDescription, isSequence, isShuishu, leaves, modifierAt, parse, takesModifier } from './ids.js'
-import { emojiPrefix } from './emoji.js'
+import { emojiPrefix } from '@han-compose/composer/emoji'
 
 import { unicodeProperty } from './unicode.js'
 import { unalias } from './aliases.js'

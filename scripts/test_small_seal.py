@@ -1,6 +1,7 @@
 """Importer invariants: python3 -m unittest discover -s scripts -p test_small_seal.py."""
 import unittest
 from build_small_seal import mappings, compile_data, sexps
+from engine_data import DATA
 
 class ImportTests(unittest.TestCase):
     def test_exact_properties_only(self):
@@ -94,7 +95,7 @@ class ShippedCrosswalkTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         entries = json.loads((root / 'scripts/data/small-seal/supplements.json').read_text(encoding='utf-8'))['entries']
         doc = json.loads(gzip.decompress((root / 'data/small-seal.json.gz').read_bytes()))
-        outlines = json.loads(gzip.decompress((root / 'data/small-seal-outlines.json.gz').read_bytes()))
+        outlines = json.loads(gzip.decompress((DATA / 'sources/small-seal/outlines.json.gz').read_bytes()))
         parts = {part['part']: part for part in doc['parts']}
         for entry in entries:
             char = entry['char']
