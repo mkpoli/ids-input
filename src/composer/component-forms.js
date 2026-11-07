@@ -44,7 +44,7 @@ export function componentParts(text, region = constants.face, style = 'sans', at
   // complete native glyphs retain their designed proportions and side bearings.
   // Nested forms use the description's contextual row/column allocation.
   const target = atRoot ? mapped(frame, constants.face, region) : region
-  const font = style === 'kaisho' ? 'Kureedo' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK`
+  const font = style === 'kaisho' ? 'Kureedo' : style === 'fangsong' ? 'Zhuque Fangsong' : `Noto ${style === 'serif' ? 'Serif' : 'Sans'} CJK`
   const editorial = editorialForms.get(text)
   const origin = editorial ? `${editorial} editorial (${font}): ${text}`
     : text === '⿰冫⿱丿丶' || text === '⿰冫⿾冫' ? 'four-dot repetition' : `${font}: ${text}`
