@@ -3,6 +3,7 @@
   // empty slot), buttons to clear it or take its level away, and the components that can stand in its
   // place or the descriptions it can be split into. A problem or the next slot to fill shows beneath;
   // the components float over the page, so choosing a part does not move what is around it.
+  import { untrack } from 'svelte'
   import { isNode, write } from '../core/ids.js'
   import { recursiveAlternatives } from '../core/recursive-alternatives.js'
   import { shortcut } from './shortcut.js'
@@ -20,30 +21,37 @@
   const identity = $derived(`${at}\u0000${part}\u0000${written}`)
   /** @type {{ text: string, tree: import('../core/ids.js').Part }[]} */
   let recursive = $state([])
-  let truncated = $state(false)
+  let truncated = $state(false), loading = $state(false), failed = $state(false)
+  let resultKey = ''
   let moreKey = $state(''), moreLevel = $state(0)
   const level = $derived(moreKey === identity ? moreLevel : 0)
   const additional = $derived(recursive.filter(({ text }) => !editor.splits.includes(text) && !merges.includes(text) && !editor.swaps.some(swap => swap.char === text)))
-  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0 || additional.length > 0 || truncated)
+  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
   const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part: part || written }))
 
   $effect(() => {
     const selected = picked, adapter = editor.adapter, key = identity, count = level
-    recursive = []; truncated = false
-    if (!editor.chosen || !selected) return
+    if (resultKey !== key) { resultKey = key; recursive = []; truncated = false; failed = false }
+    if (!editor.chosen || !selected) { loading = false; return }
+    loading = true
     const controller = new AbortController()
     ;(async () => {
       try {
-        const scale = 2 ** count
+        const scale = 2 ** count, seen = new Set(untrack(() => recursive.map(option => option.text)))
+        let cut = false, lost = false
         for await (const result of recursiveAlternatives(selected, adapter, {
           signal: controller.signal, maxResults: 128 * scale, maxStates: 512 * scale,
           maxDepth: 4 + 2 * count, maxWork: 8192 * scale, maxLookups: 64 * scale,
         })) {
           if (controller.signal.aborted || identity !== key) return
-          if (result.type === 'alternative') recursive = [...recursive, { text: write(result.tree), tree: result.tree }]
-          else truncated = true
+          if (result.type === 'alternative') {
+            const text = write(result.tree)
+            if (!seen.has(text)) { seen.add(text); recursive = [...recursive, { text, tree: result.tree }] }
+          } else { cut = result.reasons.some(reason => reason !== 'lookup'); lost = result.reasons.includes('lookup') }
         }
-      } catch { /* Existing direct alternatives remain available if a lookup fails. */ }
+        truncated = cut; failed = lost
+      } catch { if (!controller.signal.aborted) failed = true }
+      finally { if (!controller.signal.aborted) loading = false }
     })()
     return () => controller.abort()
   })
@@ -174,7 +182,7 @@
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} style:top="{top}px" style:left="{left}px">
+    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading} style:top="{top}px" style:left="{left}px">
       <div class="ids-swaps-head">
         <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
@@ -196,10 +204,11 @@
           <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
         {/each}
       </div>
-      {#if truncated}
-        {#if level < 3}<button type="button" class="ids-more" onclick={() => { moreKey = identity; moreLevel = level + 1 }}>{t('ids.from.more')}</button>
-        {:else}<span class="ids-title">{t('ids.from.more')}</span>{/if}
+      {#if truncated || level > 0}
+        <button type="button" class="ids-more" aria-disabled={loading || !truncated || level >= 3}
+          onclick={() => { if (!loading && truncated && level < 3) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.from.more')}</button>
       {/if}
+      <span class="ids-status" role="status">{loading && level > 0 ? t('ids.from.searching') : failed ? t('ids.from.searchFailed') : ''}</span>
     </div>
   {/if}
 </div>
@@ -240,6 +249,8 @@
   .ids-split{max-width:100%;overflow-wrap:anywhere;text-align:left;font-size:16px;color:var(--_muted)}
   .ids-merge{font-weight:500}
   .ids-more{align-self:flex-start;padding:4px 8px;font-size:12px}
+  .ids-status{font-size:11px;color:var(--_muted)}
+  .ids-status:empty{display:none}
   .ids-swap:not(:disabled):hover{border-color:var(--_accent)}
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}

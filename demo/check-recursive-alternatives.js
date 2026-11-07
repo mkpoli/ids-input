@@ -20,7 +20,17 @@ try {
   await left.waitFor({ timeout: 120000 })
   await right.waitFor({ timeout: 120000 })
   await both.waitFor({ timeout: 120000 })
+  const more = page.locator('.ids-more')
+  await more.waitFor({ timeout: 120000 })
+  await more.focus()
+  await more.press('Enter')
+  assert.equal(await more.evaluate(element => element === document.activeElement), true, 'loading more keeps keyboard focus')
+  assert.equal(await both.count(), 1, 'existing alternatives remain while more load')
+  await page.waitForFunction(() => document.querySelector('.ids-swaps')?.getAttribute('aria-busy') === 'false', null, { timeout: 120000 })
+  assert.equal(await more.evaluate(element => element === document.activeElement), true, 'focus remains after loading more')
   if (process.env.IDS_SHOT) {
+    await field.focus()
+    await page.locator('.ids-swaps').evaluate(element => { element.scrollTop = 0 })
     await page.evaluate(() => document.fonts.ready)
     await page.screenshot({ path: process.env.IDS_SHOT })
   }

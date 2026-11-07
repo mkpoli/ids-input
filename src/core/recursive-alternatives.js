@@ -19,6 +19,38 @@ function mergeable(part, root = true) {
   return !part.note && (root || !part.marks) && part.parts.every(child => mergeable(child, false))
 }
 
+/** Bound one adapter call and signal it to stop on timeout or cancellation.
+ * @template T
+ * @param {(signal: AbortSignal) => Promise<T>} start
+ * @param {AbortSignal | undefined} signal
+ * @param {number} timeoutMs
+ * @returns {Promise<T>} */
+async function lookup(start, signal, timeoutMs) {
+  signal?.throwIfAborted()
+  const controller = new AbortController()
+  /** @type {ReturnType<typeof setTimeout> | undefined} */
+  let timer
+  /** @type {() => void} */
+  let onAbort = () => {}
+  const stop = new Promise((_, reject) => {
+    onAbort = () => {
+      reject(signal?.reason ?? new DOMException('Aborted', 'AbortError'))
+      controller.abort(signal?.reason)
+    }
+    signal?.addEventListener('abort', onAbort, { once: true })
+    timer = setTimeout(() => {
+      reject(new Error('Adapter lookup timed out'))
+      controller.abort()
+    }, timeoutMs)
+  })
+  try {
+    return /** @type {T} */ (await Promise.race([Promise.resolve().then(() => start(controller.signal)), stop]))
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', onAbort)
+  }
+}
+
 /**
  * Enumerate one-step rewrites breadth first, visiting deeper parts first, so changes to separate parts combine independently.
  * The input is excluded. Every replacement comes from structure or an exact encoded lookup; a
@@ -29,16 +61,17 @@ function mergeable(part, root = true) {
  *
  * Limits bound results, retained states, rewrite distance, inspected paths/candidates and lookups. If a
  * limit excludes work, the last event reports it; stopping iteration early omits that event.
- * Failed lookups are reported as 'lookup' and other paths continue; cancellation propagates.
+ * Failed or timed-out lookups are reported as 'lookup' and other paths continue; cancellation propagates.
  * @param {Part} part
  * @param {Pick<import('../adapter/types.js').IdsAdapter, 'structure' | 'encoded'>} adapter
- * @param {{ maxResults?: number, maxStates?: number, maxDepth?: number, maxWork?: number, maxLookups?: number, signal?: AbortSignal }} [options]
+ * @param {{ maxResults?: number, maxStates?: number, maxDepth?: number, maxWork?: number, maxLookups?: number, lookupTimeoutMs?: number, signal?: AbortSignal }} [options]
  * @returns {AsyncGenerator<AlternativeEvent, void, unknown>}
  */
-export async function* recursiveAlternatives(part, adapter, { maxResults = 128, maxStates = 512, maxDepth = 4, maxWork = 8192, maxLookups = 64, signal } = {}) {
+export async function* recursiveAlternatives(part, adapter, { maxResults = 128, maxStates = 512, maxDepth = 4, maxWork = 8192, maxLookups = 64, lookupTimeoutMs = 5000, signal } = {}) {
   for (const [name, value, minimum] of /** @type {[string, number, number][]} */ ([['maxResults', maxResults, 0], ['maxStates', maxStates, 1], ['maxDepth', maxDepth, 0], ['maxWork', maxWork, 1], ['maxLookups', maxLookups, 0]])) {
     if (!Number.isSafeInteger(value) || value < minimum) throw new RangeError(`${name} must be an integer >= ${minimum}`)
   }
+  if (!Number.isSafeInteger(lookupTimeoutMs) || lookupTimeoutMs < 1 || lookupTimeoutMs > 2147483647) throw new RangeError('lookupTimeoutMs must be an integer between 1 and 2147483647')
   /** @type {{ tree: Part, depth: number }[]} */
   const queue = [{ tree: part, depth: 0 }]
   const seen = new Set([write(part)])
@@ -67,7 +100,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
           if (!structures.has(base)) {
             if (lookups >= maxLookups) { cuts.add('lookups'); continue }
             lookups++
-            structures.set(base, adapter.structure(base, { signal }))
+            structures.set(base, lookup(requestSignal => adapter.structure(base, { signal: requestSignal }), signal, lookupTimeoutMs))
           }
           const found = await /** @type {Promise<import('./decompose.js').Sequence[]>} */ (structures.get(base))
           signal?.throwIfAborted()
@@ -83,7 +116,8 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
           if (!encoded.has(sequence)) {
             if (lookups >= maxLookups) { cuts.add('lookups'); continue }
             lookups++
-            encoded.set(sequence, adapter.encoded(sequence, { exact: true, signal }))
+            const findEncoded = adapter.encoded.bind(adapter)
+            encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, lookupTimeoutMs))
           }
           const found = await /** @type {Promise<string[]>} */ (encoded.get(sequence))
           signal?.throwIfAborted()

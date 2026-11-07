@@ -119,6 +119,35 @@ describe('recursiveAlternatives', () => {
     expect(events.at(-1)).toEqual({ type: 'truncated', reasons: ['lookup'] })
   })
 
+  test('times out hanging lookups, aborts them, and continues other paths', async () => {
+    const requests = []
+    const source = {
+      structure: async (char, { signal }) => {
+        if (char === '甲') { requests.push(signal); return await new Promise(() => {}) }
+        return char === '乙' ? [{ text: '丙' }] : []
+      },
+      encoded: async (_text, { signal }) => { requests.push(signal); return await new Promise(() => {}) },
+    }
+    const { texts, events } = await collect(tree('⿰甲乙'), source, { lookupTimeoutMs: 10 })
+    expect(texts).toContain('⿰甲丙')
+    expect(events.at(-1)).toEqual({ type: 'truncated', reasons: ['lookup'] })
+    expect(requests.length).toBeGreaterThan(1)
+    expect(requests.every(signal => signal.aborted)).toBe(true)
+  })
+
+  test('aborts an in-flight lookup even when the adapter ignores its signal', async () => {
+    const controller = new AbortController()
+    let requestSignal
+    let started
+    const ready = new Promise(resolve => { started = resolve })
+    const source = { structure: async (_char, { signal }) => { requestSignal = signal; started(); return await new Promise(() => {}) } }
+    const pending = collect('甲', source, { signal: controller.signal, lookupTimeoutMs: 5000 })
+    await ready
+    controller.abort()
+    await expect(pending).rejects.toThrow()
+    expect(requestSignal.aborted).toBe(true)
+  })
+
   test('yields child alternatives before looking up their parent', async () => {
     const source = {
       structure: async char => char === '甲' ? [{ text: '丙' }] : [],
@@ -139,5 +168,7 @@ describe('recursiveAlternatives', () => {
     await expect(collect('甲', source, { signal: controller.signal })).rejects.toThrow()
     await expect(collect('甲', { structure: async () => { throw new DOMException('cancelled', 'AbortError') } })).rejects.toThrow('cancelled')
     await expect(collect('甲', source, { maxWork: Infinity })).rejects.toThrow(RangeError)
+    await expect(collect('甲', source, { lookupTimeoutMs: 0 })).rejects.toThrow(RangeError)
+    await expect(collect('甲', source, { lookupTimeoutMs: 2147483648 })).rejects.toThrow(RangeError)
   })
 })
