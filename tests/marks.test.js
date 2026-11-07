@@ -80,6 +80,11 @@ describe('loose marks', () => {
     expect(write(placed.tree)).toBe('⿰亻水ˇ')
   })
 
+  it('retains operator modifiers when marks are normalized', () => {
+    const tree = { op: '⿴', note: '1', parts: ['甲', { op: '⿰', note: '2', parts: ['乙', '丙'], marks: 'ˊ' }] }
+    expect(write(normalizeMarks(tree))).toBe('⿴[1]甲⿰[2]乙丙ˊ')
+  })
+
   it('keeps a child mark before the marks of the node that holds it', () => {
     const tree = { op: '⿰', parts: ['木', { op: '⿱', parts: ['七', '口'], marks: 'ˇ' }], marks: 'ˊ' }
     expect(write(normalizeMarks(tree))).toBe('⿰木⿱七口ˇˊ')
