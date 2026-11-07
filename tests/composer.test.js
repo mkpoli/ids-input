@@ -786,7 +786,7 @@ describe('the leading component under a cover', () => {
   const net = branch => part(branch, [50, 300, 950, 360], [50, 160, 110, 360], [890, 160, 950, 360], [50, 160, 950, 220])
   const clear = (child, ...lower) =>
     Composer.prototype.clearUnderCover.call(
-      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang },
+      { partial: false, C: constants, topOperand: Composer.prototype.topOperand, hang: Composer.prototype.hang, closed: Composer.prototype.closed },
       '⿱', ['宀', child], [[cover()], lower])
   const span = placedPart => [placedPart.target[0], placedPart.target[2]]
 

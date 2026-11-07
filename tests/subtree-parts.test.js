@@ -3,7 +3,7 @@ import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'nod
 import { tmpdir } from 'node:os'
 import { pathToFileURL } from 'node:url'
 import { gzipSync, gunzipSync } from 'node:zlib'
-import { subtrees, frequencies, strokeCounter, MANUAL_PARTS, manualUses, build } from '../scripts/build_subtree_parts.mjs'
+import { subtrees, frequencies, strokeCounter, MANUAL_PARTS, MANUAL_SOURCES, manualUses, build } from '../scripts/build_subtree_parts.mjs'
 import { parseIdsTable } from '../src/adapter/babelstone.js'
 import { parse, write, replaceAt } from '../src/core/ids.js'
 
@@ -39,7 +39,7 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
   expect(report.characters).toBe(103825)
   expect(report.parts.length).toBeGreaterThan(100000)
   const compounds = palette.parts.filter(row => !/^\{\d+\}$/.test(row[0]) && [...row[0]].length > 1)
-  expect(compounds).toHaveLength(32)
+  expect(compounds).toHaveLength(94)
   expect(compounds.find(row => row[0] === '⿰冫⿱丿丶')).toEqual(['⿰冫⿱丿丶', 113, 4, 1, null, 'c'])
   for (const [text, uses, strokes, derived, , kind] of compounds) {
     expect(parse(text).problem).toBeUndefined()
@@ -52,6 +52,17 @@ it('ships all frequencies and selectable common compound parts with strokes', ()
     expect(write(replaceAt(parse('⿰木水').tree, [1], tree))).toBe(`⿰木${text}`)
     if (!MANUAL_PARTS.includes(text)) expect(report.parts.find(row => row[0] === text)?.[1]).toBe(uses)
   }
+})
+
+it('keeps every manual shortcut a component no character of the corpus is written as', () => {
+  const table = parseIdsTable(gunzipSync(readFileSync(new URL('../data/babelstone-ids.tsv.gz', import.meta.url))).toString())
+  const spellings = new Set([...table.values()].flatMap(sequences => sequences.map(sequence => sequence.text)))
+  expect(Object.values(MANUAL_SOURCES).flat()).toEqual(MANUAL_PARTS)
+  expect(new Set(MANUAL_PARTS).size).toBe(MANUAL_PARTS.length)
+  for (const text of MANUAL_PARTS) expect(subtrees(text).at(-1).op).toBeTruthy()
+  // The corpus and han-compose entries describe no character of the corpus, so none of them doubles
+  // for a component a character already encodes.
+  expect([...MANUAL_SOURCES.corpus, ...MANUAL_SOURCES.hanCompose].filter(text => spellings.has(text))).toEqual([])
 })
 
 it('counts source placeholders and literal shortcuts once per character', () => {

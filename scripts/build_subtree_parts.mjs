@@ -74,8 +74,29 @@ export function strokeCounter(table, rows) {
   return count
 }
 
-// Requested literal IDS remain selectable even below the frequency cutoff.
-export const MANUAL_PARTS = ['⿰冫⿱丿丶', '⿳亠㐅厂', '⿳亠丷厂', '⿻𢆶戈', '⿸尸彳', '㇯鹿比', '㇯馬灬', '㇯鳥灬', '⿳亠口冖', '⿸尸氺', '⿳𰀉冖木', '⿳卝罒冖', '⿱丿乚', '⿰氵氵', '⿱𰀪亻', '⿲彳⿱山一攵']
+/**
+ * Literal IDS that stay selectable below the frequency cutoff, under the source that supplies them:
+ * `requested` the shortcuts asked for one at a time, `cover` the runs a cover layout sets as one
+ * part, `corpus` components the bundled corpus writes inside 15 to 29 distinct characters, under the
+ * cutoff, and `hanCompose` the components han-compose names in its own data and design notes
+ * (<https://github.com/mkpoli/han-compose>: `docs/design/ids-composer.md`,
+ * `data/vocab/han-ids-drawn.tsv`, `src/han_compose/compose.py`, `src/han_compose/kanjivg_cuts.py`,
+ * `tests/test_compose.py`, read at commit bf13d98). No `corpus` or `hanCompose` entry is the whole
+ * description of a character, so none of them doubles for a component a character already encodes:
+ * 鬼 for ⿷⿱甶儿厶, 𦥔 for ⿻臼丨, 爫 for ⿱㇒𭕄, 𡗗 for ⿻三人, 主 for ⿱亠土 and 壳 for ⿱⿳士冖一几 are left out.
+ */
+export const MANUAL_SOURCES = {
+  requested: ['⿰冫⿱丿丶', '⿳亠㐅厂', '⿳亠丷厂', '⿻𢆶戈', '⿸尸彳', '㇯鹿比', '㇯馬灬', '㇯鳥灬', '⿳亠口冖', '⿸尸氺', '⿳𰀉冖木', '⿳卝罒冖', '⿱丿乚', '⿰氵氵', '⿱𰀪亻', '⿲彳⿱山一攵'],
+  cover: ['⿱一血', '⿱一𧘇', '⿱罒夫', '⿱日𧘇', '⿱皿亅', '⿱八亠', '⿱臼火', '⿱𠂊巾', '⿳丅口丄', '⿱八人'],
+  corpus: ['⿰⿻三丨刀', '⿱卝干', '⿱左⺼', '⿱⿴𦥑同冖', '⿱一八', '⿻二丿', '⿰未攵', '⿱丑丑', '⿱囪心', '⿳𠂉一乙',
+    '⿵𠆢丶', '⿻十从', '⿳宀⿻㇒𰀁口', '⿳穴𠆢又', '⿴𦥑囟', '⿱日⺝', '⿵冂㸚', '⿰⺝刂', '⿰工几', '⿰𫜹𫜹',
+    '⿱䙲巳', '⿱𠂉一', '⿱𠂉丶', '⿱𰀁口', '⿲𰀪丨⿱丶丶', '⿵冂丨', '⿻口土', '⿻甲一', '⿰丰丰', '⿰田田',
+    '⿵𦉪丅', '⿹丅丿', '⿴囗夕', '⿵入一', '⿵冂⺀', '⿻一止', '⿰⿵冂⺀刂', '⿰臣⿱𠂉一', '⿰𠄠𠄠', '⿱⿵入一⿰⺝刂',
+    '⿱䒑⿰⿵冂⺀刂', '⿲木夕木', '⿴囗夊', '⿸⿹丅丿丨'],
+  // 脊's top, ⿻人⿰二二, is left out: the preview overlays 人 on two full-size 二 and fills the counters.
+  hanCompose: ['⿱𠆢虫', '⿱⿱㇒𭕄𠙻', '⿻干二', '⿱一丷', '⿱⺀㐅', '⿱⿱一丷⿱一八', '⿻乛亅', '⿹⿻乛亅㇒'],
+}
+export const MANUAL_PARTS = Object.values(MANUAL_SOURCES).flat()
 // IDS.TXT's component table: {11}, bottom of 軣, ⿰⿱丶㇀⿱㇒丶.
 // Exact root descriptions in the bundled corpus. Preserve regional spellings as aliases.
 export const ENCODED_PARTS = {
@@ -93,14 +114,27 @@ export const SOURCE_ALIASES = {
   '⿳亠口冖': ['{87}'], '⿳𰀉冖木': ['⿱{38}木'], '⿱丿乚': ['⿱㇒乚'],
 }
 
+/** Every spelling the table writes, kept beside it so a count over many parts parses the corpus once. */
+const spellingsCache = new WeakMap()
+/** @param {Map<string, { text: string }[]>} table */
+function spellingsOf(table) {
+  let spellings = spellingsCache.get(table)
+  if (!spellings) {
+    spellings = new Map()
+    for (const sequences of table.values()) {
+      spellings.set(sequences, [...new Set(sequences.flatMap(({ text }) => {
+        try { return subtrees(text).map(node => node.text) } catch { return [] }
+      }))])
+    }
+    spellingsCache.set(table, spellings)
+  }
+  return spellings
+}
+
 export function manualUses(table, text, aliases = SOURCE_ALIASES[text] ?? []) {
   const spellings = new Set([text, ...aliases])
   let uses = 0
-  for (const sequences of table.values()) {
-    if (sequences.some(({ text }) => {
-      try { return subtrees(text).some(node => spellings.has(node.text)) } catch { return false }
-    })) uses++
-  }
+  for (const nodes of spellingsOf(table).values()) if (nodes.some(node => spellings.has(node))) uses++
   return uses
 }
 
@@ -148,7 +182,7 @@ export function build(root = new URL('../', import.meta.url)) {
   }
   rows.sort((a, b) => (a[5] === 't') - (b[5] === 't') || (a[5] === 't' ? a[0].codePointAt(0) - b[0].codePointAt(0) : b[1] - a[1] || a[0].codePointAt(0) - b[0].codePointAt(0) || (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)))
   palette.parts = rows
-  palette.subtrees = { threshold, manual: MANUAL_PARTS, sourceAliases: SOURCE_ALIASES, encoded: ENCODED_PARTS, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
+  palette.subtrees = { threshold, manual: MANUAL_PARTS, manualSources: MANUAL_SOURCES, sourceAliases: SOURCE_ALIASES, encoded: ENCODED_PARTS, measure: 'distinct characters containing the exact proper subtree', builder: 'scripts/build_subtree_parts.mjs' }
   writeFileSync(data('ids-parts.json'), JSON.stringify(palette) + '\n')
   const report = {
     columns: ['part', 'uses', 'occurrences', 'nestedUses', 'strokes'],
