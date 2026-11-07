@@ -10,8 +10,8 @@ parts, taking each from a whole character it resembles, which draws no one's han
 West's table records the draft's own drawing of each form as a glyph in BabelStone Han PUA, at a
 private-use code point the table prints beside the IDS.
 
-This script reads the table, keeps the descriptions the examples use, and writes each glyph's
-outline into `data/erjian-glyphs.json` in the composer's 1000-unit box, y down.
+This script reads the table and writes each glyph's outline into `data/erjian-glyphs.json` in the
+composer's 1000-unit box, y down, so any form of the table is drawn as the draft drew it.
 
     uv run scripts/build_erjian_glyphs.py [--font path/to/BabelStoneHanPUA.ttf]
 
@@ -38,7 +38,6 @@ TABLE_URL = "https://www.babelstone.co.uk/Fonts/Erjian.html"
 FONT_URL = "https://www.babelstone.co.uk/Fonts/Download/BabelStoneHanPUA.ttf"
 FONT_SHA256 = "92e7155bd28f5570449f4dc71e9bb6fa919f67ef0120d4f83b58c61bed3ed4dc"
 OUT = ROOT / "data" / "erjian-glyphs.json"
-EXAMPLES = ROOT / "demo" / "lib" / "examples.js"
 ROW = re.compile(r"<TR[^>]*>(.*?)</TR>", re.S | re.I)
 CELL = re.compile(r"<TD[^>]*>(.*?)</TD>", re.S | re.I)
 PUA = re.compile(r"PUA U\+([0-9A-F]{4,})")
@@ -62,18 +61,18 @@ def rows(table: str) -> dict[str, dict[str, str]]:
         cells = [re.sub(r"\s+", " ", TAG.sub(" ", cell)).strip() for cell in CELL.findall(row.group(1))]
         if len(cells) != 5 or not re.match(r"^[12]\.[123]:", cells[0]) or not IDS.match(cells[3]):
             continue
+        # A form the table writes with ？ leaves a part unnamed, so no reader can type it.
+        if "？" in cells[3]:
+            continue
         point = PUA.search(cells[4])
         if point:
             out[cells[3]] = {"table": cells[0], "character": cells[2], "codepoint": f"U+{point.group(1)}"}
     return out
 
 
-def wanted() -> list[str]:
-    """The 二简字 descriptions the examples show, which is what the app needs drawn."""
-    text = EXAMPLES.read_text(encoding="utf-8")
-    start = text.index("{ key: 'erjian'")
-    end = text.index("{ key: '", start + 1)
-    return re.findall(r"sequence: '([^']+)'", text[start:end])
+def wanted(table: dict[str, dict[str, str]]) -> list[str]:
+    """Every description the table draws, since a form is looked up by the text a reader types."""
+    return list(table)
 
 
 def outline(font: TTFont, point: int) -> str | None:
@@ -101,10 +100,8 @@ def main() -> None:
     font = TTFont(font_path)
 
     seen: dict[str, dict[str, str]] = {}
-    for sequence in wanted():
-        row = table.get(sequence)
-        if not row or sequence in seen:
-            continue
+    for sequence in wanted(table):
+        row = table[sequence]
         drawing = outline(font, int(row["codepoint"][2:], 16))
         if drawing:
             seen[sequence] = {**row, "d": drawing}

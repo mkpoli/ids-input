@@ -11,7 +11,7 @@ const covered = Object.keys(data)
 describe('the draft glyphs of the 二简字 forms', () => {
   it('answers for the descriptions it holds, and no others', () => {
     for (const sequence of covered) expect(hasErjian(sequence)).toBe(true)
-    for (const sequence of ['⿰木子', '⿱艹半', '', '⿰忄']) expect(hasErjian(sequence)).toBe(false)
+    for (const sequence of ['⿰木子', '⿱艹半丙', '', '⿰忄']) expect(hasErjian(sequence)).toBe(false)
     expect(erjianDrawing('⿰木子')).toBeNull()
   })
   it('names the table entry and the character each form was made for', () => {
@@ -36,16 +36,21 @@ describe('the draft glyphs of the 二简字 forms', () => {
     expect(svg).not.toContain('<text')
     expect(svg).not.toContain('slot')
   })
-  it('covers the examples whose form the draft drew, and leaves the rest to the composer', () => {
+  it('covers the table, not only the examples', () => {
+    const examples = EXAMPLE_GROUPS.flatMap(group => group.examples)
+    const loose = covered.filter(sequence => !examples.some(example => example.sequence === sequence))
+    expect(loose.length).toBeGreaterThan(30)
+    for (const sequence of ['⿰讠旦', '⿱𥫗布', '⿸厂九']) expect(hasErjian(sequence)).toBe(true)
+  })
+  it('names the character of each 二简字 example whose form the draft drew', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'erjian')
-    const uncovered = group.examples.filter(example => !hasErjian(example.sequence)).map(example => example.sequence)
-    // 弹 and 数 are in the table but BabelStone Han PUA draws no glyph for either.
-    expect(uncovered.sort()).toEqual(['⿱由攵', '⿱甲弓'])
     for (const example of group.examples) {
       if (hasErjian(example.sequence)) expect(erjianEntry(example.sequence)?.character).toBe(example.char)
     }
+    // 弹 and 数 are in the table but BabelStone Han PUA draws no glyph for either.
+    expect(group.examples.filter(example => !hasErjian(example.sequence)).map(example => example.sequence).sort()).toEqual(['⿱由攵', '⿱甲弓'])
   })
-  it('stays out of descriptions the draft drew no form for', () => {
-    expect(covered.some(sequence => !EXAMPLE_GROUPS.some(group => group.examples.some(example => example.sequence === sequence)))).toBe(false)
+  it('leaves out a form whose parts the table leaves unnamed', () => {
+    for (const sequence of covered) expect(sequence).not.toContain('？')
   })
 })
