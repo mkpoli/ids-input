@@ -98,7 +98,9 @@ Kaisho forms are the PUA glyph itself. 60 have a clean host cut. The other 9 (`{
 `{65}`, `{79}`, `{90}`, `{92}`, `{103}`, `{111}`, `{118}`) have no clean cut and use the PUA
 glyph in Sans too; the file lists them in `fallback`.
 `numbered-sans-outlines.json.gz` carries the same 69 Sans outlines for the palette source, so a
-description draws the cut in the Sans face and the PUA glyph in Serif. The cuts use han-compose
+description draws the cut in the Sans face and the PUA glyph in Serif. The contextual Sans `{5}`
+variant in `numbered-five-context.json` uses the native left portion of 葭 in Noto Sans CJK JP 2.004,
+centred without reshaping; regenerate it with `scripts/build_numbered_five.py`. The cuts use han-compose
 `fec2847` and record their font versions and digests in `numbered-forms.json`; the PUA glyphs are
 under the Arphic Public License, the Noto and Plangothic cuts under their own SIL OFL terms.
 

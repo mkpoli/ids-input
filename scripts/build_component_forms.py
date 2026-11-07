@@ -59,7 +59,8 @@ def seal_dot_top(cs, style):
 
     Remove 上's baseline, then place its stem and rightward bar over the
     native cover. Each face retains its own cover width, terminals and
-    stroke weights; only the stem's open intervals are shortened.
+    stroke weights. Shorten the stem's open intervals and extend Kureedo's
+    rightward bar to the cover's edge.
     """
     if style == 'sans':
         # The plain bar reaches the cover's right edge. Keep its native 75
@@ -71,15 +72,26 @@ def seal_dot_top(cs, style):
         # asymmetric brush endings. The thin bar sits lower than Sans.
         levels = [(100, 543), (435, 697), (529, 791), (789, 810), (829, 850)]
         dx = 25
+    elif style == 'kaisho':
+        # Cut Kureedo 上 above its baseline (highest point 74), retaining
+        # the slanted bar and stem entry; join the stem to 冖's rising roof.
+        levels = [(100, 460), (399, 660), (467, 728), (703, 790), (763, 850)]
+        dx = 30
     else:
-        raise ValueError('No attested Kaisho outline has been prepared')
+        raise ValueError('Unknown KRM top style: ' + style)
 
     def ymap(y):
         a, b = next(((a, b) for a, b in zip(levels, levels[1:]) if y <= b[0]), levels[-2:])
         return a[1] + (y - a[0]) * (b[1] - a[1]) / (b[0] - a[0])
 
+    def xmap(x):
+        # Extend only Kureedo's rightward bar; retain the native stem width.
+        if style == 'kaisho' and x > 496:
+            return 526 + (x - 496) * (917 - 526) / (794 - 496)
+        return x + dx
+
     top = crop_group(cs('上'), (-2000, 100, 3000, 2000))
-    top = [[ops, [round(ymap(v) if i % 2 else v + dx, 2)
+    top = [[ops, [round(ymap(v) if i % 2 else xmap(v), 2)
                   for i, v in enumerate(points)]] for ops, points in top]
     return [top, group(cs('冖'))]
 
@@ -344,7 +356,9 @@ brush_sha = hashlib.sha256(brush_path.read_bytes()).hexdigest()
 if brush_sha != '678769b18123201d292436e854121de9b636162ca595e5e9fb71684636ead430':
     raise ValueError('Unexpected source font hash: kaisho')
 brush = TTFont(brush_path)
-result['forms']['kaisho'] = {}
+brush_gs, brush_cmap = brush.getGlyphSet(), brush.getBestCmap()
+brush_cs = lambda ch: contours(brush_gs, brush_cmap[ord(ch)])
+result['forms']['kaisho'] = {'⿱⺊冖': seal_dot_top(brush_cs, 'kaisho')}
 register_xie(result['forms']['kaisho'], [group(part) for part in xie_kaisho(brush.getGlyphSet(), brush.getBestCmap())])
 result['sources']['kaisho'] = {
     'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
@@ -363,8 +377,8 @@ result['editorial'] = {
         'limitation': 'Regularized editorial outlines, not a facsimile or an encoded-character identification. The manuscript informs the joined centred stem and extended rightward horizontal dot; each face uses its own 上 and 冖 donors with editorial stem spacing. GlyphWiki is a comparison witness, not an outline donor.',
         'comparison': 'https://glyphwiki.org/glyph/hdic_hkrm-01035410.svg',
         'gloss': 'K07097330: 俗; K01035410: 俗處字',
-        'kaisho': 'No prepared form; retain ordinary Kaisho composition without a Sans fallback.',
-        'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖']},
+        'kaisho': 'Kureedo 上 without its baseline, with editorial stem spacing and an extended rightward bar, over native 冖.',
+        'donors': {'sans': ['上', '冖'], 'serif': ['上', '冖'], 'kaisho': ['上', '冖']},
         'forms': ['⿱⺊冖'],
     },
 }

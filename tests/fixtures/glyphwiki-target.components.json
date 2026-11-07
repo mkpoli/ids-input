@@ -1,0 +1,632 @@
+{
+  "format": "glyphwiki-components",
+  "version": 1,
+  "roots": [
+    "twedu-a00836-011@9"
+  ],
+  "provenance": {
+    "sourceUrl": "https://glyphwiki.org/json?name=twedu-a00836-011%409",
+    "sourceDate": "2026-11-07",
+    "input": {
+      "format": "api-jsonl",
+      "bytes": 1939,
+      "sha256": "464176a9edea252b3b1a0a465a984d7bec725b657f5131e7cbb1aa5aba4c9ee7"
+    },
+    "license": {
+      "name": "GlyphWiki data and article license",
+      "url": "https://glyphwiki.org/wiki/GlyphWiki:データ・記事のライセンス",
+      "evidenceUrl": "https://sources.debian.org/src/thunderbird/1%3A78.8.0-1~deb10u1/layout/reftests/fonts/glyphwiki-license.txt/",
+      "terms": "グリフウィキに登録されているグリフデータおよび記事は、誰もが自由に利用できることとします。複製、改変などの二次利用を認めるものとします。著作者表示も特に制限を設けません。新しいフォントのベースデータとして用いることや、そのままコピーしたものをフォントとして著作物とすることを妨げません。記事中に引用されている部分については、グリフウィキには著作権はありませんので引用元のライセンスを確認してください。",
+      "limitation": "Japanese text reproduced by Debian; accompanying English translation dates to 2008-10-08. The current official license page returned HTTP 403 on 2026-11-07. No SPDX equivalence asserted."
+    },
+    "sources": [
+      {
+        "url": "https://glyphwiki.org/dump.tar.gz",
+        "author": "GlyphWiki",
+        "accessed": "2026-11-07",
+        "evidence": "HEAD and bytes 0-65535 only: gzip tar; first member dump_newest_only.txt, name | related | data table.",
+        "limitation": "Mutable URL; archive remainder and historical member were not inspected."
+      },
+      {
+        "url": "https://ku6goma.appspot.com/gwv/data.html",
+        "author": "くろごま",
+        "accessed": "2026-11-07",
+        "evidence": "Type 99 component records have 8 or 11 fields; fields 1 and 2 carry stretch parameters (zero-based).",
+        "limitation": "Third-party validator notes warn on 2017-05-10 that descriptions may be outdated."
+      },
+      {
+        "url": "https://raw.githubusercontent.com/ge9/kage-afdko-toolkit/master/README.md",
+        "author": "ge9",
+        "accessed": "2026-11-07",
+        "evidence": "The glyphwiki section describes newest-only and all-versions dumps, including omitted blanked historical revisions.",
+        "limitation": "Third-party documentation at a mutable URL; no renderer code used."
+      }
+    ],
+    "limitations": [
+      "Unversioned references resolve within this input snapshot; they do not establish historical dependency revisions.",
+      "Bare dump names carry no revision number. Explicit @revision requests never fall back to bare names or another revision.",
+      "Related Unicode values are source metadata, not assertions of identical glyph shape.",
+      "Coordinates and stretch fields are uninterpreted source strings; no outlines, stroke expansion, or rendering is supplied.",
+      "Provenance URLs, dates and API capture metadata are supplied by the input owner; hashes establish byte identity, not authenticity."
+    ]
+  },
+  "limits": {
+    "maxInputBytes": 536870912,
+    "maxScanBytes": 2147483648,
+    "maxLineBytes": 65536,
+    "maxGlyphs": 256,
+    "maxDepth": 16,
+    "maxRecords": 8192,
+    "maxDataBytes": 1048576,
+    "maxOutputBytes": 16777216
+  },
+  "statistics": {
+    "passes": 3,
+    "scannedBytes": 5817,
+    "dataBytes": 507,
+    "records": 21
+  },
+  "nodes": [
+    {
+      "id": "twedu-a00836-011@9",
+      "name": "twedu-a00836-011",
+      "revision": "9",
+      "revisionEvidence": "api-response",
+      "related": "U+2D260",
+      "data": "99:0:0:14:19:185:60:u20120-t$99:0:0:-6:34:209:272:u4e5b-k$99:0:0:6:3:194:129:u4e04-07$99:0:0:0:46:199:152:u4e37-jr$99:0:0:0:-36:200:204:u540b-t04",
+      "dataSha256": "7cd8e10b1591cbe469ef073cc826338066471e37e4571c1219fc5860a089463e",
+      "records": [
+        {
+          "index": 0,
+          "raw": "99:0:0:14:19:185:60:u20120-t",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "14",
+            "19",
+            "185",
+            "60",
+            "u20120-t"
+          ],
+          "component": {
+            "reference": "u20120-t",
+            "placement": {
+              "x1": "14",
+              "y1": "19",
+              "x2": "185",
+              "y2": "60"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        },
+        {
+          "index": 1,
+          "raw": "99:0:0:-6:34:209:272:u4e5b-k",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "-6",
+            "34",
+            "209",
+            "272",
+            "u4e5b-k"
+          ],
+          "component": {
+            "reference": "u4e5b-k",
+            "placement": {
+              "x1": "-6",
+              "y1": "34",
+              "x2": "209",
+              "y2": "272"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        },
+        {
+          "index": 2,
+          "raw": "99:0:0:6:3:194:129:u4e04-07",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "6",
+            "3",
+            "194",
+            "129",
+            "u4e04-07"
+          ],
+          "component": {
+            "reference": "u4e04-07",
+            "placement": {
+              "x1": "6",
+              "y1": "3",
+              "x2": "194",
+              "y2": "129"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        },
+        {
+          "index": 3,
+          "raw": "99:0:0:0:46:199:152:u4e37-jr",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "0",
+            "46",
+            "199",
+            "152",
+            "u4e37-jr"
+          ],
+          "component": {
+            "reference": "u4e37-jr",
+            "placement": {
+              "x1": "0",
+              "y1": "46",
+              "x2": "199",
+              "y2": "152"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        },
+        {
+          "index": 4,
+          "raw": "99:0:0:0:-36:200:204:u540b-t04",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "0",
+            "-36",
+            "200",
+            "204",
+            "u540b-t04"
+          ],
+          "component": {
+            "reference": "u540b-t04",
+            "placement": {
+              "x1": "0",
+              "y1": "-36",
+              "x2": "200",
+              "y2": "204"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/twedu-a00836-011%409",
+        "inputLine": 1,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=twedu-a00836-011%409",
+          "retrievedAt": "2026-11-07T09:52:33.942Z",
+          "responseSha256": "5c574adc7e0b625fd9cb246bcd4256c52680145ec8759f6f8f6ab1be6b0ef2c3"
+        }
+      }
+    },
+    {
+      "id": "u20120-t",
+      "name": "u20120-t",
+      "revision": "2",
+      "revisionEvidence": "api-response",
+      "related": "U+20120",
+      "data": "1:0:0:19:55:183:55$1:0:0:19:160:183:160",
+      "dataSha256": "633e805403394d48d06947737999578fa178bb2aa54d7916e3a7139b9732ee10",
+      "records": [
+        {
+          "index": 0,
+          "raw": "1:0:0:19:55:183:55",
+          "fields": [
+            "1",
+            "0",
+            "0",
+            "19",
+            "55",
+            "183",
+            "55"
+          ]
+        },
+        {
+          "index": 1,
+          "raw": "1:0:0:19:160:183:160",
+          "fields": [
+            "1",
+            "0",
+            "0",
+            "19",
+            "160",
+            "183",
+            "160"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u20120-t%402",
+        "inputLine": 2,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u20120-t",
+          "retrievedAt": "2026-11-07T09:52:34.059Z",
+          "responseSha256": "349ee9eced76d5188de3815dff65e00fa590830e0a4dcd9a19b75143f9281f8b"
+        }
+      }
+    },
+    {
+      "id": "u4e04-07",
+      "name": "u4e04-07",
+      "revision": "1",
+      "revisionEvidence": "api-response",
+      "related": "U+4E04",
+      "data": "1:0:32:100:16:100:179$1:0:0:16:179:184:179",
+      "dataSha256": "f62954cdaac506e3622e3d6f0e7120e5a17f52ac39dde4fa925b3fd0869ea7fb",
+      "records": [
+        {
+          "index": 0,
+          "raw": "1:0:32:100:16:100:179",
+          "fields": [
+            "1",
+            "0",
+            "32",
+            "100",
+            "16",
+            "100",
+            "179"
+          ]
+        },
+        {
+          "index": 1,
+          "raw": "1:0:0:16:179:184:179",
+          "fields": [
+            "1",
+            "0",
+            "0",
+            "16",
+            "179",
+            "184",
+            "179"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u4e04-07%401",
+        "inputLine": 4,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u4e04-07",
+          "retrievedAt": "2026-11-07T09:52:34.285Z",
+          "responseSha256": "11ffdf023fbb800dc3d664483a6f1c384b8aa533efccd5dbdef54b8101d38c7b"
+        }
+      }
+    },
+    {
+      "id": "u4e37-jr",
+      "name": "u4e37-jr",
+      "revision": "2",
+      "revisionEvidence": "api-response",
+      "related": "U+4E37",
+      "data": "2:7:8:44:64:62:84:70:118$2:0:7:152:66:139:94:120:128",
+      "dataSha256": "fa3e1db1dd1eea8805fd629308b22317122fb314b5a7075c1914459dce317996",
+      "records": [
+        {
+          "index": 0,
+          "raw": "2:7:8:44:64:62:84:70:118",
+          "fields": [
+            "2",
+            "7",
+            "8",
+            "44",
+            "64",
+            "62",
+            "84",
+            "70",
+            "118"
+          ]
+        },
+        {
+          "index": 1,
+          "raw": "2:0:7:152:66:139:94:120:128",
+          "fields": [
+            "2",
+            "0",
+            "7",
+            "152",
+            "66",
+            "139",
+            "94",
+            "120",
+            "128"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u4e37-jr%402",
+        "inputLine": 5,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u4e37-jr",
+          "retrievedAt": "2026-11-07T09:52:34.408Z",
+          "responseSha256": "773fd630ed63638b0385cc240702e7fc6529c31feac17c4a087ca0b192efc794"
+        }
+      }
+    },
+    {
+      "id": "u4e5b-k",
+      "name": "u4e5b-k",
+      "revision": "1",
+      "revisionEvidence": "api-response",
+      "related": "U+4E5B",
+      "data": "1:0:2:24:33:166:33$2:22:7:166:33:163:39:154:48",
+      "dataSha256": "8013deeb83724a95a45cb5eaedf97b31d81f45be12c74254453a5f679e4fdc77",
+      "records": [
+        {
+          "index": 0,
+          "raw": "1:0:2:24:33:166:33",
+          "fields": [
+            "1",
+            "0",
+            "2",
+            "24",
+            "33",
+            "166",
+            "33"
+          ]
+        },
+        {
+          "index": 1,
+          "raw": "2:22:7:166:33:163:39:154:48",
+          "fields": [
+            "2",
+            "22",
+            "7",
+            "166",
+            "33",
+            "163",
+            "39",
+            "154",
+            "48"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u4e5b-k%401",
+        "inputLine": 3,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u4e5b-k",
+          "retrievedAt": "2026-11-07T09:52:34.175Z",
+          "responseSha256": "94e906f8303a8d37060ff9c1e9cbc62911a4842b8ad146ae59c1918c273bf5fe"
+        }
+      }
+    },
+    {
+      "id": "u53e3-t01",
+      "name": "u53e3-t01",
+      "revision": "7",
+      "revisionEvidence": "api-response",
+      "related": "U+53E3",
+      "data": "1:12:13:24:44:24:132$1:2:2:24:44:62:44$1:22:24:62:44:62:132$1:2:2:24:132:62:132",
+      "dataSha256": "3d4188299c54fc415a64b49dc801466cb85d3f9a6ceb9e5dd2a0bb1a8a33685a",
+      "records": [
+        {
+          "index": 0,
+          "raw": "1:12:13:24:44:24:132",
+          "fields": [
+            "1",
+            "12",
+            "13",
+            "24",
+            "44",
+            "24",
+            "132"
+          ]
+        },
+        {
+          "index": 1,
+          "raw": "1:2:2:24:44:62:44",
+          "fields": [
+            "1",
+            "2",
+            "2",
+            "24",
+            "44",
+            "62",
+            "44"
+          ]
+        },
+        {
+          "index": 2,
+          "raw": "1:22:24:62:44:62:132",
+          "fields": [
+            "1",
+            "22",
+            "24",
+            "62",
+            "44",
+            "62",
+            "132"
+          ]
+        },
+        {
+          "index": 3,
+          "raw": "1:2:2:24:132:62:132",
+          "fields": [
+            "1",
+            "2",
+            "2",
+            "24",
+            "132",
+            "62",
+            "132"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u53e3-t01%407",
+        "inputLine": 7,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u53e3-t01",
+          "retrievedAt": "2026-11-07T09:52:34.654Z",
+          "responseSha256": "2f0d0986e89e5b7ea3a4fe2797f359c23fca3dcab85e0b8fe4336f9537bd031a"
+        }
+      }
+    },
+    {
+      "id": "u540b-t04",
+      "name": "u540b-t04",
+      "revision": "2",
+      "revisionEvidence": "api-response",
+      "related": "U+540B",
+      "data": "99:0:0:11:133:219:188:u53e3-t01$1:0:0:90:147:184:147$1:0:4:150:130:150:182$2:7:8:100:149:112:155:117:168",
+      "dataSha256": "38eea579134ac91dfc24fba245c6f5d9bffa42b842b6465e9983256ef21a423d",
+      "records": [
+        {
+          "index": 0,
+          "raw": "99:0:0:11:133:219:188:u53e3-t01",
+          "fields": [
+            "99",
+            "0",
+            "0",
+            "11",
+            "133",
+            "219",
+            "188",
+            "u53e3-t01"
+          ],
+          "component": {
+            "reference": "u53e3-t01",
+            "placement": {
+              "x1": "11",
+              "y1": "133",
+              "x2": "219",
+              "y2": "188"
+            },
+            "stretch": {
+              "fields1And2": [
+                "0",
+                "0"
+              ],
+              "fields8Onward": []
+            }
+          }
+        },
+        {
+          "index": 1,
+          "raw": "1:0:0:90:147:184:147",
+          "fields": [
+            "1",
+            "0",
+            "0",
+            "90",
+            "147",
+            "184",
+            "147"
+          ]
+        },
+        {
+          "index": 2,
+          "raw": "1:0:4:150:130:150:182",
+          "fields": [
+            "1",
+            "0",
+            "4",
+            "150",
+            "130",
+            "150",
+            "182"
+          ]
+        },
+        {
+          "index": 3,
+          "raw": "2:7:8:100:149:112:155:117:168",
+          "fields": [
+            "2",
+            "7",
+            "8",
+            "100",
+            "149",
+            "112",
+            "155",
+            "117",
+            "168"
+          ]
+        }
+      ],
+      "source": {
+        "url": "https://glyphwiki.org/wiki/u540b-t04%402",
+        "inputLine": 6,
+        "capture": {
+          "url": "https://glyphwiki.org/json?name=u540b-t04",
+          "retrievedAt": "2026-11-07T09:52:34.537Z",
+          "responseSha256": "ef83f57486d799358dd35f74d755f96a59bcb102b1795c1373dfb8c9a03eff41"
+        }
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "twedu-a00836-011@9",
+      "to": "u20120-t",
+      "recordIndex": 0,
+      "resolution": "snapshot-unversioned"
+    },
+    {
+      "from": "twedu-a00836-011@9",
+      "to": "u4e5b-k",
+      "recordIndex": 1,
+      "resolution": "snapshot-unversioned"
+    },
+    {
+      "from": "twedu-a00836-011@9",
+      "to": "u4e04-07",
+      "recordIndex": 2,
+      "resolution": "snapshot-unversioned"
+    },
+    {
+      "from": "twedu-a00836-011@9",
+      "to": "u4e37-jr",
+      "recordIndex": 3,
+      "resolution": "snapshot-unversioned"
+    },
+    {
+      "from": "twedu-a00836-011@9",
+      "to": "u540b-t04",
+      "recordIndex": 4,
+      "resolution": "snapshot-unversioned"
+    },
+    {
+      "from": "u540b-t04",
+      "to": "u53e3-t01",
+      "recordIndex": 0,
+      "resolution": "snapshot-unversioned"
+    }
+  ]
+}
