@@ -227,7 +227,9 @@
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
     if (dragging) return
-    if (!componentIdentity(value) && (!adapter.characterInfo || !characterScript(value))) { leave(); return }
+    // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
+    // only place its strokes are laid out; it opens for the stroke record too.
+    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value)) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; char = value
@@ -455,7 +457,9 @@
     <header>
       <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
       <div>
-        <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
+        {#if identity || info?.script || characterScript(char)}
+          <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
+        {/if}
         <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
         {#if strokes?.strokes != null || strokeGlyph}
           <!-- Both halves are strokes: the count carries its unit ("4 strokes", "{count}画"), and
