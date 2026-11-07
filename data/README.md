@@ -323,13 +323,15 @@ rows), each row naming its source.
 
 ## `erjian-glyphs.json`
 
-The 二简字 forms the draft drew whole, kept for the descriptions the composer can only approximate:
-⿰忄井 for 警, ⿸厂九 for 厩, ⿱千田 for 臿. The composer builds such a description from parts, taking
-each from a whole character it resembles; the draft drew one outline instead. 14 entries, 24 KB.
+The 二简字 forms the draft drew whole: ⿰忄井 for 警, ⿸厂九 for 厩, ⿱千田 for 臿. The composer builds
+such a description out of its parts, taking each from a whole character it resembles, so the shape
+is nobody's handwriting; the draft drew one outline instead. Any form the table draws is kept, so a
+reader who types one gets the draft's shape rather than an approximation. 67 entries, 140 KB.
 
 Each entry is keyed by the description and gives the table entry it follows (`table`), the character
 the form was made for (`character`), the private-use code point of the glyph (`codepoint`) and the
-outline (`d`, an SVG path in the composer's 1000-unit box, y down). The outlines are the glyphs of
+outline (`d`, an SVG path in the composer's 1000-unit box, y down). A form the table writes with ？
+is left out: one of its parts is unnamed, so nobody can type it. The outlines are the glyphs of
 BabelStone Han PUA by Andrew West; the table is his [二简字 (Erjian)
 table](https://www.babelstone.co.uk/Fonts/Erjian.html), read 2026-11-06. Built by
 `uv run scripts/build_erjian_glyphs.py`, which pins the font at SHA-256
