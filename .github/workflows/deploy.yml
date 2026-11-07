@@ -2,14 +2,13 @@ name: Deploy
 on:
   push:
     branches: [main]
-  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  # A deploy runs to the end; a second push to a preview cancels the one it supersedes.
+  # A deploy runs to the end; a newer dispatch of the same branch waits.
   group: deploy-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,13 +28,9 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    # Merged main becomes the site; a branch of this repository answers at a preview alias. A fork's
-    # pull request cannot read this repository's secrets, which gate the steps below.
-    if: |
-      github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Merged main becomes the site; credentials gate the upload below.
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,18 +49,6 @@ jobs:
         run: |
           if [ -n "$token" ] && [ -n "$account" ]; then echo "ok=true" >> "$GITHUB_OUTPUT"
           else echo "ok=false" >> "$GITHUB_OUTPUT"; fi
-      - id: name
-        if: github.ref != 'refs/heads/main'
-        env:
-          number: ${{ github.event.number }}
-          branch: ${{ github.ref_name }}
-        run: |
-          if [ -n "$number" ]; then echo "preview=pr-${number}" >> "$GITHUB_OUTPUT"
-          else
-            slug=$(printf %s "$branch" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9\n' '-' | sed 's/-\+/-/g; s/^-//' | cut -c1-40 | sed 's/-$//')
-            [ -n "$slug" ] || slug="branch-$(echo "$GITHUB_SHA" | cut -c1-7)"
-            echo "preview=${slug}" >> "$GITHUB_OUTPUT"
-          fi
       - id: ship
         if: steps.creds.outputs.ok == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -74,12 +57,4 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: '4.156.0'
           packageManager: bun
-          command: ${{ github.ref == 'refs/heads/main' && 'deploy' || format('versions upload --preview-alias {0}', steps.name.outputs.preview) }}
-      - if: github.event_name == 'pull_request' && steps.creds.outputs.ok == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          alias: ${{ steps.name.outputs.preview }}
-          number: ${{ github.event.number }}
-        run: |
-          url="https://${alias}-ids-input-workshop.mkpoli.workers.dev"
-          gh pr comment "$number" --edit-last --create-if-none --body "Preview: ${url}"
+          command: deploy
