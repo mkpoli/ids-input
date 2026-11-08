@@ -65,6 +65,23 @@ export function loadJurchenStrokes() {
   return jurchen
 }
 
+/** @type {Promise<Map<string, number>> | null} */
+let kana = null
+
+/**
+ * The stroke count of each kana, from `data/kana-strokes.json.gz`. KanjiVG records the strokes but
+ * names no class for them, so a kana has a count and no first stroke.
+ * @returns {Promise<Map<string, number>>}
+ */
+export function loadKanaStrokes() {
+  kana ??= download(new URL('../../data/kana-strokes.json.gz', import.meta.url))
+    .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Kana strokes')))
+    .then(unpack).then(JSON.parse).then((/** @type {{ keys: string[], strokes: number[] }} */ data) =>
+      new Map(data.keys.map((key, index) => [key, data.strokes[index]])))
+    .catch(error => { kana = null; throw error })
+  return kana
+}
+
 /** @type {Promise<Map<string, number | null>> | null} */
 let loading = null
 

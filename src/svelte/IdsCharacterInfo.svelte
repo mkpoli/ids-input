@@ -4,7 +4,7 @@
   import { isJurchen } from '../core/ids.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
-  import { loadJurchenStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
+  import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
@@ -60,10 +60,18 @@
     loadJurchenStrokes().then(records => { jurchenStrokes = records }).catch(() => { jurchenStrokes = new Map() })
   })
   const jurchenRecord = $derived(char && isJurchen(char) ? jurchenStrokes?.get(char) ?? null : null)
+  // Kana counts come from KanjiVG's stroke paths; it names no class, so there is no first stroke.
+  let kanaCounts = $state.raw(/** @type {Map<string, number> | null} */ (null))
+  $effect(() => {
+    if (kanaCounts || !char || characterScript(char) !== 'kana') return
+    loadKanaStrokes().then(counts => { kanaCounts = counts }).catch(() => { kanaCounts = new Map() })
+  })
+  const kanaCount = $derived(char && characterScript(char) === 'kana' ? kanaCounts?.get(char) ?? null : null)
   const strokes = $derived(char
     ? strokeRecords?.get(char)
       ?? (tangutCount == null ? null : { strokes: tangutCount, first: null })
       ?? jurchenRecord
+      ?? (kanaCount == null ? null : { strokes: kanaCount, first: null })
     : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
