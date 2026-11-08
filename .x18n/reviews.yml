@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=https://x18n.dev/schema/reviews.json
 x18n: 1
 sources:
+  core:ids.clear:
+    ja: 11741c6c9d8f06
   core:ids.templates.generatorPart:
     ja: f8e141bdaf70c
     ko: f8e141bdaf70c
@@ -19,6 +21,8 @@ sources:
     vi: 1ee56317f497bd
     zh-Hans: 1ee56317f497bd
     zh-Hant: 1ee56317f497bd
+  core:ids.unwrap:
+    ja: 10d8dfdc20e7ad
   core:info.site.editorial:
     ko: 1865f0b5db521d
   core:parts.hangul.oldCluster:
