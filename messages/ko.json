@@ -382,5 +382,6 @@
   "info.site.yedict": "yedict",
   "info.site.zdic": "zdic",
   "info.site.chise": "CHISE IDS",
-  "info.firstStrokeShort": "첫 획"
+  "info.firstStrokeShort": "첫 획",
+  "info.script.jurchen": "여진 문자"
 }
