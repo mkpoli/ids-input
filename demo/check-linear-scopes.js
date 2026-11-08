@@ -16,6 +16,18 @@ try {
     assert.equal(await page.locator('.sequence-scopes g[data-path=""]').count(), 1)
     const leads = await page.locator('.scope-lead').evaluateAll(els => els.map(el => el.getAttribute('d')))
     assert.ok(leads.every(d => /[CQ]/.test(d)), 'each IDC has a curved lead')
+    const geometry = await page.locator('.sequence-scopes g').evaluateAll(groups => groups.map(group => {
+      const segments = [...group.querySelectorAll('.scope-segment')].map(path => {
+        const [, start, , end] = path.getAttribute('d').match(/M ([\d.]+) ([\d.]+) H ([\d.]+)/).map(Number)
+        return { start, end }
+      })
+      return {
+        gaps: segments.slice(1).map((segment, index) => segment.start - segments[index].end),
+        meet: Number(group.querySelector('.scope-lead').getAttribute('d').match(/([\d.]+) ([\d.]+)$/)[1]) === segments[0].start
+      }
+    }))
+    assert.ok(geometry.every(scope => scope.gaps.every(gap => Math.abs(gap - 5) < .01)), 'adjacent segments keep one gap')
+    assert.ok(geometry.every(scope => scope.meet), 'each lead meets its first segment')
     await page.locator('.ids-op[data-path="0"]').hover()
     assert.equal(await page.locator('.sequence-paint .hovered').count(), 3)
     await page.locator('#tree-tab').click()
@@ -45,7 +57,7 @@ try {
       const spans = [...run.querySelectorAll('span')]
       const origin = run.getBoundingClientRect().left
       const segment = run.querySelector('.scope-segment')
-      return Math.abs(Number(segment.getAttribute('d').split(' ')[1]) - (spans[1].getBoundingClientRect().left - origin + 1.5)) < .1
+      return Math.abs(Number(segment.getAttribute('d').split(' ')[1]) - (spans[1].getBoundingClientRect().left - origin + 2.5)) < .1
     })
     assert.ok(aligned, 'operator notes use measured token widths')
     await field.fill('木')
