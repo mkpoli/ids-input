@@ -30,7 +30,7 @@ export function jurchenTable(doc) {
  * @param {JurchenData} doc
  */
 export function jurchenSequences(doc) {
-  return new Map(jurchenTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '' }]]] : []))
+  return new Map(jurchenTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '', sources: ['project'] }]]] : []))
 }
 
 /** What a part is called wherever the editor names one. @param {JurchenPart} part */

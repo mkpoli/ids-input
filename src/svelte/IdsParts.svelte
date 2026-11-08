@@ -580,10 +580,18 @@
     if (!(event.ctrlKey || event.metaKey) || event.altKey) return
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const key = event.key.toLowerCase()
-    const target = key === 'a' ? button.closest('.parts-panel')
-      : key === 'c' && window.getSelection()?.isCollapsed ? button.querySelector('.part-text') : null
+    // A focused part copies itself in one step; a selection inside the list copies as text.
+    if (key === 'c' && window.getSelection()?.isCollapsed) {
+      const text = button.querySelector('.part-text')?.textContent
+      if (!text) return
+      event.preventDefault()
+      navigator.clipboard?.writeText(text).catch(() => {})
+      return
+    }
+    if (key !== 'a') return
+    const target = button.closest('.parts-panel')
     if (!target) return
-    if (key === 'a') event.preventDefault()
+    event.preventDefault()
     const range = document.createRange(), selection = window.getSelection()
     range.selectNodeContents(target)
     selection?.removeAllRanges()

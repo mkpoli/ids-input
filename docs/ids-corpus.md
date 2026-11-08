@@ -4,10 +4,10 @@ A design for one merged catalogue of components and descriptions, fusing BabelSt
 zi.tools forms and this project's own rows, so that a character can be built from parts that no
 Unicode block names.
 
-Status: the artifact and its build script exist (`data/ids-corpus.json.gz`,
-`scripts/build_ids_corpus.mjs`); the adapter option does not, so no host loads the file yet. What is
-built is the first increment: BabelStone and the CHISE UCS files, with every CHISE entity still
-unresolved.
+Status: the artifact, its build script and the adapter option exist (`data/ids-corpus.json.gz`,
+`scripts/build_ids_corpus.mjs`, `babelStoneAdapter({ chise })`), and the workshop loads it so its
+CHISE rows sit beside BabelStone's with their source. What is built is the first increment:
+BabelStone and the CHISE UCS files, with every CHISE entity still unresolved.
 
 ## Why
 

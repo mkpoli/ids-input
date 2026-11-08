@@ -20,7 +20,8 @@
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import layers from '../data/tangut-layers.json.gz?url'
-  import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import zitools from '../data/yi-bai-ids.tsv.gz?url'
+  import corpus from '../data/ids-corpus.json.gz?url'
   import projectIds from '../data/ids-project.tsv.gz?url'
   import overwriteIds from '../data/ids-overwrites.tsv?url'
   import components from '../data/ids-components.tsv?url'
@@ -42,7 +43,6 @@
   import { createSampleDrawings } from './lib/sample-drawings.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
-  import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
@@ -88,7 +88,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {
@@ -210,9 +210,6 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
-      // The draft drew some 二简字 forms whole; those drawings stand in for the composed parts, which
-      // could only be crops of other characters.
-      if (hasErjian(sequence)) return /** @type {import('../src/adapter/types.js').Drawing} */ (erjianDrawing(sequence))
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
@@ -1585,7 +1582,7 @@
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
   .seq-line :global(.ids-field input){padding-right:44px}
-  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
+  .seq-line .seq-copy{position:absolute;right:6px;top:8px;display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .seq-line .seq-copy:hover{background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
   .seq-line .seq-copy:disabled{color:var(--ui-color-ink-muted);background:none;cursor:default}
   .status{margin:0;font-size:12px;line-height:1.45;color:var(--ui-color-ink-muted)}

@@ -18,7 +18,6 @@ import { bundledSource } from '@han-compose/composer/bundled'
 import { compose, fromUrl } from '@han-compose/composer/loader'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
-import { erjianDrawing, hasErjian } from '../../src/composer/erjian.js'
 
 // The outlines the engine carries, where its package keeps them.
 const DATA = join(dirname(fileURLToPath(import.meta.resolve('@han-compose/composer/package.json'))), 'data')
@@ -40,12 +39,6 @@ const drawings = {}
 const failed = []
 for (const example of EXAMPLES) {
   try {
-    // A 二简字 form the draft drew whole is kept as that drawing, which is what the demo shows.
-    if (hasErjian(example.sequence)) {
-      drawings[example.sequence] = { char: example.char, drawn: erjianDrawing(example.sequence) }
-      console.log(`kept ${example.sequence}`)
-      continue
-    }
     const local = onlyBundled(example.sequence)
     let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? bundled : source)
     if (hasBopomofo(example.sequence)) {

@@ -180,7 +180,7 @@ describe('Jurchen editorial descriptions', () => {
 
   it('reads them as descriptions, found by their parts', async () => {
     const adapter = jurchenAdapter({ data, palette: [] })
-    expect((await adapter.table()).get(SAMPLE)).toEqual([{ text: `⿱${TOP}${BOTTOM}`, regions: '' }])
+    expect((await adapter.table()).get(SAMPLE)).toEqual([{ text: `⿱${TOP}${BOTTOM}`, regions: '', sources: ['project'] }])
     expect((await adapter.containing(TOP + BOTTOM)).items).toContain(SAMPLE)
     expect((await adapter.findByIds(TOP)).hits.map(hit => hit.char)).toContain(SAMPLE)
   })
@@ -196,10 +196,9 @@ describe('Jurchen editorial descriptions', () => {
 
   it('carries them into the search worker, and survives a missing file', async () => {
     const parts = [{ part: SAMPLE, ids: `⿱${TOP}${BOTTOM}` }, { part: TOP, ids: null }, { part: BOTTOM, ids: null }]
-    const args = ['data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined]
-    const search = await loadSearchWorker(...args, { format: 1, parts })
+    const search = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 1, parts } })
     expect(search.search(TOP, { limit: 3 }).hits.map(hit => hit.char)).toEqual([SAMPLE])
-    const other = await loadSearchWorker(...args, { format: 2, parts: [] })
+    const other = await loadSearchWorker({ ids: 'data:text/plain,', jurchen: { format: 2, parts: [] } })
     expect(other.search(TOP, { limit: 3 }).hits).toEqual([])
   })
 
@@ -210,7 +209,7 @@ describe('Jurchen editorial descriptions', () => {
     globalThis.fetch = async (url, init) => String(url).endsWith('jurchen')
       ? (up ? new Response(Buffer.from(good, 'base64')) : new Response('', { status: 404 })) : realFetch(url, init)
     try {
-      await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, undefined, 'https://example.invalid/jurchen')
+      await loadSearchWorker({ ids: 'data:text/plain,', jurchen: 'https://example.invalid/jurchen' })
       expect(await recovered()).toBe(false)
       up = true
       expect(await recovered()).toBe(true)

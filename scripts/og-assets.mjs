@@ -31,19 +31,22 @@ const FONTS = {
   'jurchen.ttf': 'IDSJurchen.woff2',
   'new-korean.ttf': 'IDSNewKorean.woff2',
 }
-// Two faces are too big to keep in the repository: fetched at pinned releases, checked, then
-// converted like the rest. The general face is for the Basic Multilingual Plane, the planes face for
-// the supplementary planes the parts subset leaves out.
+// Two faces are too big to keep in the repository: fetched at pinned tags, checked, then converted
+// like the rest. The general face is for the Basic Multilingual Plane, the planes face for the
+// supplementary planes the parts subset leaves out. github.com's `/raw/` and `/releases/download/`
+// redirects answered 504s to the builds, so the files are read from raw.githubusercontent.com.
 /** @param {string} address @param {string} sha256 @param {string} into */
 async function fetchFace(address, sha256, into) {
-  const bytes = new Uint8Array(await (await fetch(address)).arrayBuffer())
+  const response = await fetch(address)
+  if (!response.ok) throw new Error(`${into}: HTTP ${response.status} from ${address}`)
+  const bytes = new Uint8Array(await response.arrayBuffer())
   const digest = createHash('sha256').update(bytes).digest('hex')
   if (digest !== sha256) throw new Error(`${into}: sha256 ${digest}, not ${sha256}`)
   writeFileSync(join(out, into), bytes)
   return join(out, into)
 }
-const NOTO = 'https://github.com/notofonts/noto-cjk/raw/Sans2.004/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'
-const PLANES = 'https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic_Project/releases/download/V2.9.5795/PlangothicP1-Regular.ttf'
+const NOTO = 'https://raw.githubusercontent.com/notofonts/noto-cjk/Sans2.004/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'
+const PLANES = 'https://raw.githubusercontent.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic_Project/V2.9.5795/fonts/static/PlangothicP1-Regular.ttf'
 const fetched = [
   await fetchFace(NOTO, '68a3fc98800b2a27b371f2fb79991daf3633bd89309d4ffaa6946fd587f375b5', 'fonts/general.otf'),
   await fetchFace(PLANES, '550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6', 'fonts/planes.ttf'),

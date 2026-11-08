@@ -1,7 +1,7 @@
 // @ts-check
 // The description search in a Web Worker, so its index is built once off the page's thread. It
-// receives `{ id, ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen, query,
-// limit, mode, componentLookup }`: the first message loads the IDS tables and forms; each search
+// receives `{ id, ids, zitools, chise, project, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen,
+// query, limit, mode, componentLookup }`: the first message loads the IDS tables and forms; each search
 // builds its index when needed. A failed load is tried again on the next message. Each answers
 // `{ id, result }` or `{ id, error }`.
 import { sealTable, sealForms } from './seal-data.js'
@@ -9,6 +9,7 @@ import { shuishuSequences } from './shuishu-data.js'
 import { jurchenSequences } from './jurchen-data.js'
 import { createSearch, readStructuralForms } from '../core/search.js'
 import { expandNumberedComponents, mergeIdsTables, parseIdsTable, parseLayers, readNumberedComponents, readText } from './babelstone.js'
+import { readCorpus } from './corpus.js'
 import { download } from '@han-compose/composer/retry'
 
 /** @type {Promise<ReturnType<typeof createSearch>> | null} */
@@ -28,13 +29,19 @@ export async function recovered() {
   return back.some(Boolean)
 }
 
-/** @param {string} ids @param {string[] | undefined} additionalIds @param {string | undefined} components @param {string | undefined} componentsText @param {string | undefined} forms @param {string | undefined} given @param {string | undefined} layers @param {string | undefined} layersText @param {string | import('./seal-data.js').SmallSealData | undefined} smallSeal @param {string | import('./shuishu-data.js').ShuishuData | undefined} shuishu @param {string | import('./jurchen-data.js').JurchenData | undefined} jurchen */
-export async function load(ids, additionalIds, components, componentsText, forms, given, layers, layersText, smallSeal, shuishu, jurchen) {
-  const [text, extras, numbered, formsText, layerText] = await Promise.all([
+/** @param {{ ids: string, zitools?: string, chise?: string, project?: string, components?: string, componentsText?: string,
+ *   forms?: string, formsText?: string, layers?: string, layersText?: string,
+ *   smallSeal?: string | import('./seal-data.js').SmallSealData,
+ *   shuishu?: string | import('./shuishu-data.js').ShuishuData,
+ *   jurchen?: string | import('./jurchen-data.js').JurchenData }} files */
+export async function load({ ids, zitools, chise, project, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen }) {
+  const [text, fromZitools, fromChise, fromProject, numbered, formText, layerText] = await Promise.all([
     get(ids).then(readText),
-    Promise.all((additionalIds ?? []).map(url => get(url).then(readText))),
+    zitools ? get(zitools).then(readText) : null,
+    chise ? get(chise).then(readText) : null,
+    project ? get(project).then(readText) : null,
     componentsText !== undefined ? componentsText : components ? get(components).then(readText) : '',
-    given !== undefined ? given : forms ? get(forms).then(r => r.text()) : '',
+    formsText !== undefined ? formsText : forms ? get(forms).then(r => r.text()) : '',
     // Layers are an extra reading; a failed file leaves the source search standing.
     layersText !== undefined ? layersText : layers ? get(layers).then(readText).catch(() => '') : '',
   ])
@@ -45,8 +52,11 @@ export async function load(ids, additionalIds, components, componentsText, forms
   const shuiDoc = typeof shuishu === 'string' ? await optional(shuishu, shuishuSequences) : shuishu
   const jurDoc = typeof jurchen === 'string' ? await optional(jurchen, jurchenSequences) : jurchen
   const parts = readNumberedComponents(numbered)
-  /** @type {Map<string, import('../core/decompose.js').Sequence[]>} */
-  const merged = new Map(extras.reduce((found, extra) => mergeIdsTables(found, expandNumberedComponents(parseIdsTable(extra), parts)), expandNumberedComponents(parseIdsTable(text), parts)))
+  let merged = expandNumberedComponents(parseIdsTable(text, 'babelstone'), parts)
+  for (const [extra, source] of [[fromZitools, 'zitools'], [fromProject, 'project']]) {
+    if (extra) merged = mergeIdsTables(merged, expandNumberedComponents(parseIdsTable(/** @type {string} */ (extra), /** @type {string} */ (source)), parts))
+  }
+  if (fromChise) merged = mergeIdsTables(merged, readCorpus(/** @type {string} */ (fromChise)))
   if (doc) for (const [char, sequences] of sealTable(doc)) merged.set(char, sequences)
   try {
     if (shuiDoc) for (const [char, sequences] of shuishuSequences(shuiDoc)) {
@@ -68,13 +78,13 @@ export async function load(ids, additionalIds, components, componentsText, forms
     const texts = table.get(char) ?? []
     if (!texts.includes(sequence)) table.set(char, [sequence, ...texts])
   }
-  const search = createSearch(table, { forms: sealForms(formsText, doc), structuralForms: readStructuralForms(formsText) })
+  const search = createSearch(table, { forms: sealForms(formText, doc), structuralForms: readStructuralForms(formText) })
   return search
 }
-self.onmessage = async ({ data: { id, ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen, query, limit, mode, componentLookup } }) => {
+self.onmessage = async ({ data: { id, ids, zitools, chise, project, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen, query, limit, mode, componentLookup } }) => {
   try {
     if (ready && lost.length && await recovered()) ready = null
-    ready ??= load(ids, additionalIds, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen).catch(error => { ready = null; throw error })
+    ready ??= load({ ids, zitools, chise, project, components, componentsText, forms, formsText, layers, layersText, smallSeal, shuishu, jurchen }).catch(error => { ready = null; throw error })
     const search = await ready
     self.postMessage({ id, result: mode === 'structure' ? search.structure(query, { limit })
       : mode === 'unknown' ? search.unknownStructure(query, { limit })

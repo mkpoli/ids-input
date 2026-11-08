@@ -1,9 +1,10 @@
 <script>
   import { tick } from 'svelte'
   import { characterScript } from '../adapter/character-info.js'
+  import { isJurchen } from '../core/ids.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
-  import { loadStrokeRecords, loadTangutStrokes } from './strokes.js'
+  import { loadJurchenStrokes, loadKanaStrokes, loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
@@ -52,7 +53,26 @@
     loadTangutStrokes().then(counts => { tangutStrokes = counts }).catch(() => { tangutStrokes = new Map() })
   })
   const tangutCount = $derived(char && characterScript(char) === 'tangut' ? tangutStrokes?.get(char) ?? null : null)
-  const strokes = $derived(char ? strokeRecords?.get(char) ?? (tangutCount == null ? null : { strokes: tangutCount, first: null }) : null)
+  // Jurchen characters carry a count and, from their stroke code, a first stroke of their own.
+  let jurchenStrokes = $state.raw(/** @type {Map<string, import('./strokes.js').StrokeRecord> | null} */ (null))
+  $effect(() => {
+    if (jurchenStrokes || !char || !isJurchen(char)) return
+    loadJurchenStrokes().then(records => { jurchenStrokes = records }).catch(() => { jurchenStrokes = new Map() })
+  })
+  const jurchenRecord = $derived(char && isJurchen(char) ? jurchenStrokes?.get(char) ?? null : null)
+  // Kana counts come from KanjiVG's stroke paths; it names no class, so there is no first stroke.
+  let kanaCounts = $state.raw(/** @type {Map<string, number> | null} */ (null))
+  $effect(() => {
+    if (kanaCounts || !char || characterScript(char) !== 'kana') return
+    loadKanaStrokes().then(counts => { kanaCounts = counts }).catch(() => { kanaCounts = new Map() })
+  })
+  const kanaCount = $derived(char && characterScript(char) === 'kana' ? kanaCounts?.get(char) ?? null : null)
+  const strokes = $derived(char
+    ? strokeRecords?.get(char)
+      ?? (tangutCount == null ? null : { strokes: tangutCount, first: null })
+      ?? jurchenRecord
+      ?? (kanaCount == null ? null : { strokes: kanaCount, first: null })
+    : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
   // the character itself, then the sites that hold it. A data record is named by its site; each
@@ -236,7 +256,7 @@
     if (dragging) return
     // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
     // only place its strokes are laid out; it opens for the stroke record too.
-    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value)) { leave(); return }
+    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value) && !(isJurchen(value) && jurchenStrokes?.has(value))) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; char = value

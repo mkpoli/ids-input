@@ -1,4 +1,5 @@
 // @ts-check
+import { isJurchen } from '../core/ids.js'
 import { isSmallSeal } from './seal-data.js'
 import { READING_SYSTEMS, SOUND_SYSTEMS } from '../core/tangut-readings.js'
 
@@ -11,11 +12,13 @@ export const SOURCE_KINDS = /** @type {const} */ (['editorial', 'unicodeSealSour
 /** @typedef {{ format: string, entries: Record<string, GlossEntry>, aids: MeaningAid[], components: Record<string, { en: string, sense?: string, han: string[], emoji: string, source: InfoSource }> }} CharacterInfoData */
 /** @typedef {{ char: string, kind: 'han' | 'tangut' | 'seal' | 'modern' | 'usage', meaning?: string }} CharacterRelation */
 /** @typedef {{ name: string, zh: string, value: string }} InfoReading */
-/** @typedef {{ char: string, script: 'han' | 'tangut' | 'component' | 'seal', glosses: string[], meanings?: { ja?: string[], zh?: string[] }, readings?: InfoReading[], soundGlosses?: InfoReading[], association?: string, emoji: { text: string, meaning: string }[], relations: CharacterRelation[], sources: InfoSource[], sourceSites?: string[] }} CharacterInfo */
+/** @typedef {{ char: string, script: 'han' | 'tangut' | 'component' | 'seal' | 'jurchen' | 'kana', glosses: string[], meanings?: { ja?: string[], zh?: string[] }, readings?: InfoReading[], soundGlosses?: InfoReading[], association?: string, emoji: { text: string, meaning: string }[], relations: CharacterRelation[], sources: InfoSource[], sourceSites?: string[] }} CharacterInfo */
 
 /** @param {string} char */
 export const characterScript = char => [...char].length !== 1 ? null : isSmallSeal(char) ? 'seal'
   : /^[\u{18800}-\u{18AFF}]$/u.test(char) ? 'component'
+  : isJurchen(char) ? 'jurchen'
+  : /^[\u3041-\u3096\u30a1-\u30fa]$/u.test(char) ? 'kana'
   : /^[\u{17000}-\u{187FF}\u{18D00}-\u{18DFF}]$/u.test(char) ? 'tangut'
   : /^[\p{Unified_Ideograph}\p{Radical}\uF900-\uFAFF\u{2F800}-\u{2FA1F}〇]$/u.test(char) ? 'han' : null
 
