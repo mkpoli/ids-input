@@ -59,11 +59,12 @@ export function tokens(text) {
   return out
 }
 
-/** A layer takes one pastel hue: its operands share it, and an operator keeps the hue of the layer
- * it sits in. Light and dark palettes follow the component’s inherited color-scheme.
- * @param {number[]} path */
-export function tint(path) {
-  const hue = layerHue(path.length ? path.slice(0, -1) : [])
+/** A layer takes one pastel hue: its operands and the operator that opens it share it. A plain
+ * part takes the hue of the layer it sits in. Light and dark palettes follow the component’s
+ * inherited color-scheme.
+ * @param {number[]} path @param {boolean} [operator] */
+export function tint(path, operator = false) {
+  const hue = layerHue(operator || !path.length ? path : path.slice(0, -1))
   return `light-dark(oklch(72% 0.13 ${hue}), oklch(82% 0.11 ${hue}))`
 }
 
