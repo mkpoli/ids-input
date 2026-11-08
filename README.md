@@ -858,7 +858,7 @@ from `data/unicode-outlines/030.json.gz`; Node's fetch does not read local file 
 `hasUnicodeGlyph(component)` reports exact bundled coverage. Fallback glyphs are monochrome,
 with the source font's design; they do not imitate a selected serif or handwritten face.
 
-The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
