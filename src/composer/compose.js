@@ -945,7 +945,9 @@ export class Composer {
     if (yan) return yan
     // Native compound forms have no trained layout features; fit their actual outlines.
     if (this.hosted && this.layout && (!hasRepetition || ownFormsOnly(this.fontStyle)) && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
-      const learned = this.learned(op, children, atRoot ? null : region)
+      // A description nothing in the export spells as one character has nothing to integrate a host
+      // cut with, so each operand is drawn from its own glyph.
+      const learned = this.learned(op, children, atRoot ? null : region, !this.bySequence(keyOf(node)))
       if (learned) return learned
     }
     if (!this.separate && !hasRepetition && atRoot && op in this.AXIS) {
@@ -1721,8 +1723,18 @@ export class Composer {
   shares(op, children, region) {
     const C = this.C
     if (op in this.ENCLOSE) {
-      const outer = this.node(children[0], region)
+      let outer = this.node(children[0], region)
+      // 虍's whole glyph leaves the inner only the narrow hook. The export's designed 虍 cuts
+      // (from 慮, 虜, 虞 …) open wider, so take one when the outer is 虍.
+      if (op === '⿸' && typeof children[0] === 'string' && children[0] === '虍') {
+        const cut = this.host(op, 0, children[0], children.slice(1), region)
+        if (cut) outer = [placed(cut.piece, cut.piece.box, fitted(cut.piece.box, region, C.STRETCH), this.ink(cut.record.h), `host ${cut.record.h}`)]
+      }
       let room = this.room(op, outer, region)
+      if (op === '⿸' && typeof children[0] === 'string' && children[0] === '虍') {
+        const [x0, y0, x1, y1] = region, w = x1 - x0, h = y1 - y0
+        room = [x0 + 0.18 * w, y0 + 0.0 * h, x0 + 0.99 * w, y0 + 0.95 * h]
+      }
       const fallback = !room
       if (!room) {
         const [x0, y0, x1, y1] = this.INSIDE[op], w = region[2] - region[0], h = region[3] - region[1]
