@@ -1,4 +1,4 @@
-// The chosen part's tools: Clear part carries the ⬚ icon, the operator palette's ⬚ empties the chosen
+// The chosen part's tools: Clear carries the ⬚ icon, the operator palette's ⬚ empties the chosen
 // part with ?, and Remove this level says what it keeps. Run against a devrun server:
 //   IDS_URL=http://localhost:5199 CHROMIUM_PATH=/path/to/chrome bun demo/check-part-tools.js
 import { chromium } from 'playwright-core'
@@ -53,5 +53,5 @@ try {
   await page.locator('.ids-op').first().click()
   assert.equal(await page.locator('.ids-remove').getAttribute('title'), 'Remove this level; its first non-empty part takes its place', 'the tooltip says what the unwrap keeps')
   assert.deepEqual(errors, [], 'no page errors')
-  console.log('PASS Clear part carries ⬚, the palette adds a ? empty slot, and the unwrap tooltip says what it keeps')
+  console.log('PASS Clear carries ⬚, the palette adds a ? empty slot, and the unwrap tooltip says what it keeps')
 } finally { await browser.close() }
