@@ -272,6 +272,11 @@ const VARIANT_CUTS = {
   }],
 }
 
+// 身 shortens its first stroke and lifts its foot for the left column. The cuts from 射, 躬 and
+// 躭 have that form; a cut from a dense neighbour (𨊂, 軀, 軆) keeps the standalone width, which
+// reads as a whole character beside the right operand.
+const LEFT_BODY_HOSTS = new Set(['射', '躬', '躭'])
+
 // Kureedo draws no ⿺电; its ⿺巴 form (巴 round 三 in 𠀧, Kureedo's SIL OFL 1.1 face) presses the
 // box of such a glyph to this share of the width and draws its foot out to the right edge.
 const ENCLOSURE_SHARE = 0.485
@@ -1496,6 +1501,12 @@ export class Composer {
     return ranked.length ? ranked[0][1] : null
   }
 
+  /** Whether the export carries the left column's 身, cut from 射, 躬 or 躭. */
+  hasLeftBody(node, place = 'L') {
+    return this.alternatives(node, place).some(written =>
+      this.hostsOf(written, place).some(h => LEFT_BODY_HOSTS.has(h.h) && !this.excluded(h.h)))
+  }
+
   ranked(op, index, node, siblings, box, isPlaced = false) {
     const C = this.C, place = this.slot(op, index)
     const want = siblings.reduce((s, n) => s + this.ink(n), 0)
@@ -1503,6 +1514,16 @@ export class Composer {
     const siblingKeys = siblings.map(child => this.renderKey(child))
     const siblingKey = written => {
       try { return this.renderKey(this.parse(written)) } catch { return written }
+    }
+    // ⿰身X draws its 身 as 射, 躬 and 躭 do: the first stroke shortens and the foot lifts for the
+    // narrow column. A cut from a dense neighbour (𨊂, 軀, 軆) keeps the standalone width.
+    if (op === '⿰' && place === 'L' && keyOf(node) === '身') {
+      const native = []
+      for (const written of this.alternatives(node, place))
+        for (const h of this.hostsOf(written, place))
+          if (LEFT_BODY_HOSTS.has(h.h) && !this.excluded(h.h))
+            native.push([Math.abs(Math.log(stretchOf(this.cutOf(h).box, box))), h])
+      if (native.length) return [[0, this.chosen(native.sort((a, b) => a[0] - b[0])[0][1])]]
     }
     let hand = null
     if (node === '𠂇') {
@@ -1627,8 +1648,10 @@ export class Composer {
         }
       }
       // An operand drawn from its own glyph keeps the part inside its box, where a host cut can carry
-      // the rest of that character in with it.
-      if (ownParts && typeof child === 'string' && !this.excluded(child)) {
+      // the rest of that character in with it. 身 is the exception: its own glyph is the standalone
+      // width, and the left column needs the narrower form 射, 躬 and 躭 draw.
+      if (ownParts && typeof child === 'string' && !this.excluded(child)
+        && !(op === '⿰' && i === 0 && keyOf(child) === '身' && this.hasLeftBody(child))) {
         const own = this.glyph(child)
         if (own) {
           groups.push([this.place(own, box, this.ink(child), `glyph ${child}`)])
