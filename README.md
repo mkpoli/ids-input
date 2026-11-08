@@ -96,7 +96,8 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   // Vite: serve the data files as assets and pass their URLs.
   import ids from 'ids-input/data/babelstone-ids.tsv.gz?url'
   import layers from 'ids-input/data/tangut-layers.json.gz?url'
-  import additionalIds from 'ids-input/data/yi-bai-ids.tsv.gz?url'
+  import zitools from 'ids-input/data/yi-bai-ids.tsv.gz?url'
+  import corpus from 'ids-input/data/ids-corpus.json.gz?url'
   import projectIds from 'ids-input/data/ids-project.tsv.gz?url' 
   import components from 'ids-input/data/ids-components.tsv?url'
   import parts from 'ids-input/data/ids-parts.json?url'
@@ -105,7 +106,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
   import folds from 'ids-input/data/component-name-folds.tsv?url'
   import characters from 'ids-input/data/character-vocabulary.tsv.gz?url'
 
-  const adapter = babelStoneAdapter({ ids, layers, additionalIds: [additionalIds, projectIds], components, parts, forms, names, folds, characters })
+  const adapter = babelStoneAdapter({ ids, zitools, chise: corpus, project: projectIds, layers, components, parts, forms, names, folds, characters })
   let value = $state('')
 </script>
 
@@ -556,7 +557,7 @@ each leaf's box as its local frame, or `composeDocumentSource(document, preview)
 source together. The composer's leaf ownership is used when present; without it, one non-cut part per
 component in reading order is inferred. Other drawings report themselves incomplete.
 
-`babelStoneAdapter({ ids, layers, additionalIds, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
+`babelStoneAdapter({ ids, zitools, chise, project, layers, overwrite, components, parts, forms, names, folds, characters, sketches })` answers
 `structure`, `search` (a character, `U+6728` or bare hex, a name such as 絞絲, or a word or reading
 such as water or のぶん when `names` is given, and the whole characters those names belong to when
 `characters` is given), `containing`, `parts` and `sketchTemplates` from the files in `data/`.
@@ -570,12 +571,15 @@ components by number; the 52 with a fragment draw it and insert it, and the 69 t
 draw BabelStone Han PUA's glyph for the PUA code point it gives and insert that character. In the
 Sans face, 60 of them are cut from the host character's Noto Sans/Plangothic glyph; the other 9 fall
 back to the PUA glyph. They sit in the unknown-stroke group because BabelStone gives them no stroke
-count. `additionalIds` adds tables in the same
-format, one URL or an array: Yi Bai's descriptions and this project's own table for characters newer
-than BabelStone's (currently empty; 𳑳, U+33473, is a 獨體字 and is not described); `overwrite` maps a
-whole description to the encoded character it draws as (`⿰𦚏𳑳` as 龍). `forms` folds the
-description search's components and opens a named component into the forms that stand for it;
-`folds` folds Chinese scripts and positional forms together before names are compared. Without them
+count. `zitools` adds the descriptions zi.tools publishes (`data/yi-bai-ids.tsv.gz`), `project` this
+project's own (`data/ids-project.tsv.gz`, currently empty; 𳑳, U+33473, is a 獨體字 and is not
+described), and `chise` the CHISE rows of `data/ids-corpus.json.gz`, the GPL-2.0-or-later catalogue in
+[`docs/ids-corpus.md`](docs/ids-corpus.md); a host that cannot take GPL leaves `chise` out. Every
+description names the sources that give it in `sources`: BabelStone, zi.tools, CHISE, and this
+project's own Shuishu and Jurchen decompositions. One description two sources agree on is listed once
+with both. `overwrite` maps a whole description to the encoded character it draws as (`⿰𦚏𳑳` as
+龍). `forms` folds the description search's components and opens a named component into the forms
+that stand for it; `folds` folds Chinese scripts and positional forms together before names are compared. Without them
 `⺡` and `氵` are different components and a name finds only the form and the script the table
 records. The containing search builds an index in memory on first use: under Bun, about half a
 second for the most frequent components and 150 MB of heap with the table loaded; a host with a
@@ -589,11 +593,13 @@ keep their source description; malformed descriptions stay as source text. Both 
 source descriptions remain searchable. The computed reading follows shapes and does not assert a
 recorded segmentation or historical descent.
 
-Pass `additionalIds` as the URL of an IDS table in the same format, or an array of them, to add
-descriptions without replacing BabelStone's. The workshop supplies `data/yi-bai-ids.tsv.gz`, Yi
-Bai's unannotated standard subset, and its own `data/ids-project.tsv.gz` for characters newer than
-BabelStone's (empty at present; the newer character 𳑳 is a 獨體字). Extended expressions and variant
-annotations are not included.
+The three tables beside BabelStone's add descriptions without replacing them. The workshop passes
+all three: `data/yi-bai-ids.tsv.gz`, the unannotated standard subset zi.tools publishes; its own
+`data/ids-project.tsv.gz` for characters newer than BabelStone's (empty at present; the newer
+character 𳑳 is a 獨體字); and `data/ids-corpus.json.gz`, whose CHISE rows are optional because that
+file is GPL-2.0-or-later. Each description's `sources` says which of `babelstone`, `zitools`,
+`chise` and `project` give it; Shuishu's and Jurchen's editorial decompositions name `project`.
+Extended expressions and variant annotations are not included.
 
 ## Search
 

@@ -70,7 +70,7 @@ it('searches an unknown structure through the local adapter and respects abortio
 
 it('searches an unknown structure through the worker loader', async () => {
   const ids = '杏\t⿱木口\n呆\t⿱口木\n木\t木\n口\t口\n'
-  const search = await loadSearchWorker(`data:text/plain,${encodeURIComponent(ids)}`, undefined, undefined, '', undefined, '', undefined, '', undefined, undefined)
+  const search = await loadSearchWorker({ ids: `data:text/plain,${encodeURIComponent(ids)}` })
   expect(search.unknownStructure('⿰木口', { limit: 5 }).hits.map(hit => hit.char)).toEqual(['呆', '杏'])
 })
 

@@ -637,7 +637,8 @@ dictionary numbers, `logogram` for the other 279 and `radical` for the 47 radica
 dictionary coverage, not frequency; the spreadsheet also lists 286 further forms that the proposal
 does not cover.
 
-`ids` is an editorial decomposition, written by hand in [`shuishu/ids.json`](shuishu/ids.json) for
+`ids` is an editorial decomposition, written by hand in [`shuishu/ids.json`](shuishu/ids.json) and
+carried with `sources: ['project']` for
 the characters whose parts are all in the block and whose arrangement is plain. No source states
 one: the charts give a `→` cross reference to a radical for 41 of the 533 characters and nothing
 else, the spreadsheet has no structure column, and the chart font carries no ligature or IDS glyph
@@ -680,7 +681,8 @@ for Jurchen, so another font may draw the base form. Each carries its base chara
 and its own stroke code. The build reads the row for U+18FF3 U+FE01 without the stray U+FE00 at the
 end of its code, and drops the table's placeholder row for U+25A1.
 
-`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) for 44
+`ids` is an editorial decomposition, written in [`jurchen/ids.json`](jurchen/ids.json) and carried
+with `sources: ['project']` for 44
 characters. No source states one, so each is a reading of the Alari glyph: it describes the shape
 and makes no claim about how the character arose. `scripts/build_jurchen.py` refuses an entry with an
 operator other than ⿰, ⿱, ⿷ and ⿸, a part outside the block, or strokes that do not add up; a radical's
@@ -1212,6 +1214,8 @@ CHISE's, and every row carries the source it came from.
 - Changes: CHISE writes each description with the character's code point and its parts as entities;
   the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
   rows with BabelStone's. Built on 2026-11-04.
+- Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
+  `sources: ['chise']`; a host that cannot take GPL leaves the option out.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
   [the corpus note](../docs/ids-corpus.md).
 

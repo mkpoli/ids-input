@@ -1,6 +1,7 @@
 // @ts-check
 export * from './types.js'
-export { babelStoneAdapter, parseIdsTable, paletteRows } from './babelstone.js'
+export { babelStoneAdapter, mergeIdsTables, parseIdsTable, paletteRows } from './babelstone.js'
+export { CORPUS_FORMAT, readCorpus } from './corpus.js'
 export { componentIndex } from './containing.js'
 export { smallSealAdapter, isSmallSeal } from './small-seal.js'
 export { shuishuAdapter, isShuishu, shuishuLabel, shuishuNames, shuishuTable } from './shuishu.js'

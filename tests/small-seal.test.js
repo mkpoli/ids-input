@@ -35,7 +35,7 @@ it('preserves every Jiguge source record and excludes unresolved data from the e
 })
 
 it('looks up seal decompositions without replacing modern Han structures', async () => {
-  expect(await adapter.structure(seal)).toEqual([{ text: sequence, regions: '' }])
+  expect(await adapter.structure(seal)).toEqual([{ text: sequence, regions: '', sources: ['chise'] }])
   expect(await adapter.structure('玨')).toEqual([{ text: '⿰王王', regions: '' }])
   expect(await adapter.structure(String.fromCodePoint(0x3FC3F))).toEqual([])
   expect(await adapter.encoded(sequence)).toEqual([seal])

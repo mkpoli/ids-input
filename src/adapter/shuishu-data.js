@@ -30,7 +30,7 @@ export function shuishuTable(doc) {
  * @param {ShuishuData} doc
  */
 export function shuishuSequences(doc) {
-  return new Map(shuishuTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '' }]]] : []))
+  return new Map(shuishuTable(doc).flatMap(part => part.ids ? [[part.part, [{ text: part.ids, regions: '', sources: ['project'] }]]] : []))
 }
 
 /**
