@@ -82,7 +82,7 @@ try {
     await tintMode.selectOption('on')
     await page.keyboard.press('Escape')
     const strokes = await page.locator('.scope-segment').evaluateAll(elements => [...new Set(elements.map(element => getComputedStyle(element).stroke))])
-    assert.ok(strokes.length > 1, 'operand segments keep their branch tints')
+    assert.ok(strokes.length > 1, 'operand segments take their layer tints')
     await page.emulateMedia({ forcedColors: 'active' })
     assert.equal(await page.locator('.sequence-scopes').evaluate(element => getComputedStyle(element).visibility), 'visible')
     const forced = await page.evaluate(() => {
@@ -131,6 +131,6 @@ try {
     assert.ok(await field.isVisible())
     assert.deepEqual(errors, [])
     await page.close()
-    console.log(`PASS ${colorScheme}: scope segmentation, root, curves, hover and selection, branch tints, forced colors, draft states, deep scrolling, phone`)
+    console.log(`PASS ${colorScheme}: scope segmentation, root, curves, hover and selection, layer tints, forced colors, draft states, deep scrolling, phone`)
   }
 } finally { await browser.close() }
