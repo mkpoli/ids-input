@@ -41,6 +41,30 @@ export function loadTangutStrokes() {
   return tangut
 }
 
+/** Each Jurchen stroke code letter as its class: h 横, s 豎, p 撇, d 點, z 折; b closes a radical. */
+const JURCHEN_CLASS = /** @type {Record<string, '横' | '豎' | '撇' | '點' | '折'>} */ ({ h: '横', s: '豎', p: '撇', d: '點', z: '折' })
+
+/** @type {Promise<Map<string, StrokeRecord>> | null} */
+let jurchen = null
+
+/**
+ * Each Jurchen character and radical with its stroke count and first stroke. Alari's stroke code
+ * gives the first four strokes and the last, so its first letter is the class of the first stroke;
+ * the count comes from the character's own row.
+ * @returns {Promise<Map<string, StrokeRecord>>}
+ */
+export function loadJurchenStrokes() {
+  jurchen ??= download(new URL('../../data/jurchen.json.gz', import.meta.url))
+    .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Jurchen strokes')))
+    .then(unpack).then(JSON.parse).then((/** @type {{ parts: { part: string, strokes?: number | null, jurCode?: string }[] }} */ data) =>
+      new Map(data.parts.map(part => [part.part, {
+        strokes: part.strokes ?? null,
+        first: part.jurCode ? JURCHEN_CLASS[part.jurCode[0]] ?? null : null,
+      }])))
+    .catch(error => { jurchen = null; throw error })
+  return jurchen
+}
+
 /** @type {Promise<Map<string, number | null>> | null} */
 let loading = null
 
