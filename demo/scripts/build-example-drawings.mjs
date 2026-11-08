@@ -16,7 +16,6 @@ import { bundledSource } from '../../src/composer/bundled.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
 import { EXAMPLES } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
-import { erjianDrawing, hasErjian } from '../../src/composer/erjian.js'
 
 const source = fromUrl(COMPOSER_BASE)
 // Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
@@ -35,12 +34,6 @@ const drawings = {}
 const failed = []
 for (const example of EXAMPLES) {
   try {
-    // A 二简字 form the draft drew whole is kept as that drawing, which is what the demo shows.
-    if (hasErjian(example.sequence)) {
-      drawings[example.sequence] = { char: example.char, drawn: erjianDrawing(example.sequence) }
-      console.log(`kept ${example.sequence}`)
-      continue
-    }
     const local = onlyBundled(example.sequence)
     let selected = hasTangut(example.sequence) ? (local ? tangut : mixed) : (local ? bundled : source)
     if (hasBopomofo(example.sequence)) {
