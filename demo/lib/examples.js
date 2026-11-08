@@ -275,11 +275,21 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱宀K', refs: [20], char: '' },
     { sequence: '⿻Mo', refs: [20], char: '' },
   ] },
+  // Created characters (創作漢字): a photographed sign sets 不想上班那就別上 as four characters, each
+  // carrying two syllables: 不 beside 目 over 心, 上 and 丿 beside 王, 那's left beside 就's 尤, and
+  // 另 beside 上. The sequences are the poster's transcription; BabelStone has no row for any.
+  { key: 'created', refs: [72], examples: [
+    { sequence: '⿱⿰不目心', char: '' },
+    { sequence: '⿲上丿王', char: '' },
+    { sequence: '⿰𭃂尤', char: '' },
+    { sequence: '⿰另上', char: '' },
+  ] },
   // Korean gukja (國字): the coda of each syllable is written with a Chinese character or stroke,
   // and the forms follow the article by reading. Every encoded description is BabelStone's, tagged
   // K, 14 as GKP. The twenty forms without a code point follow the encoded ones, as the article
   // writes them, a decomposition alone. 𬼝, which the article leaves without a reading, ends the
-  // table and so the group.
+  // article's table. ⿲意情意, read 의정의, comes from 檀国大学校東洋学研究院『韓国漢字字典』 through a
+  // post that photographs its entry, and closes the group.
   { key: 'korean', refs: [1, 30], examples: [
     { sequence: '⿱加𠃍', char: '㔖', reading: '각' },
     { sequence: '⿱加乙', char: '乫', reading: '갈' },
@@ -398,6 +408,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱呼乙', char: '', reading: '홀' },
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
+    // The dictionary's 心部 entry 33: 意, 情 and 意 stand side by side, read 의정의.
+    { sequence: '⿲意情意', refs: [71], char: '', reading: '의정의' },
   ] },
   // Hangul ligatures (합자): two syllables written in one block, which Unicode cannot encode since
   // it precomposes each syllable alone. Both come from a Buddhist manuscript: ᄋ + ᆞ over ㄹ + ㅏ,

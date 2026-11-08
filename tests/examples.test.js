@@ -148,6 +148,14 @@ describe('the demo examples', () => {
     }
     for (const example of group.examples) expect(example.char).toBe('')
   })
+  it('keeps the created characters with their source', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'created')
+    expect(group.refs).toEqual([sourceNumber('x-egasmb')])
+    expect(group.examples.map(example => example.sequence)).toEqual([
+      '⿱⿰不目心', '⿲上丿王', '⿰𭃂尤', '⿰另上',
+    ])
+    expect(group.examples.every(example => example.char === '')).toBe(true)
+  })
   it("writes out 龍's numbered right part", () => {
     expect(table.get('龍').map(entry => entry.text)).toContain('⿰𦚏⿷己三')
     expect(described.get('⿰𦚏⿷己三')).toContain('龍')
@@ -158,7 +166,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'ligature', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'ligature', 'created', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)
@@ -212,6 +220,8 @@ it('reads the Korean gukja as the source does', () => {
     '⿱呼乙': '홀', '⿱禾乙': '활',
     // The article's last row gives 𬼝 no reading, so it carries none.
     '⿱去乙': undefined,
+    // 韓國漢字字典, through the post's photograph of the entry.
+    '⿲意情意': '의정의',
   }
   expect(korean.map(example => example.sequence).sort()).toEqual(Object.keys(readings).sort())
   for (const example of korean) {
@@ -219,10 +229,13 @@ it('reads the Korean gukja as the source does', () => {
     expect(Object.hasOwn(example, 'reading')).toBe(readings[example.sequence] !== undefined)
   }
   expect(korean.find(example => example.sequence === '⿱去乙')).toEqual({ sequence: '⿱去乙', char: '𬼝' })
+  expect(korean.find(example => example.sequence === '⿲意情意')).toEqual({
+    sequence: '⿲意情意', refs: [sourceNumber('x-jumanjikyo')], char: '', reading: '의정의',
+  })
   for (const shape of ['乙', '𠃍', '㇣', '𠃊', '𠮟', '口', '巴']) {
     expect(korean.some(example => example.sequence.includes(shape))).toBe(true)
   }
-  expect(korean.filter(example => !example.char)).toHaveLength(20)
+  expect(korean.filter(example => !example.char)).toHaveLength(21)
   expect(korean.filter(example => example.reading === '갈')).toHaveLength(3)
   expect(korean.filter(example => example.reading === '솔')).toHaveLength(5)
   expect(korean.filter(example => example.reading === '곳')).toHaveLength(4)
