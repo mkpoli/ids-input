@@ -9,6 +9,7 @@
   "ids.adjust.unavailable": "This drawing cannot be split into parts.",
   "ids.alternatives.both": "Split and merge",
   "ids.alternatives.merge": "Merge",
+  "ids.alternatives.more": "Show more",
   "ids.alternatives.replace": "Replace",
   "ids.alternatives.split": "Split",
   "ids.choose": "Choose {part}",

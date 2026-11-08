@@ -9,6 +9,7 @@
   "ids.adjust.unavailable": "이 글자는 부품으로 나눌 수 없습니다.",
   "ids.alternatives.both": "나누고 합치기",
   "ids.alternatives.merge": "합치기",
+  "ids.alternatives.more": "더 보기",
   "ids.alternatives.replace": "바꾸기",
   "ids.alternatives.split": "나누기",
   "ids.choose": "{part} 고르기",

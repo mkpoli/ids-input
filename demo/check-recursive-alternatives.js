@@ -69,6 +69,7 @@ try {
   }
   assert.ok(await page.locator('.ids-options button').count() > shown, 'pressing more adds alternatives')
   assert.equal(await page.locator('.ids-more').count(), 0, 'the more button goes once every alternative is shown')
+  assert.ok(await page.locator('.ids-swaps').evaluate(element => element.scrollTop) > 0, 'the list keeps its scroll when the more control goes')
 
   await page.goto(`${url}/?ids=${encodeURIComponent('⿰⿰口寸⿰口寸')}`, { waitUntil: 'domcontentloaded' })
   await field.waitFor()

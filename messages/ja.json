@@ -9,6 +9,7 @@
   "ids.adjust.unavailable": "この字形は部品に分けられません。",
   "ids.alternatives.both": "分割と1字にまとめ",
   "ids.alternatives.merge": "1字にまとめ",
+  "ids.alternatives.more": "さらに表示",
   "ids.alternatives.replace": "置き換え",
   "ids.alternatives.split": "分割",
   "ids.choose": "{part}を選ぶ",

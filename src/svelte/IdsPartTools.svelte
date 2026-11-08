@@ -68,7 +68,7 @@
           loading = false
           // The button goes when the list is complete; keep the reader's place at the list's close.
           if (!truncated && moreButton && moreButton === document.activeElement) {
-            /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus()
+            /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus({ preventScroll: true })
           }
         }
       }
@@ -268,7 +268,7 @@
       </div>
       {#if truncated}
         <button type="button" class="ids-more" bind:this={moreButton} aria-disabled={loading}
-          onclick={() => { if (!loading) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.from.more')}</button>
+          onclick={() => { if (!loading) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.alternatives.more')}</button>
       {/if}
       <span class="ids-status" role="status">{loading && level > 0 ? t('ids.from.searching') : failed ? t('ids.from.searchFailed') : ''}</span>
     </div>

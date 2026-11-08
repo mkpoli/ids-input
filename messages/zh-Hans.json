@@ -9,6 +9,7 @@
   "ids.adjust.unavailable": "此字形无法拆分部件。",
   "ids.alternatives.both": "拆分并合并",
   "ids.alternatives.merge": "合并",
+  "ids.alternatives.more": "显示更多",
   "ids.alternatives.replace": "替换",
   "ids.alternatives.split": "拆分",
   "ids.choose": "选择{part}",
