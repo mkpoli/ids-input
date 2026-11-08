@@ -81,9 +81,10 @@
     </div>
 
     <h2>Licence</h2>
-    <p><a href={manifest.licence.url}>CC0 1.0 Universal</a>. The descriptions, their arrangement and
-      the editorial readings are in the public domain. Each record cites the work it came from, and the
-      cited works keep their own terms.</p>
+    <p><a href={manifest.licence.url}>CC0 1.0 Universal</a>. This project's selection, arrangement,
+      source notes and editorial readings are in the public domain. Some records transcribe material
+      under other terms; the source records name those terms where the project records them. Small Seal
+      descriptions stay in the GPL corpus and are not part of this release.</p>
 
     <h2>Cite</h2>
     <p class="cite">IDS Input. Open IDS descriptions, version {manifest.version}.

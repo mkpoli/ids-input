@@ -173,9 +173,9 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿱⿰日日⿲有見財			ligature				false	uhk-hetizi
 ⿰⿱日斗⿱進金			ligature				false	uhk-hetizi
 ⿳𦥯⿲女子乚皿			ligature				false	uhk-hetizi zi-tools-kongmeng
-⿳五⿲矢口隹龰			ligature				false	uhk-hetizi
-⿱黄⿱金⿳艹田⿵冂山			ligature				false	uhk-hetizi gmw-zuhezi
-⿳士⿲女口意祥			ligature				false	fznews-jixiang
+⿳五⿲矢口隹龰			ligature				true	uhk-hetizi
+⿱黄⿱金⿳艹田⿵冂山			ligature				true	uhk-hetizi gmw-zuhezi
+⿳士⿲女口意祥			ligature				true	fznews-jixiang
 ⿱艹⿰马尼			ligature				false	zh-yue-hetizi
 ⿰⿳⿰SIR木阝			ligature				false	zh-yue-hetizi
 ⿱⿰⿱コン⿱クリ土			ligature				false	geba-wp
@@ -498,14 +498,6 @@ ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
 ⿱百林	𤾓	U+24F93	nom	trăm			false	babelstone en-wp-nom
 ⿺竜内	𥪞	U+25A9E	nom	trong			false	babelstone en-wp-nom
 ⿱天上	𡗶	U+215F6	nom	trời			false	babelstone en-wp-nom
-⿰𽁭𽁭	𽄌	U+3D10C	seal		玨		false	small-seal
-⿰𽄝𽄝	𽄨	U+3D128	seal		艸		false	small-seal
-⿱𽄨𽄨	𽌜	U+3D31C	seal		茻		false	small-seal
-⿰𽀒𽀒	𽁞	U+3D05E	seal		祘		false	small-seal
-⿱𽄨𽌤	𽄤	U+3D124	seal		芬		false	small-seal
-⿱𽄨𽁞	𽋒	U+3D2D2	seal		蒜		false	small-seal
-⿹𽄐𽌤	𽄑	U+3D111	seal		氛		false	small-seal
-⿴𽌣𽄘	𽌠	U+3D320	seal		小		false	small-seal
 ⿱𙆠𘸏	𘸕	U+18E15	jurchen	(g)an			true	jurchen-numeric jurchen-ids
 ⿱𙆢𙆪	𘹌	U+18E4C	jurchen	pə			true	jurchen-numeric jurchen-ids
 ⿷𘹵𙇐	𘹺	U+18E7A	jurchen	no			true	jurchen-numeric jurchen-ids

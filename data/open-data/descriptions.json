@@ -4,14 +4,14 @@
   "licence": {
     "spdx": "CC0-1.0",
     "url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "note": "The descriptions, their arrangement and the editorial readings are public domain. Each record cites its source, and the cited works keep their own terms."
+    "note": "This project’s selection, arrangement, source notes and editorial readings are dedicated to the public domain. Source-derived material keeps the terms its record names, where the project records one."
   },
   "counts": {
-    "descriptions": 592,
+    "descriptions": 584,
     "unencoded": 115,
-    "editorial": 62,
-    "groups": 21,
-    "sources": 78,
+    "editorial": 65,
+    "groups": 20,
+    "sources": 77,
     "components": 121
   },
   "groups": [
@@ -118,12 +118,6 @@
       "unencoded": 0
     },
     {
-      "key": "seal",
-      "title": "Small Seal",
-      "count": 8,
-      "unencoded": 0
-    },
-    {
       "key": "jurchen",
       "title": "Jurchen",
       "count": 44,
@@ -149,6 +143,7 @@
       "author": "Andrew West",
       "date": "2025-06-27",
       "url": "https://www.babelstone.co.uk/CJK/IDS.TXT",
+      "licence": "Public Domain",
       "status": "checked",
       "note": "The description of each encoded character, also bundled as data/babelstone-ids.tsv.gz. 皶 keeps the GKP form ⿰查皮; the TJ record is ⿰査皮."
     },
@@ -310,6 +305,7 @@
       "key": "geba-wp",
       "title": "全学联汉字",
       "url": "https://zh.wikipedia.org/wiki/全学联汉字",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "Read 2026-10-28. The Geba-ji tables under 西文字母, 假名声旁, 通假, 楷化, 记号, 字形省去, 隶定, 训读 and 声旁. The tables write the letters full width (Ｒ, Ｋ); the examples use ASCII. The 1967 東京教育大学 barricade photograph is [on Commons](https://commons.wikimedia.org/wiki/File:On_strike_work1967.07.05.jpg); the 1991 NAVI photograph is [on Commons](https://commons.wikimedia.org/wiki/File:NAVI_hansen_shukai.jpg)."
     },
@@ -326,6 +322,7 @@
       "key": "ja-wp-geba",
       "title": "ゲバ字",
       "url": "https://ja.wikipedia.org/wiki/ゲバ字",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "Gives the same 宀+R form for 寮."
     },
@@ -363,17 +360,11 @@
       "note": "⿰木き, ⿰木⿳ㄙㄨㄥ, ⿰木⿱ㄅㄞ, ⿺辶說, ⿱龹幸, ⿶む子 and 〾⿱⿰大⿱七六⿵勹五. No published source is recorded for these exact forms. The last is a Jianzipu-style transcription, and 〾 marks its approximate shape; a related notation with 四 in place of 五 is in 謝俊仁, 音樂展覽 – 古琴篇, https://www2.lcsd.gov.hk/tc/mo/activities/communityprogrammes/roving_exhibition_guqin.html."
     },
     {
-      "key": "small-seal",
-      "title": "CHISE Jiguge small-seal records",
-      "url": "https://www.chise.org/",
-      "status": "reported",
-      "note": "Read from data/small-seal.json.gz; the modern labels are correspondences."
-    },
-    {
       "key": "tangut-ids",
       "title": "BabelStone Tangut IDS",
       "author": "Andrew West",
       "url": "https://www.babelstone.co.uk/Tangut/TangutIDS.txt",
+      "licence": "Public Domain",
       "status": "checked",
       "note": "The Tangut descriptions, also bundled as data/babelstone-ids.tsv.gz."
     },
@@ -391,6 +382,7 @@
       "title": "국자의 음역자와 구결자",
       "date": "2026-08-28",
       "url": "https://ko.wikipedia.org/w/index.php?title=국자의_음역자와_구결자&oldid=42393816",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "The characters, Hangul readings and, where the article gives one, the code point of each Korean gukja and gugyeol example, read 2026-10-29. Twenty gukja forms have no code point and stand as the article writes them, as a decomposition. The article gives its last row, 𬼝, no reading. Its stroke-count column is blank for some entries; 亪 and 𠃌 carry no K region in BabelStone."
     },
@@ -498,6 +490,7 @@
       "title": "U-source ideographs (UTR #45)",
       "date": "2026-07-30",
       "url": "https://www.unicode.org/Public/UCD/latest/ucd/USourceData.txt",
+      "licence": "Unicode License v3",
       "status": "checked",
       "note": "UTC-00949 records the 招財進寶 ligature as ⿱宀⿺辶⿱⿰王尔⿲隹貝招, status NoAction. The record nests the 宀 above the 辶; the proposal’s glyph puts the 辶 around it, and the example follows the glyph (⿺辶⿱宀⿱⿰王尔⿲隹貝招). The drawing approximates the hand-set glyph; the export’s 宀 has longer side strokes than the reference, so a box-for-box placement would merge them with 王 and 尔. The reference glyph is [docs/images/utc-00949-reference.png](https://github.com/mkpoli/ids-input/blob/main/docs/images/utc-00949-reference.png)."
     },
@@ -506,6 +499,7 @@
       "title": "合成字",
       "date": "2026-01-03",
       "url": "https://zh-yue.wikipedia.org/w/index.php?title=合成字&oldid=2365560",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "Lists 招財進寶, 孔孟好學, 草泥馬, 阿Sir and 動L; gives 草泥馬 as ⿱艹⿰马尼, 阿Sir as ⿰⿳⿰SIR木阝, and 動L as ⿱成龍. The 招財進寶 image is named ⿱𡩧⿺進⿰貝招. Read 2026-10-29."
     },
@@ -538,6 +532,7 @@
       "key": "en-wp-kokuji",
       "title": "Kokuji",
       "url": "https://en.wikipedia.org/wiki/Kokuji",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "The kokuji examples and their readings, read 2026-10-30: the jōyō, jinmeiyō and hyōgai entries, and 鰯, 鱈, 樫, 椙, 椛, 柾, 粁, 竏, 瓩 and 竓 from the examples and history sections. The readings of 鰯, 鱈, 樫, 椙, 椛, 柾 and 竓 come from KANJIDIC2, https://www.edrdg.org/kanjidic/kanjidic2.xml.gz. 搾 is left out as disputed there, and 鮟 as not a kokuji."
     },
@@ -545,6 +540,7 @@
       "key": "en-wp-nom",
       "title": "Chữ Nôm",
       "url": "https://en.wikipedia.org/wiki/Ch%E1%BB%AF_N%C3%B4m",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "The invented Nôm characters and their readings, read 2026-10-30: the Tale of Kiều table (𤾓 trăm, 𢆥 năm, 𥪞 trong, 𡎝 cõi, 𠊛 người, 𡨸 chữ, 𱺵 là, 恄 ghét) and the account of locally invented characters (𠀧 ba, 𡗶 trời, 𫜵 làm, 𠬠 một). Borrowed Chinese characters used phonetically (些, 才, 命, 窖, 饒) are left out, and so is 媄, which the article notes is also a Chinese variant of 美."
     },
@@ -624,6 +620,7 @@
       "author": "Wikipedia contributors",
       "date": "2026-08-11",
       "url": "https://ja.wikipedia.org/w/index.php?title=幽霊文字&oldid=110601177",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "Lists the historical twelve unresolved JIS characters: 墸, 壥, 妛, 彁, 挧, 暃, 椦, 槞, 蟐, 袮, 閠 and 駲. Unresolved JIS provenance can coexist with historical same-shape attestations; proposed miscopy origins remain hypotheses. JIS X 0208:1997, Annex 7, and the old dictionaries are cited indirectly through this article. Read 2026-10-31."
     },
@@ -673,6 +670,7 @@
       "title": "cjkvi-ids ids.txt",
       "author": "Kawabata Taichi and the CJKVI Database",
       "url": "https://github.com/cjkvi/cjkvi-ids/blob/master/ids.txt",
+      "licence": "GPL-2.0-or-later",
       "status": "checked",
       "note": "Read 2026-11-01. Describes 迠 (U+8FE0) as ⿺辶占, beside 建 as ⿺廴聿; lists 菓, 苐, 証 and 講 without the 草 forms. Licensed GPL v2 or later, so its rows inform this note and are not copied into the data."
     },
@@ -690,6 +688,7 @@
       "title": "JurchenSources.txt, Unicode 18.0",
       "author": "Unicode, Inc.",
       "url": "https://www.unicode.org/Public/18.0.0/ucd/JurchenSources.txt",
+      "licence": "Unicode License v3",
       "status": "checked",
       "note": "The numeric values of the Jurchen numerals, kJURC_Numeric, and the readings of the composed characters, kJURC_NCReading; the glyphs are Alari Xuwasun Jurchen."
     },
@@ -721,6 +720,7 @@
       "key": "zh-wp-jianhua-fangfa",
       "title": "简化字的简化方法",
       "url": "https://zh.wikipedia.org/w/index.php?title=简化字的简化方法&oldid=93222926",
+      "licence": "CC BY-SA 4.0",
       "status": "checked",
       "note": "Read 2026-11-07. Under 仿日文假名 it gives 卫（衛） and quotes 易熙吾 and 陳光垚 for the katakana origin, then records the other explanations in circulation: that 卫 keeps the middle of 韋 (《商務漢字精解字典》, 2012), and the folk etymologies of 倪匡 (a banner on the ground) and 流沙河 (the initial P of protection)."
     },
@@ -3139,7 +3139,7 @@
       "reading": null,
       "modern": null,
       "abbreviates": null,
-      "editorial": false,
+      "editorial": true,
       "sources": [
         "uhk-hetizi"
       ]
@@ -3152,7 +3152,7 @@
       "reading": null,
       "modern": null,
       "abbreviates": null,
-      "editorial": false,
+      "editorial": true,
       "sources": [
         "uhk-hetizi",
         "gmw-zuhezi"
@@ -3166,7 +3166,7 @@
       "reading": null,
       "modern": null,
       "abbreviates": null,
-      "editorial": false,
+      "editorial": true,
       "sources": [
         "fznews-jixiang"
       ]
@@ -7672,110 +7672,6 @@
       "sources": [
         "babelstone",
         "en-wp-nom"
-      ]
-    },
-    {
-      "ids": "⿰𽁭𽁭",
-      "char": "𽄌",
-      "codepoint": "U+3D10C",
-      "group": "seal",
-      "reading": null,
-      "modern": "玨",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿰𽄝𽄝",
-      "char": "𽄨",
-      "codepoint": "U+3D128",
-      "group": "seal",
-      "reading": null,
-      "modern": "艸",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿱𽄨𽄨",
-      "char": "𽌜",
-      "codepoint": "U+3D31C",
-      "group": "seal",
-      "reading": null,
-      "modern": "茻",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿰𽀒𽀒",
-      "char": "𽁞",
-      "codepoint": "U+3D05E",
-      "group": "seal",
-      "reading": null,
-      "modern": "祘",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿱𽄨𽌤",
-      "char": "𽄤",
-      "codepoint": "U+3D124",
-      "group": "seal",
-      "reading": null,
-      "modern": "芬",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿱𽄨𽁞",
-      "char": "𽋒",
-      "codepoint": "U+3D2D2",
-      "group": "seal",
-      "reading": null,
-      "modern": "蒜",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿹𽄐𽌤",
-      "char": "𽄑",
-      "codepoint": "U+3D111",
-      "group": "seal",
-      "reading": null,
-      "modern": "氛",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
-      ]
-    },
-    {
-      "ids": "⿴𽌣𽄘",
-      "char": "𽌠",
-      "codepoint": "U+3D320",
-      "group": "seal",
-      "reading": null,
-      "modern": "小",
-      "abbreviates": null,
-      "editorial": false,
-      "sources": [
-        "small-seal"
       ]
     },
     {

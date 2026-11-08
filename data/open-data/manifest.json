@@ -4,14 +4,14 @@
   "licence": {
     "spdx": "CC0-1.0",
     "url": "https://creativecommons.org/publicdomain/zero/1.0/",
-    "note": "The descriptions, their arrangement and the editorial readings are public domain. Each record cites its source, and the cited works keep their own terms."
+    "note": "This project’s selection, arrangement, source notes and editorial readings are dedicated to the public domain. Source-derived material keeps the terms its record names, where the project records one."
   },
   "counts": {
-    "descriptions": 592,
+    "descriptions": 584,
     "unencoded": 115,
-    "editorial": 62,
-    "groups": 21,
-    "sources": 78,
+    "editorial": 65,
+    "groups": 20,
+    "sources": 77,
     "components": 121
   },
   "groups": [
@@ -118,12 +118,6 @@
       "unencoded": 0
     },
     {
-      "key": "seal",
-      "title": "Small Seal",
-      "count": 8,
-      "unencoded": 0
-    },
-    {
       "key": "jurchen",
       "title": "Jurchen",
       "count": 44,
@@ -145,12 +139,12 @@
   "files": [
     {
       "name": "descriptions.json",
-      "bytes": 225708,
+      "bytes": 223747,
       "type": "application/json"
     },
     {
       "name": "descriptions.tsv",
-      "bytes": 36720,
+      "bytes": 36293,
       "type": "text/tab-separated-values"
     },
     {
@@ -160,7 +154,7 @@
     },
     {
       "name": "README.md",
-      "bytes": 14922,
+      "bytes": 16144,
       "type": "text/markdown"
     }
   ]

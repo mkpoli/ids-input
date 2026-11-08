@@ -1,4 +1,4 @@
-import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync } from 'node:fs'
 import { extname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -70,9 +70,10 @@ function openData() {
     name: 'open-data',
     configureServer(server) {
       server.middlewares.use('/data/open-data', (request, response, next) => {
-        const name = decodeURIComponent((request.url ?? '').split('?')[0].replace(/^\//, ''))
+        let name
+        try { name = decodeURIComponent((request.url ?? '').split('?')[0].replace(/^\//, '')) } catch { return next() }
         const file = join(OPEN_DATA, name)
-        if (!name || name.includes('/') || !existsSync(file)) return next()
+        if (!name || name.startsWith('.') || name.includes('/') || !existsSync(file) || !statSync(file).isFile()) return next()
         response.setHeader('Content-Type', OPEN_DATA_TYPES[extname(file)] ?? 'application/octet-stream')
         response.end(readFileSync(file))
       })
@@ -80,7 +81,9 @@ function openData() {
     writeBundle() {
       const out = join(import.meta.dirname, '..', 'dist', 'data', 'open-data')
       mkdirSync(out, { recursive: true })
-      for (const name of readdirSync(OPEN_DATA)) copyFileSync(join(OPEN_DATA, name), join(out, name))
+      for (const name of ['descriptions.json', 'descriptions.tsv', 'components.tsv', 'manifest.json', 'README.md']) {
+        if (existsSync(join(OPEN_DATA, name))) copyFileSync(join(OPEN_DATA, name), join(out, name))
+      }
     },
   }
 }

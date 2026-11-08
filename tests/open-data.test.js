@@ -7,6 +7,7 @@ import { OPERATORS, parse } from '../src/core/index.js'
 const read = name => readFileSync(new URL(`../data/open-data/${name}`, import.meta.url), 'utf8')
 const dataset = JSON.parse(read('descriptions.json'))
 const manifest = JSON.parse(read('manifest.json'))
+const readme = read('README.md')
 const tsv = read('descriptions.tsv').trimEnd().split('\n')
 const componentsTsv = read('components.tsv').trimEnd().split('\n')
 const OPERATOR = new Set(OPERATORS.map(([operator]) => operator))
@@ -18,17 +19,25 @@ describe('the open data release', () => {
     expect(dataset.version).toBe(1)
     expect(dataset.licence.spdx).toBe('CC0-1.0')
     expect(dataset.licence.url).toBe('https://creativecommons.org/publicdomain/zero/1.0/')
-    expect(read('README.md')).toContain(dataset.licence.url)
+    expect(dataset.licence.note).toContain('public domain')
+    expect(readme).toContain(dataset.licence.url)
+    expect(readme).toContain('CC BY-SA 4.0')
   })
 
   it('counts what it holds', () => {
+    expect(dataset.counts).toEqual({
+      descriptions: 584, unencoded: 115, editorial: 65, groups: 20, sources: 77, components: 121,
+    })
     expect(dataset.counts.descriptions).toBe(dataset.records.length)
     expect(dataset.counts.unencoded).toBe(dataset.records.filter(record => !record.char).length)
     expect(dataset.counts.editorial).toBe(dataset.records.filter(record => record.editorial).length)
     expect(dataset.counts.groups).toBe(dataset.groups.length)
     expect(dataset.counts.sources).toBe(dataset.sources.length)
     expect(dataset.counts.components).toBe(dataset.components.length)
+    expect(dataset.groups.reduce((sum, group) => sum + group.count, 0)).toBe(dataset.counts.descriptions)
     expect(manifest.counts).toEqual(dataset.counts)
+    expect(manifest.groups).toEqual(dataset.groups)
+    expect(manifest.licence).toEqual(dataset.licence)
   })
 
   it('carries one row per description', () => {
@@ -59,7 +68,14 @@ describe('the open data release', () => {
     }
   })
 
-  it('cites a source for each record and uses each source it lists', () => {
+  it('keeps the GPL small-seal rows out', () => {
+    expect(dataset.records.some(record => record.group === 'seal')).toBe(false)
+    expect(dataset.groups.some(group => group.key === 'seal')).toBe(false)
+    expect(SOURCES.has('small-seal')).toBe(false)
+    expect(readme).toContain('GPL-2.0-or-later')
+  })
+
+  it('cites a known source and uses every source it lists', () => {
     for (const record of dataset.records) {
       for (const key of record.sources) expect(SOURCES.has(key)).toBe(true)
     }
@@ -72,26 +88,45 @@ describe('the open data release', () => {
     }
   })
 
-  it('marks the Shuishu and Jurchen readings as editorial', () => {
-    for (const record of dataset.records) {
-      expect(record.editorial).toBe(record.group === 'shuishu' || record.group === 'jurchen')
+  it('names the records that carry no source', () => {
+    const unsourced = dataset.records.filter(record => record.sources.length === 0)
+    expect(unsourced.map(record => record.ids)).toEqual(['⿰言⿱⿰幺幺⿰幺幺', '⿱車🚗'])
+    for (const record of unsourced) expect(readme).toContain(record.ids)
+    expect(readme).toContain('Two records')
+  })
+
+  it('names source terms where the project records them', () => {
+    expect(SOURCES.get('babelstone')?.licence).toBe('Public Domain')
+    expect(SOURCES.get('en-wp-kokuji')?.licence).toBe('CC BY-SA 4.0')
+    expect(readme).toMatch(/\| Key \| Work \| Author \| Date \| Terms \| Status \| URL \|/)
+  })
+
+  it('marks the descriptions no source decomposes as editorial', () => {
+    const editorial = dataset.records.filter(record => record.editorial)
+    expect(editorial).toHaveLength(65)
+    for (const record of editorial) expect(['shuishu', 'jurchen', 'ligature']).toContain(record.group)
+    expect(editorial.filter(record => record.group === 'ligature')).toHaveLength(3)
+    for (const record of dataset.records.filter(record => record.group === 'shuishu' || record.group === 'jurchen')) {
+      expect(record.editorial).toBe(true)
     }
-    expect(dataset.records.filter(record => record.editorial)).toHaveLength(62)
   })
 
   it('writes the same records as a table', () => {
     expect(tsv[0]).toBe('ids\tchar\tcodepoint\tgroup\treading\tmodern\tabbreviates\teditorial\tsources')
     expect(tsv).toHaveLength(dataset.records.length + 1)
     dataset.records.forEach((record, index) => {
-      const cells = tsv[index + 1].split('\t')
-      expect(cells[0]).toBe(record.ids)
-      expect(cells[1]).toBe(record.char ?? '')
-      expect(cells[3]).toBe(record.group)
-      expect(cells[7]).toBe(String(record.editorial))
-      expect(cells[8]).toBe(record.sources.join(' '))
+      expect(tsv[index + 1].split('\t')).toEqual([
+        record.ids, record.char ?? '', record.codepoint ?? '', record.group, record.reading ?? '',
+        record.modern ?? '', record.abbreviates ?? '', String(record.editorial), record.sources.join(' '),
+      ])
     })
     expect(componentsTsv[0]).toBe('component\tdescription\tfragment\teditorial')
     expect(componentsTsv).toHaveLength(dataset.components.length + 1)
+    dataset.components.forEach((component, index) => {
+      expect(componentsTsv[index + 1].split('\t')).toEqual([
+        component.component, component.description, component.fragment, String(component.editorial),
+      ])
+    })
   })
 
   it('lists the files it ships with their sizes', () => {
