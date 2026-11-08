@@ -243,7 +243,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
-  // Navy characters (海軍漢字): the 位相文字 the Imperial Japanese Navy wrote with kanji and kana.
+  // Navy characters (海軍漢字): the 位相文字 of 漢字的構成 used in the Imperial Japanese Navy.
   // 艦ツ and 掌キ come from the BiangBiangCon slides. The rest come from @xWcvlUa1jn96009, whose
   // 日本漢字学会 talk and its write-up define the set: ⿲木十木 is 機関銃 but likely an Army form,
   // ⿰車ト is トラック and read as an Army form too, and ⿰米林 is ハヤシライス, a 主計科 form.
@@ -287,7 +287,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿻Mo', refs: [20], char: '' },
   ] },
   // Created characters (創作漢字): a photographed sign sets 不想上班那就別上 as four characters, each
-  // carrying two syllables: 不 beside 目 over 心, 上 and 丿 beside 王, 那's left beside 就's 尤, and
+  // carrying two syllables: 不 beside 目 over 心, 上, 丿 and 王 side by side, 那's left beside 就's 尤, and
   // 另 beside 上. The sequences are the poster's transcription; BabelStone has no row for any.
   { key: 'created', refs: [72], examples: [
     { sequence: '⿱⿰不目心', char: '' },
