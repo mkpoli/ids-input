@@ -98,6 +98,10 @@ describe('the demo examples', () => {
           // BabelStone assigns this description to 𦜳, a 肉-radical character; the dictionary entry
           // the example cites is a different, unencoded character.
           expect(found).toEqual(['𦜳'])
+        } else if (sequence === '⿰米林') {
+          // BabelStone assigns this description to 𮇥 (U+2E1E5), a G-region character; the Navy
+          // form is a different, unencoded character.
+          expect(found).toEqual(['𮇥'])
         } else {
           expect(found).toEqual([])
         }
@@ -148,6 +152,26 @@ describe('the demo examples', () => {
     }
     for (const example of group.examples) expect(example.char).toBe('')
   })
+  it('keeps the Navy characters with their sources', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'navy')
+    expect(group.examples.map(example => example.sequence)).toEqual([
+      '⿰艦ツ', '⿰掌キ', '⿲木十木', '⿰車ト', '⿰米林',
+    ])
+    const refs = new Map(group.examples.map(example => [example.sequence, example.refs]))
+    const ships = [sourceNumber('script-hybrid'), sourceNumber('x-cincpac-images')]
+    expect(refs.get('⿰艦ツ')).toEqual(ships)
+    expect(refs.get('⿰掌キ')).toEqual(ships)
+    expect(refs.get('⿲木十木')).toEqual([
+      sourceNumber('jsccc8-navy'), sourceNumber('note-kaigun-kamome'), sourceNumber('x-kaigun-kikanju'),
+    ])
+    expect(refs.get('⿰車ト')).toEqual([sourceNumber('jsccc8-navy'), sourceNumber('x-kaigun-truck')])
+    expect(refs.get('⿰米林')).toEqual([sourceNumber('jsccc8-navy'), sourceNumber('x-kaigun-hayashi')])
+  })
+  it('keeps ⿰甫舎 as the 舗 variant its post records', () => {
+    expect(EXAMPLES.find(example => example.sequence === '⿰甫舎')).toEqual({
+      sequence: '⿰甫舎', refs: [sourceNumber('x-mkpoli-u820e')], char: '舗', parts: '甫舎',
+    })
+  })
   it('keeps the created characters with their source', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'created')
     expect(group.refs).toEqual([sourceNumber('x-egasmb')])
@@ -166,7 +190,7 @@ describe('the demo examples', () => {
 })
 
 it('keeps all Tangut examples in a separate section', () => {
-  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'ligature', 'created', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
+  expect(EXAMPLE_GROUPS.map(group => group.key)).toEqual(['basic', 'complex', 'repeated', 'enclosures', 'mixed', 'sign', 'erjian', 'geba', 'navy', 'ligature', 'created', 'korean', 'hangul', 'gugyeol', 'kokuji', 'ghost', 'nom', 'seal', 'jurchen', 'shuishu', 'tangut'])
   const tangut = EXAMPLE_GROUPS.find(group => group.key === 'tangut').examples
   expect(tangut.every(example => onlyTangut(example.sequence))).toBe(true)
   expect(EXAMPLE_GROUPS.filter(group => group.key !== 'tangut').flatMap(group => group.examples).some(example => onlyTangut(example.sequence))).toBe(false)

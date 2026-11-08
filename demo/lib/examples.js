@@ -27,6 +27,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰要勿', refs: [7], char: '覅' },
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
     { sequence: '⿰查皮', char: '皶' },
+    // A transposition of 舗's two sides, recorded on GlyphWiki and read 舗.
+    { sequence: '⿰甫舎', refs: [78], char: '舗', parts: '甫舎' },
     { sequence: '⿰讠射', char: '谢' },
     { sequence: '⿻⺀大', char: '头' },
     { sequence: '⿱龹幸', refs: [26], char: '' },
@@ -123,8 +125,6 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰舟力', char: '𬜑' },
     { sequence: '⿴口도', refs: [15,24], char: '' },
     { sequence: '⿰舟ラ', refs: [15,16,17], char: '' },
-    { sequence: '⿰艦ツ', refs: [15,23], char: '' },
-    { sequence: '⿰掌キ', refs: [15,23], char: '' },
     { sequence: '⿵门T', refs: [16,18], char: '' },
     { sequence: '⿰𛂦方', refs: [18,1], char: '𭤪' },
     { sequence: '⿰亻A', refs: [19], char: '' },
@@ -242,6 +242,17 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿺辶⿱𭕄共', char: '', abbreviates: '選' },
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
+  ] },
+  // Navy characters (海軍漢字): the 位相文字 the Imperial Japanese Navy wrote with kanji and kana.
+  // 艦ツ and 掌キ come from the BiangBiangCon slides. The rest come from @xWcvlUa1jn96009, whose
+  // 日本漢字学会 talk and its write-up define the set: ⿲木十木 is 機関銃 but likely an Army form,
+  // ⿰車ト is トラック and read as an Army form too, and ⿰米林 is ハヤシライス, a 主計科 form.
+  { key: 'navy', examples: [
+    { sequence: '⿰艦ツ', refs: [15,23], char: '' },
+    { sequence: '⿰掌キ', refs: [15,23], char: '' },
+    { sequence: '⿲木十木', refs: [73,74,75], char: '' },
+    { sequence: '⿰車ト', refs: [73,76], char: '' },
+    { sequence: '⿰米林', refs: [73,77], char: '' },
   ] },
   // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
