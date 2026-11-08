@@ -1,5 +1,8 @@
 // Build `data/kana-strokes.json.gz`: the stroke count and first stroke of every kana KanjiVG draws.
 //
+// Halfwidth katakana (U+FF66–U+FF9D) are the same kana drawn narrow, so each takes the count of the
+// kana it decomposes to under NFKC; KanjiVG draws none of them itself.
+//
 // KanjiVG draws one path per stroke, numbered `kvg:<code point>-s1`, `-s2` and so on, so the number
 // of paths is the stroke count and their order is the writing order. It records no five-stroke
 // class, and reading one off a path's shape does not work: kana strokes are curved, so a turn and a
@@ -65,9 +68,22 @@ for (const [from, to] of RANGES) {
   }
 }
 
+// Halfwidth katakana copy the count of the kana Unicode decomposes them to.
+const counted = new Map(keys.map((key, index) => [key, strokes[index]]))
+const missingHalfwidth = []
+for (let point = 0xff66; point <= 0xff9d; point++) {
+  const char = String.fromCodePoint(point)
+  const wide = char.normalize('NFKC')
+  const count = counted.get(wide)
+  if (count === undefined) { missingHalfwidth.push(char); continue }
+  keys.push(char)
+  strokes.push(count)
+}
+
 if (!keys.length) throw Error('no kana drawn: check the source directory or the network')
 const text = JSON.stringify({ revision: REVISION, source: SOURCE, keys, strokes })
 const gz = gzipSync(text, { level: 9, mtime: 0 })
 writeFileSync(TARGET, gz)
 console.log(`${keys.length} kana, ${gz.length} bytes`)
 if (absent.length) console.log(`not drawn by KanjiVG: ${absent.join('')}`)
+if (missingHalfwidth.length) console.log(`halfwidth forms with no full-width count: ${missingHalfwidth.join('')}`)
