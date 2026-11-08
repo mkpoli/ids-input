@@ -515,6 +515,22 @@ describe('subtraction queries', () => {
     expect(found('㇯⬚軍')).toEqual(['輝'])
   })
 
+  it('follows a single-component description as well as a decomposition', () => {
+    const aliases = createSearch(new Map(Object.entries({
+      光: ['⿱⺌兀'], 甲: ['⿱冖車'], 乙: ['甲'], 丙: ['⿰光冖'],
+    })))
+    expect(aliases.search('㇯乙車').hits.map(hit => hit.char)).toEqual(aliases.search('冖').hits.map(hit => hit.char))
+    expect(aliases.search('㇯乙車').hits.map(hit => hit.char)).toContain('丙')
+  })
+
+  it('leaves a placeholder out of a subtraction', () => {
+    const placeholders = createSearch(new Map([
+      ['甲', ['⿱？木']], ['乙', ['⿰光木']], ['光', ['⿱⺌兀']],
+    ]))
+    expect(placeholders.search('⿰光㇯甲？').hits).toEqual([])
+    expect(placeholders.search('⿰光㇯甲木').hits).toEqual([])
+  })
+
   it('normalizes an unknown-structure pattern too', () => {
     expect(index.unknownStructure('㇯軍車').hits.map(hit => hit.char))
       .toEqual(index.unknownStructure('冖').hits.map(hit => hit.char))

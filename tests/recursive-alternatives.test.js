@@ -201,6 +201,17 @@ test('reads a subtraction through its decompositions', async () => {
   expect((await collect(tree('㇯輝車'), source)).texts).toContain('⿰光冖')
 })
 
+test('follows a single-component description as well as a decomposition', async () => {
+  const source = adapter({ 甲: ['⿱冖車'], 乙: ['甲'] })
+  expect((await collect(tree('㇯乙車'), source)).texts).toContain('冖')
+})
+
+test('does not take one operand of a description that is itself a subtraction', async () => {
+  const source = adapter({ 乌: ['㇯鸟丶'], 鸟: ['⿱一鸟'] })
+  const { texts } = await collect(tree('㇯乌丶'), source)
+  expect(texts).not.toContain('鸟')
+})
+
 test('leaves a subtraction the decompositions do not resolve', async () => {
   const source = adapter({ 軍: ['⿱冖車'] })
   const { texts } = await collect(tree('㇯軍光'), source)

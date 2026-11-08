@@ -56,6 +56,16 @@ describe('subtraction normalization', () => {
     expect(normalizeSubtractionText('光', decomposition)).toBe('光')
   })
 
+  it('does not read a description that is itself a subtraction as parts', () => {
+    const described = { 乌: ['㇯鸟丶'], 鸟: ['⿱一鸟'] }
+    expect(normalizeSubtractionText('㇯乌丶', char => described[char] ?? [])).toBe('㇯乌丶')
+  })
+
+  it('does not resolve a placeholder or a target carrying one', () => {
+    expect(normalizeSubtractionText('㇯甲？', char => ({ 甲: ['⿱？木'] })[char] ?? [])).toBe('㇯甲？')
+    expect(normalizeSubtractionText('⿰光㇯甲木', char => ({ 甲: ['⿱？木'] })[char] ?? [])).toBe('⿰光㇯甲木')
+  })
+
   it('stops on a cycle of descriptions', () => {
     const cyclic = { 甲: ['⿰甲乙'], 乙: ['⿱甲口'] }
     const result = normalizeSubtractions(tree('㇯甲口'), char => cyclic[char] ?? [])

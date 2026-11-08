@@ -116,7 +116,15 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
           const findStructure = adapter.structure.bind(adapter)
           structures.set(base, lookup(requestSignal => findStructure(base, { signal: requestSignal }), signal, lookupTimeoutMs))
         }
-        const list = await /** @type {Promise<import('./decompose.js').Sequence[]>} */ (structures.get(base))
+        let list
+        try {
+          list = await /** @type {Promise<import('./decompose.js').Sequence[]>} */ (structures.get(base))
+        } catch (error) {
+          signal?.throwIfAborted()
+          if (error instanceof Error && error.name === 'AbortError') throw error
+          cuts.add('lookup')
+          continue
+        }
         signal?.throwIfAborted()
         /** @type {Part[]} */
         const parsed = []

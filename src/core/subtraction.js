@@ -2,16 +2,18 @@
 // Subtraction as a description: ㇯SX takes X out of what S decomposes into, so ㇯軍車 is 冖 because
 // 軍 is ⿱冖車. A description is read only as far as a character's own decomposition, and a node
 // left with one part collapses to that part.
-import { arity, isNode, parse, write } from './ids.js'
+import { UNKNOWN, arity, isNode, parse, write } from './ids.js'
 
 /** @typedef {import('./ids.js').Part} SubtractionPart */
 
 /** The first operand is taken away whole. */
 const GONE = Symbol('gone')
 
-/** A part with no operator note or loose marks, which a removal could not carry. @param {SubtractionPart} part @returns {boolean} */
+/** A part a removal can read: no placeholder, operator note or loose marks anywhere in it.
+ * @param {SubtractionPart} part @returns {boolean} */
 function plain(part) {
-  if (part === null || typeof part === 'string') return true
+  if (part === null) return true
+  if (typeof part === 'string') return part !== UNKNOWN
   return !part.note && !part.marks && part.parts.every(child => plain(child))
 }
 
@@ -85,6 +87,9 @@ function subtractOnce(tree, target, describe, maxDepth = 8) {
       return out
     }
     if (part === null || !plain(part)) return out
+    // What ㇯ takes away, and what it takes it from, do not stand in the character: a description
+    // that is itself a subtraction is not a sequence of parts to take one out of.
+    if (part.op === '㇯') return out
     part.parts.forEach((child, index) => {
       for (const result of walk(child, seen, depth).values()) {
         const parts = part.parts.slice()
@@ -110,6 +115,7 @@ function subtractOnce(tree, target, describe, maxDepth = 8) {
  * @returns {SubtractionPart[]}
  */
 export function subtractionRemainders(tree, target, describe, maxDepth = 8) {
+  if (!plain(tree) || !plain(target)) return []
   return /** @type {SubtractionPart[]} */ (subtractOnce(tree, target, describe, maxDepth).filter(result => result !== GONE))
 }
 

@@ -681,8 +681,10 @@ components hidden inside a subtraction are omitted because the data does not est
 
 A subtraction is read through the first operand's description when that description holds the
 second: `㇯軍車` is `冖`, because 軍 is `⿱冖車`. Queries, structural patterns and unknown-structure
-patterns normalize it before matching, so `⿰光㇯軍車` finds what `⿰光冖` finds. A remainder no
-operator can write, such as a three-part node left with two parts, stays as typed.
+patterns normalize it before matching, so `⿰光㇯軍車` finds what `⿰光冖` finds. A description that is
+itself a subtraction, or that holds a placeholder, is left alone, since its operands do not stand in
+the character. A remainder no operator can write, such as a three-part node left with two parts,
+stays as typed.
 
 For a structural search of a subtraction with a wildcard, use the structural-search mode, or pass
 `{ componentLookup: false }` to `createSearch().search()` or `adapter.findByIds()`; the latter

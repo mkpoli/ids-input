@@ -115,7 +115,7 @@ export function createStructuralSearch(table, { forms = new Map() } = {}) {
     shared.clear()
     if (!query.trim()) return { hits: [], total: 0, characters: '', problem: 'empty' }
     const texts = query.split('|').map(s => s.replace(/\s/gu, '').replace(/[⬚＋]/gu, '？'))
-      .map(text => normalizeSubtractionText(text, char => trees(char)))
+      .map(text => normalizeSubtractionText(text, char => table.get(char) ?? []))
     const patterns = texts.map(text => parse(text))
     if (patterns.length > 8 || patterns.some(p => p.problem || !p.tree || typeof p.tree === 'string'))
       return { hits: [], total: 0, characters: '', problem: 'pattern' }

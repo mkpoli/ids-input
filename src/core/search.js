@@ -262,7 +262,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
   /** A query term with each subtraction its descriptions resolve rewritten; a term that resolves
    * nothing is left as typed, so a draft keeps its empty slots.
    * @param {string} text @returns {string} */
-  const normalizeTerm = text => normalizeSubtractionText(unalias(text), char => treesOf(lookupChar(char)))
+  const normalizeTerm = text => normalizeSubtractionText(unalias(text), char => table.get(lookupChar(char)) ?? [])
 
   // What each character holds at any depth, folded and counted; of several descriptions, the most
   // any one names of each component. Operators are held too, under their own characters. Kept
