@@ -1,15 +1,22 @@
 <script>
   // The chosen part of `editor`: a field to type it (Enter puts what it holds and moves on to the next
-  // empty slot), buttons to clear it or take its level away, and the components that can stand in its
-  // place or the descriptions it can be split into. A problem or the next slot to fill shows beneath;
-  // the components float over the page, so choosing a part does not move what is around it.
-  import { isNode } from '../core/ids.js'
+  // empty slot), buttons to clear it or take its level away, and the alternatives in its place: the
+  // components that can stand for it, the descriptions it splits into, the characters it merges to,
+  // and the recursive combinations of splitting and merging, each under its own heading. A problem or
+  // the next slot to fill shows beneath; the alternatives float over the page, so choosing a part does
+  // not move what is around it.
+  import { untrack } from 'svelte'
+  import { isNode, write } from '../core/ids.js'
+  import { recursiveAlternatives } from '../core/recursive-alternatives.js'
   import { shortcut } from './shortcut.js'
   import { watchFallback } from './fallback-font.js'
+
+  /** @typedef {{ text: string, tree: import('../core/ids.js').Part, operation: 'expand' | 'merge' | 'both' }} Option */
 
   /** @type {{ editor: import('./editor.svelte.js').Editor, keyHints?: boolean, slot?: HTMLInputElement | null, status?: boolean }} */
   let { editor, keyHints = true, slot = $bindable(null), status = true } = $props()
   const t = $derived(editor.t)
+  const uid = $props.id()
   const picked = $derived(editor.picked)
   function apply() { if (editor.enter()) queueMicrotask(() => { slot?.focus(); slot?.select() }) }
   const part = $derived(typeof picked === 'string' ? picked : '')
@@ -17,14 +24,64 @@
   const merges = $derived(editor.merges)
   const at = $derived(editor.chosen ? editor.chosen.join('.') : '')
   const identity = $derived(`${at}\u0000${part}\u0000${written}`)
-  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0)
-  const label = $derived(merges.length > 0 ? t('ids.merges.label', { part: written }) : t('ids.swaps.label', { part }))
+  /** @type {Option[]} */
+  let recursive = $state([])
+  let truncated = $state(false), loading = $state(false), failed = $state(false)
+  let resultKey = ''
+  let moreKey = $state(''), moreLevel = $state(0)
+  const level = $derived(moreKey === identity ? moreLevel : 0)
+  const additional = $derived(recursive.filter(({ text }) => !editor.splits.includes(text) && !merges.includes(text) && !editor.swaps.some(swap => swap.char === text)))
+  /** The recursive alternatives by the operations that made them. @type {Record<'expand' | 'merge' | 'both', Option[]>} */
+  const extra = $derived.by(() => {
+    /** @type {Record<'expand' | 'merge' | 'both', Option[]>} */
+    const out = { expand: [], merge: [], both: [] }
+    for (const option of additional) out[option.operation].push(option)
+    return out
+  })
+  const replaceable = $derived((Boolean(part) && (editor.swaps.length > 0 || editor.splits.length > 0)) || merges.length > 0 || additional.length > 0 || truncated || failed)
+  const label = $derived(t('ids.swaps.label', { part: part || written }))
+
+  $effect(() => {
+    const selected = picked, adapter = editor.adapter, key = identity, count = level
+    if (resultKey !== key) { resultKey = key; recursive = []; truncated = false; failed = false }
+    if (!editor.chosen || !selected) { loading = false; return }
+    loading = true
+    const controller = new AbortController()
+    ;(async () => {
+      try {
+        const scale = 2 ** count, seen = new Set(untrack(() => recursive.map(option => option.text)))
+        let cut = false, lost = false
+        for await (const result of recursiveAlternatives(selected, adapter, {
+          signal: controller.signal, maxResults: 128 * scale, maxStates: 512 * scale,
+          maxDepth: 4 + 2 * count, maxWork: 8192 * scale, maxLookups: 64 * scale,
+        })) {
+          if (controller.signal.aborted || identity !== key) return
+          if (result.type === 'alternative') {
+            const text = write(result.tree)
+            if (!seen.has(text)) { seen.add(text); recursive = [...recursive, { text, tree: result.tree, operation: result.operation }] }
+          } else { cut = result.reasons.some(reason => reason !== 'lookup'); lost = result.reasons.includes('lookup') }
+        }
+        truncated = cut; failed = lost
+      } catch { if (!controller.signal.aborted) failed = true }
+      finally {
+        if (!controller.signal.aborted) {
+          loading = false
+          // The button goes when the list is complete; keep the reader's place at the list's close.
+          if (!truncated && moreButton && moreButton === document.activeElement) {
+            /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus({ preventScroll: true })
+          }
+        }
+      }
+    })()
+    return () => controller.abort()
+  })
   /** @type {HTMLElement | null} */ let root = $state(null)
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
+  /** @type {HTMLButtonElement | null} */ let moreButton = $state(null)
   let open = $state(false)
   let placed = $state(false)
-  let top = $state(0), left = $state(0)
+  let top = $state(0), left = $state(0), maxHeight = $state(420)
   /** The part whose list the reader closed, so it stays closed until another part is chosen. */
   let shut = $state(/** @type {string | null} */ (null))
 
@@ -64,9 +121,16 @@
     if (!root || !panel) return
     if (!inSight(root)) { placed = false; return }
     const anchor = root.getBoundingClientRect(), box = panel.getBoundingClientRect(), edge = 8, gap = 6
-    const under = anchor.bottom + gap
-    const y = under + box.height > innerHeight - edge ? anchor.top - box.height - gap : under
-    top = Math.max(edge, Math.min(y, innerHeight - box.height - edge))
+    const under = anchor.bottom + gap, room = innerHeight - edge - under
+    // The list drops from the tools to the bottom edge of the window. Only a strip too short to
+    // read sends it above the tools, where it has to cover the tree.
+    if (room >= 160) {
+      top = under
+      maxHeight = Math.min(420, room)
+    } else {
+      maxHeight = Math.min(420, Math.max(120, anchor.top - gap - edge))
+      top = Math.max(edge, anchor.top - gap - box.height)
+    }
     left = Math.max(edge, Math.min(anchor.left, innerWidth - box.width - edge))
     placed = true
   }
@@ -146,25 +210,67 @@
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} style:top="{top}px" style:left="{left}px">
+    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading} style:top="{top}px" style:left="{left}px" style:max-height="{maxHeight}px">
       <div class="ids-swaps-head">
         <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
       </div>
       <div class="ids-options">
-        {#each editor.swaps as item (item.char)}
-          <button type="button" class="ids-swap" disabled={editor.disabled} title={item.count ? `${picked} → ${item.char} · ${item.count}` : `${picked} → ${item.char}`}
-            draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)} onclick={() => editor.take(item.char)}>{item.char}</button>
-        {/each}
-        {#each editor.splits as sequence (sequence)}
-          <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
-            onclick={() => editor.take(sequence)}>{sequence}</button>
-        {/each}
-        {#each merges as char (char)}
-          <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.merge', { part: written, char })}
-            aria-label={t('ids.merge', { part: written, char })} onclick={() => editor.merge(char)}>{char}</button>
-        {/each}
+        {#if editor.swaps.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-replace`}>
+            <span class="ids-option-label" id={`${uid}-replace`}>{t('ids.alternatives.replace')}</span>
+            <div class="ids-option-items">
+              {#each editor.swaps as item (item.char)}
+                <button type="button" class="ids-swap" disabled={editor.disabled} title={item.count ? `${picked} → ${item.char} · ${item.count}` : `${picked} → ${item.char}`}
+                  draggable="true" ondragstart={event => event.dataTransfer?.setData('text/plain', item.char)} onclick={() => editor.take(item.char)}>{item.char}</button>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        {#if merges.length || extra.merge.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-merge`}>
+            <span class="ids-option-label" id={`${uid}-merge`}>{t('ids.alternatives.merge')}</span>
+            <div class="ids-option-items">
+              {#each merges as char (char)}
+                <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.merge', { part: written, char })}
+                  aria-label={t('ids.merge', { part: written, char })} onclick={() => editor.merge(char)}>{char}</button>
+              {/each}
+              {#each extra.merge as option (option.text)}
+                <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        {#if editor.splits.length || extra.expand.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-split`}>
+            <span class="ids-option-label" id={`${uid}-split`}>{t('ids.alternatives.split')}</span>
+            <div class="ids-option-items">
+              {#each editor.splits as sequence (sequence)}
+                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
+                  onclick={() => editor.take(sequence)}>{sequence}</button>
+              {/each}
+              {#each extra.expand as option (option.text)}
+                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        {#if extra.both.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-both`}>
+            <span class="ids-option-label" id={`${uid}-both`}>{t('ids.alternatives.both')}</span>
+            <div class="ids-option-items">
+              {#each extra.both as option (option.text)}
+                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
+              {/each}
+            </div>
+          </div>
+        {/if}
       </div>
+      {#if truncated}
+        <button type="button" class="ids-more" bind:this={moreButton} aria-disabled={loading}
+          onclick={() => { if (!loading) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.alternatives.more')}</button>
+      {/if}
+      <span class="ids-status" role="status">{loading && level > 0 ? t('ids.from.searching') : failed ? t('ids.from.searchFailed') : ''}</span>
     </div>
   {/if}
 </div>
@@ -194,16 +300,22 @@
   kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
   .ids-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:system-ui,var(--_font),sans-serif;font-size:11px;color:var(--_muted)}
   .ids-swaps{position:fixed;z-index:20;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
-    max-width:min(420px,calc(100vw - 16px));max-height:min(42vh,300px);padding:10px;border:1px solid var(--_line);border-radius:12px;background:var(--_surface);
+    max-width:min(420px,calc(100vw - 16px));max-height:min(52vh,420px);padding:10px;border:1px solid var(--_line);border-radius:12px;background:var(--_surface);
     box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto}
   .ids-swaps:not(.ready){visibility:hidden}
   .ids-swaps-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ids-swaps-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
-  .ids-options{display:flex;flex-wrap:wrap;gap:6px}
+  .ids-options{display:flex;flex-direction:column;gap:8px}
+  .ids-option-group{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .ids-option-label{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--_muted)}
+  .ids-option-items{display:flex;flex-wrap:wrap;gap:6px}
   .ids-swap{min-width:40px;padding:2px 8px;font-size:22px;line-height:1.25;font-family:var(--_font)}
-  .ids-split{font-size:16px;color:var(--_muted)}
+  .ids-split{max-width:100%;overflow-wrap:anywhere;text-align:left;font-size:16px;color:var(--_muted)}
   .ids-merge{font-weight:500}
+  .ids-more{align-self:flex-start;padding:4px 8px;font-size:12px}
+  .ids-status{font-size:11px;color:var(--_muted)}
+  .ids-status:empty{display:none}
   .ids-swap:not(:disabled):hover{border-color:var(--_accent)}
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}
