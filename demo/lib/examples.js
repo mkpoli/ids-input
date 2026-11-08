@@ -27,6 +27,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰要勿', refs: [7], char: '覅' },
     { sequence: '⿰𠤕⿱龴疋', char: '疑' },
     { sequence: '⿰查皮', char: '皶' },
+    // A transposition of 舗's two sides, recorded on GlyphWiki and read 舗.
+    { sequence: '⿰甫舎', refs: [78], char: '舗', parts: '甫舎' },
     { sequence: '⿰讠射', char: '谢' },
     { sequence: '⿻⺀大', char: '头' },
     { sequence: '⿱龹幸', refs: [26], char: '' },
@@ -123,8 +125,6 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰舟力', char: '𬜑' },
     { sequence: '⿴口도', refs: [15,24], char: '' },
     { sequence: '⿰舟ラ', refs: [15,16,17], char: '' },
-    { sequence: '⿰艦ツ', refs: [15,23], char: '' },
-    { sequence: '⿰掌キ', refs: [15,23], char: '' },
     { sequence: '⿵门T', refs: [16,18], char: '' },
     { sequence: '⿰𛂦方', refs: [18,1], char: '𭤪' },
     { sequence: '⿰亻A', refs: [19], char: '' },
@@ -243,6 +243,17 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳丷冖兀', char: '', abbreviates: '総' },
     { sequence: '⿵门斗', char: '𫔯', abbreviates: '闘' },
   ] },
+  // Navy characters (海軍漢字): the 位相文字 of 漢字的構成 used in the Imperial Japanese Navy.
+  // 艦ツ and 掌キ come from the BiangBiangCon slides. The rest come from @xWcvlUa1jn96009, whose
+  // 日本漢字学会 talk and its write-up define the set: ⿲木十木 is 機関銃 but likely an Army form,
+  // ⿰車ト is トラック and read as an Army form too, and ⿰米林 is ハヤシライス, a 主計科 form.
+  { key: 'navy', examples: [
+    { sequence: '⿰艦ツ', refs: [15,23], char: '' },
+    { sequence: '⿰掌キ', refs: [15,23], char: '' },
+    { sequence: '⿲木十木', refs: [73,74,75], char: '' },
+    { sequence: '⿰車ト', refs: [73,76], char: '' },
+    { sequence: '⿰米林', refs: [73,77], char: '' },
+  ] },
   // Word ligatures put a phrase inside one square. 招財進寶 follows the glyph in L2/12-032;
   // 日日有見財 and 日進斗金 take their component order from the UHK article's photographs; 日日有見財
   // draws in two rows, 有 beside 見財, because the photographed three-row split squeezes 有 into a
@@ -275,11 +286,21 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱宀K', refs: [20], char: '' },
     { sequence: '⿻Mo', refs: [20], char: '' },
   ] },
+  // Created characters (創作漢字): a photographed sign sets 不想上班那就別上 as four characters, each
+  // carrying two syllables: 不 beside 目 over 心, 上, 丿 and 王 side by side, 那's left beside 就's 尤, and
+  // 另 beside 上. The sequences are the poster's transcription; BabelStone has no row for any.
+  { key: 'created', refs: [72], examples: [
+    { sequence: '⿱⿰不目心', char: '' },
+    { sequence: '⿲上丿王', char: '' },
+    { sequence: '⿰𭃂尤', char: '' },
+    { sequence: '⿰另上', char: '' },
+  ] },
   // Korean gukja (國字): the coda of each syllable is written with a Chinese character or stroke,
   // and the forms follow the article by reading. Every encoded description is BabelStone's, tagged
   // K, 14 as GKP. The twenty forms without a code point follow the encoded ones, as the article
   // writes them, a decomposition alone. 𬼝, which the article leaves without a reading, ends the
-  // table and so the group.
+  // article's table. ⿲意情意, read 의정의, comes from 檀国大学校東洋学研究院『韓国漢字字典』 through a
+  // post that photographs its entry, and closes the group.
   { key: 'korean', refs: [1, 30], examples: [
     { sequence: '⿱加𠃍', char: '㔖', reading: '각' },
     { sequence: '⿱加乙', char: '乫', reading: '갈' },
@@ -398,6 +419,8 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱呼乙', char: '', reading: '홀' },
     // The article's last row gives 𬼝 no reading, only 음을 알 수 없음.
     { sequence: '⿱去乙', char: '𬼝' },
+    // The dictionary's 心部 entry 33: 意, 情 and 意 stand side by side, read 의정의.
+    { sequence: '⿲意情意', refs: [71], char: '', reading: '의정의' },
   ] },
   // Hangul ligatures (합자): two syllables written in one block, which Unicode cannot encode since
   // it precomposes each syllable alone. Both come from a Buddhist manuscript: ᄋ + ᆞ over ㄹ + ㅏ,
