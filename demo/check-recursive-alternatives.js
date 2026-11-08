@@ -48,7 +48,27 @@ try {
   assert.equal(await more.evaluate(element => element === document.activeElement), true, 'loading more keeps keyboard focus')
   assert.equal(await splitChoices.getByText('⿰⿰口寸⿰口寸', { exact: true }).count(), 1, 'existing alternatives remain while more load')
   await page.waitForFunction(() => document.querySelector('.ids-swaps')?.getAttribute('aria-busy') === 'false', null, { timeout: 120000 })
-  assert.equal(await more.evaluate(element => element === document.activeElement), true, 'focus remains after loading more')
+  if (await more.count()) {
+    assert.equal(await more.evaluate(element => element === document.activeElement), true, 'focus remains after loading more')
+    assert.equal(await more.getAttribute('aria-disabled'), 'false', 'the resting more button can be pressed again')
+  }
+
+  await page.goto(`${url}/?ids=${encodeURIComponent('⿱始𠮟')}`, { waitUntil: 'domcontentloaded' })
+  await field.waitFor()
+  await page.locator('.ids-tree .ids-op').first().click()
+  await field.focus()
+  await groupsAre(['Merge', 'Split', 'Split and merge'])
+  const shown = await page.locator('.ids-options button').count()
+  for (let i = 0; i < 8; i++) {
+    const next = page.locator('.ids-more')
+    if (!(await next.count())) break
+    assert.equal(await next.getAttribute('aria-disabled'), 'false', 'a resting more button stays pressable')
+    await next.click()
+    await page.waitForFunction(() => document.querySelector('.ids-swaps')?.getAttribute('aria-busy') === 'true', null, { timeout: 30000 }).catch(() => {})
+    await page.waitForFunction(() => document.querySelector('.ids-swaps')?.getAttribute('aria-busy') === 'false', null, { timeout: 120000 })
+  }
+  assert.ok(await page.locator('.ids-options button').count() > shown, 'pressing more adds alternatives')
+  assert.equal(await page.locator('.ids-more').count(), 0, 'the more button goes once every alternative is shown')
 
   await page.goto(`${url}/?ids=${encodeURIComponent('⿰⿰口寸⿰口寸')}`, { waitUntil: 'domcontentloaded' })
   await field.waitFor()

@@ -63,13 +63,22 @@
         }
         truncated = cut; failed = lost
       } catch { if (!controller.signal.aborted) failed = true }
-      finally { if (!controller.signal.aborted) loading = false }
+      finally {
+        if (!controller.signal.aborted) {
+          loading = false
+          // The button goes when the list is complete; keep the reader's place at the list's close.
+          if (!truncated && moreButton && moreButton === document.activeElement) {
+            /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus()
+          }
+        }
+      }
     })()
     return () => controller.abort()
   })
   /** @type {HTMLElement | null} */ let root = $state(null)
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
+  /** @type {HTMLButtonElement | null} */ let moreButton = $state(null)
   let open = $state(false)
   let placed = $state(false)
   let top = $state(0), left = $state(0), maxHeight = $state(420)
@@ -257,9 +266,9 @@
           </div>
         {/if}
       </div>
-      {#if truncated || level > 0}
-        <button type="button" class="ids-more" aria-disabled={loading || !truncated || level >= 3}
-          onclick={() => { if (!loading && truncated && level < 3) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.from.more')}</button>
+      {#if truncated}
+        <button type="button" class="ids-more" bind:this={moreButton} aria-disabled={loading}
+          onclick={() => { if (!loading) { moreKey = identity; moreLevel = level + 1 } }}>{t('ids.from.more')}</button>
       {/if}
       <span class="ids-status" role="status">{loading && level > 0 ? t('ids.from.searching') : failed ? t('ids.from.searchFailed') : ''}</span>
     </div>
