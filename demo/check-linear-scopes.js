@@ -83,6 +83,26 @@ try {
     await page.keyboard.press('Escape')
     const strokes = await page.locator('.scope-segment').evaluateAll(elements => [...new Set(elements.map(element => getComputedStyle(element).stroke))])
     assert.ok(strokes.length > 1, 'operand segments take their layer tints')
+    const layers = await page.locator('.sequence-scopes g').evaluateAll(groups => groups.map(group => {
+      const plain = selector => {
+        const element = group.querySelector(`${selector}:not(.scope-hovered):not(.scope-selected)`)
+        return element ? getComputedStyle(element).stroke : null
+      }
+      return {
+        path: group.dataset.path ?? '',
+        lead: plain('.scope-lead'),
+        segments: [...group.querySelectorAll('.scope-segment:not(.scope-hovered):not(.scope-selected)')].map(element => getComputedStyle(element).stroke)
+      }
+    }))
+    const byPath = new Map(layers.map(layer => [layer.path, layer]))
+    assert.ok(layers.every(layer => new Set(layer.segments).size <= 1), 'the operands of one operator share one tint')
+    assert.ok(layers.every(layer => {
+      if (layer.lead === null) return true
+      const parent = layer.path === '' ? null : byPath.get(layer.path.split('.').slice(0, -1).join('.'))
+      const tint = parent ? parent.segments[0] : layer.segments[0]
+      return tint === undefined || layer.lead === tint
+    }), 'each lead keeps the tint of the layer its operator sits in')
+    assert.ok(layers.some(layer => layer.lead !== null && layer.segments.length && layer.lead !== layer.segments[0]), 'a nested lead keeps a tint other than its own layer')
     await page.emulateMedia({ forcedColors: 'active' })
     assert.equal(await page.locator('.sequence-scopes').evaluate(element => getComputedStyle(element).visibility), 'visible')
     const forced = await page.evaluate(() => {
