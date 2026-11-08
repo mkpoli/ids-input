@@ -3,7 +3,7 @@
   import { characterScript } from '../adapter/character-info.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
-  import { loadStrokeRecords } from './strokes.js'
+  import { loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
@@ -45,7 +45,14 @@
     if (strokeRecords) return
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
-  const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
+  // Tangut characters carry a count in their own table; it has no first stroke to give.
+  let tangutStrokes = $state.raw(/** @type {Map<string, number> | null} */ (null))
+  $effect(() => {
+    if (tangutStrokes || !char || characterScript(char) !== 'tangut') return
+    loadTangutStrokes().then(counts => { tangutStrokes = counts }).catch(() => { tangutStrokes = new Map() })
+  })
+  const tangutCount = $derived(char && characterScript(char) === 'tangut' ? tangutStrokes?.get(char) ?? null : null)
+  const strokes = $derived(char ? strokeRecords?.get(char) ?? (tangutCount == null ? null : { strokes: tangutCount, first: null }) : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
   // the character itself, then the sites that hold it. A data record is named by its site; each
