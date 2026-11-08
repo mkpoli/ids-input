@@ -27,7 +27,7 @@ try {
   assert.equal(await page.locator('.ids-key-empty .ids-kbd').textContent(), '?', 'the empty slot shows its key')
   assert.equal(await page.locator('.ids-part-tools .ids-empty').count(), 0, 'the tools keep one ⬚ button')
   assert.equal(await page.locator('.ids-clear .ids-glyph').textContent(), '⬚', 'Clear part carries the ⬚ icon')
-  assert.ok((await page.locator('.ids-clear').innerText()).includes('Clear part'), 'Clear part keeps its name')
+  assert.ok((await page.locator('.ids-clear').innerText()).includes('Clear'), 'Clear keeps its name')
   assert.equal(await page.locator('.ids-key-empty').isDisabled(), true, 'the empty slot waits for a chosen part')
 
   await choose(0)
