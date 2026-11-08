@@ -558,6 +558,7 @@ export class Composer {
   compose(sequence, marks = '') {
     this.approximate.clear()
     this.nativeEnclosures.clear()
+    this.joints.length = 0
     let slots = 0
     const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? mapOperands(node, number) : node
     const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
@@ -591,9 +592,15 @@ export class Composer {
         })
       }
       if (!this.partial && this.weighted) this.balance(out)
+      this.settleJoints()
       const construct = CONSTRUCTS[sequence]
-      // The bundled body is Noto's: a face with its own forms keeps the drawing it made.
-      if (construct && !ownFormsOnly(this.fontStyle) && !this.excluded(construct.host)) out = constructParts(construct, out)
+      // The bundled body is Noto's: a face with its own forms keeps the drawing it made. A nested
+      // construct is drawn where its description is a component (`node`), not here.
+      if (construct && !construct.nested && !ownFormsOnly(this.fontStyle)) {
+        const hosts = new Set([construct.host, ...(construct.cuts ?? []).map(cut => cut.host)])
+        if (![...hosts].some(host => this.excluded(host)))
+          out = constructParts(construct, out, Object.fromEntries([...hosts].map(host => [host, this.glyphRecord(host)])), this.face)
+      }
       // Layout can squeeze an operand after it was placed. Restore native proportions within its
       // final allocation so a contextual cut keeps the donor font's stroke widths.
       for (const part of out) if (part.nativeAspect) {
@@ -1047,10 +1054,35 @@ export class Composer {
     if (op === SUBTRACT) return this.subtracted(children, region, atRoot)
     if (!(op in this.AXIS) && !(op in this.ENCLOSE) && op !== '⿻') throw new LookupError(`${op} is not laid out.`)
     if (op === '⿻') return this.overlay(children, region)
+    // A ⿵ whose outer operand is a roof (入 over 一, as in 兪's top) has no opening for the inner
+    // part: the description as a whole is a stack, the bar under the roof. Laid as an enclosure,
+    // the roof stretches over the whole cell and the bar lands in the slot between its feet. The
+    // stack is laid out from its two operands; written ⿱, the same pair also spells 𠓛, whose
+    // glyph is the font's cut of it.
+    if (atRoot && op === '⿵' && this.roof(children[0], region ?? this.face)) return this.shares('⿱', children, region, atRoot)
+    if (!this.separate && this.rowHoldsEnclosure(node)) {
+      const adopted = this.enclosureRow(op, children, region)
+      if (adopted) return adopted
+    }
     const legs = !this.separate && op === '⿸' && this.legEnclosure(children, region)
     if (legs) return legs
     const yan = !this.separate && op === '⿸' && this.yanEnclosure(children, region)
     if (yan) return yan
+    // As a left-bottom surround, ⿳𠂉一乙 uses 𣱪's frame across the whole cell.
+    // Its standalone construct uses 气; the enclosing form keeps the host's wider opening.
+    const surround = op === '⿺' && !this.separate ? SURROUND_CONSTRUCTS[keyOf(children[0])] : null
+    if (surround) {
+      const frame = constructBody(surround, region)
+      if (frame) {
+        // The frame's own ink leaves the room the surrounded part fills, as 𣱪 draws it; the natural
+        // stack would leave a smaller pocket between its strokes.
+        const [x0, y0, x1, y1] = this.INSIDE[op]
+        const w = region[2] - region[0], h = region[3] - region[1]
+        const room = this.room(op, [frame], region)
+          ?? [region[0] + x0 * w, region[1] + y0 * h, region[0] + x1 * w, region[1] + y1 * h]
+        return [frame, ...this.node(children[1], room)]
+      }
+    }
     // Native compound forms have no trained layout features; fit their actual outlines.
     if (this.hosted && this.layout && (!hasRepetition || ownFormsOnly(this.fontStyle)) && children.length === 2 && this.hasHosts(op, children) && (atRoot ? this.layout.ops.includes(op) : op === '⿰' || op === '⿱')) {
       // A description nothing in the export spells as one character has nothing to integrate a host
@@ -1058,11 +1090,11 @@ export class Composer {
       const learned = this.learned(op, children, atRoot ? null : region, !this.bySequence(keyOf(node)))
       if (learned) return learned
     }
-    if (!this.separate && !hasRepetition && atRoot && op in this.AXIS) {
+    if (!this.separate && !hasRepetition && atRoot && op in this.AXIS && !this.rowHoldsEnclosure(node)) {
       const moved = this.transplant(op, children)
       if (moved) return moved
     }
-    return this.shares(op, children, region)
+    return this.shares(op, children, region, atRoot)
   }
 
   /** Two syllables in one block, set at the split the manuscript's blocks keep: the upper takes
@@ -2444,14 +2476,113 @@ export class Composer {
       sides.includes('B') ? Math.min(region[3], room[3] + along * h) : room[3]]
   }
 
-  /** Neighbouring parts moved apart where they face each other closer than `FACING` (`_space`). */
-  space(axis, groups) {
+  /** Whether `ch` is a roof in a ⿵ rather than a frame: the opening its ink closes is narrower
+   *  than half its width, as the slot between 入's legs is, so the part below hangs under it rather
+   *  than sitting inside. */
+  roof(ch, region) {
+    if (typeof ch !== 'string') return false
+    const glyph = this.drawnGlyph(ch)
+    if (!glyph) return false
+    const part = placed(glyph, glyph.box, fitted(glyph.box, region, this.C.STRETCH), this.ink(ch), `glyph ${ch}`)
+    const room = this.room('⿵', [part], region)
+    return !room || room[2] - room[0] < 0.5 * (region[2] - region[0])
+  }
+
+  /** A stack's neighbouring operands, remembered so their ink can be settled after weighting. */
+  recordJoints(op, groups) {
+    if (this.AXIS[op] !== 1 || groups.length < 2) return
+    for (let k = 1; k < groups.length; k++) this.joints.push([groups[k - 1], groups[k]])
+  }
+
+  /** Two stacked operands whose bands share an edge but whose ink, lightened by `balance`, leaves a
+   *  seam: raise the lower one until its ink meets the upper's. A gap wider than `FACING` down the
+   *  stack is the layout's own, and stays. */
+  settleJoints() {
+    if (this.partial) return
+    const C = this.C
+    for (const [above, below] of this.joints) {
+      if (!above.length || !below.length) continue
+      const box = bounds(below), aboveBox = bounds(above)
+      if (Math.abs(aboveBox[1] - box[3]) > 1) continue
+      const gap = inkBounds(above)[1] - inkBounds(below)[3]
+      if (!(gap > 0) || gap >= C.FACING[1]) continue
+      const to = [box[0], box[1], box[2], box[3] + gap]
+      if (stretchOf(box, to) > C.STRETCH) continue
+      for (const part of below) part.target = targetFor(part, mapped(drawnBox(part), box, to))
+    }
+  }
+
+  /** The height a cut keeps in a stack band the layout has no usual box for: the height its own
+   *  proportion gives at the band's width, where the band is taller than `HOST_EXTENT` times that;
+   *  zero where the band already fits it. */
+  cutBand(box, source) {
+    const width = box[2] - box[0], aspect = (source[3] - source[1]) / Math.max(source[2] - source[0], 1)
+    if (!(width > 0 && aspect > 0)) return 0
+    return (box[3] - box[1]) / width > this.C.HOST_EXTENT * aspect ? aspect * width : 0
+  }
+
+  /** Whether `ch` is a roof in a ⿵ rather than a frame: the opening its ink closes is narrower
+   *  than half its width, as the slot between 入's legs is, so the part below hangs under it rather
+   *  than sitting inside. */
+  roof(ch, region) {
+    if (typeof ch !== 'string') return false
+    const glyph = this.drawnGlyph(ch)
+    if (!glyph) return false
+    const part = placed(glyph, glyph.box, fitted(glyph.box, region, this.C.STRETCH), this.ink(ch), `glyph ${ch}`)
+    const room = this.room('⿵', [part], region)
+    return !room || room[2] - room[0] < 0.5 * (region[2] - region[0])
+  }
+
+  /** A stack's neighbouring operands, remembered so their ink can be settled after weighting. */
+  recordJoints(op, groups) {
+    if (this.AXIS[op] !== 1 || groups.length < 2) return
+    for (let k = 1; k < groups.length; k++) this.joints.push([groups[k - 1], groups[k]])
+  }
+
+  /** Two stacked operands whose bands share an edge but whose ink, lightened by `balance`, leaves a
+   *  seam: raise the lower one until its ink meets the upper's. A gap wider than `FACING` down the
+   *  stack is the layout's own, and stays. */
+  settleJoints() {
+    if (this.partial) return
+    const C = this.C
+    for (const [above, below] of this.joints) {
+      if (!above.length || !below.length) continue
+      const box = bounds(below), aboveBox = bounds(above)
+      if (Math.abs(aboveBox[1] - box[3]) > 1) continue
+      const gap = inkBounds(above)[1] - inkBounds(below)[3]
+      if (!(gap > 0) || gap >= C.FACING[1]) continue
+      const to = [box[0], box[1], box[2], box[3] + gap]
+      if (stretchOf(box, to) > C.STRETCH) continue
+      for (const part of below) part.target = targetFor(part, mapped(drawnBox(part), box, to))
+    }
+  }
+
+  /** The height a cut keeps in a stack band the layout has no usual box for: the height its own
+   *  proportion gives at the band's width, where the band is taller than `HOST_EXTENT` times that;
+   *  zero where the band already fits it. */
+  cutBand(box, source) {
+    const width = box[2] - box[0], aspect = (source[3] - source[1]) / Math.max(source[2] - source[0], 1)
+    if (!(width > 0 && aspect > 0)) return 0
+    return (box[3] - box[1]) / width > this.C.HOST_EXTENT * aspect ? aspect * width : 0
+  }
+
+  /** Neighbouring parts moved apart where they face each other closer than `FACING` (`_space`), or,
+   *  down a stack, closed on each other where the donor drew them into each other: two cuts from
+   *  different glyphs meet where the layout put their boxes, which leaves the seam 芙 has no 夫 for
+   *  and the gap below the 一 of ⿱一𧘇. The gap the donor itself drew says which stacks the designer
+   *  closed, and the pair is settled one way or the other, never squeezed apart and then drawn back.
+   *  A median gap can look clear while one stroke reaches into the other (𠂊's hook into 巾's bar);
+   *  where the nearest ink overlaps, the pair is settled by that overlap instead. */
+  space(axis, groups, nested = false) {
     if (this.partial) return
     const C = this.C
     for (let k = 0; k + 1 < groups.length; k++) {
       const a = groups[k], b = groups[k + 1]
-      const gap = facing(a, b, axis)
-      if (gap === null || gap >= C.FACING[axis]) continue
+      if (axis === 1 && a?.length && b?.length && this.closed(b, a, nested ? CLOSED_NESTED : 1)) continue
+      const gaps = facing(a, b, axis)
+      if (!gaps) continue
+      const gap = gaps.min <= 0 ? gaps.min : gaps.median
+      if (gap >= C.FACING[axis]) continue
       const half = (C.FACING[axis] - gap) / 2
       const [first, second] = axis === 0 ? [a, b] : [b, a]
       const limit = group => C.SQUEEZE * (Math.max(...group.map(p => p.target[axis + 2])) - Math.min(...group.map(p => p.target[axis])))
@@ -2489,6 +2620,21 @@ export class Composer {
     return out
   }
 
+  /** A roof below a stacked part (冖, 雨) sits on it: the roof's bar is its upper edge, and the part
+   *  above rests on the bar, as 學 and 覺 set the 冖 on the 𦥑. Raise the roof where the layout left
+   *  a seam narrower than `FACING`; a wider gap is the layout's own. */
+  closeUnderCover(op, children, groups) {
+    if (this.partial || op !== '⿱' || children.length !== 2) return
+    if (!(typeof children[1] === 'string' && CLOSING_COVERS.has(children[1]))) return
+    const above = groups[0], below = groups[1]
+    if (!above?.length || !below?.length) return
+    const gap = inkBounds(above)[1] - inkBounds(below)[3]
+    if (!(gap > 0 && gap < this.C.FACING[1])) return
+    const box = bounds(below)
+    const to = [box[0], box[1] + gap, box[2], box[3] + gap]
+    for (const part of below) part.target = targetFor(part, mapped(drawnBox(part), box, to))
+  }
+
   /** A bar directly under a cover (宀, 冖, 穴, 雨) is drawn at `COVER_BAR` of the cover's width,
    *  centred on it; bars lower in the part and non-cover stacks are left alone. */
   fitUnderCover(op, children, groups) {
@@ -2509,21 +2655,27 @@ export class Composer {
       }
       return
     }
-    const cover = ch => COVER_ROOTS.has(ch) || Boolean(this?.isCover?.(ch))
+    const cover = ch => COVER_ROOTS.has(ch) || COVERS.has(ch) || Boolean(this?.isCover?.(ch))
     const pairs = op === '⿱' ? (cover(children[0]) ? [[0, 1]] : [])
       : op === '⿳' ? [0, 1].filter(i => i + 1 < children.length && cover(children[i])).map(i => [i, i + 1]) : []
+    // A cover on top of a three-band stack sets the bands: the roof, a taller middle that overlaps it
+    // and a shorter, narrower bottom over the middle (害, 宴, and the 宀 over ㇒𰀁口 of C059). A roof
+    // between the cover and a base (𠆢 over 又 in ⿳穴𠆢又, as 叜) is the body's head, not a block:
+    // the base occupies the opening between the roof's legs and reaches the cell's foot.
     if (op === '⿳' && groups.length >= 3 && typeof children[0] === 'string' && cover(children[0])) {
       const coverBox = bounds(groups[0])
       const H = this.face[3] - this.face[1]
       const coverBottom = coverBox[3] - 0.30 * H
       const middleTop = coverBottom + 0.11 * H
       const middleBottom = middleTop - 0.43 * H
-      const bottomTop = middleBottom - 0.065 * H
-      const bottomBottom = bottomTop - 0.31 * H
-      const width = coverBox[2] - coverBox[0], bottomWidth = width * 0.66, centre = (coverBox[0] + coverBox[2]) / 2
+      const roofed = typeof children[1] === 'string' && ROOF_BODIES.has(children[1])
+      const bottomTop = roofed ? middleTop - 0.32 * H : middleBottom - 0.065 * H
+      const bottomBottom = roofed ? this.face[1] : bottomTop - 0.31 * H
+      const width = coverBox[2] - coverBox[0], bottomWidth = roofed ? width * 0.64 : width * 0.66, centre = (coverBox[0] + coverBox[2]) / 2
+      const middleWidth = roofed ? width * 0.90 : width
       const boxes = [
         [coverBox[0], coverBottom, coverBox[2], coverBox[3]],
-        [coverBox[0], middleBottom, coverBox[2], middleTop],
+        [centre - middleWidth / 2, middleBottom, centre + middleWidth / 2, middleTop],
         [centre - bottomWidth / 2, bottomBottom, centre + bottomWidth / 2, bottomTop],
       ]
       groups.forEach((group, i) => {
@@ -2681,26 +2833,40 @@ export class Composer {
     this.hang(rest)
   }
 
-  /** The last operand of the child under a cover closed on to the one above it, where a designer
-   *  drew it overlapping the component above (`gap` below zero: the lower half of 衣 as 袁 cuts it)
-   *  and it tapers to a point at the top, so it tucks under what it meets rather than running into
-   *  it. The operand is the one cut the stack placed itself, read from its own stack's gap, and it
-   *  grows no further than `STRETCH` allows: a wide gap is a sign the stack is not the one the
-   *  donor drew. */
+  /** The last operand of the child under a cover closed on to the one above it, where it tapers to
+   *  a point at the top, so it tucks under what it meets rather than running into it. The operand is
+   *  the one cut the stack placed itself, read from its own stack's gap. */
   hang(rest) {
     const held = rest.filter(part => Number.isInteger(part.branch?.[0]))
     const operands = [...new Set(held.map(part => part.branch[0]))].sort((a, b) => a - b)
     if (held.length < rest.length || operands.length < 2) return
     const last = held.filter(part => part.branch[0] === operands.at(-1))
     const above = held.filter(part => part.branch[0] === operands.at(-2))
-    if (last.length !== 1) return
-    const lastBox = bounds(last)
-    if (!(last[0].gap < 0) || flatTopped(last, lastBox)) return
-    const meet = bounds(above)[1]
-    if (meet <= lastBox[3] || lastBox[3] <= lastBox[1]) return
-    const to = [lastBox[0], lastBox[1], lastBox[2], meet]
-    if (stretchOf(lastBox, to) > this.C.STRETCH) return
-    for (const part of last) part.target = targetFor(part, mapped(drawnBox(part), lastBox, to))
+    if (last.length === 1) this.closed(last, above)
+  }
+
+  /** `below` raised until its top reaches the bottom of `above` by the overlap the donor drew, where
+   *  it is a single cut a designer drew overlapping the component above it (`gap` below zero: 夫 as
+   *  芙 cuts it, the lower half of 衣 as 袁 does). The overlap a donor records comes from either side,
+   *  so a flat-topped operand stays where it is: there the gap is as likely to be a 艹 or a 亠
+   *  hanging into the component below it, and raising a bar on to the bar above it welds the two. It
+   *  grows no further than `STRETCH` allows: a wide gap is a sign the stack is not the one the donor
+   *  drew. Two cuts whose boxes already meet still take the overlap, so a peak that merely touches a
+   *  bar above it tucks under it. Answers whether the pair is settled. */
+  closed(below, above, share = 1) {
+    if (below.length !== 1 || !(below[0].gap < 0)) return false
+    const box = bounds(below), aboveBottom = bounds(above)[1]
+    if (box[3] <= box[1] || flatTopped(below, box)) return false
+    // The overlap is measured in the donor's units, so it scales with the cut: the peak of ⿱一𧘇
+    // reaches the 一's band but leaves a seam under the bar, which the 衣's own overlap closes.
+    const reach = -below[0].gap * scaleOf(below[0])[1] * share
+    if (reach < CLOSED_SHARE * Math.max(0, aboveBottom - box[3])) return false
+    const meet = aboveBottom - below[0].gap * scaleOf(below[0])[1] * share
+    if (meet <= box[3]) return true
+    const to = [box[0], box[1], box[2], meet]
+    if (stretchOf(box, to) > this.C.STRETCH) return false
+    for (const part of below) part.target = targetFor(part, mapped(drawnBox(part), box, to))
+    return true
   }
 
   /** A cover shortens what it covers, and the designer's own drawing leaves a band of white between
@@ -3040,7 +3206,9 @@ function squeeze(group, axis, low, high) {
   }
 }
 
-/** The median gap between two groups along their facing edges, in font units (`_facing`). */
+/** The median gap between two groups along their facing edges, and the nearest gap, in font units
+ *  (`_facing`). The median keeps one tapered stroke from widening every gap; the nearest tells
+ *  whether one part reaches into the other anyway. */
 function facing(a, b, axis, size = 250) {
   const ma = fill(groupRings(a), size, EM_BOX), mb = fill(groupRings(b), size, EM_BOX)
   const gaps = []
@@ -3057,7 +3225,7 @@ function facing(a, b, axis, size = 250) {
   if (gaps.length < 5) return null
   gaps.sort((x, y) => x - y)
   const n = gaps.length, median = n % 2 ? gaps[(n - 1) / 2] : (gaps[n / 2 - 1] + gaps[n / 2]) / 2
-  return median * 1000 / size
+  return { median: median * 1000 / size, min: gaps[0] * 1000 / size }
 }
 
 /**
