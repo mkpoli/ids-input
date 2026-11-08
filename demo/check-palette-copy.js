@@ -6,8 +6,9 @@ import { chromium } from 'playwright-core'
 import { strict as assert } from 'node:assert'
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH })
+const context = await browser.newContext({ viewport: { width: 1440, height: 950 } })
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 950 } })
+  const page = await context.newPage()
   page.setDefaultNavigationTimeout(120000)
   await page.addInitScript(() => {
     const copied = []
@@ -28,6 +29,15 @@ try {
   const copied = await page.evaluate(() => window.__copied)
   assert.deepEqual(copied, [character], 'the focused part lands on the clipboard in one keystroke')
   console.log(`PASS ${character} copies with one keystroke`)
+  // Ctrl+A copies the page of parts, without the pager and the stroke counts around it.
+  await part.focus()
+  await page.keyboard.press('Control+a')
+  await page.keyboard.press('Control+c')
+  await page.waitForTimeout(400)
+  const bulk = await page.evaluate(() => window.getSelection()?.toString() ?? '')
+  assert.match(bulk, /口/, 'the page of parts is selected')
+  assert.doesNotMatch(bulk, /Previous|Next|Page \d/, 'the pager stays out of the selection')
+  console.log('PASS the page of parts selects without the pager')
 } finally {
   await browser.close()
 }
