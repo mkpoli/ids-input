@@ -159,7 +159,9 @@ The editor holds the tree, the chosen part and a history of named steps (`editor
 with ⿰", "Put 木"): `operator`, `put`, `merge`, `take`, `empty`, `remove`, `open`, `undo`, `redo`,
 `travel` and `keydown` change it, `change` names the last change and whether it threw something away,
 and `listen(fn)` hears each new text. `merges` lists the characters the chosen node encodes and
-`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. `snapshot()` returns that
+`merge(char)` puts one in its place (⿱一口 as 𠮛), one more named step. In place of `㇯軍車`, the
+part tools offer `冖`, and in place of a whole `⿰光㇯軍車` they offer `⿰光冖`; the rule reads the
+first operand's description, so the alternative appears among the merges. `snapshot()` returns that
 state and history; `restore(state)` puts them back, for a host switching between documents. In the
 tree, a click chooses a part, a part dragged from the palette, the decomposition tree, a search or
 the swaps is put where it is dropped, and a part of the tree, or a whole group grabbed by its frame,
@@ -676,6 +678,14 @@ To find characters containing 木, use `㇯⬚木`; to list the components of �
 The empty slot works as a wildcard in both searches. The zi.tools spellings `㇯？木` and `㇯森？`
 also work, and `SU` can be used in place of `㇯`. These searches use the adapter's own data;
 components hidden inside a subtraction are omitted because the data does not establish which survive.
+
+A subtraction is read through the first operand's description when that description holds the
+second: `㇯軍車` is `冖`, because 軍 is `⿱冖車`. Queries, structural patterns and unknown-structure
+patterns normalize it before matching, so `⿰光㇯軍車` finds what `⿰光冖` finds. A description that is
+itself a subtraction, or that holds a placeholder, is left alone, since its operands do not stand in
+the character. A remainder no operator can write, such as a three-part node left with two parts,
+stays as typed.
+
 For a structural search of a subtraction with a wildcard, use the structural-search mode, or pass
 `{ componentLookup: false }` to `createSearch().search()` or `adapter.findByIds()`; the latter
 also finds matching subtrees inside a character.
