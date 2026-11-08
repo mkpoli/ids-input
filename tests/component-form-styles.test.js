@@ -54,9 +54,26 @@ it('recognizes only explicit Kaisho forms and credits their native font', () => 
 // which is also what tells 田's counters apart from the band: a counter that winds with the
 // band rather than against it fills in.
 const WAN_SHAN = '⿳艹田⿵冂山'
+const flattened = new WeakMap()
 const inked = (contours, x, y) => {
   let winding = 0
-  for (const [, points] of contours) {
+  for (const contour of contours) {
+    const [ops, raw] = contour
+    // Flatten the actual quadratic curves, not their control-point polygon.
+    const points = flattened.get(contour) ?? []
+    let at = 0, previous
+    if (!flattened.has(contour)) for (const command of ops.matchAll(/([MLQ])(2)?/g)) {
+      const end = raw.slice(at, at + 2); at += 2
+      if (command[1] === 'Q') {
+        const target = raw.slice(at, at + 2); at += 2
+        for (let step = 1; step <= 32; step++) {
+          const t = step / 32, u = 1 - t
+          points.push(...target.map((v, i) => u * u * previous[i] + 2 * u * t * end[i] + t * t * v))
+        }
+        previous = target
+      } else { points.push(...end); previous = end }
+    }
+    flattened.set(contour, points)
     const n = points.length / 2
     for (let i = 0; i < n; i++) {
       const j = (i + 1) % n
@@ -171,4 +188,62 @@ it('draws 萬 with a band-sized 山 in both Noto faces', () => {
       expect(`${where}: ${inked(contours, x, y) ? 'ink' : 'clear'}`).toBe(`${where}: clear`)
     }
   }
+})
+
+for (const [style, font, expected] of [
+  ['kaisho', 'Kureedo', { contours: 6, box: [298, 38, 670, 238], spine: [464, 510], inner: [209, 806], blade: 25,
+    ink: [[480, 190], [400, 100], [330, 150], [645, 150]],
+    clear: [[400, 150], [570, 150], [480, 45], [330, 200], [645, 210], [280, 70], [720, 70]],
+    bar: [[400, 68, 110], [570, 84, 123]] }],
+  ['fangsong', 'Zhuque Fangsong', { contours: 4, box: [315, 28, 673, 205], spine: [471, 522], inner: [236, 817], blade: 14,
+    ink: [[495, 170], [420, 90], [365, 140], [635, 140]],
+    clear: [[420, 150], [570, 150], [495, 40], [365, 170], [635, 180], [280, 70], [720, 70]],
+    bar: [[420, 64, 106], [560, 82, 124]] }],
+]) {
+  it(`draws the prepared 萬 from ${style}'s native compartment and 岡`, () => {
+    expect(isComponentForm(WAN_SHAN, style)).toBe(true)
+    expect(isGroupedForm(WAN_SHAN, style)).toBe(true)
+    expect(onlyBundled(WAN_SHAN, false, false, style)).toBe(true)
+    expect(componentParts(WAN_SHAN, undefined, style).every(p => p.origin === `${font}: ${WAN_SHAN}`)).toBe(true)
+    const [wan, shan] = data.forms[style][WAN_SHAN]
+    expect(wan).toHaveLength(expected.contours)
+    expect(shan).toHaveLength(1)
+    expect(shan[0][0]).toContain('Q2')
+    const points = shan[0][1], xs = points.filter((_, i) => i % 2 === 0), ys = points.filter((_, i) => i % 2)
+    expect([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)]).toEqual(expected.box)
+    expect(points.every(Number.isFinite)).toBe(true)
+    expect(expected.box[0] - expected.inner[0]).toBeGreaterThan(70)
+    expect(expected.inner[1] - expected.box[2]).toBeGreaterThan(100)
+    expect(expected.box[1] - expected.blade).toBeGreaterThan(10)
+    for (const x of expected.spine) expect(xs).toContain(x)
+    for (const [x, y] of expected.ink) expect(inked(shan, x, y)).toBe(true)
+    for (const [x, y] of expected.clear) expect({ x, y, ink: inked([...wan, ...shan], x, y) }).toEqual({ x, y, ink: false })
+    // Sample each sloping native horizontal away from the centre stem. Both
+    // edges remain separate; shortening the uprights must not flatten the bar.
+    for (const [x, bottom, top] of expected.bar) {
+      expect(inked(shan, x, bottom - 4)).toBe(false)
+      expect(inked(shan, x, bottom + 4)).toBe(true)
+      expect(inked(shan, x, top - 4)).toBe(true)
+      expect(inked(shan, x, top + 4)).toBe(false)
+    }
+    // Check the whole compartment, including the sloped hook blade, rather
+    // than relying on a bounding box or the appearance of a large preview.
+    let joint = 0
+    for (let y = -120; y <= 270; y += 3) for (let x = 140; x <= 910; x += 3) {
+      if (inked(shan, x, y) && inked(wan, x, y)) {
+        expect(x).toBeGreaterThanOrEqual(expected.spine[0] - 1)
+        expect(x).toBeLessThanOrEqual(expected.spine[1] + 1)
+        expect(y).toBeGreaterThan(style === 'kaisho' ? 212 : 180)
+        joint++
+      }
+    }
+    expect(joint).toBeGreaterThan(70)
+    expect(data.forms[style][WAN_SHAN]).not.toEqual(data.forms.serif[WAN_SHAN])
+  })
+}
+
+it('keeps missing Fangsong forms available to the existing caller fallback', () => {
+  expect(isComponentForm('⿱丿乚', 'fangsong')).toBe(false)
+  expect(componentDrawing('⿱丿乚', 'fangsong')).toBeNull()
+  expect(componentDrawing('⿱丿乚', 'serif')).not.toBeNull()
 })
