@@ -211,20 +211,6 @@
             </div>
           </div>
         {/if}
-        {#if editor.splits.length || extra.expand.length}
-          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-split`}>
-            <span class="ids-option-label" id={`${uid}-split`}>{t('ids.alternatives.split')}</span>
-            <div class="ids-option-items">
-              {#each editor.splits as sequence (sequence)}
-                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
-                  onclick={() => editor.take(sequence)}>{sequence}</button>
-              {/each}
-              {#each extra.expand as option (option.text)}
-                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
-              {/each}
-            </div>
-          </div>
-        {/if}
         {#if merges.length || extra.merge.length}
           <div class="ids-option-group" role="group" aria-labelledby={`${uid}-merge`}>
             <span class="ids-option-label" id={`${uid}-merge`}>{t('ids.alternatives.merge')}</span>
@@ -235,6 +221,20 @@
               {/each}
               {#each extra.merge as option (option.text)}
                 <button type="button" class="ids-swap ids-merge" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
+              {/each}
+            </div>
+          </div>
+        {/if}
+        {#if editor.splits.length || extra.expand.length}
+          <div class="ids-option-group" role="group" aria-labelledby={`${uid}-split`}>
+            <span class="ids-option-label" id={`${uid}-split`}>{t('ids.alternatives.split')}</span>
+            <div class="ids-option-items">
+              {#each editor.splits as sequence (sequence)}
+                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.split', { part })}
+                  onclick={() => editor.take(sequence)}>{sequence}</button>
+              {/each}
+              {#each extra.expand as option (option.text)}
+                <button type="button" class="ids-swap ids-split" disabled={editor.disabled} title={t('ids.use')} onclick={() => editor.put(option.tree, editor.chosen)}>{option.text}</button>
               {/each}
             </div>
           </div>
