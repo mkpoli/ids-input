@@ -580,12 +580,20 @@
     if (!(event.ctrlKey || event.metaKey) || event.altKey) return
     const button = /** @type {HTMLElement} */ (event.currentTarget)
     const key = event.key.toLowerCase()
-    // A focused part copies itself in one step; a selection inside the list copies as text.
+    // A focused part copies itself in one step, where the browser offers the clipboard (an http
+    // origin does not); elsewhere it selects the part so the browser's own copy takes it.
     if (key === 'c' && window.getSelection()?.isCollapsed) {
       const text = button.querySelector('.part-text')?.textContent
       if (!text) return
-      event.preventDefault()
-      navigator.clipboard?.writeText(text).catch(() => {})
+      if (navigator.clipboard?.writeText) {
+        event.preventDefault()
+        navigator.clipboard.writeText(text).catch(() => {})
+        return
+      }
+      const range = document.createRange(), selection = window.getSelection()
+      range.selectNodeContents(/** @type {Node} */ (button.querySelector('.part-text')))
+      selection?.removeAllRanges()
+      selection?.addRange(range)
       return
     }
     if (key !== 'a') return
