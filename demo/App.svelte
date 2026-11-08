@@ -1582,7 +1582,7 @@
   .seq-line{position:relative}
   .seq-line :global(.ids-field){width:100%}
   .seq-line :global(.ids-field input){padding-right:44px}
-  .seq-line .seq-copy{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
+  .seq-line .seq-copy{position:absolute;right:6px;top:8px;display:grid;place-items:center;width:30px;height:30px;padding:0;border:0;border-radius:var(--ui-radius-sm);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .seq-line .seq-copy:hover{background:var(--ui-color-surface-sunken);color:var(--ui-color-ink)}
   .seq-line .seq-copy:disabled{color:var(--ui-color-ink-muted);background:none;cursor:default}
   .status{margin:0;font-size:12px;line-height:1.45;color:var(--ui-color-ink-muted)}
