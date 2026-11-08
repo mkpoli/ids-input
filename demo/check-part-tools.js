@@ -38,9 +38,10 @@ try {
   assert.equal(await value(), '⿰亻⿱七木', 'the palette change can be undone')
 
   await choose(0)
-  // The card the click opens covers the toolbar, so the press lands on the card and is passed
-  // through to the clear button under it.
-  await page.locator('.ids-clear').click({ force: true })
+  // The character card covers the toolbar; close it before using Clear.
+  const cardClose = page.locator('.ids-character-info .close')
+  if (await cardClose.count()) await cardClose.click()
+  await page.locator('.ids-clear').click()
   assert.equal(await value(), '⿰⬚⿱七木', 'the merged button empties the chosen part')
   await page.locator('.toast button').click()
   const slot = page.locator('input.ids-slot')
