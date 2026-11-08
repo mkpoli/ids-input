@@ -249,7 +249,7 @@
   {#if isNode(part)}
     {@const what = parent ? t('ids.part', { part: editor.name(part.op), n: parent.n, name: editor.name(parent.op) }) : editor.name(part.op)}
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path)} draggable={!editor.disabled && path.length > 0 && !(editing && samePath(editing.path, path))}
+    <div class="ids-node {nodeLayout(part)}" style:--tint={tint(path, true)} draggable={!editor.disabled && path.length > 0 && !(editing && samePath(editing.path, path))}
       ondragstart={event => startDrag(event, path)} ondragend={endDrag}
       title={path.length ? `${editor.name(part.op)} · ${t('ids.dragSibling')}` : undefined}
       class:dragged={dragging !== null && samePath(dragging.path, path)} class:carried={carry !== null && samePath(carry.path, path)} class:chosen={selected} class:hovered={editor.isHovered(path)} class:tinted={editor.isTinted(path)} class:over={overKind(path) === 'move'} class:swap={overKind(path) === 'swap'} data-op={part.op} data-hover-path={key(path)} class:disabled={editor.disabled} onclick={event => frameClick(event, path)}

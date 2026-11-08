@@ -128,7 +128,7 @@ The Svelte components need `svelte` 5. The core and the adapter run anywhere.
 | `recentKey` | `'ids-input.recentParts'` | `localStorage` key of the palette's recent parts; `null` keeps none |
 | `keyHints` | `true` | show each operator's key in a corner of its button |
 | `preview` | snippet | `(sequence, whole)`, drawn beside the field in place of `IdsPreview` |
-| `tintMode` | `"hover"` | branch tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
+| `tintMode` | `"hover"` | layer tints: `"hover"`, `"on"`, or `"off"`; also accepted by `createEditor` |
 | `disabled` | | |
 
 `IdsInput` shows `IdsPreview` beside the field when the adapter has a `preview` or a `drawing`.
@@ -885,7 +885,7 @@ closes it, and Escape closes the submenu before the menu.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
-Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear part does, and shows `?`.
+Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear button does, and shows `?`.
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in

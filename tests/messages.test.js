@@ -66,7 +66,7 @@ describe('a translator', () => {
   it('falls back to English, then to the key', () => {
     const t = translator({ 'ids.use': 'この字形にする' }, 'ja')
     expect(t('ids.use')).toBe('この字形にする')
-    expect(t('ids.clear')).toBe('Clear part')
+    expect(t('ids.clear')).toBe('Clear')
     expect(t('nothing.here')).toBe('nothing.here')
     expect(translator(catalogue('ja'), 'ja')('parts.strokeCount', { count: 1 })).toBe(catalogue('ja')['parts.strokeCount.other'].replace('{count}', '1'))
   })

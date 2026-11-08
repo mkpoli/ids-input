@@ -110,6 +110,54 @@ for (const [i, entry] of manifest.files.entries()) {
   }
 }
 
+// Equivalences: BabelStone numbers a part `{n}` where CHISE names it `&name;`. Aligning the two
+// sources' descriptions of one character, token by token, and keeping the pairs where exactly one
+// operand differs gives the same component under two names.
+const TOKEN = /\{(\d+)\}|&([^;]+);|[\s\S]/g
+const tokenize = value => [...value.matchAll(TOKEN)].map(match => match[0])
+/** @type {Map<number, { babel: typeof rows, chise: typeof rows }>} */
+const bySubject = new Map()
+for (const row of rows) {
+  let group = bySubject.get(row.subject)
+  if (!group) bySubject.set(row.subject, group = { babel: [], chise: [] })
+  ;(row.prov === babelProv ? group.babel : group.chise).push(row)
+}
+/** @type {Map<string, { count: number, prov: Set<number>, chars: string[] }>} */
+const aligned = new Map()
+const record = (number, name, prov, char) => {
+  const key = `${number}\0${name}`
+  let found = aligned.get(key)
+  if (!found) aligned.set(key, found = { count: 0, prov: new Set(), chars: [] })
+  found.count++
+  found.prov.add(prov)
+  if (found.chars.length < 5) found.chars.push(char)
+}
+for (const [subject, group] of bySubject) {
+  for (const b of group.babel) {
+    const bt = tokenize(b.text)
+    for (const c of group.chise) {
+      const ct = tokenize(c.text)
+      if (bt.length !== ct.length) continue
+      /** @type {[number, string, string][]} */
+      const diff = []
+      for (let i = 0; i < bt.length; i++) if (bt[i] !== ct[i]) diff.push([i, bt[i], ct[i]])
+      if (diff.length !== 1) continue
+      for (const [a, d] of [[diff[0][1], diff[0][2]], [diff[0][2], diff[0][1]]]) {
+        const numbered = /^\{(\d+)\}$/.exec(a), entity = /^&([^;]+);$/.exec(d)
+        if (numbered && entity) record(numbered[1], entity[1], c.prov, String.fromCodePoint(subject))
+      }
+    }
+  }
+}
+const equivalences = [...aligned]
+  .map(([key, found]) => {
+    const [number, name] = key.split('\0')
+    return [`bsp:${number}`, `chise:${name}`, 'alignment', found.count >= 2 ? 'verified' : 'candidate',
+      [...found.prov, babelProv].sort((a, b) => a - b),
+      `${found.count} ${found.count === 1 ? 'character' : 'characters'}: ${found.chars.join(' ')}`]
+  })
+  .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
+
 // Component identities: every entity name CHISE uses that no codepoint covers.
 const components = []
 const aliases = []
@@ -124,6 +172,23 @@ for (const name of [...entityNames].sort()) {
   components.push([cid, `U+${char.toString(16).toUpperCase()}`, 'unencoded', 'u', null, 0, null, false, null])
   aliases.push([cid, 'chise', name, chiseProv[0], 'name', 'glyph', 'verified'])
   aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, chiseProv[0], 'codepoint', 'character', 'verified'])
+}
+
+// BabelStone's numbered components, after the CHISE entities so their private-use slots stay put.
+const numbered = []
+for (const line of (await readFile(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')).split(/\r?\n/)) {
+  if (!line || line.startsWith('#')) continue
+  const [name, description, fragment] = line.split('\t')
+  const number = Number(name?.slice(1, -1))
+  if (Number.isInteger(number)) numbered.push({ number, description, fragment: fragment || null })
+}
+numbered.sort((a, b) => a.number - b.number)
+for (const { number } of numbered) {
+  const cid = `bsp:${number}`
+  const char = PUA_BASE + nextSlot++
+  components.push([cid, `U+${char.toString(16).toUpperCase()}`, 'unencoded', 'u', null, 0, null, false, null])
+  aliases.push([cid, 'bsp', String(number), babelProv, 'number', 'glyph', 'verified'])
+  aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, babelProv, 'codepoint', 'character', 'verified'])
 }
 
 /** The canonical text of a row: entity names rewritten to their cid token. */
@@ -167,7 +232,7 @@ const corpus = {
   provenance,
   components: { columns: ['cid', 'char', 'type', 'class', 'label', 'uses', 'strokes', 'strokesDerived', 'first'], rows: components },
   aliases: { columns: ['cid', 'ns', 'value', 'prov', 'basis', 'scope', 'status'], rows: aliases },
-  equivalences: { columns: ['a', 'b', 'basis', 'status', 'prov', 'note'], rows: [] },
+  equivalences: { columns: ['a', 'b', 'basis', 'status', 'prov', 'note'], rows: equivalences },
   merges: { columns: ['kept', 'absorbed', 'basis', 'prov', 'note'], rows: [] },
   descriptions: { columns: ['subject', 'text', 'resolved', 'prov', 'regions', 'role', 'status'], rows: descriptions },
   counts: {
@@ -175,6 +240,7 @@ const corpus = {
     components: components.length,
     unresolved: descriptions.filter(row => row[6] === 'unresolved').length,
     ready: descriptions.filter(row => row[6] === 'ready').length,
+    equivalences: equivalences.length,
   },
 }
 

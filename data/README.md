@@ -1131,10 +1131,12 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `kana-strokes.json.gz`
 
-The stroke count of every kana KanjiVG draws: 175 keys in code-point order, hiragana U+3041–U+3096
+The stroke count of every kana KanjiVG draws: 176 keys in code-point order, hiragana U+3041–U+3096
 then katakana U+30A1–U+30FA, with a count for each (`strokes`, one entry per key), the pinned
 `revision` and its `source`. KanjiVG draws one path per stroke, in writing order, so the number of
-paths is the count: あ three, イ two, フ one.
+paths is the count: あ three, イ two, マ two, フ one. That is every kana in both ranges, and the build
+says which ones KanjiVG does not draw rather than dropping them silently: one path may carry
+attributes besides `id` and `d`, which is how マ was once lost.
 
 - Licence: **CC BY-SA 3.0**, Copyright (C) 2009/2010/2011 Ulrich Apel; attribution and licence links
   in `data/licences/kanjivg-CC-BY-SA-3.0.txt`. The derived table is shared alike under the same
@@ -1189,7 +1191,8 @@ dictionary under LGPL-3.0 (see `data/licences/rime-stroke-LGPL-3.0.txt`).
 One catalogue of component identities and the descriptions that name them, built by
 `scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
 108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
-CHISE's, and every row carries the source it came from.
+CHISE's, and every row carries the source it came from. It also holds 1,517 components — 1,396 CHISE
+entities and BabelStone's 121 numbered parts as `bsp:n` — and 94 `equivalences` between them.
 
 - Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
   (`COPYING-chise-ids.txt`). The code stays MIT.
@@ -1197,7 +1200,10 @@ CHISE's, and every row carries the source it came from.
   licence; the pin, per-file digests and licence statement are in `chise-sources.json`.
 - Changes: CHISE writes each description with the character's code point and its parts as entities;
   the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
-  rows with BabelStone's. Built on 2026-11-04.
+  rows with BabelStone's. It gives BabelStone's numbered parts `bsp:n` cids and aligns the two
+  sources' descriptions of each character: where exactly one operand differs as `{n}` against
+  `&name;`, the pair is an `equivalence` (`verified` on two or more characters, `candidate` on one).
+  Built on 2026-11-09 from the sources pinned on 2026-11-04.
 - Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
   `sources: ['chise']`; a host that cannot take GPL leaves the option out.
 - Format: columnar JSON, gzipped; the design behind the identity model is in

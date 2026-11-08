@@ -22,10 +22,13 @@ test('unfinished slots have zero width; invalid drafts are unmapped', () => {
   expect(tokens('⿰木!').map(token => token.text)).toEqual(['⿰', '木', '!'])
   expect(tokens('')).toEqual([])
 })
-test('branch tints are stable and distinct', () => {
-  expect(tint([0])).toBe(tint([0]))
-  expect(tint([0])).not.toBe(tint([1]))
-  expect(tint([0, 0])).not.toBe(tint([0, 1]))
+test('layer tints are stable, and an operator shares its operands’ hue', () => {
+  expect(tint([0])).toBe(tint([1]))
+  expect(tint([0, 0])).toBe(tint([0, 1]))
+  expect(tint([0], true)).toBe(tint([0, 0]))
+  expect(tint([0], true)).not.toBe(tint([0]))
+  expect(tint([0, 0])).not.toBe(tint([1, 0]))
+  expect(tint([], true)).toBe(tint([]))
 })
 
 test('ranges select the smallest enclosing subtree without splitting selectors', () => {
