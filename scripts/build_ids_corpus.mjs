@@ -110,10 +110,11 @@ for (const [i, entry] of manifest.files.entries()) {
   }
 }
 
-// Equivalences: the two sources name one part differently, BabelStone as `{n}` or a character,
-// CHISE as `&name;` or a character. Aligning their descriptions of one character, operator by
-// operator, and keeping the operand positions where the two differ gives the names that stand for
-// one component. A pair seen on several characters is stronger than one seen once.
+// Equivalences: BabelStone names a part `{n}` where CHISE names it `&name;`. Aligning their
+// descriptions of one character, operator by operator, and keeping the operand positions where the
+// two differ gives the two names that stand for one component. A pair seen on several characters is
+// stronger than one seen once. A component against a *character* is not recorded: a part may look
+// like 叀 without being the character 叀, and the alignment cannot tell the two apart.
 const TOKEN = /\{(\d+)\}|&([^;]+);|./gsu
 /** The IDS fragment note 6 gives each numbered component; a number with one is compared as that
  * fragment, so a composite such as {2} (`⿱⺈𫩏`) is not taken for its first character. */
@@ -148,14 +149,6 @@ const record = (a, b, prov, char) => {
   found.prov.add(prov)
   found.chars.add(char)
 }
-/** The cid a token names: `bsp:n`, `chise:name`, `ucs:HEX`, or null for a character no table names. */
-const cidOf = token => {
-  const numbered = /^\{(\d+)\}$/.exec(token)
-  if (numbered) return `bsp:${numbered[1]}`
-  const entity = /^&([^;]+);$/.exec(token)
-  if (entity) return `chise:${entity[1]}`
-  return [...token].length === 1 && !OPERATORS.has(token) ? `ucs:${token.codePointAt(0).toString(16).toUpperCase()}` : null
-}
 for (const [subject, group] of bySubject) {
   for (const b of group.babel) {
     const bt = tokenize(b.text)
@@ -172,17 +165,15 @@ for (const [subject, group] of bySubject) {
       }
       if (!sameOperators || !diff.length) continue
       for (const [, x, y] of diff) {
-        const a = cidOf(x), other = cidOf(y)
-        if (!a || !other || a === other) continue
-        record(a, other, c.prov, String.fromCodePoint(subject))
+        for (const [a, d] of [[x, y], [y, x]]) {
+          const numbered = /^\{(\d+)\}$/.exec(a), entity = /^&([^;]+);$/.exec(d)
+          if (numbered && entity) record(`bsp:${numbered[1]}`, `chise:${entity[1]}`, c.prov, String.fromCodePoint(subject))
+        }
       }
     }
   }
 }
 const equivalences = [...aligned.values()]
-  // Two characters differing between the sources are variants or slips in a description, not two
-  // names of one component; the table keeps number, entity and character against each other.
-  .filter(found => !(found.a.startsWith('ucs:') && found.b.startsWith('ucs:')))
   .map(found => {
     // One character's regional descriptions may give the same pair several times; the count is of
     // characters, not descriptions.
