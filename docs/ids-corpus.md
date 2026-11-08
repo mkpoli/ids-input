@@ -72,12 +72,14 @@ uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, plus `s
 
 An `equivalences` row names two cids, a `basis` (`alignment`), a `status` (`verified` where two or more
 characters attest the pair, `candidate` where one does), the provenance indexes of the descriptions
-that carry it, and a note listing the characters. Three kinds are recorded: a BabelStone number
-against a CHISE entity (`bsp:7` / `chise:CDP-8BD0`), a number against a Unicode character (`bsp:7` /
-`ucs:53C0`, 叀), and a CHISE entity against a character. Two characters that differ between the
-sources are variants or slips in a description, not two names of one component, and are left out. The
-table is inferred, not asserted by either source: it never merges the two cids, and a description
-keeps the notation its source wrote.
+that carry it, and a note listing the characters. One kind is recorded: a BabelStone number against a
+CHISE entity (`bsp:7` / `chise:CDP-8BD0`). A component is not equated with a Unicode character: the
+part BabelStone numbers `{7}` looks like 叀, but a part is not the character 叀, and the alignment
+cannot tell a shared shape from an identity. Two characters that differ between the sources are
+variants or slips in a description, and are left out. A number with a known note 6 fragment is
+compared as that fragment, so a composite such as `{2}` (`⿱⺈𫩏`) cannot be taken for a leaf it
+contains. The table is inferred, not asserted by either source: it never merges the two cids, and a
+description keeps the notation its source wrote.
 
 Every description row carries `subject` (a cid), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`
@@ -111,16 +113,15 @@ So `chise:GT-K01666` becomes its own cid with a private-use char, equivalent-by-
 to `⿸虍` plus that cid, and where no outline exists the composer draws `⿱毌力`.
 
 The alignment is built, not curated: for every character both sources describe, the build compares
-their descriptions operator by operator and keeps the operand positions where the two differ. It finds
-702 pairs, 216 seen on two or more characters and `verified`: 62 number against entity, 24 number
-against character, 616 entity against character. BabelStone's `{7}` is CHISE's `CDP-8BD0` on eight
-characters (惠 `⿱{7}心` / `⿱&CDP-8BD0;心`, 專, 䦄 and five more) and the character 叀 on ten.
+their descriptions operator by operator and keeps the operand positions where a number and an entity
+differ. It finds 62 pairs, 48 seen on two or more characters and `verified`. BabelStone's `{7}` is
+CHISE's `CDP-8BD0` on eight characters: 惠 `⿱{7}心` / `⿱&CDP-8BD0;心`, 專, 䦄 and five more.
 
 ## First increment
 
 Built: `data/ids-corpus.json.gz` from BabelStone and the eighteen CHISE files (102,894 CHISE rows
 beside 108,425 BabelStone ones), with 1,517 components (1396 CHISE entities and 121 BabelStone
-numbers) and 702 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
+numbers) and 62 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
 `data/ids-corpus-sources.tar.gz` as the offered source, `data/COPYING-chise-ids.txt`, and a check
 that every `ready` row parses and that `bun scripts/build_ids_corpus.mjs --check` reproduces the
 committed bytes.

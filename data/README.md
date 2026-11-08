@@ -1192,9 +1192,8 @@ One catalogue of component identities and the descriptions that name them, built
 `scripts/build_ids_corpus.mjs` from BabelStone IDS and CHISE-IDS. It holds 211,319 descriptions,
 108,425 of them BabelStone's (public domain, `babelstone-ids.tsv.gz`, pinned above) and 102,894
 CHISE's, and every row carries the source it came from. It also holds 1,517 components — 1,396 CHISE
-entities and BabelStone's 121 numbered parts as `bsp:n` — and 702 `equivalences` between them: 62
-number against entity, 24 number against character, 616 entity against character, 216 of all of them
-seen on two or more characters.
+entities and BabelStone's 121 numbered parts as `bsp:n` — and 62 `equivalences` between them, 48 of
+them seen on two or more characters.
 
 - Licence: **GPL-2.0-or-later** for the file as a whole, because CHISE's rows are
   (`COPYING-chise-ids.txt`). The code stays MIT.
@@ -1203,11 +1202,11 @@ seen on two or more characters.
 - Changes: CHISE writes each description with the character's code point and its parts as entities;
   the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
   rows with BabelStone's. It gives BabelStone's numbered parts `bsp:n` cids and aligns the two
-  sources' descriptions of each character: at every operand position where they differ, a number, an
-  entity and a character are recorded as an `equivalence` (`verified` on two or more characters,
-  `candidate` on one). A number with a known note 6 fragment is compared as that fragment, so a
-  composite is not taken for a leaf. Two characters that differ between the sources are variants or
-  slips, and are left out. Built on 2026-11-09 from the sources pinned on 2026-11-04.
+  sources' descriptions of each character: at every operand position where a number and an entity
+  differ, the pair is an `equivalence` (`verified` on two or more characters, `candidate` on one). A
+  number with a known note 6 fragment is compared as that fragment, so a composite is not taken for a
+  leaf. A component is not equated with a character it resembles, and two characters that differ are
+  variants or slips, not identities. Built on 2026-11-09 from the sources pinned on 2026-11-04.
 - Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
   `sources: ['chise']`; a host that cannot take GPL leaves the option out.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
