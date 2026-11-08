@@ -156,6 +156,43 @@ const CELL_MIDDLE_INSET = 0.08
 const CELL_AXIS = { '⿵': 1, '⿶': 1 }
 /** The scale `fitInside` walks down to, and the share of a box a room is short of before it gives way. */
 const FIT_FLOOR = 0.45
+/** Frames a font sets as a left half and a right half: the halves stand at the sides of the cell
+ *  and the enclosed part sits between them (𦥑 in ⿴𦥑囟, read as ⿲). */
+const SPLIT_FRAMES = new Set(['𦥑'])
+/** A short stack in a tall column of a ⿲ keeps to the top of its column, leaving the rest empty:
+ *  山 over 一 in ⿲彳⿱山一攵 stands as 微 and 徵 set it, with 攵 filling the lower right. A stack is
+ *  short when each part stays under this share of the column's height at the column's width, and
+ *  both together under `SHORT_STACK`; it is then drawn in the top `SHORT_STACK` of the column,
+ *  twice the 0.28 that `CELL_TOP` gives one top part, and its lower part closes to
+ *  `SHORT_STACK_GAP` under the upper. Measured on the parts' own glyphs, before any host cut:
+ *  徵 sets 山's foot 66 units above the 王 below it, 7% of the column; the stack is placed at 7.6%
+ *  so its own spacing settles there. */
+const SHORT_STACK_PART = 0.45, SHORT_STACK = 0.56, SHORT_STACK_GAP = 0.076
+/** Share of a donor's overlap a nested stack closes by: at the root the seam closes fully, inside
+ *  another node that same overlap crowds what it sits under (⿱一𧘇 under 罒 in ⿱宀⿳罒一𧘇). */
+export const CLOSED_NESTED = 0.45
+/** How much of the gap between two stacked operands a donor's overlap has to cover before the pair
+ *  is closed: an overlap the designer drew somewhere else (八 under 宀) is no seam to weld shut. */
+const CLOSED_SHARE = 0.15
+/** The least share of a three-band stack's height an enclosed middle band takes: a 口 or 日
+ *  compressed to a sliver reads as a gap between two bars. */
+const MIDDLE_BAND = 0.4
+/** Middle operands drawn as a closed box: they need height to keep their counter open. */
+const ENCLOSED_MIDDLE = new Set(['口', '日', '田', '目', '罒', '回', '囗', '曰'])
+/** The most of a three-band stack's height a single component over a cover takes: a hollow roof
+ *  (𰀉 over 冖, the top of 橐) otherwise reads as one band too many, with the bottom squeezed. */
+const TOP_BAND = 1 / 3
+/** The share of the region's width a three-band stack's middle band takes: a 口 or 日 set as wide as
+ *  the bars above and below it looks stretched, and the font draws it narrower and taller. */
+const MIDDLE_ACROSS = 0.72
+/** How much of a pair's height the learned layout may give its top before its ink has to agree:
+ *  past `LEARNED_TOP`, a top holding under `LEARNED_INK` of the pair's ink fills too little of it. */
+const LEARNED_TOP = 0.55, LEARNED_INK = 0.4
+/** Characters whose middle horizontal the font runs out past its right vertical: the textbooks
+ *  end 丑's third stroke inside that vertical. Their own glyph and any host cut of them are drawn
+ *  with the bar cut back to the vertical. A glyph the cut cannot be made in (a brush outline
+ *  without separate bars) is left as the font draws it. */
+const CONTAINED_MIDDLE_BARS = new Set(['丑'])
 
 /** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands.
  * An operator's zi.tools modifier is retained as the array's `note`. */
@@ -314,7 +351,7 @@ export class Composer {
    * draw operands as individual pieces where possible, including cuts from a matching whole glyph,
    * so a view that changes one part can address its leaf.
    */
-  constructor(data, { exclude = [], face = null, separate = false, fontStyle = 'sans' } = {}) {
+  constructor(data, { exclude = [], face = null, separate = false, fontStyle = 'sans', keepBars = false } = {}) {
     this.data = data
     const m = data.manifest, c = m.constants
     this.C = c
@@ -328,6 +365,7 @@ export class Composer {
     this.face = face ?? c.face
     this.separate = separate
     this.fontStyle = fontStyle
+    this.keepBars = keepBars
     // `hosted` as han-compose's: with no host list there is nothing to cut, and the learned boxes —
     // where cut parts go — would stretch whole glyphs into component shapes (a squat 木, its bar
     // merged with its neighbour's). The export's own manifest says how many bytes of host lists it
@@ -347,6 +385,8 @@ export class Composer {
     this.nativeEnclosures = new Set()
     this.normalizer = createRenderNormalizer({ record: key => this.rec(key), parse: text => this.parse(text), keyOf, excluded: key => this.excluded(key) })
     this.resolutions = new Map()
+    // Stacked operand pairs, settled against their ink once the drawing is weighted.
+    this.joints = []
   }
 
   arity = ch => this.arities.get(ch) ?? 0
@@ -415,6 +455,22 @@ export class Composer {
 
   glyphRecord(ch) { const record = this.rec(ch); const glyph = record?.G; if (glyph && record.sg && !glyph.sg) glyph.sg = record.sg; return glyph ?? null }
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
+  /** The glyph a whole character is drawn with: a body the font drew as another shape is replaced
+   *  by `BODY_FORMS` where the export carries the glyph that cut was made for. A cut of the glyph
+   *  (`pieceOf`) keeps the font's own contours. */
+  drawnGlyph(ch, contain = false) {
+    const record = this.glyphRecord(ch)
+    if (!record) return null
+    const form = BODY_FORMS[ch]
+    const piece = (form ? bodyForm(record, this.glyphRecord(form.host), form) : null) ?? partOf(record)
+    return contain ? this.pieceFor(ch, piece) : piece
+  }
+  /** A piece drawn for `key`, a glyph or a host cut, with the bar rule of `CONTAINED_MIDDLE_BARS`
+   *  applied. */
+  pieceFor(key, piece) {
+    if (this.keepBars || typeof key !== 'string' || !CONTAINED_MIDDLE_BARS.has(key)) return piece
+    return containedMiddleBar(piece)
+  }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }
   /** A source occurrence's rendering identity. A composer is recreated after each loading pass. */
@@ -1927,6 +1983,7 @@ export class Composer {
   instance(node, region) {
     const C = this.C, k = keyOf(node)
     if (k.includes(EMPTY)) return null
+    if (this.rowHoldsEnclosure(node)) return null
     const names = [k, ...(this.bySequence(k) ? [this.bySequence(k)] : [])]
     if (names.some(n => this.excluded(n)) && !this.stroked(node)) return null
     let best = null
@@ -2004,7 +2061,7 @@ export class Composer {
       const donor = chosen.find(t => t.written[j] === keys[j])
       // A separated drawing unfolds a sequence operand rather than taking a teacher's piece for it.
       if (donor && !containsComponentForm(keyOf(child), this.fontStyle) && !(this.separate && Array.isArray(child))) {
-        const piece = this.pieceOf(donor.pieces[j])
+        const piece = this.pieceFor(keys[j], this.pieceOf(donor.pieces[j]))
         return [placed(piece, piece.box, box, this.ink(donor.ch), `overlay ${donor.ch}`)]
       }
       return this.node(child, box)
@@ -2576,6 +2633,89 @@ function joinedPair(bands, boxes) {
   if (!(footBox[3] > footBox[1]) || aboveBox[1] <= footBox[3]) return -1
   if (flatTopped(foot, footBox)) return -1
   return aboveBox[3] - aboveBox[1] <= COVER_BARRED * (footBox[3] - footBox[1]) ? k : -1
+}
+
+/** The right outer edge of a vertical contour at `y`, from its flattened ring; -Infinity where the
+ *  contour does not cross that height. */
+function leftEdgeAt(contour, y) {
+  const ring = rings([contour], [contour.light], 8)[0] ?? []
+  let edge = Infinity
+  for (let i = 0; i < ring.length; i += 2) {
+    const j = (i + 2) % ring.length
+    const x0 = ring[i], y0 = ring[i + 1], x1 = ring[j], y1 = ring[j + 1]
+    if (y0 === y1) {
+      if (y0 === y) edge = Math.min(edge, x0, x1)
+      continue
+    }
+    if (y < Math.min(y0, y1) || y > Math.max(y0, y1)) continue
+    edge = Math.min(edge, x0 + (x1 - x0) * (y - y0) / (y1 - y0))
+  }
+  return edge
+}
+
+function rightEdgeAt(contour, y) {
+  const ring = rings([contour], [contour.light], 8)[0] ?? []
+  let edge = -Infinity
+  for (let i = 0; i < ring.length; i += 2) {
+    const j = (i + 2) % ring.length
+    const x0 = ring[i], y0 = ring[i + 1], x1 = ring[j], y1 = ring[j + 1]
+    if (y0 === y1) {
+      if (y0 === y) edge = Math.max(edge, x0, x1)
+      continue
+    }
+    if (y < Math.min(y0, y1) || y > Math.max(y0, y1)) continue
+    edge = Math.max(edge, x0 + (x1 - x0) * (y - y0) / (y1 - y0))
+  }
+  return edge
+}
+
+/** `part` with the middle horizontal of a `CONTAINED_MIDDLE_BARS` character cut back to its right vertical:
+ *  the font lets 丑's third stroke run past that vertical, and the textbooks keep it inside. Answers
+ *  `part` itself where it holds no separate middle bar and vertical to cut. */
+/** Where a 丑's middle bar starts and ends across the glyph, as shares of its ink width: the font
+ *  draws it from 222 to 764 in a glyph spanning 62 to 938. */
+export const BAR_FROM = 0.18
+export const BAR_TO = 0.80
+/** How far inside the right vertical's outer edge the bar is cut, as a share of the part's width:
+ *  the font ends 丑's bar at 764 with the vertical reaching 783, about 2% of the glyph. */
+export const BAR_INSET = 0.02
+
+function containedMiddleBar(part) {
+  const boxes = part.contours.map(contour => pointsBox(contour.light))
+  const wide = (box, times) => box[2] - box[0] > times * (box[3] - box[1])
+  const bars = boxes.map((box, i) => ({ box, i })).filter(({ box }) => wide(box, BAR_ASPECT))
+  if (bars.length !== 3) return part
+  // Bars ordered by height, y up: the bottom one first and the top one last.
+  bars.sort((a, b) => a.box[1] - b.box[1])
+  const middle = bars[1].i
+  const verticals = boxes.map((box, i) => ({ box, i })).filter(({ box }) => box[3] - box[1] > 2 * (box[2] - box[0]))
+  if (!verticals.length) return part
+  const right = verticals.reduce((a, b) => b.box[2] > a.box[2] ? b : a).i
+  const contour = part.contours[middle]
+  const light = Float64Array.from(contour.light), heavy = Float64Array.from(contour.heavy ?? contour.light)
+  // The bar is also longer than the font draws a 丑's: a 丑 sets it from about a fifth of the glyph's
+  // width in to four fifths, so the cut's bar is mapped onto that span before the right vertical
+  // takes what still reaches past it.
+  const ink = part.box, width = ink[2] - ink[0]
+  const left = ink[0] + width * BAR_FROM, inset = width * BAR_INSET
+  for (let k = 0; k < light.length; k += 2) {
+    if (light[k] < left) { light[k] = left; if (heavy[k] < left) heavy[k] = left }
+  }
+  let cut = true
+  for (let k = 0; k < light.length; k += 2) {
+    const edge = rightEdgeAt(part.contours[right], light[k + 1]) - inset
+    if (!Number.isFinite(edge) || light[k] <= edge) continue
+    light[k] = edge
+    if (heavy[k] > edge) heavy[k] = edge
+    cut = true
+  }
+  if (!cut) return part
+  const contours = part.contours.slice()
+  contours[middle] = { ...contour, light, heavy }
+  const out = derived(part, contours, part.box.slice())
+  if (part.fixed) out.fixed = true
+  if (part.strokes) out.strokes = part.strokes
+  return out
 }
 
 /** A detached four-point horizontal spanning half the part that no native cut supports (`_extra_bar`). */
