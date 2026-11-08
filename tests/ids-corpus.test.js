@@ -49,19 +49,26 @@ describe('the merged corpus', () => {
     }
   })
 
-  it('records the equivalences its alignment finds between BabelStone numbers and CHISE names', () => {
+  it('records the equivalences its alignment finds between numbers, entities and characters', () => {
     const known = new Set(corpus.components.rows.map(row => row[0]))
     expect(corpus.equivalences.rows.length).toBe(corpus.counts.equivalences)
     for (const row of corpus.equivalences.rows) {
       const [a, b, basis, status, prov, note] = row
-      expect(a.startsWith('bsp:') && b.startsWith('chise:')).toBe(true)
-      expect(known.has(a) && known.has(b)).toBe(true)
+      const ns = [a.split(':')[0], b.split(':')[0]]
+      expect(ns).not.toEqual(['ucs', 'ucs'])
+      expect(ns.some(ns => ns === 'bsp' || ns === 'chise')).toBe(true)
+      for (const cid of [a, b]) if (cid.startsWith('bsp:') || cid.startsWith('chise:')) expect(known.has(cid)).toBe(true)
       expect(basis).toBe('alignment')
       expect(['verified', 'candidate']).toContain(status)
       expect(prov.length).toBeGreaterThan(0)
       expect(note).toMatch(/^\d+ characters?: /)
+      for (const cid of [a, b]) if (cid.startsWith('ucs:')) {
+        const point = Number.parseInt(cid.slice(4), 16)
+        expect(point >= 0xd800 && point <= 0xdfff).toBe(false)
+      }
     }
     expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[3]).toBe('verified')
+    expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'ucs:53C0')?.[3]).toBe('verified')
   })
 
   it('resolves every name its descriptions use', () => {
