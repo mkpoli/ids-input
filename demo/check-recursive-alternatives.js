@@ -102,6 +102,7 @@ try {
   await page.locator('.ids-swaps-close').click()
   const reopen = page.locator('.ids-reopen')
   await reopen.waitFor({ timeout: 120000 })
+  await page.waitForFunction(() => document.activeElement?.classList.contains('ids-reopen'), null, { timeout: 5000 })
   assert.equal(await reopen.textContent(), 'Alternatives', 'a closed list leaves a button that brings it back')
   await reopen.click()
   await page.locator('.ids-swaps').waitFor({ timeout: 120000 })

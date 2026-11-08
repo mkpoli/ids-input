@@ -79,6 +79,7 @@
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
   /** @type {HTMLButtonElement | null} */ let moreButton = $state(null)
+  /** @type {HTMLButtonElement | null} */ let reopenButton = $state(null)
   let open = $state(false)
   let placed = $state(false)
   let sheet = $state(false)
@@ -168,7 +169,8 @@
   function hide() {
     shut = identity
     open = false
-    if (slot && root?.querySelector('.ids-swaps')?.contains(document.activeElement)) slot.focus()
+    // A close keeps the reader in the tools, on the control that brings the list back.
+    if (root?.contains(document.activeElement)) setTimeout(() => reopenButton?.focus({ preventScroll: true }), 0)
   }
   /** Bring back the list the reader closed for this part. */
   function show() {
@@ -220,7 +222,7 @@
       title={`${t('ids.clear')} (${shortcut('backspace')})`} onclick={() => editor.empty(editor.chosen)}><span class="ids-glyph" aria-hidden="true">⬚</span>{t('ids.clear')}{#if keyHints}<kbd aria-hidden="true">{shortcut('backspace', undefined, { compact: true })}</kbd>{/if}</button>
     <button type="button" class="ids-remove" disabled={editor.disabled || !isNode(picked)} title={t('ids.unwrapHint')} onclick={() => editor.remove(editor.chosen)}>{t('ids.unwrap')}</button>
     {#if shut === identity && replaceable}
-      <button type="button" class="ids-reopen" onclick={show}>{t('ids.alternatives.show')}</button>
+      <button type="button" class="ids-reopen" bind:this={reopenButton} onclick={show}>{t('ids.alternatives.show')}</button>
     {/if}
   </div>
   {#if status}
@@ -323,11 +325,11 @@
   .ids-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:system-ui,var(--_font),sans-serif;font-size:11px;color:var(--_muted)}
   .ids-swaps{position:fixed;z-index:41;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
     max-width:min(420px,calc(100vw - 16px));max-height:min(52vh,420px);padding:10px;border:1px solid var(--_line);border-radius:12px;background:var(--_surface);
-    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto}
+    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto;overscroll-behavior:contain}
   .ids-swaps:not(.ready){visibility:hidden}
   /* A phone reads the list as a bottom sheet, above a scrim that closes it. */
   .ids-sheet{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom, 0px));top:auto;width:auto;max-width:none;border-radius:16px}
-  .ids-scrim{position:fixed;inset:0;z-index:40;margin:0;padding:0;border:0;border-radius:0;background:rgb(16 16 24 / .32);cursor:default}
+  .ids-scrim{position:fixed;inset:0;z-index:40;margin:0;padding:0;border:0;border-radius:0;background:rgb(16 16 24 / .32);cursor:default;touch-action:none}
   .ids-swaps-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ids-swaps-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
