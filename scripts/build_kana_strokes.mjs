@@ -18,21 +18,47 @@ const TARGET = new URL('../data/kana-strokes.json.gz', import.meta.url)
 // Hiragana U+3041–U+3096 and katakana U+30A1–U+30FA, the kana a reader meets.
 const RANGES = [[0x3041, 0x3096], [0x30a1, 0x30fa]]
 
+/**
+ * KanjiVG's SVG for one kana, or null where the file does not exist. A failed request is retried,
+ * and a failure that survives the retries throws: a kana dropped by a lost connection would ship as
+ * a silent gap (マ was lost that way once).
+ * @param {string | undefined} dir @param {string} name @returns {Promise<string | null>}
+ */
+async function readKana(dir, name) {
+  if (dir) {
+    try { return readFileSync(`${dir}/${name}.svg`, 'utf8') } catch { return null }
+  }
+  const url = `https://raw.githubusercontent.com/KanjiVG/kanjivg/${REVISION}/kanji/${name}.svg`
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(url)
+      if (response.status === 404) return null
+      if (!response.ok) throw Error(`${response.status}`)
+      return await response.text()
+    } catch (error) {
+      if (attempt === 3) throw error
+      await new Promise(resolve => setTimeout(resolve, 400 * attempt))
+    }
+  }
+  return null
+}
+
 const dir = process.argv[2]
 /** @type {string[]} */ const keys = []
 /** @type {number[]} */ const strokes = []
+/** @type {string[]} */ const absent = []
 for (const [from, to] of RANGES) {
   for (let point = from; point <= to; point++) {
     const char = String.fromCodePoint(point)
     const name = point.toString(16).padStart(5, '0')
-    let svg = ''
-    try {
-      svg = dir ? readFileSync(`${dir}/${name}.svg`, 'utf8')
-        : await (await fetch(`https://raw.githubusercontent.com/KanjiVG/kanjivg/${REVISION}/kanji/${name}.svg`)).text()
-    } catch { continue }
-    if (!svg.includes(`kvg:${name}-s1`)) continue
-    const paths = [...svg.matchAll(new RegExp(`<path id="kvg:${name}-s(\\d+)" d="([^"]*)"`, 'g'))]
-    if (!paths.length) continue
+    const svg = await readKana(dir, name)
+    if (svg === null) { absent.push(char); continue }
+    // A path may carry attributes besides id and d (マ's `kvg:type="㇇"` sits between them), so the
+    // tag is matched whole and `d` read from it rather than required next to the id.
+    const paths = [...svg.matchAll(new RegExp(`<path id="kvg:${name}-s(\\d+)"([^>]*)>`, 'g'))]
+      .map(match => [match[1], /\bd="([^"]*)"/.exec(match[2])?.[1] ?? ''])
+      .filter(([, d]) => d)
+    if (!paths.length) { absent.push(char); continue }
     paths.sort((a, b) => Number(a[1]) - Number(b[1]))
     keys.push(char)
     strokes.push(paths.length)
@@ -44,3 +70,4 @@ const text = JSON.stringify({ revision: REVISION, source: SOURCE, keys, strokes 
 const gz = gzipSync(text, { level: 9, mtime: 0 })
 writeFileSync(TARGET, gz)
 console.log(`${keys.length} kana, ${gz.length} bytes`)
+if (absent.length) console.log(`not drawn by KanjiVG: ${absent.join('')}`)
