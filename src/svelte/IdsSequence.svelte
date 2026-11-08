@@ -226,7 +226,6 @@
   .sequence-run{position:relative;width:max-content;min-width:0}
   .sequence-scopes{position:absolute;top:100%;left:0;overflow:visible;fill:none}
   .sequence-scopes path{stroke:var(--_muted);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
-  .sequence-scopes .scope-lead{stroke-linecap:butt}
   .sequence-scopes path.scope-tinted{stroke:color-mix(in oklab,var(--tint) 55%,var(--_ink-soft))}
   .sequence-scopes path.scope-hovered,.sequence-scopes path.scope-selected{stroke:var(--_accent);stroke-width:1.6}
   .sequence-scopes path.scope-segment.scope-hovered,.sequence-scopes path.scope-segment.scope-selected{stroke-width:2}

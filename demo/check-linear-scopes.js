@@ -33,8 +33,8 @@ try {
       }
     }))
     assert.ok(geometry.every(scope => scope.gaps.every(gap => Math.abs(gap - 5) < .01)), 'adjacent segments keep one gap')
-    assert.ok(geometry.every(scope => Math.abs(scope.started - scope.left) < .01), 'each lead starts at its IDC left edge')
-    assert.equal(await page.locator('.scope-lead').first().evaluate(element => getComputedStyle(element).strokeLinecap), 'butt')
+    assert.ok(geometry.every(scope => Math.abs(scope.started - scope.left - 1) < .01), 'each lead starts one pixel inside its IDC left edge')
+    assert.equal(await page.locator('.scope-lead').first().evaluate(element => getComputedStyle(element).strokeLinecap), 'round')
     assert.ok(geometry.every(scope => Math.abs(scope.separation - 5) < .01), 'each lead stops one gap before its first segment')
     await page.locator('.ids-op[data-path="0"]').hover()
     assert.equal(await page.locator('.sequence-paint .hovered').count(), 3)

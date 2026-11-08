@@ -8,7 +8,7 @@ test('root scope segments its immediate operands and sits below nested scopes', 
   const scopes = sequenceScopes(tokens('⿰⿱木水火'), boxes([20, 20, 20, 20, 20]))
   expect(scopes.map(scope => [scope.path, scope.lane])).toEqual([[[], 1], [[0], 0]])
   expect(scopes[0].segments).toEqual([{ path: [0], d: 'M 22.5 10 H 77.5' }, { path: [1], d: 'M 82.5 10 H 97.5' }])
-  expect(scopes[0].lead).toBe('M 0 0 C 0 10, 13.5 10, 17.5 10')
+  expect(scopes[0].lead).toBe('M 1 0 C 1 10, 13.5 10, 17.5 10')
 })
 
 test('adjacent segments keep one fixed gap, and each lead stops one gap before its first segment', () => {
