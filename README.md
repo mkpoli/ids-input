@@ -595,7 +595,8 @@ all three: `data/yi-bai-ids.tsv.gz`, the unannotated standard subset zi.tools pu
 `data/ids-project.tsv.gz` for characters newer than BabelStone's (empty at present; the newer
 character 𳑳 is a 獨體字); and `data/ids-corpus.json.gz`, whose CHISE rows are optional because that
 file is GPL-2.0-or-later. Each description's `sources` says which of `babelstone`, `zitools`,
-`chise` and `project` give it. Extended expressions and variant annotations are not included.
+`chise` and `project` give it; Shuishu's and Jurchen's editorial decompositions name `project`.
+Extended expressions and variant annotations are not included.
 
 ## Search
 
