@@ -1619,7 +1619,7 @@ export class Composer {
       // the rest of that character in with it.
       if (ownParts && typeof child === 'string' && !this.excluded(child)) {
         const own = this.glyph(child)
-        if (own && stretchOf(own.box, box) <= C.STRETCH) {
+        if (own) {
           groups.push([this.place(own, box, this.ink(child), `glyph ${child}`)])
           continue
         }
