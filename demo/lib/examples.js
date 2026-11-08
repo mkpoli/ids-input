@@ -265,7 +265,7 @@ export const EXAMPLE_GROUPS = [
     // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on a 冂 around 山, and
     // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
-    { sequence: '⿱黃⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
+    { sequence: '⿱黄⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
     { sequence: '⿳士⿲女口意祥', refs: [50], char: '' },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
