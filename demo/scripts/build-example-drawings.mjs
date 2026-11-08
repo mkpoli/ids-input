@@ -14,9 +14,11 @@ import { hasJurchen, jurchenSource } from '../../src/composer/jurchen.js'
 import { onlyBundled } from '../../src/composer/local.js'
 import { bundledSource } from '../../src/composer/bundled.js'
 import { compose, fromUrl } from '../../src/composer/loader.js'
-import { EXAMPLES } from '../lib/examples.js'
+import { EXAMPLES, EXAMPLE_GROUPS } from '../lib/examples.js'
 import { COMPOSER_BASE } from '../lib/composer.js'
 
+const DRAFTED = new Map(EXAMPLE_GROUPS.filter(group => ['sign', 'erjian'].includes(group.key))
+  .flatMap(group => group.examples.map(example => [example.sequence, group.key])))
 const source = fromUrl(COMPOSER_BASE)
 // Examples whose parts are all bundled draw from a local source. `onlyBundled` also says yes to a
 // whole sequence that matches a component form, then skips its parts, so the export stays behind
@@ -162,7 +164,10 @@ for (const example of EXAMPLES) {
     if (hasSmallSeal(example.sequence)) selected = smallSealSource({load: async () => JSON.parse(gunzipSync(readFileSync(new URL('../../data/small-seal-outlines.json.gz', import.meta.url)))), fallback: selected})
     if (hasShuishu(example.sequence)) selected = shuishuSource({ load: loadShuishu, fallback: selected })
     if (hasJurchen(example.sequence)) selected = jurchenSource({ load: loadJurchen, fallback: selected })
-    const drawn = await compose(selected, example.char || example.sequence)
+    // A draft form names the character it stood for, not the one its parts spell out: the examples of
+    // the sign and the 二简字 group are drawn from the description, so the thumbnail matches the editor.
+    const drafted = (DRAFTED.get(example.sequence) ?? null) !== null
+    const drawn = await compose(selected, drafted ? example.sequence : example.char || example.sequence)
     if (example.sequence === JOINED_DOTS) { joinHuangToJin(drawn); dropCao(drawn); fitWanToStack(drawn) }
     drawings[example.sequence] = { char: example.char, drawn }
     console.log(`drew ${example.char || example.sequence}`)
