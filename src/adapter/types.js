@@ -71,6 +71,7 @@
  * @property {DrawingPart[]} [parts] Each drawn part, in reading order. A part may be several pieces; a cut piece is not ink.
  * @property {(string | null)[]} [transforms] One SVG transform per part in `parts`, as a view adjusted it; null where a part is unchanged. `drawingSvg` writes the parts separately when any is set.
  * @property {string[]} [approximate] Operators drawn by an approximation of their own.
+ * @property {{ capped: boolean }} [normalization] Whether the bounded identity lookup stopped before exhausting its evidence; proven mappings and literal fallback geometry remain available.
  * @property {boolean} [cells] Whether the parts are drawn apart, one in each cell, instead of composed.
  * @property {string[]} [origins] What each part was drawn from, in reading order.
  * @property {'sans' | 'serif'} [faceFallback] The face this drawing was borrowed from when the chosen face lacked a part.
