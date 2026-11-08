@@ -51,7 +51,7 @@
 </script>
 
 <span class="inline-edit" class:leaf={variant === 'leaf'}>
-  <input bind:this={input} bind:value disabled={editor.disabled} oninput={event => { loadFallbackText(event.currentTarget.value); error = '' }} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
+  <input bind:this={input} bind:value disabled={editor.disabled} oninput={event => { loadFallbackText(event.currentTarget.value, getComputedStyle(event.currentTarget).fontFamily); error = '' }} aria-label={editor.t('ids.inline.label')} aria-invalid={error ? 'true' : undefined} aria-describedby={error ? `${uid}-error` : undefined}
     lang="ja" spellcheck="false" autocomplete="off" onkeydown={key} onblur={() => apply(false)} oncompositionstart={() => composing = true}
     oncompositionend={() => { composing = false; if (document.activeElement !== input) apply(false) }}
     onclick={event => event.stopPropagation()} ondblclick={event => event.stopPropagation()}
