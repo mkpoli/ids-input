@@ -276,6 +276,7 @@ export async function compose(source, sequence, { exclude = [], face = null, sep
     let drawn = null, failure = null, composer = null, cells = false
     try {
       composer = new Composer(store, { exclude, face, separate, fontStyle })
+      if (layout === 'cells' && composer.sharedForm(tree)) throw new LookupError('Cells layout does not draw shared visual forms.')
       cells = !marks && !modifiedOperators(sequence).length
         && (layout === 'cells' || (layout === 'auto' && composer.cellsFor(tree, marks)))
       drawn = cells ? composer.cellLayout(tree) : composer.compose(description, marks)
