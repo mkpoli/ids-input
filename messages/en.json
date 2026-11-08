@@ -11,6 +11,7 @@
   "ids.alternatives.merge": "Merge",
   "ids.alternatives.more": "Show more",
   "ids.alternatives.replace": "Replace",
+  "ids.alternatives.show": "Alternatives",
   "ids.alternatives.split": "Split",
   "ids.choose": "Choose {part}",
   "ids.chooseFirst": "Choose a part to fill.",

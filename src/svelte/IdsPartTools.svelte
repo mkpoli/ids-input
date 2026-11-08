@@ -79,8 +79,10 @@
   $effect(() => { if (root) return watchFallback(root) })
   /** @type {HTMLElement | null} */ let panel = $state(null)
   /** @type {HTMLButtonElement | null} */ let moreButton = $state(null)
+  /** @type {HTMLButtonElement | null} */ let reopenButton = $state(null)
   let open = $state(false)
   let placed = $state(false)
+  let sheet = $state(false)
   let top = $state(0), left = $state(0), maxHeight = $state(420)
   /** The part whose list the reader closed, so it stays closed until another part is chosen. */
   let shut = $state(/** @type {string | null} */ (null))
@@ -120,6 +122,14 @@
   function place() {
     if (!root || !panel) return
     if (!inSight(root)) { placed = false; return }
+    // A narrow window gets a bottom sheet: full width, tall enough to read and reach on a phone.
+    if (innerWidth <= 640) {
+      sheet = true
+      maxHeight = Math.min(Math.round(innerHeight * 0.62), 560)
+      placed = true
+      return
+    }
+    sheet = false
     const anchor = root.getBoundingClientRect(), box = panel.getBoundingClientRect(), edge = 8, gap = 6
     const under = anchor.bottom + gap, room = innerHeight - edge - under
     // The list drops from the tools to the bottom edge of the window. Only a strip too short to
@@ -159,7 +169,14 @@
   function hide() {
     shut = identity
     open = false
-    if (slot && root?.querySelector('.ids-swaps')?.contains(document.activeElement)) slot.focus()
+    // A close keeps the reader in the tools, on the control that brings the list back.
+    if (root?.contains(document.activeElement)) setTimeout(() => reopenButton?.focus({ preventScroll: true }), 0)
+  }
+  /** Bring back the list the reader closed for this part. */
+  function show() {
+    shut = null
+    open = true
+    setTimeout(() => { /** @type {HTMLElement | null | undefined} */ (panel?.querySelector('.ids-swaps-close'))?.focus({ preventScroll: true }) }, 0)
   }
   /** Where an outside press began, so a tap closes the list and a scroll or drag does not. */
   let press = /** @type {{ x: number, y: number } | null} */ (null)
@@ -204,13 +221,20 @@
     <button type="button" class="ids-clear" disabled={editor.disabled || !editor.chosen || picked === null || picked === undefined}
       title={`${t('ids.clear')} (${shortcut('backspace')})`} onclick={() => editor.empty(editor.chosen)}><span class="ids-glyph" aria-hidden="true">⬚</span>{t('ids.clear')}{#if keyHints}<kbd aria-hidden="true">{shortcut('backspace', undefined, { compact: true })}</kbd>{/if}</button>
     <button type="button" class="ids-remove" disabled={editor.disabled || !isNode(picked)} title={t('ids.unwrapHint')} onclick={() => editor.remove(editor.chosen)}>{t('ids.unwrap')}</button>
+    {#if shut === identity && replaceable}
+      <button type="button" class="ids-reopen" bind:this={reopenButton} onclick={show}>{t('ids.alternatives.show')}</button>
+    {/if}
   </div>
   {#if status}
     {#if editor.problem}<p class="ids-problem" role="status">{editor.problem}</p>
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
+  {#if open && sheet && placed}
+    <button type="button" class="ids-scrim" aria-hidden="true" tabindex="-1" onclick={hide}></button>
+  {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading} style:top="{top}px" style:left="{left}px" style:max-height="{maxHeight}px">
+    <div class="ids-swaps" class:ids-sheet={sheet} class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading}
+      style:top={sheet ? undefined : `${top}px`} style:left={sheet ? undefined : `${left}px`} style:max-height="{maxHeight}px">
       <div class="ids-swaps-head">
         <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>
@@ -299,10 +323,13 @@
   .ids-tools > button:not(:disabled):hover{border-color:var(--_line-strong);background:var(--_surface-subtle)}
   kbd{position:absolute;right:4px;bottom:2px;font:500 9px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--_muted);pointer-events:none}
   .ids-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:system-ui,var(--_font),sans-serif;font-size:11px;color:var(--_muted)}
-  .ids-swaps{position:fixed;z-index:20;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
+  .ids-swaps{position:fixed;z-index:41;display:flex;flex-direction:column;gap:6px;width:max-content;min-width:min(200px,calc(100vw - 16px));
     max-width:min(420px,calc(100vw - 16px));max-height:min(52vh,420px);padding:10px;border:1px solid var(--_line);border-radius:12px;background:var(--_surface);
-    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto}
+    box-shadow:0 12px 32px -8px rgb(16 16 24 / .28),0 2px 8px rgb(16 16 24 / .12);overflow:auto;overscroll-behavior:contain}
   .ids-swaps:not(.ready){visibility:hidden}
+  /* A phone reads the list as a bottom sheet, above a scrim that closes it. */
+  .ids-sheet{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom, 0px));top:auto;width:auto;max-width:none;border-radius:16px}
+  .ids-scrim{position:fixed;inset:0;z-index:40;margin:0;padding:0;border:0;border-radius:0;background:rgb(16 16 24 / .32);cursor:default;touch-action:none}
   .ids-swaps-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
   .ids-swaps-close{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:6px;background:none;color:var(--_muted);font-size:16px;line-height:1}
   .ids-swaps-close:hover{background:var(--_surface-subtle);color:var(--_ink)}
@@ -320,4 +347,10 @@
   .ids-problem,.ids-pending{margin:0;font-size:12px;line-height:1.45}
   .ids-problem{color:var(--_fault)}
   .ids-pending{color:var(--_muted)}
+  @media (pointer: coarse){
+    .ids-swaps-close{width:44px;height:44px;font-size:20px}
+    .ids-swap{min-height:44px;padding:4px 10px}
+    .ids-more{min-height:44px;padding:8px 12px;font-size:14px}
+    .ids-tools > button{min-height:44px}
+  }
 </style>
