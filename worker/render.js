@@ -11,7 +11,6 @@ import { JURCHEN_VARIANT, OPERATORS } from '../src/core/ids.js'
 import { facesFor } from './fonts.js'
 import { COMPOSER_BASE } from '../demo/lib/composer.js'
 import { EXAMPLES } from '../demo/lib/examples.js'
-import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
 import { CARD_VERSION } from './card-version.js'
 
 const KEPT = 'public, max-age=86400, stale-while-revalidate=604800'
@@ -78,13 +77,8 @@ async function drawUnits(env, units, first) {
   return await Promise.all(units.map((unit) => draw(env, unit).catch(() => null)))
 }
 
-/**
- * The sequence drawn, or null where it could not be. A 二简字 form the draft drew whole is drawn as
- * that drawing; the parts would otherwise be crops of other characters.
- * @param {any} env @param {string} sequence
- */
+/** The sequence composed, or null where it could not be. @param {any} env @param {string} sequence */
 async function draw(env, sequence) {
-  if (hasErjian(sequence)) return erjianDrawing(sequence)
   const source = sourceFor(sequence, { base: COMPOSER_BASE, loaders: loadersFor(env) })
   await source.ready()
   return await compose(source, sequence, { separate: false, fontStyle: 'sans' })

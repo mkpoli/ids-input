@@ -41,7 +41,6 @@
   import { createSampleDrawings } from './lib/sample-drawings.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
-  import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
@@ -206,9 +205,6 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
-      // The draft drew some 二简字 forms whole; those drawings stand in for the composed parts, which
-      // could only be crops of other characters.
-      if (hasErjian(sequence)) return /** @type {import('../src/adapter/types.js').Drawing} */ (erjianDrawing(sequence))
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
