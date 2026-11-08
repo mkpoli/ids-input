@@ -1595,10 +1595,21 @@ export class Composer {
     if (op in this.ENCLOSE && !region && area(boxes[0]) < C.ENCLOSING_LEAST * area(this.face)) boxes[0] = this.face.slice()
     if (C.COVERING.includes(op)) boxes[0] = union(boxes)
     if (boxes.some(b => b[2] <= b[0] || b[3] <= b[1])) return null
+    // 王 as the left part of a compound body takes its combining form and a narrow column.
+    const wangLeft = !region && op === '⿰' && children[0] === '王' && Array.isArray(children[1])
+    if (wangLeft) {
+      const frame = union(boxes), split = frame[0] + 0.28 * (frame[2] - frame[0])
+      boxes[0] = [frame[0], frame[1], split, frame[3]]
+      boxes[1] = [split, frame[1], frame[2], frame[3]]
+    }
     const groups = []
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       let box = boxes[i]
+      if (wangLeft && i === 0) {
+        const glyph = this.glyph('𤣩')
+        if (glyph) { groups.push([this.place(glyph, box, this.ink('𤣩'), 'glyph 𤣩')]); continue }
+      }
       if (this.AXIS[op] === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans') {
         groups.push(this.node(child, box, false, true))
         continue
