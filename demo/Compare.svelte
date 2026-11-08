@@ -126,6 +126,7 @@
             <h2 class="seq" lang="zh">{entry.sequence}</h2>
             <span class="badge">{t('compare.score.f1')} {two(entry.f1)}</span>
           </div>
+          {#if entry.note}<p class="reading">{entry.note}</p>{/if}
           <div class="drawings">
             <figure>
               <figcaption>{t('compare.ours')}</figcaption>
@@ -197,6 +198,7 @@
   .card{display:flex;flex-direction:column;gap:9px;padding:13px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-xl);background:var(--ui-color-surface);box-shadow:var(--ui-shadow-1)}
   .head{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
   .seq{margin:0;font-family:var(--cjk);font-size:24px;font-weight:400;line-height:1.2;overflow-wrap:anywhere}
+  .reading{margin:0;color:var(--ui-color-ink-muted);font-size:12px;line-height:1.45}
   .badge{font:600 11.5px/1 ui-monospace,"SF Mono",Menlo,Consolas,monospace;color:var(--ui-color-accent);background:var(--ui-color-accent-soft);padding:4px 7px;border-radius:var(--ui-radius-pill);white-space:nowrap}
   .drawings{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   figure{margin:0;display:flex;flex-direction:column;gap:3px}
