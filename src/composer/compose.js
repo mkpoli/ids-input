@@ -1751,7 +1751,7 @@ export class Composer {
       }
       const inner = this.node(children[1], room)
       if (op === '⿸' && typeof children[0] === 'string' && children[0] === '虍') {
-        this.fit(outer, inner, region, this.stem0[0][0], { ...C, ROOM_MARGIN: 1.2 })
+        this.fit(outer, inner, region, this.stem0[0][0], { ...C, ROOM_MARGIN: 1.8 })
       } else {
         this.fit(outer, inner, region, this.stem0[0][0], C,
           fallback && op === '⿽' ? { room, bounds: room } : undefined)
