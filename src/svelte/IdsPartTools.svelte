@@ -72,7 +72,7 @@
   /** @type {HTMLElement | null} */ let panel = $state(null)
   let open = $state(false)
   let placed = $state(false)
-  let top = $state(0), left = $state(0)
+  let top = $state(0), left = $state(0), maxHeight = $state(420)
   /** The part whose list the reader closed, so it stays closed until another part is chosen. */
   let shut = $state(/** @type {string | null} */ (null))
 
@@ -112,9 +112,16 @@
     if (!root || !panel) return
     if (!inSight(root)) { placed = false; return }
     const anchor = root.getBoundingClientRect(), box = panel.getBoundingClientRect(), edge = 8, gap = 6
-    const under = anchor.bottom + gap
-    const y = under + box.height > innerHeight - edge ? anchor.top - box.height - gap : under
-    top = Math.max(edge, Math.min(y, innerHeight - box.height - edge))
+    const under = anchor.bottom + gap, room = innerHeight - edge - under
+    // The list drops from the tools to the bottom edge of the window. Only a strip too short to
+    // read sends it above the tools, where it has to cover the tree.
+    if (room >= 160) {
+      top = under
+      maxHeight = Math.min(420, room)
+    } else {
+      maxHeight = Math.min(420, Math.max(120, anchor.top - gap - edge))
+      top = Math.max(edge, anchor.top - gap - box.height)
+    }
     left = Math.max(edge, Math.min(anchor.left, innerWidth - box.width - edge))
     placed = true
   }
@@ -194,7 +201,7 @@
     {:else if editor.pending}<p class="ids-pending" role="status">{editor.pending}</p>{/if}
   {/if}
   {#if open && replaceable}
-    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading} style:top="{top}px" style:left="{left}px">
+    <div class="ids-swaps" class:ready={placed} bind:this={panel} role="group" aria-label={label} aria-busy={loading} style:top="{top}px" style:left="{left}px" style:max-height="{maxHeight}px">
       <div class="ids-swaps-head">
         <span class="ids-title" title={label}>{label}</span>
         <button type="button" class="ids-swaps-close" aria-label={t('ids.swaps.close')} title={t('ids.swaps.close')} onclick={hide}>×</button>

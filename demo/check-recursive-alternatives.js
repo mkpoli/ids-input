@@ -35,6 +35,12 @@ try {
   assert.equal(await group('Merge').count(), 0, 'an expansion alone has no merge group')
   assert.equal(await group('Split and merge').count(), 0, 'an expansion alone has no mixed group')
 
+  const panelBox = await page.locator('.ids-swaps').boundingBox()
+  const toolsBox = await page.locator('.ids-part-tools .ids-tools').boundingBox()
+  assert.ok(panelBox && toolsBox, 'the list and the tools are laid out')
+  assert.ok(panelBox.y >= toolsBox.y + toolsBox.height, 'the alternatives drop below the tools')
+  assert.ok(panelBox.y + panelBox.height >= 860, 'the alternatives reach the bottom edge')
+
   const more = page.locator('.ids-more')
   await more.waitFor({ timeout: 120000 })
   await more.focus()
