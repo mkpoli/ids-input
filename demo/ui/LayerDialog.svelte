@@ -10,7 +10,7 @@
   /** @typedef {import('../../src/document/index.js').Node} Node */
   /** @typedef {import('../../src/adapter/types.js').Drawing} Drawing */
   /** @typedef {import('../../src/adapter/types.js').SketchLeaf} SketchLeaf */
-  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void, oncanvas?: (() => void) | null }} */
+  /** @type {{ open: boolean, session: DocumentSession | null, preview: ((sequence: string, options?: { signal?: AbortSignal, onSketch?: (leaves: SketchLeaf[]) => void }) => Promise<Drawing>) | null, sequence: string, t: (key: string, params?: Record<string, string | number>) => string, chosenPath?: number[] | null, structure?: ((char: string) => Promise<{ text: string, sources?: string[] }[]>) | null, onchange?: () => void, onchoose?: ((path: number[]) => void) | null, onstructure?: () => void, oncanvas?: (() => void) | null }} */
   let { open = $bindable(false), session, preview, sequence, t, chosenPath = null, structure = null, onchange = () => {}, onchoose = null, onstructure = () => {}, oncanvas = null } = $props()
 
   let drawing = $state.raw(/** @type {Drawing | null} */ (null))
@@ -36,7 +36,7 @@
   let mobius = $state({ a: [1, 0], b: [0, 0], c: [0, 0], d: [1, 0] })
   let nonlinear = $state(false)
   let applyError = $state('')
-  let splitOptions = $state(/** @type {string[]} */ ([]))
+  let splitOptions = $state(/** @type {{ text: string, sources: string[] }[]} */ ([]))
   let splitMessage = $state('')
   let splitTarget = $state(/** @type {Node | null} */ (null))
   let strokeId = $state(/** @type {string | null} */ (null))
@@ -311,11 +311,27 @@
     splitMessage = ''
     try {
       const found = await structure(node.char)
-      splitOptions = [...new Set(found.map(item => item.text).filter(Boolean))]
+      /** @type {Map<string, string[]>} */
+      const byText = new Map()
+      for (const item of found) {
+        if (!item.text) continue
+        const had = byText.get(item.text) ?? []
+        byText.set(item.text, [...new Set([...had, ...(item.sources ?? [])])])
+      }
+      splitOptions = [...byText].map(([text, sources]) => ({ text, sources }))
       if (!splitOptions.length) splitMessage = t('app.layers.noSplit')
     } catch {
       splitMessage = t('app.layers.splitFailed')
     }
+  }
+
+  const SOURCES = new Set(['babelstone', 'zitools', 'chise', 'project'])
+  /** @param {string[]} sources @returns {string[]} */
+  const visibleSources = sources => sources.filter(source => SOURCES.has(source))
+  /** @param {string[]} sources */
+  const sourcesTitle = sources => {
+    const names = visibleSources(sources).map(source => t(`ids.source.${source}`))
+    return names.length ? t('ids.from.sources', { sources: names.join(' · ') }) : ''
   }
 
   /** @param {string} sequence */
@@ -459,8 +475,10 @@
     {#if splitOptions.length}
       <div class="splits" role="group" aria-label={t('app.layers.chooseSplit')}>
         <span>{t('app.layers.split')} {splitTarget?.char ?? ''}</span>
-        {#each splitOptions as option (option)}
-          <button type="button" lang="ja" onclick={() => applySplit(option)}>{option}</button>
+        {#each splitOptions as option (option.text)}
+          <button type="button" lang="ja" onclick={() => applySplit(option.text)} title={sourcesTitle(option.sources)}>
+            {option.text}{#if visibleSources(option.sources).length}<span class="split-sources">{#each visibleSources(option.sources) as source (source)}<span class="split-source">{t(`ids.source.${source}`)}</span>{/each}</span>{/if}
+          </button>
         {/each}
       </div>
     {/if}
@@ -589,8 +607,10 @@
   .coef-name{align-self:center;padding-bottom:var(--ui-space-3xs);color:var(--ui-color-ink-muted);font:italic var(--ui-weight-semibold) var(--ui-text-lg) ui-serif,serif}
   .splits{display:flex;flex-wrap:wrap;align-items:center;gap:var(--ui-space-xs);margin-top:var(--ui-space-lg);padding:var(--ui-space-sm) var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-lg)}
   .splits span{font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
-  .splits button{height:var(--ui-control-h-sm);padding:0 var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:var(--ui-text-sm);cursor:pointer}
+  .splits button{display:inline-flex;align-items:center;gap:6px;height:var(--ui-control-h-sm);padding:0 var(--ui-space-md);border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-pill);background:var(--ui-color-surface-sunken);color:var(--ui-color-ink);font-family:var(--cjk);font-size:var(--ui-text-sm);cursor:pointer}
   .splits button:hover{border-color:var(--ui-color-border-strong);background:var(--ui-color-surface-hover)}
+  .split-sources{display:inline-flex;gap:3px}
+  .split-source{padding:0 4px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-sm);font-family:var(--ui-font-sans);font-size:10px;line-height:15px;color:var(--ui-color-ink-muted);white-space:nowrap}
   .actions{display:flex;gap:var(--ui-space-sm);margin-top:var(--ui-space-lg)}
   .history{margin-top:var(--ui-space-md);font-size:var(--ui-text-xs);color:var(--ui-color-ink-muted)}
   .history summary{cursor:pointer}
