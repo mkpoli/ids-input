@@ -3,7 +3,7 @@
 // means a new COMPOSER_BASE and `bun run build:example-drawings`.
 import { LOCAL_SANS } from './desktop.js'
 
-export const COMPOSER_BASE = 'https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5+letters/'
+export const COMPOSER_BASE = 'https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/'
 // The Kaisho, Fangsong and Serif exports (han-compose `export-web`) are uploaded beside the sans one.
 export const COMPOSER_BASES = {
   sans: COMPOSER_BASE,
