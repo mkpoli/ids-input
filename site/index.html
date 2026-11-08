@@ -74,7 +74,10 @@ let compPart=null, APPROVED=[], ALIASES={};
 
 function renderComponents(){
   const rows=pick(DATA.components);
-  const fine=new Set(APPROVED.filter(x=>!Object.hasOwn(ALIASES,x)));
+  // A card is done when either the approved list or the component's own flag says so: the two are
+  // written by different steps, and a card must not come back because one of them lagged.
+  const fine=new Set([...APPROVED, ...rows.filter(r=>r.approved).map(r=>r.ids), ...Object.keys(ALIASES)]
+    .filter(x=>!Object.hasOwn(ALIASES,x)));
   const bad=rows.filter(r=>!fine.has(r.ids) && !r.sameAs);
   const merged=rows.filter(r=>r.sameAs);
   const parts=[...new Set(rows.map(r=>r.ids[0]))];
