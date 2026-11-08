@@ -4,7 +4,7 @@
   "base": "https://ids-input-composer.mkpoli.workers.dev/ce3eaafda8f9-kaisho-compose-layout-v4-kaisho-f6/",
   "implementationHashes": {
     "data/unicode-properties.json": "20763faa888f696bd7cf17d7f569a726c30f95f41528df15407bba0278a02722",
-    "demo/lib/composer.js": "696cfd260c1454d9581154d414a91de20ee8b25147e6f6a2aadba11d5b9382d8",
+    "demo/lib/composer.js": "f2a483c03a72763781c82d8b2e23ab01c185a52bb2d8069b889633facacc2e04",
     "node_modules/@han-compose/composer/data/palette/bundled-coverage.json": "427e4df7e9a539167f793e481375c6c2e15faea437e6d8cb03c5b704fad1450a",
     "node_modules/@han-compose/composer/data/palette/fallback-characters.json": "e48eef9ffeac7d28c8d1081d3e7f1457e962cc5db0b8cdc0534d1b0d558c6549",
     "node_modules/@han-compose/composer/data/unicode/coverage.json": "0bf324e4c2399d9a84bc1bded50c1f0f8a152f134574abb06619cb435dda39ca",
@@ -14,7 +14,7 @@
     "node_modules/@han-compose/composer/src/client.js": "6988e5b929a502eb6d14a555e0a03b11458b3a65ac55203aa79831acb1e9f149",
     "node_modules/@han-compose/composer/src/component-forms.js": "906cbac0d51515e390f69038a46d90e475232a2328adf14e41b48b2e6250da77",
     "node_modules/@han-compose/composer/src/component-forms.json": "a15cddfd1525aa4571c0d692aff9ae9678ce3f97ac00a82d82e87974bad4a9cc",
-    "node_modules/@han-compose/composer/src/compose.js": "67f7f4ffaf3332d61cec5dad09e186d73075016978f6afd72f7ce81072c72a8c",
+    "node_modules/@han-compose/composer/src/compose.js": "f527919d2eb92b5922980baf91849362bfa325db4d2f4a3426609667a3398c5f",
     "node_modules/@han-compose/composer/src/constants.json": "57169400c90ed3bc7c1a99105b0b2cab340c01aeb72c04ec140185a15409374c",
     "node_modules/@han-compose/composer/src/constructs.js": "cdd549961cfbab7d0b64c8df7bc9675060b6f8cc5744ce57cc43bb9c751cc8de",
     "node_modules/@han-compose/composer/src/document-path.js": "b5370f36e75677b92094f5fc26415aa6c4db4b79c94df011e6c66d62946e1c69",
