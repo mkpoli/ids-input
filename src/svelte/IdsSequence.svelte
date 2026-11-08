@@ -8,7 +8,7 @@
   import { loadFallbackText } from './fallback-font.js'
   import { sequenceScopes } from './sequence-scopes.js'
   /** @type {HTMLDivElement | null} */ let textRun = $state(null)
-  /** @type {{left:number, right:number}[]} */ let bounds = $state([])
+  /** @type {{left:number, right:number, inkLeft:number}[]} */ let bounds = $state([])
   $effect(() => {
     void editor.draft
     const run = textRun
@@ -26,7 +26,7 @@
         bounds = [...run.querySelectorAll('span')].map(span => {
           const box = span.getBoundingClientRect()
           const character = [...(span.dataset.character ?? '')][0] ?? ''
-          const metrics = context && /^[\u2FF0-\u2FFF]$/.test(character) ? context.measureText(character) : null
+          const metrics = context && arity(character) > 0 ? context.measureText(character) : null
           const inkLeft = metrics && Number.isFinite(metrics.actualBoundingBoxLeft)
             ? Math.max(0, -metrics.actualBoundingBoxLeft)
             : 0
@@ -36,6 +36,10 @@
     }
     const observer = new ResizeObserver(measure)
     observer.observe(run)
+    // A face switch changes the CSS font without necessarily changing the run's size.
+    const fonts = new MutationObserver(measure)
+    fonts.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style', 'data-font'] })
+    if (document.body && document.body !== document.documentElement) fonts.observe(document.body, { attributes: true, attributeFilter: ['class', 'style', 'data-font'] })
     document.fonts.addEventListener('loadingdone', measure)
     void document.fonts.ready.then(() => { if (alive) measure() })
     measure()
@@ -43,6 +47,7 @@
       alive = false
       cancelAnimationFrame(frame)
       observer.disconnect()
+      fonts.disconnect()
       document.fonts.removeEventListener('loadingdone', measure)
     }
   })
