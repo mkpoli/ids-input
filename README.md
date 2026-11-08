@@ -942,6 +942,9 @@ letters such as L and R side by side go in from the part field, one slot at a ti
 - `data/ids-overwrites.tsv`: descriptions drawn as an encoded character instead of a composition,
   `⿰𦚏𳳳` as 龍 and `⿷⿺己一三` as 𳳳 (JYutnet JYN00025; zi.tools); the adapter reads it with
   `overwrite`.
+- `data/open-data/`: the published descriptions and their citations, CC0 1.0
+  (<https://creativecommons.org/publicdomain/zero/1.0/>), built by `scripts/build_open_ids.mjs`
+  from the starter catalogue and `data/ids-components.tsv`.
 - `data/component-forms.tsv`: radical and positional forms, from han-compose's
   `data/vocab/han-component-forms.tsv`, drawn from Unicode's EquivalentUnifiedIdeograph.txt (Unicode
   License v3) and cjkvi-variants' `radical-variants.txt` (public domain); its header names both (26 KB).
@@ -982,6 +985,13 @@ The sources the project reads, draws on, compares with or cites are catalogued a
 <https://ids.mkpo.li/sources>: data, fonts, code, references, prior work and the records behind the
 examples, with each source’s author, licence, dates, category and tags. The example records keep
 their notes and citation numbers.
+
+## Open data
+
+The descriptions the project transcribed or read, each with the source behind it, are published at
+<https://ids.mkpo.li/open-data> as JSON and TSV, one row per description. The files live in
+`data/open-data/`, are built by `bun scripts/build_open_ids.mjs`, and are dedicated to the public
+domain (CC0 1.0).
 
 ## The workshop
 

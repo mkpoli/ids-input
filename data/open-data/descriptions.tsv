@@ -1,0 +1,593 @@
+ids	char	codepoint	group	reading	modern	abbreviates	editorial	sources
+⿾正	𣥄	U+23944	basic				false	babelstone n2572
+⿿予	𠄔	U+20114	basic				false	babelstone n2572
+⿿凹	𠕄	U+20544	basic				false	babelstone
+⿱不要	嫑	U+5AD1	basic				false	babelstone
+⿱艹半			basic				false	erjian
+⿰舟邊			basic				false	jyutnet
+⿻大㸚	爽	U+723D	basic				false	babelstone
+㇯豕㇒	𧰧	U+27C27	basic				false	babelstone
+⿰光㇯軍車			basic				false	x-monkey-hikaru
+⿱成龙			basic				false	chii-duang
+⿰氵恩	𰜩	U+30729	basic				false	adobe-kr
+⿰要勿	覅	U+8985	basic				false	cns-fiao
+⿰𠤕⿱龴疋	疑	U+7591	basic				false	babelstone
+⿰查皮	皶	U+76B6	basic				false	babelstone
+⿰甫舎	舗	U+8217	basic				false	x-mkpoli-u820e
+⿰讠射	谢	U+8C22	basic				false	babelstone
+⿻⺀大	头	U+5934	basic				false	babelstone
+⿱龹幸			basic				false	personal
+⿱艹堀			basic				false	x-sarasvati
+⿱投石			basic				false	x-uteta-toushi
+⿲𠂤日千			basic				false	x-kadisco
+⿱一心			basic				false	x-jianhuazi
+⿰忄実			basic				false	x-umihotarus x-dodan
+⿰忄實			basic				false	x-umihotarus
+⿱⿰虎⿿虎貝	𧹂	U+27E42	complex				false	babelstone
+⿳宀⿰丨⿴⿻冂一一⿹𠃌灬			complex				false	jyutnet
+⿰𦚏𳑳			complex				false	jyutnet
+⿰扌⿸厃⿱儿𢀛			complex				false	jyutnet
+〾⿱⿰大⿱七六⿵勹五			complex				false	personal
+⿱苦⿲⿰⿹耳舌鼻⿳⿸⿹平惡意眼⿰淨𭰏⿰⿱女子身			complex				false	x-umihotarus
+⿳⿲木缶木冖⿰鬯彡	鬱	U+9B31	complex				false	babelstone
+⿺辶⿳穴⿰月⿰⿲⿱幺長⿱言馬⿱幺長刂心	𰻞	U+30EDE	complex				false	babelstone
+⿱䨺龘	𱁬	U+3106C	complex				false	babelstone
+⿰鼻囊	齉	U+9F49	complex				false	babelstone
+⿱⿱⿴𦥑同冖𤍾	爨	U+7228	complex				false	babelstone
+⿰氵鬱	灪	U+706A	complex				false	babelstone
+⿰鹵僉	鹼	U+9E7C	complex				false	babelstone
+⿰臣⿾臣	𦣩	U+268E9	repeated				false	babelstone
+⿱⿿止止	𣥒	U+23952	repeated				false	babelstone
+⿰⿾臣臣	臦	U+81E6	repeated				false	babelstone
+⿱或⿿或	𢨋	U+22A0B	repeated				false	babelstone
+⿰⿱興興⿱興興	𠔻	U+2053B	repeated				false	babelstone
+⿱七⿰七七	㐂	U+3402	repeated				false	babelstone
+⿱木林	森	U+68EE	repeated				false	babelstone
+⿱龖龖	𪚥	U+2A6A5	repeated				false	babelstone
+⿱龍龖	龘	U+9F98	repeated				false	babelstone
+⿱⿰雷雷⿰雷雷	䨻	U+4A3B	repeated				false	babelstone
+⿱馬騳	驫	U+9A6B	repeated				false	babelstone
+⿱鹿𱋁	麤	U+9EA4	repeated				false	babelstone
+⿱雷⿰雷雷	靐	U+9750	repeated				false	babelstone
+⿱⿰鏡鏡⿰鏡鏡	𰽔	U+30F54	repeated				false	babelstone
+⿱𡥦𡥦	𡦪	U+219AA	repeated				false	babelstone
+⿱巛巛	𡿭	U+21FED	repeated				false	babelstone
+⿱⿰林林⿰林林	𣡽	U+2387D	repeated				false	babelstone
+⿱吅品	𠾅	U+20F85	repeated				false	babelstone
+⿱垚土	㙓	U+3653	repeated				false	babelstone
+⿰木森	𣛧	U+236E7	repeated				false	babelstone
+⿱林⿰林林	𣡕	U+23855	repeated				false	babelstone
+⿱天𭑈	𡙎	U+2164E	repeated				false	babelstone x-uteta-pinzi-ten-chi
+⿱地⿰地地			repeated				false	x-uteta-pinzi-ten-chi
+⿱里⿰里里			repeated				false	x-uteta-pinzi-ri-mo
+⿱莫⿰莫莫			repeated				false	x-uteta-pinzi-ri-mo
+⿱無⿰無無	𲬺	U+32B3A	repeated				false	irg-ws2021-uk-20565
+⿱火火	炎	U+708E	repeated				false	babelstone myriadrevery-jouji
+⿱土土	圭	U+572D	repeated				false	babelstone myriadrevery-jouji
+⿰木木	林	U+6797	repeated				false	babelstone myriadrevery-jouji
+⿰竞竞	競	U+7AF6	repeated				false	babelstone myriadrevery-jouji
+⿰𠃛𠁣	𨳈	U+28CC8	repeated				false	babelstone myriadrevery-jouji
+⿸尸尸	𡰲	U+21C32	repeated				false	babelstone myriadrevery-jouji
+⿵門門	闁	U+95C1	repeated				false	babelstone myriadrevery-jouji
+⿲水水水	㴇	U+3D07	repeated				false	babelstone myriadrevery-jouji
+⿱口吅	品	U+54C1	repeated				false	babelstone myriadrevery-jouji
+⿱日昍	晶	U+6676	repeated				false	babelstone myriadrevery-jouji
+⿰火炎	㷋	U+3DCB	repeated				false	babelstone myriadrevery-jouji
+⿰日昌	晿	U+667F	repeated				false	babelstone myriadrevery-jouji
+⿱㼌瓜	𤬑	U+24B11	repeated				false	babelstone myriadrevery-jouji
+⿱朋朋	朤	U+6724	repeated				false	babelstone myriadrevery-jouji
+⿱炏炏	燚	U+71DA	repeated				false	babelstone myriadrevery-jouji
+⿴囗㗊	𡈨	U+21228	repeated				false	babelstone myriadrevery-jouji
+⿱⿰竹竹⿰竹竹	𥷹	U+25DF9	repeated				false	babelstone myriadrevery-jouji
+⿰言⿱⿰幺幺⿰幺幺			repeated				false	
+⿵門覃			enclosures				false	jyutnet
+⿺辶比			enclosures				false	erjian
+⿷匚也	匜	U+531C	enclosures				false	babelstone
+⿼叉丶	㕚	U+355A	enclosures				false	babelstone n2572
+⿽水丶	氷	U+6C37	enclosures				false	babelstone n2572
+⿹⿺㇉一卄			enclosures				false	jyutnet
+⿺辶說			enclosures				false	personal
+⿺克千	兛	U+515B	enclosures				false	babelstone
+⿴囗或	國	U+570B	enclosures				false	babelstone
+⿴囗元	园	U+56ED	enclosures				false	x-privjj
+⿴囗書	圕	U+5715	enclosures				false	babelstone
+⿱⿰◇ㅏㄴ			mixed				false	x-zoenshiueh
+⿶む子			mixed				false	x-umanoyui
+⿱⿰力田𠂇	𫦫	U+2B9AB	mixed				false	babelstone
+⿳宀𭕄木	𫳍	U+2BCCD	mixed				false	babelstone
+⿰車卜	𨊣	U+282A3	mixed				false	babelstone
+⿰舟力	𬜑	U+2C711	mixed				false	babelstone
+⿴口도			mixed				false	script-hybrid x-hado
+⿰舟ラ			mixed				false	script-hybrid l2-24-201 ndl-jmtt
+⿵门T			mixed				false	l2-24-201 irg-n2744
+⿰𛂦方	𭤪	U+2D92A	mixed				false	irg-n2744 babelstone
+⿰亻A			mixed				false	irg-n2637
+⿰扌3			mixed				false	irg-n2744
+⿰木⿳ㄙㄨㄥ			mixed				false	personal
+⿰木⿱ㄅㄞ			mixed				false	personal
+⿰木き			mixed				false	personal
+⿴囗⿱エン			mixed				false	x-kygna x-kechilee x-ryakjiten x-kingko x-sc2rm x-vivanon x-privjj
+⿱月朋			mixed				false	x-uteta
+⿺廴占			mixed				false	x-eonway-sign erjian-draft-1977 irg-ws2024-01372 stitutes-short-forms cjkvi-variants-ids
+⿱車🚗			mixed				false	
+⿰设冓	講	U+8B1B	sign				false	x-eonway-sign
+⿱艹果	菓	U+83D3	sign				false	babelstone
+⿱艹𢎨	苐	U+82D0	sign				false	babelstone x-eonway-sign
+⿰设正	証	U+8A3C	sign				false	x-eonway-sign
+⿰彳卫	衛	U+885B	sign				false	x-eonway-sign yixiwu-jianhuaziyuan chenguangyao-jianzipu zh-wp-jianhua-fangfa
+⿰忄井	警	U+8B66	erjian				false	erjian
+⿱艹么	蘑	U+8611	erjian				false	erjian
+⿱千田	臿	U+81FF	erjian				false	erjian
+⿸厂九	厩	U+53A9	erjian				false	erjian
+⿱亠公	衮	U+886E	erjian				false	erjian
+⿰彳力	律	U+5F8B	erjian				false	erjian
+⿱力十	率	U+7387	erjian				false	erjian
+⿱入寸	辱	U+8FB1	erjian				false	erjian
+⿱甲弓	弹	U+5F39	erjian				false	erjian
+⿻弓冫	弱	U+5F31	erjian				false	erjian
+⿱犬一	然	U+7136	erjian				false	erjian
+⿱大手	攀	U+6500	erjian				false	erjian
+⿰亻彐	侵	U+4FB5	erjian				false	erjian
+⿱由攵	数	U+6570	erjian				false	erjian
+⿸疒力	痢	U+75E2	erjian				false	erjian
+⿺辶欠	遣	U+9063	erjian				false	erjian
+⿱宀R			geba			寮	false	geba-wp l2-24-125 ja-wp-geba
+⿰亻⿱宀R			geba			僚	false	geba-wp l2-24-125
+⿸疒R			geba			療	false	geba-wp l2-24-125
+⿱冖G			geba			軍	false	geba-wp l2-24-125
+⿰石K			geba			確	false	geba-wp l2-24-125
+⿰龺K			geba			韓	false	geba-wp l2-24-125
+⿺辶K			geba			還	false	geba-wp l2-24-125
+⿰飠K			geba			館	false	geba-wp l2-24-125
+⿰糸N			geba			縄	false	geba-wp l2-24-125
+⿰言N			geba			認	false	geba-wp l2-24-125
+⿰言R			geba			論	false	geba-wp l2-24-125
+⿰言S			geba			識	false	geba-wp l2-24-125
+⿸广K			geba			慶	false	geba-wp l2-24-125
+⿸广O			geba			応	false	geba-wp l2-24-125
+⿰言ギ			geba			議	false	geba-wp x-miho
+⿰木キ			geba			機	false	geba-wp
+⿺走キ			geba			起	false	geba-wp
+⿰木コ			geba			構	false	geba-wp
+⿰言コ			geba			講	false	geba-wp
+⿰火⿱セン			geba			煽	false	geba-wp
+⿰糸ソ			geba			組	false	geba-wp
+⿸尸ソ			geba			層	false	geba-wp
+⿱龸ド			geba			堂	false	geba-wp
+⿰虫ホ			geba			蜂	false	geba-wp
+⿰扌マ			geba			抹	false	geba-wp
+⿱艹ヤ			geba			薬	false	geba-wp
+⿰阝ヱ			geba			衛	false	geba-wp
+⿵门日	间	U+95F4	geba			間	false	geba-wp
+⿻𠤎丶			geba			義	false	geba-wp
+⿰虍刂			geba			劇	false	geba-wp
+⿺辶⿱𭕄共			geba			選	false	geba-wp
+⿳丷冖兀			geba			総	false	geba-wp
+⿵门斗	𫔯	U+2B52F	geba			闘	false	geba-wp
+⿰艦ツ			navy				false	script-hybrid x-cincpac-images
+⿰掌キ			navy				false	script-hybrid x-cincpac-images
+⿲木十木			navy				false	jsccc8-navy note-kaigun-kamome x-kaigun-kikanju
+⿰車ト			navy				false	jsccc8-navy x-kaigun-truck
+⿰米林			navy				false	jsccc8-navy x-kaigun-hayashi
+⿺辶⿱宀⿱⿰王尔⿲隹貝招			ligature				false	l2-12-032 utr45
+⿱⿰日日⿲有見財			ligature				false	uhk-hetizi
+⿰⿱日斗⿱進金			ligature				false	uhk-hetizi
+⿳𦥯⿲女子乚皿			ligature				false	uhk-hetizi zi-tools-kongmeng
+⿳五⿲矢口隹龰			ligature				false	uhk-hetizi
+⿱黄⿱金⿳艹田⿵冂山			ligature				false	uhk-hetizi gmw-zuhezi
+⿳士⿲女口意祥			ligature				false	fznews-jixiang
+⿱艹⿰马尼			ligature				false	zh-yue-hetizi
+⿰⿳⿰SIR木阝			ligature				false	zh-yue-hetizi
+⿱⿰⿱コン⿱クリ土			ligature				false	geba-wp
+⿱⿲ンメセ土			ligature				false	geba-wp
+⿸广⿰KO			ligature				false	geba-wp
+⿱宀K			ligature				false	geba-wp
+⿻Mo			ligature				false	geba-wp
+⿱⿰不目心			created				false	x-egasmb
+⿲上丿王			created				false	x-egasmb
+⿰𭃂尤			created				false	x-egasmb
+⿰另上			created				false	x-egasmb
+⿱加𠃍	㔖	U+3516	korean	각			false	babelstone ko-wp-gukja
+⿱加乙	乫	U+4E6B	korean	갈			false	babelstone ko-wp-gukja
+⿱可乙	㐓	U+3413	korean	갈			false	babelstone ko-wp-gukja
+⿱加己	㠰	U+3830	korean	갈			false	babelstone ko-wp-gukja
+⿱加𠮟	㖙	U+3599	korean	갓			false	babelstone ko-wp-gukja
+⿱加㇣	㔔	U+3514	korean	강			false	babelstone ko-wp-gukja
+⿱介𠮟	㖋	U+358B	korean	갯			false	babelstone ko-wp-gukja
+⿱𠮟介	㖎	U+358E	korean	갯			false	babelstone ko-wp-gukja
+⿱巨𠃍	巪	U+5DEA	korean	걱			false	babelstone ko-wp-gukja
+⿱巨乙	乬	U+4E6C	korean	걸			false	babelstone ko-wp-gukja
+⿱擧乙	㐦	U+3426	korean	걸			false	babelstone ko-wp-gukja
+⿱去𠮟	唟	U+551F	korean	것			false	babelstone ko-wp-gukja
+⿳亠口乙	㐔	U+3414	korean	골			false	babelstone ko-wp-gukja
+⿸庫乙	㐣	U+3423	korean	골			false	babelstone ko-wp-gukja
+⿱古巴	𰅶	U+30176	korean	곱			false	babelstone ko-wp-gukja
+⿱高巴	䯩	U+4BE9	korean	곱			false	babelstone ko-wp-gukja
+⿱古𠮟	㖛	U+359B	korean	곳			false	babelstone ko-wp-gukja
+⿳亠口𠮟	㖜	U+359C	korean	곳			false	babelstone ko-wp-gukja
+⿸庫𠮟	廤	U+5EE4	korean	곳			false	babelstone ko-wp-gukja
+⿱花𠮟	蒊	U+848A	korean	곳			false	babelstone ko-wp-gukja
+⿱九乙	㐇	U+3407	korean	굴			false	babelstone ko-wp-gukja
+⿱拘乙	㐝	U+341D	korean	굴			false	babelstone ko-wp-gukja
+⿱仇𠮟	㖌	U+358C	korean	굿			false	babelstone ko-wp-gukja
+⿱文乙	㐎	U+340E	korean	글			false	babelstone ko-wp-gukja
+⿱其乙	㐞	U+341E	korean	길			false	babelstone ko-wp-gukja
+⿱非乙	㐟	U+341F	korean	길			false	babelstone ko-wp-gukja
+⿱未𠮟	㖝	U+359D	korean	끗			false	babelstone ko-wp-gukja
+⿱奴乙	㐐	U+3410	korean	놀			false	babelstone ko-wp-gukja
+⿱老乙	㐗	U+3417	korean	놀			false	babelstone ko-wp-gukja
+⿱老口	㖈	U+3588	korean	놈			false	babelstone ko-wp-gukja
+⿱艿𠮟	莻	U+83BB	korean	늦			false	babelstone ko-wp-gukja
+⿱石乙	乭	U+4E6D	korean	돌			false	babelstone ko-wp-gukja
+⿱冬乙	㐑	U+3411	korean	돌			false	babelstone ko-wp-gukja
+⿱道𠮟	㘏	U+360F	korean	돗			false	babelstone ko-wp-gukja
+⿱斗𠃍	㪲	U+3AB2	korean	둑			false	babelstone ko-wp-gukja
+⿱豆𠃊	䜳	U+4733	korean	둔			false	babelstone ko-wp-gukja
+⿱入乙	㐈	U+3408	korean	둘			false	babelstone ko-wp-gukja
+⿱斗乙	乧	U+4E67	korean	둘			false	babelstone ko-wp-gukja
+⿱豆乙	㐙	U+3419	korean	둘			false	babelstone ko-wp-gukja
+⿱斗𠮟	㖍	U+358D	korean	둣			false	babelstone ko-wp-gukja
+⿱斗㇣	㪳	U+3AB3	korean	둥			false	babelstone ko-wp-gukja
+⿱同𠮟	㖯	U+35AF	korean	똥			false	babelstone ko-wp-gukja
+⿱𠮟同	㖰	U+35B0	korean	똥			false	babelstone ko-wp-gukja
+⿱浮乙	㐢	U+3422	korean	뜰			false	babelstone ko-wp-gukja
+⿱末乙	𪜑	U+2A711	korean	말			false	babelstone ko-wp-gukja
+⿱毛乙	𰀴	U+30034	korean	몰			false	babelstone ko-wp-gukja
+⿱木乙	朰	U+6730	korean	몰			false	babelstone ko-wp-gukja
+⿱卯乙	乮	U+4E6E	korean	묠			false	babelstone ko-wp-gukja
+⿱夜口	㖱	U+35B1	korean	뱀			false	babelstone ko-wp-gukja
+⿱甫乙	乶	U+4E76	korean	볼			false	babelstone ko-wp-gukja
+⿱不乙	𰀲	U+30032	korean	불			false	babelstone ko-wp-gukja
+⿱付𠮟	㖚	U+359A	korean	붓			false	babelstone ko-wp-gukja
+⿱始𠮟	㗠	U+35E0	korean	비롯			false	babelstone ko-wp-gukja
+⿱分𠮟	兺	U+517A	korean	뿐			false	babelstone ko-wp-gukja
+⿱𠮟分	哛	U+54DB	korean	뿐			false	babelstone ko-wp-gukja
+⿱士乙	㐊	U+340A	korean	살			false	babelstone ko-wp-gukja
+⿱沙乙	乷	U+4E77	korean	살			false	babelstone ko-wp-gukja
+⿱沙邑	䣉	U+48C9	korean	삽			false	babelstone ko-wp-gukja
+⿱覀乙	𰀽	U+3003D	korean	설			false	babelstone ko-wp-gukja
+⿱折乙	乴	U+4E74	korean	설			false	babelstone ko-wp-gukja
+⿱鋤乙	㐥	U+3425	korean	설			false	babelstone ko-wp-gukja
+⿱召乙	㐒	U+3412	korean	솔			false	babelstone ko-wp-gukja
+⿱所乙	乺	U+4E7A	korean	솔			false	babelstone ko-wp-gukja
+⿱小𠮟	㕾	U+357E	korean	솟			false	babelstone ko-wp-gukja
+⿱米乙	㐘	U+3418	korean	쌀			false	babelstone ko-wp-gukja
+⿱種𠮟	㘒	U+3612	korean	씻			false	babelstone ko-wp-gukja
+⿱於𠃍	㫇	U+3AC7	korean	억			false	babelstone ko-wp-gukja
+⿱於乙	乻	U+4E7B	korean	얼			false	babelstone ko-wp-gukja
+⿱於𠮟	旕	U+65D5	korean	엇			false	babelstone ko-wp-gukja
+⿱如𠮟	㖲	U+35B2	korean	엿			false	babelstone ko-wp-gukja
+⿱汝𠮟	㖳	U+35B3	korean	엿			false	babelstone ko-wp-gukja
+⿱五乙	㐏	U+340F	korean	올			false	babelstone ko-wp-gukja
+⿱乎乙	乯	U+4E6F	korean	올			false	babelstone ko-wp-gukja
+⿱吾乙	㐚	U+341A	korean	올			false	babelstone ko-wp-gukja
+⿱外𠮟	夞	U+591E	korean	욋			false	babelstone ko-wp-gukja
+⿱于乙	𠃗	U+200D7	korean	울			false	babelstone ko-wp-gukja
+⿱佑乙	㐛	U+341B	korean	울			false	babelstone ko-wp-gukja
+⿱由乙	㐕	U+3415	korean	율			false	babelstone ko-wp-gukja
+⿱乳乙	㐠	U+3420	korean	율			false	babelstone ko-wp-gukja
+⿱芿𠮟	㗡	U+35E1	korean	잇			false	babelstone ko-wp-gukja
+⿱者𠃍	䎞	U+439E	korean	작			false	babelstone ko-wp-gukja
+⿱者乙	乽	U+4E7D	korean	잘			false	babelstone ko-wp-gukja
+⿱者𠮟	㗯	U+35EF	korean	잣			false	babelstone ko-wp-gukja
+⿱丁乙	㐉	U+3409	korean	절			false	babelstone ko-wp-gukja
+⿱爫乙	㐍	U+340D	korean	졸			false	babelstone ko-wp-gukja
+⿱注乙	乼	U+4E7C	korean	줄			false	babelstone ko-wp-gukja
+⿱注𠮟	㗟	U+35DF	korean	줏			false	babelstone ko-wp-gukja
+⿱直𠮟	嗭	U+55ED	korean	짓			false	babelstone ko-wp-gukja
+⿱次乙	乲	U+4E72	korean	찰			false	babelstone ko-wp-gukja
+⿱土乙	㐋	U+340B	korean	톨			false	babelstone ko-wp-gukja
+⿱巴𠮟	巼	U+5DFC	korean	팟			false	babelstone ko-wp-gukja
+⿱甫𠮟	喸	U+55B8	korean	폿			false	babelstone ko-wp-gukja
+⿱下乙	乤	U+4E64	korean	할			false	babelstone ko-wp-gukja
+⿱禾乙	𰀹	U+30039	korean	활			false	babelstone ko-wp-gukja
+⿱介乙			korean	갤			false	babelstone ko-wp-gukja
+⿱古乙			korean	골			false	babelstone ko-wp-gukja
+⿱句乙			korean	굴			false	babelstone ko-wp-gukja
+⿱月乙			korean	달			false	babelstone ko-wp-gukja
+⿱付乙			korean	댈			false	babelstone ko-wp-gukja
+⿱代乙			korean	댈			false	babelstone ko-wp-gukja
+⿱叱乙			korean	뜰			false	babelstone ko-wp-gukja
+⿱馬乙			korean	말			false	babelstone ko-wp-gukja
+⿱未乙			korean	밀			false	babelstone ko-wp-gukja
+⿱夫乙			korean	불			false	babelstone ko-wp-gukja
+⿱火乙			korean	불			false	babelstone ko-wp-gukja
+⿱角乙			korean	뿔			false	babelstone ko-wp-gukja
+⿱小乙			korean	솔			false	babelstone ko-wp-gukja
+⿱少乙			korean	솔			false	babelstone ko-wp-gukja
+⿱松乙			korean	솔			false	babelstone ko-wp-gukja
+⿱菸叱			korean	엇			false	babelstone ko-wp-gukja
+⿱右乙			korean	울			false	babelstone ko-wp-gukja
+⿱吐乙			korean	톨			false	babelstone ko-wp-gukja
+⿱坪乙			korean	펼			false	babelstone ko-wp-gukja
+⿱呼乙			korean	홀			false	babelstone ko-wp-gukja
+⿱去乙	𬼝	U+2CF1D	korean				false	babelstone ko-wp-gukja
+⿲意情意			korean	의정의			false	x-jumanjikyo
+⿱ᄋᆞ〯라〮			hangul	@ra			false	x-sebansios-blocks
+⿱ᄃᆞ륵〮			hangul	d@ruk			false	x-sebansios-blocks
+⿱𠆢丶	亽	U+4EBD	gugyeol	나			false	babelstone ko-wp-gukja
+⿱亦乁	亪	U+4EAA	gugyeol	란			false	babelstone ko-wp-gukja
+⿱爲了	爳	U+7233	gugyeol	료			false	babelstone ko-wp-gukja
+⿱厶小	厼	U+53BC	gugyeol	며			false	babelstone ko-wp-gukja
+⿰弓厼	㢱	U+38B1	gugyeol	며			false	babelstone ko-wp-gukja
+⿱一丿	丆	U+4E06	gugyeol	면			false	babelstone ko-wp-gukja
+⿱斜𰆊	厁	U+5381	gugyeol	산			false	babelstone ko-wp-gukja
+⿱士𰆊	壭	U+58ED	gugyeol	산			false	babelstone ko-wp-gukja
+⿱𠆢⺀	仒	U+4ED2	gugyeol	어			false	babelstone ko-wp-gukja
+⿰丶㇒	丷	U+4E37	gugyeol	하			false	babelstone ko-wp-gukja
+⿱丷𰆊	兯	U+516F	gugyeol	한			false	babelstone ko-wp-gukja
+⿱㇒丷	乊	U+4E4A	gugyeol	호			false	babelstone ko-wp-gukja
+⿱乊乙	乥	U+4E65	gugyeol	홀			false	babelstone ko-wp-gukja
+⿰土下	圷	U+5737	kokuji	あくつ			false	babelstone sljfaq-kokuji
+⿰魚利	鯏	U+9BCF	kokuji	あさり			false	babelstone sljfaq-kokuji
+⿺辶南	遖	U+9056	kokuji	あっぱれ			false	babelstone sljfaq-kokuji
+⿱海土	塰	U+5870	kokuji	あま			false	babelstone sljfaq-kokuji
+⿵𠘨巾	凧	U+51E7	kokuji	いかのぼり			false	babelstone sljfaq-kokuji
+⿰角鳥	鵤	U+9D64	kokuji	いかる			false	babelstone sljfaq-kokuji
+⿰土入	圦	U+5726	kokuji	いり			false	babelstone sljfaq-kokuji
+⿰木入	杁	U+6741	kokuji	いり			false	babelstone sljfaq-kokuji
+⿰魚弱	鰯	U+9C2F	kokuji	いわし			false	babelstone en-wp-kokuji
+⿱𥫗丸	笂	U+7B02	kokuji	うつぼ			false	babelstone sljfaq-kokuji
+⿰𩙿𥁕	饂	U+9942	kokuji	うどん			false	babelstone sljfaq-kokuji
+⿰虫老	蛯	U+86EF	kokuji	えび			false	babelstone sljfaq-kokuji
+⿰火貢	熕	U+7195	kokuji	おおづつ			false	babelstone sljfaq-kokuji
+⿰糹威	縅	U+7E05	kokuji	おどす			false	babelstone sljfaq-kokuji
+⿰亻弟	俤	U+4FE4	kokuji	おもかげ			false	babelstone sljfaq-kokuji
+⿱下風	颪	U+98AA	kokuji	おろし			false	babelstone sljfaq-kokuji
+⿰女鼻	嬶	U+5B36	kokuji	かか			false	babelstone sljfaq-kokuji
+⿰石花	硴	U+7874	kokuji	かき			false	babelstone sljfaq-kokuji
+⿰土行	垳	U+57B3	kokuji	がけ			false	babelstone sljfaq-kokuji
+⿰釒芳	錺	U+933A	kokuji	かざり			false	babelstone sljfaq-kokuji
+⿰木島	槝	U+69DD	kokuji	かし			false	babelstone sljfaq-kokuji
+⿰木堅	樫	U+6A2B	kokuji	かし			false	babelstone en-wp-kokuji
+⿰魚石	鮖	U+9B96	kokuji	かじか			false	babelstone sljfaq-kokuji
+⿰釒送	鎹	U+93B9	kokuji	かすがい			false	babelstone sljfaq-kokuji
+⿰魚希	鯑	U+9BD1	kokuji	かずのこ			false	babelstone sljfaq-kokuji
+⿰糹齊	纃	U+7E83	kokuji	かすり			false	babelstone sljfaq-kokuji
+⿰糸忍	綛	U+7D9B	kokuji	かせ			false	babelstone sljfaq-kokuji
+⿱艹縵	蘰	U+8630	kokuji	かつら			false	babelstone sljfaq-kokuji
+⿰口入	叺	U+53FA	kokuji	かます			false	babelstone sljfaq-kokuji
+⿰衤𠧗	裃	U+88C3	kokuji	かみしも			false	babelstone sljfaq-kokuji
+⿰魚喜	鱚	U+9C5A	kokuji	きす			false	babelstone sljfaq-kokuji
+⿺瓦千	瓩	U+74E9	kokuji	キログラム			false	babelstone en-wp-kokuji
+⿰米千	粁	U+7C81	kokuji	キロメートル			false	babelstone en-wp-kokuji
+⿰立千	竏	U+7ACF	kokuji	キロリットル			false	babelstone en-wp-kokuji
+⿰口食	喰	U+55B0	kokuji	くう			false	babelstone sljfaq-kokuji
+⿰木門	椚	U+691A	kokuji	くぬぎ			false	babelstone sljfaq-kokuji
+⿰木到	椡	U+6921	kokuji	くぬぎ			false	babelstone sljfaq-kokuji
+⿱久米	粂	U+7C82	kokuji	くめ			false	babelstone sljfaq-kokuji
+⿰山弁	峅	U+5CC5	kokuji	くら			false	babelstone sljfaq-kokuji
+⿰亻車	俥	U+4FE5	kokuji	くるま			false	babelstone sljfaq-kokuji
+⿰田衣	畩	U+7569	kokuji	けさ			false	babelstone sljfaq-kokuji
+⿰糹頝	纐	U+7E90	kokuji	コウ			false	babelstone sljfaq-kokuji
+⿰魚康	鱇	U+9C47	kokuji	コウ			false	babelstone en-wp-kokuji
+⿰米花	糀	U+7CC0	kokuji	こうじ			false	babelstone sljfaq-kokuji
+⿵𠘨木	凩	U+51E9	kokuji	こがらし			false	babelstone sljfaq-kokuji
+⿱艹座	蓙	U+84D9	kokuji	ござ			false	babelstone sljfaq-kokuji
+⿰魚甬	鯒	U+9BD2	kokuji	こち			false	babelstone sljfaq-kokuji
+⿰魚冬	鮗	U+9B97	kokuji	このしろ			false	babelstone sljfaq-kokuji
+⿰革𠧗	鞐	U+9790	kokuji	こはぜ			false	babelstone sljfaq-kokuji
+⿰土花	埖	U+57D6	kokuji	ごみ			false	babelstone sljfaq-kokuji
+⿺辶入	込	U+8FBC	kokuji	こむ			false	babelstone en-wp-kokuji
+⿰忄永	怺	U+603A	kokuji	こらえる			false	babelstone sljfaq-kokuji
+⿰木神	榊	U+698A	kokuji	さかき			false	babelstone en-wp-kokuji
+⿺辶谷	逧	U+9027	kokuji	さこ			false	babelstone sljfaq-kokuji
+⿱𥫗世	笹	U+7B39	kokuji	ささ			false	babelstone sljfaq-kokuji
+⿱𥫗彫	簓	U+7C13	kokuji	ささら			false	babelstone sljfaq-kokuji
+⿰口行	哘	U+54D8	kokuji	さそう			false	babelstone sljfaq-kokuji
+⿰扌刃	扨	U+6268	kokuji	さて			false	babelstone sljfaq-kokuji
+⿰耳定	聢	U+8062	kokuji	しか			false	babelstone sljfaq-kokuji
+⿰田鳥	鴫	U+9D2B	kokuji	しぎ			false	babelstone sljfaq-kokuji
+⿱雨下	雫	U+96EB	kokuji	しずく			false	babelstone sljfaq-kokuji
+⿰身美	躾	U+8EBE	kokuji	しつけ			false	babelstone en-wp-kokuji
+⿰木典	椣	U+6923	kokuji	しで			false	babelstone sljfaq-kokuji
+⿸疒積	癪	U+766A	kokuji	しゃく			false	babelstone sljfaq-kokuji
+⿰魚虎	鯱	U+9BF1	kokuji	しゃちほこ			false	babelstone sljfaq-kokuji
+⿰口贈	囎	U+56CE	kokuji	しょう			false	babelstone sljfaq-kokuji
+⿰訁定	諚	U+8ADA	kokuji	ジョウ			false	babelstone sljfaq-kokuji
+⿰月萃	膵	U+81B5	kokuji	スイ			false	babelstone sljfaq-kokuji
+⿰木昌	椙	U+6919	kokuji	すぎ			false	babelstone en-wp-kokuji
+⿰米合	粭	U+7CAD	kokuji	すくも			false	babelstone sljfaq-kokuji
+⿰米家	糘	U+7CD8	kokuji	すくも			false	babelstone sljfaq-kokuji
+⿺辶一	辷	U+8FB7	kokuji	すべる			false	babelstone sljfaq-kokuji
+⿰月泉	腺	U+817A	kokuji	せん			false	babelstone en-wp-kokuji
+⿰米厘	糎	U+7CCE	kokuji	センチ			false	babelstone sljfaq-kokuji
+⿺瓦厘	甅	U+7505	kokuji	センチグラム			false	babelstone sljfaq-kokuji
+⿰立厘	竰	U+7AF0	kokuji	センチリットル			false	babelstone sljfaq-kokuji
+⿰木山	杣	U+6763	kokuji	そま			false	babelstone sljfaq-kokuji
+⿰舟雪	艝	U+825D	kokuji	そり			false	babelstone sljfaq-kokuji
+⿰車雪	轌	U+8F4C	kokuji	そり			false	babelstone sljfaq-kokuji
+⿰衤擧	襷	U+8977	kokuji	たすき			false	babelstone sljfaq-kokuji
+⿰火達	燵	U+71F5	kokuji	タツ			false	babelstone sljfaq-kokuji
+⿰木府	椨	U+6928	kokuji	たぶ			false	babelstone sljfaq-kokuji
+⿰魚雪	鱈	U+9C48	kokuji	たら			false	babelstone en-wp-kokuji
+⿰土𠧗	垰	U+57B0	kokuji	たわ			false	babelstone sljfaq-kokuji
+⿲彳鳥亍	鵆	U+9D46	kokuji	ちどり			false	babelstone sljfaq-kokuji
+⿰木母	栂	U+6802	kokuji	つが			false	babelstone sljfaq-kokuji
+⿵門山	閊	U+958A	kokuji	つかえる			false	babelstone sljfaq-kokuji
+⿰木觀	欟	U+6B1F	kokuji	つき			false	babelstone sljfaq-kokuji
+⿰柬鳥	鶫	U+9DAB	kokuji	つぐみ			false	babelstone sljfaq-kokuji
+⿺辶十	辻	U+8FBB	kokuji	つじ			false	babelstone en-wp-kokuji
+⿰衤妻	褄	U+8904	kokuji	つま			false	babelstone sljfaq-kokuji
+⿱弓一	弖	U+5F16	kokuji	テ			false	babelstone sljfaq-kokuji
+⿺瓦十	瓧	U+74E7	kokuji	デカグラム			false	babelstone sljfaq-kokuji
+⿰米十	籵	U+7C75	kokuji	デカメートル			false	babelstone sljfaq-kokuji
+⿰立十	竍	U+7ACD	kokuji	デカリットル			false	babelstone sljfaq-kokuji
+⿺瓦分	瓰	U+74F0	kokuji	デシグラム			false	babelstone sljfaq-kokuji
+⿰立分	竕	U+7AD5	kokuji	デシリットル			false	babelstone sljfaq-kokuji
+⿰山𠧗	峠	U+5CE0	kokuji	とうげ			false	babelstone en-wp-kokuji
+⿰魚於	鯲	U+9BF2	kokuji	どじょう			false	babelstone sljfaq-kokuji
+⿰木万	杤	U+6764	kokuji	とち			false	babelstone sljfaq-kokuji
+⿰木⿸𠂆万	栃	U+6803	kokuji	とち			false	babelstone sljfaq-kokuji
+⿺辶中	迚	U+8FDA	kokuji	とても			false	babelstone sljfaq-kokuji
+⿰革丙	鞆	U+9786	kokuji	とも			false	babelstone sljfaq-kokuji
+⿰口頓	噸	U+5678	kokuji	トン			false	babelstone sljfaq-kokuji
+⿺瓦屯	瓲	U+74F2	kokuji	トン			false	babelstone sljfaq-kokuji
+⿵𠘨止	凪	U+51EA	kokuji	なぎ			false	babelstone sljfaq-kokuji
+⿰木知	椥	U+6925	kokuji	なぎ			false	babelstone sljfaq-kokuji
+⿱山刀	屶	U+5C76	kokuji	なた			false	babelstone sljfaq-kokuji
+⿰魚念	鯰	U+9BF0	kokuji	なまず			false	babelstone sljfaq-kokuji
+⿰入鳥	鳰	U+9CF0	kokuji	にお			false	babelstone sljfaq-kokuji
+⿹勹匕	匂	U+5302	kokuji	におう			false	babelstone en-wp-kokuji
+⿱代土	垈	U+5788	kokuji	ぬた			false	babelstone sljfaq-kokuji
+⿰氵土	汢	U+6C62	kokuji	ねた			false	babelstone sljfaq-kokuji
+⿰魚危	鮠	U+9BA0	kokuji	はえ			false	babelstone sljfaq-kokuji
+⿰石谷	硲	U+7872	kokuji	はざま			false	babelstone sljfaq-kokuji
+⿰火田	畑	U+7551	kokuji	はたけ			false	babelstone en-wp-kokuji
+⿱白田	畠	U+7560	kokuji	はたけ			false	babelstone sljfaq-kokuji
+⿰魚神	鰰	U+9C30	kokuji	はたはた			false	babelstone sljfaq-kokuji
+⿰亻動	働	U+50CD	kokuji	はたらく			false	babelstone en-wp-kokuji
+⿰口新	噺	U+567A	kokuji	はなし			false	babelstone sljfaq-kokuji
+⿰木泉	楾	U+697E	kokuji	はんぞう			false	babelstone sljfaq-kokuji
+⿰釒兵	鋲	U+92F2	kokuji	びょう			false	babelstone sljfaq-kokuji
+⿱林下	梺	U+68BA	kokuji	ふむと			false	babelstone sljfaq-kokuji
+⿰釒武	錻	U+933B	kokuji	ぶりき			false	babelstone en-wp-kokuji
+⿰土屏	塀	U+5840	kokuji	へい			false	babelstone en-wp-kokuji
+⿺瓦百	瓸	U+74F8	kokuji	ヘクトグラム			false	babelstone sljfaq-kokuji
+⿰米百	粨	U+7CA8	kokuji	ヘクトメートル			false	babelstone sljfaq-kokuji
+⿰立百	竡	U+7AE1	kokuji	ヘクトリットル			false	babelstone sljfaq-kokuji
+⿰木䙳	樮	U+6A2E	kokuji	ほくそ			false	babelstone sljfaq-kokuji
+⿱母衣	袰	U+88B0	kokuji	ほろ			false	babelstone sljfaq-kokuji
+⿰木正	柾	U+67FE	kokuji	まさき			false	babelstone en-wp-kokuji
+⿰木升	枡	U+67A1	kokuji	ます			false	babelstone sljfaq-kokuji
+⿰木舛	桝	U+685D	kokuji	ます			false	babelstone sljfaq-kokuji
+⿰亻吴	俣	U+4FE3	kokuji	また			false	babelstone sljfaq-kokuji
+⿰土山	圸	U+5738	kokuji	まま			false	babelstone sljfaq-kokuji
+⿸麻呂	麿	U+9EBF	kokuji	まろ			false	babelstone sljfaq-kokuji
+⿰米毛	粍	U+7C8D	kokuji	ミリ			false	babelstone sljfaq-kokuji
+⿺瓦毛	瓱	U+74F1	kokuji	ミリグラム			false	babelstone sljfaq-kokuji
+⿰立毛	竓	U+7AD3	kokuji	ミリリットル			false	babelstone en-wp-kokuji
+⿱少毛	毟	U+6BDF	kokuji	むしる			false	babelstone sljfaq-kokuji
+⿰木室	榁	U+6981	kokuji	むろ			false	babelstone sljfaq-kokuji
+⿰魚休	鮴	U+9BB4	kokuji	めばる			false	babelstone sljfaq-kokuji
+⿱木工	杢	U+6762	kokuji	もく			false	babelstone sljfaq-kokuji
+⿰米刃	籾	U+7C7E	kokuji	もみ			false	babelstone sljfaq-kokuji
+⿰木⿱艹⿰亻𠤎	椛	U+691B	kokuji	もみじ			false	babelstone en-wp-kokuji
+⿻勹乂	匁	U+5301	kokuji	もんめ			false	babelstone en-wp-kokuji
+⿰身雁	軅	U+8EC5	kokuji	やがて			false	babelstone sljfaq-kokuji
+⿰身應	軈	U+8EC8	kokuji	やがて			false	babelstone sljfaq-kokuji
+⿱艹泡	萢	U+8422	kokuji	やち			false	babelstone sljfaq-kokuji
+⿱𥫗梁	簗	U+7C17	kokuji	やな			false	babelstone sljfaq-kokuji
+⿰釒遣	鑓	U+9453	kokuji	やり			false	babelstone sljfaq-kokuji
+⿰月雪	膤	U+81A4	kokuji	ゆき			false	babelstone sljfaq-kokuji
+⿰衤行	裄	U+88C4	kokuji	ゆき			false	babelstone sljfaq-kokuji
+⿰山平	岼	U+5CBC	kokuji	ゆり			false	babelstone sljfaq-kokuji
+⿵門水	閖	U+9596	kokuji	ゆり			false	babelstone sljfaq-kokuji
+⿰木卆	枠	U+67A0	kokuji	わく			false	babelstone en-wp-kokuji
+⿳山一女	妛	U+599B	ghost				false	babelstone sanseido-ghost
+⿰弓哥	彁	U+5F41	ghost				false	babelstone sanseido-ghost
+⿰木劵	椦	U+6926	ghost				false	babelstone kanken-ghost
+⿰土⿱艹⿻者丶	墸	U+58B8	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰土㕓	壥	U+58E5	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰扌羽	挧	U+6327	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿱日非	暃	U+6683	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰木竜	槞	U+69DE	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰虫常	蟐	U+87D0	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰衤尓	袮	U+88AE	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿵門玉	閠	U+95A0	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿰馬州	駲	U+99F2	ghost				false	babelstone wdic-ghost ja-wp-ghost
+⿺巴三	𠀧	U+20027	nom	ba			false	babelstone en-wp-nom
+⿰宁字	𡨸	U+21A38	nom	chữ			false	babelstone en-wp-nom
+⿰土癸	𡎝	U+2139D	nom	cõi			false	babelstone en-wp-nom
+⿰忄吉	恄	U+6044	nom	ghét			false	babelstone en-wp-nom
+⿱罒𪜀	𱺵	U+31EB5	nom	là			false	babelstone en-wp-nom
+⿴𰀪⺀	𫜵	U+2B735	nom	làm			false	babelstone en-wp-nom
+⿱丷又	𠬠	U+20B20	nom	một			false	babelstone en-wp-nom
+⿰南年	𢆥	U+221A5	nom	năm			false	babelstone en-wp-nom
+⿰㝵人	𠊛	U+2029B	nom	người			false	babelstone en-wp-nom
+⿱百林	𤾓	U+24F93	nom	trăm			false	babelstone en-wp-nom
+⿺竜内	𥪞	U+25A9E	nom	trong			false	babelstone en-wp-nom
+⿱天上	𡗶	U+215F6	nom	trời			false	babelstone en-wp-nom
+⿰𽁭𽁭	𽄌	U+3D10C	seal		玨		false	small-seal
+⿰𽄝𽄝	𽄨	U+3D128	seal		艸		false	small-seal
+⿱𽄨𽄨	𽌜	U+3D31C	seal		茻		false	small-seal
+⿰𽀒𽀒	𽁞	U+3D05E	seal		祘		false	small-seal
+⿱𽄨𽌤	𽄤	U+3D124	seal		芬		false	small-seal
+⿱𽄨𽁞	𽋒	U+3D2D2	seal		蒜		false	small-seal
+⿹𽄐𽌤	𽄑	U+3D111	seal		氛		false	small-seal
+⿴𽌣𽄘	𽌠	U+3D320	seal		小		false	small-seal
+⿱𙆠𘸏	𘸕	U+18E15	jurchen	(g)an			true	jurchen-numeric jurchen-ids
+⿱𙆢𙆪	𘹌	U+18E4C	jurchen	pə			true	jurchen-numeric jurchen-ids
+⿷𘹵𙇐	𘹺	U+18E7A	jurchen	no			true	jurchen-numeric jurchen-ids
+⿷𘺅𙇐	𘺉	U+18E89	jurchen	xala			true	jurchen-numeric jurchen-ids
+⿸𙆨𙇐	𘺹	U+18EB9	jurchen	duin			true	jurchen-numeric jurchen-ids
+⿸𙆩𙇐	𘻁	U+18EC1	jurchen	dalba			true	jurchen-numeric jurchen-ids
+⿰𘻳𙆰	𘼆	U+18F06	jurchen	ʃïn			true	jurchen-numeric jurchen-ids
+⿱𙆳𙇇	𘼕	U+18F15	jurchen	xən			true	jurchen-numeric jurchen-ids
+⿱𙆳𙆩	𘼖	U+18F16	jurchen	dir			true	jurchen-numeric jurchen-ids
+⿱𙆳𙆫	𘼗	U+18F17	jurchen	dʒafa			true	jurchen-numeric jurchen-ids
+⿱𙆺𙇈	𘽪	U+18F6A	jurchen	dʒə			true	jurchen-numeric jurchen-ids
+⿸𙆼𙇐	𘾅	U+18F85	jurchen	weixa			true	jurchen-numeric jurchen-ids
+⿰𘿅𙇐	𘿚	U+18FDA	jurchen	ʃïn			true	jurchen-numeric jurchen-ids
+⿱𘿆𙇐	𘿝	U+18FDD	jurchen				true	jurchen-numeric jurchen-ids
+⿸𘿖𙇐	𘿭	U+18FED	jurchen	ʃan			true	jurchen-numeric jurchen-ids
+⿰𘿬𙇐	𘿸	U+18FF8	jurchen	ʃïn			true	jurchen-numeric jurchen-ids
+⿷𘿬𙇐	𙀁	U+19001	jurchen	uli			true	jurchen-numeric jurchen-ids
+⿰𙆿𘺹	𙀚	U+1901A	jurchen	dzo			true	jurchen-numeric jurchen-ids
+⿸𙀱𙇐	𙀷	U+19037	jurchen	dʒo			true	jurchen-numeric jurchen-ids
+⿰𙆿𙅞	𙀾	U+1903E	jurchen	ə			true	jurchen-numeric jurchen-ids
+⿱𙆠𙁉	𙁊	U+1904A	jurchen	dʒo			true	jurchen-numeric jurchen-ids
+⿰𙇂𙆩	𙁮	U+1906E	jurchen	(g)un			true	jurchen-numeric jurchen-ids
+⿰𙇂𙆨	𙁯	U+1906F	jurchen	nialma			true	jurchen-numeric jurchen-ids
+⿰𙇂𙆬	𙁰	U+19070	jurchen	bən			true	jurchen-numeric jurchen-ids
+⿰𙇂𘺹	𙁵	U+19075	jurchen	ti			true	jurchen-numeric jurchen-ids
+⿰𙇂𙆯	𙁹	U+19079	jurchen	li			true	jurchen-numeric jurchen-ids
+⿰𙇂𘾵	𙁺	U+1907A	jurchen	gi			true	jurchen-numeric jurchen-ids
+⿰𙇂𘾹	𙁻	U+1907B	jurchen	tʃu			true	jurchen-numeric jurchen-ids
+⿰𙇂𘻑	𙂆	U+19086	jurchen	uru			true	jurchen-numeric jurchen-ids
+⿰𙇂𘽳	𙂍	U+1908D	jurchen	gio			true	jurchen-numeric jurchen-ids
+⿰𙇂𙂻	𙂎	U+1908E	jurchen	y			true	jurchen-numeric jurchen-ids
+⿰𙇃𙆩	𙂒	U+19092	jurchen	nindʒu			true	jurchen-numeric jurchen-ids
+⿰𙇃𙄑	𙂔	U+19094	jurchen	dei			true	jurchen-numeric jurchen-ids
+⿰𙇄𘺹	𙂜	U+1909C	jurchen	ei			true	jurchen-numeric jurchen-ids
+⿰𙇄𙄃	𙂞	U+1909E	jurchen	gə			true	jurchen-numeric jurchen-ids
+⿱𙇇𙆣	𙃊	U+190CA	jurchen	ə			true	jurchen-numeric jurchen-ids
+⿱𙇇𙆩	𙃌	U+190CC	jurchen	un			true	jurchen-numeric jurchen-ids
+⿱𙇈𙆣	𙃔	U+190D4	jurchen	bandi			true	jurchen-numeric jurchen-ids
+⿱𙇉𙆩	𙃛	U+190DB	jurchen	amba			true	jurchen-numeric jurchen-ids
+⿰𙇌𙇐	𙃺	U+190FA	jurchen	bia			true	jurchen-numeric jurchen-ids
+⿱𙇑𘼜	𙅇	U+19147	jurchen	maçi			true	jurchen-numeric jurchen-ids
+⿱𙇒𙆩	𙆌	U+1918C	jurchen	xula			true	jurchen-numeric jurchen-ids
+⿱𙇒𘺹	𙆏	U+1918F	jurchen				true	jurchen-numeric jurchen-ids
+⿱𙇒𙆼	𙆐	U+19190	jurchen				true	jurchen-numeric jurchen-ids
+⿱𛔀𛔥	𛌉	U+1B309	shuishu		戌		true	shuishu shuishu-db
+⿱𛔀𛔤	𛌑	U+1B311	shuishu				true	shuishu shuishu-db
+⿱𛔁𛔀	𛌘	U+1B318	shuishu				true	shuishu shuishu-db
+⿴𛔉𛔁	𛍢	U+1B362	shuishu		甲		true	shuishu shuishu-db
+⿰𛔛𛔛	𛍫	U+1B36B	shuishu				true	shuishu shuishu-db
+⿱𛔊𛔔	𛍭	U+1B36D	shuishu		本		true	shuishu shuishu-db
+⿱𛔛𛔈	𛍳	U+1B373	shuishu		离		true	shuishu shuishu-db
+⿵𛔅𛔐	𛎷	U+1B3B7	shuishu				true	shuishu shuishu-db
+⿱𛔒𛔉	𛏓	U+1B3D3	shuishu		吉		true	shuishu shuishu-db
+⿱𛔚𛔈	𛐐	U+1B410	shuishu		冬		true	shuishu shuishu-db
+⿱𛔛𛔠	𛐖	U+1B416	shuishu		石		true	shuishu shuishu-db
+⿱𛔜𛔗	𛐚	U+1B41A	shuishu				true	shuishu shuishu-db
+⿱𛔒𛔫	𛐨	U+1B428	shuishu		床		true	shuishu shuishu-db
+⿱𛔍𛔦	𛐬	U+1B42C	shuishu		睡		true	shuishu shuishu-db
+⿱𛔤𛔇	𛑺	U+1B47A	shuishu		忌		true	shuishu shuishu-db
+⿱𛔩𛔞	𛑾	U+1B47E	shuishu		坏		true	shuishu shuishu-db
+⿱𛔪𛔙	𛒁	U+1B481	shuishu		要		true	shuishu shuishu-db
+⿱𛔀𛔩	𛒌	U+1B48C	shuishu				true	shuishu shuishu-db
+⿱𘠀⿰𘣣𘠐	𗀃	U+17003	tangut				false	tangut-ids
+⿱𘠀𘨐	𗀇	U+17007	tangut				false	tangut-ids
+⿰𘠁𘡤	𗀰	U+17030	tangut				false	tangut-ids
+⿲𘠁𘢌𘠡	𗁀	U+17040	tangut				false	tangut-ids
+⿳𘠛𘡩𘣂	𗇩	U+171E9	tangut				false	tangut-ids
+⿺𘠔𘢌	𗇅	U+171C5	tangut				false	tangut-ids
+⿸𘡋𘣟	𗔾	U+1753E	tangut				false	tangut-ids
+⿵𘢗𘡃	𗬷	U+17B37	tangut				false	tangut-ids
+⿱𘠂⿻𘠀𘡃	𗃐	U+170D0	tangut				false	tangut-ids
+⿲𘠁⿱𘠀𘠨𘥇	𗁥	U+17065	tangut				false	tangut-ids
+⿺𘢦⿱𘠀⿲𘡃𘠁𘡃	𗮺	U+17BBA	tangut				false	tangut-ids
+⿱𘠀⿰𘢰𘠆	𗀀	U+17000	tangut				false	tangut-ids
+⿰𘫿𘫿	𘴅	U+18D05	tangut				false	tangut-ids
+⿲𘫺𘢅𘫱	𗐃	U+17403	tangut				false	tangut-ids
+⿳𘠛𘠛⿲𘠐𘧤𘦗	𗰮	U+17C2E	tangut				false	tangut-ids
+⿰𘧥⿱𘧉⿰𘢤𘢱	𘔉	U+18509	tangut				false	tangut-ids
+⿱𘡍⿰𘤧⿺𘢍𘡹	𗕉	U+17549	tangut				false	tangut-ids
+⿰𘠣⿸𘡋⿱𘫽𘣗	𗌣	U+17323	tangut				false	tangut-ids
+⿳𘠛𘠛⿵𘠒⿲𘡃𘠁𘡃	𗰭	U+17C2D	tangut				false	tangut-ids
+⿱𘡊⿰𘢌⿱𘠀⿲𘠁𘢌𘠁	𗓟	U+174DF	tangut				false	tangut-ids
+⿱𘡩⿰𘢌⿳𘡊⿰𘠗𘠗𘥷	𗟕	U+177D5	tangut				false	tangut-ids
+⿱𘣘⿰𘧨⿱𘡊⿰𘠳𘠢	𗷖	U+17DD6	tangut				false	tangut-ids
+⿰⿱𘡎⿰𘠡𘪧𘣹	𘟷	U+187F7	tangut				false	tangut-ids
