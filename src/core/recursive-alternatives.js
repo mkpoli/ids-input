@@ -1,6 +1,7 @@
 // @ts-check
-import { decomposable } from './decompose.js'
+import { decomposable, lookupChar } from './decompose.js'
 import { isNode, partAt, parse, paths, replaceAt, splitMarks, withMarks, write } from './ids.js'
+import { subtractionRemainders } from './subtraction.js'
 
 /** @typedef {import('./ids.js').Part} Part */
 /** @typedef {'results' | 'states' | 'depth' | 'work' | 'lookups' | 'lookup'} AlternativeCut */
@@ -85,6 +86,51 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
   /** @type {Set<AlternativeCut>} */
   const cuts = new Set()
   let work = 0, results = 0, lookups = 0
+  /** The parsed descriptions of the characters in `part` and of theirs, a few characters deep, so a
+   * subtraction can be read in one step instead of waiting for its own expansions. The structure
+   * cache and lookup budget are those the expansions use.
+   * @param {Part} part @param {number} [levels] @returns {Promise<Map<string, Part[]>>} */
+  async function describeParts(part, levels = 3) {
+    /** @type {Map<string, Part[]>} */
+    const found = new Map()
+    /** @type {Part[]} */
+    let frontier = [part]
+    for (let level = 0; level < levels && frontier.length; level++) {
+      /** @type {Set<string>} */
+      const characters = new Set()
+      /** @param {Part} tree */
+      const collect = tree => {
+        if (typeof tree === 'string') {
+          const base = lookupChar(tree)
+          if (decomposable(base)) characters.add(base)
+        } else if (tree !== null) tree.parts.forEach(collect)
+      }
+      for (const tree of frontier) collect(tree)
+      /** @type {Part[]} */
+      const next = []
+      for (const base of characters) {
+        if (found.has(base)) continue
+        if (!structures.has(base)) {
+          if (lookups >= maxLookups) { cuts.add('lookups'); break }
+          lookups++
+          const findStructure = adapter.structure.bind(adapter)
+          structures.set(base, lookup(requestSignal => findStructure(base, { signal: requestSignal }), signal, lookupTimeoutMs))
+        }
+        const list = await /** @type {Promise<import('./decompose.js').Sequence[]>} */ (structures.get(base))
+        signal?.throwIfAborted()
+        /** @type {Part[]} */
+        const parsed = []
+        for (const entry of list) {
+          const read = parse(entry.text, { open: true })
+          if (!read.problem && read.tree !== null) parsed.push(read.tree)
+        }
+        found.set(base, parsed)
+        next.push(...parsed)
+      }
+      frontier = next
+    }
+    return found
+  }
   outer: for (let i = 0; i < queue.length; i++) {
     const { tree, depth, expand: expanded, merge: merged } = queue[i]
     for (const path of paths(tree).sort((a, b) => b.length - a.length)) {
@@ -96,10 +142,27 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
       let choices = []
       /** @type {(text: string) => Part | undefined} */
       let replacementFor = () => undefined
-      /** @type {'expand' | 'merge' | null} */
+      /** @type {'expand' | 'merge' | 'normalize' | null} */
       let step = null
+      let normalized = false
       try {
-        if (typeof current === 'string' && decomposable(current)) {
+        if (isNode(current) && current.op === '㇯' && !current.note && !current.marks
+          && current.parts.length === 2 && current.parts[0] !== null && current.parts[1] !== null) {
+          const [from, take] = current.parts
+          const described = await describeParts(from)
+          const remainders = subtractionRemainders(from, take, char => described.get(char) ?? [])
+          if (remainders.length) {
+            step = 'normalize'
+            normalized = true
+            choices = remainders.map(write)
+            replacementFor = text => {
+              const parsed = parse(text, { open: true })
+              if (parsed.problem || parsed.tree === null) return undefined
+              return parsed.tree
+            }
+          }
+        }
+        if (!normalized && typeof current === 'string' && decomposable(current)) {
           step = 'expand'
           const { base, marks } = splitMarks(current)
           if (typeof base !== 'string') continue
@@ -116,7 +179,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
             if (parsed.problem || parsed.tree === null || paths(parsed.tree).some(p => partAt(parsed.tree, p) === null)) return undefined
             return withMarks(parsed.tree, marks)
           }
-        } else if (isNode(current) && adapter.encoded && mergeable(current)) {
+        } else if (!normalized && isNode(current) && adapter.encoded && mergeable(current)) {
           step = 'merge'
           const { base, marks } = splitMarks(current)
           const sequence = write(base)
@@ -155,7 +218,7 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
         if (depth >= maxDepth) { cuts.add('depth'); continue }
         if (results >= maxResults) { cuts.add('results'); break outer }
         if (queue.length >= maxStates) { cuts.add('states'); break outer }
-        const expand = expanded || step === 'expand', merge = merged || step === 'merge'
+        const expand = expanded || step === 'expand', merge = merged || step === 'merge' || step === 'normalize'
         seen.add(text)
         queue.push({ tree: next, depth: depth + 1, expand, merge })
         results++

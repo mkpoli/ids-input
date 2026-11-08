@@ -191,3 +191,18 @@ describe('recursiveAlternatives', () => {
     await expect(collect('甲', source, { lookupTimeoutMs: 2147483648 })).rejects.toThrow(RangeError)
   })
 })
+
+test('reads a subtraction through its decompositions', async () => {
+  const source = adapter({ 軍: ['⿱冖車'], 光: ['⿱⺌兀'], 輝: ['⿰光軍'] })
+  const direct = await collect(tree('㇯軍車'), source)
+  expect(direct.texts).toContain('冖')
+  expect(direct.operations['冖']).toBe('merge')
+  expect((await collect(tree('⿰光㇯軍車'), source)).texts).toContain('⿰光冖')
+  expect((await collect(tree('㇯輝車'), source)).texts).toContain('⿰光冖')
+})
+
+test('leaves a subtraction the decompositions do not resolve', async () => {
+  const source = adapter({ 軍: ['⿱冖車'] })
+  const { texts } = await collect(tree('㇯軍光'), source)
+  expect(texts).toEqual(['㇯⿱冖車光'])
+})

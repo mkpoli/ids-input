@@ -19,6 +19,7 @@ import { EMPTY_MARKS, UNKNOWN, arity, entryDescription, isComponent, isDescripti
 import { unalias } from './aliases.js'
 import { lookupChar, tokens, unencoded } from './decompose.js'
 import { createStructuralSearch } from './structural-search.js'
+import { normalizeSubtractionText } from './subtraction.js'
 import { searchShape, SHAPE_COMPONENTS } from './search-shapes.js'
 
 /**
@@ -258,6 +259,10 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     }
     return found
   }
+  /** A query term with each subtraction its descriptions resolve rewritten; a term that resolves
+   * nothing is left as typed, so a draft keeps its empty slots.
+   * @param {string} text @returns {string} */
+  const normalizeTerm = text => normalizeSubtractionText(unalias(text), char => treesOf(lookupChar(char)))
 
   // What each character holds at any depth, folded and counted; of several descriptions, the most
   // any one names of each component. Operators are held too, under their own characters. Kept
@@ -821,7 +826,8 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
     const special = componentLookup ? componentQuery(query) : null
     if (special?.kind === 'containing') return containingPart(special.char, limit)
     if (special?.kind === 'parts') return partsOf(special.char, limit)
-    const { terms, problem } = parseQuery(query, { literal })
+    const normalized = (query ?? '').split(/[\s\u3000]+/).map(term => term ? normalizeTerm(term) : term).join(' ')
+    const { terms, problem } = parseQuery(normalized, { literal })
     if (problem) return { hits: [], total: 0, problem }
     const by = index()
     // Each leaf needs one of its alternatives. Keep the descriptions' keys separate: an イ
@@ -963,7 +969,7 @@ export function createSearch(table, { forms = new Map(), structuralForms = new M
    * @returns {{ hits: Hit[], total: number, characters: string, problem?: 'empty' | 'pattern' }}
    */
   function unknownStructure(query, { limit = 60 } = {}) {
-    const texts = (query ?? '').split('|').map(text => text.replace(/\s/gu, ''))
+    const texts = (query ?? '').split('|').map(text => normalizeTerm(text.replace(/\s/gu, '')))
     if (!texts.some(Boolean)) return { hits: [], total: 0, characters: '', problem: 'empty' }
     if (texts.length > 8 || texts.some(text => !text)) return { hits: [], total: 0, characters: '', problem: 'pattern' }
     /** @type {{ terms: string[], elements: (string | import('./ids.js').Node)[] }[]} */

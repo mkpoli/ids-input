@@ -115,3 +115,10 @@ it('uses narrow forms in the adapter while retaining broad ordinary component se
   expect(chars(await adapter.findByStructure('⿰AA'))).toEqual(['林'])
   expect(chars(await adapter.findByIds('⿰丿丿'))).toContain('八')
 })
+
+it('normalizes a subtraction before matching a whole structure', () => {
+  const s = createStructuralSearch(new Map([
+    ['光', ['⿱⺌兀']], ['軍', ['⿱冖車']], ['車', ['⿻亘丨']], ['甲', ['⿰光冖']],
+  ]))
+  expect(chars(s.search('⿰光㇯軍車'))).toEqual(['甲'])
+})

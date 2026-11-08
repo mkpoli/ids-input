@@ -487,3 +487,36 @@ it('preserves halfwidth kana voicing marks as component constraints', () => {
   const search = createSearch(new Map([['甲', ['⿰ｶﾞ']], ['乙', ['⿰ｶ木']]]))
   expect(search.search('ｶﾞ').hits.map(hit => hit.char)).toEqual(['甲'])
 })
+
+describe('subtraction queries', () => {
+  // 軍 is ⿱冖車, so ㇯軍車 stands for 冖.
+  const table = new Map(Object.entries({
+    光: ['⿱⺌兀'], 軍: ['⿱冖車'], 車: ['⿻亘丨'], 冖: ['冖'], 輝: ['⿰光軍'], 甲: ['⿰光冖'],
+  }))
+  const index = createSearch(table)
+  const found = query => index.search(query).hits.map(hit => hit.char)
+
+  it('reads ㇯軍車 as 冖', () => {
+    expect(found('㇯軍車')).toEqual(found('冖'))
+  })
+
+  it('normalizes a subtraction inside a larger query', () => {
+    expect(found('⿰光㇯軍車')).toEqual(['甲'])
+    expect(index.search('⿰光㇯軍車').hits[0].sequence).toBe('⿰光冖')
+    expect(found('⿰？㇯軍車')).toEqual(['甲'])
+  })
+
+  it('follows the decomposition of the subtracted operand', () => {
+    expect(found('㇯輝車')).toEqual(['甲'])
+    expect(found('㇯軍光')).toEqual([])
+  })
+
+  it('leaves a wildcard subtraction to the component lookup', () => {
+    expect(found('㇯⬚軍')).toEqual(['輝'])
+  })
+
+  it('normalizes an unknown-structure pattern too', () => {
+    expect(index.unknownStructure('㇯軍車').hits.map(hit => hit.char))
+      .toEqual(index.unknownStructure('冖').hits.map(hit => hit.char))
+  })
+})
