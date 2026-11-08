@@ -45,8 +45,23 @@ describe('the merged corpus', () => {
       const point = Number.parseInt(String(row[charColumn]).slice(2), 16)
       expect(point).toBeGreaterThanOrEqual(corpus.pua.base)
       expect(() => parse(`⿰${String.fromCodePoint(point)}木`)).not.toThrow()
-      expect(row[cidColumn].startsWith('chise:')).toBe(true)
+      expect(/^(?:chise|bsp):/.test(row[cidColumn])).toBe(true)
     }
+  })
+
+  it('records the equivalences its alignment finds between BabelStone numbers and CHISE names', () => {
+    const known = new Set(corpus.components.rows.map(row => row[0]))
+    expect(corpus.equivalences.rows.length).toBe(corpus.counts.equivalences)
+    for (const row of corpus.equivalences.rows) {
+      const [a, b, basis, status, prov, note] = row
+      expect(a.startsWith('bsp:') && b.startsWith('chise:')).toBe(true)
+      expect(known.has(a) && known.has(b)).toBe(true)
+      expect(basis).toBe('alignment')
+      expect(['verified', 'candidate']).toContain(status)
+      expect(prov.length).toBeGreaterThan(0)
+      expect(note).toMatch(/^\d+ characters?: /)
+    }
+    expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[3]).toBe('verified')
   })
 
   it('resolves every name its descriptions use', () => {
