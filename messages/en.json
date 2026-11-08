@@ -40,6 +40,7 @@
   "ids.draw.results": "Similar parts",
   "ids.draw.undo": "Undo stroke",
   "ids.empty": "Empty slot",
+  "ids.emptyHint": "A dashed box marks an empty slot; ? clears the chosen part.",
   "ids.find.placeholder": "水 / water / 💧",
   "ids.from.atomic": "No smaller parts recorded",
   "ids.from.collapse": "Hide the parts of {part}",

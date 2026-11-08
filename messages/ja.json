@@ -40,6 +40,7 @@
   "ids.draw.results": "近い部品",
   "ids.draw.undo": "一画戻す",
   "ids.empty": "空き",
+  "ids.emptyHint": "破線の四角は空き。? キーで選んだ部分を消します。",
   "ids.find.placeholder": "水・water・💧",
   "ids.from.atomic": "分解の記録なし",
   "ids.from.collapse": "{part}の部品を隠す",

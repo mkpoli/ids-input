@@ -47,6 +47,7 @@
       </div>
     {/if}
   {/each}
+  <p class="ids-op-legend">{t('ids.emptyHint')}</p>
 </div>
 
 <style>
@@ -62,6 +63,7 @@
   .ids-op-group{display:flex;flex-direction:column;gap:4px;min-width:0}
   .ids-op-group[data-arity="2"]{flex:1 1 100%}
   .ids-op-label{font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--_muted)}
+  .ids-op-legend{flex:1 1 100%;margin:0;font-size:11px;line-height:1.45;color:var(--_muted)}
   .ids-op-keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:4px}
   .ids-op-group:not([data-arity="2"]) .ids-op-keys{grid-template-columns:repeat(3,40px)}
   .ids-op-group[data-arity="3"] .ids-op-keys{grid-template-columns:repeat(2,40px)}
