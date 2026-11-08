@@ -1751,7 +1751,7 @@ export class Composer {
       }
       const hu = op === '⿸' && typeof children[0] === 'string' && children[0] === '虍'
       const [hx0, hy0, hx1, hy1] = region, hw = hx1 - hx0, hh = hy1 - hy0
-      const huRoom = hu ? [hx0 + 0.30 * hw, hy0 + 0.05 * hh, hx0 + 0.97 * hw, hy0 + 0.60 * hh] : null
+      const huRoom = hu ? [hx0 + 0.30 * hw, hy0 + 0.0 * hh, hx0 + 0.97 * hw, hy0 + 0.55 * hh] : null
       const inner = this.node(children[1], hu ? huRoom : room)
       if (!hu) this.fit(outer, inner, region, this.stem0[0][0], C,
         fallback && op === '⿽' ? { room, bounds: room } : undefined)
