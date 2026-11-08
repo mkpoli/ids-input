@@ -25,6 +25,22 @@ export function loadStrokeRecords() {
   return reading
 }
 
+/** @type {Promise<Map<string, number>> | null} */
+let tangut = null
+
+/**
+ * The stroke count of each Tangut character, from `data/tangut-strokes.json.gz`. The table records
+ * no writing order, so a record has a count and no first stroke.
+ * @returns {Promise<Map<string, number>>}
+ */
+export function loadTangutStrokes() {
+  tangut ??= download(new URL('../../data/tangut-strokes.json.gz', import.meta.url))
+    .then(response => response.ok ? response.arrayBuffer() : Promise.reject(new Error('Tangut strokes')))
+    .then(unpack).then(JSON.parse).then((/** @type {{ values: Record<string, number> }} */ data) => new Map(Object.entries(data.values)))
+    .catch(error => { tangut = null; throw error })
+  return tangut
+}
+
 /** @type {Promise<Map<string, number | null>> | null} */
 let loading = null
 
