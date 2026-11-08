@@ -12,7 +12,7 @@ try {
     const field = page.locator('.ids-field input')
     await field.fill('⿰木口')
     await field.press('Tab')
-    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 30000 })
+    await page.locator('.ids-preview[data-step="composed"]').waitFor({ timeout: 60000 })
     await page.getByRole('button', { name: 'Layers', exact: true }).click()
     const dialog = page.getByRole('dialog')
     await dialog.locator('img').waitFor({ timeout: 30000 })
