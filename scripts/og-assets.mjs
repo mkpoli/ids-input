@@ -35,15 +35,25 @@ const FONTS = {
 // like the rest. The general face is for the Basic Multilingual Plane, the planes face for the
 // supplementary planes the parts subset leaves out. github.com's `/raw/` and `/releases/download/`
 // redirects answered 504s to the builds, so the files are read from raw.githubusercontent.com.
+//
+// That host still answers 5xx under load, so a failed fetch is tried again with a longer wait. A
+// file that arrives whole and hashes differently is a real change and is reported at once.
+const FETCH_ATTEMPTS = 4
 /** @param {string} address @param {string} sha256 @param {string} into */
 async function fetchFace(address, sha256, into) {
-  const response = await fetch(address)
-  if (!response.ok) throw new Error(`${into}: HTTP ${response.status} from ${address}`)
-  const bytes = new Uint8Array(await response.arrayBuffer())
-  const digest = createHash('sha256').update(bytes).digest('hex')
-  if (digest !== sha256) throw new Error(`${into}: sha256 ${digest}, not ${sha256}`)
-  writeFileSync(join(out, into), bytes)
-  return join(out, into)
+  for (let attempt = 1; ; attempt++) {
+    const response = await fetch(address)
+    if (response.ok) {
+      const bytes = new Uint8Array(await response.arrayBuffer())
+      const digest = createHash('sha256').update(bytes).digest('hex')
+      if (digest !== sha256) throw new Error(`${into}: sha256 ${digest}, not ${sha256}`)
+      writeFileSync(join(out, into), bytes)
+      return join(out, into)
+    }
+    if (attempt === FETCH_ATTEMPTS) throw new Error(`${into}: HTTP ${response.status} from ${address}`)
+    console.warn(`${into}: HTTP ${response.status} from ${address}, retrying`)
+    await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** (attempt - 1)))
+  }
 }
 const NOTO = 'https://raw.githubusercontent.com/notofonts/noto-cjk/Sans2.004/Sans/OTF/Japanese/NotoSansCJKjp-Regular.otf'
 const PLANES = 'https://raw.githubusercontent.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic_Project/V2.9.5795/fonts/static/PlangothicP1-Regular.ttf'
