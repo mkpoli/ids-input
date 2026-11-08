@@ -41,15 +41,30 @@ for (const [path, url] of Object.entries(DEV)) DEV_SHARDS[/\/([0-9a-f]{3})\.woff
 /** @type {Map<string, Promise<FontFace>>} */
 const faces = new Map()
 
+/** Families a reader supplied, ahead of the bundled shards in the stacks. @type {string[]} */
+let userFamilies = []
+
 /**
- * Points `--fallback-font` at `IDS Fallback Shared`, a family the document now has a face of, so the
- * stacks that ask for it draw with the shards before the installed fonts.
+ * Points `--fallback-font` at the families the reader supplied and at `IDS Fallback Shared`, a
+ * family the document has a face of, so the stacks that ask for it draw with the reader's fonts
+ * before the shards.
  */
 function address() {
+  const families = [...userFamilies.map(family => `"${family}"`), `"${SHARED}"`].join(',')
   const style = document.getElementById('ids-fallback-font') ?? document.createElement('style')
   style.id = 'ids-fallback-font'
-  style.textContent = `:root{--fallback-font:"${SHARED}"}`
+  style.textContent = `:root{--fallback-font:${families}}`
   if (!style.isConnected) document.head.append(style)
+}
+
+/**
+ * Puts the reader's own fonts ahead of the bundled shards in every stack. A font that lacks a
+ * character lets the stacks fall through, so the order only decides who draws first.
+ * @param {string[]} families
+ */
+export function setUserFontFamilies(families) {
+  userFamilies = [...families]
+  address()
 }
 
 /**

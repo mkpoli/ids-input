@@ -65,6 +65,8 @@
   import Dialog from './ui/Dialog.svelte'
   import LayerDialog from './ui/LayerDialog.svelte'
   import PreferencesDialog from './ui/PreferencesDialog.svelte'
+  import { addUserFont, listUserFonts, registerUserFont, removeUserFont } from './lib/user-fonts.js'
+  import { setUserFontFamilies } from '../src/svelte/fallback-font.js'
   import ShareDialog from './ui/ShareDialog.svelte'
   import ReplacementDialog from './ui/ReplacementDialog.svelte'
   import ReportDialog from './ui/ReportDialog.svelte'
@@ -1189,6 +1191,29 @@
   })
 
   let replacementOpen = $state(false), aboutOpen = $state(false), sponsorOpen = $state(false), prefsOpen = $state(false), shareOpen = $state(false), moreOpen = $state(false), pointsOpen = $state(false), layerOpen = $state(false), closeAllOpen = $state(false)
+  /** Fonts the reader brought, tried before the bundled shards. @type {import('./lib/user-fonts.js').UserFont[]} */
+  let userFonts = $state([])
+  /** Register what the browser can read and put those families ahead of the shards. */
+  async function applyUserFonts() {
+    const families = []
+    for (const font of userFonts) if (await registerUserFont(font)) families.push(font.family)
+    setUserFontFamilies(families)
+  }
+  /** @param {File} file @param {string} name @param {string} licence */
+  async function addFontFile(file, name, licence) {
+    userFonts = [...userFonts, await addUserFont({ name, licence, bytes: await file.arrayBuffer() })]
+    await applyUserFonts()
+  }
+  /** @param {string} id */
+  async function removeFont(id) {
+    await removeUserFont(id)
+    userFonts = userFonts.filter(font => font.id !== id)
+    await applyUserFonts()
+  }
+  onMount(async () => {
+    userFonts = await listUserFonts()
+    await applyUserFonts()
+  })
   // A problem report: the menus open it, and `?report=1` opens it on arrival.
   let reportOpen = $state(params.get('report') === '1')
   const endpoint = reportEndpoint(location)
@@ -1526,7 +1551,7 @@
 <AboutDialog bind:open={aboutOpen} {locale} {t} />
 <TitleDialog bind:open={titleOpen} title={currentTitle} {t} onsave={saveTitle} />
 <SponsorDialog bind:open={sponsorOpen} {locale} {t} />
-<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} {t} ontheme={setTheme} />
+<PreferencesDialog anchor={settingsButton} bind:open={prefsOpen} {theme} bind:keyHints bind:tintMode bind:composer defaultComposer={COMPOSER_BASE} fonts={userFonts} onaddfont={addFontFile} onremovefont={removeFont} {t} ontheme={setTheme} />
 <ReplacementDialog bind:open={replacementOpen} {adapter} {t} onopen={openSequence} />
 <div class="drop-overlay" class:show={dropping} aria-hidden={!dropping}><p>{t('app.file.drop')}</p></div>
 <ShareDialog bind:open={shareOpen} link={linkTo(editor.whole, location, currentDocument())} sequence={editor.whole} {t} onnote={note} />
