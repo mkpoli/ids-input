@@ -112,15 +112,15 @@ to `⿸虍` plus that cid, and where no outline exists the composer draws `⿱�
 
 The alignment is built, not curated: for every character both sources describe, the build compares
 their descriptions operator by operator and keeps the operand positions where the two differ. It finds
-605 pairs, 206 seen on two or more characters and `verified`: 102 number against entity, 50 number
-against character, 453 entity against character. BabelStone's `{7}` is CHISE's `CDP-8BD0` on eight
-characters (惠 `⿱{7}心` / `⿱&CDP-8BD0;心`, 專, 䦄 and five more) and the character 叀 on nine.
+702 pairs, 216 seen on two or more characters and `verified`: 62 number against entity, 24 number
+against character, 616 entity against character. BabelStone's `{7}` is CHISE's `CDP-8BD0` on eight
+characters (惠 `⿱{7}心` / `⿱&CDP-8BD0;心`, 專, 䦄 and five more) and the character 叀 on ten.
 
 ## First increment
 
 Built: `data/ids-corpus.json.gz` from BabelStone and the eighteen CHISE files (102,894 CHISE rows
 beside 108,425 BabelStone ones), with 1,517 components (1396 CHISE entities and 121 BabelStone
-numbers) and 605 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
+numbers) and 702 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
 `data/ids-corpus-sources.tar.gz` as the offered source, `data/COPYING-chise-ids.txt`, and a check
 that every `ready` row parses and that `bun scripts/build_ids_corpus.mjs --check` reproduces the
 committed bytes.

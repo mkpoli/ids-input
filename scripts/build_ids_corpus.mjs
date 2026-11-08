@@ -114,8 +114,23 @@ for (const [i, entry] of manifest.files.entries()) {
 // CHISE as `&name;` or a character. Aligning their descriptions of one character, operator by
 // operator, and keeping the operand positions where the two differ gives the names that stand for
 // one component. A pair seen on several characters is stronger than one seen once.
-const TOKEN = /\{(\d+)\}|&([^;]+);|[\s\S]/g
-const tokenize = value => [...value.matchAll(TOKEN)].map(match => match[0])
+const TOKEN = /\{(\d+)\}|&([^;]+);|./gsu
+/** The IDS fragment note 6 gives each numbered component; a number with one is compared as that
+ * fragment, so a composite such as {2} (`⿱⺈𫩏`) is not taken for its first character. */
+const fragments = new Map()
+for (const line of (await readFile(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')).split(/\r?\n/)) {
+  if (!line || line.startsWith('#')) continue
+  const [name, , fragment] = line.split('\t')
+  const number = Number(name?.slice(1, -1))
+  if (fragment && Number.isInteger(number)) fragments.set(number, fragment)
+}
+/** @param {string} value @param {Set<number>} [seen] */
+const expand = (value, seen = new Set()) => value.replace(/\{(\d+)\}/g, (whole, digits) => {
+  const number = Number(digits), fragment = fragments.get(number)
+  if (fragment === undefined || seen.has(number)) return whole
+  return expand(fragment, new Set([...seen, number]))
+})
+const tokenize = value => [...expand(value).matchAll(TOKEN)].map(match => match[0])
 /** @type {Map<number, { babel: typeof rows, chise: typeof rows }>} */
 const bySubject = new Map()
 for (const row of rows) {
@@ -129,10 +144,9 @@ const record = (a, b, prov, char) => {
   const [one, two] = [a, b].sort()
   const key = `${one}\0${two}`
   let found = aligned.get(key)
-  if (!found) aligned.set(key, found = { a: one, b: two, count: 0, prov: new Set(), chars: [] })
-  found.count++
+  if (!found) aligned.set(key, found = { a: one, b: two, prov: new Set(), chars: new Set() })
   found.prov.add(prov)
-  if (found.chars.length < 5) found.chars.push(char)
+  found.chars.add(char)
 }
 /** The cid a token names: `bsp:n`, `chise:name`, `ucs:HEX`, or null for a character no table names. */
 const cidOf = token => {
@@ -169,9 +183,14 @@ const equivalences = [...aligned.values()]
   // Two characters differing between the sources are variants or slips in a description, not two
   // names of one component; the table keeps number, entity and character against each other.
   .filter(found => !(found.a.startsWith('ucs:') && found.b.startsWith('ucs:')))
-  .map(found => [found.a, found.b, 'alignment', found.count >= 2 ? 'verified' : 'candidate',
-    [...found.prov, babelProv].sort((a, b) => a - b),
-    `${found.count} ${found.count === 1 ? 'character' : 'characters'}: ${found.chars.join(' ')}`])
+  .map(found => {
+    // One character's regional descriptions may give the same pair several times; the count is of
+    // characters, not descriptions.
+    const characters = [...found.chars]
+    return [found.a, found.b, 'alignment', characters.length >= 2 ? 'verified' : 'candidate',
+      [...found.prov, babelProv].sort((a, b) => a - b),
+      `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.slice(0, 5).join(' ')}`]
+  })
   .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
 
 // Component identities: every entity name CHISE uses that no codepoint covers.

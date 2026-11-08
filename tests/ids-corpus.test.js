@@ -62,6 +62,10 @@ describe('the merged corpus', () => {
       expect(['verified', 'candidate']).toContain(status)
       expect(prov.length).toBeGreaterThan(0)
       expect(note).toMatch(/^\d+ characters?: /)
+      for (const cid of [a, b]) if (cid.startsWith('ucs:')) {
+        const point = Number.parseInt(cid.slice(4), 16)
+        expect(point >= 0xd800 && point <= 0xdfff).toBe(false)
+      }
     }
     expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')?.[3]).toBe('verified')
     expect(corpus.equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'ucs:53C0')?.[3]).toBe('verified')
