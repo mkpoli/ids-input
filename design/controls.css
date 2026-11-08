@@ -174,12 +174,14 @@
   gap: 2px;
   padding: 2px;
   border-radius: var(--ui-radius-md);
-  background: var(--ui-color-surface-hover);
+  background: var(--ui-color-surface-sunken);
 }
 
 .ui-switch-bar > .ui-button {
   flex: 1;
   justify-content: center;
+  min-block-size: var(--ui-control-h-sm);
+  border-color: transparent;
   border-radius: var(--ui-radius-sm);
   background: none;
   color: var(--ui-color-ink-muted);
@@ -1223,6 +1225,10 @@
   .ui-spinner {
     border-color: ButtonText;
     border-block-start-color: Highlight;
+  }
+
+  .ui-switch-bar > .ui-button {
+    border-color: ButtonBorder;
   }
 
   .ui-switch-bar > .ui-button[aria-pressed='true'],
