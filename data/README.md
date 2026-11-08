@@ -1131,12 +1131,16 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `kana-strokes.json.gz`
 
-The stroke count of every kana KanjiVG draws: 176 keys in code-point order, hiragana U+3041–U+3096
-then katakana U+30A1–U+30FA, with a count for each (`strokes`, one entry per key), the pinned
-`revision` and its `source`. KanjiVG draws one path per stroke, in writing order, so the number of
-paths is the count: あ three, イ two, マ two, フ one. That is every kana in both ranges, and the build
-says which ones KanjiVG does not draw rather than dropping them silently: one path may carry
-attributes besides `id` and `d`, which is how マ was once lost.
+The stroke count of every kana KanjiVG draws, and of the halfwidth forms of them: 231 keys in
+code-point order, hiragana U+3041–U+3096, katakana U+30A1–U+30FA, then halfwidth katakana
+U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the pinned `revision` and its
+`source`. A halfwidth form is the same kana drawn narrow, so it takes the count of the kana NFKC
+decomposes it to; ｰ has none, since ー lies outside the counted ranges.
+
+KanjiVG draws one path per stroke, in writing order, so the number of paths is the count: あ three,
+イ two, マ two, フ one. That is every kana in both ranges, and the build says which ones KanjiVG does
+not draw rather than dropping them silently: one path may carry attributes besides `id` and `d`,
+which is how マ was once lost.
 
 - Licence: **CC BY-SA 3.0**, Copyright (C) 2009/2010/2011 Ulrich Apel; attribution and licence links
   in `data/licences/kanjivg-CC-BY-SA-3.0.txt`. The derived table is shared alike under the same
