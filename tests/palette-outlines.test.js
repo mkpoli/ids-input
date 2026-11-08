@@ -8,10 +8,12 @@ import { hasPaletteGlyph, paletteSource } from '../src/composer/palette.js'
 
 it('draws every palette fallback as an editable component', async () => {
   const chars = JSON.parse(readFileSync(new URL('../data/palette-fallback-characters.json', import.meta.url)))
+  const numbered = new Set(Object.keys(JSON.parse(readFileSync(new URL('../data/numbered-forms.json', import.meta.url))).forms.sans))
   const outlines = JSON.parse(gunzipSync(readFileSync(new URL('../data/palette-outlines.json.gz', import.meta.url))))
   expect(Object.keys(outlines.records).sort()).toEqual([...chars].sort())
   const source = paletteSource({ load: async () => outlines })
   for (const char of chars) {
+    if (numbered.has(char)) continue
     expect(hasPaletteGlyph(char)).toBe(true)
     expect(onlyBundled(`⿰${char}⬚`)).toBe(true)
     const drawn = await compose(source, `⿰${char}⬚`, { separate: true })

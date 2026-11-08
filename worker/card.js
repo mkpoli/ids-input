@@ -1,6 +1,7 @@
 // The share card uses the workshop palette. IDC characters are text; button icons never enter it.
 import { drawingSvg } from '../src/core/preview.js'
 import { scopesSvg } from '../src/document/svg.js'
+import { isEditorial } from './editorial.js'
 
 export const SIZE = { width: 1200, height: 630 }
 /** @param {string} character */
@@ -174,6 +175,11 @@ export function cardSvg({ sequence, drawing = null, char = null, familyOf = () =
       + `<path d="M628 397V437" stroke="${p.line}"/>`
       + `<text x="650" y="402" font-size="14" fill="${p.muted}">Unicode</text>`
       + `<text data-codepoint="true" x="650" y="433" font-size="22" letter-spacing="1.1" fill="${p.ink}">${escaped(point ?? '')}</text>`
+      + (isEditorial(sequence, char)
+        ? `<path d="M780 397V437" stroke="${p.line}"/>`
+          + `<text x="802" y="402" font-size="14" fill="${p.muted}">Description</text>`
+          + `<text data-editorial="true" x="802" y="433" font-size="22" fill="${p.ink}">Editorial</text>`
+        : '')
     : `<text x="568" y="398" font-size="14" fill="${p.muted}">Composes</text>`
       + `<text x="568" y="436" font-size="20" fill="${p.muted}">No character at this code point</text>`
   // A document with a title says that; one without keeps the character its sequence names.

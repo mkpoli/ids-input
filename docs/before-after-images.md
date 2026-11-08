@@ -21,7 +21,7 @@ bun scripts/render_before_after.mjs --out /tmp/shots/before --cases cases.json
 bun scripts/render_before_after.mjs --out /tmp/shots/after --cases cases.json
 ```
 
-`cases.json` is a list of `[label, description]` pairs. The script draws each description, and the character named by the label, from the pinned export.
+`cases.json` is a list of `[label, description]` pairs. The script draws each description, and the character named by the label, from the pinned export. Pass `--whole` to draw each composition without splitting it into one piece per leaf.
 
 ## Checking them
 

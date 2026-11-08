@@ -659,7 +659,8 @@
           <span class="part-text visually-hidden">{part.fragment}</span>
           <span class="numbered-ref" aria-hidden="true">{part.part}</span>
         {:else if part.glyph}
-          <span class="part-text">{part.glyph}</span>
+          <IdsPartIcon sequence={part.glyph} {adapter} />
+          <span class="part-text visually-hidden">{part.glyph}</span>
           <span class="numbered-ref" aria-hidden="true">{part.part}</span>
         {:else if isSequence(part.part)}
           <IdsPartIcon sequence={part.part} {adapter} />

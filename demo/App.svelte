@@ -39,8 +39,10 @@
   import { LOCALES, appMessages } from './lib/locales.js'
   import { EXAMPLES, EXAMPLE_GROUPS } from './lib/examples.js'
   import { createIconDrawings } from './lib/icons.js'
+  import { createSampleDrawings } from './lib/sample-drawings.js'
   import { recognizeDrawing } from './lib/sketch-recognizer.js'
   import { COMPOSER_BASE, COMPOSER_BASES, readFrom } from './lib/composer.js'
+  import { erjianDrawing, hasErjian } from '../src/composer/erjian.js'
   import { DESKTOP, SITE } from './lib/desktop.js'
   import { addressDocument, documentFrom, linkTo, sameShare, sequenceFrom, transformed } from './lib/share.js'
   import { canonical, makeTab, readActiveTab, readTabs, tabName, writeTabs } from './lib/tabs.js'
@@ -52,6 +54,7 @@
   import AboutDialog from './ui/AboutDialog.svelte'
   import SponsorDialog from './ui/SponsorDialog.svelte'
   import ExportPanel from './ui/ExportPanel.svelte'
+  import FaceSample from './ui/FaceSample.svelte'
   import TitleDialog from './ui/TitleDialog.svelte'
   import { download } from './lib/files.js'
   import Icon from './ui/Icon.svelte'
@@ -204,6 +207,9 @@
     /** @type {ReturnType<typeof composerPreview>} */
     const preview = Object.assign(async (sequence, options) => {
       options?.signal?.throwIfAborted()
+      // The draft drew some 二简字 forms whole; those drawings stand in for the composed parts, which
+      // could only be crops of other characters.
+      if (hasErjian(sequence)) return /** @type {import('../src/adapter/types.js').Drawing} */ (erjianDrawing(sequence))
       // A description whose operator modifier narrows it to one character draws that character: the
       // layout ignores the crossing the modifier names.
       if (sequence.includes('[')) {
@@ -296,6 +302,28 @@
         (style === 'sans' && exportUrl(at) === preparedBase && !hasEmoji(sequence) ? await preparedFor(sequence) : null) ?? draw(sequence)))
     }
     return /** @type {ReturnType<typeof createIconDrawings>} */ (iconDrawings.get(key))
+  }
+  /** The four faces the switch names, each with its composer style and message key. @type {{ key: 'sans' | 'serif' | 'fangsong' | 'klee', style: 'sans' | 'serif' | 'fangsong' | 'kaisho', label: string }[]} */
+  const FONT_FACES = [
+    { key: 'sans', style: 'sans', label: 'app.font.sans' },
+    { key: 'serif', style: 'serif', label: 'app.font.serif' },
+    { key: 'fangsong', style: 'fangsong', label: 'app.font.fangsong' },
+    { key: 'klee', style: 'kaisho', label: 'app.font.klee' },
+  ]
+  /** The export a face's sample draws from, as the chosen face's preview does: one named in `?composer=`, the build or Preferences, else the face's own. @param {typeof FONT_FACES[number]['key']} key */
+  const faceExport = key => composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[key] || COMPOSER_BASE
+  // The switch's samples, one drawer per face and export: a newer sequence replaces the drawing in
+  // flight, and the toolbar and large view asking for one sequence share its answer.
+  /** @type {Map<string, ReturnType<typeof createSampleDrawings>>} */
+  const sampleDrawings = new Map()
+  /** @param {typeof FONT_FACES[number]} option */
+  const sampleDraw = option => {
+    const at = faceExport(option.key), key = `${at}\0${option.style}`
+    if (!sampleDrawings.has(key)) {
+      const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
+      sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
+    }
+    return /** @type {ReturnType<typeof createSampleDrawings>} */ (sampleDrawings.get(key))
   }
   const componentStyle = $derived(face === 'serif' ? 'serif' : face === 'fangsong' ? 'fangsong' : face === 'klee' ? 'kaisho' : 'sans')
   const icons = $derived(iconsAt(base, componentStyle))
@@ -1208,6 +1236,19 @@
   const setTheme = next => { theme = next; applyTheme(next) }
 </script>
 
+{#snippet fontSwitch(wait)}
+  <div class="font-switch" role="group" aria-label={t('app.font.label')}>
+    {#each FONT_FACES as option (option.key)}
+      <button type="button" class="font-choice" aria-pressed={face === option.key} aria-label={t(option.label)} title={t(option.label)} onclick={() => face = option.key}>
+        <span class="aa {option.key}"><FaceSample sequence={editor.whole} draw={sampleDraw(option)} delay={wait}>
+          {#snippet fallback()}<span class="specimen">Aa</span>{/snippet}
+        </FaceSample></span>
+        <span class="wide {option.key}">{t(option.label)}</span>
+      </button>
+    {/each}
+  </div>
+{/snippet}
+
 <svelte:window onkeydown={keys} ondragenter={dragFiles} ondragover={dragFiles} ondragleave={leaveFiles} ondrop={dropDocument}
   onpointerdown={swipeStart} onpointerup={swipeEnd} onpointercancel={swipeCancel} />
 <svelte:head><title>{currentTitle ? `${currentTitle} — ${t('app.title')}` : `${t('app.title')} — ${t('ids.label')}`}</title></svelte:head>
@@ -1227,12 +1268,7 @@
           <span class="wide-only"><Menu label={t('app.history.label')} icon="history" text={false} items={historyItems} {keyHints} /></span>
         </div>
         <span class="wide-only"><Menu label={t('app.examples.label')} icon="book" items={exampleItems} {keyHints} wide view={exampleView} /></span>
-      <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-        <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
-        <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
-      </div>
+      {@render fontSwitch(400)}
       </nav>
       <button type="button" class="sponsor" title={t('app.sponsor.label')} aria-label={t('app.sponsor.label')} aria-haspopup="dialog" aria-expanded={sponsorOpen} onclick={() => sponsorOpen = true}>
         <span class="sponsor-face" aria-hidden="true">
@@ -1393,12 +1429,7 @@
           }}>
           <div class="large-bar">
             <button type="button" class="large-close" title={t('app.close')} aria-label={t('app.close')} onclick={() => { large = false }}><Icon name="close" /></button>
-            <div class="font-switch" role="group" aria-label={t('app.font.label')}>
-              <button type="button" class="font-choice" aria-pressed={face === 'sans'} aria-label={t('app.font.sans')} title={t('app.font.sans')} onclick={() => face = 'sans'}><span class="aa sans">Aa</span><span class="wide sans">{t('app.font.sans')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'serif'} aria-label={t('app.font.serif')} title={t('app.font.serif')} onclick={() => face = 'serif'}><span class="aa serif">Aa</span><span class="wide serif">{t('app.font.serif')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'fangsong'} aria-label={t('app.font.fangsong')} title={t('app.font.fangsong')} onclick={() => face = 'fangsong'}><span class="aa fangsong">Aa</span><span class="wide fangsong">{t('app.font.fangsong')}</span></button>
-              <button type="button" class="font-choice" aria-pressed={face === 'klee'} aria-label={t('app.font.klee')} title={t('app.font.klee')} onclick={() => face = 'klee'}><span class="aa klee">Aa</span><span class="wide klee">{t('app.font.klee')}</span></button>
-            </div>
+            {#if large}{@render fontSwitch(0)}{/if}
             <span class="large-ids" data-sequence={editor.whole} title={editor.whole} aria-label={editor.whole}>
               {#each [...editor.whole] as ch}
                 {#if operatorSet.has(ch)}<OperatorIcon op={ch} size={18} />{:else}<span>{ch}</span>{/if}
@@ -1490,7 +1521,7 @@
   .group{gap:0;height:32px;border-radius:var(--ui-radius-md);background:var(--ui-color-surface);box-shadow:inset 0 0 0 1px var(--ui-color-border)}
   .font-switch{display:flex;align-items:center;gap:2px;height:32px;padding:2px;border:1px solid var(--ui-color-border);border-radius:var(--ui-radius-md);background:var(--ui-color-surface)}
   .font-choice{display:flex;align-items:center;gap:5px;height:26px;padding:0 7px;border:0;border-radius:var(--ui-radius-sm);background:none;color:var(--ui-color-ink-muted);font:inherit;font-size:11px;cursor:pointer}
-  .font-choice .aa{font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
+  .font-choice .aa{display:grid;place-items:center;width:18px;height:18px;font-size:14px;line-height:1;color:var(--ui-color-ink);font-family:var(--cjk-label-sans)}
   .font-choice .wide{font-family:var(--cjk-label-sans)}
   .font-choice .aa.serif,.font-choice .wide.serif{font-family:var(--cjk-label-serif)}
   .font-choice .aa.fangsong,.font-choice .wide.fangsong{font-family:var(--cjk-label-fangsong)}

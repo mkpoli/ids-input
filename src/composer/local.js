@@ -1,5 +1,6 @@
 // @ts-check
 import { isNode, parse, splitDescription, write } from '../core/ids.js'
+import { tonesOf, withoutMarks } from '../core/marks.js'
 import { isComponentForm, isGroupedForm } from './component-forms.js'
 import { hasPaletteGlyph } from './palette.js'
 import { hasBundledGlyph } from './bundled-coverage.js'
@@ -13,10 +14,13 @@ export function onlyBundled(sequence, separate = false, unicode = false, fontSty
   if (marks && ![...marks].every(hasUnicodeGlyph)) return false
   const result = parse(base, { open: true })
   if (result.problem || result.tree === null) return false
+  // A tone mark on a syllable loads like a loose one; the syllable decides the rest.
+  if (![...tonesOf(result.tree)].every(hasUnicodeGlyph)) return false
   let filled = false
-  /** @param {import('../core/ids.js').Part} node */
-  const local = node => {
-    if (node === null) return true
+  /** @param {import('../core/ids.js').Part} part */
+  const local = part => {
+    if (part === null) return true
+    const node = isNode(part) ? part : /** @type {string} */ (withoutMarks(part))
     if ((separate ? isGroupedForm : isComponentForm)(write(node), fontStyle)) { filled = true; return true }
     if (isNode(node)) return node.parts.every(local)
     filled = true

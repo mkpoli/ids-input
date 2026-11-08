@@ -89,6 +89,21 @@ font versions, so the palette's `glyph` column is tied to that version. Built by
 `scripts/build_palette_outlines.py`, and the font is under the Arphic Public License
 (`fonts/LICENSE-BabelStoneHanPUA.txt`).
 
+## `numbered-forms.json` and `numbered-sans-outlines.json.gz`
+
+The 69 numbered components with no IDS fragment have two faces. `numbered-forms.json` holds their
+component forms: the Sans forms are cut from the host characters' Noto Sans CJK JP 2.004 and Plangothic
+V2.9.5795 glyphs, using the component's BabelStone PUA glyph as the shape to match; the Serif and
+Kaisho forms are the PUA glyph itself. 60 have a clean host cut. The other 9 (`{23}`, `{27}`,
+`{65}`, `{79}`, `{90}`, `{92}`, `{103}`, `{111}`, `{118}`) have no clean cut and use the PUA
+glyph in Sans too; the file lists them in `fallback`.
+`numbered-sans-outlines.json.gz` carries the same 69 Sans outlines for the palette source, so a
+description draws the cut in the Sans face and the PUA glyph in Serif. The contextual Sans `{5}`
+variant in `numbered-five-context.json` uses the native left portion of 葭 in Noto Sans CJK JP 2.004,
+centred without reshaping; regenerate it with `scripts/build_numbered_five.py`. The cuts use han-compose
+`fec2847` and record their font versions and digests in `numbered-forms.json`; the PUA glyphs are
+under the Arphic Public License, the Noto and Plangothic cuts under their own SIL OFL terms.
+
 ## `ids-project.tsv.gz`
 
 This project's own IDS descriptions for characters newer than BabelStone's Unicode 16.0 edition and
@@ -305,6 +320,22 @@ SHA-256 of this copy `7e12d79da41b18f5fbf8fb0eae2adc31aa9f57e6e2eabe79836804c072
 (Unicode License v3, <https://www.unicode.org/license.txt>; 348 rows) and cjkvi-variants'
 `radical-variants.txt` at e4f1da2 (public domain, <https://github.com/cjkvi/cjkvi-variants>; 219
 rows), each row naming its source.
+
+## `erjian-glyphs.json`
+
+The 二简字 forms the draft drew whole, kept for the descriptions the composer can only approximate:
+⿰忄井 for 警, ⿸厂九 for 厩, ⿱千田 for 臿. The composer builds such a description from parts, taking
+each from a whole character it resembles; the draft drew one outline instead. 14 entries, 24 KB.
+
+Each entry is keyed by the description and gives the table entry it follows (`table`), the character
+the form was made for (`character`), the private-use code point of the glyph (`codepoint`) and the
+outline (`d`, an SVG path in the composer's 1000-unit box, y down). The outlines are the glyphs of
+BabelStone Han PUA by Andrew West; the table is his [二简字 (Erjian)
+table](https://www.babelstone.co.uk/Fonts/Erjian.html), read 2026-11-06. Built by
+`uv run scripts/build_erjian_glyphs.py`, which pins the font at SHA-256
+`92e7155bd28f5570449f4dc71e9bb6fa919f67ef0120d4f83b58c61bed3ed4dc` (BabelStone Han PUA 1.472) and
+the table revision it read. Licence: Arphic Public License, the font's own
+(`fonts/LICENSE-BabelStoneHanPUA.txt`).
 
 ## component-names.tsv
 
@@ -1113,6 +1144,23 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 `script-ranges.json` holds the same pinned Unicode Script ranges for grouping parts supplied by a
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
+
+## `kana-strokes.json.gz`
+
+The stroke count of every kana KanjiVG draws: 175 keys in code-point order, hiragana U+3041–U+3096
+then katakana U+30A1–U+30FA, with a count for each (`strokes`, one entry per key), the pinned
+`revision` and its `source`. KanjiVG draws one path per stroke, in writing order, so the number of
+paths is the count: あ three, イ two, フ one.
+
+- Licence: **CC BY-SA 3.0**, Copyright (C) 2009/2010/2011 Ulrich Apel; attribution and licence links
+  in `data/licences/kanjivg-CC-BY-SA-3.0.txt`. The derived table is shared alike under the same
+  licence. Rebuild with `node scripts/build_kana_strokes.mjs [kvg directory]`, which reads KanjiVG at
+  revision `610091ce618cf757ed1357a8954cd65283e015d6` unless given a checkout.
+
+The table holds counts alone. KanjiVG records no five-stroke class, and one cannot be read off the
+paths: kana strokes are curved, so a turn and a curve carry the same turning angle, and a classifier
+built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
+stroke types.
 
 ## `han-parts.json.gz`
 

@@ -138,13 +138,14 @@ export const EXAMPLE_GROUPS = [
     // A car below 車, to show an emoji operand; it writes no character and no source records it.
     { sequence: '⿱車🚗', refs: [], char: '' },
   ] },
-  // The station sign's 講 and 証, and its 菓 and 苐. The sequence writes the 讠 part as 设
-  // (U+8BBE) because 讠 (U+8BA0) is no character of its own.
+  // The station sign's 講 and 証, its 菓 and 苐, and the 衛 it writes with 彳 and 卫. The sequence
+  // writes the 讠 part as 设 (U+8BBE) because 讠 (U+8BA0) is no character of its own.
   { key: 'sign', refs: [59], examples: [
     { sequence: '⿰设冓', refs: [59], char: '講', parts: '设冓' },
     { sequence: '⿱艹果', refs: [1], char: '菓' },
     { sequence: '⿱艹𢎨', refs: [1, 59], char: '苐' },
     { sequence: '⿰设正', refs: [59], char: '証', parts: '设正' },
+    { sequence: '⿰彳卫', refs: [59, 68, 69, 70], char: '衛', parts: '彳卫' },
   ] },
   // 二简字 from the draft's table as West records it, written with each component's own description,
   // since a component runs its own description in its own IDS. Each names the character it writes,
@@ -251,7 +252,7 @@ export const EXAMPLE_GROUPS = [
   // コンクリート (⿱⿰⿱コン⿱クリ土), セメント (⿱⿲ンメセ土), 慶応 (⿸广⿰KO), 警察 and 憲法 (⿱宀K)
   // and ムーブメント (⿻Ｍｏ; the example writes ⿻Mo). 唯吾知足, 黃金萬兩 and 吉祥如意 share strokes
   // between their characters. 唯吾知足 sets 五 above 矢, 口 and 隹, with 龰, the bottom of 足, below,
-  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 with 両's bottom, 冂 around 山, drawn as a prepared
+  // so one 口 serves all four; 黃金萬兩 sets 黃 and 金 above 萬's 艹田 over a 冂 around 山, drawn as a prepared
   // form;
   // 吉祥如意 shares one 口 between 吉 (士 above it) and 如 (女 beside it), with 意 and 祥 around.
   { key: 'ligature', examples: [
@@ -261,7 +262,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿱⿰日日⿲有見財', refs: [46], char: '' },
     { sequence: '⿰⿱日斗⿱進金', refs: [46], char: '' },
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
-    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on 両's 冂山, and
+    // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on a 冂 around 山, and
     // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
     { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
     { sequence: '⿱黃⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },

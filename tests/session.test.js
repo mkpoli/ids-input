@@ -238,3 +238,44 @@ describe('a document session', () => {
     expect(validateDocument(session.document)).toEqual([])
   })
 })
+
+describe('geometry edits in a session', () => {
+  const pinned = () => {
+    const document = fromSequence('木')
+    document.render = { mode: 'pinned', engine: 'test', revision: '1', options: {}, assets: [{ role: 'font', sha256: '0'.repeat(64) }] }
+    return document
+  }
+  const edit = id => ({ id, node: 'n1', geometry: '1'.repeat(64), target: { kind: 'contour', piece: 0, contour: 0 }, transform: [] })
+
+  it('coalesces a gesture across edits, clears and replaced edits', () => {
+    const document = pinned()
+    document.root.id = 'n1'
+    const session = createDocumentSession(document)
+    session.setGeometryEdit(edit('e1'))
+    session.setGeometryEdit(edit('e2'))
+    session.setGeometryEdit({ ...edit('e1'), transform: [{ type: 'affine', matrix: [1, 0, 0, 1, 1, 0] }] }, { coalesce: 'g', replace: ['e2'] })
+    expect(session.document.geometryEdits?.map(item => item.id)).toEqual(['e1'])
+    session.clearGeometryEdit('e1', { coalesce: 'g' })
+    session.setGeometryEdit(edit('e1'), { coalesce: 'g' })
+    expect(session.steps.done).toHaveLength(3)
+    session.undo()
+    expect(session.document.geometryEdits?.map(item => item.id)).toEqual(['e1', 'e2'])
+    session.clearGeometryEdit(['e1', 'e2'])
+    expect(session.document.geometryEdits).toBeUndefined()
+  })
+
+  it('adds, replaces and clears an edit with undo', () => {
+    const document = pinned()
+    document.root.id = 'n1'
+    const session = createDocumentSession(document)
+    session.setGeometryEdit(edit('e1'))
+    expect(session.document.geometryEdits?.map(item => item.id)).toEqual(['e1'])
+    expect(validateDocument(session.document)).toEqual([])
+    session.setGeometryEdit(edit('e1'))
+    expect(session.document.geometryEdits).toHaveLength(1)
+    expect(session.undo()).toBe(true)
+    expect(session.document.geometryEdits?.[0]?.id).toBe('e1')
+    session.clearGeometryEdit('e1')
+    expect(session.document.geometryEdits).toBeUndefined()
+  })
+})

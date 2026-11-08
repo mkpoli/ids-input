@@ -167,6 +167,25 @@ async function checkKeyboard(page) {
   assert.ok(segmentRing.width >= 2, `the segmented focus ring is 2px or more (${segmentRing.width})`)
   pass('arrow keys move and select within a segmented control')
 
+  const chosenHalf = page.locator('.sample-switch [aria-pressed="true"]')
+  await chosenHalf.focus()
+  await page.keyboard.press('Shift')
+  const halfRing = await chosenHalf.evaluate(el => {
+    const style = getComputedStyle(el)
+    return {
+      visible: el.matches(':focus-visible'),
+      style: style.outlineStyle,
+      width: parseFloat(style.outlineWidth),
+      offset: parseFloat(style.outlineOffset),
+      contrast: window.__colour.ratio(style.outlineColor, window.__colour.backdrop(el.parentElement)),
+    }
+  })
+  assert.equal(halfRing.visible, true, 'the chosen view half takes focus')
+  assert.equal(halfRing.style, 'solid', 'the chosen view half draws a ring')
+  assert.ok(halfRing.width >= 2 && halfRing.offset > 0, 'the ring sits outside the half, on the track')
+  assert.ok(halfRing.contrast >= 3, `the ring clears 3:1 on the track (${halfRing.contrast}:1)`)
+  pass('the chosen view half rings outside its fill')
+
   await check.focus()
   const ring = await check.evaluate(el => {
     const style = getComputedStyle(el)

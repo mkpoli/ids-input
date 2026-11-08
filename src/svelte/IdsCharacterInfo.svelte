@@ -3,7 +3,7 @@
   import { characterScript } from '../adapter/character-info.js'
   import { componentIdentity } from '../core/component-identity.js'
   import { strokeClassName, translator } from './i18n.js'
-  import { loadStrokeRecords } from './strokes.js'
+  import { loadStrokeRecords, loadTangutStrokes } from './strokes.js'
   import { watchFallback } from './fallback-font.js'
 
   /** @type {{ root: HTMLElement | null, adapter: import('../adapter/types.js').IdsAdapter, messages?: Record<string, string>, locale?: string, disabled?: boolean, onpick?: (part: string, path?: number[]) => void }} */
@@ -45,11 +45,18 @@
     if (strokeRecords) return
     loadStrokeRecords().then(records => { strokeRecords = records }).catch(() => { strokeRecords = new Map() })
   })
-  const strokes = $derived(char ? strokeRecords?.get(char) ?? null : null)
+  // Tangut characters carry a count in their own table; it has no first stroke to give.
+  let tangutStrokes = $state.raw(/** @type {Map<string, number> | null} */ (null))
+  $effect(() => {
+    if (tangutStrokes || !char || characterScript(char) !== 'tangut') return
+    loadTangutStrokes().then(counts => { tangutStrokes = counts }).catch(() => { tangutStrokes = new Map() })
+  })
+  const tangutCount = $derived(char && characterScript(char) === 'tangut' ? tangutStrokes?.get(char) ?? null : null)
+  const strokes = $derived(char ? strokeRecords?.get(char) ?? (tangutCount == null ? null : { strokes: tangutCount, first: null }) : null)
 
   // One list of every source the card drew on: the data it is built from, then the records that name
-  // the character itself, and the character's page on zi.tools. A data record is named by its site;
-  // each course record keeps its own title.
+  // the character itself, then the sites that hold it. A data record is named by its site; each
+  // course record keeps its own title.
   /** What a course's title still says once the course's name is said. @param {string} label @param {string} course */
   const left = (label, course) => label.startsWith(course) ? label.slice(course.length).replace(/^ ?· ?/, '').trim() : label
   /** @type {{ key: string, site: string, what: string, url: string }[]} */
@@ -72,9 +79,17 @@
     const shared = new Map()
     for (const entry of list) shared.set(entry.site, (shared.get(entry.site) ?? 0) + 1)
     for (const entry of list) if (shared.get(entry.site) > 1 && entry.what) entry.site = `${entry.site} · ${entry.what}`
-    // zi.tools indexes the same characters from its own records; the card ends by handing the reader
-    // that page once it has named what it read.
-    if (char) list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
+    // The sites that hold the character in their own records, after the records the card read.
+    // zi.tools and CHISE list every script the card shows; 字海 and 漢典 cover Han characters.
+    if (char) {
+      list.push({ key: 'zitools', site: t('info.site.zitools'), what: 'zi.tools', url: `https://zi.tools/zi/${encodeURIComponent(char)}` })
+      if (/^\p{Unified_Ideograph}$/u.test(char)) {
+        const point = (char.codePointAt(0) ?? 0).toString(16).toUpperCase().padStart(5, '0')
+        list.push({ key: 'yedict', site: t('info.site.yedict'), what: 'yedict', url: `http://www.yedict.com/z/U${point}` })
+        list.push({ key: 'zdic', site: t('info.site.zdic'), what: 'zdic', url: `https://www.zdic.net/${locale.startsWith('zh-Hant') ? 'hant' : 'hans'}/${encodeURIComponent(char)}` })
+      }
+      list.push({ key: 'chise', site: t('info.site.chise'), what: 'CHISE IDS', url: `https://www.chise.org/est/view/character/${encodeURIComponent(char)}` })
+    }
     return list
   })
   // A class message writes the stroke glyph first, then its name (㇐ Horizontal, ㇒ Falling left), so
@@ -219,7 +234,9 @@
   /** @param {HTMLElement} element @param {string} value @param {number} delay */
   function schedule(element, value, delay) {
     if (dragging) return
-    if (!componentIdentity(value) && (!adapter.characterInfo || !characterScript(value))) { leave(); return }
+    // A mark records strokes but no script and no Unicode identity (々, 〡), and the panel is the
+    // only place its strokes are laid out; it opens for the stroke record too.
+    if (!componentIdentity(value) && !(adapter.characterInfo && characterScript(value)) && !strokeRecords?.has(value)) { leave(); return }
     keep()
     if (anchor === element && char === value && (open || showTimer !== undefined)) return
     close(); anchor = element; char = value
@@ -447,7 +464,9 @@
     <header>
       <span class="glyph" lang={info?.script === 'tangut' || info?.script === 'component' ? 'txg' : 'zh'}>{char}</span>
       <div>
-        <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
+        {#if identity || info?.script || characterScript(char)}
+          <span class="script">{identity ? t(`parts.identity.${identity.type}`) : t(`info.script.${info?.script ?? characterScript(char)}`)}</span>
+        {/if}
         <div class="code"><code>{code}</code><button class="copy" type="button" title={t('info.copy', { char })} aria-label={t('info.copy', { char })} onclick={copy}><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d={copied ? 'm5 12 5 5 9-10' : 'M9 9h11v11H9zM5 15H4V4h11v1'} /></svg></button><span class="copy-note" class:failed={copyFailed} role="status">{copied ? t('info.copied') : copyFailed ? t('info.copyFailed') : ''}</span></div>
         {#if strokes?.strokes != null || strokeGlyph}
           <!-- Both halves are strokes: the count carries its unit ("4 strokes", "{count}画"), and
@@ -514,7 +533,7 @@
       {/each}
     {/if}
     {#if sources.length}
-      <p class="sources" id={`${uid}-sources`}><span class="label">{t('info.source.sections')}</span>{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
+      <p class="sources">{#each sources as source, index (source.key)}{#if index > 0}<span class="sep" aria-hidden="true">·</span>{/if}<a href={source.url} target="_blank" rel="noopener noreferrer" title={source.what}>{source.site}</a>{/each}</p>
     {/if}
   {/if}
 </div>
@@ -529,7 +548,6 @@
   .unicode-name{font:11px/1.5 ui-monospace,monospace;overflow-wrap:anywhere;color:var(--info-muted)}
   .unicode-forms{margin:12px 0}.unicode-form{text-align:start}.unicode-form>span:last-child{display:flex;flex-direction:column;gap:2px}.unicode-form .label{margin:0}
   .sources{display:flex;flex-wrap:wrap;align-items:baseline;column-gap:4px;row-gap:2px;margin:10px 0 0;font-size:11.5px;line-height:1.6;color:var(--info-muted)}
-  .sources .label{margin:0 4px 0 0;font-size:11px}
   .sources a{color:var(--info-muted);text-decoration:underline;text-decoration-color:color-mix(in srgb,var(--info-muted) 55%,transparent);text-underline-offset:2px}
   .sources a:hover{color:var(--ids-accent,light-dark(#2944c7,#8ea8ff));text-decoration-color:currentColor}
   .sources a:focus-visible{outline:2px solid var(--ids-focus,light-dark(#2944c7,#8ea8ff));outline-offset:2px;border-radius:2px}

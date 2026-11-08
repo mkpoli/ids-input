@@ -219,6 +219,8 @@
   "app.layers.failed": "无法按图层绘制此描述。",
   "app.layers.nonlinear": "此图层具有非线性变换。请先重置再使用字段。",
   "app.layers.reset": "重置变换",
+  "app.layers.noStrokeData": "此导出没有笔画分组。",
+  "app.layers.strokes": "笔画",
   "app.layers.transform": "变换",
   "app.layers.x": "X",
   "app.layers.y": "Y",

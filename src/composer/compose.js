@@ -29,7 +29,9 @@ import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
 import componentConstants from './constants.json' with { type: 'json' }
+import numberedFiveContext from '../../data/numbered-five-context.json' with { type: 'json' }
 import pyramidCatalog from './pyramid-glyphs.json' with { type: 'json' }
+import { createRenderNormalizer } from './normalization.js'
 
 const pyramidGlyphs = new Map(pyramidCatalog.entries.flatMap(({ char, part, sequence, pair }) =>
   [sequence, `⿱${part}${pair}`, `⿱${part}⿰${part}${part}`].map(ids => [ids, char])))
@@ -110,7 +112,8 @@ const COVER_CLOSE_SHARE = 0.5
 // height from its top; a brush roof's left tip stands well above its bar. `height` is the share of the
 // whole the top takes, where the face's own band leaves ⺊ too short. `KRM_GAP` is how far 人's apex
 // stands below the bar, as a share of the whole: the manuscript tucks it close under the roof.
-const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null } }
+// Kureedo's roof underside at the centred stem is about 448 in its 274–546 ink band.
+const KRM_TOP = { sans: { bar: 0.24, height: 0.7 }, serif: { bar: 0.34, height: null }, kaisho: { bar: 0.36, height: null } }
 const KRM_GAP = 0.035
 // Share of its own height a component's top band covers, and the share of the component's width
 // the ink in that band must span for the component to count as flat-topped.
@@ -151,8 +154,8 @@ const CELL_AXIS = { '⿵': 1, '⿶': 1 }
 /** The scale `fitInside` walks down to, and the share of a box a room is short of before it gives way. */
 const FIT_FLOOR = 0.45
 
-/** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands. A
- * zi.tools modifier after an operator (`⿻[1:]`) is read and left out of the tree. */
+/** `⿰亻⿱亠女` as ['⿰', '亻', ['⿱', '亠', '女']], each operator taking `arity(op)` operands.
+ * An operator's zi.tools modifier is retained as the array's `note`. */
 export function parseTree(sequence, arity) {
   const chars = [...sequence]
   let at = 0
@@ -171,11 +174,17 @@ export function parseTree(sequence, arity) {
       at = end
       return ch + tones
     }
+    let note = ''
     if (MODIFIABLE.has(ch) && chars[at] === '[') {
       const close = chars.indexOf(']', at + 1)
-      if (close > at && close - at <= 65 && MODIFIER.test(chars.slice(at + 1, close).join(''))) at = close + 1
+      if (close > at && close - at <= 65 && MODIFIER.test(chars.slice(at + 1, close).join(''))) {
+        note = chars.slice(at + 1, close).join('')
+        at = close + 1
+      }
     }
-    return [ch, ...Array.from({ length: n }, node)]
+    const tree = [ch, ...Array.from({ length: n }, node)]
+    if (note) tree.note = note
+    return tree
   }
   const tree = node()
   if (at !== chars.length) throw new LookupError(`${sequence} has more components than its operators take.`)
@@ -189,8 +198,10 @@ const tightBox = part => {
   return Number.isFinite(box[0]) ? box : part.box
 }
 
-/** A node written out again as a sequence. */
-export const keyOf = node => typeof node === 'string' ? node : node[0] + node.slice(1).map(keyOf).join('')
+/** A node written out again as a sequence, including crossing constraints. */
+export const keyOf = node => typeof node === 'string' ? node : node[0] + (node.note ? `[${node.note}]` : '') + node.slice(1).map(keyOf).join('')
+/** Rebuild operands without losing their operator's crossing constraint. */
+export const mapOperands = (node, visit) => Object.assign([node[0], ...node.slice(1).map(visit)], node.note ? { note: node.note } : {})
 
 /** An empty slot, as the editor writes it (EMPTY in ids-input's core). The composer lays a tree with empty
  *  slots out as it would a whole one, each empty slot an operand it knows nothing of (the layout
@@ -205,7 +216,7 @@ const hasSlot = node => isEmpty(node) || Array.isArray(node) && node.slice(1).so
 const slotsIn = node => isEmpty(node) ? 1 : Array.isArray(node) ? node.slice(1).reduce((sum, kid) => sum + slotsIn(kid), 0) : 0
 /** `node` with the numbers of its empty slots shifted by `by`, so each repeated cell keeps its own. */
 const shiftedSlots = (node, by) => isEmpty(node) ? `${EMPTY}${Number(node.slice(1)) + by}`
-  : Array.isArray(node) ? [node[0], ...node.slice(1).map(kid => shiftedSlots(kid, by))] : node
+  : Array.isArray(node) ? mapOperands(node, kid => shiftedSlots(kid, by)) : node
 const isRepeatedRow = node => Array.isArray(node) && (node[0] === '⿰' || node[0] === '⿲') &&
   node.slice(1).every(child => keyOf(child) === keyOf(node[1]))
 
@@ -326,6 +337,8 @@ export class Composer {
     this.pyramids = new WeakMap()
     this.bases = new WeakMap()
     this.nativeEnclosures = new Set()
+    this.normalizer = createRenderNormalizer({ record: key => this.rec(key), parse: text => this.parse(text), keyOf, excluded: key => this.excluded(key) })
+    this.resolutions = new Map()
   }
 
   arity = ch => this.arities.get(ch) ?? 0
@@ -392,35 +405,21 @@ export class Composer {
     return this.node(base, region)
   }
 
-  glyphRecord(ch) { return this.rec(ch)?.G ?? null }
+  glyphRecord(ch) { const record = this.rec(ch); const glyph = record?.G; if (glyph && record.sg && !glyph.sg) glyph.sg = record.sg; return glyph ?? null }
   glyph(ch) { const g = this.glyphRecord(ch); return g ? partOf(g) : null }
   /** Whether the variable font draws `ch`: its strokes can be weighted. */
   own(ch) { return this.glyphRecord(ch)?.v === 1 }
-  /**
-   * The character a description draws, if one is drawn for it. A description may name a character
-   * that is itself described (⿰查皮 for 皶), so an absent key is tried again with its described
-   * operands written out, twice over.
-   */
-  bySequence(k) {
-    let key = k
-    for (let depth = 0; depth <= 2; depth += 1) {
-      const encoded = this.rec(key)?.e
-      if (encoded) return encoded
-      const spelled = this.spell(key)
-      if (spelled === key) return null
-      key = spelled
-    }
-    return null
+  /** A source occurrence's rendering identity. A composer is recreated after each loading pass. */
+  resolution(node) {
+    const key = keyOf(node)
+    if (!this.resolutions.has(key)) this.resolutions.set(key, this.normalizer.resolve(node))
+    return this.resolutions.get(key)
   }
-  /** `key` with every described operand written out, or `key` itself. A key that does not parse is
-   *  left alone: a caller with no tree to draw checks the tree's own parse.
-   *  @param {string} key */
-  spell(key) {
-    let tree
-    try { tree = this.parse(key) } catch { return key }
-    /** @param {any} node @returns {any} */
-    const walk = node => typeof node === 'string' ? this.sequenceOf(node) ?? node : node.slice(0, 1).concat(node.slice(1).map(walk))
-    return keyOf(walk(tree))
+  /** Shared lookup key and metrics for descriptions that name the same form. */
+  renderKey(node) { return this.resolution(node).key }
+  /** The encoded glyph supported by the description's normalization evidence. */
+  bySequence(key) {
+    try { return this.resolution(this.parse(key)).encoded } catch { return null }
   }
   sequenceOf(ch) { return this.rec(ch)?.s ?? null }
   atomic(ch) { return this.rec(ch)?.at === 1 }
@@ -430,11 +429,15 @@ export class Composer {
     if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).ink
     if (Array.isArray(node) && node[0] === '⿸' && this.yanStackedDays(node[1], node[2]))
       return this.ink(node[1], seen) + this.ink('儿', seen) + YAN_STACK_INK
-    if (typeof node !== 'string') return node.slice(1).reduce((s, n) => s + this.ink(n, seen), 0)
-    const r = this.rec(node)
-    if (!this.excluded(node) && r?.G) return r.ink
-    if (r?.s && !seen.has(node)) {
-      try { return this.ink(this.parse(r.s), new Set([...seen, node])) } catch { /* unreadable: as unknown */ }
+    if (typeof node !== 'string') {
+      const key = this.renderKey(node), record = this.rec(key)
+      if (!this.excluded(key) && record?.G) return record.ink
+      return node.slice(1).reduce((s, n) => s + this.ink(n, seen), 0)
+    }
+    const key = this.renderKey(node), r = this.rec(key)
+    if (!this.excluded(key) && r?.G) return r.ink
+    if (r?.s && !seen.has(key)) {
+      try { return this.ink(this.parse(r.s), new Set([...seen, key])) } catch { /* unreadable: as unknown */ }
     }
     return !this.excluded('永') ? this.rec('永')?.ink ?? 1000 : 1000
   }
@@ -443,13 +446,15 @@ export class Composer {
   outlines(node, seen = new Set()) {
     if (componentRecord(keyOf(node), this.fontStyle)) return componentRecord(keyOf(node), this.fontStyle).o
     if (typeof node === 'string') {
-      const r = this.rec(node)
-      if (!this.excluded(node)) return r?.G ? r.G.p.length : 0
-      if (r?.s && !seen.has(node)) {
-        try { return this.outlines(this.parse(r.s), new Set([...seen, node])) } catch { /* unreadable */ }
+      const key = this.renderKey(node), r = this.rec(key)
+      if (!this.excluded(key)) return r?.G ? r.G.p.length : 0
+      if (r?.s && !seen.has(key)) {
+        try { return this.outlines(this.parse(r.s), new Set([...seen, key])) } catch { /* unreadable */ }
       }
       return 0
     }
+    const key = this.renderKey(node), record = this.rec(key)
+    if (!this.excluded(key) && record?.G) return record.G.p.length
     const counts = node.slice(1).map(n => this.outlines(n, seen))
     return counts.every(Boolean) ? counts.reduce((a, b) => a + b, 0) : 0
   }
@@ -472,23 +477,13 @@ export class Composer {
     this.approximate.clear()
     this.nativeEnclosures.clear()
     let slots = 0
-    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
+    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? mapOperands(node, number) : node
     const tree = this.normalizeYan(number(this.cancelTransforms(this.parse(sequence))))
     const rendered = this.normalizeRequestedEnclosures(tree)
     // A mark that sits beside the drawing takes a margin: the character shrinks toward the opposite
     // corner, so the mark stands outside its strokes instead of over them.
     const frame = this.face.slice()
-    let face = frame
-    if (marks) {
-      const outbound = [...marks].filter(isOutbound).join('')
-      if (outbound) {
-        const probe = markParts(this, outbound, frame, frame)
-        if (probe.length) {
-          const fitted = markFace(frame, union(probe.map(part => part.target)))
-          if (fitted.scale < 1) face = fitted.face
-        }
-      }
-    }
+    const face = this.faceBeside(marks)
     const previous = this.face
     this.face = face
     try {
@@ -517,6 +512,16 @@ export class Composer {
       const construct = CONSTRUCTS[sequence]
       // The bundled body is Noto's: a face with its own forms keeps the drawing it made.
       if (construct && !ownFormsOnly(this.fontStyle) && !this.excluded(construct.host)) out = constructParts(construct, out)
+      // Layout can squeeze an operand after it was placed. Restore native proportions within its
+      // final allocation so a contextual cut keeps the donor font's stroke widths.
+      for (const part of out) if (part.nativeAspect) {
+        const [x0, y0, x1, y1] = part.target
+        const [sx0, sy0, sx1, sy1] = part.source
+        const scale = Math.min((x1 - x0) / (sx1 - sx0), (y1 - y0) / (sy1 - sy0))
+        const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2
+        const w = (sx1 - sx0) * scale, h = (sy1 - sy0) * scale
+        part.target = [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2]
+      }
       // Loose marks annotate the whole drawing; they take no part in its layout or weight.
       if (marks) out.push(...markParts(this, marks, frame, face))
       return out
@@ -529,9 +534,10 @@ export class Composer {
    *  dense has no designed host forms; drawn in place, its parts overlap each other. */
   cellsFor(tree, marks = '') {
     if (marks || this.exclude.size) return false
+    // Cell scaffolds already have a complete layout; searching every repeated subtree adds no evidence.
+    if (this.pyramid(tree) || this.pyramidWithBase(tree)) return false
     const key = keyOf(tree)
     if (this.bySequence(key) || this.spelled.has(key)) return false
-    if (this.pyramid(tree) || this.pyramidWithBase(tree)) return false
     if (isGroupedForm(key, this.fontStyle) || isComponentForm(key, this.fontStyle)) return false
     let leaves = 0, supported = true
     const walk = node => {
@@ -555,7 +561,7 @@ export class Composer {
    *  tree's reading order on an axis chosen for the cell's shape, so no cell overlaps another. */
   cellLayout(tree) {
     let slots = 0
-    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? [node[0], ...node.slice(1).map(number)] : node
+    const number = node => node === EMPTY ? `${EMPTY}${slots++}` : Array.isArray(node) ? mapOperands(node, number) : node
     const numbered = number(tree)
     const out = []
     let leaf = 0
@@ -682,7 +688,25 @@ export class Composer {
    * region and its `INSIDE`. Answers `{ index, box, empty }` per leaf in reading order, boxes in
    * font units, y up.
    */
-  sketch(sequence) {
+  sketch(sequence, marks = '') {
+    const previous = this.face
+    this.face = this.faceBeside(marks)
+    try { return this.sketched(sequence) } finally { this.face = previous }
+  }
+
+  /** The face a character takes beside its outbound marks: the whole face where none needs room. @param {string} marks */
+  faceBeside(marks) {
+    const frame = this.face.slice()
+    const outbound = [...marks].filter(isOutbound).join('')
+    if (!outbound) return frame
+    const probe = markParts(this, outbound, frame, frame)
+    if (!probe.length) return frame
+    const fitted = markFace(frame, union(probe.map(part => part.target)))
+    return fitted.scale < 1 ? fitted.face : frame
+  }
+
+  /** The leaves of `sequence` laid out in the current face. */
+  sketched(sequence) {
     const out = []
     const walk = (node, region, atRoot) => {
       const pyramid = this.pyramid(node)
@@ -764,18 +788,11 @@ export class Composer {
     return { ...placed(makePart([], region.slice()), region.slice(), region.slice(), 0, 'empty'), empty: Number(node.slice(1)) }
   }
 
-  /** What an operand may be drawn as in `place`: itself, the character a sequence describes, then
-   *  its positional forms there. */
+  /** Preferred host keys depend on rendering identity, independently of the input spelling. */
   alternatives(node, place) {
-    const out = [keyOf(node)]
-    let ch = node
-    if (typeof node !== 'string') {
-      const e = this.bySequence(keyOf(node))
-      if (!e) return out
-      ch = e
-      out.push(e)
-    }
-    for (const form of this.rec(ch)?.a?.[place] ?? []) if (!out.includes(form)) out.push(form)
+    const key = this.renderKey(node)
+    const out = [key]
+    for (const form of this.rec(key)?.a?.[place] ?? []) if (!out.includes(form)) out.push(form)
     return out
   }
 
@@ -794,7 +811,7 @@ export class Composer {
     if (!this.hosted) return false
     const places = this.data.manifest.files?.hosts?.places
     if (!places) return true
-    return children.some((child, i) => places.includes(`${this.slot(op, i)}\t${keyOf(child)}`))
+    return children.some((child, i) => places.includes(`${this.slot(op, i)}\t${this.renderKey(child)}`))
   }
 
   /** What a host entry's cut is known by before its outlines are read: its box and its contour
@@ -829,7 +846,7 @@ export class Composer {
     return { record: h, get piece() { return self.pieceOf(h) } }
   }
 
-  node(node, region, atRoot = false) {
+  node(node, region, atRoot = false, sideBySide = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
     if (pyramid) {
@@ -878,7 +895,18 @@ export class Composer {
       }
       let squeezed = glyph !== null && stretchOf(glyph.box, region) > C.STRETCH
       if (tree && (this.stroked(tree) || this.atomic(encoded))) squeezed = false
-      if (glyph && !(squeezed && tree)) return [this.place(glyph, region, this.ink(encoded), `glyph ${encoded}`)]
+      if (glyph && !(squeezed && tree)) {
+        if (sideBySide && encoded === '\u{F2A9}' && this.fontStyle === 'sans') {
+          // The native cut from 葭 already has its contextual proportions.
+          const context = partOf(numberedFiveContext.G)
+          const [x0, y0, x1, y1] = context.box
+          const scale = Math.min((region[2] - region[0]) / (x1 - x0), (region[3] - region[1]) / (y1 - y0))
+          const cx = (region[0] + region[2]) / 2, cy = (region[1] + region[3]) / 2
+          const w = (x1 - x0) * scale, h = (y1 - y0) * scale
+          return [{ ...placed(context, context.box, [cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2], numberedFiveContext.ink, `glyph ${encoded}`), fixed: true, nativeAspect: true }]
+        }
+        return [this.place(glyph, region, this.ink(encoded), `glyph ${encoded}`)]
+      }
       if (!tree) throw new LookupError(`No glyph or sequence draws ${encoded}.`)
       if (!glyph) this.missingGlyphs.add(encoded)
       this.expanding.add(encoded)
@@ -1256,7 +1284,7 @@ export class Composer {
     if (!Array.isArray(node)) return node
     const kids = node.slice(1).map(child => this.cancelTransforms(child))
     if ((node[0] === MIRROR || node[0] === ROTATE) && Array.isArray(kids[0]) && kids[0][0] === node[0]) return kids[0][1]
-    return [node[0], ...kids]
+    return Object.assign([node[0], ...kids], node.note ? { note: node.note } : {})
   }
 
   /** The same yan enclosure can put its contents inside 厂 before grouping the upper strokes. */
@@ -1270,7 +1298,7 @@ export class Composer {
       if (op === '⿱' && kids.length === 2 && kids[0] === '文')
         return ['⿸', ['⿱', '文', '厂'], tail[2]]
     }
-    return [op, ...kids]
+    return Object.assign([op, ...kids], node.note ? { note: node.note } : {})
   }
 
   /** Whole-character lookup for attested overlays; nested editing keeps its leaves. */
@@ -1302,7 +1330,7 @@ export class Composer {
   normalizeRepeatedGrids(node) {
     if (!Array.isArray(node)) return node
     const grid = this.repeatedGrid(node)
-    return grid ? grid.tree : [node[0], ...node.slice(1).map(child => this.normalizeRepeatedGrids(child))]
+    return grid ? grid.tree : mapOperands(node, child => this.normalizeRepeatedGrids(child))
   }
 
   repeatedGrid(node) {
@@ -1315,7 +1343,7 @@ export class Composer {
 
   /** These host aliases use their expanded form for glyph lookup and parent layout features. */
   requestedEnclosure(node) {
-    if (!Array.isArray(node) || node.length !== 3) return null
+    if (!Array.isArray(node) || node.length !== 3 || node.note) return null
     const [op, outer, inner] = node
     if (op === '⿹' && (outer === '須' || keyOf(outer) === '⿰彡頁')) return { tree: ['⿰', ['⿱', '彡', inner], '頁'], innerIndex: 1 }
     if (op === '⿸' && (outer === '攸' || keyOf(outer) === '⿲亻丨攵')) return { tree: ['⿲', '亻', '丨', ['⿱', '攵', inner]], innerIndex: 3 }
@@ -1329,7 +1357,7 @@ export class Composer {
     if (!Array.isArray(node)) return node
     const rewritten = this.requestedEnclosure(node)
     const tree = rewritten?.tree ?? node
-    return [tree[0], ...tree.slice(1).map(child => this.normalizeRequestedEnclosures(child))]
+    return mapOperands(tree, child => this.normalizeRequestedEnclosures(child))
   }
 
   /** Layout and first inner leaf for two-part descriptions with a disconnected outer part. */
@@ -1470,7 +1498,10 @@ export class Composer {
     const C = this.C, place = this.slot(op, index)
     const want = siblings.reduce((s, n) => s + this.ink(n), 0)
     const aspect = (box[2] - box[0]) / Math.max(box[3] - box[1], 1)
-    const siblingKeys = siblings.map(keyOf)
+    const siblingKeys = siblings.map(child => this.renderKey(child))
+    const siblingKey = written => {
+      try { return this.renderKey(this.parse(written)) } catch { return written }
+    }
     let hand = null
     if (node === '𠂇') {
       const drawn = [op, ...siblings.slice(0, index), node, ...siblings.slice(index)]
@@ -1487,8 +1518,8 @@ export class Composer {
           // The hand an entry's node writes (`hd`).
           if (h.hd !== hand) continue
         }
-        let exact = h.op === op && h.ok.length === siblingKeys.length && h.ok.every((k, j) => k === siblingKeys[j])
-        exact = exact && h.j === 1
+        const exact = h.j === 1 && h.op === op && h.ok.length === siblingKeys.length
+          && h.ok.every((key, j) => siblingKey(key) === siblingKeys[j])
         const ratio = Math.abs(Math.log(Math.max(h.si, 1) / Math.max(want, 1)))
         scored.push([!exact, alien, ratio, h.d, h])
       }
@@ -1553,7 +1584,7 @@ export class Composer {
 
   // ---------------------------------------------------------------- learned layout
   predict(op, children) {
-    const keys = children.map(keyOf)
+    const keys = children.map(child => this.renderKey(child))
     return forward(this.layout, features(this.layout, op, keys.map(k => this.rec(k)), [this.slot(op, 0), this.slot(op, 1)]))
   }
 
@@ -1568,6 +1599,10 @@ export class Composer {
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
       let box = boxes[i]
+      if (this.AXIS[op] === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans') {
+        groups.push(this.node(child, box, false, true))
+        continue
+      }
       // Under a cover, a child whose own glyph fits the box is drawn from it: a host cut can meet
       // the cover's bar through a turning stroke and leave a wedge (定's 𤴓 cut from 是).
       if (i === 1 && op === '⿱' && typeof children[0] === 'string' && COVERS.has(children[0])
@@ -1718,8 +1753,8 @@ export class Composer {
             box[axis] = ranges[i][0]
             box[axis + 2] = ranges[i][1]
             const glyph = typeof child === 'string' ? this.glyph(child) : null
-            if (glyph) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
-            else groups.push(this.row(child, box, children.length))
+            if (glyph && !(axis === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans')) groups.push(placed(glyph, glyph.box, box, this.ink(child), `glyph ${child}`))
+            else groups.push(this.row(child, box, children.length, axis === 0))
           }
           return this.flatten(groups)
         }
@@ -1763,9 +1798,10 @@ export class Composer {
           return
         }
       }
-      const part = this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
+      const contextualFive = axis === 0 && child === '\u{F2A9}' && this.fontStyle === 'sans'
+      const part = contextualFive ? null : this.host(op, i, child, [...children.slice(0, i), ...children.slice(i + 1)], box)
       if (part) groups.push([{ ...placed(part.piece, part.piece.box, fitted(part.piece.box, box, C.STRETCH), this.ink(part.record.h), `host ${part.record.h}`), ...(axis === 1 ? { gap: part.record.g } : {}) }])
-      else groups.push(this.row(child, box, children.length))
+      else groups.push(this.row(child, box, children.length, axis === 0))
     })
     if (compactYan && !this.partial) {
       // Restore just enough room when a whole-glyph outline protrudes toward 朱.
@@ -1789,9 +1825,9 @@ export class Composer {
 
   /** `child` drawn into `box` as one of `count` aligned operands; a whole glyph in a row of three may
    *  change its proportions up to `ROW_STRETCH`. */
-  row(child, box, n) {
-    const group = this.node(child, box)
-    if (n === 3 && group.length === 1 && group[0].origin.startsWith('glyph ')) group[0].target = fitted(group[0].source, box, this.C.ROW_STRETCH)
+  row(child, box, n, sideBySide) {
+    const group = this.node(child, box, false, sideBySide)
+    if (n === 3 && group.length === 1 && !group[0].nativeAspect && group[0].origin.startsWith('glyph ')) group[0].target = fitted(group[0].source, box, this.C.ROW_STRETCH)
     else if (n === 3 && group.length > 1 && group[0].balanceBox && group.every(p => p.balanceBox === group[0].balanceBox)) {
       const frame = group[0].balanceBox, target = fitted(frame, box, this.C.ROW_STRETCH)
       for (const part of group) part.target = mapped(part.source, frame, target)
@@ -1802,8 +1838,8 @@ export class Composer {
   /** A whole glyph a stack's middle band cannot compress: bars and covers (一, 冖, 丷) lie flat
    *  enough to be one, a full character such as 六 or 水 does not. */
   middleWhole(child) {
-    if (typeof child !== 'string') return false
-    const glyph = this.glyph(child)
+    const key = this.renderKey(child)
+    const glyph = this.glyph(key)
     if (!glyph) return false
     const ink = tightBox(glyph)
     return this.outlines(child) > 1 && ink[2] - ink[0] <= MIDDLE_FLAT * (ink[3] - ink[1])
@@ -1975,7 +2011,7 @@ export class Composer {
       for (let c = 0; c < size; c++) heights[c] = blocked[row * size + c] ? 0 : heights[c] + 1
       const stack = []
       for (let col = cols[0]; col <= cols[1]; col++) {
-        const h = col < size ? heights[col] : 0
+        const h = col < cols[1] ? heights[col] : 0
         while (stack.length && heights[stack.at(-1)] >= h) {
           const top = stack.pop()
           const height = heights[top], left = stack.length ? stack.at(-1) + 1 : cols[0], width = col - left

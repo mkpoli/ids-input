@@ -25,6 +25,7 @@ export {
   transformPath,
 } from './transform.js'
 export { renderLayers, renderScopes } from './render.js'
+export { applyGeometryEdits, fingerprintGeometry, splitSubpaths } from './geometry-edit.js'
 export { scopesMarkup, scopesSvg } from './svg.js'
 export { createDocumentSession } from './session.js'
 export { SESSION_FORMAT, SESSION_VERSION, SessionRecordError, readSession, sessionFromRecord, sessionRecord, writeSession } from './store.js'
