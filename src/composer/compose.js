@@ -1619,7 +1619,7 @@ export class Composer {
     if (C.COVERING.includes(op)) boxes[0] = union(boxes)
     if (boxes.some(b => b[2] <= b[0] || b[3] <= b[1])) return null
     // 王 as the left part of a compound body takes its combining form and a narrow column.
-    const wangLeft = !region && op === '⿰' && children[0] === '王' && Array.isArray(children[1])
+    const wangLeft = !region && op === '⿰' && children[0] === '王'
     if (wangLeft) {
       const frame = union(boxes), split = frame[0] + 0.28 * (frame[2] - frame[0])
       boxes[0] = [frame[0], frame[1], split, frame[3]]
@@ -1648,12 +1648,15 @@ export class Composer {
         }
       }
       // An operand drawn from its own glyph keeps the part inside its box, where a host cut can carry
-      // the rest of that character in with it. 身 is the exception: its own glyph is the standalone
-      // width, and the left column needs the narrower form 射, 躬 and 躭 draw.
+      // the rest of that character in with it. A glyph the box would deform beyond STRETCH is no
+      // form for that place (示's square glyph in a left column); 身 also takes the left column's
+      // narrow form from 射, 躬 or 躭.
       if (ownParts && typeof child === 'string' && !this.excluded(child)
         && !(op === '⿰' && i === 0 && keyOf(child) === '身' && this.hasLeftBody(child))) {
         const own = this.glyph(child)
-        if (own) {
+        // The left column is where a square glyph loses its form; a right or upper operand keeps
+        // its own glyph, which the box's size matches.
+        if (own && (i > 0 || stretchOf(own.box, box) <= C.STRETCH)) {
           groups.push([this.place(own, box, this.ink(child), `glyph ${child}`)])
           continue
         }
