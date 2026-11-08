@@ -942,7 +942,16 @@ export class Composer {
     const designed = this.variantParts(node, region)
     if (designed) return designed
     const key = keyOf(node), nativeSource = yanGlyphs.get(key) ?? yanSources.get(key)
-    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key, this.fontStyle))
+    // A description the font draws as a variation sequence keeps that outline, where the export
+    // still draws the glyph the outline was read against. An export that draws another base composes
+    // its operands; a source without a drawable base keeps the prepared form.
+    const ivd = IVD_FORMS[key]
+    const ivdRecord = ivd && !this.excluded(ivd.base) ? this.glyphRecord(ivd.base) : null
+    if (ivd && ivdRecord && (!this.separate || isGroupedForm(key, this.fontStyle))) {
+      const variant = ivdParts(ivd, key, ivdRecord, this.fontStyle, region, atRoot)
+      if (variant) return variant
+    }
+    const repeated = (!nativeSource || !this.excluded(nativeSource)) && (!this.separate || isGroupedForm(key, this.fontStyle)) && !ivdRecord
       ? componentParts(key, region, this.fontStyle, atRoot) : null
     if (repeated) return repeated
     const hasRepetition = containsComponentForm(keyOf(node), this.fontStyle)
@@ -963,7 +972,7 @@ export class Composer {
     }
     if (this.separate && Array.isArray(node)) encoded = null
     if (encoded && !this.expanding.has(encoded) && (typeof node === 'string' || !this.excluded(encoded))) {
-      const glyph = this.glyph(encoded)
+      const glyph = this.drawnGlyph(encoded, !atRoot)
       let tree = typeof node !== 'string' ? node : null
       if (!tree && this.sequenceOf(encoded) && !this.excluded(encoded)) {
         try { tree = this.parse(this.sequenceOf(encoded)) } catch (error) {
@@ -994,7 +1003,7 @@ export class Composer {
       } finally { this.expanding.delete(encoded) }
     }
     if (typeof node === 'string') {
-      const glyph = this.glyph(node)
+      const glyph = this.drawnGlyph(node, !atRoot)
       if (!glyph) throw new LookupError(`No glyph or sequence draws ${node}.`)
       return [this.place(glyph, region, this.ink(node), `glyph ${node}`)]
     }
@@ -1818,7 +1827,7 @@ export class Composer {
           found.push([Math.abs(Math.log(Math.max(h.si, 1) / Math.max(want, 1))), h])
         }
       found.sort((a, b) => a[0] - b[0])
-      const pieces = found.slice(0, C.TRANSPLANT_CANDIDATES).map(([ratio, h]) => [ratio, h, this.cutOf(h), h.g])
+      const pieces = found.slice(0, C.TRANSPLANT_CANDIDATES).map(([ratio, h]) => [ratio, h, this.cutOf(h), h.g, children[i]])
       if (!pieces.length) return null
       options.push(pieces)
     }
@@ -1833,13 +1842,54 @@ export class Composer {
     }
     const [cost, chain] = best.reduce((a, b) => b[0] < a[0] ? b : a)
     if (cost > C.TRANSPLANT_TOLERANCE * (children.length - 1)) return null
-    return chain.map(([, h]) => { const piece = this.pieceOf(h); return placed(piece, piece.box, piece.box.slice(), this.ink(h.h), `transplant ${h.h}`) })
+    return chain.map(([, h, , , key]) => {
+      const piece = this.pieceFor(key, this.pieceOf(h))
+      return placed(piece, piece.box, piece.box.slice(), this.ink(h.h), `transplant ${h.h}`)
+    })
   }
 
   // ---------------------------------------------------------------- no layout to follow
+  /** The box a short two-part stack takes at the top of a tall column (`SHORT_STACK_PART`,
+   *  `SHORT_STACK`), leaving the rest of the column empty; null for a stack that fills its column.
+   *  The stack is drawn in the top `SHORT_STACK` of the column, where the layout gives its parts
+   *  room, rather than stretched down the whole column. */
+  shortStackBox(node, box) {
+    if (!Array.isArray(node) || node[0] !== '⿱' || node.length !== 3) return null
+    const leaves = node.slice(1)
+    if (leaves.some(leaf => typeof leaf !== 'string' || isEmpty(leaf))) return null
+    const width = box[2] - box[0], height = box[3] - box[1]
+    if (!(width > 0 && height > 0)) return null
+    const heights = []
+    for (const leaf of leaves) {
+      const glyph = this.glyph(leaf)
+      if (!glyph) return null
+      const span = glyph.box[2] - glyph.box[0], tall = glyph.box[3] - glyph.box[1]
+      if (!(span > 0 && tall > 0)) return null
+      heights.push(tall / span * width)
+    }
+    if (heights.some(tall => tall > SHORT_STACK_PART * height)) return null
+    const natural = heights.reduce((sum, tall) => sum + tall, 0)
+    if (natural > SHORT_STACK * height) return null
+    return [box[0], box[3] - SHORT_STACK * height, box[2], box[3]]
+  }
+
+  /** The lower part of a short stack (`shortStackBox`) drawn `SHORT_STACK_GAP` of the column's
+   *  height under the upper one. The layout spaces the two over a full column, so the gap has to
+   *  close with them at the top, and the stack's own pair opens to the gap 徵 sets. */
+  closeShortStack(parts, column) {
+    const above = parts.filter(part => part.branch?.[0] === 0)
+    const below = parts.filter(part => part.branch?.[0] === 1)
+    if (!above.length || !below.length) return
+    const gap = bounds(above)[1] - bounds(below)[3]
+    const target = (column[3] - column[1]) * SHORT_STACK_GAP
+    if (!(Math.abs(target - gap) > 1)) return
+    const shift = gap - target
+    for (const part of below) part.target = [part.target[0], part.target[1] + shift, part.target[2], part.target[3] + shift]
+  }
+
   /** Operands sharing the region along an aligned operator by `SHARES`; an enclosed one in the room its
    *  enclosing part leaves. */
-  shares(op, children, region) {
+  shares(op, children, region, atRoot = false) {
     const C = this.C
     if (op in this.ENCLOSE) {
       let outer = this.node(children[0], region)
