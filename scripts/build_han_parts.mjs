@@ -46,7 +46,7 @@ function unzipEntry(archive, name) {
 }
 
 const root = COMPOSER_BASE, manifest = await (await fetch(root + 'manifest.json')).json()
-if (manifest.format !== 5 || manifest.files.records.files !== 4096) throw Error('Unexpected composer export')
+if (![5, 6].includes(manifest.format) || manifest.files.records.files !== 4096) throw Error('Unexpected composer export')
 const keys = new Set(), errors = []; let next = 0, done = 0
 async function worker() {
   while (next < 4096) {

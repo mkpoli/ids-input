@@ -859,7 +859,7 @@ which are laid out as equal cells. Under Vite, keep both packages out of depende
 (`optimizeDeps: { exclude: ['ids-input', '@han-compose/composer'] }`) so the Worker's URL resolves;
 `composerPreview({ base, worker })` takes a function making the Worker for other bundlers.
 
-The demo draws Sans from `https://glyphatlas.org/atlas/composer/bd0829bc6fbf-sans-compose-layout-v4-f5/`,
+The demo draws Sans from `https://ids-input-composer.mkpoli.workers.dev/a83fc941166b-sans-compose-layout-v4-f6/`,
 Serif from the serif export, Fangsong from the Zhuque Fangsong export, and Kaisho from the Kureedo export; `?composer=<url>` or
 `VITE_COMPOSER_BASE` points every face at another copy of one export. A face that cannot draw a
 description draws the encoded character it names in that face, else the Sans export's drawing.
