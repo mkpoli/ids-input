@@ -82,7 +82,21 @@ try {
     await tintMode.selectOption('on')
     await page.keyboard.press('Escape')
     const strokes = await page.locator('.scope-segment').evaluateAll(elements => [...new Set(elements.map(element => getComputedStyle(element).stroke))])
-    assert.ok(strokes.length > 1, 'operand segments keep their branch tints')
+    assert.ok(strokes.length > 1, 'operand segments take their layer tints')
+    const layers = await page.locator('.sequence-scopes g').evaluateAll(groups => groups.map(group => {
+      const plain = selector => {
+        const element = group.querySelector(`${selector}:not(.scope-hovered):not(.scope-selected)`)
+        return element ? getComputedStyle(element).stroke : null
+      }
+      return {
+        path: group.dataset.path ?? '',
+        lead: plain('.scope-lead'),
+        segments: [...group.querySelectorAll('.scope-segment:not(.scope-hovered):not(.scope-selected)')].map(element => getComputedStyle(element).stroke)
+      }
+    }))
+    assert.ok(layers.every(layer => new Set(layer.segments).size <= 1), 'the operands of one operator share one tint')
+    assert.ok(layers.every(layer => layer.lead === null || !layer.segments.length || layer.lead === layer.segments[0]), 'each lead takes the tint of the layer its operator opens')
+    assert.ok(layers.some(layer => layer.path !== '' && layer.lead !== null && layer.segments.length), 'a nested lead and its segments are checked')
     await page.emulateMedia({ forcedColors: 'active' })
     assert.equal(await page.locator('.sequence-scopes').evaluate(element => getComputedStyle(element).visibility), 'visible')
     const forced = await page.evaluate(() => {
@@ -131,6 +145,6 @@ try {
     assert.ok(await field.isVisible())
     assert.deepEqual(errors, [])
     await page.close()
-    console.log(`PASS ${colorScheme}: scope segmentation, root, curves, hover and selection, branch tints, forced colors, draft states, deep scrolling, phone`)
+    console.log(`PASS ${colorScheme}: scope segmentation, root, curves, hover and selection, layer tints, forced colors, draft states, deep scrolling, phone`)
   }
 } finally { await browser.close() }

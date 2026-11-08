@@ -589,7 +589,8 @@
       return
     }
     if (key !== 'a') return
-    const target = button.closest('.parts-panel')
+    // The page of parts, without the pager and the stroke counts around it.
+    const target = button.closest('.parts-grid')
     if (!target) return
     event.preventDefault()
     const range = document.createRange(), selection = window.getSelection()

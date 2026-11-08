@@ -7,12 +7,22 @@ import { tokens } from '@han-compose/composer/tokens'
 /** @typedef {import('@han-compose/composer/tokens').Token} Token */
 export { tokens }
 
-/** Related branches share a pastel hue; nested siblings shift gently within it.
- * Light and dark palettes follow the component’s inherited color-scheme.
- * @param {number[]} path */
-export function tint(path) {
-  const hue = path.length ? [350, 210, 75][path[0] % 3] + path.slice(1).reduce((sum, n, i) => sum + (n - .5) * 24 / (i + 1), 0) : 305
+/** A layer takes one pastel hue: its operands and the operator that opens it share it. A plain
+ * part takes the hue of the layer it sits in. Light and dark palettes follow the component’s
+ * inherited color-scheme.
+ * @param {number[]} path @param {boolean} [operator] */
+export function tint(path, operator = false) {
+  const hue = layerHue(operator || !path.length ? path : path.slice(0, -1))
   return `light-dark(oklch(72% 0.13 ${hue}), oklch(82% 0.11 ${hue}))`
+}
+
+/** The hue of the layer an operator opens. Every operand of that operator shares it; a deeper
+ * operator shifts within its branch. The root layer keeps the workshop’s base hue.
+ * @param {number[]} operatorPath */
+function layerHue(operatorPath) {
+  return operatorPath.length
+    ? [350, 210, 75][operatorPath[0] % 3] + operatorPath.slice(1).reduce((sum, n, i) => sum + (n - .5) * 24 / (i + 1), 0)
+    : 305
 }
 
 /** The smallest subtree containing a nonempty text range. A range inside an operator's zi.tools

@@ -49,7 +49,9 @@ Three levels.
 - **Identity (`cid`).** One component form under every name the sources give it: `ucs:F936`,
   `chise:GT-K01666`, `gwx:u7537-01`, `bsp:22`, `ids:<fingerprint>`.
 - **Equivalence.** Distinct cids that may substitute for one another in search and glyph fallback.
-  Equivalence never rewrites a description; the tree keeps the component the source named.
+  Equivalence never rewrites a description; the tree keeps the component the source named. The
+  `bsp:n` cids are BabelStone's 121 numbered parts; where CHISE names one `&name;`, the two are one
+  component under two names, and the `equivalences` table records the pair.
 
 Precedence when a cid is first assigned is `ucs` > `chise` > `gwx` > `bsp` > `ids`. A ledger freezes
 each cid, so a later encoding adds a `ucs` alias rather than renumbering anything.
@@ -67,6 +69,11 @@ A CHISE name resolves through the pinned ontology, never by parsing its prefix. 
 One artifact, `data/ids-corpus.json.gz`, with columnar tables in the shape `ids-parts.json` already
 uses: `components`, `aliases`, `equivalences`, `merges`, `descriptions`, plus `sources`, `provenance`,
 `pua` and `counts`. Outlines stay where they already live, so the corpus carries no `glyphs` table.
+
+An `equivalences` row names two cids, a `basis` (`alignment`), a `status` (`verified` where two or more
+characters attest the pair, `candidate` where one does), the provenance indexes of the descriptions
+that carry it, and a note listing the characters. The table is inferred, not asserted by either
+source: it never merges the two cids, and a description keeps the notation its source wrote.
 
 Every description row carries `subject` (a cid), the source's `text`, a `resolved` form in which
 unencoded leaves are `&cid;`, the provenance indexes of every attestation, region tags, a `role`
@@ -99,13 +106,17 @@ So `chise:GT-K01666` becomes its own cid with a private-use char, equivalent-by-
 `ucs:7537` and not merged with it, because the field really is drawn differently. `U+F936` resolves
 to `⿸虍` plus that cid, and where no outline exists the composer draws `⿱毌力`.
 
-A second case shows alignment: BabelStone's `⿹{22}一` for 与 and CHISE's `⿹&CDP-8BBF;一` differ in
-one leaf, which unites `bsp:22`, `chise:CDP-8BBF` and `chise:GT-K00125` under one cid.
+The alignment is built, not curated: for every character both sources describe, the build compares
+their descriptions token by token and keeps the pairs where exactly one operand differs, `{n}` against
+`&name;`. It finds 94 pairs; 71 are seen on two or more characters and are `verified`, the rest
+`candidate`. BabelStone's `{7}` and CHISE's `CDP-8BD0` are the clearest case, seen on 惠 `⿱{7}心` /
+`⿱&CDP-8BD0;心`, 專, 䦄 and four more.
 
 ## First increment
 
 Built: `data/ids-corpus.json.gz` from BabelStone and the eighteen CHISE files (102,894 CHISE rows
-beside 108,425 BabelStone ones), `data/chise-sources.json` as the pinned-source manifest,
+beside 108,425 BabelStone ones), with 1,517 components (1396 CHISE entities and 121 BabelStone
+numbers) and 94 equivalences between them; `data/chise-sources.json` as the pinned-source manifest,
 `data/ids-corpus-sources.tar.gz` as the offered source, `data/COPYING-chise-ids.txt`, and a check
 that every `ready` row parses and that `bun scripts/build_ids_corpus.mjs --check` reproduces the
 committed bytes.
