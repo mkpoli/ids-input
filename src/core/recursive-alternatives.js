@@ -170,6 +170,32 @@ export async function* recursiveAlternatives(part, adapter, { maxResults = 128, 
             }
           }
         }
+        if (normalized && isNode(current) && adapter.encoded && mergeable(current)) {
+          // A description that reads as a remainder may also name a character of its own; both
+          // rewrites are one step from the tree the reader chose.
+          const sequence = write(current)
+          if (!encoded.has(sequence)) {
+            if (lookups < maxLookups) {
+              lookups++
+              const findEncoded = adapter.encoded.bind(adapter)
+              encoded.set(sequence, lookup(requestSignal => findEncoded(sequence, { exact: true, signal: requestSignal }), signal, lookupTimeoutMs))
+            } else cuts.add('lookups')
+          }
+          if (encoded.has(sequence)) {
+            try {
+              const found = await /** @type {Promise<string[]>} */ (encoded.get(sequence))
+              signal?.throwIfAborted()
+              choices = [...choices, ...found.filter(char => {
+                const parsed = parse(char, { open: true })
+                return !parsed.problem && typeof parsed.tree === 'string' && decomposable(parsed.tree)
+              })]
+            } catch (error) {
+              signal?.throwIfAborted()
+              if (error instanceof Error && error.name === 'AbortError') throw error
+              cuts.add('lookup')
+            }
+          }
+        }
         if (!normalized && typeof current === 'string' && decomposable(current)) {
           step = 'expand'
           const { base, marks } = splitMarks(current)
