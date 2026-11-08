@@ -128,6 +128,22 @@ try {
     console.log(`${tab}: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every part draws'}`)
     if (boxed.length) failures.push(`${tab}: ${boxed.join(' ')}`)
   }
+  // The whole Han repertoire, paged: the largest palette page the workshop shows. Its button sits
+  // on the Components tab, so come back to it.
+  await page.getByRole('tab', { name: 'Components', exact: true }).click()
+  await page.waitForTimeout(1200)
+  const allCharacters = page.getByRole('button', { name: 'All characters', exact: true })
+  if (await allCharacters.count()) {
+    await allCharacters.first().click()
+    await page.waitForTimeout(2000)
+    await page.evaluate(() => document.fonts.ready)
+    await reveal(page, '.parts-grid .part')
+    const boxed = await boxedInPage(page, '.parts-grid .part')
+    console.log(`All characters: ${boxed.length ? `${boxed.length} boxed (${boxed.slice(0, 6).join(' ')})` : 'every part draws'}`)
+    if (boxed.length) failures.push(`All characters: ${boxed.join(' ')}`)
+  } else {
+    console.log('skip All characters: no such button')
+  }
   // The search results and the tree show characters as well.
   for (const [what, selector] of [['search results', '.ids-search-results .char'], ['tree', '.ids-tree .ids-part[data-character]']]) {
     if (!await page.locator(selector).count()) { console.log(`skip the ${what}: nothing shown`); continue }
