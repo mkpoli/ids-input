@@ -137,6 +137,23 @@ try {
   assert.equal(await phone.locator('.ids-reopen').count(), 1, 'the phone keeps a way back to the list')
   await phone.close()
 
+  const landscape = await browser.newPage({ viewport: { width: 844, height: 390 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+  landscape.on('pageerror', error => errors.push(error.message))
+  await landscape.goto(`${url}/?ids=${encodeURIComponent('⿰⿱一口吋')}`, { waitUntil: 'domcontentloaded' })
+  await landscape.locator('.ids-field input').waitFor()
+  const landscapeCompose = landscape.locator('#phone-compose-tab')
+  if (await landscapeCompose.count()) await landscapeCompose.click()
+  const landscapeTools = await landscape.locator('.ids-part-tools').boundingBox()
+  assert.ok(landscapeTools && landscapeTools.y >= 390, 'the landscape tree leaves the tools below the fold')
+  await landscape.locator('.ids-tree .ids-op').first().click()
+  await landscape.waitForFunction(() => document.querySelectorAll('.ids-option-label').length === 3, null, { timeout: 120000 })
+  const landscapeSheet = landscape.locator('.ids-swaps')
+  assert.equal(await landscapeSheet.evaluate(element => element.classList.contains('ids-sheet')), true, 'a landscape phone gets the sheet too')
+  const landscapeBox = await landscapeSheet.boundingBox()
+  assert.ok(landscapeBox && landscapeBox.y + landscapeBox.height <= 390, 'the landscape sheet fits the viewport')
+  assert.equal(await landscape.locator('.ids-scrim').count(), 1, 'the landscape sheet dims the page')
+  await landscape.close()
+
   assert.deepEqual(errors, [], 'no page errors')
   console.log('PASS recursive alternatives are grouped by split, merge and both, and each choice is undoable')
 } finally { await browser.close() }

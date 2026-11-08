@@ -121,14 +121,16 @@
   }
   function place() {
     if (!root || !panel) return
-    if (!inSight(root)) { placed = false; return }
-    // A narrow window gets a bottom sheet: full width, tall enough to read and reach on a phone.
-    if (innerWidth <= 640) {
+    // Touch screens get a bottom sheet, in either orientation, even when the tools are off screen:
+    // the sheet does not follow them.
+    const coarse = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches
+    if (innerWidth <= 640 || (coarse && innerWidth <= 1024)) {
       sheet = true
       maxHeight = Math.min(Math.round(innerHeight * 0.62), 560)
       placed = true
       return
     }
+    if (!inSight(root)) { placed = false; return }
     sheet = false
     const anchor = root.getBoundingClientRect(), box = panel.getBoundingClientRect(), edge = 8, gap = 6
     const under = anchor.bottom + gap, room = innerHeight - edge - under
