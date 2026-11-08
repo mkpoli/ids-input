@@ -5,7 +5,7 @@
   // description this face cannot draw falls back to the specimen.
   import { drawingSvg, parse, write } from '../../src/core/index.js'
   /** @typedef {Parameters<typeof drawingSvg>[0]} Drawing */
-  /** @type {{ sequence: string, draw: (sequence: string) => Promise<Drawing | null>, delay?: number, fallback?: import('svelte').Snippet }} */
+  /** @type {{ sequence: string, draw: ((sequence: string) => Promise<Drawing | null>) & { cancel?: () => void }, delay?: number, fallback?: import('svelte').Snippet }} */
   let { sequence, draw, delay = 400, fallback } = $props()
   const uid = $props.id()
   const read = $derived(parse(sequence, { open: true }))
@@ -15,7 +15,7 @@
   $effect(() => {
     const text = source, ask = draw
     let live = true, timer = 0
-    if (!text) { drawing = null; return }
+    if (!text) { drawing = null; ask.cancel?.(); return }
     // A first failure may be the export's connection, not the face: ask once more after a pause.
     /** @param {boolean} retry */
     const make = retry => {

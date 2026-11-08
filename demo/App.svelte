@@ -315,6 +315,12 @@
   /** @param {typeof FONT_FACES[number]} option */
   const sampleDraw = option => {
     const at = faceExport(option.key), key = `${at}\0${option.style}`
+    // An export named anew retires this face's drawer over the one before, and the drawing in it.
+    for (const [oldKey, drawer] of sampleDrawings) {
+      if (oldKey === key || !oldKey.endsWith(`\0${option.style}`)) continue
+      drawer.cancel()
+      sampleDrawings.delete(oldKey)
+    }
     if (!sampleDrawings.has(key)) {
       const preview = previewAt(at, separate, option.style, `switch-${option.key}`)
       sampleDrawings.set(key, createSampleDrawings((sequence, { signal }) => preview(sequence, { signal })))
