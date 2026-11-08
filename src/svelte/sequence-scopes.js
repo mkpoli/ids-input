@@ -42,8 +42,8 @@ export function sequenceScopes(tokens, bounds) {
       const left = child.box.left + inset, right = Math.max(left, child.right - inset)
       return { path: child.token.path, d: `M ${left} ${y} H ${right}` }
     })
-    const start = box.left + Math.min(6, (box.right - box.left) / 2)
-    const end = children[0] ? children[0].box.left + inset : box.right
+    const start = box.left
+    const end = children[0] ? children[0].box.left + inset - GAP : box.right
     return { path: token.path, lane, lead: `M ${start} 0 C ${start} ${y}, ${end - 4} ${y}, ${end} ${y}`, segments }
   })
 }

@@ -8,10 +8,10 @@ test('root scope segments its immediate operands and sits below nested scopes', 
   const scopes = sequenceScopes(tokens('⿰⿱木水火'), boxes([20, 20, 20, 20, 20]))
   expect(scopes.map(scope => [scope.path, scope.lane])).toEqual([[[], 1], [[0], 0]])
   expect(scopes[0].segments).toEqual([{ path: [0], d: 'M 22.5 10 H 77.5' }, { path: [1], d: 'M 82.5 10 H 97.5' }])
-  expect(scopes[0].lead).toBe('M 6 0 C 6 10, 18.5 10, 22.5 10')
+  expect(scopes[0].lead).toBe('M 0 0 C 0 10, 13.5 10, 17.5 10')
 })
 
-test('adjacent segments keep one fixed gap, and every lead meets its first segment', () => {
+test('adjacent segments keep one fixed gap, and each lead stops one gap before its first segment', () => {
   const scopes = sequenceScopes(tokens('⿰⿱木火⿱日月'), boxes(Array(7).fill(20)))
   const segment = d => { const [, start, , end] = d.match(/M ([\d.]+) ([\d.]+) H ([\d.]+)/).map(Number); return {start, end} }
   for (const scope of scopes) {
@@ -19,7 +19,7 @@ test('adjacent segments keep one fixed gap, and every lead meets its first segme
     for (let index = 1; index < segments.length; index++) {
       expect(segments[index].start - segments[index - 1].end).toBe(5)
     }
-    expect(Number(scope.lead.match(/([\d.]+) ([\d.]+)$/)[1])).toBe(segments[0].start)
+    expect(Number(scope.lead.match(/([\d.]+) ([\d.]+)$/)[1])).toBe(segments[0].start - 5)
   }
 })
 

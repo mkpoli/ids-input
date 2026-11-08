@@ -21,13 +21,20 @@ try {
         const [, start, , end] = path.getAttribute('d').match(/M ([\d.]+) ([\d.]+) H ([\d.]+)/).map(Number)
         return { start, end }
       })
+      const lead = group.querySelector('.scope-lead').getAttribute('d')
+      const run = group.closest('.sequence-run')
+      const token = run.querySelector(`span[data-path="${group.dataset.path}"]`)
+      const origin = run.getBoundingClientRect().left
       return {
         gaps: segments.slice(1).map((segment, index) => segment.start - segments[index].end),
-        meet: Number(group.querySelector('.scope-lead').getAttribute('d').match(/([\d.]+) ([\d.]+)$/)[1]) === segments[0].start
+        started: Number(lead.match(/^M ([\d.]+)/)[1]),
+        left: token.getBoundingClientRect().left - origin,
+        separation: segments[0].start - Number(lead.match(/([\d.]+) ([\d.]+)$/)[1])
       }
     }))
     assert.ok(geometry.every(scope => scope.gaps.every(gap => Math.abs(gap - 5) < .01)), 'adjacent segments keep one gap')
-    assert.ok(geometry.every(scope => scope.meet), 'each lead meets its first segment')
+    assert.ok(geometry.every(scope => Math.abs(scope.started - scope.left) < .01), 'each lead starts at its IDC left edge')
+    assert.ok(geometry.every(scope => Math.abs(scope.separation - 5) < .01), 'each lead stops one gap before its first segment')
     await page.locator('.ids-op[data-path="0"]').hover()
     assert.equal(await page.locator('.sequence-paint .hovered').count(), 3)
     await page.locator('#tree-tab').click()
