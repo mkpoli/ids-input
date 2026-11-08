@@ -23,6 +23,11 @@ test('adjacent segments keep one fixed gap, and each lead stops one gap before i
   }
 })
 
+test('a lead starts one pixel inside the measured glyph ink', () => {
+  const [scope] = sequenceScopes(tokens('⿰木'), [{left: 0, right: 20, inkLeft: 4}, {left: 20, right: 40}])
+  expect(scope.lead).toBe('M 5 0 C 5 4, 13.5 4, 17.5 4')
+})
+
 test('geometry follows measured variable-width notes, emoji and selectors', () => {
   const spans = tokens('⿴[1]👩🏽‍💻𠀀\u{E0100}')
   const [scope] = sequenceScopes(spans, boxes([58, 31, 24]))

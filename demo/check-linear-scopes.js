@@ -16,24 +16,35 @@ try {
     assert.equal(await page.locator('.sequence-scopes g[data-path=""]').count(), 1)
     const leads = await page.locator('.scope-lead').evaluateAll(els => els.map(el => el.getAttribute('d')))
     assert.ok(leads.every(d => /[CQ]/.test(d)), 'each IDC has a curved lead')
-    const geometry = await page.locator('.sequence-scopes g').evaluateAll(groups => groups.map(group => {
-      const segments = [...group.querySelectorAll('.scope-segment')].map(path => {
-        const [, start, , end] = path.getAttribute('d').match(/M ([\d.]+) ([\d.]+) H ([\d.]+)/).map(Number)
-        return { start, end }
+    const geometry = await page.locator('.sequence-scopes g').evaluateAll(groups => {
+      const canvas = document.createElement('canvas')
+      const context = canvas.getContext('2d')
+      return groups.map(group => {
+        const segments = [...group.querySelectorAll('.scope-segment')].map(path => {
+          const [, start, , end] = path.getAttribute('d').match(/M ([\d.]+) ([\d.]+) H ([\d.]+)/).map(Number)
+          return { start, end }
+        })
+        const lead = group.querySelector('.scope-lead').getAttribute('d')
+        const run = group.closest('.sequence-run')
+        const token = run.querySelector(`span[data-path="${group.dataset.path}"]`)
+        const style = getComputedStyle(token)
+        if (context) context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+        const character = [...token.dataset.character][0]
+        const inkLeft = context && /^[\u2FF0-\u2FFF]$/.test(character)
+          ? Math.max(0, -context.measureText(character).actualBoundingBoxLeft)
+          : 0
+        const origin = run.getBoundingClientRect().left
+        return {
+          gaps: segments.slice(1).map((segment, index) => segment.start - segments[index].end),
+          started: Number(lead.match(/^M ([\d.]+)/)[1]),
+          left: token.getBoundingClientRect().left - origin,
+          inkLeft,
+          separation: segments[0].start - Number(lead.match(/([\d.]+) ([\d.]+)$/)[1])
+        }
       })
-      const lead = group.querySelector('.scope-lead').getAttribute('d')
-      const run = group.closest('.sequence-run')
-      const token = run.querySelector(`span[data-path="${group.dataset.path}"]`)
-      const origin = run.getBoundingClientRect().left
-      return {
-        gaps: segments.slice(1).map((segment, index) => segment.start - segments[index].end),
-        started: Number(lead.match(/^M ([\d.]+)/)[1]),
-        left: token.getBoundingClientRect().left - origin,
-        separation: segments[0].start - Number(lead.match(/([\d.]+) ([\d.]+)$/)[1])
-      }
-    }))
+    })
     assert.ok(geometry.every(scope => scope.gaps.every(gap => Math.abs(gap - 5) < .01)), 'adjacent segments keep one gap')
-    assert.ok(geometry.every(scope => Math.abs(scope.started - scope.left - 1) < .01), 'each lead starts one pixel inside its IDC left edge')
+    assert.ok(geometry.every(scope => Math.abs(scope.started - (scope.left + scope.inkLeft + 1)) < .01), 'each lead starts one pixel inside the IDC ink box')
     assert.equal(await page.locator('.scope-lead').first().evaluate(element => getComputedStyle(element).strokeLinecap), 'round')
     assert.ok(geometry.every(scope => Math.abs(scope.separation - 5) < .01), 'each lead stops one gap before its first segment')
     await page.locator('.ids-op[data-path="0"]').hover()

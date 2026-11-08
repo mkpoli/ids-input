@@ -19,9 +19,18 @@
       frame = requestAnimationFrame(() => {
         if (!alive) return
         const origin = run.getBoundingClientRect().left
+        const style = getComputedStyle(run)
+        const canvas = document.createElement('canvas')
+        const context = canvas.getContext('2d')
+        if (context) context.font = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
         bounds = [...run.querySelectorAll('span')].map(span => {
           const box = span.getBoundingClientRect()
-          return {left: box.left - origin, right: box.right - origin}
+          const character = [...(span.dataset.character ?? '')][0] ?? ''
+          const metrics = context && /^[\u2FF0-\u2FFF]$/.test(character) ? context.measureText(character) : null
+          const inkLeft = metrics && Number.isFinite(metrics.actualBoundingBoxLeft)
+            ? Math.max(0, -metrics.actualBoundingBoxLeft)
+            : 0
+          return {left: box.left - origin, right: box.right - origin, inkLeft}
         })
       })
     }

@@ -1,7 +1,7 @@
 // @ts-check
 import { arity } from '../core/ids.js'
 /** @typedef {import('./tokens.js').Token} Token */
-/** @typedef {{left:number, right:number}} Bounds */
+/** @typedef {{left:number, right:number, inkLeft?:number}} Bounds */
 /** @typedef {{token:Token, box:Bounds, children:ScopeNode[], operator:boolean, height:number, right:number}} ScopeNode */
 /** A fixed gap keeps operand boundaries legible at every size; each segment keeps half of it from the glyph box. */
 const GAP = 5
@@ -42,7 +42,7 @@ export function sequenceScopes(tokens, bounds) {
       const left = child.box.left + inset, right = Math.max(left, child.right - inset)
       return { path: child.token.path, d: `M ${left} ${y} H ${right}` }
     })
-    const start = box.left + 1
+    const start = box.left + (box.inkLeft ?? 0) + 1
     const end = children[0] ? children[0].box.left + inset - GAP : box.right
     return { path: token.path, lane, lead: `M ${start} 0 C ${start} ${y}, ${end - 4} ${y}, ${end} ${y}`, segments }
   })
