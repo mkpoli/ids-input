@@ -110,11 +110,27 @@ for (const [i, entry] of manifest.files.entries()) {
   }
 }
 
-// Equivalences: BabelStone numbers a part `{n}` where CHISE names it `&name;`. Aligning the two
-// sources' descriptions of one character, token by token, and keeping the pairs where exactly one
-// operand differs gives the same component under two names.
-const TOKEN = /\{(\d+)\}|&([^;]+);|[\s\S]/g
-const tokenize = value => [...value.matchAll(TOKEN)].map(match => match[0])
+// Equivalences: the two sources name one part differently, BabelStone as `{n}` or a character,
+// CHISE as `&name;` or a character. Aligning their descriptions of one character, operator by
+// operator, and keeping the operand positions where the two differ gives the names that stand for
+// one component. A pair seen on several characters is stronger than one seen once.
+const TOKEN = /\{(\d+)\}|&([^;]+);|./gsu
+/** The IDS fragment note 6 gives each numbered component; a number with one is compared as that
+ * fragment, so a composite such as {2} (`⿱⺈𫩏`) is not taken for its first character. */
+const fragments = new Map()
+for (const line of (await readFile(new URL('../data/ids-components.tsv', import.meta.url), 'utf8')).split(/\r?\n/)) {
+  if (!line || line.startsWith('#')) continue
+  const [name, , fragment] = line.split('\t')
+  const number = Number(name?.slice(1, -1))
+  if (fragment && Number.isInteger(number)) fragments.set(number, fragment)
+}
+/** @param {string} value @param {Set<number>} [seen] */
+const expand = (value, seen = new Set()) => value.replace(/\{(\d+)\}/g, (whole, digits) => {
+  const number = Number(digits), fragment = fragments.get(number)
+  if (fragment === undefined || seen.has(number)) return whole
+  return expand(fragment, new Set([...seen, number]))
+})
+const tokenize = value => [...expand(value).matchAll(TOKEN)].map(match => match[0])
 /** @type {Map<number, { babel: typeof rows, chise: typeof rows }>} */
 const bySubject = new Map()
 for (const row of rows) {
@@ -122,15 +138,23 @@ for (const row of rows) {
   if (!group) bySubject.set(row.subject, group = { babel: [], chise: [] })
   ;(row.prov === babelProv ? group.babel : group.chise).push(row)
 }
-/** @type {Map<string, { count: number, prov: Set<number>, chars: string[] }>} */
+/** @type {Map<string, { a: string, b: string, count: number, prov: Set<number>, chars: string[] }>} */
 const aligned = new Map()
-const record = (number, name, prov, char) => {
-  const key = `${number}\0${name}`
+const record = (a, b, prov, char) => {
+  const [one, two] = [a, b].sort()
+  const key = `${one}\0${two}`
   let found = aligned.get(key)
-  if (!found) aligned.set(key, found = { count: 0, prov: new Set(), chars: [] })
-  found.count++
+  if (!found) aligned.set(key, found = { a: one, b: two, prov: new Set(), chars: new Set() })
   found.prov.add(prov)
-  if (found.chars.length < 5) found.chars.push(char)
+  found.chars.add(char)
+}
+/** The cid a token names: `bsp:n`, `chise:name`, `ucs:HEX`, or null for a character no table names. */
+const cidOf = token => {
+  const numbered = /^\{(\d+)\}$/.exec(token)
+  if (numbered) return `bsp:${numbered[1]}`
+  const entity = /^&([^;]+);$/.exec(token)
+  if (entity) return `chise:${entity[1]}`
+  return [...token].length === 1 && !OPERATORS.has(token) ? `ucs:${token.codePointAt(0).toString(16).toUpperCase()}` : null
 }
 for (const [subject, group] of bySubject) {
   for (const b of group.babel) {
@@ -140,21 +164,32 @@ for (const [subject, group] of bySubject) {
       if (bt.length !== ct.length) continue
       /** @type {[number, string, string][]} */
       const diff = []
-      for (let i = 0; i < bt.length; i++) if (bt[i] !== ct[i]) diff.push([i, bt[i], ct[i]])
-      if (diff.length !== 1) continue
-      for (const [a, d] of [[diff[0][1], diff[0][2]], [diff[0][2], diff[0][1]]]) {
-        const numbered = /^\{(\d+)\}$/.exec(a), entity = /^&([^;]+);$/.exec(d)
-        if (numbered && entity) record(numbered[1], entity[1], c.prov, String.fromCodePoint(subject))
+      let sameOperators = true
+      for (let i = 0; i < bt.length; i++) {
+        if (bt[i] === ct[i]) continue
+        if (OPERATORS.has(bt[i]) || OPERATORS.has(ct[i])) { sameOperators = false; break }
+        diff.push([i, bt[i], ct[i]])
+      }
+      if (!sameOperators || !diff.length) continue
+      for (const [, x, y] of diff) {
+        const a = cidOf(x), other = cidOf(y)
+        if (!a || !other || a === other) continue
+        record(a, other, c.prov, String.fromCodePoint(subject))
       }
     }
   }
 }
-const equivalences = [...aligned]
-  .map(([key, found]) => {
-    const [number, name] = key.split('\0')
-    return [`bsp:${number}`, `chise:${name}`, 'alignment', found.count >= 2 ? 'verified' : 'candidate',
+const equivalences = [...aligned.values()]
+  // Two characters differing between the sources are variants or slips in a description, not two
+  // names of one component; the table keeps number, entity and character against each other.
+  .filter(found => !(found.a.startsWith('ucs:') && found.b.startsWith('ucs:')))
+  .map(found => {
+    // One character's regional descriptions may give the same pair several times; the count is of
+    // characters, not descriptions.
+    const characters = [...found.chars]
+    return [found.a, found.b, 'alignment', characters.length >= 2 ? 'verified' : 'candidate',
       [...found.prov, babelProv].sort((a, b) => a - b),
-      `${found.count} ${found.count === 1 ? 'character' : 'characters'}: ${found.chars.join(' ')}`]
+      `${characters.length} ${characters.length === 1 ? 'character' : 'characters'}: ${characters.slice(0, 5).join(' ')}`]
   })
   .sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]))
 
