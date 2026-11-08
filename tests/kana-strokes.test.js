@@ -11,7 +11,10 @@ it('counts the strokes of every kana KanjiVG draws', () => {
   expect(keys.every((key, index) => [...key].length === 1 && (!index || keys[index - 1].codePointAt(0) < key.codePointAt(0)))).toBe(true)
   expect(keys.every(key => (key >= '\u3041' && key <= '\u3096') || (key >= '\u30a1' && key <= '\u30fa'))).toBe(true)
   const count = key => strokes[keys.indexOf(key)]
-  for (const [key, value] of [['あ', 3], ['い', 2], ['う', 2], ['ア', 2], ['イ', 2], ['ウ', 3], ['カ', 2], ['キ', 3], ['フ', 1], ['ノ', 1]]) expect([key, count(key)]).toEqual([key, value])
+  for (const [key, value] of [['あ', 3], ['い', 2], ['う', 2], ['ア', 2], ['イ', 2], ['ウ', 3], ['カ', 2], ['キ', 3], ['フ', 1], ['ノ', 1], ['マ', 2]]) expect([key, count(key)]).toEqual([key, value])
+  // Every kana in the two ranges is drawn: 176, not 175. A kana lost to a parse or a lost
+  // connection is a silent gap, so the count is pinned.
+  expect(keys.length).toBe(176)
   expect(Math.min(...strokes)).toBeGreaterThan(0)
   expect(Math.max(...strokes)).toBeLessThan(10)
   expect(data.revision).toMatch(/^[0-9a-f]{40}$/)
