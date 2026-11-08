@@ -19,7 +19,8 @@
   import { documentFile, readDocumentFile } from './lib/documents.js'
   import ids from '../data/babelstone-ids.tsv.gz?url'
   import layers from '../data/tangut-layers.json.gz?url'
-  import additionalIds from '../data/yi-bai-ids.tsv.gz?url'
+  import zitools from '../data/yi-bai-ids.tsv.gz?url'
+  import corpus from '../data/ids-corpus.json.gz?url'
   import projectIds from '../data/ids-project.tsv.gz?url'
   import overwriteIds from '../data/ids-overwrites.tsv?url'
   import components from '../data/ids-components.tsv?url'
@@ -84,7 +85,7 @@
   let composer = $state(params.get('composer') || load('composer', '') || '')
   const base = $derived(composer || import.meta.env.VITE_COMPOSER_BASE || COMPOSER_BASES[face] || COMPOSER_BASE)
   $effect(() => save('composer', params.get('composer') ? undefined : composer || undefined))
-  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, additionalIds: [additionalIds, projectIds], overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
+  const sealAdapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, zitools, chise: corpus, project: projectIds, overwrite: overwriteIds, components, parts, sketches, forms, names, folds, characters, characterInfo, chains })
 
   const operatorSet = new Set(OPERATORS.map(([op]) => op))
   const babel = { ...sealAdapter, recognizeDrawing, parts: async () => {

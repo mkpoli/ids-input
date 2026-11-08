@@ -1164,6 +1164,8 @@ CHISE's, and every row carries the source it came from.
 - Changes: CHISE writes each description with the character's code point and its parts as entities;
   the build converts the first to a `ucs` cid and the second to `chise:` names, then merges the
   rows with BabelStone's. Built on 2026-11-04.
+- Use: `babelStoneAdapter({ chise })` adds the CHISE rows to the description table, each with
+  `sources: ['chise']`; a host that cannot take GPL leaves the option out.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
   [the corpus note](../docs/ids-corpus.md).
 

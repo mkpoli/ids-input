@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import { gunzipSync, gzipSync } from 'node:zlib'
 import { readFileSync } from 'node:fs'
 import { babelStoneAdapter, componentIndex, parseIdsTable, paletteRows } from '../src/adapter/index.js'
+import { readCorpus } from '../src/adapter/corpus.js'
 
 const TABLE = `# header
 一\t一(GHTJKPV)
@@ -33,19 +34,22 @@ describe('the BabelStone adapter', () => {
 
   it('reads a gzipped table once, and answers a character\'s descriptions', async () => {
     const adapter = babelStoneAdapter({ ids: 'ids.tsv.gz', fetch })
-    expect(await adapter.structure('骨')).toEqual(table.get('骨'))
-    expect(await adapter.structure('林')).toEqual([{ text: '⿰木木', regions: 'GHTJKPV' }])
+    expect(await adapter.structure('骨')).toEqual(table.get('骨').map(row => ({ ...row, sources: ['babelstone'] })))
+    expect(await adapter.structure('林')).toEqual([{ text: '⿰木木', regions: 'GHTJKPV', sources: ['babelstone'] }])
     expect(requests.filter(url => url === 'ids.tsv.gz')).toHaveLength(1)
   })
   it('reads a table served uncompressed', async () => {
-    expect(await babelStoneAdapter({ ids: 'plain.tsv', fetch }).structure('滑')).toEqual([{ text: '⿰氵骨', regions: 'GHTJKPV' }])
+    expect(await babelStoneAdapter({ ids: 'plain.tsv', fetch }).structure('滑')).toEqual([{ text: '⿰氵骨', regions: 'GHTJKPV', sources: ['babelstone'] }])
   })
-  it('adds descriptions from a second table without replacing or duplicating the first', async () => {
+  it('adds descriptions from a second table, marking the source of each', async () => {
     const extra = '林\t⿰木木 ⿱木木\n𫜺\t⿱山田\n'
     const get = async url => new Response(url === 'extra' ? extra : TABLE)
-    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
-    expect(await adapter.structure('林')).toEqual([{ text: '⿰木木', regions: 'GHTJKPV' }, { text: '⿱木木', regions: '' }])
-    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+    const adapter = babelStoneAdapter({ ids: 'base', zitools: 'extra', fetch: get, worker: null })
+    expect(await adapter.structure('林')).toEqual([
+      { text: '⿰木木', regions: 'GHTJKPV', sources: ['babelstone', 'zitools'] },
+      { text: '⿱木木', regions: '', sources: ['zitools'] },
+    ])
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '', sources: ['zitools'] }])
     expect(await adapter.encoded('⿱山田')).toContain('𫜺')
     expect((await adapter.findByIds('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
     expect((await adapter.findByStructure('⿱山田')).hits.map(hit => hit.char)).toContain('𫜺')
@@ -57,35 +61,37 @@ describe('the BabelStone adapter', () => {
     expect(await adapter.overwrite('⿷⿺己一三')).toEqual([String.fromCodePoint(0x33473)])
     expect(await adapter.overwrite('⿰𦚏⿷己三')).toEqual([])
   })
-  it('adds several additional tables in the order given', async () => {
+  it('adds several tables in the order given, each with its source', async () => {
     const project = '𱁬\t⿰木木\n'
     const get = async url => new Response(url === 'project' ? project : url === 'extra' ? '𫜺\t⿱山田\n' : TABLE)
-    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: ['extra', 'project'], fetch: get, worker: null })
-    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
-    expect(await adapter.structure('𱁬')).toEqual([{ text: '⿰木木', regions: '' }])
+    const adapter = babelStoneAdapter({ ids: 'base', zitools: 'extra', project: 'project', fetch: get, worker: null })
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '', sources: ['zitools'] }])
+    expect(await adapter.structure('𱁬')).toEqual([{ text: '⿰木木', regions: '', sources: ['project'] }])
     expect(await adapter.encoded('⿰木木')).toContain('𱁬')
   })
   it('leaves a 獨體字 without a decomposition', async () => {
-    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: ['project'], fetch: async url => new Response(url === 'project' ? '' : TABLE), worker: null })
+    const adapter = babelStoneAdapter({ ids: 'base', project: 'project', fetch: async url => new Response(url === 'project' ? '' : TABLE), worker: null })
     expect(await adapter.structure(String.fromCodePoint(0x33473))).toEqual([])
     expect(await adapter.encoded('⿷⿺己一三')).toEqual([])
   })
-  it('retains distinct regional tags from both sources', async () => {
+  it('retains distinct regional tags from both sources, and both names on a shared one', async () => {
     const extra = '林\t⿰木木(J) ⿱木木(MT) ⿱木木(P) ⿱木木(P)\n'
     const get = async url => new Response(url === 'extra' ? extra : TABLE)
-    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
+    const adapter = babelStoneAdapter({ ids: 'base', zitools: 'extra', fetch: get, worker: null })
     expect(await adapter.structure('林')).toEqual([
-      { text: '⿰木木', regions: 'GHTJKPV' }, { text: '⿰木木', regions: 'J' },
-      { text: '⿱木木', regions: 'MT' }, { text: '⿱木木', regions: 'P' },
+      { text: '⿰木木', regions: 'GHTJKPV', sources: ['babelstone'] },
+      { text: '⿰木木', regions: 'J', sources: ['zitools'] },
+      { text: '⿱木木', regions: 'MT', sources: ['zitools'] },
+      { text: '⿱木木', regions: 'P', sources: ['zitools'] },
     ])
   })
   it('retries a failed additional table instead of caching incomplete data', async () => {
     let attempts = 0
     const get = async url => url !== 'extra' ? new Response(TABLE)
       : ++attempts === 1 ? new Response('', { status: 503 }) : new Response('𫜺\t⿱山田\n')
-    const adapter = babelStoneAdapter({ ids: 'base', additionalIds: 'extra', fetch: get, worker: null })
+    const adapter = babelStoneAdapter({ ids: 'base', zitools: 'extra', fetch: get, worker: null })
     await expect(adapter.structure('𫜺')).rejects.toThrow('503')
-    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '' }])
+    expect(await adapter.structure('𫜺')).toEqual([{ text: '⿱山田', regions: '', sources: ['zitools'] }])
   })
   it('gives no descriptions for a character that names only itself, or none at all', async () => {
     const adapter = babelStoneAdapter({ table })
@@ -300,4 +306,36 @@ it('finds ideographic zero and arbitrary graphic components literally or by code
 it('finds literal braces as contained components', async () => {
   const adapter = babelStoneAdapter({ table: new Map([['甲', [{ text: '⿳{1}', regions: '' }]]]) })
   expect((await adapter.containing('{1')).items).toContain('甲')
+})
+
+describe('the CHISE corpus', () => {
+  const corpus = {
+    format: 'ids-input/ids-corpus',
+    sources: [{ id: 'babelstone' }, { id: 'chise-IDS-UCS-Basic.txt' }],
+    descriptions: {
+      columns: ['subject', 'text', 'resolved', 'prov', 'regions', 'role', 'status'],
+      rows: [
+        ['ucs:6728', '⿻十八', null, [0, 1], '', 'source', 'ready'],
+        ['ucs:6F22', '⿰氵&CDP-1;', '⿰氵&chise:CDP-1;', [1], '', 'source', 'unresolved'],
+        ['ucs:4E00', '一', null, [1], '', 'source', 'empty'],
+        ['ucs:6797', '⿰木木', null, [0], 'G', 'source', 'ready'],
+      ],
+    },
+  }
+  it('reads only the rows CHISE attests, with every source that gives them', () => {
+    const read = readCorpus(JSON.stringify(corpus))
+    expect(read.get('木')).toEqual([{ text: '⿻十八', regions: '', sources: ['babelstone', 'chise'] }])
+    expect(read.get('漢')).toEqual([{ text: '⿰氵&CDP-1;', regions: '', sources: ['chise'] }])
+    expect(read.has('一')).toBe(false)
+    expect(read.has('林')).toBe(false)
+  })
+  it('merges into the BabelStone table, naming both sources on one description', async () => {
+    const get = async url => new Response(url === 'corpus' ? JSON.stringify(corpus) : TABLE)
+    const adapter = babelStoneAdapter({ ids: 'base', chise: 'corpus', fetch: get, worker: null })
+    expect(await adapter.structure('木')).toEqual([{ text: '⿻十八', regions: 'GHTJKPV', sources: ['babelstone', 'chise'] }])
+    expect(await adapter.structure('漢')).toEqual([{ text: '⿰氵&CDP-1;', regions: '', sources: ['chise'] }])
+  })
+  it('refuses a document that is not a corpus', () => {
+    expect(() => readCorpus('{"format":"something-else"}')).toThrow('ids-corpus')
+  })
 })

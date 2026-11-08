@@ -14,6 +14,7 @@ import { isComponent, isSequence, parse, write } from '../core/ids.js'
 import { chainCharacter as chainName, readChainEntries } from '../core/chain-entries.js'
 import { readSketchTemplates } from '../core/sketch-data.js'
 import { download } from '../core/retry.js'
+import { readCorpus } from './corpus.js'
 
 /**
  * @typedef {import('./types.js').IdsAdapter} IdsAdapter
@@ -32,9 +33,11 @@ const SCRIPT = /[\p{Ideographic}\p{Radical}\u2E80-\u2FFF\u3041-\u30FF\u3100-\u31
  * The table `data/babelstone-ids.tsv.gz` holds, once decompressed: char → its descriptions with
  * their source regions. Lines starting with `#` are its header.
  * @param {string} text
+ * @param {string} [source] The source the table's descriptions come from (`babelstone`, `zitools`,
+ *   `project`). The text does not name it, so a table read without one carries no source.
  * @returns {Map<string, Sequence[]>}
  */
-export function parseIdsTable(text) {
+export function parseIdsTable(text, source) {
   /** @type {Map<string, Sequence[]>} */
   const table = new Map()
   for (const line of text.split('\n')) {
@@ -43,26 +46,39 @@ export function parseIdsTable(text) {
     if (tab < 0) continue
     table.set(line.slice(0, tab), line.slice(tab + 1).split(' ').filter(Boolean).map(written => {
       const match = REGIONS.exec(written)
-      return match ? { text: written.slice(0, match.index), regions: match[1] } : { text: written, regions: '' }
+      const read = match ? { text: written.slice(0, match.index), regions: match[1] } : { text: written, regions: '' }
+      return source ? { ...read, sources: [source] } : read
     }))
   }
   return table
 }
 
-/** Combine descriptions without changing either source's region tags.
+/** A description with `sources` added, once each, keeping the order they were first seen in.
+ * @param {Sequence} row @param {string[] | undefined} sources */
+const withSources = (row, sources) => {
+  const next = [...(row.sources ?? [])]
+  for (const source of sources ?? []) if (!next.includes(source)) next.push(source)
+  return next.length === (row.sources ?? []).length ? row : { ...row, sources: next }
+}
+
+/** Combine descriptions, keeping each source's region tags and the sources that attest a description.
+ * A description another source gives without a region tag is the same description, so only its
+ * source is added; a distinct region tag stays a distinct row.
  * @param {Map<string, Sequence[]>} base @param {Map<string, Sequence[]>} extra */
 export function mergeIdsTables(base, extra) {
   const merged = new Map(base)
   for (const [char, descriptions] of extra) {
-    const first = base.get(char) ?? []
-    const seen = new Set(first.map(item => `${item.text}\0${item.regions ?? ''}`))
-    const texts = new Set(first.map(item => item.text))
-    const added = descriptions.filter(item => {
+    const rows = [...(merged.get(char) ?? [])]
+    for (const item of descriptions) {
       const key = `${item.text}\0${item.regions ?? ''}`
-      if (seen.has(key) || (!item.regions && texts.has(item.text))) return false
-      seen.add(key); texts.add(item.text); return true
-    })
-    if (added.length) merged.set(char, [...first, ...added])
+      const same = rows.findIndex(row => `${row.text}\0${row.regions ?? ''}` === key)
+      if (same >= 0) { rows[same] = withSources(rows[same], item.sources); continue }
+      // An untagged duplicate attests the same description; a region tag stays that source's own.
+      const attested = item.regions ? [] : rows.map((row, i) => row.text === item.text ? i : -1).filter(i => i >= 0)
+      if (attested.length) { for (const i of attested) rows[i] = withSources(rows[i], item.sources); continue }
+      rows.push(item)
+    }
+    if (rows.length) merged.set(char, rows)
   }
   return merged
 }
@@ -149,10 +165,13 @@ export function expandNumberedComponents(table, parts) {
   return new Map([...table].map(([char, sequences]) => {
     /** @type {Sequence[]} */
     const out = []
-    const seen = new Set()
-    for (const { text, regions } of sequences) {
+    /** @type {Map<string, number>} */
+    const seen = new Map()
+    for (const { text, regions, sources } of sequences) {
       const written = expand(text), key = `${written}\t${regions}`
-      if (!seen.has(key)) { seen.add(key); out.push({ text: written, regions }) }
+      const at = seen.get(key)
+      if (at === undefined) { seen.set(key, out.length); out.push({ text: written, regions, sources }) }
+      else out[at] = withSources(out[at], sources)
     }
     return [char, out]
   }))
@@ -166,13 +185,14 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * table uncompressed), `parts` of `data/ids-parts.json`; each is fetched once, when first needed.
  * `components` is the URL of `data/ids-components.tsv` (or `componentsText` its text), the numbered
  * components IDS.TXT note 6 names and the IDS fragments that write them out ({12}, the right of 龍,
- * as ⿷己三); a sequence naming one reads as the IDS it names. `additionalIds` is an optional table,
- * or an array of tables, in the same format; new descriptions follow the first table's descriptions.
- * The workshop supplies Yi Bai's set and this project's own `data/ids-project.tsv.gz` for characters
- * newer than BabelStone's. Duplicate untagged descriptions are omitted; distinct region tags are
- * kept. `overwrite` is an optional table (or `overwriteText` its text) of descriptions that draw as an
- * encoded character's context-adapted form, such as ⿰𦚏𳳳 as 龍; `overwrite(sequence)` returns that
- * character. `table` and `palette` hand the data over directly instead. `forms` is the URL of
+ * as ⿷己三); a sequence naming one reads as the IDS it names. `zitools` is the URL of
+ * `data/yi-bai-ids.tsv.gz`, the descriptions zi.tools publishes, and `project` of
+ * `data/ids-project.tsv.gz`, this project's own descriptions for characters newer than BabelStone's.
+ * `chise` is the URL of `data/ids-corpus.json.gz`, the merged catalogue in docs/ids-corpus.md; its
+ * CHISE rows join the same table. Each description names the sources that give it, and duplicate
+ * descriptions keep every source and region tag. `overwrite` is an optional table (or
+ * `overwriteText` its text) of descriptions that draw as an encoded character's context-adapted
+ * form, such as ⿰𦚏𳳳 as 龍; `overwrite(sequence)` returns that character. `table` and `palette` hand the data over directly instead. `forms` is the URL of
  * `data/component-forms.tsv` (or `formsText` its text), which the description search folds
  * components by and the component search opens the names of a component's other forms with.
  * `names` is the URL of `data/component-names.tsv` (or `namesText` its text), the names, words and
@@ -194,7 +214,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  * the page's fonts when it opens. `shuishu` adds the Shuishu characters and radicals to the
  * palette, and their names, readings and meanings to the search. `jurchen` adds the Jurchen
  * characters and radicals to the palette, and their readings and stroke codes to the search.
- * @param {{ ids?: string | URL, additionalIds?: string | URL | Array<string | URL>, components?: string | URL, componentsText?: string,
+ * @param {{ ids?: string | URL, zitools?: string | URL, chise?: string | URL, project?: string | URL, components?: string | URL, componentsText?: string,
  *   overwrite?: string | URL, overwriteText?: string,
  *   parts?: string | URL, forms?: string | URL, formsText?: string, names?: string | URL, namesText?: string,
  *   folds?: string | URL, foldsText?: string, characters?: string | URL, charactersText?: string,
@@ -210,7 +230,7 @@ const codePoint = char => `U+${/** @type {number} */ (char.codePointAt(0)).toStr
  *   worker?: (() => Worker) | null }} options
  * @returns {IdsAdapter & { table: () => Promise<Map<string, Sequence[]>> }}
  */
-export function babelStoneAdapter({ ids, additionalIds, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
+export function babelStoneAdapter({ ids, zitools, chise, project, components, componentsText, overwrite, overwriteText, parts, forms, formsText, names, namesText, folds, foldsText, characters, charactersText, chains, characterInfo, layers, layersText, smallSeal, sketches, shuishu, jurchen, table: given, palette: givenPalette, fetch: get = download,
 
   worker = typeof Worker === 'undefined' || !ids ? null : () => new Worker(new URL('./search-worker.js', import.meta.url), { type: 'module' }) } = {}) {
   /** @type {Promise<Map<string, Sequence[]>> | null} */
@@ -281,7 +301,9 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     return new Promise((resolve, reject) => {
       asked.set(id, { resolve, reject })
       searcher?.postMessage({ id, query, limit, mode, componentLookup, ids: new URL(String(ids), base).href,
-        additionalIds: extraIds.length ? extraIds.map(url => new URL(String(url), base).href) : undefined,
+        zitools: zitools ? new URL(String(zitools), base).href : undefined,
+        chise: chise ? new URL(String(chise), base).href : undefined,
+        project: project ? new URL(String(project), base).href : undefined,
         components: components ? new URL(String(components), base).href : undefined, componentsText,
         forms: forms ? new URL(String(forms), base).href : undefined, formsText,
         layers: layers ? new URL(String(layers), base).href : undefined, layersText,
@@ -343,21 +365,20 @@ export function babelStoneAdapter({ ids, additionalIds, components, componentsTe
     })
     .catch(error => { overwriteMap = null; throw error })
 
-  /** The additional tables, as one list; an optional single table stays one. @type {Array<string | URL>} */
-  const extraIds = additionalIds === undefined ? [] : Array.isArray(additionalIds) ? additionalIds : [additionalIds]
   const read = () => table ??= Promise.all([
-    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(parseIdsTable)
+    given ? Promise.resolve(given) : ids ? load(ids).then(readText).then(text => parseIdsTable(text, 'babelstone'))
       : smallSeal || shuishu || jurchen ? /** @type {Map<string, Sequence[]>} */ (new Map()) : Promise.reject(new Error('babelStoneAdapter: no `ids` URL or `table` given')),
-    ...extraIds.map(url => load(url).then(readText).then(parseIdsTable)),
+    zitools ? load(zitools).then(readText).then(text => parseIdsTable(text, 'zitools')) : null,
+    chise ? load(chise).then(readText).then(readCorpus) : null,
+    project ? load(project).then(readText).then(text => parseIdsTable(text, 'project')) : null,
     componentsText !== undefined ? componentsText : components ? load(components).then(readText) : '',
     readSeal(),
-  ]).then(([base, ...rest]) => {
-    const tables = /** @type {Map<string, Sequence[]>[]} */ (rest.slice(0, extraIds.length))
-    const numbered = /** @type {string} */ (rest[extraIds.length])
-    const doc = /** @type {import('./seal-data.js').SmallSealData | null} */ (rest[extraIds.length + 1])
-    const parts = readNumberedComponents(numbered)
-    const merged = tables.reduce((found, table) => mergeIdsTables(found, expandNumberedComponents(table, parts)), expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts))
-    return doc ? new Map([...merged, ...sealTable(doc)]) : merged
+  ]).then(([base, fromZitools, fromChise, fromProject, numbered, doc]) => {
+    const parts = readNumberedComponents(/** @type {string} */ (numbered))
+    let merged = expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (base), parts)
+    for (const extra of [fromZitools, fromProject]) if (extra) merged = mergeIdsTables(merged, expandNumberedComponents(/** @type {Map<string, Sequence[]>} */ (extra), parts))
+    if (fromChise) merged = mergeIdsTables(merged, /** @type {Map<string, Sequence[]>} */ (fromChise))
+    return doc ? mergeIdsTables(merged, sealTable(doc)) : merged
   })
     .catch(error => { table = null; throw error })
 

@@ -99,7 +99,7 @@ describe('Shuishu', () => {
     const adapter = shuishuAdapter({ data, palette: [] })
     const table = await adapter.table()
     const built = data.parts.find(part => part.ids === `⿱${String.fromCodePoint(0x1b501)}${String.fromCodePoint(0x1b500)}`)
-    expect(table.get(built.part)).toEqual([{ text: built.ids, regions: '' }])
+    expect(table.get(built.part)).toEqual([{ text: built.ids, regions: '', sources: ['project'] }])
     // A part finds the characters written with it, and the character finds its own parts.
     const holding = await adapter.containing(String.fromCodePoint(0x1b501) + String.fromCodePoint(0x1b500))
     expect(holding.items).toContain(built.part)
@@ -144,18 +144,18 @@ describe('Shuishu', () => {
 
   it('carries the decompositions into the search worker', async () => {
     const gibberish = { format: 1, parts: [{ part: '𛌘', ids: '⿱𛔁𛔀' }, { part: '𛔀', ids: null }, { part: '𛔁', ids: null }] }
-    const search = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, gibberish)
+    const search = await loadSearchWorker({ ids: 'data:text/plain,', shuishu: gibberish })
     expect(search.search('𛔀', { limit: 3 }).hits.map(hit => hit.char)).toEqual(['𛌘'])
   })
 
   it('keeps the worker search standing without a readable decomposition file', async () => {
     const broken = Buffer.from('{oops').toString('base64')
-    const unreadable = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${broken}`)
+    const unreadable = await loadSearchWorker({ ids: 'data:text/plain,', shuishu: `data:application/json;base64,${broken}` })
     expect(unreadable.search('𛔀', { limit: 3 }).hits).toEqual([])
-    const other = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, { format: 2, parts: [] })
+    const other = await loadSearchWorker({ ids: 'data:text/plain,', shuishu: { format: 2, parts: [] } })
     expect(other.search('𛔀', { limit: 3 }).hits).toEqual([])
     const wrong = Buffer.from('{"format":2,"parts":[]}').toString('base64')
-    const versioned = await loadSearchWorker('data:text/plain,', undefined, undefined, '', undefined, '', undefined, '', undefined, `data:application/json;base64,${wrong}`)
+    const versioned = await loadSearchWorker({ ids: 'data:text/plain,', shuishu: `data:application/json;base64,${wrong}` })
     expect(versioned.search('𛔀', { limit: 3 }).hits).toEqual([])
   })
 

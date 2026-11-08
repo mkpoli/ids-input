@@ -15,7 +15,7 @@
   import folds from '../data/component-name-folds.tsv?url'
   import characterInfo from '../data/character-info.json.gz?url'
   import characters from '../data/character-vocabulary.tsv.gz?url'
-  const adapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, additionalIds: projectIds, overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo })
+  const adapter = smallSealAdapter({ data: sealData, shuishu: shuishuData, jurchen: jurchenData, ids, layers, project: projectIds, overwrite: overwriteIds, components, parts, forms, names, folds, characters, characterInfo })
   let value = $state('')
   let used = $state('')
 </script>
