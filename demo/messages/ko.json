@@ -219,6 +219,7 @@
   "app.layers.failed": "이 설명을 레이어로 그릴 수 없습니다.",
   "app.layers.nonlinear": "이 레이어에는 비선형 변형이 있습니다. 필드를 사용하기 전에 초기화하세요.",
   "app.layers.reset": "변형 초기화",
+  "app.layers.noStrokeData": "이 내보내기에는 획 그룹이 없습니다.",
   "app.layers.strokes": "획",
   "app.layers.transform": "변형",
   "app.layers.x": "X",

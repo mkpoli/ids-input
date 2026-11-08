@@ -496,6 +496,8 @@
               onclick={() => chooseStroke(stroke.id)}>{stroke.id}</button>
           {/each}
         </div>
+      {:else if strokeGeometry}
+        <p class="note">{t('app.layers.noStrokeData')}</p>
       {/if}
       <fieldset class="ui-card transform" data-variant="sunken" data-padding="sm" disabled={nonlinear}>
         <legend>{t('app.layers.transform')}</legend>
