@@ -7,7 +7,9 @@
 // does not carry (teachers, KanjiVG's groups for overlays, the standalone model) falls back the way
 // the composer falls back without them: rows of three share their axis by `SHARES`.
 //
-// Beyond the composer, ⿾ mirrors its operand, ⿿ turns it half round, 〾 draws it as it is, ㇯
+// Beyond the composer, a stacked operand whose donor drew it into the component above it closes on
+// to the operand above wherever the two cuts leave a seam (`space`, `closed`), not only under a cover, ⿾
+// mirrors its operand, ⿿ turns it half round, 〾 draws it as it is, ㇯
 // draws its second operand as a cut out of the first, and ⿼ ⿽ enclose from the right and the lower
 // right, their inner part placed in the room the outer one leaves.
 //
@@ -19,12 +21,13 @@ import { EM_BOX, area, centre, count, derived, drawnBox, drawnContours, fill, fi
   placed, pointsBox, pyRound, raster, rings, scaleOf, shrunk, square, stretchOf, targetFor, union, within } from './geometry.js'
 import { ownFormsOnly, componentParts, componentPosition, componentPositionBox, componentRecord, containsComponentForm, isComponentForm, isGroupedForm } from './component-forms.js'
 import { features, forward } from './layout.js'
-import { CONSTRUCTS, constructParts } from './constructs.js'
+import { CONSTRUCTS, BODY_FORMS, IVD_FORMS, SURROUND_CONSTRUCTS, bodyForm, constructBody, constructParts, ivdParts } from './constructs.js'
 import { pyramidCells, pyramidOnBaseLayout } from './pyramid.js'
 import { pyramidRows, pyramidOnBase } from '../core/pyramid.js'
 import { hangulClusterAt, jamoClass } from '../core/hangul.js'
 import { hangulLetters } from '../core/hangul-ids.js'
 import { toConjoiningJamo } from '../core/hangul.js'
+import { componentFix } from './component-fixes.js'
 import { isOutbound, markFace, markParts } from './marks.js'
 import { splitToneMarks, toneMarksAt } from '../core/marks.js'
 import { hexOf } from './sha256.js'
@@ -851,7 +854,21 @@ export class Composer {
     return { record: h, get piece() { return self.pieceOf(h) } }
   }
 
+  /** The parts drawing `node` in `region`, with the correction its description carries, where the
+   *  component is one the font cuts wrong (`COMPONENT_FIXES`). */
   node(node, region, atRoot = false, sideBySide = false) {
+    const construct = CONSTRUCTS[keyOf(node)]
+    if (construct?.nested) {
+      const hosts = new Set([construct.host, ...(construct.cuts ?? []).map(cut => cut.host)])
+      if (![...hosts].some(host => this.excluded(host))) {
+        const parts = constructParts(construct, [], Object.fromEntries([...hosts].map(host => [host, this.glyphRecord(host)])), region)
+        if (parts.length) return parts
+      }
+    }
+    return componentFix(keyOf(node), this.drawNode(node, region, atRoot, sideBySide), this, region)
+  }
+
+  drawNode(node, region, atRoot = false, sideBySide = false) {
     if (isEmpty(node)) return [this.placeholder(node, region)]
     const pyramid = this.pyramid(node)
     if (pyramid) {
