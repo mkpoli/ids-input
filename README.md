@@ -886,7 +886,7 @@ closes it, and Escape closes the submenu before the menu.
 
 The operator palette groups the operators by how many parts they take (1: ⿾ ⿿ 〾; 2: ⿰ ⿱ ⿴ ⿵
 ⿶ ⿷ ⿼ ⿸ ⿹ ⿺ ⿽ ⿻ ㇯; 3: ⿲ ⿳, `OPERATOR_GROUPS` in the core), each button showing its key (`shortcut()` writes keys as the platform does: ⌘⇧Z on Apple systems,
-Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear part does, and shows `?`.
+Ctrl+Shift+Z elsewhere). After them a ⬚ button empties the chosen part, as the part tools' Clear button does, and shows `?`.
 
 An operator on a slot splits it, the old part first (⿰ on 失 gives ⿰失⬚); on an operator it takes
 its place and keeps its parts, refusing to drop a filled one. In the sequence field, ASCII names in
