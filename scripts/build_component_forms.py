@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = ["fonttools==4.63.0", "skia-pathops==0.9.2", "brotli==1.2.0"]
 # ///
-"""Export contextual forms from pinned Noto TTCs and the bundled Kureedo WOFF2.
+"""Export contextual forms from pinned Noto TTCs and bundled brush WOFF2s.
 
 Run with uv; arguments are Noto Sans CJK and Noto Serif CJK Regular TTC paths.
 """
@@ -109,6 +109,137 @@ def compress_chang(outlines, style):
         i = next((i for i in range(len(source)-1) if y <= source[i+1]), len(source)-2)
         return round(target[i] + (y-source[i]) * (target[i+1]-target[i]) / (source[i+1]-source[i]), 2)
     return [[ops, [ymap(v) if i % 2 else v for i,v in enumerate(points)]] for ops,points in outlines]
+
+def wan_shan(cs, style):
+    if style in ('kaisho', 'fangsong'):
+        return wan_shan_brush(cs, style)
+    # 萬's own outline with 山 where its 禸 sits. One contour of 萬 carries the outer
+    # edge, 田's box, the legs and the 禸 pencil as a single run of filled ink, so a
+    # boolean cut cannot lift the pencil out. Splice it out of that contour instead:
+    # the run from the right leg's inner edge round to the left leg's inner edge keeps
+    # 艹, 田, the bar under 田, the legs and the hook untouched, and closing it flat
+    # across the band's inner top drops the pencil. 山 uses the compartment above the hook blade.
+    wan = cs('萬')
+    if style == 'sans':
+        # 萬's own contour order differs between the two faces.
+        cao, counters, frame = wan[5:6], wan[:4], wan[4]
+        inner_top, keep = (826, 208), slice(5, 25)
+    else:
+        cao, counters, frame = wan[0:1], wan[1:5], wan[5]
+        inner_top, keep = (814, 240), slice(6, 42)
+    # Reopening the contour at the band's inner top: the splice starts on the right
+    # leg's inner edge and `closePath` draws the flat edge back from the left one.
+    band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
+
+    def path_of(recordings):
+        path = pathops.Path()
+        for recording in recordings: replayRecording(recording, path.getPen())
+        return path
+
+    # The command indices are not safe to take on trust: a slice that starts one command late
+    # still closes along the band's inner top, and only nicks a leg. Compare against 萬 itself.
+    native, spliced = path_of(wan), path_of([band] + cao + counters)
+    assert pathops.op(spliced, native, pathops.PathOp.DIFFERENCE).area < 0.1, 'The 萬 splice draws outside 萬'
+    removed = pathops.op(native, spliced, pathops.PathOp.DIFFERENCE)
+    assert removed.area > 1000, 'The 萬 splice removes no 禸 pencil'
+    assert removed.bounds[3] <= inner_top[1] + 0.1, 'The 萬 splice reaches above the band inner top'
+
+    if style == 'sans':
+        # Reproduce the merged band-derived construction: 72-unit uprights, a
+        # 65-unit bar (the ceiling's weight), and 444/644 of the opening's width.
+        # Feet clear the hook blade by 16; the stem overlaps only the ceiling.
+        vertices = [(648,178),(648,105),(534,105),(534,232),
+                    (462,232),(462,105),(348,105),(348,178),
+                    (276,178),(276,0),(348,0),(348,40),
+                    (648,40),(648,0),(720,0),(720,178)]
+        shan = [[('moveTo', (vertices[0],))] +
+                [('lineTo', (p,)) for p in vertices[1:]] + [('closePath', ())]]
+    else:
+        # 岡 supplies an enclosure-sized 山 with a native 29-unit horizontal,
+        # matching 萬's ceiling. Keep its curved feet and slanted arm entries;
+        # shorten the straight runs between them, never scale the bar thinner.
+        # The full width is 69% of the opening, centred on 田's counter gap.
+        donor = cs('岡')[2]
+        assert donor[6] == ('lineTo', ((337,167),))
+        assert donor[21] == ('lineTo', ((655,167),))
+        levels = [(53,24),(91,62),(138,80),(167,109),(362,177),(395,210)]
+        def ymap(y):
+            a,b = next(((a,b) for a,b in zip(levels,levels[1:]) if y <= b[0]), levels[-2:])
+            return a[1] + (y-a[0])*(b[1]-a[1])/(b[0]-a[0])
+        def mapped(command):
+            op, points = command
+            return op, tuple((503.5+(x-512)*0.92, ymap(y)) for x,y in points)
+        shan = [[('moveTo', ((535,109),)), ('lineTo', ((535,254),)),
+                 ('lineTo', ((472,254),)), ('lineTo', ((472,109),))] +
+                [mapped(command) for command in donor[6:22]] + [('closePath', ())]]
+
+    # Only the stem may meet 萬, in the ceiling directly below 田's counter gap.
+    overlap = pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION)
+    spine = (462,534) if style == 'sans' else (472,535)
+    top = 232 if style == 'sans' else 254
+    allowed = pathops.Path()
+    allowed.moveTo(spine[0], inner_top[1]); allowed.lineTo(spine[1], inner_top[1])
+    allowed.lineTo(spine[1], top); allowed.lineTo(spine[0], top); allowed.close()
+    assert overlap.area > 0, '山 stem does not join the ceiling'
+    assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
+    return [group([band] + cao + counters), group(shan)]
+
+def wan_shan_brush(cs, style):
+    """Keep each face's sloping ceiling, splice out 禸, and shorten 岡's 山.
+
+    Donor horizontals and curved feet retain their vertical weight. Only the
+    open upright runs contract; the new stem follows 田's counter-gap column.
+    """
+    wan = cs('萬')
+    donor = cs('岡')[1]
+    if style == 'kaisho':
+        frame = wan[1]
+        assert frame[47] == ('lineTo', ((463, 214),))
+        assert frame[65] == ('lineTo', ((510, 216),))
+        band = frame[:48] + [frame[65], ('closePath', ())]
+        retained = wan[:1] + wan[2:]
+        def mapped(command):
+            op, points = command
+            return op, tuple((x - 8, y - 60 if y <= 187 else 127 + (y - 187) * 58 / 188) for x, y in points)
+        shan = [mapped(c) for c in donor[:11]] + [
+            ('lineTo', ((510, 238),)), ('lineTo', ((464, 236),)),
+        ] + [mapped(c) for c in donor[32:]]
+        ceiling = [(463, 214), (510, 216), (510, 238), (464, 236)]
+        removed_top = 216
+    elif style == 'fangsong':
+        frame = wan[0]
+        assert frame[11] == ('lineTo', ((520, 184),))
+        assert frame[35] == ('qCurveTo', ((471, 153), (471, 181)))
+        band = frame[:12] + [('lineTo', ((471, 181),))] + frame[36:]
+        retained = wan[1:]
+        def mapped(command):
+            op, points = command
+            return op, tuple((x, y - 28 if y <= 156 else 128 + (y - 156) * 42 / 184) for x, y in points)
+        shan = [mapped(c) for c in donor[:21]] + [
+            ('lineTo', ((471, 202),)), ('lineTo', ((522, 205),)),
+        ] + [mapped(c) for c in donor[52:]]
+        ceiling = [(471, 180), (522, 180), (522, 205), (471, 205)]
+        removed_top = 184
+    else:
+        raise ValueError('Unknown brush style: ' + style)
+
+    def path_of(recordings):
+        path = pathops.Path()
+        for recording in recordings:
+            replayRecording(recording, path.getPen())
+        return path
+
+    native, spliced = path_of(wan), path_of([band] + retained)
+    assert pathops.op(spliced, native, pathops.PathOp.DIFFERENCE).area < 0.1
+    removed = pathops.op(native, spliced, pathops.PathOp.DIFFERENCE)
+    assert removed.area > 1000
+    assert removed.bounds[3] <= removed_top + 0.1
+    allowed = path_of([[('moveTo', (ceiling[0],))] +
+                       [('lineTo', (p,)) for p in ceiling[1:]] + [('closePath', ())]])
+    overlap = pathops.op(path_of([shan]), spliced, pathops.PathOp.INTERSECTION)
+    assert overlap.area > 0, '山 stem does not join the ceiling'
+    assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 touches the legs, blade or ceiling outside its stem'
+    return [group([band] + retained), group([shan])]
 
 hashes = {'sans':'b76b0433203017ca80401b2ee0dd69350349871c4b19d504c34dbdd80541690a', 'serif':'93069d8e9e45d515cc421c971a79e6a5777704b348e36a9ef86578bf58adef77'}
 result = {'license':'SIL OFL 1.1', 'sources':{}, 'forms':{}, 'positions':{}}
@@ -278,76 +409,7 @@ for style, filename in zip(('sans','serif'), sys.argv[1:], strict=True):
     for ch,bottom in [('塁','土'),('疂','冝')]:
         for dots_seq in ['⿰冫⿱丿丶','⿰冫⿾冫']:
             forms['⿳田'+dots_seq+bottom]=[group(cs(ch))]
-    # 萬's own outline with 山 where its 禸 sits. One contour of 萬 carries the outer
-    # edge, 田's box, the legs and the 禸 pencil as a single run of filled ink, so a
-    # boolean cut cannot lift the pencil out. Splice it out of that contour instead:
-    # the run from the right leg's inner edge round to the left leg's inner edge keeps
-    # 艹, 田, the bar under 田, the legs and the hook untouched, and closing it flat
-    # across the band's inner top drops the pencil. 山 uses the compartment above the hook blade.
-    wan = cs('萬')
-    if style == 'sans':
-        # 萬's own contour order differs between the two faces.
-        cao, counters, frame = wan[5:6], wan[:4], wan[4]
-        inner_top, keep = (826, 208), slice(5, 25)
-    else:
-        cao, counters, frame = wan[0:1], wan[1:5], wan[5]
-        inner_top, keep = (814, 240), slice(6, 42)
-    # Reopening the contour at the band's inner top: the splice starts on the right
-    # leg's inner edge and `closePath` draws the flat edge back from the left one.
-    band = [('moveTo', (inner_top,))] + frame[keep] + [('closePath', ())]
-
-    def path_of(recordings):
-        path = pathops.Path()
-        for recording in recordings: replayRecording(recording, path.getPen())
-        return path
-
-    # The command indices are not safe to take on trust: a slice that starts one command late
-    # still closes along the band's inner top, and only nicks a leg. Compare against 萬 itself.
-    native, spliced = path_of(wan), path_of([band] + cao + counters)
-    assert pathops.op(spliced, native, pathops.PathOp.DIFFERENCE).area < 0.1, 'The 萬 splice draws outside 萬'
-    removed = pathops.op(native, spliced, pathops.PathOp.DIFFERENCE)
-    assert removed.area > 1000, 'The 萬 splice removes no 禸 pencil'
-    assert removed.bounds[3] <= inner_top[1] + 0.1, 'The 萬 splice reaches above the band inner top'
-
-    if style == 'sans':
-        # Reproduce the merged band-derived construction: 72-unit uprights, a
-        # 65-unit bar (the ceiling's weight), and 444/644 of the opening's width.
-        # Feet clear the hook blade by 16; the stem overlaps only the ceiling.
-        vertices = [(648,178),(648,105),(534,105),(534,232),
-                    (462,232),(462,105),(348,105),(348,178),
-                    (276,178),(276,0),(348,0),(348,40),
-                    (648,40),(648,0),(720,0),(720,178)]
-        shan = [[('moveTo', (vertices[0],))] +
-                [('lineTo', (p,)) for p in vertices[1:]] + [('closePath', ())]]
-    else:
-        # 岡 supplies an enclosure-sized 山 with a native 29-unit horizontal,
-        # matching 萬's ceiling. Keep its curved feet and slanted arm entries;
-        # shorten the straight runs between them, never scale the bar thinner.
-        # The full width is 69% of the opening, centred on 田's counter gap.
-        donor = cs('岡')[2]
-        assert donor[6] == ('lineTo', ((337,167),))
-        assert donor[21] == ('lineTo', ((655,167),))
-        levels = [(53,24),(91,62),(138,80),(167,109),(362,177),(395,210)]
-        def ymap(y):
-            a,b = next(((a,b) for a,b in zip(levels,levels[1:]) if y <= b[0]), levels[-2:])
-            return a[1] + (y-a[0])*(b[1]-a[1])/(b[0]-a[0])
-        def mapped(command):
-            op, points = command
-            return op, tuple((503.5+(x-512)*0.92, ymap(y)) for x,y in points)
-        shan = [[('moveTo', ((535,109),)), ('lineTo', ((535,254),)),
-                 ('lineTo', ((472,254),)), ('lineTo', ((472,109),))] +
-                [mapped(command) for command in donor[6:22]] + [('closePath', ())]]
-
-    # Only the stem may meet 萬, in the ceiling directly below 田's counter gap.
-    overlap = pathops.op(path_of(shan), spliced, pathops.PathOp.INTERSECTION)
-    spine = (462,534) if style == 'sans' else (472,535)
-    top = 232 if style == 'sans' else 254
-    allowed = pathops.Path()
-    allowed.moveTo(spine[0], inner_top[1]); allowed.lineTo(spine[1], inner_top[1])
-    allowed.lineTo(spine[1], top); allowed.lineTo(spine[0], top); allowed.close()
-    assert overlap.area > 0, '山 stem does not join the ceiling'
-    assert pathops.op(overlap, allowed, pathops.PathOp.DIFFERENCE).area < 0.1, '山 runs into 萬 outside the stem'
-    forms['⿳艹田⿵冂山'] = [group([band] + cao + counters), group(shan)]
+    forms['⿳艹田⿵冂山'] = wan_shan(cs, style)
     # The top of the KRM vulgar 處 (K07097330): ⺊'s dot as a bar, the stem centred on the cover
     # and joined to it. One component, reused as the top of ⿳⺊冖人 and its relatives.
     forms['⿱⺊冖'] = seal_dot_top(cs, style)
@@ -377,10 +439,23 @@ brush = TTFont(brush_path)
 brush_gs, brush_cmap = brush.getGlyphSet(), brush.getBestCmap()
 brush_cs = lambda ch: contours(brush_gs, brush_cmap[ord(ch)])
 result['forms']['kaisho'] = {'⿱⺊冖': seal_dot_top(brush_cs, 'kaisho')}
+result['forms']['kaisho']['⿳艹田⿵冂山'] = wan_shan(brush_cs, 'kaisho')
 register_xie(result['forms']['kaisho'], [group(part) for part in xie_kaisho(brush.getGlyphSet(), brush.getBestCmap())])
 result['sources']['kaisho'] = {
     'name': brush['name'].getDebugName(4), 'version': brush['name'].getDebugName(5),
     'sha256': brush_sha, 'url': 'https://github.com/mkpoli/kureedo',
+}
+fangsong_path = Path('fonts/ZhuqueFangsong-Regular.woff2')
+fangsong_sha = hashlib.sha256(fangsong_path.read_bytes()).hexdigest()
+if fangsong_sha != '5cb9aca8a85825a204ba58c9e975d8298e7370494b845694ee8a6882d0d6ed37':
+    raise ValueError('Unexpected source font hash: fangsong')
+fangsong = TTFont(fangsong_path)
+fangsong_gs, fangsong_cmap = fangsong.getGlyphSet(), fangsong.getBestCmap()
+fangsong_cs = lambda ch: contours(fangsong_gs, fangsong_cmap[ord(ch)])
+result['forms']['fangsong'] = {'⿳艹田⿵冂山': wan_shan(fangsong_cs, 'fangsong')}
+result['sources']['fangsong'] = {
+    'name': fangsong['name'].getDebugName(4), 'version': fangsong['name'].getDebugName(5),
+    'sha256': fangsong_sha,
 }
 result['editorial'] = {
     'JYN00003': {**XIE_PROVENANCE, 'donors': {

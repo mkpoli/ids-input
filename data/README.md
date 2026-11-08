@@ -1143,6 +1143,23 @@ hashes. Unicode data is distributed under the Unicode License v3; see
 host adapter. These parts remain available in their script group, including when the bundled
 catalog cannot be loaded. A configured composer export or font can have different coverage.
 
+## `kana-strokes.json.gz`
+
+The stroke count of every kana KanjiVG draws: 175 keys in code-point order, hiragana U+3041–U+3096
+then katakana U+30A1–U+30FA, with a count for each (`strokes`, one entry per key), the pinned
+`revision` and its `source`. KanjiVG draws one path per stroke, in writing order, so the number of
+paths is the count: あ three, イ two, フ one.
+
+- Licence: **CC BY-SA 3.0**, Copyright (C) 2009/2010/2011 Ulrich Apel; attribution and licence links
+  in `data/licences/kanjivg-CC-BY-SA-3.0.txt`. The derived table is shared alike under the same
+  licence. Rebuild with `node scripts/build_kana_strokes.mjs [kvg directory]`, which reads KanjiVG at
+  revision `610091ce618cf757ed1357a8954cd65283e015d6` unless given a checkout.
+
+The table holds counts alone. KanjiVG records no five-stroke class, and one cannot be read off the
+paths: kana strokes are curved, so a turn and a curve carry the same turning angle, and a classifier
+built on that angle labelled ア, コ and ヨ wrongly. A class column waits for a source that names
+stroke types.
+
 ## `han-parts.json.gz`
 
 Every Han-script character the composer can draw: 103,352 keys in code-point order, with the

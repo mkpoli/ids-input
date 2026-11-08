@@ -501,7 +501,7 @@
         <legend>{t('app.layers.transform')}</legend>
         <div class="transform-body">
           <div class="modes" role="group" aria-label={t('app.layers.mode')}>
-            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={Boolean(strokeId) || (mode === 'matrix' && !simple)} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
+            <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'affine'} disabled={mode === 'matrix' && !simple} onclick={() => setMode('affine')}>{t('app.layers.affine')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'matrix'} disabled={Boolean(strokeId)} onclick={() => setMode('matrix')}>{t('app.layers.matrix')}</button>
             <button type="button" class="ui-button" data-size="sm" aria-pressed={mode === 'mobius'} disabled={Boolean(strokeId)} onclick={() => setMode('mobius')}>{t('app.layers.mobius')}</button>
           </div>
