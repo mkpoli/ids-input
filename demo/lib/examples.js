@@ -22,6 +22,7 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿰舟邊', refs: [4], char: '' },
     { sequence: '⿻大㸚', char: '爽' },
     { sequence: '㇯豕㇒', char: '𧰧' },
+    { sequence: '⿰光㇯軍車', refs: [79], char: '' },
     { sequence: '⿱成龙', refs: [5], char: '' },
     { sequence: '⿰氵恩', refs: [6], char: '𰜩' },
     { sequence: '⿰要勿', refs: [7], char: '覅' },
