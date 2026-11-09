@@ -13,7 +13,7 @@
   import { APPROXIMATE, composableDescription } from '../src/composer/compose.js'
   import { hasTangut } from '../src/composer/tangut.js'
   import { composerPreview as composerAt } from '../src/composer/index.js'
-  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, unalias } from '../src/core/index.js'
+  import { EMPTY_MARKS, OPERATORS, characterStrokes, componentQuery, isJurchen, isShuishu, parse, substituteSequences, unalias } from '../src/core/index.js'
   import { loadStrokeRecords } from '../src/svelte/strokes.js'
   import { createDocumentSession, layerAtPath, sessionRecord, toSequence } from '../src/document/index.js'
   import { documentFile, readDocumentFile } from './lib/documents.js'
@@ -595,6 +595,29 @@
     if (!editor.usable || !text || !ask || example?.standard && !example.char) return
     let live = true
     ask(text).then(found => { if (live) encoded = [...new Set([...known, ...found])] }, () => {})
+    return () => { live = false }
+  })
+  // A description written with a visual substitute names the character its canonical description
+  // does: ⿰彳ヱ is ⿰彳𠀄, and that is 𭛝. The typed sequence stays as written; the character and
+  // code point are shown beside it.
+  let substituted = $state(/** @type {{ sequence: string, char: string } | null} */ (null))
+  $effect(() => {
+    const text = editor.tree === null ? '' : editor.whole
+    const ask = adapter.encoded
+    substituted = null
+    if (!editor.usable || !text || !ask || encoded.length) return
+    const candidates = substituteSequences(text).slice(0, 8)
+    if (!candidates.length) return
+    let live = true
+    const read = async () => {
+      for (const sequence of candidates) {
+        try {
+          const chars = await ask(sequence)
+          if (live && chars.length) { substituted = { sequence, char: chars[0] }; return }
+        } catch { /* a description the adapter cannot encode */ }
+      }
+    }
+    void read()
     return () => { live = false }
   })
   // The strokes the output shows: an encoded character's recorded count when the description names
@@ -1443,6 +1466,15 @@
                 document={currentSession()?.document} session={currentSession()} version={documentTick} bind:scopes bind:slots
                 editable={adjusting} onchoose={path => editor.choose(path, { toggle: false })} onedit={layerChanged} bind:drawing bind:emoji bind:cut bind:cutLeaf>
                 {#snippet detailContent()}
+                  {#if substituted}
+                    <span class="encoded-character substituted-character" lang="ja" title={substituted.sequence}>
+                      <span class="substituted-sequence">{editor.whole}</span>
+                      <span class="substituted-arrow" aria-hidden="true">→</span>
+                      <span class="substituted-glyph">{substituted.char}</span>
+                      <code>{cp(substituted.char)}</code>
+                      <button type="button" title={t('app.copyChar', { char: substituted.char })} aria-label={t('app.copyChar', { char: substituted.char })} onclick={() => copy(substituted.char)}><Icon name="copy" size={13} /></button>
+                    </span>
+                  {/if}
                   {#each encoded as ch (ch)}
                     <span class="encoded-character"><code>{cp(ch)}</code><button type="button" title={t('app.copyChar', { char: ch })} aria-label={t('app.copyChar', { char: ch })} onclick={() => copy(ch)}><Icon name="copy" size={13} /></button></span>
                   {/each}
@@ -1670,6 +1702,10 @@
   .large-close:hover{border-color:var(--ui-color-border-strong)}
   .large-close:focus-visible{outline:2px solid var(--ui-color-focus);outline-offset:2px}
   .encoded-character{display:inline-flex;align-items:center;gap:2px;color:var(--ui-color-ink-muted)}
+  .substituted-character{gap:4px;max-width:100%;font-family:var(--ids-font);font-size:13px}
+  .substituted-sequence{max-width:10em;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .substituted-arrow{flex:none}
+  .substituted-glyph{font-size:16px;color:var(--ui-color-ink)}
   .encoded-character code{font:11px ui-monospace,monospace}
   .encoded-character button{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;padding:0;border:0;border-radius:var(--ui-radius-xs);background:transparent;color:var(--ui-color-ink-muted);cursor:pointer}
   .encoded-character button:hover{color:var(--ui-color-ink);background:var(--ui-color-surface-hover)}
