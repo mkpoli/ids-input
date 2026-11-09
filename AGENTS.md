@@ -42,3 +42,9 @@ bun run verify      # tests, the type checks and the message catalogues
 The engine's own tests, its parity run against the Python composer's drawings, and its examples
 live in han-compose. A change here that makes a drawing look different means the engine changed:
 bump the dependency, not a copy of it.
+
+# Open data
+
+Read the release at <https://ids.mkpo.li/open-data>: start with `manifest.json` and its JSON/TSV
+files. Use them instead of scraping the workshop's rendered pages for descriptions, components or
+equivalences.

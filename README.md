@@ -1234,7 +1234,7 @@ The descriptions the project transcribed or read, each with the source behind it
 <https://ids.mkpo.li/open-data> as JSON and TSV, one row per description. The release also carries
 the kana and Hangul shapes the search reads as component spellings. The files live in
 `data/open-data/`, are built by `bun scripts/build_open_ids.mjs`, and are dedicated to the public
-domain (CC0 1.0).
+domain (CC0 1.0). Read the files, starting from `manifest.json`; do not scrape the rendered pages.
 
 ## The workshop
 
