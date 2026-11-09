@@ -76,6 +76,8 @@
   })
 
   /** @param {Row} row */
+  const basisOf = row => row.basis === 'alignment' ? t('appendix.basisValue.alignment') : row.basis === 'reader' ? t('appendix.basisValue.reader') : row.basis
+  /** @param {Row} row */
   function sourceLinks(row) {
     if (!doc || row.yours) return []
     return [...new Set(row.prov.map(index => doc.provenance[index]?.source).filter(Boolean))]
@@ -188,7 +190,7 @@
       <p class="empty">{t('appendix.loadFailed')}</p>
     {:else if !doc}
       <p class="empty">{t('appendix.loading')}</p>
-    {:else}
+    {/if}
       <p class="count" aria-live="polite">{t('appendix.count', { count: visible.length })}</p>
       {#if visible.length === 0}
         <p class="empty">{t('appendix.empty')}</p>
@@ -223,7 +225,7 @@
                       {#if row.bDescription}<span class="desc">{row.bDescription}</span>{/if}
                     </span>
                   </td>
-                  <td class="basis">{row.basis}</td>
+                  <td class="basis">{basisOf(row)}</td>
                   <td><span class="mark {row.status}">{t(`appendix.state.${row.status}`)}</span></td>
                   <td class="note">{row.note || '—'}</td>
                   <td class="links">
@@ -254,7 +256,6 @@
           <span class="hint">{t('appendix.form.hint')}</span>
         </div>
       </section>
-    {/if}
   </main>
 </div>
 

@@ -422,5 +422,7 @@
   "appendix.state.candidate": "Ứng viên",
   "appendix.state.yours": "Của tôi",
   "app.about.openEquivalences": "Mở bảng tương đương",
-  "appendix.form.exists": "Bảng đã có cặp này."
+  "appendix.form.exists": "Bảng đã có cặp này.",
+  "appendix.basisValue.alignment": "đối chiếu",
+  "appendix.basisValue.reader": "bạn thêm"
 }
