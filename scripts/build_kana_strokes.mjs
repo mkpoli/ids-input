@@ -91,10 +91,13 @@ for (const [small, base] of AINU) {
 
 // Halfwidth katakana copy the count of the kana Unicode decomposes them to.
 const missingHalfwidth = []
-for (let point = 0xff66; point <= 0xff9d; point++) {
+// The two halfwidth sound marks decompose to combining marks, which are not counted, so they are
+// matched to the spacing marks their names give instead.
+const HALFWIDTH_MARKS = new Map([['ﾞ', '゛'], ['ﾟ', '゜']])
+for (let point = 0xff66; point <= 0xff9f; point++) {
   const char = String.fromCodePoint(point)
   const wide = char.normalize('NFKC')
-  const count = counted.get(wide)
+  const count = counted.get(wide) ?? counted.get(HALFWIDTH_MARKS.get(char) ?? '')
   if (count === undefined) { missingHalfwidth.push(char); continue }
   keys.push(char)
   strokes.push(count)
