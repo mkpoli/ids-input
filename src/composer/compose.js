@@ -2073,8 +2073,11 @@ export class Composer {
       const innerParts = groups[1].filter(p => !p.origin.startsWith('host 𭰲'))
       if (innerParts.length) {
         const box = union(innerParts.map(p => p.target)), cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2
-        const lift = 0.02 * (this.face[3] - this.face[1])
-        for (const p of innerParts) p.target = [cx + (p.target[0] - cx) * 0.97, cy + (p.target[1] - cy) * 0.97 + lift, cx + (p.target[2] - cx) * 0.97, cy + (p.target[3] - cy) * 0.97 + lift]
+        const lift = 0.02 * (this.face[3] - this.face[1]), split = 0.013 * (this.face[3] - this.face[1])
+        for (const p of innerParts) {
+          const upper = (p.target[1] + p.target[3]) / 2 > cy
+          p.target = [cx + (p.target[0] - cx) * 0.90, cy + (p.target[1] - cy) * 0.90 + lift + (upper ? split : -split), cx + (p.target[2] - cx) * 0.90, cy + (p.target[3] - cy) * 0.90 + lift + (upper ? split : -split)]
+        }
       }
     }
     this.recordJoints(op, groups)
@@ -2334,8 +2337,11 @@ export class Composer {
       const innerParts = groups[1].filter(p => !p.origin.startsWith('host 𭰲'))
       if (innerParts.length) {
         const box = union(innerParts.map(p => p.target)), cx = (box[0] + box[2]) / 2, cy = (box[1] + box[3]) / 2
-        const lift = 0.02 * (this.face[3] - this.face[1])
-        for (const p of innerParts) p.target = [cx + (p.target[0] - cx) * 0.97, cy + (p.target[1] - cy) * 0.97 + lift, cx + (p.target[2] - cx) * 0.97, cy + (p.target[3] - cy) * 0.97 + lift]
+        const lift = 0.02 * (this.face[3] - this.face[1]), split = 0.013 * (this.face[3] - this.face[1])
+        for (const p of innerParts) {
+          const upper = (p.target[1] + p.target[3]) / 2 > cy
+          p.target = [cx + (p.target[0] - cx) * 0.90, cy + (p.target[1] - cy) * 0.90 + lift + (upper ? split : -split), cx + (p.target[2] - cx) * 0.90, cy + (p.target[3] - cy) * 0.90 + lift + (upper ? split : -split)]
+        }
       }
     }
     this.recordJoints(op, groups)
