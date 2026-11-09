@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { createSearch, parseQuery, readForms, similarStructures, tokens } from '../src/core/index.js'
+import { createSearch, parseQuery, readForms, similarStructures, substituteSequences, tokens } from '../src/core/index.js'
 
 
 // A few descriptions, as BabelStone writes them (regions dropped).
@@ -357,6 +357,15 @@ it('finds 𭛝 from the katakana ヱ through its component 𠀄', () => {
   expect(index.search('⿰彳ヱ')).toEqual(index.search('⿰彳𠀄'))
   expect(index.search('⿰彳ヱ').hits.map(hit => hit.char)).toEqual(['𭛝'])
   expect(parseQuery('ヱ').terms[0].leaves).toEqual(['𠀄'])
+})
+
+
+it('writes the descriptions its visual substitutes stand for', () => {
+  expect(substituteSequences('⿰彳ヱ')).toEqual(['⿰彳𠀄'])
+  expect(substituteSequences('⿰木キ')).toEqual(['⿰木十', '⿰木弋'])
+  expect(substituteSequences('⿰彳𠀄')).toEqual([])
+  expect(substituteSequences('木')).toEqual([])
+  expect(substituteSequences('')).toEqual([])
 })
 
 

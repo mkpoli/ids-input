@@ -1,4 +1,6 @@
 // @ts-check
+import { parse, write } from './ids.js'
+
 // Query-only visual correspondences. Kana families use the encoded components named by Ashide:
 // https://ashide.otodo.net/setumei/ziboziso.html
 // https://ashide.otodo.net/setumei/tebiki.html
@@ -46,4 +48,38 @@ export function searchShape(token, next) {
   if (!choices) return token
   const anyOf = choices.map(component => component + token.slice(base.length))
   return anyOf.length === 1 ? anyOf[0] : { anyOf }
+}
+
+
+/** The most sequences a substitution expands to. */
+export const SUBSTITUTE_LIMIT = 32
+
+/**
+ * The canonical descriptions a query's visual substitutes can stand for, without the typed one.
+ * `⿰彳ヱ` gives `⿰彳𠀄`; `⿰木キ` gives `⿰木十` and `⿰木弋`. A draft or a description with no
+ * substitutes gives none.
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function substituteSequences(text) {
+  const parsed = parse(text, { open: true })
+  if (parsed.problem || parsed.tree === null) return []
+  /** @param {import('./ids.js').Part} part @returns {string[]} */
+  const forms = part => {
+    if (part === null) return []
+    if (typeof part === 'string') {
+      const shape = searchShape(part, undefined)
+      return typeof shape === 'string' ? [shape] : shape.anyOf
+    }
+    let out = ['']
+    for (const child of part.parts) {
+      const choices = forms(child)
+      const next = []
+      for (const prefix of out) for (const choice of choices) next.push(prefix + choice)
+      out = next.slice(0, SUBSTITUTE_LIMIT)
+    }
+    return out.map(inner => part.op + inner)
+  }
+  const typed = write(parsed.tree)
+  return [...new Set(forms(parsed.tree))].filter(sequence => sequence !== typed).slice(0, SUBSTITUTE_LIMIT)
 }
