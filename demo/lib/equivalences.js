@@ -1,0 +1,31 @@
+// The two sides a reader types in the equivalence appendix. A number can be written `{7}`, `7` or
+// `bsp:7`; an entity `CDP-8BD0`, `&CDP-8BD0;` or `chise:CDP-8BD0`; a character as itself or `ucs:53C0`.
+// The page accepts a reader's own pairs even where the corpus records none.
+
+/** @param {string} text @returns {string | null} The cid the text names, or null. */
+export function parseSide(text) {
+  const value = text.trim()
+  if (!value) return null
+  const braced = /^\{(\d+)\}$/.exec(value)
+  if (braced) return `bsp:${Number(braced[1])}`
+  if (/^\d+$/.test(value)) return `bsp:${Number(value)}`
+  const entity = /^&([^;]+);$/.exec(value)
+  if (entity) return `chise:${entity[1]}`
+  const cid = /^(bsp|chise|ucs):(.+)$/i.exec(value)
+  if (cid) {
+    const [scheme, rest] = [cid[1].toLowerCase(), cid[2].trim()]
+    if (scheme === 'bsp' && /^\d+$/.test(rest)) return `bsp:${Number(rest)}`
+    if (scheme === 'chise' && /^[A-Za-z0-9_.-]+$/.test(rest)) return `chise:${rest}`
+    if (scheme === 'ucs' && /^[0-9A-Fa-f]{4,6}$/.test(rest)) return `ucs:${rest.toUpperCase()}`
+    return null
+  }
+  if (/^[A-Za-z][A-Za-z0-9]*(?:[-_.][A-Za-z0-9]+)+$/.test(value)) return `chise:${value}`
+  const chars = [...value]
+  return chars.length === 1 ? `ucs:${(chars[0].codePointAt(0) ?? 0).toString(16).toUpperCase()}` : null
+}
+
+/** A pair in the order the table stores it. @param {string} a @param {string} b @returns {[string, string] | null} */
+export function parsePair(a, b) {
+  const one = parseSide(a), two = parseSide(b)
+  return one && two && one !== two ? [one, two].sort() : null
+}

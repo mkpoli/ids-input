@@ -34,8 +34,8 @@
    * @typedef {import('../adapter/types.js').IdsAdapter} IdsAdapter
    * @typedef {import('../adapter/types.js').PalettePart} PalettePart
    */
-  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, onpick?: (part: string) => unknown }} */
-  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', onpick } = $props()
+  /** @type {{ adapter: IdsAdapter, disabled?: boolean, messages?: Record<string, string>, locale?: string, recentKey?: string | null, equivalents?: Map<string, string[]>, onpick?: (part: string) => unknown }} */
+  let { adapter, disabled = false, messages, locale = 'en', recentKey = 'ids-input.recentParts', equivalents, onpick } = $props()
   const t = $derived(translator(messages, locale))
   /** @type {HTMLElement | null} */
   let partsRoot = $state(null)
@@ -636,6 +636,7 @@
       nko ? [nko.name, nko.form, nko.code].filter(Boolean).join(' · ') : tab === 'hangul' ? substituteNames[part.part] : null,
       romanization,
       syllableIds ? `${t('parts.hangulIds')}: ${syllableIds}` : null,
+      equivalents?.get(part.part)?.length ? t('parts.equivalents', { names: (equivalents.get(part.part) ?? []).join(' ') }) : null,
       ...(part.aliases ?? []),
       ...(part.modern ?? []),
       part.sealBasis === 'cjk-ids' ? t('parts.seal.inferred', { ids: part.modernIds?.join(' / ') ?? '' }) : part.sealBasis === 'crosswalk' ? t('parts.seal.crosswalk') : null,

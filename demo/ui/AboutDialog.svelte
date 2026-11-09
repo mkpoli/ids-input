@@ -88,7 +88,7 @@
     <p>{t('app.about.outputLicense')}</p>
     <h3>{t('app.footer.sources')}</h3>
     <p>{t('app.about.fullSources')}</p>
-    <p><a class="catalogue" href={`./sources.html?lang=${locale}`}>{t('app.about.openSources')}</a></p>
+    <p><a class="catalogue" href={`./sources.html?lang=${locale}`}>{t('app.about.openSources')}</a> · <a class="catalogue" href={`./equivalences.html?lang=${locale}`}>{t('app.about.openEquivalences')}</a></p>
     <h3>{t('app.about.acknowledgments')}</h3>
     <p>{t('app.about.feedbackThanks')}</p>
     {#each groups as group}

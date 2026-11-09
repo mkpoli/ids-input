@@ -1224,6 +1224,14 @@ them seen on two or more characters.
 - Format: columnar JSON, gzipped; the design behind the identity model is in
   [the corpus note](../docs/ids-corpus.md).
 
+## `ids-equivalences.json`
+
+The alignments in `ids-corpus.json.gz`, as one small table for the appendix page at `/equivalences`:
+62 rows of a BabelStone number against the CHISE entity that names the same component, 48 of them
+`verified`. Each row carries both sides' display characters, BabelStone's description, the basis, the
+status, the provenance indexes and the characters that attest it. Written by
+`scripts/build_ids_corpus.mjs`; the data is **GPL-2.0-or-later** like the corpus it comes from.
+
 ## Preview coverage audit
 
 `bun scripts/audit_render_coverage.mjs CACHE_DIR OUTPUT_JSON [sans|serif|fangsong|klee]` renders every

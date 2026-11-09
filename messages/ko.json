@@ -394,5 +394,6 @@
   "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "첫 획",
   "info.script.jurchen": "여진 문자",
-  "info.script.kana": "가나"
+  "info.script.kana": "가나",
+  "parts.equivalents": "CHISE: {names}"
 }

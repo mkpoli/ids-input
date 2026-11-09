@@ -394,5 +394,6 @@
   "info.site.chise": "CHISE IDS",
   "info.firstStrokeShort": "首筆",
   "info.script.jurchen": "女真文字",
-  "info.script.kana": "假名"
+  "info.script.kana": "假名",
+  "parts.equivalents": "CHISE：{names}"
 }

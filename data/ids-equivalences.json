@@ -1,0 +1,1373 @@
+{
+ "format": "ids-input/equivalences",
+ "version": 1,
+ "licence": "GPL-2.0-or-later",
+ "sources": [
+  {
+   "id": "babelstone",
+   "title": "BabelStone IDS",
+   "url": "https://www.babelstone.co.uk/CJK/IDS.TXT",
+   "date": "2025-06-27",
+   "edition": "2025-06-27",
+   "licence": "Public Domain",
+   "sha256": "563f8da2b3e43d21dfb271fa3331dd0f3df96eb2518dc8d8c0cbf309d119be6a"
+  },
+  {
+   "id": "chise-IDS-UCS-Basic.txt",
+   "file": "IDS-UCS-Basic.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Basic.txt",
+   "sha256": "497ab2be984a86233848fe3631046351f3bb0334bfaac1d8f836aff2d3f87ba0",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Compat-Supplement.txt",
+   "file": "IDS-UCS-Compat-Supplement.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Compat-Supplement.txt",
+   "sha256": "c1d265a791a24a8b4d7d963cb7cf31a6a3b1b234b630477d3f27798c9ccab930",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Compat.txt",
+   "file": "IDS-UCS-Compat.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Compat.txt",
+   "sha256": "7683730c8213ecb3a2b3e85daa6b7b913c43b44a81a9af7900671bca4d091391",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-A.txt",
+   "file": "IDS-UCS-Ext-A.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-A.txt",
+   "sha256": "d58c5b21054d1ba07fd2621f0892b36c088009d7890b136f42f8c5a5af21f495",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-1.txt",
+   "file": "IDS-UCS-Ext-B-1.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-1.txt",
+   "sha256": "336be9f156b9c78785a79360978241b1a2973fab5c26662489f69e4d94b13ba0",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-2.txt",
+   "file": "IDS-UCS-Ext-B-2.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-2.txt",
+   "sha256": "551150fa2bd8886c17b5af40ad1d7876026d477349e7d636b0fbfc7306d26b81",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-3.txt",
+   "file": "IDS-UCS-Ext-B-3.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-3.txt",
+   "sha256": "33a51a09a18d06fb666e72f13d3854c41a1d06207f0f0c4ac43f3687a0bea6fb",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-4.txt",
+   "file": "IDS-UCS-Ext-B-4.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-4.txt",
+   "sha256": "f6c926482a3600e93b17be958de8cce701c0d91c644316a87e3a821374ad4360",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-5.txt",
+   "file": "IDS-UCS-Ext-B-5.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-5.txt",
+   "sha256": "21cf28e9e4aeb3d98e8c7739899270b13a6d080a2f65f0d4287710d71e72901a",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-B-6.txt",
+   "file": "IDS-UCS-Ext-B-6.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-B-6.txt",
+   "sha256": "a732d18a27f418cb4610b7a1e1674487485111734cbd131220caa1baf23b630a",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-C.txt",
+   "file": "IDS-UCS-Ext-C.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-C.txt",
+   "sha256": "74dcff528d54508225e587384f132cac508b97a866969ebbeea848a030910225",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-D.txt",
+   "file": "IDS-UCS-Ext-D.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-D.txt",
+   "sha256": "c300f9ace1ffd9526fe3c17a12c94b3823e1a97cd507bd4b85b784bf269a3234",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-E.txt",
+   "file": "IDS-UCS-Ext-E.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-E.txt",
+   "sha256": "aab22be5a0ba07d3830f37f344b08950c566286171539c08ce6d0d0a5f3a635b",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-F.txt",
+   "file": "IDS-UCS-Ext-F.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-F.txt",
+   "sha256": "dfede4731416ad43a084d0ecdc86562607e9057735e9ac43114870fa5dbf9f5e",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-G.txt",
+   "file": "IDS-UCS-Ext-G.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-G.txt",
+   "sha256": "1f8f8cc7d911ccf86c196ce4de43d7e4ca03689ee83d4e3e380120eac336c64d",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-H.txt",
+   "file": "IDS-UCS-Ext-H.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-H.txt",
+   "sha256": "e239d31373777a953c755ba99ae7a502a33823bddd0fc9af4e61e3cd8f209e0c",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-I.txt",
+   "file": "IDS-UCS-Ext-I.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-I.txt",
+   "sha256": "a84694c801290033b7e3f79303c71fcdcae595afc3a47481496dc051832369d0",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  },
+  {
+   "id": "chise-IDS-UCS-Ext-J.txt",
+   "file": "IDS-UCS-Ext-J.txt",
+   "url": "https://raw.githubusercontent.com/chise/ids/main/IDS-UCS-Ext-J.txt",
+   "sha256": "0910def2870d1e4cb38c4064f060de5efc48bb73fee6d5f7447657fa121fa260",
+   "date": "",
+   "edition": "main@2026-11-04",
+   "licence": "GPL-2.0-or-later"
+  }
+ ],
+ "provenance": [
+  {
+   "source": "babelstone",
+   "licence": "Public Domain",
+   "date": "2025-06-27",
+   "edition": "2025-06-27"
+  },
+  {
+   "source": "chise-IDS-UCS-Basic.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Compat-Supplement.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Compat.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-A.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-1.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-2.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-3.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-4.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-5.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-B-6.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-C.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-D.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-E.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-F.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-G.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-H.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-I.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  },
+  {
+   "source": "chise-IDS-UCS-Ext-J.txt",
+   "licence": "GPL-2.0-or-later",
+   "date": "",
+   "edition": "main@2026-11-04"
+  }
+ ],
+ "columns": [
+  "a",
+  "b",
+  "aChar",
+  "bChar",
+  "aDescription",
+  "bDescription",
+  "basis",
+  "status",
+  "prov",
+  "note"
+ ],
+ "rows": [
+  [
+   "bsp:100",
+   "chise:CDP-8661",
+   "󰗖",
+   "󰆬",
+   "之 without top stroke (F3BE)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    7,
+    8,
+    16
+   ],
+   "5 characters: 𤾤 𧵐 𱦍 𱩨 𱶰"
+  ],
+  [
+   "bsp:101",
+   "chise:CDP-88D3",
+   "󰗗",
+   "󰊐",
+   "left of 癶 (ECF6)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    9
+   ],
+   "2 characters: 𨦏 𨳥"
+  ],
+  [
+   "bsp:102",
+   "chise:CDP-88D5",
+   "󰗘",
+   "󰊒",
+   "right of 癶 (ECF7)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    6
+   ],
+   "1 character: 𢄖"
+  ],
+  [
+   "bsp:104",
+   "chise:GT-K01793",
+   "󰗚",
+   "󰐙",
+   "top right of 𥋮 (ECF9)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    7
+   ],
+   "1 character: 𥋮"
+  ],
+  [
+   "bsp:105",
+   "chise:GT-K00764",
+   "󰗛",
+   "󰏽",
+   "top right of 𨄛 (ECFA)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6,
+    7,
+    9
+   ],
+   "4 characters: 𣼦 𣽵 𥽊 𨄛"
+  ],
+  [
+   "bsp:106",
+   "chise:GT-K01253",
+   "󰗜",
+   "󰐋",
+   "top of 𡛹 (ECFB)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6,
+    8,
+    14
+   ],
+   "4 characters: 𣐦 𦫁 𦫂 𭟩"
+  ],
+  [
+   "bsp:107",
+   "chise:GT-K01253",
+   "󰗝",
+   "󰐋",
+   "middle of 𡙌 (ECFC)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    8
+   ],
+   "1 character: 𦫂"
+  ],
+  [
+   "bsp:111",
+   "chise:CDP-86E8",
+   "󰗡",
+   "󰇳",
+   "inside of 𭁟 (EF31)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    9,
+    14
+   ],
+   "4 characters: 𠁬 𨱗 𨱘 𭀟"
+  ],
+  [
+   "bsp:116",
+   "chise:CDP-88B4",
+   "󰗦",
+   "󰉿",
+   "inside top of 鹿慶 (EF36)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    4
+   ],
+   "1 character: 䴡"
+  ],
+  [
+   "bsp:118",
+   "chise:CDP-88BC",
+   "󰗨",
+   "󰊇",
+   "outside of 𠁅 (ECFF)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    15,
+    16
+   ],
+   "5 characters: 𠁅 𠙚 𠟵 𱀭 𱨪"
+  ],
+  [
+   "bsp:120",
+   "chise:CDP-8AC2",
+   "󰗪",
+   "󰋲",
+   "right of 𤛒 without 口 (F2CC)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6,
+    7,
+    8,
+    9
+   ],
+   "8 characters: 𢄛 𢤉 𤛒 𥵽 𦒞"
+  ],
+  [
+   "bsp:14",
+   "chise:CDP-8BC8",
+   "󰖁",
+   "󰌟",
+   "top of 𡕡 (F2B0)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    4,
+    5,
+    9,
+    12,
+    14
+   ],
+   "8 characters: 䒭 𠇛 𠇡 𠯵 𡕡"
+  ],
+  [
+   "bsp:14",
+   "chise:CDP-8C78",
+   "󰖁",
+   "󰍄",
+   "top of 𡕡 (F2B0)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    16
+   ],
+   "1 character: 𱳷"
+  ],
+  [
+   "bsp:17",
+   "chise:CDP-8C42",
+   "󰖄",
+   "󰌲",
+   "left of 剆 [G source glyph] (F2B3)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    6,
+    8
+   ],
+   "4 characters: 𠘄 𣟜 𦫍 𦫏"
+  ],
+  [
+   "bsp:18",
+   "chise:CDP-8B7C",
+   "󰖅",
+   "󰌋",
+   "left of 即 (F2B4)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    7,
+    8,
+    9
+   ],
+   "13 characters: 即 廄 既 鵖 𡬠"
+  ],
+  [
+   "bsp:19",
+   "chise:CDP-89E7",
+   "󰖆",
+   "󰋔",
+   "right of 㤤 (F2B5)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    4,
+    6,
+    7,
+    9,
+    14
+   ],
+   "10 characters: 茰 㤤 㻀 䛕 𢈔"
+  ],
+  [
+   "bsp:21",
+   "chise:CDP-8C4F",
+   "󰖈",
+   "󰌺",
+   "top of 祭豋 (F101)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    7,
+    13,
+    14
+   ],
+   "6 characters: 祭 詧 豋 𤑪 𫫱"
+  ],
+  [
+   "bsp:24",
+   "chise:CDP-85BF",
+   "󰖋",
+   "󰅬",
+   "right of 水 (F2F2)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    9,
+    14
+   ],
+   "4 characters: 𠅆 𨦏 𨳥 𬽆"
+  ],
+  [
+   "bsp:25",
+   "chise:CDP-8CC6",
+   "󰖌",
+   "󰍙",
+   "bottom (legs) of 喪 (F2F4)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    8,
+    9,
+    11,
+    14
+   ],
+   "13 characters: 畏 𠅕 𣌪 𣭺 𦤌"
+  ],
+  [
+   "bsp:26",
+   "chise:CDP-8DEB",
+   "󰖍",
+   "󰎮",
+   "top of 韲 (F2BA)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    4,
+    5,
+    7,
+    8,
+    9,
+    10,
+    14
+   ],
+   "20 characters: 韲 䐡 𠆈 𠆗 𠆜"
+  ],
+  [
+   "bsp:27",
+   "chise:CDP-895C",
+   "󰖎",
+   "󰊥",
+   "bottom of 𤣥 (F2BB)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    6,
+    7,
+    8
+   ],
+   "5 characters: 丝 𣷒 𤣥 𥾬 𧘛"
+  ],
+  [
+   "bsp:30",
+   "chise:U-i003+5915",
+   "󰖑",
+   "󰔭",
+   "top of 彔 (F2F5)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    14
+   ],
+   "1 character: 𭳛"
+  ],
+  [
+   "bsp:33",
+   "chise:CDP-8DDF",
+   "󰖔",
+   "󰎦",
+   "bottom of 雋 (F2C1)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    8,
+    15
+   ],
+   "8 characters: 雋 𠈧 𠮁 𡊐 𡶓"
+  ],
+  [
+   "bsp:36",
+   "chise:CDP-8CD4",
+   "󰖗",
+   "󰍟",
+   "top of 𠢘㥑 (F2C4)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    4,
+    5,
+    6,
+    7,
+    9,
+    11,
+    14,
+    15,
+    16
+   ],
+   "19 characters: 戞 㥑 𠨦 𠮕 𢕶"
+  ],
+  [
+   "bsp:39",
+   "chise:CDP-8CBD",
+   "󰖚",
+   "󰍑",
+   "left of 卬 (F2C7)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    7,
+    9,
+    14
+   ],
+   "13 characters: 卬 𠑼 𠒂 𣆼 𣆾"
+  ],
+  [
+   "bsp:40",
+   "chise:CDP-85FD",
+   "󰖛",
+   "󰆑",
+   "right of 𩤷 (F2C8)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6
+   ],
+   "2 characters: 𢍐 𣤼"
+  ],
+  [
+   "bsp:40",
+   "chise:GT-K02841",
+   "󰖛",
+   "󰐧",
+   "right of 𩤷 (F2C8)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    9
+   ],
+   "2 characters: 𩗠 𩤷"
+  ],
+  [
+   "bsp:40",
+   "chise:U-i001+4E23",
+   "󰖛",
+   "󰓿",
+   "right of 𩤷 (F2C8)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6,
+    7
+   ],
+   "2 characters: 𣇅 𤡼"
+  ],
+  [
+   "bsp:45",
+   "chise:CDP-8BC5",
+   "󰖠",
+   "󰌜",
+   "left of 北 [G source glyph] (F5FB)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    9
+   ],
+   "2 characters: 北 𩍫"
+  ],
+  [
+   "bsp:47",
+   "chise:CDP-8CBB",
+   "󰖢",
+   "󰍐",
+   "outside of 鳥島 (F2CA)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    6,
+    7,
+    9,
+    12,
+    14
+   ],
+   "10 characters: 島 梟 裊 鳥 𣁓"
+  ],
+  [
+   "bsp:5",
+   "chise:CDP-8C7A",
+   "󰕸",
+   "󰍆",
+   "left of 叚 (F2A9)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    6,
+    7,
+    13,
+    14
+   ],
+   "7 characters: 𡂶 𢻀 𢼖 𥐃 𫨻"
+  ],
+  [
+   "bsp:50",
+   "chise:CDP-8BC8",
+   "󰖥",
+   "󰌟",
+   "top right of 叚 (F319)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    9
+   ],
+   "1 character: 𨒝"
+  ],
+  [
+   "bsp:50",
+   "chise:CDP-8C78",
+   "󰖥",
+   "󰍄",
+   "top right of 叚 (F319)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    7,
+    8,
+    9,
+    14,
+    16
+   ],
+   "23 characters: 囙 𠑻 𠑼 𠒂 𢂟"
+  ],
+  [
+   "bsp:51",
+   "chise:CDP-896A",
+   "󰖦",
+   "󰊭",
+   "outside of 馬 (F2CB)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    6,
+    9,
+    12,
+    14
+   ],
+   "8 characters: 𠙖 𣻴 𩡧 𫠉 𮕹"
+  ],
+  [
+   "bsp:53",
+   "chise:CDP-8964",
+   "󰖨",
+   "󰊩",
+   "outside of 鸟岛 (F2E7)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    17
+   ],
+   "5 characters: 凫 岛 枭 鸟 𮹔"
+  ],
+  [
+   "bsp:54",
+   "chise:CDP-89DF",
+   "󰖩",
+   "󰋏",
+   "outside of 烏 (F2FA)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    16
+   ],
+   "3 characters: 烏 𠂶 𱣠"
+  ],
+  [
+   "bsp:55",
+   "chise:CDP-8D56",
+   "󰖪",
+   "󰍾",
+   "outside of 鹿慶 (F2D0)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    6,
+    8,
+    11,
+    14,
+    16
+   ],
+   "14 characters: 𡐝 𢉖 𢉺 𢉻 𢊁"
+  ],
+  [
+   "bsp:56",
+   "chise:CDP-8BBE",
+   "󰖫",
+   "󰌗",
+   "top of 無 (F2CF)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    15
+   ],
+   "5 characters: 橆 無 舞 𰙄 𰙈"
+  ],
+  [
+   "bsp:57",
+   "chise:CDP-88F1",
+   "󰖬",
+   "󰊟",
+   "outside of 在 (F2CE)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1
+   ],
+   "2 characters: 在 存"
+  ],
+  [
+   "bsp:58",
+   "chise:CDP-88EE",
+   "󰖭",
+   "󰊝",
+   "top left of 留 (F2CD)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    9,
+    16
+   ],
+   "2 characters: 𨧋 𱰴"
+  ],
+  [
+   "bsp:59",
+   "chise:CDP-8C40",
+   "󰖮",
+   "󰌰",
+   "bottom of 舄 (F13C)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    7,
+    8
+   ],
+   "11 characters: 舄 𠍶 𡦗 𢊁 𣚐"
+  ],
+  [
+   "bsp:6",
+   "chise:CDP-8CE4",
+   "󰕹",
+   "󰍦",
+   "left of 段 (F2AA)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    8,
+    9
+   ],
+   "5 characters: 段 𠭊 𣍔 𦵍 𨕉"
+  ],
+  [
+   "bsp:60",
+   "chise:CDP-v005-88CB",
+   "󰖯",
+   "󰎾",
+   "outside of 龜 [H source glyph] (F5F6)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    10
+   ],
+   "2 characters: 𪚺 𪛀"
+  ],
+  [
+   "bsp:61",
+   "chise:GT-14579",
+   "󰖰",
+   "󰏌",
+   "outside of 臧 (F5F0)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    14
+   ],
+   "1 character: 𮍐"
+  ],
+  [
+   "bsp:62",
+   "chise:A-CDP-8BF8",
+   "󰖱",
+   "󰀋",
+   "bottom of 華 (F13D)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    14
+   ],
+   "1 character: 𭏬"
+  ],
+  [
+   "bsp:62",
+   "chise:CDP-8BF8",
+   "󰖱",
+   "󰌭",
+   "bottom of 華 (F13D)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    13
+   ],
+   "3 characters: 崋 華 𬀽"
+  ],
+  [
+   "bsp:68",
+   "chise:CDP-88D4",
+   "󰖶",
+   "󰊑",
+   "top of 黑 (F5F4)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    7,
+    8,
+    9
+   ],
+   "4 characters: 𡮝 𥊷 𦆑 𨷅"
+  ],
+  [
+   "bsp:69",
+   "chise:CDP-88A7",
+   "󰖷",
+   "󰉹",
+   "outside of 戠 (F5F5)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    6,
+    7,
+    8
+   ],
+   "5 characters: 𢨞 𤎷 𥏛 𦁋 𧨺"
+  ],
+  [
+   "bsp:7",
+   "chise:CDP-8BD0",
+   "󰕺",
+   "󰌡",
+   "top of 專惠 (F4F3)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    4,
+    5,
+    6,
+    8,
+    9
+   ],
+   "8 characters: 專 惠 䦄 𡭏 𢡴"
+  ],
+  [
+   "bsp:70",
+   "chise:CDP-8D6B",
+   "󰖸",
+   "󰎉",
+   "inside of 虛 (F2D1)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    6,
+    9
+   ],
+   "4 characters: 虛 𡁖 𣦄 𩣌"
+  ],
+  [
+   "bsp:71",
+   "chise:CDP-8CAC",
+   "󰖹",
+   "󰍊",
+   "left of 𦥑 (F5FE)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    5,
+    7,
+    8
+   ],
+   "8 characters: 印 𠂩 𠃤 𡳟 𤦨"
+  ],
+  [
+   "bsp:71",
+   "chise:MJ056865",
+   "󰖹",
+   "󰓜",
+   "left of 𦥑 (F5FE)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    6
+   ],
+   "1 character: 𢕧"
+  ],
+  [
+   "bsp:72",
+   "chise:CDP-8CAC",
+   "󰖺",
+   "󰍊",
+   "left of 印 [G source glyph] (F5FF)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    6,
+    7,
+    8
+   ],
+   "7 characters: 印 𣢔 𤺝 𥄤 𧆧"
+  ],
+  [
+   "bsp:75",
+   "chise:CDP-8B7C",
+   "󰖽",
+   "󰌋",
+   "bottom left of 爵 [K source glyph] (ECE2)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    6
+   ],
+   "1 character: 𣠫"
+  ],
+  [
+   "bsp:75",
+   "chise:GT-K02400",
+   "󰖽",
+   "󰐤",
+   "bottom left of 爵 [K source glyph] (ECE2)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    9
+   ],
+   "1 character: 𨘅"
+  ],
+  [
+   "bsp:76",
+   "chise:CDP-884A",
+   "󰖾",
+   "󰉚",
+   "top of 長 (ECE3)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    6
+   ],
+   "1 character: 𣤀"
+  ],
+  [
+   "bsp:77",
+   "chise:CDP-88B9",
+   "󰖿",
+   "󰊄",
+   "top of 㒫 (ECE4)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    4,
+    5,
+    9
+   ],
+   "4 characters: 㒫 𡿰 𨛞 𨤾"
+  ],
+  [
+   "bsp:89",
+   "chise:CDP-88CB",
+   "󰗋",
+   "󰊍",
+   "outside of 𪚧 (F5F7)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    7,
+    10
+   ],
+   "6 characters: 𥤛 𪚧 𪚫 𪚾 𪚿"
+  ],
+  [
+   "bsp:92",
+   "chise:U-i012+9EFD",
+   "󰗎",
+   "󰕍",
+   "core of 𪚧 (F5FA)",
+   null,
+   "alignment",
+   "candidate",
+   [
+    0,
+    14
+   ],
+   "1 character: 𮒮"
+  ],
+  [
+   "bsp:94",
+   "chise:CDP-88C8",
+   "󰗐",
+   "󰊌",
+   "top of 其 (ECF0)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    1,
+    14
+   ],
+   "2 characters: 其 𭭡"
+  ],
+  [
+   "bsp:94",
+   "chise:CDP-8B72",
+   "󰗐",
+   "󰌈",
+   "top of 其 (ECF0)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    5,
+    7,
+    14,
+    15
+   ],
+   "7 characters: 𠀪 𠀫 𤹛 𭏍 𭐢"
+  ],
+  [
+   "bsp:96",
+   "chise:U-i001+864D",
+   "󰗒",
+   "󰔐",
+   "outside of 𭾐 (ECF2)",
+   null,
+   "alignment",
+   "verified",
+   [
+    0,
+    14,
+    16
+   ],
+   "13 characters: 𭅍 𭇢 𭞐 𭟾 𭸣"
+  ]
+ ]
+}

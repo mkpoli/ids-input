@@ -217,6 +217,25 @@ for (const { number } of numbered) {
   aliases.push([cid, 'char', `U+${char.toString(16).toUpperCase()}`, babelProv, 'codepoint', 'character', 'verified'])
 }
 
+// The equivalence table as its own small document, for the appendix page. Labels come from the
+// components' characters and note 6's descriptions, so a reader sees `CDP-8BD0` beside `top of 專惠`.
+const charOf = new Map(components.map(([cid, code]) => [cid, code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null]))
+const descriptionOf = new Map(numbered.map(({ number, description }) => [`bsp:${number}`, description]))
+const equivalenceDoc = {
+  format: 'ids-input/equivalences',
+  version: 1,
+  licence: 'GPL-2.0-or-later',
+  sources,
+  provenance,
+  columns: ['a', 'b', 'aChar', 'bChar', 'aDescription', 'bDescription', 'basis', 'status', 'prov', 'note'],
+  rows: equivalences.map(([a, b, basis, status, prov, note]) => [
+    a, b, charOf.get(a) ?? null, charOf.get(b) ?? null,
+    descriptionOf.get(a) ?? null, descriptionOf.get(b) ?? null, basis, status, prov, note,
+  ]),
+}
+const EQUIVALENCES = new URL('../data/ids-equivalences.json', import.meta.url)
+const equivalenceBytes = Buffer.from(`${JSON.stringify(equivalenceDoc, null, 1)}\n`)
+
 /** The canonical text of a row: entity names rewritten to their cid token. */
 const resolvedOf = value => {
   let changed = false
@@ -295,7 +314,7 @@ const archive = gzipSync(tar(inputs), { level: 9, mtime: 0 })
 const ARCHIVE = new URL('../data/ids-corpus-sources.tar.gz', import.meta.url)
 
 if (CHECK) {
-  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive]]) {
+  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes]]) {
     const committed = await readFile(path).catch(() => null)
     if (!committed || !committed.equals(expected)) throw new Error(`${path} is not what this build writes`)
   }
@@ -304,5 +323,7 @@ if (CHECK) {
   await mkdir(dirname(OUT), { recursive: true })
   await writeFile(OUT, bytes)
   await writeFile(ARCHIVE, archive)
+  await writeFile(EQUIVALENCES, equivalenceBytes)
   console.log(`${OUT}: ${corpus.counts.descriptions} descriptions, ${corpus.counts.components} components, ${corpus.counts.unresolved} unresolved, ${bytes.length} bytes`)
+  console.log(`${EQUIVALENCES}: ${equivalences.length} equivalences, ${equivalenceBytes.length} bytes`)
 }
