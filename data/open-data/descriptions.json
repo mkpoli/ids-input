@@ -8,7 +8,7 @@
   },
   "counts": {
     "descriptions": 584,
-    "unencoded": 115,
+    "unencoded": 130,
     "editorial": 65,
     "groups": 20,
     "sources": 77,
@@ -55,7 +55,7 @@
       "key": "erjian",
       "title": "Erjian forms",
       "count": 16,
-      "unencoded": 0
+      "unencoded": 15
     },
     {
       "key": "geba",
@@ -162,7 +162,7 @@
       "author": "Andrew West",
       "url": "https://www.babelstone.co.uk/Fonts/Erjian.html",
       "status": "checked",
-      "note": "Entry 2.2:003 has 瓣 as ⿱艹半; entry 2.2:007 has 避 as ⿺辶比. The draft’s own explanation of the table says 廴 was merged into 辶, and the entries follow that. Read 2026-11-01. A form the page leaves as ？ is given in IDS here only when the 2000 BabelStone Erjian 2 font draws its component; the examples drawn from ？ entries are ⿰口𠂇 (嚼), ⿱艹⿰氵？ as it stands (磅礡), ⿱？巴 (霸), ⿰？了 (聊), ⿱？双 (霜) and ⿱于心 (愚). 2.2:008 簿 is left out: the page spells its bamboo head 𥫗 and its glyph draws a 竹 head with the four-stroke 𥫗 inside, which the composer cannot draw."
+      "note": "Entry 2.2:003 has 瓣 as ⿱艹半; entry 2.2:007 has 避 as ⿺辶比. The draft’s own explanation of the table says 廴 was merged into 辶, and the entries follow that. Read 2026-11-01. A form the page leaves as ？ is given in IDS here only when the 2000 BabelStone Erjian 2 font draws its component; the examples drawn from ？ entries are ⿰口𠂇 (嚼), ⿱艹⿰氵？ as it stands (磅礡), ⿱？巴 (霸), ⿰？了 (聊), ⿱？双 (霜) and ⿱于心 (愚). 2.2:008 簿 is left out: the page spells its bamboo head 𥫗 and its glyph draws a 竹 head with the four-stroke 𥫗 inside, which the composer cannot draw. Unicode 18.0 encodes ⿰忄井 as U+327F1, the second-stage form of 警 and 儆 ([IRG WS2021 record 01312](https://hc.jsecs.org/irg/ws2021/app/?id=01312)); that example keeps its character. ⿱亠公 is also the IDS of U+2CEA4, a different character read xuán and a semantic variant of 玄 ([IRG WS2024 record 00095](https://hc.jsecs.org/irg/ws2024/app/index.php?id=00095)), so the 衮 form stays unencoded. The 繁體字 of each standard comes from [Unihan 18.0.0 kTraditionalVariant](https://www.unicode.org/Public/18.0.0/ucd/Unihan.zip): 厩→廄 (U+5EC4), 衮→袞 (U+889E), 弹→彈 (U+5F48) and 数→數 (U+6578); the other twelve standards have no variant, so their 繁體字 is the character itself. Read 2026-11-09."
     },
     {
       "key": "jyutnet",
@@ -2355,8 +2355,8 @@
     },
     {
       "ids": "⿰忄井",
-      "char": "警",
-      "codepoint": "U+8B66",
+      "char": "𲟱",
+      "codepoint": "U+327F1",
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2368,8 +2368,8 @@
     },
     {
       "ids": "⿱艹么",
-      "char": "蘑",
-      "codepoint": "U+8611",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2381,8 +2381,8 @@
     },
     {
       "ids": "⿱千田",
-      "char": "臿",
-      "codepoint": "U+81FF",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2394,8 +2394,8 @@
     },
     {
       "ids": "⿸厂九",
-      "char": "厩",
-      "codepoint": "U+53A9",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2407,8 +2407,8 @@
     },
     {
       "ids": "⿱亠公",
-      "char": "衮",
-      "codepoint": "U+886E",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2420,8 +2420,8 @@
     },
     {
       "ids": "⿰彳力",
-      "char": "律",
-      "codepoint": "U+5F8B",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2433,8 +2433,8 @@
     },
     {
       "ids": "⿱力十",
-      "char": "率",
-      "codepoint": "U+7387",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2446,8 +2446,8 @@
     },
     {
       "ids": "⿱入寸",
-      "char": "辱",
-      "codepoint": "U+8FB1",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2459,8 +2459,8 @@
     },
     {
       "ids": "⿱甲弓",
-      "char": "弹",
-      "codepoint": "U+5F39",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2472,8 +2472,8 @@
     },
     {
       "ids": "⿻弓冫",
-      "char": "弱",
-      "codepoint": "U+5F31",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2485,8 +2485,8 @@
     },
     {
       "ids": "⿱犬一",
-      "char": "然",
-      "codepoint": "U+7136",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2498,8 +2498,8 @@
     },
     {
       "ids": "⿱大手",
-      "char": "攀",
-      "codepoint": "U+6500",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2511,8 +2511,8 @@
     },
     {
       "ids": "⿰亻彐",
-      "char": "侵",
-      "codepoint": "U+4FB5",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2524,8 +2524,8 @@
     },
     {
       "ids": "⿱由攵",
-      "char": "数",
-      "codepoint": "U+6570",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2537,8 +2537,8 @@
     },
     {
       "ids": "⿸疒力",
-      "char": "痢",
-      "codepoint": "U+75E2",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,
@@ -2550,8 +2550,8 @@
     },
     {
       "ids": "⿺辶欠",
-      "char": "遣",
-      "codepoint": "U+9063",
+      "char": null,
+      "codepoint": null,
       "group": "erjian",
       "reading": null,
       "modern": null,

@@ -36,7 +36,15 @@ describe('the demo examples', () => {
       for (const example of group.examples) {
         const { sequence, char } = example
         const found = described.get(sequence) ?? []
-        if (group.key === 'geba') {
+        if (group.key === 'erjian') {
+          // A 二簡字 form names the standard it replaces in `standard`. BabelStone has no row for
+          // it; ⿰忄井 is the one form Unicode 18.0 encodes, as 𲟱 (U+327F1).
+          expect(char).toBe(sequence === '⿰忄井' ? '𲟱' : '')
+          expect(example.refs).toEqual([sourceNumber('erjian')])
+          expect([...example.standard]).toHaveLength(1)
+          expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
+          expect(found).toEqual([])
+        } else if (group.key === 'geba') {
           expect(group.refs ?? []).toContain(sourceNumber('geba-wp'))
           const name = char || example.abbreviates
           expect(typeof name).toBe('string')
@@ -73,11 +81,6 @@ describe('the demo examples', () => {
             const shui = JSON.parse(gunzipSync(readFileSync(new URL('../data/shuishu.json.gz', import.meta.url))))
             expect(shui.parts.map(part => part.part)).toContain(char)
             expect(shui.parts.find(part => part.part === char)?.shuiMeaning).toBe(example.modern)
-          } else if (group.key === 'erjian') {
-            // The table's forms name characters BabelStone has no row for, so the example names one
-            // by the sequence and the table records it.
-            expect(example.refs).toEqual([sourceNumber('erjian')])
-            expect(found.some(other => other !== char)).toBe(false)
           } else if ('source' in example && example.source === 'data/shuishu/ids.json') {
             const ids = JSON.parse(readFileSync(new URL('../data/shuishu/ids.json', import.meta.url), 'utf8'))
             expect(ids.entries[char.codePointAt(0).toString(16).toUpperCase()]).toBe(sequence)
@@ -116,6 +119,16 @@ describe('the demo examples', () => {
     expect(bySequence.has('⿰辶⿱𭕄共')).toBe(false)
     expect(bySequence.get('⿰舟ラ')?.refs).toContain(sourceNumber('ndl-jmtt'))
     expect(bySequence.has('⿰艦ラ')).toBe(false)
+  })
+  it('gives each Erjian standard its 繁體字', () => {
+    const group = EXAMPLE_GROUPS.find(group => group.key === 'erjian')
+    const differing = Object.fromEntries(group.examples.filter(example => example.traditional).map(example => [example.standard, example.traditional]))
+    expect(differing).toEqual({ 厩: '廄', 衮: '袞', 弹: '彈', 数: '數' })
+    for (const example of group.examples) {
+      expect(example.char).toBe(example.sequence === '⿰忄井' ? '𲟱' : '')
+      expect([...example.standard]).toHaveLength(1)
+      expect([...(example.traditional ?? example.standard)]).toHaveLength(1)
+    }
   })
   it('keep the Geba abbreviations in one cited group', () => {
     const group = EXAMPLE_GROUPS.find(group => group.key === 'geba')
