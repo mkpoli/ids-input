@@ -21,7 +21,9 @@ const REVISION = '610091ce618cf757ed1357a8954cd65283e015d6'
 const SOURCE = `KanjiVG ${REVISION}, CC BY-SA 3.0, https://github.com/KanjiVG/kanjivg`
 const TARGET = new URL('../data/kana-strokes.json.gz', import.meta.url)
 // Hiragana U+3041–U+3096 and katakana U+30A1–U+30FA, the kana a reader meets.
-const RANGES = [[0x3041, 0x3096], [0x30a1, 0x30fa]]
+// The letters, then the marks kana are written with: the iteration and voiced marks (ゝゞヽヾ) and
+// the middle dot and prolonged sound mark (・ー).
+const RANGES = [[0x3041, 0x3096], [0x309b, 0x309e], [0x30a1, 0x30fa], [0x30fb, 0x30fe]]
 
 /**
  * KanjiVG's SVG for one kana, or null where the file does not exist. A failed request is retried,
