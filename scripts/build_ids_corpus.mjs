@@ -221,6 +221,7 @@ for (const { number } of numbered) {
 // components' characters and note 6's descriptions, so a reader sees `CDP-8BD0` beside `top of 專惠`.
 const charOf = new Map(components.map(([cid, code]) => [cid, code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null]))
 const descriptionOf = new Map(numbered.map(({ number, description }) => [`bsp:${number}`, description]))
+const fragmentOf = new Map(numbered.map(({ number, fragment }) => [`bsp:${number}`, fragment]))
 const equivalenceDoc = {
   format: 'ids-input/equivalences',
   version: 1,
@@ -263,6 +264,64 @@ for (const row of rows) {
 const descriptions = [...seen.values()]
   .sort((a, b) => a.subject.localeCompare(b.subject) || a.text.localeCompare(b.text))
   .map(row => [row.subject, row.text, row.resolved, row.prov, row.regions, row.role, row.status])
+
+// Every component the descriptions use, encoded or not: the numbered parts, the CHISE entities and
+// the characters that fill the other operands. The appendix lists the lot, with an equivalence where
+// one is known.
+const uses = new Map()
+const use = cid => uses.set(cid, (uses.get(cid) ?? 0) + 1)
+for (const row of descriptions) {
+  const text = row[1].replace(/\[[^\]]*\]/g, '')
+  for (const match of text.matchAll(/\{(\d+)\}|&([^;]+);|./gsu)) {
+    const [whole, number, entity] = match
+    if (number) use(`bsp:${number}`)
+    else if (entity) use(`chise:${entity}`)
+    else if (!OPERATORS.has(whole)) use(`ucs:${(whole.codePointAt(0) ?? 0).toString(16).toUpperCase()}`)
+  }
+}
+/** @type {Map<string, { cid: string, status: string, note: string }[]>} */
+const equivalentsOf = new Map()
+for (const [a, b, , status, , note] of equivalences) {
+  for (const [one, two] of [[a, b], [b, a]]) {
+    const list = equivalentsOf.get(one) ?? []
+    list.push({ cid: two, status, note })
+    equivalentsOf.set(one, list)
+  }
+}
+const componentRows = components.map(([cid, code]) => {
+  const kind = cid.startsWith('bsp:') ? 'number' : cid.startsWith('chise:') ? 'entity' : 'character'
+  const number = /^bsp:(\d+)$/.exec(cid)
+  const description = number ? descriptionOf.get(`bsp:${number[1]}`) ?? null : null
+  const pua = number ? /\(([0-9A-F]{4,6})\)\s*$/.exec(description ?? '') : null
+  return {
+    cid,
+    char: pua ? String.fromCodePoint(Number.parseInt(pua[1], 16)) : code ? String.fromCodePoint(Number.parseInt(code.slice(2), 16)) : null,
+    kind,
+    label: number ? `{${number[1]}}` : cid.replace(/^chise:/, ''),
+    description: description ? description.replace(/\s*\([0-9A-F]{4,6}\)\s*$/, '') : description,
+    fragment: number ? fragmentOf.get(`bsp:${number[1]}`) ?? null : null,
+    uses: uses.get(cid) ?? 0,
+    equivalents: equivalentsOf.get(cid) ?? [],
+  }
+})
+const encodedRows = [...uses.keys()].filter(cid => cid.startsWith('ucs:') && !charOf.has(cid)).map(cid => {
+  const point = Number.parseInt(cid.slice(4), 16)
+  return { cid, char: String.fromCodePoint(point), kind: 'character', label: String.fromCodePoint(point), description: null, uses: uses.get(cid) ?? 0, equivalents: equivalentsOf.get(cid) ?? [] }
+})
+const RANK = { number: 0, entity: 1, character: 2 }
+const indexRows = [...componentRows, ...encodedRows].sort((a, b) =>
+  (RANK[a.kind] - RANK[b.kind]) || a.cid.localeCompare(b.cid))
+const indexDoc = {
+  format: 'ids-input/components',
+  version: 1,
+  licence: 'GPL-2.0-or-later',
+  sources,
+  provenance,
+  counts: { all: indexRows.length, number: indexRows.filter(row => row.kind === 'number').length, entity: indexRows.filter(row => row.kind === 'entity').length, character: indexRows.filter(row => row.kind === 'character').length },
+  rows: indexRows,
+}
+const INDEX = new URL('../data/ids-components-index.json.gz', import.meta.url)
+const indexBytes = gzipSync(Buffer.from(JSON.stringify(indexDoc)), { level: 9, mtime: 0 })
 
 const corpus = {
   format: 'ids-input/ids-corpus',
@@ -314,7 +373,7 @@ const archive = gzipSync(tar(inputs), { level: 9, mtime: 0 })
 const ARCHIVE = new URL('../data/ids-corpus-sources.tar.gz', import.meta.url)
 
 if (CHECK) {
-  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes]]) {
+  for (const [path, expected] of [[OUT, bytes], [ARCHIVE, archive], [EQUIVALENCES, equivalenceBytes], [INDEX, indexBytes]]) {
     const committed = await readFile(path).catch(() => null)
     if (!committed || !committed.equals(expected)) throw new Error(`${path} is not what this build writes`)
   }
@@ -324,6 +383,8 @@ if (CHECK) {
   await writeFile(OUT, bytes)
   await writeFile(ARCHIVE, archive)
   await writeFile(EQUIVALENCES, equivalenceBytes)
+  await writeFile(INDEX, indexBytes)
   console.log(`${OUT}: ${corpus.counts.descriptions} descriptions, ${corpus.counts.components} components, ${corpus.counts.unresolved} unresolved, ${bytes.length} bytes`)
   console.log(`${EQUIVALENCES}: ${equivalences.length} equivalences, ${equivalenceBytes.length} bytes`)
+  console.log(`${INDEX}: ${indexRows.length} components, ${indexBytes.length} bytes`)
 }
