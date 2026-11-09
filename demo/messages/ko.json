@@ -393,6 +393,8 @@
   "app.sitesMore": "다른 문자 프로젝트",
   "appendix.title": "미인코딩 구성 요소",
   "appendix.lead": "코퍼스가 이름 붙인 모든 구성 요소를 인코딩된 문자까지 포함해 보여 줍니다. 대응이 있으면 동등을 표시하고, 추가한 대응은 사용자 정의 구성 요소로 나타납니다.",
+  "appendix.equivalents": "가타카나와 한글 대응",
+  "appendix.equivalentsLead": "검색은 이것들을 같은 부품의 다른 표기로 읽습니다. 반각 가타카나는 전각 줄을 사용하고, 탁점이 붙은 가나는 그대로 검색합니다.",
   "appendix.search": "구성 요소, 문자, 동등 찾기",
   "appendix.all": "전체",
   "appendix.yours": "내 항목",

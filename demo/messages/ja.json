@@ -393,6 +393,8 @@
   "app.sitesMore": "他の文字プロジェクト",
   "appendix.title": "符号化されていない部品",
   "appendix.lead": "コーパスが名づける部品を、符号化済みのものも含めて並べます。対応が見つかった部品には等価を示し、追加した対応は独自の部品として現れます。",
+  "appendix.equivalents": "カタカナとハングルの対応",
+  "appendix.equivalentsLead": "検索では、これらを同じ部品の別表記として読みます。半角カタカナは全角の行を使い、濁点・半濁点が付いた仮名はそのまま検索します。",
   "appendix.search": "部品・文字・等価を検索",
   "appendix.all": "すべて",
   "appendix.yours": "追加分",
