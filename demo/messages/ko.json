@@ -118,6 +118,8 @@
   "app.prefs.fontLicence": "라이선스",
   "app.prefs.fontAdd": "추가",
   "app.prefs.fontRemove": "{name} 삭제",
+  "app.prefs.fontChoose": "파일 선택",
+  "app.prefs.fontRemoveShort": "삭제",
   "app.share.label": "공유",
   "app.share.copied": "링크를 복사했습니다",
   "app.share.link": "링크",

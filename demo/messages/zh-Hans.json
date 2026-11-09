@@ -118,6 +118,8 @@
   "app.prefs.fontLicence": "许可",
   "app.prefs.fontAdd": "添加",
   "app.prefs.fontRemove": "删除 {name}",
+  "app.prefs.fontChoose": "选择文件",
+  "app.prefs.fontRemoveShort": "删除",
   "app.share.label": "分享",
   "app.share.copied": "已复制链接",
   "app.share.link": "链接",

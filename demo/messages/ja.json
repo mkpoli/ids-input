@@ -118,6 +118,8 @@
   "app.prefs.fontLicence": "ライセンス",
   "app.prefs.fontAdd": "追加",
   "app.prefs.fontRemove": "{name} を削除",
+  "app.prefs.fontChoose": "ファイルを選択",
+  "app.prefs.fontRemoveShort": "削除",
   "app.share.label": "共有",
   "app.share.copied": "リンクをコピーしました",
   "app.share.link": "リンク",

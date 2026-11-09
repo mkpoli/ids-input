@@ -13,12 +13,14 @@
   let fontName = $state('')
   let fontLicence = $state('')
   let fontBusy = $state(false)
+  let chosenName = $state('')
   /** @param {Event} event */
   async function chosenFont(event) {
     const file = /** @type {HTMLInputElement} */ (event.currentTarget).files?.[0]
     if (!file) return
     fontName = file.name.replace(/\.[^.]+$/, '')
     fontLicence = ''
+    chosenName = file.name
     fontInput = /** @type {HTMLInputElement} */ (event.currentTarget)
   }
   async function addFont() {
@@ -30,6 +32,7 @@
       if (fontInput) fontInput.value = ''
       fontName = ''
       fontLicence = ''
+      chosenName = ''
     } finally {
       fontBusy = false
     }
@@ -61,25 +64,37 @@
         onchange={event => { composer = /** @type {HTMLInputElement} */ (event.currentTarget).value }}
         onkeydown={event => { if (event.key === 'Enter') composer = /** @type {HTMLInputElement} */ (event.currentTarget).value }} />
     </div>
-    <div class="pref column fonts">
-      <span>{t('app.prefs.fonts')}</span>
-      <p class="hint">{t('app.prefs.fontsHint')}</p>
+    <div class="ui-field fonts">
+      <span class="ui-label">{t('app.prefs.fonts')}</span>
+      <p class="ui-hint">{t('app.prefs.fontsHint')}</p>
       {#if fonts.length}
         <ul class="font-list">
           {#each fonts as font (font.id)}
-            <li>
+            <li class="font-row">
               <span class="font-name">{font.name}</span>
               <span class="font-licence">{font.licence}</span>
-              <button type="button" class="font-remove" aria-label={t('app.prefs.fontRemove', { name: font.name })} title={t('app.prefs.fontRemove', { name: font.name })} onclick={() => onremovefont?.(font.id)}>×</button>
+              <button type="button" class="ui-button" data-variant="quiet" data-size="xs" aria-label={t('app.prefs.fontRemove', { name: font.name })} onclick={() => onremovefont?.(font.id)}>{t('app.prefs.fontRemoveShort')}</button>
             </li>
           {/each}
         </ul>
       {/if}
       <div class="font-add">
-        <input bind:this={fontInput} type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" aria-label={t('app.prefs.fontFile')} onchange={chosenFont} />
-        <input type="text" bind:value={fontName} placeholder={t('app.prefs.fontName')} aria-label={t('app.prefs.fontName')} />
-        <input type="text" bind:value={fontLicence} placeholder={t('app.prefs.fontLicence')} aria-label={t('app.prefs.fontLicence')} />
-        <button type="button" class="font-add-button" disabled={fontBusy || !fontName.trim() || !fontLicence.trim() || !fontInput?.files?.length} onclick={addFont}>{t('app.prefs.fontAdd')}</button>
+        <label class="ui-field">
+          <span class="ui-label">{t('app.prefs.fontFile')}</span>
+          <span class="font-file-row">
+            <button type="button" class="ui-button" data-size="sm" onclick={() => fontInput?.click()}>{chosenName || t('app.prefs.fontChoose')}</button>
+            <input class="ui-visually-hidden" bind:this={fontInput} type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" onchange={chosenFont} />
+          </span>
+        </label>
+        <label class="ui-field">
+          <span class="ui-label">{t('app.prefs.fontName')}</span>
+          <input class="ui-input" type="text" bind:value={fontName} />
+        </label>
+        <label class="ui-field">
+          <span class="ui-label">{t('app.prefs.fontLicence')}</span>
+          <input class="ui-input" type="text" bind:value={fontLicence} />
+        </label>
+        <button type="button" class="ui-button font-add-button" data-variant="primary" data-size="sm" disabled={fontBusy || !fontName.trim() || !fontLicence.trim() || !fontInput?.files?.length} onclick={addFont}>{t('app.prefs.fontAdd')}</button>
       </div>
     </div>
   </div>
@@ -92,16 +107,13 @@
   .switch{padding-block:2px}
   .column{flex-direction:column;align-items:stretch;gap:var(--ui-space-xs)}
   .compact{inline-size:auto;min-inline-size:132px}
-  .fonts{gap:var(--ui-space-sm)}
-  .hint{margin:0;font-size:var(--ui-text-sm);color:var(--ui-color-ink-soft)}
-  .font-list{display:flex;flex-direction:column;gap:2px;margin:0;padding:0;list-style:none}
-  .font-list li{display:flex;align-items:center;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}
-  .font-name{font-weight:500}
-  .font-licence{color:var(--ui-color-ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .font-remove{margin-inline-start:auto;padding:0 var(--ui-space-xs);font-size:var(--ui-text-md);line-height:1;background:none;border:0;color:var(--ui-color-ink-soft);cursor:pointer}
-  .font-add{display:flex;flex-wrap:wrap;gap:var(--ui-space-xs);align-items:center}
-  .font-add input[type=file]{max-inline-size:100%;font-size:var(--ui-text-sm)}
-  .font-add input[type=text]{flex:1 1 8em;min-inline-size:0;padding:4px 6px;border:1px solid var(--ui-color-border);border-radius:6px;background:var(--ui-color-surface);color:inherit;font:inherit;font-size:var(--ui-text-sm)}
-  .font-add-button{padding:4px 10px;border:1px solid var(--ui-color-border);border-radius:6px;background:var(--ui-color-surface);color:inherit;font:inherit;font-size:var(--ui-text-sm);cursor:pointer}
-  .font-add-button:disabled{cursor:default;opacity:.55}
+  .fonts{flex:1 1 100%;gap:var(--ui-space-sm);padding-block:var(--ui-space-sm)}
+  .font-list{display:flex;flex-direction:column;gap:var(--ui-space-xs);margin:0;padding:0;list-style:none}
+  .font-row{display:flex;align-items:center;gap:var(--ui-space-sm);font-size:var(--ui-text-sm)}
+  .font-name{font-weight:var(--ui-weight-semibold)}
+  .font-licence{color:var(--ui-color-ink-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .font-row .ui-button{margin-inline-start:auto}
+  .font-add{display:flex;flex-direction:column;gap:var(--ui-space-sm)}
+  .font-file-row{display:flex;gap:var(--ui-space-xs)}
+  .font-add-button{align-self:flex-start}
 </style>

@@ -93,6 +93,8 @@
   "app.prefs.fontLicence": "Giấy phép",
   "app.prefs.fontAdd": "Thêm",
   "app.prefs.fontRemove": "Xóa {name}",
+  "app.prefs.fontChoose": "Chọn tệp",
+  "app.prefs.fontRemoveShort": "Xóa",
   "app.share.label": "Chia sẻ",
   "app.share.copied": "Đã sao chép liên kết",
   "app.share.link": "Liên kết",
