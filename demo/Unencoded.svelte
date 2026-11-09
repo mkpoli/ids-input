@@ -88,6 +88,8 @@
   function setFilter(next) { filter = next; page = 1 }
   $effect(() => { void query; page = 1 })
 
+  /** @param {string} cid */
+  const shortName = cid => cid.replace(/^(?:chise|bsp|ucs):/, '')
   /** @param {Row} row */
   const kindLabel = row => t(`appendix.kindValue.${row.kind}`)
   /** @param {Row} row */
@@ -243,6 +245,21 @@
       {/if}
     {/if}
 
+    {#if mine.length}
+      <section class="mine" aria-labelledby="mine-title">
+        <h2 id="mine-title">{t('appendix.mine')}</h2>
+        <ul>
+          {#each mine as pair (`${pair.a}\0${pair.b}`)}
+            <li>
+              <span class="pair-name">{shortName(pair.a)} ↔ {shortName(pair.b)}</span>
+              {#if pair.note}<span class="pair-note">{pair.note}</span>{/if}
+              <button type="button" class="remove" onclick={() => remove(pair.a, pair.b)} aria-label={t('appendix.remove')} title={t('appendix.remove')}>×</button>
+            </li>
+          {/each}
+        </ul>
+      </section>
+    {/if}
+
     <section class="add" aria-labelledby="add-title">
       <h2 id="add-title">{t('appendix.form.title')}</h2>
       <form onsubmit={add}>
@@ -300,6 +317,11 @@
   .pager{display:flex;align-items:center;gap:10px;justify-content:center;margin:12px 0;font-size:12px;color:var(--ids-muted)}
   .pager button{padding:5px 10px;border:1px solid var(--ids-control-border);border-radius:6px;background:var(--ids-surface);color:inherit;font:inherit;cursor:pointer}
   .pager button:disabled{opacity:.5;cursor:default}
+  .mine{margin-top:22px;padding-top:14px;border-top:1px solid var(--ids-line)}
+  .mine ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+  .mine li{display:flex;align-items:baseline;gap:8px;font-size:12.5px}
+  .pair-name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .pair-note{color:var(--ids-muted);font-size:11.5px}
   .add{margin-top:26px;padding-top:18px;border-top:1px solid var(--ids-line)}
   h2{font-size:13px;margin:0 0 10px}
   form{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}

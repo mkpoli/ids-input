@@ -271,7 +271,8 @@ const descriptions = [...seen.values()]
 const uses = new Map()
 const use = cid => uses.set(cid, (uses.get(cid) ?? 0) + 1)
 for (const row of descriptions) {
-  for (const match of row[1].matchAll(/\{(\d+)\}|&([^;]+);|./gsu)) {
+  const text = row[1].replace(/\[[^\]]*\]/g, '')
+  for (const match of text.matchAll(/\{(\d+)\}|&([^;]+);|./gsu)) {
     const [whole, number, entity] = match
     if (number) use(`bsp:${number}`)
     else if (entity) use(`chise:${entity}`)

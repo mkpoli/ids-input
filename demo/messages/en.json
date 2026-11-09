@@ -435,5 +435,6 @@
   "appendix.page": "Page {page} of {pages}",
   "appendix.prev": "Previous",
   "appendix.next": "Next",
-  "appendix.one": "One side"
+  "appendix.one": "One side",
+  "appendix.mine": "Your pairs"
 }

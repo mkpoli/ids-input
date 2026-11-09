@@ -433,5 +433,6 @@
   "appendix.page": "{page}/{pages}ページ",
   "appendix.prev": "前へ",
   "appendix.next": "次へ",
-  "appendix.one": "片方"
+  "appendix.one": "片方",
+  "appendix.mine": "追加した対応"
 }

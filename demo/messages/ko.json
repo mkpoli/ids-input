@@ -433,5 +433,6 @@
   "appendix.page": "{page}/{pages} 페이지",
   "appendix.prev": "이전",
   "appendix.next": "다음",
-  "appendix.one": "한쪽"
+  "appendix.one": "한쪽",
+  "appendix.mine": "내 대응"
 }

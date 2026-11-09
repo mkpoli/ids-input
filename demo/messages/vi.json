@@ -433,5 +433,6 @@
   "appendix.page": "Trang {page}/{pages}",
   "appendix.prev": "Trước",
   "appendix.next": "Sau",
-  "appendix.one": "Một bên"
+  "appendix.one": "Một bên",
+  "appendix.mine": "Cặp của bạn"
 }

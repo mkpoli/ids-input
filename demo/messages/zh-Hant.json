@@ -433,5 +433,6 @@
   "appendix.page": "第{page}頁，共{pages}頁",
   "appendix.prev": "上一頁",
   "appendix.next": "下一頁",
-  "appendix.one": "一側"
+  "appendix.one": "一側",
+  "appendix.mine": "我的對應"
 }
