@@ -424,5 +424,6 @@
   "app.about.openEquivalences": "等価の一覧を開く",
   "appendix.form.exists": "この対応はすでに一覧にあります。",
   "appendix.basisValue.alignment": "整列",
-  "appendix.basisValue.reader": "追加"
+  "appendix.basisValue.reader": "追加",
+  "appendix.glyph": "字形"
 }

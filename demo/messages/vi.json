@@ -424,5 +424,6 @@
   "app.about.openEquivalences": "Mở bảng tương đương",
   "appendix.form.exists": "Bảng đã có cặp này.",
   "appendix.basisValue.alignment": "đối chiếu",
-  "appendix.basisValue.reader": "bạn thêm"
+  "appendix.basisValue.reader": "bạn thêm",
+  "appendix.glyph": "Hình"
 }

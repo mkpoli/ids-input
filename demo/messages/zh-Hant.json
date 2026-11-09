@@ -424,5 +424,6 @@
   "app.about.openEquivalences": "開啟等價表",
   "appendix.form.exists": "該對應已在表中。",
   "appendix.basisValue.alignment": "對齊",
-  "appendix.basisValue.reader": "讀者新增"
+  "appendix.basisValue.reader": "讀者新增",
+  "appendix.glyph": "字形"
 }

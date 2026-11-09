@@ -10,7 +10,8 @@
   import { applyTheme, storedTheme } from './lib/theme.js'
   import { load, save } from './lib/storage.js'
   import dataUrl from '../data/ids-equivalences.json?url'
-  import { parsePair, parseSide } from './lib/equivalences.js'
+  import componentsUrl from '../data/ids-components.tsv?url'
+  import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
 
   const params = new URLSearchParams(location.search)
   const wanted = String(params.get('lang') ?? load('locale', null) ?? navigator.language ?? '')
@@ -31,18 +32,38 @@
   /** @type {{ provenance: { source?: string }[], sources: { id: string, title: string, url: string, licence?: string }[], rows: any[][] } | null} */
   let doc = $state(null)
   let failed = $state(false)
+  /** BabelStone's numbered components: the PUA glyph note 6 prints, the description and the fragment.
+   * @type {Map<number, { glyph: string | null, description: string }>} */
+  let numbered = $state(new Map())
 
   onMount(async () => {
+    const [equivalencesResponse, componentsResponse] = await Promise.allSettled([fetch(dataUrl), fetch(componentsUrl)])
     try {
-      const response = await fetch(dataUrl)
-      if (!response.ok) throw new Error(String(response.status))
-      doc = await response.json()
+      if (equivalencesResponse.status !== 'fulfilled' || !equivalencesResponse.value.ok) throw new Error('equivalences')
+      doc = await equivalencesResponse.value.json()
     } catch { failed = true }
+    try {
+      if (componentsResponse.status !== 'fulfilled' || !componentsResponse.value.ok) return
+      const text = await componentsResponse.value.text()
+      const map = new Map()
+      for (const line of text.split(/\r?\n/)) {
+        if (!line || line.startsWith('#')) continue
+        const [name, description] = line.split('\t')
+        const number = Number(name?.slice(1, -1))
+        if (!Number.isInteger(number)) continue
+        const pua = /\(([0-9A-F]{4,6})\)\s*$/.exec(description ?? '')
+        map.set(number, { glyph: pua ? String.fromCodePoint(Number.parseInt(pua[1], 16)) : null, description: stripPua(description) })
+      }
+      numbered = map
+    } catch { /* The table still lists the pairs without glyphs. */ }
   })
 
+  /** Note 6 prints the PUA code point after the description; the Glyph column carries it instead.
+   * @param {string | null} text */
+  const stripPua = text => text ? text.replace(/\s*\([0-9A-F]{4,6}\)\s*$/, '') : text
   /** @param {any[]} raw @returns {Row} */
   const corpusRow = raw => ({
-    a: raw[0], b: raw[1], aChar: raw[2], bChar: raw[3], aDescription: raw[4], bDescription: raw[5],
+    a: raw[0], b: raw[1], aChar: raw[2], bChar: raw[3], aDescription: stripPua(raw[4]), bDescription: stripPua(raw[5]),
     basis: raw[6], status: raw[7], prov: raw[8] ?? [], note: raw[9] ?? '',
   })
   const corpusRows = $derived(doc ? doc.rows.map(corpusRow) : [])
@@ -75,6 +96,23 @@
     yours: mine.length,
   })
 
+  /** The BabelStone glyph of the pair's numbered side, or the character itself when the pair names one.
+   * @param {Row} row */
+  function glyphOf(row) {
+    for (const cid of [row.a, row.b]) {
+      const numberedCid = /^bsp:(\d+)$/.exec(cid)
+      if (numberedCid) return numbered.get(Number(numberedCid[1]))?.glyph ?? null
+      const scalar = /^ucs:([0-9A-Fa-f]+)$/.exec(cid)
+      if (scalar) return String.fromCodePoint(Number.parseInt(scalar[1], 16))
+    }
+    return null
+  }
+  /** @param {string} cid @param {string | null} description */
+  const descriptionOf = (cid, description) => {
+    if (description) return description
+    const numberedCid = /^bsp:(\d+)$/.exec(cid)
+    return numberedCid ? numbered.get(Number(numberedCid[1]))?.description ?? null : null
+  }
   /** @param {Row} row */
   const basisOf = row => row.basis === 'alignment' ? t('appendix.basisValue.alignment') : row.basis === 'reader' ? t('appendix.basisValue.reader') : row.basis
   /** @param {Row} row */
@@ -126,17 +164,7 @@
     input.value = ''
     if (!file) return
     try {
-      const parsed = JSON.parse(await file.text())
-      const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.rows) ? parsed.rows : null
-      if (!list) throw new Error('no rows')
-      const imported = []
-      for (const item of list) {
-        const [a, b] = Array.isArray(item) ? [parseSide(String(item[0] ?? '')), parseSide(String(item[1] ?? ''))] : [parseSide(String(item?.a ?? '')), parseSide(String(item?.b ?? ''))]
-        if (!a || !b || a === b) continue
-        const [one, two] = [a, b].sort()
-        const note = Array.isArray(item) ? String(item[2] ?? '') : String(item?.note ?? '')
-        if (!imported.some(row => row.a === one && row.b === two)) imported.push({ a: one, b: two, note })
-      }
+      const imported = importPairs(JSON.parse(await file.text()))
       const merged = new Map(mine.map(row => [`${row.a}\0${row.b}`, row]))
       for (const row of imported) merged.set(`${row.a}\0${row.b}`, row)
       mine = [...merged.values()]
@@ -199,6 +227,7 @@
           <table>
             <thead>
               <tr>
+                <th scope="col">{t('appendix.glyph')}</th>
                 <th scope="col">{t('appendix.one')}</th>
                 <th scope="col">{t('appendix.other')}</th>
                 <th scope="col">{t('appendix.basis')}</th>
@@ -211,18 +240,19 @@
             <tbody>
               {#each visible as row (row.yours ? `mine:${row.a}:${row.b}` : `${row.a}:${row.b}`)}
                 <tr class:yours={row.yours}>
+                  <td class="glyph">{glyphOf(row) ?? '—'}</td>
                   <td>
                     <span class="identity">
                       <span class="name">{nameOf(row.a)}</span>
                       <span class="scheme">{schemeOf(row.a)}</span>
-                      {#if row.aDescription}<span class="desc">{row.aDescription}</span>{/if}
+                      {#if descriptionOf(row.a, row.aDescription)}<span class="desc">{descriptionOf(row.a, row.aDescription)}</span>{/if}
                     </span>
                   </td>
                   <td>
                     <span class="identity">
                       <span class="name">{nameOf(row.b)}</span>
                       <span class="scheme">{schemeOf(row.b)}</span>
-                      {#if row.bDescription}<span class="desc">{row.bDescription}</span>{/if}
+                      {#if descriptionOf(row.b, row.bDescription)}<span class="desc">{descriptionOf(row.b, row.bDescription)}</span>{/if}
                     </span>
                   </td>
                   <td class="basis">{basisOf(row)}</td>
@@ -282,6 +312,7 @@
   th{font-size:11px;font-weight:600;color:var(--ids-muted);white-space:nowrap;background:var(--ids-surface-subtle)}
   tbody tr:last-child td{border-bottom:0}
   tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
+  .glyph{font-family:'IDS Numbered','Noto Sans CJK JP',serif;font-size:22px;line-height:1.2;color:var(--ids-ink);white-space:nowrap}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
   .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
