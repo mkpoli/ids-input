@@ -2,6 +2,14 @@
 
 Each file keeps its own licence; the MIT licence of the code does not cover them.
 
+## `open-data/`
+
+The release served at <https://ids.mkpo.li/open-data>: the descriptions this project transcribed
+or read, one row per description, each citing its source. JSON, TSV, the numbered components and a
+README with the fields and the source list; CC0 1.0. Built by `bun scripts/build_open_ids.mjs`
+from the starter catalogue in `demo/lib/examples.js`, its source records and
+`data/ids-components.tsv`.
+
 ## `yi-bai-ids.tsv.gz`
 
 Standard IDS descriptions from Yi Bai's level-1 IDS dataset at commit

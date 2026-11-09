@@ -7,7 +7,7 @@
 // with no code point, and names the character for an encoded one. `reading` holds a Korean
 // gukja's reading in Hangul, or a Jurchen character's reading as Unicode records it.
 /**
- * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string }} Example
+ * @typedef {{ sequence: string, refs?: number[], char: string, parts?: string, abbreviates?: string, reading?: string, modern?: string, source?: string, editorial?: boolean }} Example
  * @typedef {{ key: string, refs?: number[], examples: Example[] }} ExampleGroup
  */
 
@@ -276,9 +276,9 @@ export const EXAMPLE_GROUPS = [
     { sequence: '⿳𦥯⿲女子乚皿', refs: [46,49], char: '' },
     // These follow the photographed structures: 龰 is 足's bottom, 萬's 艹田 sits on a 冂 around 山, and
     // 士 and 女 meet at one 口. IDS cannot share a stroke, so the arrangements remain editorial.
-    { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '' },
-    { sequence: '⿱黄⿱金⿳艹田⿵冂山', refs: [46,51], char: '' },
-    { sequence: '⿳士⿲女口意祥', refs: [50], char: '' },
+    { sequence: '⿳五⿲矢口隹龰', refs: [46], char: '', editorial: true },
+    { sequence: '⿱黄⿱金⿳艹田⿵冂山', refs: [46,51], char: '', editorial: true },
+    { sequence: '⿳士⿲女口意祥', refs: [50], char: '', editorial: true },
     { sequence: '⿱艹⿰马尼', refs: [43], char: '' },
     { sequence: '⿰⿳⿰SIR木阝', refs: [43], char: '' },
     { sequence: '⿱⿰⿱コン⿱クリ土', refs: [20], char: '' },

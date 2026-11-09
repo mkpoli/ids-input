@@ -1,0 +1,161 @@
+{
+  "format": "ids-input/open-ids",
+  "version": 1,
+  "licence": {
+    "spdx": "CC0-1.0",
+    "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "note": "This project’s selection, arrangement, source notes and editorial readings are dedicated to the public domain. Source-derived material keeps the terms its record names, where the project records one."
+  },
+  "counts": {
+    "descriptions": 584,
+    "unencoded": 115,
+    "editorial": 65,
+    "groups": 20,
+    "sources": 77,
+    "components": 121
+  },
+  "groups": [
+    {
+      "key": "basic",
+      "title": "Basic structures",
+      "count": 24,
+      "unencoded": 11
+    },
+    {
+      "key": "complex",
+      "title": "Complex structures",
+      "count": 13,
+      "unencoded": 5
+    },
+    {
+      "key": "repeated",
+      "title": "Repeated components",
+      "count": 44,
+      "unencoded": 4
+    },
+    {
+      "key": "enclosures",
+      "title": "Enclosures",
+      "count": 11,
+      "unencoded": 4
+    },
+    {
+      "key": "mixed",
+      "title": "Mixed scripts",
+      "count": 19,
+      "unencoded": 14
+    },
+    {
+      "key": "sign",
+      "title": "Station sign forms",
+      "count": 5,
+      "unencoded": 0
+    },
+    {
+      "key": "erjian",
+      "title": "Erjian forms",
+      "count": 16,
+      "unencoded": 0
+    },
+    {
+      "key": "geba",
+      "title": "Geba-ji",
+      "count": 33,
+      "unencoded": 31
+    },
+    {
+      "key": "navy",
+      "title": "Navy characters",
+      "count": 5,
+      "unencoded": 5
+    },
+    {
+      "key": "ligature",
+      "title": "Word ligatures",
+      "count": 14,
+      "unencoded": 14
+    },
+    {
+      "key": "created",
+      "title": "Created characters",
+      "count": 4,
+      "unencoded": 4
+    },
+    {
+      "key": "korean",
+      "title": "Korean gukja",
+      "count": 116,
+      "unencoded": 21
+    },
+    {
+      "key": "hangul",
+      "title": "Hangul ligatures",
+      "count": 2,
+      "unencoded": 2
+    },
+    {
+      "key": "gugyeol",
+      "title": "Korean gugyeol",
+      "count": 13,
+      "unencoded": 0
+    },
+    {
+      "key": "kokuji",
+      "title": "Japanese kokuji",
+      "count": 156,
+      "unencoded": 0
+    },
+    {
+      "key": "ghost",
+      "title": "Ghost kanji",
+      "count": 12,
+      "unencoded": 0
+    },
+    {
+      "key": "nom",
+      "title": "Vietnamese Nôm",
+      "count": 12,
+      "unencoded": 0
+    },
+    {
+      "key": "jurchen",
+      "title": "Jurchen",
+      "count": 44,
+      "unencoded": 0
+    },
+    {
+      "key": "shuishu",
+      "title": "Shuishu logograms",
+      "count": 18,
+      "unencoded": 0
+    },
+    {
+      "key": "tangut",
+      "title": "Tangut",
+      "count": 23,
+      "unencoded": 0
+    }
+  ],
+  "files": [
+    {
+      "name": "descriptions.json",
+      "bytes": 223747,
+      "type": "application/json"
+    },
+    {
+      "name": "descriptions.tsv",
+      "bytes": 36293,
+      "type": "text/tab-separated-values"
+    },
+    {
+      "name": "components.tsv",
+      "bytes": 5072,
+      "type": "text/tab-separated-values"
+    },
+    {
+      "name": "README.md",
+      "bytes": 16144,
+      "type": "text/markdown"
+    }
+  ]
+}
