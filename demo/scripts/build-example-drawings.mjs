@@ -36,7 +36,7 @@ await source.ready()
 // 黃金萬兩 sets 黃 above 金, and 黃 ends in two dots that sit in the gap between them.
 // The print the example follows joins the two: 金's roof takes the dots' place. Drop the
 // dots from 黃's own outline and let the roof meet the body it belongs to.
-const JOINED_DOTS = '⿱⿱龷由⿱金⿱田⿵冂山'
+const JOINED_DOTS = '⿱⿱龷由⿱⿱⿰丿㇏⿻王丷⿱田⿵冂山'
 
 // The stored drawings run y down, and a viewer that flips y shows them upside down.
 function inkBox(d) {
@@ -66,7 +66,7 @@ function place(body, jin, band) {
 
 function joinHuangToJin(drawn) {
   const body = drawn?.parts?.find(p => String(p.origin).startsWith('Noto Sans CJK: ⿱龷由'))
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
+  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫') || String(p.origin).startsWith('Noto Sans CJK: ⿱⿰丿㇏⿻王丷'))
   if (!body || !jin) return drawn
   const fit = (part, left, right, top, bottom) => {
     const box = inkBox(part.d)
@@ -103,7 +103,7 @@ function transformPath(d, map) {
 }
 
 function fitWanToStack(drawn) {
-  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫'))
+  const jin = drawn?.parts?.find(p => String(p.origin).startsWith('host 鑫') || String(p.origin).startsWith('Noto Sans CJK: ⿱⿰丿㇏⿻王丷'))
   const wans = (drawn?.parts ?? []).filter(p => String(p.origin).startsWith('Noto Sans CJK: ⿱田⿵冂山'))
   if (!jin || wans.length === 0) return drawn
   const boxes = wans.map(p => inkBox(p.d))
