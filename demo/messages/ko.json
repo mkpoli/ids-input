@@ -425,5 +425,8 @@
   "appendix.form.exists": "이 대응은 이미 표에 있습니다.",
   "appendix.basisValue.alignment": "정렬",
   "appendix.basisValue.reader": "사용자 추가",
-  "appendix.glyph": "자형"
+  "appendix.glyph": "자형",
+  "appendix.glyphTitle.babel": "BabelStone Han PUA",
+  "appendix.glyphTitle.ours": "이 프로젝트의 Sans 자형",
+  "appendix.glyphNote": "왼쪽은 BabelStone Han PUA, 오른쪽은 이 프로젝트의 Sans 자형입니다."
 }

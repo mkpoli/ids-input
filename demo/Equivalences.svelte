@@ -11,6 +11,7 @@
   import { load, save } from './lib/storage.js'
   import dataUrl from '../data/ids-equivalences.json?url'
   import componentsUrl from '../data/ids-components.tsv?url'
+  import { componentDrawing } from '../src/composer/component-forms.js'
   import { importPairs, parsePair, parseSide } from './lib/equivalences.js'
 
   const params = new URLSearchParams(location.search)
@@ -106,6 +107,12 @@
       if (scalar) return String.fromCodePoint(Number.parseInt(scalar[1], 16))
     }
     return null
+  }
+  /** The project's Sans cut of the pair's glyph, beside BabelStone Han PUA's drawing.
+   * @param {Row} row */
+  function ourGlyph(row) {
+    const glyph = glyphOf(row)
+    return glyph ? componentDrawing(glyph, 'sans') : null
   }
   /** @param {string} cid @param {string | null} description */
   const descriptionOf = (cid, description) => {
@@ -240,7 +247,15 @@
             <tbody>
               {#each visible as row (row.yours ? `mine:${row.a}:${row.b}` : `${row.a}:${row.b}`)}
                 <tr class:yours={row.yours}>
-                  <td class="glyph">{glyphOf(row) ?? '—'}</td>
+                  <td class="glyph">
+                    {#if glyphOf(row)}<span class="pua" title={t('appendix.glyphTitle.babel')}>{glyphOf(row)}</span>{/if}
+                    {#if ourGlyph(row)}
+                      <svg class="ours" viewBox="0 0 1000 1000" role="img" aria-label={t('appendix.glyphTitle.ours')}>
+                        <path d={ourGlyph(row).d} fill="currentColor" />
+                      </svg>
+                    {/if}
+                    {#if !glyphOf(row) && !ourGlyph(row)}—{/if}
+                  </td>
                   <td>
                     <span class="identity">
                       <span class="name">{nameOf(row.a)}</span>
@@ -269,6 +284,7 @@
             </tbody>
           </table>
         </div>
+        <p class="glyph-note">{t('appendix.glyphNote')}</p>
       {/if}
 
       <section class="add" aria-labelledby="add-title">
@@ -312,7 +328,10 @@
   th{font-size:11px;font-weight:600;color:var(--ids-muted);white-space:nowrap;background:var(--ids-surface-subtle)}
   tbody tr:last-child td{border-bottom:0}
   tr.yours{background:color-mix(in srgb,var(--ids-accent-light) 45%,transparent)}
-  .glyph{font-family:'IDS Numbered','Noto Sans CJK JP',serif;font-size:22px;line-height:1.2;color:var(--ids-ink);white-space:nowrap}
+  .glyph{display:flex;align-items:center;gap:6px;color:var(--ids-ink);white-space:nowrap}
+  .pua{font-family:'IDS Numbered','Noto Sans CJK JP',serif;font-size:22px;line-height:1.2}
+  .glyph-note{font-size:11.5px;color:var(--ids-muted);margin:8px 0 0}
+  .ours{width:26px;height:26px;flex:none}
   .identity{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
   .name{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
   .scheme{font-size:10px;color:var(--ids-muted);text-transform:uppercase;letter-spacing:.02em}
