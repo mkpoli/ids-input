@@ -36,6 +36,15 @@ def read_ids(char: str) -> str | None:
                 text = re.sub(r"\([^)]*\)$", "", description)
                 if text.startswith("⿰"):
                     return text
+    corpus = cut.ROOT / "data" / "ids-corpus.json.gz"
+    if not corpus.exists():
+        return None
+    with gzip.open(corpus, "rt", encoding="utf-8") as source:
+        document = json.load(source)
+    subject = f"ucs:{ord(char):X}"
+    for row in document["descriptions"]["rows"]:
+        if row[0] == subject and row[1].startswith("⿰"):
+            return row[1]
     return None
 
 
@@ -108,6 +117,8 @@ def candidates(pieces, arity):
 
 def template(face, texts, faces):
     for text in texts:
+        if not text or len(text) != 1:
+            continue
         for candidate in [face] + [f for f in faces if f is not face]:
             shape = candidate.whole(text)
             if shape is not None:
@@ -133,7 +144,11 @@ def main() -> int:
         if face is None:
             out[char] = {"error": "no glyph"}
             continue
-        root = cut.parse(ids)
+        try:
+            root = cut.parse(ids)
+        except ValueError:
+            out[char] = {"error": "unparsable description"}
+            continue
         if root.operator not in ("⿰", "⿲"):
             out[char] = {"error": "not a row"}
             continue
