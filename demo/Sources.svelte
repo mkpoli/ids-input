@@ -96,7 +96,7 @@
           {#each LOCALES as [code, name] (code)}<option value={code}>{name}</option>{/each}
         </select>
       </label>
-      <a class="back" href={`./equivalences.html?lang=${locale}`}>{t('appendix.title')}</a>
+      <a class="back" href={`./unencoded.html?lang=${locale}`}>{t('appendix.title')}</a>
       <a class="back" href="./open-data.html">Open data</a>
       <ThemeSwitch {theme} label={t('app.prefs.theme')} labels={{ system: t('app.theme.system'), light: t('app.theme.light'), dark: t('app.theme.dark') }} onchange={setTheme} />
       <a class="back" href={`./?lang=${locale}`}>{t('sources.back')}</a>

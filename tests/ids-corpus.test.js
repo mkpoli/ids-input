@@ -7,6 +7,7 @@ import { parse } from '../src/core/ids.js'
 
 const corpus = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-corpus.json.gz', import.meta.url))).toString('utf8'))
 const equivalences = JSON.parse(readFileSync(new URL('../data/ids-equivalences.json', import.meta.url), 'utf8'))
+const index = JSON.parse(gunzipSync(readFileSync(new URL('../data/ids-components-index.json.gz', import.meta.url))))
 const rows = corpus.descriptions.rows
 const column = name => corpus.descriptions.columns.indexOf(name)
 const subject = column('subject'), text = column('text'), resolved = column('resolved')
@@ -79,6 +80,22 @@ describe('the merged corpus', () => {
     }
     const seven = equivalences.rows.find(row => row[0] === 'bsp:7' && row[1] === 'chise:CDP-8BD0')
     expect(seven?.[7]).toBe('verified')
+  })
+
+  it('lists every component, encoded characters included, with an equivalent where known', () => {
+    expect(index.format).toBe('ids-input/components')
+    expect(index.rows.length).toBe(index.counts.all)
+    expect(index.counts.number).toBe(121)
+    expect(index.counts.entity).toBeGreaterThan(1000)
+    expect(index.counts.character).toBeGreaterThan(10000)
+    const seven = index.rows.find(row => row.cid === 'bsp:7')
+    expect(seven?.equivalents[0]?.cid).toBe('chise:CDP-8BD0')
+    const bare = index.rows.find(row => row.cid === 'bsp:1')
+    expect(bare?.equivalents.length).toBe(0)
+    for (const row of index.rows) {
+      expect(['number', 'entity', 'character']).toContain(row.kind)
+      expect(row.uses).toBeGreaterThanOrEqual(0)
+    }
   })
 
   it('resolves every name its descriptions use', () => {

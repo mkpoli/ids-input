@@ -1226,7 +1226,7 @@ them seen on two or more characters.
 
 ## `ids-equivalences.json`
 
-The alignments in `ids-corpus.json.gz`, as one small table for the appendix page at `/equivalences`:
+The alignments in `ids-corpus.json.gz`, as one small table for the components page at `/unencoded`:
 62 rows of a BabelStone number against the CHISE entity that names the same component, 48 of them
 `verified`. Each row carries both sides' display characters, BabelStone's description, the basis, the
 status, the provenance indexes and the characters that attest it. Written by
