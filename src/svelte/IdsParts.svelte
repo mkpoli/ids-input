@@ -116,8 +116,8 @@
   let parts = $state.raw(/** @type {PalettePart[] | null} */ (null))
   let failed = $state(false)
   let tab = $state(/** @type {(typeof TABS)[number]} */ ('components')), filter = $state('')
-  // Components opens on Common (undefined); other groups are stroke symbols, a stroke count,
-  // or parts without a recorded count (null).
+  // Components opens on Common (undefined); other groups are stroke symbols, the components written
+  // as a description, a stroke count, or parts without a recorded count (null).
   /** @type {number | 'strokes' | null | undefined} */
   let count = $state(undefined)
   // The Components tail: every part from HAN_TAIL strokes up in one group.
@@ -656,9 +656,11 @@
     tab = tabs[to]
     tabButtons[to]?.focus()
   }
-  // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes.
+  // In the stroke-symbol view, ㇣ falls outside the five first-stroke classes. The components written
+  // as a description have no first stroke recorded; their groups are stroke counts.
   /** @param {string | null | undefined} cls */
-  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`) : !partTail && chosen === 'strokes' ? t('parts.first.rest') : t('parts.first.unknown')
+  const heading = cls => cls ? t(`parts.first.${CLASS_KEY[/** @type {keyof typeof CLASS_KEY} */ (cls)]}`)
+    : !partTail && chosen === 'strokes' ? t('parts.first.rest') : t('parts.first.unknown')
 </script>
 
 {#snippet grid(/** @type {PalettePart[]} */ list)}
@@ -1095,7 +1097,7 @@
   .part.compound{position:relative;padding:5px}
   .part :global(.part-icon){user-select:none}
   .compound-text{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;
-    font:8px/1 var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);color:var(--_ink);background:var(--_surface)}
+    font:8px/1 var(--ids-font,var(--ids-glyph-fallback, var(--fallback-font, "IDS Fallback")),sans-serif);color:var(--_muted);background:transparent}
   .part.numbered{flex-direction:column;gap:1px;font-size:18px}
   .numbered-ref{font:7px/1 var(--ids-ui-font,system-ui,sans-serif);color:var(--_muted)}
   .part.compound .numbered-ref{position:absolute;bottom:0;max-width:100%;overflow:hidden;white-space:nowrap;background:var(--_surface)}

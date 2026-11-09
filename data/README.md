@@ -733,8 +733,34 @@ Common also shows hard-to-type components used by at least 50 characters
 (287 in this corpus), while keeping them available in their stroke groups.
 Compound IDS use a lower cutoff of 30 distinct characters below the root. The
 current corpus supplies 28 frequent trees: sixteen remain as compound shortcuts
-and twelve normalize to ten encoded characters. The sixteen manual entries
-bring the compound total to thirty-two. Exact regional spellings remain searchable aliases
+and twelve normalize to ten encoded characters. The seventy-eight manual entries
+bring the compound total to ninety-four. Each one carries an additive (derived)
+stroke count, is inserted as a subtree, is searchable by that count, and stands
+in the palette's Compound group under its stroke count. `subtrees.manualSources`
+records where each entry comes from:
+
+| Group | Entries | Source |
+| --- | --- | --- |
+| `requested` | 16 | asked for one at a time, BabelStone's numbered components among them |
+| `cover` | 10 | 一血, 一𧘇, 罒夫, 日𧘇, 皿亅, 八亠, 臼火, 𠂊巾, 丅口丄, 八人: runs a cover layout sets as one part |
+| `corpus` | 44 | components this corpus writes inside 15 to 29 distinct characters, under the cutoff |
+| `hanCompose` | 8 | components han-compose names in its own data and design notes |
+
+The `hanCompose` entries are ⿱𠆢虫, ⿱⿱㇒𭕄𠙻, ⿻干二, ⿱一丷, ⿱⺀㐅,
+⿱⿱一丷⿱一八, ⿻乛亅 and ⿹⿻乛亅㇒, read at han-compose commit bf13d98 in
+`docs/design/ids-composer.md`, `data/vocab/han-ids-drawn.tsv`,
+`src/han_compose/compose.py`, `src/han_compose/kanjivg_cuts.py` and
+`tests/test_compose.py` (<https://github.com/mkpoli/han-compose>). 脊's top,
+⿻人⿰二二, which han-compose cuts as one group, is left out: the preview overlays
+人 on two full-size 二 and fills the counters. Three more
+components han-compose names — ⿱一八, ⿱𠂉一 and ⿰臣⿱𠂉一 — the corpus ranks in the
+same 15-to-26 band, so they are counted under `corpus`; the agreement is the
+cross-check that the band holds components a renderer needs. No `corpus` or `hanCompose` entry is the
+whole description of a character, so none doubles for a component a character
+already encodes: 鬼 for ⿷⿱甶儿厶, 𦥔 for ⿻臼丨, 爫 for ⿱㇒𭕄, 𡗗 for ⿻三人, 主 for
+⿱亠土 and 壳 for ⿱⿳士冖一几 are left out. The cover entry ⿱一血 is how the corpus
+writes 𮕜, and stays a compound so the layout's run reads as one part.
+Exact regional spellings remain searchable aliases
 and appear in hover text. An encoded entry counts each source character once
 across its literal spelling and all selected IDS aliases; the raw report retains
 separate exact counts. Single-character promotion keeps its existing cutoff of 50.
@@ -1142,11 +1168,18 @@ catalog cannot be loaded. A configured composer export or font can have differen
 
 ## `kana-strokes.json.gz`
 
-The stroke count of every kana KanjiVG draws, and of the halfwidth forms of them: 231 keys in
-code-point order, hiragana U+3041–U+3096, katakana U+30A1–U+30FA, then halfwidth katakana
-U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the pinned `revision` and its
-`source`. A halfwidth form is the same kana drawn narrow, so it takes the count of the kana NFKC
-decomposes it to; ｰ has none, since ー lies outside the counted ranges.
+The stroke count of every kana KanjiVG draws, and of the forms it leaves to other sources: 256 keys
+in code-point order, hiragana U+3041–U+3096, the marks U+309B–U+309E, katakana U+30A1–U+30FE
+(the middle dot ・ and the prolonged sound mark ー included), the Ainu small katakana U+31F0–U+31FF,
+then halfwidth katakana U+FF66–U+FF9D, with a count for each (`strokes`, one entry per key), the
+pinned `revision` and its `source`.
+
+Two kinds are derived from the kana they write. A halfwidth form is the same kana drawn narrow, so
+it takes the count of the kana NFKC decomposes it to, ｰ included. An Ainu small katakana is the same
+letter drawn small, named for it (KATAKANA LETTER SMALL KU is ク), so it takes that letter's count.
+
+The marks are counted from their own paths: ー and ・ one stroke, ヽ and ゝ one, ヾ and ゞ three (the
+base mark plus the two of the voiced mark).
 
 KanjiVG draws one path per stroke, in writing order, so the number of paths is the count: あ three,
 イ two, マ two, フ one. That is every kana in both ranges, and the build says which ones KanjiVG does

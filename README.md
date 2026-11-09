@@ -694,6 +694,9 @@ IDS queries accept visual substitutes. The kana families follow the encoded
 components in the [葦手入力 correspondence table](https://ashide.otodo.net/setumei/ziboziso.html)
 and its [learning guide](https://ashide.otodo.net/setumei/tebiki.html).
 All 46 basic kana are covered; the table below lists their search alternatives.
+The kana `ヱ` searches for `𠀄`: Unihan's provisional
+[`kStrange`](https://www.unicode.org/reports/tr38/#kStrange) field gives 𭛝 (U+2D6DD) `K:U+30F1`,
+and [BabelStone](https://www.babelstone.co.uk/CJK/IDS.TXT) describes that character as `⿰彳𠀄`.
 
 | Kana | Components | Kana | Components |
 |---|---|---|---|
@@ -841,7 +844,10 @@ a manifest, the learned layout, and the records of every character and the host 
 (place, operand), packed into gzipped shards by the first three hex digits of their SHA-256
 (`g/<hhh>.json`, `p/<hhh>.json`), so a sequence loads only the shards its parts fall in. An export that
 carries no host list has no part to cut; its descriptions are laid out by the composer's plain shares
-instead of the learned boxes, which are where cut parts go. Drawing runs in a Web Worker,
+instead of the learned boxes, which are where cut parts go. The two cuts of a stack come from
+different glyphs, so a component its donor drew into the one above it arrives with a seam or a gap
+where the layout put the boxes; the drawing closes such an operand on to the one above, which the
+composer itself does only under 宀 and 冖. Drawing runs in a Web Worker,
 one sequence at a time; a newer sequence ends the drawing before it.
 
 ```js

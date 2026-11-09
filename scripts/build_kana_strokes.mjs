@@ -1,5 +1,7 @@
 // Build `data/kana-strokes.json.gz`: the stroke count and first stroke of every kana KanjiVG draws.
 //
+// The Ainu small katakana (U+31F0–U+31FF) are the same letters drawn small, one per Unicode name.
+//
 // Halfwidth katakana (U+FF66–U+FF9D) are the same kana drawn narrow, so each takes the count of the
 // kana it decomposes to under NFKC; KanjiVG draws none of them itself.
 //
@@ -19,7 +21,9 @@ const REVISION = '610091ce618cf757ed1357a8954cd65283e015d6'
 const SOURCE = `KanjiVG ${REVISION}, CC BY-SA 3.0, https://github.com/KanjiVG/kanjivg`
 const TARGET = new URL('../data/kana-strokes.json.gz', import.meta.url)
 // Hiragana U+3041–U+3096 and katakana U+30A1–U+30FA, the kana a reader meets.
-const RANGES = [[0x3041, 0x3096], [0x30a1, 0x30fa]]
+// The letters, then the marks kana are written with: the iteration and voiced marks (ゝゞヽヾ) and
+// the middle dot and prolonged sound mark (・ー).
+const RANGES = [[0x3041, 0x3096], [0x309b, 0x309e], [0x30a1, 0x30fa], [0x30fb, 0x30fe]]
 
 /**
  * KanjiVG's SVG for one kana, or null where the file does not exist. A failed request is retried,
@@ -68,8 +72,24 @@ for (const [from, to] of RANGES) {
   }
 }
 
-// Halfwidth katakana copy the count of the kana Unicode decomposes them to.
 const counted = new Map(keys.map((key, index) => [key, strokes[index]]))
+
+// The Ainu small katakana are the same letters drawn small for Ainu, one per Unicode name (SMALL KU
+// is ク), so each takes the count of the letter its name gives. KanjiVG draws none of them.
+const AINU = new Map([
+  ['ㇰ', 'ク'], ['ㇱ', 'シ'], ['ㇲ', 'ス'], ['ㇳ', 'ト'], ['ㇴ', 'ヌ'], ['ㇵ', 'ハ'], ['ㇶ', 'ヒ'],
+  ['ㇷ', 'フ'], ['ㇸ', 'ヘ'], ['ㇹ', 'ホ'], ['ㇺ', 'ム'], ['ㇻ', 'ラ'], ['ㇼ', 'リ'], ['ㇽ', 'ル'],
+  ['ㇾ', 'レ'], ['ㇿ', 'ロ'],
+])
+const missingAinu = []
+for (const [small, base] of AINU) {
+  const count = counted.get(base)
+  if (count === undefined) { missingAinu.push(small); continue }
+  keys.push(small)
+  strokes.push(count)
+}
+
+// Halfwidth katakana copy the count of the kana Unicode decomposes them to.
 const missingHalfwidth = []
 for (let point = 0xff66; point <= 0xff9d; point++) {
   const char = String.fromCodePoint(point)
@@ -87,3 +107,4 @@ writeFileSync(TARGET, gz)
 console.log(`${keys.length} kana, ${gz.length} bytes`)
 if (absent.length) console.log(`not drawn by KanjiVG: ${absent.join('')}`)
 if (missingHalfwidth.length) console.log(`halfwidth forms with no full-width count: ${missingHalfwidth.join('')}`)
+if (missingAinu.length) console.log(`Ainu kana with no base count: ${missingAinu.join('')}`)

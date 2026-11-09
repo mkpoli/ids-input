@@ -352,6 +352,14 @@ it('accepts Hangul and kana lookalikes without rewriting the result descriptions
 })
 
 
+it('finds 𭛝 from the katakana ヱ through its component 𠀄', () => {
+  const index = createSearch(new Map([['𭛝', ['⿰彳𠀄']]]))
+  expect(index.search('⿰彳ヱ')).toEqual(index.search('⿰彳𠀄'))
+  expect(index.search('⿰彳ヱ').hits.map(hit => hit.char)).toEqual(['𭛝'])
+  expect(parseQuery('ヱ').terms[0].leaves).toEqual(['𠀄'])
+})
+
+
 it('leaves unlisted halfwidth and enclosed kana out of the alias mapping', () => {
   const index = createSearch(new Map([['甲', ['⿰ｬ口']], ['乙', ['⿰ャ口']]]))
   expect(index.search('⿰ｬ口').hits.map(hit => hit.char)).toEqual(['甲'])
